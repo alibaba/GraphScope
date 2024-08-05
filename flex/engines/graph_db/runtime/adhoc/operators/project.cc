@@ -46,6 +46,9 @@ Context eval_project(const physical::Project& opr, const ReadTransaction& txn,
                      Context&& ctx,
                      const std::map<std::string, std::string>& params,
                      const std::vector<common::IrDataType>& data_types) {
+  if (ctx.row_num() == 0) {
+    return ctx;
+  }
   bool is_append = opr.is_append();
   Context ret;
   if (is_append) {
@@ -53,7 +56,6 @@ Context eval_project(const physical::Project& opr, const ReadTransaction& txn,
   }
   int mappings_size = opr.mappings_size();
   size_t row_num = ctx.row_num();
-  LOG(INFO) << "row num: " << row_num << "\n";
   std::vector<size_t> alias_ids;
   if (static_cast<size_t>(mappings_size) == data_types.size()) {
     for (int i = 0; i < mappings_size; ++i) {

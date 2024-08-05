@@ -49,9 +49,6 @@ static std::vector<LabelTriplet> get_expand_label_set(
 Context EdgeExpand::expand_edge_without_predicate(
     const ReadTransaction& txn, Context&& ctx, const EdgeExpandParams& params) {
   std::vector<size_t> shuffle_offset;
-  LOG(INFO) << "expand edge" << (int) params.labels[0].src_label << " "
-            << (int) params.labels[0].dst_label << " "
-            << (int) params.labels[0].edge_label;
 
   if (params.labels.size() == 1) {
     if (params.dir == Direction::kIn) {
@@ -72,8 +69,12 @@ Context EdgeExpand::expand_edge_without_predicate(
 
       SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
 
+      label_t dst_label = params.labels[0].dst_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
+                       if (label != dst_label) {
+                         return;
+                       }
                        auto ie_iter = txn.GetInEdgeIterator(
                            label, v, output_vertex_label, edge_label);
                        while (ie_iter.IsValid()) {
@@ -103,11 +104,15 @@ Context EdgeExpand::expand_edge_without_predicate(
       }
 
       SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
-
+      label_t src_label = params.labels[0].src_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
+                       if (label != src_label) {
+                         return;
+                       }
                        auto oe_iter = txn.GetOutEdgeIterator(
                            label, v, output_vertex_label, edge_label);
+
                        while (oe_iter.IsValid()) {
                          auto nbr = oe_iter.GetNeighbor();
                          CHECK(oe_iter.GetData().type == pt);
@@ -159,7 +164,6 @@ Context EdgeExpand::expand_edge_without_predicate(
       return ctx;
     }
   } else {
-    LOG(INFO) << "expand edge multiple";
     auto column =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
     auto label_set = column->get_labels_set();
@@ -177,7 +181,50 @@ Context EdgeExpand::expand_edge_without_predicate(
     }
     if (params.dir == Direction::kOut || params.dir == Direction::kIn) {
       if (labels.size() == 1) {
-      } else if (labels.size() > 1) {
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        if (params.dir == Direction::kOut) {
+          auto& triplet = labels[0];
+          SDSLEdgeColumnBuilder builder(Direction::kOut, triplet,
+                                        label_props[0].second);
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                if (label == triplet.src_label) {
+                  auto oe_iter = txn.GetOutEdgeIterator(
+                      label, v, triplet.dst_label, triplet.edge_label);
+                  while (oe_iter.IsValid()) {
+                    auto nbr = oe_iter.GetNeighbor();
+                    builder.push_back_opt(v, nbr, oe_iter.GetData());
+                    shuffle_offset.push_back(index);
+                    oe_iter.Next();
+                  }
+                }
+              });
+          ctx.set_with_reshuffle(params.alias, builder.finish(),
+                                 shuffle_offset);
+          return ctx;
+        } else if (params.dir == Direction::kIn) {
+          auto& triplet = labels[0];
+          SDSLEdgeColumnBuilder builder(Direction::kIn, triplet,
+                                        label_props[0].second);
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                if (label == triplet.dst_label) {
+                  auto ie_iter = txn.GetInEdgeIterator(
+                      label, v, triplet.src_label, triplet.edge_label);
+                  while (ie_iter.IsValid()) {
+                    auto nbr = ie_iter.GetNeighbor();
+                    builder.push_back_opt(nbr, v, ie_iter.GetData());
+                    shuffle_offset.push_back(index);
+                    ie_iter.Next();
+                  }
+                }
+              });
+          ctx.set_with_reshuffle(params.alias, builder.finish(),
+                                 shuffle_offset);
+          return ctx;
+        }
+      } else if (labels.size() > 1 || labels.size() == 0) {
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
 
@@ -224,7 +271,37 @@ Context EdgeExpand::expand_edge_without_predicate(
         return ctx;
       }
     } else if (params.dir == Direction::kBoth) {
-      if (labels.size() > 1) {
+      if (labels.size() == 1) {
+        BDSLEdgeColumnBuilder builder(labels[0], label_props[0].second);
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
+                                              vid_t v) {
+          if (label == labels[0].src_label) {
+            auto oe_iter = txn.GetOutEdgeIterator(label, v, labels[0].dst_label,
+                                                  labels[0].edge_label);
+            while (oe_iter.IsValid()) {
+              auto nbr = oe_iter.GetNeighbor();
+              builder.push_back_opt(v, nbr, oe_iter.GetData(), Direction::kOut);
+              shuffle_offset.push_back(index);
+              oe_iter.Next();
+            }
+          }
+          if (label == labels[0].dst_label) {
+            auto ie_iter = txn.GetInEdgeIterator(label, v, labels[0].src_label,
+                                                 labels[0].edge_label);
+            while (ie_iter.IsValid()) {
+              auto nbr = ie_iter.GetNeighbor();
+              builder.push_back_opt(nbr, v, ie_iter.GetData(), Direction::kIn);
+              shuffle_offset.push_back(index);
+              ie_iter.Next();
+            }
+          }
+        });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
+
+      } else {
         BDMLEdgeColumnBuilder builder(label_props);
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
@@ -324,7 +401,6 @@ Context EdgeExpand::expand_vertex_without_predicate(
                                                       label_triplet.edge_label);
                 while (oe_iter.IsValid()) {
                   auto nbr = oe_iter.GetNeighbor();
-                  LOG(INFO) << nbr;
                   builder.push_back_opt(nbr);
                   shuffle_offset.push_back(index);
                   oe_iter.Next();
@@ -333,13 +409,11 @@ Context EdgeExpand::expand_vertex_without_predicate(
                                                      label_triplet.edge_label);
                 while (ie_iter.IsValid()) {
                   auto nbr = ie_iter.GetNeighbor();
-                  LOG(INFO) << nbr;
                   builder.push_back_opt(nbr);
                   shuffle_offset.push_back(index);
                   ie_iter.Next();
                 }
               });
-          LOG(INFO) << "alias" << params.alias;
           ctx.set_with_reshuffle(params.alias, builder.finish(),
                                  shuffle_offset);
         } else if (params.dir == Direction::kIn &&
@@ -375,7 +449,17 @@ Context EdgeExpand::expand_vertex_without_predicate(
                   }
                 });
           } else {
-            LOG(FATAL) << "XXXX";
+            casted_input_vertex_list->foreach_vertex(
+                [&](size_t index, label_t label, vid_t v) {
+                  auto ie_iter = txn.GetInEdgeIterator(
+                      label, v, output_vertex_label, label_triplet.edge_label);
+                  while (ie_iter.IsValid()) {
+                    auto nbr = ie_iter.GetNeighbor();
+                    builder.push_back_opt(nbr);
+                    shuffle_offset.push_back(index);
+                    ie_iter.Next();
+                  }
+                });
           }
           // casted_input_vertex_list->foreach_vertex(
           //     [&](size_t index, label_t label, vid_t v) {
@@ -602,6 +686,64 @@ Context EdgeExpand::expand_vertex_without_predicate(
 
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
     } else {
+      if (params.dir == Direction::kOut) {
+        auto& casted_input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(input_vertex_list);
+        MLVertexColumnBuilder builder;
+        foreach_vertex(casted_input_vertex_list, [&](size_t index,
+                                                     label_t label, vid_t v) {
+          for (auto& triplet : params.labels) {
+            if (triplet.src_label == label) {
+              auto oe_iter = txn.GetOutEdgeIterator(label, v, triplet.dst_label,
+                                                    triplet.edge_label);
+              while (oe_iter.IsValid()) {
+                auto nbr = oe_iter.GetNeighbor();
+                builder.push_back_vertex(
+                    std::make_pair(triplet.dst_label, nbr));
+                shuffle_offset.push_back(index);
+                oe_iter.Next();
+              }
+            }
+          }
+        });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
+      } else if (params.dir == Direction::kBoth) {
+        auto& casted_input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(input_vertex_list);
+        MLVertexColumnBuilder builder;
+        foreach_vertex(casted_input_vertex_list, [&](size_t index,
+                                                     label_t label, vid_t v) {
+          for (auto& triplet : params.labels) {
+            if (triplet.src_label == label) {
+              auto oe_iter = txn.GetOutEdgeIterator(label, v, triplet.dst_label,
+                                                    triplet.edge_label);
+              while (oe_iter.IsValid()) {
+                auto nbr = oe_iter.GetNeighbor();
+                builder.push_back_vertex(
+                    std::make_pair(triplet.dst_label, nbr));
+                shuffle_offset.push_back(index);
+                oe_iter.Next();
+              }
+            }
+            if (triplet.dst_label == label) {
+              auto ie_iter = txn.GetInEdgeIterator(label, v, triplet.src_label,
+                                                   triplet.edge_label);
+              while (ie_iter.IsValid()) {
+                auto nbr = ie_iter.GetNeighbor();
+                builder.push_back_vertex(
+                    std::make_pair(triplet.src_label, nbr));
+                shuffle_offset.push_back(index);
+                ie_iter.Next();
+              }
+            }
+          }
+        });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
+      } else {
+        LOG(FATAL) << "not support";
+      }
       LOG(FATAL) << "edge expand vertex input multiple vertex label";
     }
   }

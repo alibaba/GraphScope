@@ -177,9 +177,6 @@ class OrderBy {
         queue.pop();
       }
     }
-    LOG(INFO) << "queue size: " << queue.size() << " low: " << low
-              << " high: " << high;
-
     std::vector<size_t> offsets;
     for (size_t k = 0; k < low; ++k) {
       queue.pop();

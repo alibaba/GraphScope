@@ -24,7 +24,6 @@ void eval_sink(const Context& ctx, const ReadTransaction& txn,
                Encoder& output) {
   size_t row_num = ctx.row_num();
   results::CollectiveResults results;
-
   for (size_t i = 0; i < row_num; ++i) {
     auto result = results.add_results();
     for (size_t j : ctx.tag_ids) {

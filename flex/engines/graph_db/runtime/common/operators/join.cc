@@ -22,8 +22,6 @@ namespace runtime {
 Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
   CHECK(params.left_columns.size() == params.right_columns.size())
       << "Join columns size mismatch";
-  LOG(INFO) << "Joining " << ctx.col_num() << " and " << ctx2.col_num()
-            << " rows";
   if (params.join_type == JoinKind::kSemiJoin ||
       params.join_type == JoinKind::kAntiJoin) {
     size_t right_size = ctx2.row_num();
@@ -109,14 +107,9 @@ Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
         ret.set(i, ctx2.get(i));
       }
     }
-    LOG(INFO) << ret.col_num() << " ret columns";
     return ret;
   } else if (params.join_type == JoinKind::kLeftOuterJoin) {
     size_t right_size = ctx2.row_num();
-    LOG(INFO) << "Right size: " << right_size;
-    LOG(INFO) << "Left size: " << ctx.row_num();
-    LOG(INFO) << "Right column: " << ctx2.col_num();
-    LOG(INFO) << "Left column: " << ctx.col_num();
     auto right_col = ctx2.get(params.right_columns[0]);
     CHECK(right_col->column_type() == ContextColumnType::kVertex);
 
@@ -176,7 +169,6 @@ Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
     ctx.reshuffle(offsets);
     for (size_t i = 0; i < ctx2.col_num(); i++) {
       if (builders[i] != nullptr) {
-        LOG(INFO) << "Column " << i;
         ctx.set(i, builders[i]->finish());
       } else if (i >= ctx.col_num()) {
         ctx.set(i, nullptr);

@@ -19,15 +19,38 @@ namespace gs {
 namespace runtime {
 
 Context Scan::find_vertex(const ReadTransaction& txn, label_t label,
-                          const Any& pk, int alias) {
-  SLVertexColumnBuilder builder(label);
-  vid_t vid;
-  if (txn.GetVertexIndex(label, pk, vid)) {
+                          const Any& pk, int alias, bool scan_oid) {
+  if (scan_oid) {
+    SLVertexColumnBuilder builder(label);
+    vid_t vid;
+    if (txn.GetVertexIndex(label, pk, vid)) {
+      builder.push_back_opt(vid);
+    }
+    Context ctx;
+    ctx.set(alias, builder.finish());
+    return ctx;
+  } else {
+    SLVertexColumnBuilder builder(label);
+    vid_t vid{};
+    int64_t gid{};
+    if (pk.type == PropertyType::kInt64) {
+      gid = pk.AsInt64();
+    } else if (pk.type == PropertyType::kInt32) {
+      gid = pk.AsInt32();
+    } else {
+      LOG(FATAL) << "Unsupported primary key type";
+    }
+    if (GlobalId::get_label_id(gid) == label) {
+      vid = GlobalId::get_vid(gid);
+    } else {
+      LOG(ERROR) << "Global id " << gid << " does not match label " << label;
+      return Context();
+    }
     builder.push_back_opt(vid);
+    Context ctx;
+    ctx.set(alias, builder.finish());
+    return ctx;
   }
-  Context ctx;
-  ctx.set(alias, builder.finish());
-  return ctx;
 }
 
 }  // namespace runtime

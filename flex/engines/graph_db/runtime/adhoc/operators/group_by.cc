@@ -32,6 +32,7 @@ enum class AggrKind {
   kToSet,
   kFirst,
   kToList,
+  kAvg,
 };
 
 AggrKind parse_aggregate(physical::GroupBy_AggFunc::Aggregate v) {
@@ -51,6 +52,8 @@ AggrKind parse_aggregate(physical::GroupBy_AggFunc::Aggregate v) {
     return AggrKind::kFirst;
   } else if (v == physical::GroupBy_AggFunc::TO_LIST) {
     return AggrKind::kToList;
+  } else if (v == physical::GroupBy_AggFunc::AVG) {
+    return AggrKind::kAvg;
   } else {
     LOG(FATAL) << "unsupport" << static_cast<int>(v);
     return AggrKind::kSum;
@@ -90,14 +93,11 @@ struct AggKey {
 };
 
 std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
-    const std::vector<AggKey>& keys, size_t row_num) {
+    const std::vector<AggKey>& keys, size_t row_num,
+    const std::vector<AggFunc>& functions) {
   std::unordered_map<std::string_view, size_t> sig_to_root;
   std::vector<std::vector<char>> root_list;
   std::vector<std::vector<size_t>> ret;
-  LOG(INFO) << "row_num: " << row_num << "\n";
-
-  // std::vector<char> buf;
-  // ::gs::Encoder encoder(buf);
 
   size_t keys_num = keys.size();
   std::vector<std::shared_ptr<IContextColumnBuilder>> keys_columns;
@@ -112,24 +112,36 @@ std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
     }
     keys_columns.push_back(builder);
   }
-  LOG(INFO) << "keys_num: " << keys_num << "\n";
 
   for (size_t r_i = 0; r_i < row_num; ++r_i) {
-    // buf.clear();
+    bool has_null{false};
+    for (auto func : functions) {
+      for (size_t v_i = 0; v_i < func.vars.size(); ++v_i) {
+        if (func.vars[v_i].is_optional()) {
+          if (func.vars[v_i].get(r_i, 0).is_null()) {
+            has_null = true;
+            break;
+          }
+        }
+      }
+      if (has_null) {
+        break;
+      }
+    }
+
     std::vector<char> buf;
     ::gs::Encoder encoder(buf);
     for (size_t k_i = 0; k_i < keys_num; ++k_i) {
-      if (keys[k_i].key.get(r_i).type() == RTAnyType::kUnknown) {
-        LOG(INFO) << "unknown type " << k_i << "\n";
-      }
       keys_row[k_i] = keys[k_i].key.get(r_i);
-
       keys_row[k_i].encode_sig(keys[k_i].key.type(), encoder);
     }
+
     std::string_view sv(buf.data(), buf.size());
     auto iter = sig_to_root.find(sv);
     if (iter != sig_to_root.end()) {
-      ret[iter->second].push_back(r_i);
+      if (!has_null) {
+        ret[iter->second].push_back(r_i);
+      }
     } else {
       sig_to_root.emplace(sv, ret.size());
       root_list.emplace_back(std::move(buf));
@@ -139,7 +151,9 @@ std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
       }
 
       std::vector<size_t> ret_elem;
-      ret_elem.push_back(r_i);
+      if (!has_null) {
+        ret_elem.push_back(r_i);
+      }
       ret.emplace_back(std::move(ret_elem));
     }
   }
@@ -198,7 +212,6 @@ std::shared_ptr<IContextColumn> vertex_count_distinct(
     for (auto idx : vec) {
       s.insert(var.get(idx).as_vertex());
     }
-    LOG(INFO) << s.size() << " vertex count distinct\n";
     builder.push_back_opt(s.size());
   }
   return builder.finish();
@@ -235,7 +248,6 @@ std::shared_ptr<IContextColumn> general_count(
   ValueColumnBuilder<int64_t> builder;
   if (vars.size() == 1) {
     if (vars[0].is_optional()) {
-      LOG(INFO) << "count optional\n";
       size_t col_size = to_aggregate.size();
       builder.reserve(col_size);
       for (size_t k = 0; k < col_size; ++k) {
@@ -263,9 +275,6 @@ std::shared_ptr<IContextColumn> general_count(
 
 std::shared_ptr<IContextColumn> vertex_first(
     const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
-  if (var.is_optional()) {
-    LOG(INFO) << "first optional\n";
-  }
   MLVertexColumnBuilder builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -303,11 +312,42 @@ std::shared_ptr<IContextColumn> general_min(
   builder.reserve(col_size);
   for (size_t k = 0; k < col_size; ++k) {
     auto& vec = to_aggregate[k];
-    NT s = std::numeric_limits<NT>::max();
+    if (vec.size() == 0) {
+      continue;
+    }
+    NT s = TypedConverter<NT>::to_typed(var.get(vec[0]));
     for (auto idx : vec) {
       s = std::min(s, TypedConverter<NT>::to_typed(var.get(idx)));
     }
-    builder.push_back_opt(s);
+    if constexpr (std::is_same<NT, std::string_view>::value) {
+      builder.push_back_opt(std::string(s));
+    } else {
+      builder.push_back_opt(s);
+    }
+  }
+  return builder.finish();
+}
+
+template <typename NT>
+std::shared_ptr<IContextColumn> general_max(
+    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+  ValueColumnBuilder<NT> builder;
+  size_t col_size = to_aggregate.size();
+  builder.reserve(col_size);
+  for (size_t k = 0; k < col_size; ++k) {
+    auto& vec = to_aggregate[k];
+    if (vec.size() == 0) {
+      continue;
+    }
+    NT s = TypedConverter<NT>::to_typed(var.get(vec[0]));
+    for (auto idx : vec) {
+      s = std::max(s, TypedConverter<NT>::to_typed(var.get(idx)));
+    }
+    if constexpr (std::is_same<NT, std::string_view>::value) {
+      builder.push_back_opt(std::string(s));
+    } else {
+      builder.push_back_opt(s);
+    }
   }
   return builder.finish();
 }
@@ -389,7 +429,6 @@ std::shared_ptr<IContextColumn> apply_reduce(
     }
 
     const Var& var = func.vars[0];
-    LOG(INFO) << "first " << static_cast<int>(var.type().type_enum_) << "\n";
     if (var.type() == RTAnyType::kVertex) {
       return vertex_first(var, to_aggregate);
     } else if (var.type() == RTAnyType::kI64Value) {
@@ -401,19 +440,50 @@ std::shared_ptr<IContextColumn> apply_reduce(
     }
 
     const Var& var = func.vars[0];
-    LOG(INFO) << "min " << static_cast<int>(var.type().type_enum_) << "\n";
     if (var.type() == RTAnyType::kI32Value) {
       return general_min<int>(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kStringValue) {
+      return general_min<std::string_view>(var, to_aggregate);
+    }
+  } else if (func.aggregate == AggrKind::kMax) {
+    if (func.vars.size() != 1) {
+      LOG(FATAL) << "only 1 variable to max is allowed";
+    }
+
+    const Var& var = func.vars[0];
+    if (var.type() == RTAnyType::kI32Value) {
+      return general_max<int>(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kStringValue) {
+      return general_max<std::string_view>(var, to_aggregate);
     }
   } else if (func.aggregate == AggrKind::kToList) {
     const Var& var = func.vars[0];
-    LOG(INFO) << "to_list" << static_cast<int>(var.type().type_enum_) << " "
-              << static_cast<int>(var.type().null_able_);
     if (func.vars.size() != 1) {
       LOG(FATAL) << "only 1 variable to to_list is allowed";
     }
     if (var.type() == RTAnyType::kTuple) {
       return tuple_to_list(var, to_aggregate);
+    }
+  } else if (func.aggregate == AggrKind::kAvg) {
+    if (func.vars.size() != 1) {
+      LOG(FATAL) << "only 1 variable to avg is allowed";
+    }
+    // LOG(FATAL) << "not support";
+    const Var& var = func.vars[0];
+    if (var.type() == RTAnyType::kI32Value) {
+      ValueColumnBuilder<int32_t> builder;
+      size_t col_size = to_aggregate.size();
+      builder.reserve(col_size);
+      for (size_t k = 0; k < col_size; ++k) {
+        auto& vec = to_aggregate[k];
+        int32_t s = 0;
+
+        for (auto idx : vec) {
+          s += TypedConverter<int32_t>::to_typed(var.get(idx));
+        }
+        builder.push_back_opt(s / vec.size());
+      }
+      return builder.finish();
     }
   }
 
@@ -423,9 +493,11 @@ std::shared_ptr<IContextColumn> apply_reduce(
 
 Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
                       Context&& ctx) {
+  if (ctx.row_num() == 0) {
+    return ctx;
+  }
   std::vector<AggFunc> functions;
   std::vector<AggKey> mappings;
-  LOG(INFO) << opr.DebugString() << "\n";
   int func_num = opr.functions_size();
   for (int i = 0; i < func_num; ++i) {
     functions.emplace_back(opr.functions(i), txn, ctx);
@@ -451,9 +523,28 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
       mappings.emplace_back(opr.mappings(i), txn, ctx);
     }
 
-    auto keys_ret = generate_aggregate_indices(mappings, ctx.row_num());
-    const std::vector<std::vector<size_t>>& to_aggregate = keys_ret.first;
+    auto keys_ret =
+        generate_aggregate_indices(mappings, ctx.row_num(), functions);
+    std::vector<std::vector<size_t>>& to_aggregate = keys_ret.first;
+
     Context& ret = keys_ret.second;
+
+    // exclude null values
+    if (func_num == 1 && functions[0].aggregate != AggrKind::kCount &&
+        functions[0].aggregate != AggrKind::kCountDistinct) {
+      std::vector<size_t> tmp;
+      std::vector<std::vector<size_t>> tmp_to_aggregate;
+      for (size_t i = 0; i < to_aggregate.size(); ++i) {
+        if (to_aggregate[i].size() == 0) {
+          continue;
+        }
+        tmp_to_aggregate.emplace_back(to_aggregate[i]);
+        tmp.emplace_back(i);
+      }
+      ret.reshuffle(tmp);
+      std::swap(to_aggregate, tmp_to_aggregate);
+    }
+
     for (int i = 0; i < func_num; ++i) {
       auto new_col = apply_reduce(functions[i], to_aggregate);
       ret.set(functions[i].alias, new_col);

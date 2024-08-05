@@ -92,7 +92,6 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
   for (int i = 0; i < opr_num; ++i) {
     const physical::PhysicalOpr& opr = plan.plan(i);
     double t = -grape::GetCurrentTime();
-    // LOG(INFO) << "before eval: " << get_opr_name(opr);
     assert(opr.has_opr());
     switch (opr.opr().op_kind_case()) {
       LOG(INFO) << "eval: " << get_opr_name(opr);
@@ -210,8 +209,13 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
       }
       ret = eval_intersect(txn, op, std::move(ctxs));
     } break;
+    case physical::PhysicalOpr_Operator::OpKindCase::kLimit: {
+      ret = eval_limit(opr.opr().limit(), std::move(ret));
+    } break;
+
     default:
-      LOG(FATAL) << "opr not support..." << get_opr_name(opr);
+      LOG(FATAL) << "opr not support..." << get_opr_name(opr)
+                 << opr.DebugString();
       break;
     }
     if (terminate) {

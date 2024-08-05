@@ -79,63 +79,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
 
       SLVertexColumnBuilder builder(output_vertex_label);
 
-#if 0
-        std::vector<vid_t> input;
-        std::vector<vid_t> output;
-        std::set<vid_t> exclude;
-
-        input_vertex_list.foreach_vertex(
-            [&](size_t index, label_t label, vid_t v) {
-              int depth = 0;
-              input.clear();
-              output.clear();
-              input.push_back(v);
-              while (depth < params.hop_upper && !input.empty()) {
-                if (depth >= params.hop_lower) {
-                  for (auto u : input) {
-                    if (exclude.find(u) == exclude.end()) {
-                      builder.push_back_opt(u);
-                      shuffle_offset.push_back(index);
-                    }
-
-                    auto oe_iter = txn.GetOutEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
-                    while (oe_iter.IsValid()) {
-                      output.push_back(oe_iter.GetNeighbor());
-                      oe_iter.Next();
-                    }
-
-                    auto ie_iter = txn.GetInEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
-                    while (ie_iter.IsValid()) {
-                      output.push_back(ie_iter.GetNeighbor());
-                      ie_iter.Next();
-                    }
-                  }
-                } else {
-                  for (auto u : input) {
-                    exclude.insert(u);
-                    auto oe_iter = txn.GetOutEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
-                    while (oe_iter.IsValid()) {
-                      output.push_back(oe_iter.GetNeighbor());
-                      oe_iter.Next();
-                    }
-
-                    auto ie_iter = txn.GetInEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
-                    while (ie_iter.IsValid()) {
-                      output.push_back(ie_iter.GetNeighbor());
-                      ie_iter.Next();
-                    }
-                  }
-                }
-                ++depth;
-                input.clear();
-                std::swap(input, output);
-              }
-            });
-#else
       std::vector<std::pair<size_t, vid_t>> input;
       std::vector<std::pair<size_t, vid_t>> output;
       std::set<vid_t> exclude;
@@ -178,7 +121,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
               auto nbr = oe_iter.GetNeighbor();
               if (exclude.find(nbr) == exclude.end()) {
                 output.emplace_back(index, nbr);
-                // exclude.insert(nbr);
               }
               oe_iter.Next();
             }
@@ -189,7 +131,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
               auto nbr = ie_iter.GetNeighbor();
               if (exclude.find(nbr) == exclude.end()) {
                 output.emplace_back(index, nbr);
-                // exclude.insert(nbr);
               }
               ie_iter.Next();
             }
@@ -198,9 +139,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
           ++depth;
         }
       }
-
-#endif
-
       ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
                                   shuffle_offset, params.keep_cols);
       return ctx;
@@ -213,12 +151,10 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       for (auto& label : params.labels) {
         labels.emplace(label.dst_label);
       }
-      LOG(INFO) << "labels size: " << labels.size();
 
       MLVertexColumnBuilder builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
-      // std::set<std::pair<label_t, vid_t>> exclude;
       input_vertex_list.foreach_vertex(
           [&](size_t index, label_t label, vid_t v) {
             output.emplace_back(label, v, index);
@@ -227,9 +163,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       while (depth < params.hop_upper) {
         input.clear();
         std::swap(input, output);
-        LOG(INFO) << "depth: " << depth << " size: " << input.size() << " "
-                  << params.hop_lower << "\n";
-
         if (depth >= params.hop_lower) {
           for (auto& tuple : input) {
             builder.push_back_vertex(
@@ -260,8 +193,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
             }
           }
         }
-        LOG(INFO) << output.size() << " size";
-
         ++depth;
       }
       ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
@@ -274,12 +205,10 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       for (auto& label : params.labels) {
         labels.emplace(label.dst_label);
       }
-      LOG(INFO) << "labels size: " << labels.size();
 
       MLVertexColumnBuilder builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
-      // std::set<std::pair<label_t, vid_t>> exclude;
       input_vertex_list.foreach_vertex(
           [&](size_t index, label_t label, vid_t v) {
             output.emplace_back(label, v, index);
@@ -288,9 +217,6 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       while (depth < params.hop_upper) {
         input.clear();
         std::swap(input, output);
-        LOG(INFO) << "depth: " << depth << " size: " << input.size() << " "
-                  << params.hop_lower << "\n";
-
         if (depth >= params.hop_lower) {
           for (auto& tuple : input) {
             builder.push_back_vertex(
@@ -396,7 +322,6 @@ Context PathExpand::edge_expand_p(const ReadTransaction& txn, Context&& ctx,
       std::swap(input, output);
       ++depth;
     }
-    LOG(INFO) << "alias: " << params.alias;
     builder.set_path_impls(path_impls);
     ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
                                 params.keep_cols);
@@ -454,7 +379,6 @@ Context PathExpand::edge_expand_p(const ReadTransaction& txn, Context&& ctx,
       std::swap(input, output);
       ++depth;
     }
-    LOG(INFO) << "alias: " << params.alias;
     builder.set_path_impls(path_impls);
     ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
                                 params.keep_cols);

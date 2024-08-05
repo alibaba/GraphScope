@@ -38,6 +38,19 @@ RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
   return expr_->eval_edge(label, src, dst, data, idx);
 }
 
+RTAny Expr::eval_path(size_t idx, int) const {
+  return expr_->eval_path(idx, 0);
+}
+
+RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx, int) const {
+  return expr_->eval_vertex(label, v, idx, 0);
+}
+
+RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                      const Any& data, size_t idx, int) const {
+  return expr_->eval_edge(label, src, dst, data, idx, 0);
+}
+
 RTAnyType Expr::type() const { return expr_->type(); }
 
 }  // namespace runtime

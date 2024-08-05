@@ -37,7 +37,6 @@ class Scan {
                              const ScanParams& params,
                              const PRED_T& predicate) {
     Context ctx;
-    LOG(INFO) << params.tables.size() << " size\n";
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
       SLVertexColumnBuilder builder(label);
@@ -61,12 +60,43 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish());
     }
-    LOG(INFO) << ctx.row_num() << "row num\n";
+    return ctx;
+  }
+
+  template <typename PRED_T>
+  static Context scan_gid_vertex(const ReadTransaction& txn,
+                                 const ScanParams& params,
+                                 const PRED_T& predicate,
+                                 const std::vector<int64_t>& gids) {
+    Context ctx;
+    if (params.tables.size() == 1) {
+      label_t label = params.tables[0];
+      SLVertexColumnBuilder builder(label);
+      for (auto gid : gids) {
+        vid_t vid = GlobalId::get_vid(gid);
+        if (GlobalId::get_label_id(gid) == label && predicate(label, vid)) {
+          builder.push_back_opt(vid);
+        }
+      }
+      ctx.set(params.alias, builder.finish());
+    } else if (params.tables.size() > 1) {
+      MLVertexColumnBuilder builder;
+
+      for (auto label : params.tables) {
+        for (auto gid : gids) {
+          vid_t vid = GlobalId::get_vid(gid);
+          if (GlobalId::get_label_id(gid) == label && predicate(label, vid)) {
+            builder.push_back_vertex(std::make_pair(label, vid));
+          }
+        }
+      }
+      ctx.set(params.alias, builder.finish());
+    }
     return ctx;
   }
 
   static Context find_vertex(const ReadTransaction& txn, label_t label,
-                             const Any& pk, int alias);
+                             const Any& pk, int alias, bool scan_oid);
 };
 
 }  // namespace runtime

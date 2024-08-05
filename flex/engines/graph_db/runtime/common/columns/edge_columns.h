@@ -66,6 +66,8 @@ class SDSLEdgeColumn : public IEdgeColumn {
 
   size_t size() const override { return edges_.size(); }
 
+  Direction dir() const { return dir_; }
+
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return std::dynamic_pointer_cast<IContextColumnBuilder>(
         std::make_shared<SDSLEdgeColumnBuilder>(dir_, label_, prop_type_));
@@ -529,6 +531,7 @@ class SDMLEdgeColumn : public IEdgeColumn {
     return labels;
   }
 
+  Direction dir() const { return dir_; }
   EdgeColumnType edge_column_type() const override {
     return EdgeColumnType::kSDML;
   }

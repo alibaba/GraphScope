@@ -131,6 +131,21 @@ class Tuple {
   const std::vector<RTAny>* props_;
 };
 
+class MapImpl {
+ public:
+  static MapImpl make_map_impl(const std::vector<std::string>* keys,
+                               const std::vector<RTAny>* values) {
+    MapImpl map_impl;
+    map_impl.keys = keys;
+    map_impl.values = values;
+    return map_impl;
+  }
+  size_t size() const { return keys->size(); }
+
+  const std::vector<std::string>* keys;
+  const std::vector<RTAny>* values;
+};
+
 class RTAnyType {
  public:
   enum class RTAnyTypeImpl {
@@ -150,6 +165,7 @@ class RTAnyType {
     kNull,
     kTuple,
     kList,
+    kMap,
   };
   static const RTAnyType kVertex;
   static const RTAnyType kEdge;
@@ -167,6 +183,7 @@ class RTAnyType {
   static const RTAnyType kNull;
   static const RTAnyType kTuple;
   static const RTAnyType kList;
+  static const RTAnyType kMap;
 
   RTAnyType() : type_enum_(RTAnyTypeImpl::kUnknown) {}
   RTAnyType(const RTAnyType& other)
@@ -179,6 +196,21 @@ class RTAnyType {
   }
   RTAnyTypeImpl type_enum_;
   bool null_able_;
+};
+
+class Map {
+ public:
+  static Map make_map(MapImpl impl) {
+    Map m;
+    m.map_ = impl;
+    return m;
+  }
+  std::pair<const std::vector<std::string>*, const std::vector<RTAny>*>
+  key_vals() const {
+    return std::make_pair(map_.keys, map_.values);
+  }
+
+  MapImpl map_;
 };
 
 RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt);
@@ -199,6 +231,7 @@ union RTAnyValue {
   Path p;
   Tuple t;
   List list;
+  Map map;
   bool b_val;
 };
 
@@ -211,6 +244,8 @@ class RTAny {
   RTAny(const Path& p);
   ~RTAny() = default;
   bool is_null() const { return type_ == RTAnyType::kNull; }
+
+  int numerical_cmp(const RTAny& other) const;
 
   RTAny& operator=(const RTAny& rhs);
 
@@ -231,6 +266,7 @@ class RTAny {
   static RTAny from_tuple(const Tuple& tuple);
   static RTAny from_list(const List& list);
   static RTAny from_double(double v);
+  static RTAny from_map(const Map& m);
 
   bool as_bool() const;
   int as_int32() const;
@@ -246,6 +282,7 @@ class RTAny {
   Path as_path() const;
   Tuple as_tuple() const;
   List as_list() const;
+  Map as_map() const;
 
   bool operator<(const RTAny& other) const;
   bool operator==(const RTAny& other) const;
@@ -369,6 +406,13 @@ struct TypedConverter<Tuple> {
   static const std::string name() { return "tuple"; }
 };
 
+template <>
+struct TypedConverter<Map> {
+  static RTAnyType type() { return RTAnyType::kMap; }
+  static Map to_typed(const RTAny& val) { return val.as_map(); }
+  static RTAny from_typed(Map val) { return RTAny::from_map(val); }
+  static const std::string name() { return "map"; }
+};
 template <typename T>
 class ListImpl : ListImplBase {
  public:

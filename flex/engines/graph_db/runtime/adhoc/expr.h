@@ -34,12 +34,18 @@ class Expr {
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const;
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const;
+  RTAny eval_path(size_t idx, int) const;
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const;
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx, int) const;
 
   RTAnyType type() const;
 
   std::shared_ptr<IContextColumnBuilder> builder() const {
     return expr_->builder();
   }
+
+  bool is_optional() const { return expr_->is_optional(); }
 
  private:
   std::unique_ptr<ExprBase> expr_;

@@ -334,6 +334,99 @@ std::shared_ptr<IContextColumn> ListValueColumn<T>::shuffle(
   return builder.finish();
 }
 
+class MapValueColumnBuilder;
+
+class MapValueColumn : public IValueColumn<Map> {
+ public:
+  MapValueColumn() = default;
+  ~MapValueColumn() = default;
+
+  size_t size() const override { return values_.size(); }
+
+  std::string column_info() const override {
+    return "MapValueColumn[" + std::to_string(size()) + "]";
+  }
+
+  ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override;
+
+  std::shared_ptr<IContextColumn> dup() const override;
+
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+
+  RTAnyType elem_type() const override {
+    auto type = RTAnyType::kMap;
+    return type;
+  }
+
+  RTAny get_elem(size_t idx) const override {
+    auto map_impl = MapImpl::make_map_impl(&keys_, &values_[idx]);
+    auto map = Map::make_map(map_impl);
+
+    return RTAny::from_map(map);
+  }
+
+  Map get_value(size_t idx) const override {
+    auto map_impl = MapImpl::make_map_impl(&keys_, &values_[idx]);
+    return Map::make_map(map_impl);
+  }
+
+  ISigColumn* generate_signature() const override {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+    return nullptr;
+  }
+
+  void generate_dedup_offset(std::vector<size_t>& offsets) const override {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+  }
+
+ private:
+  friend class MapValueColumnBuilder;
+  std::vector<std::string> keys_;
+  std::vector<std::vector<RTAny>> values_;
+};
+
+class MapValueColumnBuilder : public IContextColumnBuilder {
+ public:
+  MapValueColumnBuilder() = default;
+  ~MapValueColumnBuilder() = default;
+
+  void reserve(size_t size) override { values_.reserve(size); }
+
+  void push_back_elem(const RTAny& val) override {
+    CHECK(val.type() == RTAnyType::kMap);
+    auto map = val.as_map();
+    std::vector<RTAny> values;
+    const auto& [_, vals] = map.key_vals();
+    for (const auto& v : *vals) {
+      values.push_back(v);
+    }
+    values_.push_back(std::move(values));
+  }
+
+  void push_back_opt(const std::vector<RTAny>& values) {
+    values_.push_back(values);
+  }
+
+  void set_keys(const std::vector<std::string>& keys) { keys_ = keys; }
+
+  std::shared_ptr<IContextColumn> finish() override {
+    auto ret = std::make_shared<MapValueColumn>();
+    ret->keys_.swap(keys_);
+    ret->values_.swap(values_);
+    return ret;
+  }
+
+ private:
+  friend class MapValueColumn;
+  std::vector<std::string> keys_;
+  std::vector<std::vector<RTAny>> values_;
+};
+
 template <typename T>
 class OptionalValueColumn : public IValueColumn<T> {
  public:
@@ -425,6 +518,78 @@ class OptionalValueColumn : public IValueColumn<T> {
   std::vector<bool> valid_;
 };
 
+template <>
+class OptionalValueColumn<std::string_view>
+    : public IValueColumn<std::string_view> {
+ public:
+  OptionalValueColumn() = default;
+  ~OptionalValueColumn() = default;
+
+  size_t size() const override { return data_.size(); }
+
+  std::string column_info() const override {
+    return "OptionalValueColumn<" + TypedConverter<std::string_view>::name() +
+           ">[" + std::to_string(size()) + "]";
+  }
+  ContextColumnType column_type() const override {
+    return ContextColumnType::kOptionalValue;
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override {
+    return std::dynamic_pointer_cast<IContextColumnBuilder>(
+        std::make_shared<OptionalValueColumnBuilder<std::string_view>>());
+  }
+
+  std::shared_ptr<IContextColumn> dup() const override;
+
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+  RTAnyType elem_type() const override {
+    auto type = RTAnyType::kStringValue;
+    type.null_able_ = true;
+    return type;
+  }
+  RTAny get_elem(size_t idx) const override {
+    return RTAny::from_string(data_[idx]);
+  }
+
+  std::string_view get_value(size_t idx) const override {
+    return std::string_view(data_[idx]);
+  }
+
+  ISigColumn* generate_signature() const override {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+    return nullptr;
+  }
+
+  void generate_dedup_offset(std::vector<size_t>& offsets) const override {
+    std::vector<size_t> origin_offsets(data_.size());
+    for (size_t i = 0; i < data_.size(); ++i) {
+      origin_offsets[i] = i;
+    }
+    std::sort(origin_offsets.begin(), origin_offsets.end(),
+              [this](size_t a, size_t b) {
+                if (data_[a] == data_[b]) {
+                  return a < b;
+                }
+                return data_[a] < data_[b];
+              });
+    for (size_t i = 0; i < data_.size(); ++i) {
+      if (i == 0 || data_[origin_offsets[i]] != data_[origin_offsets[i - 1]]) {
+        offsets.push_back(origin_offsets[i]);
+      }
+    }
+  }
+
+  bool has_value(size_t idx) const override { return valid_[idx]; }
+  bool is_optional() const override { return true; }
+
+ private:
+  friend class OptionalValueColumnBuilder<std::string_view>;
+  std::vector<std::string> data_;
+  std::vector<bool> valid_;
+};
+
 template <typename T>
 class OptionalValueColumnBuilder : public IOptionalContextColumnBuilder {
  public:
@@ -460,6 +625,45 @@ class OptionalValueColumnBuilder : public IOptionalContextColumnBuilder {
 
  private:
   std::vector<T> data_;
+  std::vector<bool> valid_;
+};
+
+template <>
+class OptionalValueColumnBuilder<std::string_view>
+    : public IOptionalContextColumnBuilder {
+ public:
+  OptionalValueColumnBuilder() = default;
+  ~OptionalValueColumnBuilder() = default;
+
+  void reserve(size_t size) override {
+    data_.reserve(size);
+    valid_.reserve(size);
+  }
+
+  void push_back_elem(const RTAny& val) override {
+    data_.push_back(std::string(val.as_string()));
+    valid_.push_back(true);
+  }
+
+  void push_back_opt(const std::string& val, bool valid) {
+    data_.push_back(val);
+    valid_.push_back(valid);
+  }
+
+  void push_back_null() override {
+    data_.emplace_back();
+    valid_.push_back(false);
+  }
+
+  std::shared_ptr<IContextColumn> finish() override {
+    auto ret = std::make_shared<OptionalValueColumn<std::string_view>>();
+    ret->data_.swap(data_);
+    ret->valid_.swap(valid_);
+    return std::dynamic_pointer_cast<IContextColumn>(ret);
+  }
+
+ private:
+  std::vector<std::string> data_;
   std::vector<bool> valid_;
 };
 

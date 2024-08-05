@@ -13,39 +13,35 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/adhoc/expr.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
 
 namespace gs {
-
 namespace runtime {
 
-Context eval_select(const algebra::Select& opr, const ReadTransaction& txn,
-                    Context&& ctx,
-                    const std::map<std::string, std::string>& params) {
-  Expr expr(txn, ctx, params, opr.predicate(), VarType::kPathVar);
-  std::vector<size_t> offsets;
-  size_t row_num = ctx.row_num();
-  if (expr.is_optional()) {
-    for (size_t i = 0; i < row_num; ++i) {
-      if (expr.eval_path(i, 0).is_null()) {
-        continue;
-      } else if (expr.eval_path(i, 0).as_bool()) {
-        offsets.push_back(i);
-      }
-    }
-  } else {
-    for (size_t i = 0; i < row_num; ++i) {
-      if (expr.eval_path(i).as_bool()) {
-        offsets.push_back(i);
-      }
-    }
+Context eval_limit(const algebra::Limit& opr, Context&& ctx) {
+  int lower = 0;
+  int upper = ctx.row_num();
+
+  if (opr.has_range()) {
+    lower = std::max(lower, static_cast<int>(opr.range().lower()));
+    upper = std::min(upper, static_cast<int>(opr.range().upper()));
   }
 
+  if (lower >= upper) {
+    return Context();
+  }
+  if (lower == 0 && static_cast<size_t>(upper) == ctx.row_num()) {
+    return std::move(ctx);
+  }
+
+  std::vector<size_t> offsets;
+  for (int i = lower; i < upper; ++i) {
+    offsets.push_back(i);
+  }
   ctx.reshuffle(offsets);
+
   return ctx;
 }
-
 }  // namespace runtime
-
 }  // namespace gs

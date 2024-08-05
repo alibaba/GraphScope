@@ -47,7 +47,7 @@ const RTAnyType RTAnyType::kPath = RTAnyType(RTAnyType::RTAnyTypeImpl::kPath);
 const RTAnyType RTAnyType::kNull = RTAnyType(RTAnyType::RTAnyTypeImpl::kNull);
 const RTAnyType RTAnyType::kTuple = RTAnyType(RTAnyType::RTAnyTypeImpl::kTuple);
 const RTAnyType RTAnyType::kList = RTAnyType(RTAnyType::RTAnyTypeImpl::kList);
-
+const RTAnyType RTAnyType::kMap = RTAnyType(RTAnyType::RTAnyTypeImpl::kMap);
 RTAny List::get(size_t idx) const { return impl_->get(idx); }
 RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
   switch (dt.type_case()) {
@@ -148,6 +148,8 @@ RTAny::RTAny(const RTAny& rhs) : type_(rhs.type_) {
     value_.list = rhs.value_.list;
   } else if (type_ == RTAnyType::kF64Value) {
     value_.f64_val = rhs.value_.f64_val;
+  } else if (type_ == RTAnyType::kMap) {
+    value_.map = rhs.value_.map;
   } else {
     LOG(FATAL) << "unexpected type: " << static_cast<int>(type_.type_enum_);
   }
@@ -171,6 +173,8 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
     value_.list = rhs.value_.list;
   } else if (type_ == RTAnyType::kF64Value) {
     value_.f64_val = rhs.value_.f64_val;
+  } else if (type_ == RTAnyType::kMap) {
+    value_.map = rhs.value_.map;
   } else {
     LOG(FATAL) << "unexpected type: " << static_cast<int>(type_.type_enum_);
   }
@@ -293,7 +297,17 @@ RTAny RTAny::from_double(double v) {
   return ret;
 }
 
+RTAny RTAny::from_map(const Map& m) {
+  RTAny ret;
+  ret.type_ = RTAnyType::kMap;
+  ret.value_.map = std::move(m);
+  return ret;
+}
+
 bool RTAny::as_bool() const {
+  if (type_ == RTAnyType::kNull) {
+    return false;
+  }
   CHECK(type_ == RTAnyType::kBoolValue)
       << "type_ = " << static_cast<int>(type_.type_enum_);
   return value_.b_val;
@@ -340,7 +354,7 @@ std::string_view RTAny::as_string() const {
   } else if (type_ == RTAnyType::kUnknown) {
     return std::string_view();
   } else {
-    LOG(FATAL) << "unexpected type";
+    LOG(FATAL) << "unexpected type" << static_cast<int>(type_.type_enum_);
     return std::string_view();
   }
 }
@@ -364,31 +378,90 @@ Tuple RTAny::as_tuple() const {
   return value_.t;
 }
 
+Map RTAny::as_map() const {
+  CHECK(type_ == RTAnyType::kMap);
+  return value_.map;
+}
+
+int RTAny::numerical_cmp(const RTAny& other) const {
+  switch (type_.type_enum_) {
+  case RTAnyType::RTAnyTypeImpl::kI64Value:
+    switch (other.type_.type_enum_) {
+    case RTAnyType::RTAnyTypeImpl::kI32Value:
+      return value_.i64_val - other.value_.i32_val;
+    case RTAnyType::RTAnyTypeImpl::kF64Value:
+      return value_.i64_val - other.value_.f64_val;
+    default:
+      LOG(FATAL) << "not support for "
+                 << static_cast<int>(other.type_.type_enum_);
+    }
+    break;
+  case RTAnyType::RTAnyTypeImpl::kI32Value:
+    switch (other.type_.type_enum_) {
+    case RTAnyType::RTAnyTypeImpl::kI64Value:
+      return value_.i32_val - other.value_.i64_val;
+    case RTAnyType::RTAnyTypeImpl::kF64Value:
+      return value_.i32_val - other.value_.f64_val;
+    default:
+      LOG(FATAL) << "not support for "
+                 << static_cast<int>(other.type_.type_enum_);
+    }
+    break;
+  case RTAnyType::RTAnyTypeImpl::kF64Value:
+    switch (other.type_.type_enum_) {
+    case RTAnyType::RTAnyTypeImpl::kI64Value:
+      return value_.f64_val - other.value_.i64_val;
+    case RTAnyType::RTAnyTypeImpl::kI32Value:
+      return value_.f64_val - other.value_.i32_val;
+    default:
+      LOG(FATAL) << "not support for " << static_cast<int>(type_.type_enum_);
+    }
+    break;
+  default:
+    LOG(FATAL) << "not support for " << static_cast<int>(type_.type_enum_);
+  }
+}
+inline static bool is_numerical_type(const RTAnyType& type) {
+  return type == RTAnyType::kI64Value || type == RTAnyType::kI32Value ||
+         type == RTAnyType::kF64Value;
+}
+
 bool RTAny::operator<(const RTAny& other) const {
+  if (type_.type_enum_ != other.type_.type_enum_) {
+    if (is_numerical_type(type_) && is_numerical_type(other.type_)) {
+      return numerical_cmp(other) < 0;
+    } else {
+      return false;
+    }
+  }
   if (type_ == RTAnyType::kI64Value) {
     return value_.i64_val < other.value_.i64_val;
 
   } else if (type_ == RTAnyType::kI32Value) {
     return value_.i32_val < other.value_.i32_val;
+
   } else if (type_ == RTAnyType::kStringValue) {
     return value_.str_val < other.value_.str_val;
   } else if (type_ == RTAnyType::kDate32) {
     return value_.i64_val < other.value_.i64_val;
-  }
-  if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
-    return value_.i64_val < other.value_.i32_val;
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
-    return value_.i32_val < other.value_.i64_val;
   } else if (type_ == RTAnyType::kF64Value) {
     return value_.f64_val < other.value_.f64_val;
   }
+
   LOG(FATAL) << "not support for " << static_cast<int>(type_.type_enum_);
   return true;
 }
 
 bool RTAny::operator==(const RTAny& other) const {
   // assert(type_ == other.type_);
+  if (type_.type_enum_ != other.type_.type_enum_) {
+    if (is_numerical_type(type_) && is_numerical_type(other.type_)) {
+      return numerical_cmp(other) == 0;
+    } else {
+      return false;
+    }
+  }
+
   if (type_ == RTAnyType::kI64Value) {
     return value_.i64_val == other.value_.i64_val;
   } else if (type_ == RTAnyType::kI32Value) {
@@ -475,23 +548,14 @@ void RTAny::sink_impl(common::Value* value) const {
   } else if (type_ == RTAnyType::kI32Value) {
     value->set_i32(value_.i32_val);
   } else if (type_ == RTAnyType::kStringSetValue) {
-    // elem->mutable_object()->set_allocated_str_array();
-    /*
-    const std::set<std::string>& v = *value_.str_set;
-    encoder.put_int(v.size());
-    for (auto& s : v) {
-      encoder.put_string(s);
-    }*/
-    LOG(FATAL) << "string set sink";
+    LOG(FATAL) << "not support string set sink";
   } else if (type_ == RTAnyType::kDate32) {
-    LOG(INFO) << "Date sink";
     value->set_i64(value_.i64_val);
   } else if (type_ == RTAnyType::kBoolValue) {
     value->set_boolean(value_.b_val);
   } else if (type_ == RTAnyType::kF64Value) {
     value->set_f64(value_.f64_val);
   } else if (type_ == RTAnyType::kList) {
-    // LOG(INFO) << "list size = " << value_.list.size();
     LOG(FATAL) << "not support list sink";
   } else {
     LOG(FATAL) << "not implemented for " << static_cast<int>(type_.type_enum_);
@@ -520,6 +584,21 @@ static void sink_any(const Any& any, common::Value* value) {
   }
 }
 
+void sink_vertex(const gs::ReadTransaction& txn,
+                 const std::pair<label_t, vid_t>& vertex, results::Vertex* v) {
+  v->mutable_label()->set_id(vertex.first);
+  v->set_id(encode_unique_vertex_id(vertex.first, vertex.second));
+  //  TODO: add properties
+  const auto& names =
+      txn.graph().schema().get_vertex_property_names(vertex.first);
+  for (size_t i = 0; i < names.size(); ++i) {
+    auto prop = v->add_properties();
+    prop->mutable_key()->set_name(names[i]);
+    sink_any(txn.graph().get_vertex_table(vertex.first).at(vertex.second, i),
+             prop->mutable_value());
+  }
+}
+
 void RTAny::sink(const gs::ReadTransaction& txn, int id,
                  results::Column* col) const {
   col->mutable_name_or_id()->set_id(id);
@@ -541,22 +620,44 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
     }
   } else if (type_ == RTAnyType::kVertex) {
     auto v = col->mutable_entry()->mutable_element()->mutable_vertex();
-    v->mutable_label()->set_id(value_.vertex.first);
-    v->set_id(
-        txn.GetVertexId(value_.vertex.first, value_.vertex.second).AsInt64());
-    // TODO: add properties
-    const auto& names =
-        txn.graph().schema().get_vertex_property_names(value_.vertex.first);
-    LOG(INFO) << "vertex properties size = " << names.size();
-    for (size_t i = 0; i < names.size(); ++i) {
-      auto prop = v->add_properties();
-      prop->mutable_key()->set_name(names[i]);
-      sink_any(txn.graph()
-                   .get_vertex_table(value_.vertex.first)
-                   .at(value_.vertex.second, i),
-               prop->mutable_value());
+    sink_vertex(txn, value_.vertex, v);
+
+  } else if (type_ == RTAnyType::kMap) {
+    auto mp = col->mutable_entry()->mutable_map();
+    auto [keys_ptr, vals_ptr] = value_.map.key_vals();
+    auto& keys = *keys_ptr;
+    auto& vals = *vals_ptr;
+    for (size_t i = 0; i < keys.size(); ++i) {
+      if (vals[i].is_null()) {
+        continue;
+      }
+      auto ret = mp->add_key_values();
+      ret->mutable_key()->set_str(keys[i]);
+      if (vals[i].type_ == RTAnyType::kVertex) {
+        auto v = ret->mutable_value()->mutable_element()->mutable_vertex();
+        sink_vertex(txn, vals[i].as_vertex(), v);
+      } else {
+        vals[i].sink_impl(
+            ret->mutable_value()->mutable_element()->mutable_object());
+      }
     }
 
+  } else if (type_ == RTAnyType::kEdge) {
+    auto e = col->mutable_entry()->mutable_element()->mutable_edge();
+    auto [label, src, dst, prop, dir] = this->as_edge();
+    e->mutable_src_label()->set_id(label.src_label);
+    e->mutable_dst_label()->set_id(label.dst_label);
+    auto edge_label = generate_edge_label_id(label.src_label, label.dst_label,
+                                             label.edge_label);
+    e->mutable_label()->set_id(label.edge_label);
+    e->set_src_id(encode_unique_vertex_id(label.src_label, src));
+    e->set_dst_id(encode_unique_vertex_id(label.dst_label, dst));
+    e->set_id(encode_unique_edge_id(edge_label, src, dst));
+    auto& prop_names = txn.schema().get_edge_property_names(
+        label.src_label, label.dst_label, label.edge_label);
+    auto props = e->add_properties();
+    props->mutable_key()->set_name(prop_names[0]);
+    sink_any(prop, e->mutable_properties(0)->mutable_value());
   } else if (type_ == RTAnyType::kPath) {
     LOG(FATAL) << "not support path sink";
 

@@ -45,6 +45,8 @@ class ExprBase {
     return nullptr;
   }
 
+  virtual bool is_optional() const { return false; }
+
   virtual ~ExprBase() = default;
 };
 
@@ -54,6 +56,7 @@ class ConstTrueExpr : public ExprBase {
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
     return RTAny::from_bool(true);
   }
+
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
     return RTAny::from_bool(true);
@@ -76,30 +79,58 @@ class ConstFalseExpr : public ExprBase {
   RTAnyType type() const override { return RTAnyType::kBoolValue; }
 };
 
-class LabelWithInExpr : public ExprBase {
+template <typename T>
+class WithInExpr : public ExprBase {
  public:
-  LabelWithInExpr(const ReadTransaction& txn, const Context& ctx,
-                  const common::Variable& var, const common::Value& array) {
-    CHECK(array.item_case() == common::Value::kI64Array);
-    CHECK(var.has_property());
-    CHECK(var.property().has_label());
-    size_t len = array.i64_array().item_size();
-    for (size_t idx = 0; idx < len; ++idx) {
-      labels_.push_back(array.i64_array().item(idx));
+  WithInExpr(const ReadTransaction& txn, const Context& ctx,
+             std::unique_ptr<ExprBase>&& key, const common::Value& array)
+      : key_(std::move(key)) {
+    if constexpr (std::is_same_v<T, int64_t>) {
+      CHECK(array.item_case() == common::Value::kI64Array);
+      size_t len = array.i64_array().item_size();
+      for (size_t idx = 0; idx < len; ++idx) {
+        container_.push_back(array.i64_array().item(idx));
+      }
+    } else if constexpr (std::is_same_v<T, int32_t>) {
+      CHECK(array.item_case() == common::Value::kI32Array);
+      size_t len = array.i32_array().item_size();
+      for (size_t idx = 0; idx < len; ++idx) {
+        container_.push_back(array.i32_array().item(idx));
+      }
+    } else {
+      LOG(FATAL) << "not implemented";
     }
   }
 
   RTAny eval_path(size_t idx) const override {
-    LOG(FATAL) << "not implemented";
-    return RTAny::from_bool(false);
+    auto val = TypedConverter<T>::to_typed(key_->eval_path(idx));
+    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                      val) != container_.end());
+  }
+
+  RTAny eval_path(size_t idx, int) const override {
+    auto any_val = key_->eval_path(idx, 0);
+    if (any_val.is_null()) {
+      return RTAny::from_bool(false);
+    }
+    auto val = TypedConverter<T>::to_typed(any_val);
+    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                      val) != container_.end());
   }
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    for (auto l : labels_) {
-      if (l == label) {
-        return RTAny::from_bool(true);
-      }
+    auto val = TypedConverter<T>::to_typed(key_->eval_vertex(label, v, idx));
+    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                      val) != container_.end());
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
+    auto any_val = key_->eval_vertex(label, v, idx, 0);
+    if (any_val.is_null()) {
+      return RTAny::from_bool(false);
     }
-    return RTAny::from_bool(false);
+    auto val = TypedConverter<T>::to_typed(any_val);
+    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                      val) != container_.end());
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -108,8 +139,10 @@ class LabelWithInExpr : public ExprBase {
     return RTAny::from_bool(false);
   }
   RTAnyType type() const override { return RTAnyType::kBoolValue; }
+  bool is_optional() const override { return key_->is_optional(); }
 
-  std::vector<int> labels_;
+  std::unique_ptr<ExprBase> key_;
+  std::vector<T> container_;
 };
 
 class VariableExpr : public ExprBase {
@@ -132,6 +165,8 @@ class VariableExpr : public ExprBase {
     return var_.builder();
   }
 
+  bool is_optional() const override { return var_.is_optional(); }
+
  private:
   Var var_;
 };
@@ -147,6 +182,8 @@ class UnaryLogicalExpr : public ExprBase {
 
   RTAnyType type() const override;
 
+  bool is_optional() const override { return expr_->is_optional(); }
+
  private:
   std::unique_ptr<ExprBase> expr_;
   common::Logical logic_;
@@ -161,7 +198,30 @@ class LogicalExpr : public ExprBase {
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override;
 
+  RTAny eval_path(size_t idx, int) const override {
+    if (lhs_->eval_path(idx, 0).is_null() ||
+        rhs_->eval_path(idx, 0).is_null()) {
+      return RTAny::from_bool(false);
+    }
+    return eval_path(idx);
+  }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
+    if (lhs_->eval_vertex(label, v, idx, 0).is_null() ||
+        rhs_->eval_vertex(label, v, idx, 0).is_null()) {
+      return RTAny::from_bool(false);
+    }
+    return eval_vertex(label, v, idx);
+  }
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx, int) const override {
+    LOG(FATAL) << "not implemented";
+  }
+
   RTAnyType type() const override;
+
+  bool is_optional() const override {
+    return lhs_->is_optional() || rhs_->is_optional();
+  }
 
  private:
   std::unique_ptr<ExprBase> lhs_;
@@ -252,6 +312,69 @@ class TupleExpr : public ExprBase {
   std::vector<std::unique_ptr<ExprBase>> exprs_;
 };
 
+class MapExpr : public ExprBase {
+ public:
+  MapExpr(std::vector<std::string>&& keys,
+          std::vector<std::unique_ptr<ExprBase>>&& values)
+      : keys(std::move(keys)), value_exprs(std::move(values)) {
+    CHECK(keys.size() == values.size());
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    std::vector<RTAny> ret;
+    for (size_t i = 0; i < keys.size(); i++) {
+      ret.push_back(value_exprs[i]->eval_path(idx));
+    }
+    values.emplace_back(ret);
+    size_t id = values.size() - 1;
+    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
+    auto map = Map::make_map(map_impl);
+    return RTAny::from_map(map);
+  }
+
+  RTAny eval_path(size_t idx, int) const override {
+    std::vector<RTAny> ret;
+    for (size_t i = 0; i < keys.size(); i++) {
+      ret.push_back(value_exprs[i]->eval_path(idx, 0));
+    }
+    values.emplace_back(ret);
+    size_t id = values.size() - 1;
+    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
+    auto map = Map::make_map(map_impl);
+    return RTAny::from_map(map);
+  }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return RTAny();
+  }
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return RTAny();
+  }
+
+  RTAnyType type() const override { return RTAnyType::kMap; }
+
+  bool is_optional() const override {
+    for (auto& expr : value_exprs) {
+      if (expr->is_optional()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override {
+    auto builder = std::make_shared<MapValueColumnBuilder>();
+    builder->set_keys(keys);
+    return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
+  }
+
+ private:
+  std::vector<std::string> keys;
+  std::vector<std::unique_ptr<ExprBase>> value_exprs;
+  mutable std::vector<std::vector<RTAny>> values;
+};
 std::unique_ptr<ExprBase> parse_expression(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,

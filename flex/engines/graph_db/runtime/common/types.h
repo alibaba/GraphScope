@@ -25,6 +25,10 @@ namespace gs {
 
 namespace runtime {
 
+uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid);
+uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
+                                label_t edge_label_id);
+int64_t encode_unique_edge_id(uint32_t label_id, vid_t src, vid_t dst);
 enum class Direction {
   kOut,
   kIn,

@@ -27,8 +27,6 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
          const common::Variable& pb, VarType var_type)
     : getter_(nullptr) {
   int tag = -1;
-  LOG(INFO) << "pb: " << pb.DebugString();
-  //  CHECK(pb.has_node_type());
   type_ = RTAnyType::kUnknown;
   if (pb.has_node_type()) {
     type_ = parse_from_ir_data_type(pb.node_type());
@@ -42,6 +40,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       tag = pb.tag().id();
       CHECK(ctx.get(tag) != nullptr);
       type_ = ctx.get(tag)->elem_type();
+    } else if (pb.has_property() && pb.property().has_label()) {
+      type_ = RTAnyType::kI64Value;
     } else {
       LOG(FATAL) << "not support";
     }
@@ -52,7 +52,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_id()) {
-          getter_ = std::make_shared<VertexIdPathAccessor>(txn, ctx, tag);
+          getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
             getter_ = std::make_shared<VertexIdPathAccessor>(txn, ctx, tag);
@@ -105,7 +105,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_id()) {
-          getter_ = std::make_shared<VertexIdVertexAccessor>(txn);
+          getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
             getter_ = std::make_shared<VertexIdVertexAccessor>(txn);
@@ -113,6 +113,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
             getter_ = create_vertex_property_vertex_accessor(txn, type_,
                                                              pt.key().name());
           }
+        } else if (pt.has_label()) {
+          getter_ = std::make_shared<VertexLabelVertexAccessor>();
         } else {
           LOG(FATAL) << "xxx, " << pt.item_case();
         }
@@ -163,6 +165,7 @@ RTAny Var::get_edge(const LabelTriplet& label, vid_t src, vid_t dst,
 }
 
 RTAnyType Var::type() const { return type_; }
+
 std::shared_ptr<IContextColumnBuilder> Var::builder() const {
   return getter_->builder();
 }

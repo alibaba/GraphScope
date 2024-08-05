@@ -140,9 +140,104 @@ std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type) {
   return nullptr;
 }
 
+std::shared_ptr<IContextColumn> build_optional_column(
+    const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
+  switch (data_type.type_case()) {
+  case common::IrDataType::kDataType: {
+    switch (data_type.data_type()) {
+    case common::DataType::INT64: {
+      OptionalValueColumnBuilder<int64_t> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_int64(), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+    case common::DataType::INT32: {
+      OptionalValueColumnBuilder<int> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_int32(), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+    case common::DataType::DOUBLE: {
+      OptionalValueColumnBuilder<double> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_double(), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+    case common::DataType::BOOLEAN: {
+      OptionalValueColumnBuilder<bool> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_bool(), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+    case common::DataType::STRING: {
+      OptionalValueColumnBuilder<std::string_view> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(std::string(v.as_string()), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+
+    default: {
+      LOG(FATAL) << "not support";
+      break;
+    }
+    }
+  }
+  case common::IrDataType::TYPE_NOT_SET: {
+    return build_column_beta(expr, row_num);
+  } break;
+  default: {
+    LOG(FATAL) << "not support" << data_type.DebugString();
+    break;
+  }
+  }
+  return nullptr;
+}
+
 std::shared_ptr<IContextColumn> build_column(
     const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
-  LOG(INFO) << data_type.DebugString() << "\n";
+  if (expr.is_optional()) {
+    return build_optional_column(data_type, expr, row_num);
+  }
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
     switch (data_type.data_type()) {
@@ -207,7 +302,6 @@ std::shared_ptr<IContextColumn> build_column(
       return builder.finish();
     } break;
     case common::DataType::BOOLEAN: {
-      LOG(INFO) << "build bool column";
       ValueColumnBuilder<bool> builder;
       builder.reserve(row_num);
       for (size_t i = 0; i < row_num; ++i) {
@@ -283,8 +377,71 @@ std::shared_ptr<IContextColumn> build_column(
   return nullptr;
 }
 
+std::shared_ptr<IContextColumn> build_optional_column_beta(const Expr& expr,
+                                                           size_t row_num) {
+  switch (expr.type().type_enum_) {
+  case RTAnyType::RTAnyTypeImpl::kI64Value: {
+    OptionalValueColumnBuilder<int64_t> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_int64(), true);
+      }
+    }
+
+    return builder.finish();
+  } break;
+  case RTAnyType::RTAnyTypeImpl::kI32Value: {
+    OptionalValueColumnBuilder<int> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_int32(), true);
+      }
+    }
+
+    return builder.finish();
+  } break;
+  case RTAnyType::RTAnyTypeImpl::kF64Value: {
+    OptionalValueColumnBuilder<double> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_double(), true);
+      }
+    }
+
+    return builder.finish();
+  } break;
+  case RTAnyType::RTAnyTypeImpl::kMap: {
+    auto builder = expr.builder();
+    for (size_t i = 0; i < row_num; ++i) {
+      builder->push_back_elem(expr.eval_path(i, 0));
+    }
+    return builder->finish();
+  } break;
+  default: {
+    LOG(FATAL) << "not support";
+    break;
+  }
+  }
+  return nullptr;
+}
+
 std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
                                                   size_t row_num) {
+  if (expr.is_optional()) {
+    return build_optional_column_beta(expr, row_num);
+  }
   switch (expr.type().type_enum_) {
   case RTAnyType::RTAnyTypeImpl::kI64Value: {
     ValueColumnBuilder<int64_t> builder;
@@ -340,7 +497,6 @@ std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
     return builder.finish();
   } break;
   case RTAnyType::RTAnyTypeImpl::kEdge: {
-    LOG(INFO) << "build edge column";
     BDMLEdgeColumnBuilder builder;
     for (size_t i = 0; i < row_num; ++i) {
       builder.push_back_elem(expr.eval_path(i));
@@ -348,7 +504,6 @@ std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
     return builder.finish();
   }
   case RTAnyType::RTAnyTypeImpl::kTuple: {
-    LOG(INFO) << "build tuple column";
     if (expr.type().null_able_) {
       OptionalValueColumnBuilder<Tuple> builder;
       for (size_t i = 0; i < row_num; ++i) {
@@ -369,13 +524,18 @@ std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
     }
   }
   case RTAnyType::RTAnyTypeImpl::kList: {
-    LOG(INFO) << "build list column";
     auto builder = expr.builder();
     for (size_t i = 0; i < row_num; ++i) {
       builder->push_back_elem(expr.eval_path(i));
     }
     return builder->finish();
-    // LOG(FATAL) << "not support";
+  }
+  case RTAnyType::RTAnyTypeImpl::kMap: {
+    auto builder = expr.builder();
+    for (size_t i = 0; i < row_num; ++i) {
+      builder->push_back_elem(expr.eval_path(i));
+    }
+    return builder->finish();
   }
   default:
     LOG(FATAL) << "not support - " << static_cast<int>(expr.type().type_enum_);

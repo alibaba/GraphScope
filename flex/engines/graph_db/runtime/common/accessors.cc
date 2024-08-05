@@ -142,6 +142,8 @@ std::shared_ptr<IAccessor> create_edge_property_edge_accessor(RTAnyType type) {
     return std::make_shared<EdgePropertyEdgeAccessor<std::string_view>>();
   case RTAnyType::RTAnyTypeImpl::kDate32:
     return std::make_shared<EdgePropertyEdgeAccessor<Date>>();
+  case RTAnyType::RTAnyTypeImpl::kF64Value:
+    return std::make_shared<EdgePropertyEdgeAccessor<double>>();
   default:
     LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
   }

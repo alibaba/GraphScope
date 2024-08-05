@@ -124,6 +124,7 @@ RTAny LogicalExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   }
   return RTAny::from_bool(false);
 }
+
 RTAny LogicalExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                              const Any& data, size_t idx) const {
   if (logic_ == common::Logical::LT) {
@@ -180,6 +181,8 @@ RTAny UnaryLogicalExpr::eval_path(size_t idx) const {
 RTAny UnaryLogicalExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   if (logic_ == common::Logical::NOT) {
     return RTAny::from_bool(!expr_->eval_vertex(label, v, idx).as_bool());
+  } else if (logic_ == common::Logical::ISNULL) {
+    return RTAny::from_bool(expr_->eval_vertex(label, v, idx, 0).is_null());
   }
   LOG(FATAL) << "not support" << static_cast<int>(logic_);
   return RTAny::from_bool(false);
@@ -412,6 +415,8 @@ static RTAny parse_const_value(const common::Value& val) {
     return RTAny::from_bool(val.boolean());
   case common::Value::kNone:
     return RTAny(RTAnyType::kNull);
+  case common::Value::kF64:
+    return RTAny::from_double(val.f64());
   default:
     LOG(FATAL) << "not support for " << val.item_case();
   }
@@ -468,6 +473,8 @@ static inline int get_proiority(const common::ExprOpr& opr) {
     case common::Logical::LT:
     case common::Logical::LE:
       return 6;
+    case common::Logical::REGEX:
+      return 2;
     default:
       return 16;
     }
@@ -500,7 +507,6 @@ static std::unique_ptr<ExprBase> build_expr(
     std::stack<common::ExprOpr>& opr_stack, VarType var_type) {
   while (!opr_stack.empty()) {
     auto opr = opr_stack.top();
-    LOG(INFO) << opr.DebugString();
     opr_stack.pop();
     switch (opr.item_case()) {
     case common::ExprOpr::kConst: {
@@ -524,8 +530,17 @@ static std::unique_ptr<ExprBase> build_expr(
         opr_stack.pop();
         CHECK(lhs.has_var());
         CHECK(rhs.has_const_());
-        return std::make_unique<LabelWithInExpr>(txn, ctx, lhs.var(),
-                                                 rhs.const_());
+        auto key =
+            std::make_unique<VariableExpr>(txn, ctx, lhs.var(), var_type);
+        if (key->type() == RTAnyType::kI64Value) {
+          return std::make_unique<WithInExpr<int64_t>>(txn, ctx, std::move(key),
+                                                       rhs.const_());
+        } else if (key->type() == RTAnyType::kI32Value) {
+          return std::make_unique<WithInExpr<int32_t>>(txn, ctx, std::move(key),
+                                                       rhs.const_());
+        } else {
+          LOG(FATAL) << "not support";
+        }
       } else if (opr.logical() == common::Logical::NOT ||
                  opr.logical() == common::Logical::ISNULL) {
         auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
@@ -579,6 +594,25 @@ static std::unique_ptr<ExprBase> build_expr(
       // break;
     }
     case common::ExprOpr::kMap: {
+      auto op = opr.map();
+      std::vector<std::string> keys_vec;
+      std::vector<std::unique_ptr<ExprBase>> exprs;
+      for (int i = 0; i < op.key_vals_size(); ++i) {
+        auto key = op.key_vals(i).key();
+        auto val = op.key_vals(i).val();
+        auto any = parse_const_value(key);
+        CHECK(any.type() == RTAnyType::kStringValue);
+        {
+          auto str = any.as_string();
+          keys_vec.push_back(std::string(str));
+        }
+        exprs.emplace_back(
+            std::make_unique<VariableExpr>(txn, ctx, val,
+                                           var_type));  // just for parse
+      }
+      if (exprs.size() > 0) {
+        return std::make_unique<MapExpr>(std::move(keys_vec), std::move(exprs));
+      }
       LOG(FATAL) << "not support" << opr.DebugString();
     }
     default:
@@ -645,7 +679,6 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
       break;
     }
     case common::ExprOpr::kMap: {
-      LOG(INFO) << "kVarMap";
       opr_stack2.push(*it);
       break;
     }

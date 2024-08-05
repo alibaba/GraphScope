@@ -96,11 +96,8 @@ void Context::set_with_reshuffle_beta(int alias,
                                       std::shared_ptr<IContextColumn> col,
                                       const std::vector<size_t>& offsets,
                                       const std::set<int>& keep_cols) {
-  LOG(INFO) << col->size();
   head.reset();
   head = nullptr;
-  // ??
-
   if (alias >= 0) {
     if (columns.size() > static_cast<size_t>(alias) &&
         columns[alias] != nullptr) {

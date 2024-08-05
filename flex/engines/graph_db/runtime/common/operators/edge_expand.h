@@ -42,8 +42,6 @@ class EdgeExpand {
                              const EdgeExpandParams& params,
                              const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
-    LOG(INFO) << "expand edge" << (int) params.dir << " "
-              << params.labels.size();
     if (params.labels.size() == 1) {
       if (params.dir == Direction::kIn) {
         auto& input_vertex_list =
@@ -81,9 +79,10 @@ class EdgeExpand {
         return ctx;
       } else if (params.dir == Direction::kOut) {
         auto& input_vertex_list =
-            *std::dynamic_pointer_cast<SLVertexColumn>(ctx.get(params.v_tag));
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         label_t output_vertex_label = params.labels[0].dst_label;
         label_t edge_label = params.labels[0].edge_label;
+        label_t src_label = params.labels[0].src_label;
 
         auto& props = txn.schema().get_edge_properties(
             params.labels[0].src_label, params.labels[0].dst_label,
@@ -95,29 +94,125 @@ class EdgeExpand {
 
         SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
 
-        input_vertex_list.foreach_vertex([&](size_t index, label_t label,
-                                             vid_t v) {
-          auto oe_iter =
-              txn.GetOutEdgeIterator(label, v, output_vertex_label, edge_label);
-          while (oe_iter.IsValid()) {
-            auto nbr = oe_iter.GetNeighbor();
-            if (pred(params.labels[0], v, nbr, oe_iter.GetData(),
-                     Direction::kOut, index)) {
-              CHECK(oe_iter.GetData().type == pt);
-              builder.push_back_opt(v, nbr, oe_iter.GetData());
-              shuffle_offset.push_back(index);
-            }
-            oe_iter.Next();
-          }
-        });
+        foreach_vertex(input_vertex_list,
+                       [&](size_t index, label_t label, vid_t v) {
+                         if (label != src_label) {
+                           return;
+                         }
+                         auto oe_iter = txn.GetOutEdgeIterator(
+                             label, v, output_vertex_label, edge_label);
+                         while (oe_iter.IsValid()) {
+                           auto nbr = oe_iter.GetNeighbor();
+                           if (pred(params.labels[0], v, nbr, oe_iter.GetData(),
+                                    Direction::kOut, index)) {
+                             CHECK(oe_iter.GetData().type == pt);
+                             builder.push_back_opt(v, nbr, oe_iter.GetData());
+                             shuffle_offset.push_back(index);
+                           }
+                           oe_iter.Next();
+                         }
+                       });
 
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(INFO) << "expand edge both";
+        LOG(FATAL) << "expand edge both";
+      }
+    } else {
+      if (params.dir == Direction::kBoth) {
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
+        for (auto& triplet : params.labels) {
+          auto& props = txn.schema().get_edge_properties(
+              triplet.src_label, triplet.dst_label, triplet.edge_label);
+          PropertyType pt = PropertyType::kEmpty;
+          if (!props.empty()) {
+            pt = props[0];
+          }
+          label_props.emplace_back(triplet, pt);
+        }
+        BDMLEdgeColumnBuilder builder(label_props);
+
+        foreach_vertex(
+            input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+              for (auto& label_prop : label_props) {
+                auto& triplet = label_prop.first;
+                auto& pt = label_prop.second;
+                if (label == triplet.src_label) {
+                  auto oe_iter = txn.GetOutEdgeIterator(
+                      label, v, triplet.dst_label, triplet.edge_label);
+                  while (oe_iter.IsValid()) {
+                    auto nbr = oe_iter.GetNeighbor();
+                    if (pred(triplet, v, nbr, oe_iter.GetData(),
+                             Direction::kOut, index)) {
+                      CHECK(oe_iter.GetData().type == pt);
+                      builder.push_back_opt(triplet, v, nbr, oe_iter.GetData(),
+                                            Direction::kOut);
+                      shuffle_offset.push_back(index);
+                    }
+                    oe_iter.Next();
+                  }
+                }
+                if (label == triplet.dst_label) {
+                  auto ie_iter = txn.GetInEdgeIterator(
+                      label, v, triplet.src_label, triplet.edge_label);
+                  while (ie_iter.IsValid()) {
+                    auto nbr = ie_iter.GetNeighbor();
+                    if (pred(triplet, nbr, v, ie_iter.GetData(), Direction::kIn,
+                             index)) {
+                      CHECK(ie_iter.GetData().type == pt);
+                      builder.push_back_opt(triplet, nbr, v, ie_iter.GetData(),
+                                            Direction::kIn);
+                      shuffle_offset.push_back(index);
+                    }
+                    ie_iter.Next();
+                  }
+                }
+              }
+            });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
+      } else if (params.dir == Direction::kOut) {
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
+        for (auto& triplet : params.labels) {
+          auto& props = txn.schema().get_edge_properties(
+              triplet.src_label, triplet.dst_label, triplet.edge_label);
+          PropertyType pt = PropertyType::kEmpty;
+          if (!props.empty()) {
+            pt = props[0];
+          }
+          label_props.emplace_back(triplet, pt);
+        }
+        SDMLEdgeColumnBuilder builder(Direction::kOut, label_props);
+
+        foreach_vertex(
+            input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+              for (auto& label_prop : label_props) {
+                auto& triplet = label_prop.first;
+                auto& pt = label_prop.second;
+                if (label != triplet.src_label)
+                  continue;
+                auto oe_iter = txn.GetOutEdgeIterator(
+                    label, v, triplet.dst_label, triplet.edge_label);
+                while (oe_iter.IsValid()) {
+                  auto nbr = oe_iter.GetNeighbor();
+                  if (pred(triplet, v, nbr, oe_iter.GetData(), Direction::kOut,
+                           index)) {
+                    CHECK(oe_iter.GetData().type == pt);
+                    builder.push_back_opt(triplet, v, nbr, oe_iter.GetData());
+                    shuffle_offset.push_back(index);
+                  }
+                  oe_iter.Next();
+                }
+              }
+            });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
       }
     }
-
     LOG(FATAL) << "not support";
   }
 

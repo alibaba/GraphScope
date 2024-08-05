@@ -44,11 +44,11 @@ class IAccessor {
     return this->eval_path(idx);
   }
   virtual RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const {
-    return this->eval_path(idx, 0);
+    return this->eval_vertex(label, v, idx);
   }
   virtual RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                           const Any& data, size_t idx, int) const {
-    return this->eval_path(idx, 0);
+    return this->eval_edge(label, src, dst, data, idx);
   }
 
   virtual bool is_optional() const { return false; }
@@ -98,9 +98,7 @@ class VertexIdPathAccessor : public IAccessor {
   using elem_t = int64_t;
   VertexIdPathAccessor(const ReadTransaction& txn, const Context& ctx, int tag)
       : txn_(txn),
-        vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {
-    LOG(INFO) << tag << "\n";
-  }
+        vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {}
 
   bool is_optional() const override { return vertex_col_.is_optional(); }
 
@@ -119,6 +117,31 @@ class VertexIdPathAccessor : public IAccessor {
 
  private:
   const ReadTransaction& txn_;
+  const IVertexColumn& vertex_col_;
+};
+
+class VertexGIdPathAccessor : public IAccessor {
+ public:
+  using elem_t = int64_t;
+  VertexGIdPathAccessor(const Context& ctx, int tag)
+      : vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {}
+
+  bool is_optional() const override { return vertex_col_.is_optional(); }
+
+  elem_t typed_eval_path(size_t idx) const {
+    const auto& v = vertex_col_.get_vertex(idx);
+    return encode_unique_vertex_id(v.first, v.second);
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    return RTAny::from_int64(typed_eval_path(idx));
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override {
+    return vertex_col_.builder();
+  }
+
+ private:
   const IVertexColumn& vertex_col_;
 };
 
@@ -162,7 +185,8 @@ class VertexPropertyPathAccessor : public IAccessor {
   }
 
   RTAny eval_path(size_t idx) const override {
-    return TypedConverter<T>::from_typed(typed_eval_path(idx));
+    auto val = TypedConverter<T>::from_typed(typed_eval_path(idx));
+    return val;
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -201,6 +225,24 @@ class VertexLabelPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
+class VertexLabelVertexAccessor : public IAccessor {
+ public:
+  using elem_t = int64_t;
+  VertexLabelVertexAccessor() {}
+
+  elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
+    return static_cast<int64_t>(label);
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    LOG(FATAL) << "not supposed to reach here...";
+    return RTAny();
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    return RTAny::from_int64(label);
+  }
+};
 template <typename T>
 class ContextValueAccessor : public IAccessor {
  public:
@@ -251,6 +293,25 @@ class VertexIdVertexAccessor : public IAccessor {
   const ReadTransaction& txn_;
 };
 
+class VertexGIdVertexAccessor : public IAccessor {
+ public:
+  using elem_t = int64_t;
+  VertexGIdVertexAccessor() {}
+
+  elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
+    return encode_unique_vertex_id(label, v);
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    LOG(FATAL) << "not supposed to reach here...";
+    return RTAny();
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    return RTAny::from_int64(typed_eval_vertex(label, v, idx));
+  }
+};
+
 template <typename T>
 class VertexPropertyVertexAccessor : public IAccessor {
  public:
@@ -283,6 +344,23 @@ class VertexPropertyVertexAccessor : public IAccessor {
       return RTAny();
     }
     return TypedConverter<T>::from_typed(property_columns_[label]->get_view(v));
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
+    if (property_columns_[label] == nullptr) {
+      return RTAny(RTAnyType::kNull);
+    }
+    return TypedConverter<T>::from_typed(property_columns_[label]->get_view(v));
+  }
+
+  bool is_optional() const override {
+    for (auto col : property_columns_) {
+      if (col == nullptr) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
  private:
@@ -484,9 +562,11 @@ class ConstAccessor : public IAccessor {
   RTAny eval_path(size_t) const override {
     return TypedConverter<T>::from_typed(val_);
   }
+
   RTAny eval_vertex(label_t, vid_t, size_t) const override {
     return TypedConverter<T>::from_typed(val_);
   }
+
   RTAny eval_edge(const LabelTriplet&, vid_t, vid_t, const Any&,
                   size_t) const override {
     return TypedConverter<T>::from_typed(val_);
