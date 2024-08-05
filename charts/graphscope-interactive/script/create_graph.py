@@ -19,7 +19,7 @@
 
 import sys
 
-#sys.path.append("../../../flex/interactive/sdk/python/")
+# sys.path.append("../../../flex/interactive/sdk/python/")
 import time
 
 from gs_interactive.models.edge_mapping_destination_vertex_mappings_inner import (
@@ -38,20 +38,21 @@ from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
 
-query="""
+query = """
 SELECT  ds
             FROM    onecomp_risk.ads_fin_rsk_fe_ent_rel_data_version
             WHERE   ds = MAX_PT("onecomp_risk.ads_fin_rsk_fe_ent_rel_data_version");
 """
 import os
 from odps import ODPS
+
 # Make sure environment variable ALIBABA_CLOUD_ACCESS_KEY_ID already set to acquired Access Key ID,
 # environment variable ALIBABA_CLOUD_ACCESS_KEY_SECRET set to acquired Access Key Secret
 # while environment variable ALIBABA_CLOUD_STS_TOKEN set to acquired STS token.
 # Not recommended to hardcode Access Key ID or Access Key Secret in your code.
-ODPS_KEY=os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID')
-ODPS_SECRETE=os.getenv('ALIBABA_CLOUD_ACCESS_KEY_SECRET')
-PROJECT=os.getenv('ODPS_PROJECT')
+ODPS_KEY = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID")
+ODPS_SECRETE = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
+PROJECT = os.getenv("ODPS_PROJECT")
 if ODPS_KEY is None:
     raise Exception("ODPS KEY not set")
 if ODPS_SECRETE is None:
@@ -62,7 +63,7 @@ o = ODPS(
     ODPS_KEY,
     ODPS_SECRETE,
     project=PROJECT,
-    endpoint='http://service-corp.odps.aliyun-inc.com/api',
+    endpoint="http://service-corp.odps.aliyun-inc.com/api",
 )
 script_directory = os.path.dirname(os.path.abspath(__file__))
 print("script directory", script_directory)
@@ -659,9 +660,6 @@ def list_graph(sess: Session):
     print("list graph: ", graph_id_arr)
 
 
-
-
-
 if __name__ == "__main__":
     # parse command line args
     import argparse
@@ -669,7 +667,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
-    parser.add_argument("--remove-old-graph", type=bool, default=True)
+    # parser.add_argument("--remove-old-graph", type=bool, default=True)
     parser.add_argument("--ds", type=str)
 
     # finish
@@ -678,13 +676,13 @@ if __name__ == "__main__":
     print("connecting to ", args.endpoint)
     if args.ds is None:
         # get the date string of yesterday, yyyymmdd
-#        import datetime
+        #        import datetime
 
-#        yesterday = datetime.datetime.now() - datetime.timedelta(days=2)
-#        ds = yesterday.strftime("%Y%m%d")
+        #        yesterday = datetime.datetime.now() - datetime.timedelta(days=2)
+        #        ds = yesterday.strftime("%Y%m%d")
         with o.execute_sql(query).open_reader() as reader:
             pd_df = reader.to_pandas()
-            ds = pd_df['ds'][0]
+            ds = pd_df["ds"][0]
     else:
         ds = args.ds
     print("ds: ", ds)
@@ -706,21 +704,21 @@ if __name__ == "__main__":
     create_procedure(sess, graph_id, script_directory + "/procedure.cc", args.proc_name)
     print("-----------------Finish creating procedure-----------------")
 
-    start_time = time.time()
-    restart_service(sess, graph_id)
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("-----------------Finish restarting service-----------------")
-    print(f"restart service cost {execution_time:.6f}seconds")
+    #    start_time = time.time()
+    #    restart_service(sess, graph_id)
+    #    end_time = time.time()
+    #    execution_time = end_time - start_time
+    #    print("-----------------Finish restarting service-----------------")
+    #    print(f"restart service cost {execution_time:.6f}seconds")
 
     get_service_status(sess)
     print("-----------------Finish getting service status-----------------")
 
-    if args.remove_old_graph:
-        print("remove old graph")
-        delete_graph = sess.delete_graph(old_graph)
-        print("delete graph res: ", delete_graph)
-    else:
-        print("keep old graph", old_graph)
+    # if args.remove_old_graph:
+    #     print("remove old graph")
+    #     delete_graph = sess.delete_graph(old_graph)
+    #     print("delete graph res: ", delete_graph)
+    # else:
+    #     print("keep old graph", old_graph)
 
     list_graph(sess)
