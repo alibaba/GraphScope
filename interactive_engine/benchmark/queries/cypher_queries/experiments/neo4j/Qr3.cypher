@@ -1,0 +1,1 @@
+Match (p1:Person)-[:KNOWS]->(p2:Person)-[:KNOWS]->(p3:Person) Return count(p1);
