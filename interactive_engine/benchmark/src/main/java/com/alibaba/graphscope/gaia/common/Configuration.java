@@ -28,20 +28,22 @@ public class Configuration {
         }
     }
 
+    public static final String AUTH_USERNAME = "system.username";
+    public static final String AUTH_PASSWORD = "system.password";
+
+    public static final String QUERY_DIR = "query.dir";
+    public static final String PARAMETER_DIR = "query.parameters.dir";
     public static final String QUERY_SUFFIX = "query.suffix";
-    public static final String AUTH_USERNAME = "username";
-    public static final String AUTH_PASSWORD = "password";
+    public static final String ALL_QUERIES_ENABLE = "query.all.enable";
+    public static final String EXPECTED_RESULTS_PATH = "query.expected.path";
 
-    public static final String THREAD_COUNT = "thread_count";
-    public static final String QUERY_DIR = "queryDir";
-    public static final String PARAMETER_DIR = "interactive.parameters.dir";
-    public static final String WARMUP_EVERY_QUERY = "warmup.every.query";
-    public static final String OPERATION_COUNT_EVERY_QUERY = "operation.count.every.query";
-    public static final String PRINT_QUERY_NAME = "printQueryNames";
-    public static final String PRINT_QUERY_RESULT = "printQueryResults";
-    public static final String ALL_QUERIES_ENABLE = "all_queries.enable";
+    public static final String THREAD_COUNT = "benchmark.thread.count";
+    public static final String WARMUP_EVERY_QUERY = "benchmark.warmup.every.query";
+    public static final String OPERATION_COUNT_EVERY_QUERY = "benchmark.operation.count.every.query";
+    public static final String PRINT_QUERY_NAME = "benchmark.print.query.name";
+    public static final String PRINT_QUERY_RESULT = "benchmark.print.query.result";
 
-    public static final String EXPECTED_RESULTS_PATH = "expected_results.path";
+   
 
     public Optional<String> getOption(String key) {
         String value = settings.get(key);
