@@ -15,8 +15,22 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
+import com.alibaba.graphscope.proto.Code;
+
 public class BackupException extends GrootException {
     public BackupException(String msg) {
-        super(msg);
+        super(Code.BACKUP_FAILED, msg);
+    }
+
+    public BackupException(String msg, Throwable t) {
+        super(Code.BACKUP_FAILED, msg, t);
+    }
+
+    public BackupException() {
+        super(Code.BACKUP_FAILED);
+    }
+
+    public BackupException(Throwable t) {
+        super(Code.BACKUP_FAILED, t);
     }
 }

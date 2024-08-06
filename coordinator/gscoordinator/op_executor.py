@@ -29,7 +29,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-from graphscope.proto.error_codes_pb2 import OK
+from graphscope.proto.error.coordinator_pb2 import OK
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.monitor import Monitor

@@ -48,7 +48,7 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.event_name == 'pull_request')
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -86,7 +86,7 @@ jobs:
     if: false
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -154,7 +154,7 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.event_name == 'pull_request')
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -192,7 +192,7 @@ jobs:
     if: false
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -260,7 +260,7 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -298,7 +298,7 @@ jobs:
     if: false
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -369,7 +369,7 @@ jobs:
 
     needs: [build-vineyard-dev-image-x86-64]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -410,7 +410,7 @@ jobs:
 
     needs: [manifest-push-vineyard-dev-image]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 

@@ -67,7 +67,7 @@ impl Table {
     pub fn from_bytes(bytes: &[u8]) -> GraphResult<Self> {
         if bytes.len() < 4 {
             let msg = format!("invalid bytes");
-            let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_bytes);
+            let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_bytes);
             return Err(err);
         }
         let reader = UnsafeBytesReader::new(bytes);
@@ -81,12 +81,12 @@ impl Table {
                     return Ok(ret);
                 }
                 let msg = format!("invalid bytes");
-                let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_bytes);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_bytes);
                 Err(err)
             }
             x => {
                 let msg = format!("unknown encoding version {}", x);
-                let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_bytes);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_bytes);
                 return Err(err);
             }
         }

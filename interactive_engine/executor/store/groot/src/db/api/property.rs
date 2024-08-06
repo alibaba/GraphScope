@@ -91,7 +91,7 @@ impl ValueType {
             x if x == ValueType::StringList as i32 => Ok(ValueType::StringList),
             _ => {
                 let msg = format!("invalid input");
-                let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_i32, x);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_i32, x);
                 Err(err)
             }
         }
@@ -102,7 +102,7 @@ impl ValueType {
         match DataTypePb::from_i32(v) {
             None => {
                 let msg = format!("invalid input");
-                let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, to_proto, v);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, to_proto, v);
                 Err(err)
             }
             Some(pb) => Ok(pb),
@@ -199,7 +199,7 @@ impl<'a> ValueRef<'a> {
         let res = self.check_type_match(ValueType::String);
         res_unwrap!(res, get_str)?;
         ::std::str::from_utf8(self.data)
-            .map_err(|e| gen_graph_err!(GraphErrorCode::Utf8Error, e.to_string(), get_str))
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_str))
     }
 
     pub fn get_bytes(&self) -> GraphResult<&[u8]> {
@@ -285,7 +285,7 @@ impl<'a> ValueRef<'a> {
     pub fn check_type_match(&self, value_type: ValueType) -> GraphResult<()> {
         if self.r#type != value_type {
             let msg = format!("cannot transform {:?} to {:?}", self.r#type, value_type);
-            let err = gen_graph_err!(GraphErrorCode::ValueTypeMismatch, msg, check_type_match, value_type);
+            let err = gen_graph_err!(ErrorCode::VALUE_TYPE_MISMATCH, msg, check_type_match, value_type);
             return Err(err);
         }
         Ok(())
@@ -302,7 +302,7 @@ impl<'a> ValueRef<'a> {
             return Ok(reader);
         }
         let msg = format!("invalid {:?} bytes, data len is {}", value_type, self.data.len());
-        let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, check_numeric_array);
+        let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, check_numeric_array);
         Err(err)
     }
 
@@ -318,7 +318,7 @@ impl<'a> ValueRef<'a> {
             return Ok(reader);
         }
         let msg = format!("invalid str array bytes");
-        let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, weak_check_str_list);
+        let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, weak_check_str_list);
         Err(err)
     }
 }

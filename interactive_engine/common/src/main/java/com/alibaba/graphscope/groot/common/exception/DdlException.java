@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.schema.request;
+package com.alibaba.graphscope.groot.common.exception;
 
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.proto.Code;
 
 public class DdlException extends GrootException {
 
-    public DdlException(String msg) {
-        super(msg);
+    public DdlException(Throwable t) {
+        super(Code.DDL_ERROR, t);
     }
 
-    public DdlException(Throwable t) {
-        super(t);
+    public DdlException(String msg) {
+        super(Code.DDL_ERROR, msg);
+    }
+
+    public DdlException(String msg, Throwable t) {
+        super(Code.DDL_ERROR, msg, t);
+    }
+
+    public DdlException() {
+        super(Code.DDL_ERROR);
     }
 }

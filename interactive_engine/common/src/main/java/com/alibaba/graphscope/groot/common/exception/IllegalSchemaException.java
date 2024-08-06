@@ -15,8 +15,23 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
-public class NodeConnectException extends GrootException {
-    public NodeConnectException(String msg) {
-        super(msg);
+import com.alibaba.graphscope.proto.Code;
+
+public class IllegalSchemaException extends GrootException {
+
+    public IllegalSchemaException(String msg) {
+        super(Code.ILLEGAL_SCHEMA, msg);
+    }
+
+    public IllegalSchemaException(String msg, Throwable t) {
+        super(Code.ILLEGAL_SCHEMA, msg, t);
+    }
+
+    public IllegalSchemaException() {
+        super(Code.ILLEGAL_SCHEMA);
+    }
+
+    public IllegalSchemaException(Throwable t) {
+        super(Code.ILLEGAL_SCHEMA, t);
     }
 }

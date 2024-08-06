@@ -21,7 +21,7 @@ jobs:
   build-manylinux-ext-image-x86-64:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -50,7 +50,7 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
     if: false
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 

@@ -91,7 +91,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                 GraphPlanner.Summary summary = value.summary;
                                 statusCallback
                                         .getQueryLogger()
-                                        .info("ir plan {}", summary.getPhysicalPlan().explain());
+                                        .debug("ir plan {}", summary.getPhysicalPlan().explain());
                                 ResultSchema resultSchema =
                                         new ResultSchema(summary.getLogicalPlan());
                                 GremlinResultProcessor listener =

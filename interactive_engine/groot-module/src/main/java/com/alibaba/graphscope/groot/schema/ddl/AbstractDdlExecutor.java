@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.exception.DdlException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
-import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
