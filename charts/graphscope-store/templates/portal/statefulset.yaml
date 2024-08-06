@@ -87,8 +87,6 @@ spec:
           env:
             - name: CLUSTER_TYPE
               value: "KUBERNETES"
-            - name: POD_NETWORK_PLUGIN_TYPE
-              value: {{ .Values.portal.podNetworkPluginType | quote }}
             - name: VERSION
               value: {{ .Chart.Version | quote }}
             - name: GROOT_USERNAME

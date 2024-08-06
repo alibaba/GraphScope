@@ -34,7 +34,6 @@ from gscoordinator.flex.core.config import GROOT_PASSWORD
 from gscoordinator.flex.core.config import GROOT_USERNAME
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import NAMESPACE
-from gscoordinator.flex.core.config import POD_NETWORK_PLUGIN_TYPE
 from gscoordinator.flex.core.scheduler import schedule
 from gscoordinator.flex.core.utils import data_type_to_groot
 from gscoordinator.flex.core.utils import get_internal_ip
@@ -83,21 +82,15 @@ class GrootGraph(object):
             return
 
         try:
-            if POD_NETWORK_PLUGIN_TYPE == "terway":
-                # frontend statefulset and service name
-                frontend_pod_name = "{0}-graphscope-store-frontend-0".format(
-                    INSTANCE_NAME
-                )
-                pod = self._core_api.read_namespaced_pod(frontend_pod_name, NAMESPACE)
-                endpoints = [
-                    "{0}:{1}".format(pod.status.pod_ip, GROOT_GRPC_PORT),
-                    "{0}:{1}".format(pod.status.pod_ip, GROOT_GREMLIN_PORT),
-                ]
-            else:
-                name = "{0}-graphscope-store-frontend".format(INSTANCE_NAME)
-                endpoints = get_service_endpoints(
-                    self._api_client, NAMESPACE, name, "NodePort"
-                )
+            # frontend statefulset and service name
+            frontend_pod_name = "{0}-graphscope-store-frontend-0".format(
+                INSTANCE_NAME
+            )
+            pod = self._core_api.read_namespaced_pod(frontend_pod_name, NAMESPACE)
+            endpoints = [
+                "{0}:{1}".format(pod.status.pod_ip, GROOT_GRPC_PORT),
+                "{0}:{1}".format(pod.status.pod_ip, GROOT_GREMLIN_PORT),
+            ]
             gremlin_endpoint = "ws://{0}/gremlin".format(endpoints[1])
             grpc_endpoint = endpoints[0]
             conn = graphscope.conn(
@@ -312,15 +305,12 @@ def get_groot_graph_from_k8s():
         tz.tzlocal()
     ).strftime("%Y/%m/%d %H:%M:%S")
     # service endpoints: [grpc_endpoint, gremlin_endpoint]
-    if POD_NETWORK_PLUGIN_TYPE == "terway":
-        frontend_pod_name = "{0}-graphscope-store-frontend-0".format(INSTANCE_NAME)
-        pod = core_api.read_namespaced_pod(frontend_pod_name, NAMESPACE)
-        endpoints = [
-            f"{pod.status.pod_ip}:{GROOT_GRPC_PORT}",
-            f"{pod.status.pod_ip}:{GROOT_GREMLIN_PORT}",
-        ]
-    else:
-        endpoints = get_service_endpoints(api_client, NAMESPACE, name, "NodePort")
+    frontend_pod_name = "{0}-graphscope-store-frontend-0".format(INSTANCE_NAME)
+    pod = core_api.read_namespaced_pod(frontend_pod_name, NAMESPACE)
+    endpoints = [
+        f"{pod.status.pod_ip}:{GROOT_GRPC_PORT}",
+        f"{pod.status.pod_ip}:{GROOT_GREMLIN_PORT}",
+    ]
     # groot graph
     return GrootGraph(
         name=INSTANCE_NAME,
