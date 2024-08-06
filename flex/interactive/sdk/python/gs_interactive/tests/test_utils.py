@@ -22,6 +22,9 @@ import unittest
 
 import pytest
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
+
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
 from gs_interactive.client.utils import InputFormat, append_format_byte
