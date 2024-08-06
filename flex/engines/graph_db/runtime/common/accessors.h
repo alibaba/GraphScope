@@ -399,22 +399,71 @@ template <typename T>
 class EdgePropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyPathAccessor(const Context& ctx, int tag)
-      : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {}
+  EdgePropertyPathAccessor(const ReadTransaction& txn,
+                           const std::string& prop_name, const Context& ctx,
+                           int tag)
+      : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
+    const auto& labels = col_.get_labels();
+    vertex_label_num_ = txn.schema().vertex_label_num();
+    edge_label_num_ = txn.schema().edge_label_num();
+    prop_index_.resize(
+        2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
+        std::numeric_limits<size_t>::max());
+    for (auto& label : labels) {
+      size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
+                   label.dst_label * edge_label_num_ + label.edge_label;
+      const auto& names = txn.schema().get_edge_property_names(
+          label.src_label, label.dst_label, label.edge_label);
+      for (size_t i = 0; i < names.size(); ++i) {
+        if (names[i] == prop_name) {
+          prop_index_[idx] = i;
+          break;
+        }
+      }
+    }
+  }
 
   RTAny eval_path(size_t idx) const override {
     const auto& e = col_.get_edge(idx);
-    return RTAny(std::get<3>(e));
+    auto val = std::get<3>(e);
+    auto id = get_index(std::get<0>(e));
+    if (std::get<3>(e).type != PropertyType::RecordView()) {
+      CHECK(id == 0);
+      return RTAny(val);
+    } else {
+      auto rv = val.AsRecordView();
+      CHECK(id != std::numeric_limits<size_t>::max());
+      return RTAny(rv[id]);
+    }
   }
 
   elem_t typed_eval_path(size_t idx) const {
     const auto& e = col_.get_edge(idx);
-    elem_t ret;
-    ConvertAny<T>::to(std::get<3>(e), ret);
-    return ret;
+    auto val = std::get<3>(e);
+    auto id = get_index(std::get<0>(e));
+    if (std::get<3>(e).type != PropertyType::RecordView()) {
+      CHECK(id == 0);
+      elem_t ret;
+      ConvertAny<T>::to(val, ret);
+      return ret;
+
+    } else {
+      auto rv = val.AsRecordView();
+      CHECK(id != std::numeric_limits<size_t>::max());
+      auto tmp = rv[id];
+      elem_t ret;
+      ConvertAny<T>::to(tmp, ret);
+      return ret;
+    }
   }
 
   bool is_optional() const override { return col_.is_optional(); }
+
+  size_t get_index(const LabelTriplet& label) const {
+    size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
+                 label.dst_label * edge_label_num_ + label.edge_label;
+    return prop_index_[idx];
+  }
 
   RTAny eval_path(size_t idx, int) const override {
     if (!col_.has_value(idx)) {
@@ -429,6 +478,9 @@ class EdgePropertyPathAccessor : public IAccessor {
 
  private:
   const IEdgeColumn& col_;
+  std::vector<size_t> prop_index_;
+  size_t vertex_label_num_;
+  size_t edge_label_num_;
 };
 
 class EdgeLabelPathAccessor : public IAccessor {
@@ -459,12 +511,50 @@ template <typename T>
 class EdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyEdgeAccessor() {}
+  EdgePropertyEdgeAccessor(const ReadTransaction& txn,
+                           const std::string& name) {
+    edge_label_num_ = txn.schema().edge_label_num();
+    vertex_label_num_ = txn.schema().vertex_label_num();
+    indexs.resize(2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
+                  std::numeric_limits<size_t>::max());
+    for (label_t src_label = 0; src_label < vertex_label_num_; ++src_label) {
+      auto src = txn.schema().get_vertex_label_name(src_label);
+      for (label_t dst_label = 0; dst_label < vertex_label_num_; ++dst_label) {
+        auto dst = txn.schema().get_vertex_label_name(dst_label);
+        for (label_t edge_label = 0; edge_label < edge_label_num_;
+             ++edge_label) {
+          auto edge = txn.schema().get_edge_label_name(edge_label);
+          if (!txn.schema().exist(src, dst, edge)) {
+            continue;
+          }
+          size_t idx = src_label * vertex_label_num_ * edge_label_num_ +
+                       dst_label * edge_label_num_ + edge_label;
+          const std::vector<std::string>& names =
+              txn.schema().get_edge_property_names(src_label, dst_label,
+                                                   edge_label);
+          for (size_t i = 0; i < names.size(); ++i) {
+            if (names[i] == name) {
+              indexs[idx] = i;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
 
   elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                          const Any& data, size_t idx) const {
     T ret;
-    ConvertAny<T>::to(data, ret);
+    if (data.type != PropertyType::RecordView()) {
+      CHECK(get_index(label) == 0);
+      ConvertAny<T>::to(data, ret);
+    } else {
+      auto id = get_index(label);
+      CHECK(id != std::numeric_limits<size_t>::max());
+      auto view = data.AsRecordView();
+      ConvertAny<T>::to(view[id], ret);
+    }
     return ret;
   }
 
@@ -475,8 +565,19 @@ class EdgePropertyEdgeAccessor : public IAccessor {
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
-    return RTAny(data);
+    return RTAny(typed_eval_edge(label, src, dst, data, idx));
   }
+
+  size_t get_index(const LabelTriplet& label) const {
+    size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
+                 label.dst_label * edge_label_num_ + label.edge_label;
+    return indexs[idx];
+  }
+
+ private:
+  std::vector<size_t> indexs;
+  size_t vertex_label_num_;
+  size_t edge_label_num_;
 };
 
 template <typename T>
@@ -591,12 +692,14 @@ std::shared_ptr<IAccessor> create_vertex_label_path_accessor(const Context& ctx,
                                                              int tag);
 
 std::shared_ptr<IAccessor> create_edge_property_path_accessor(
+    const ReadTransaction& txn, const std::string& prop_name,
     const Context& ctx, int tag, RTAnyType type);
 
 std::shared_ptr<IAccessor> create_edge_label_path_accessor(const Context& ctx,
                                                            int tag);
 
-std::shared_ptr<IAccessor> create_edge_property_edge_accessor(RTAnyType type);
+std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
+    const ReadTransaction& txn, const std::string& prop_name, RTAnyType type);
 
 }  // namespace runtime
 
