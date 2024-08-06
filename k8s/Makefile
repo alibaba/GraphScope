@@ -155,7 +155,7 @@ interactive-experimental:
 flex-interactive:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
-		-f ${WORKING_DIR}/flex-interactive.Dockerfile \
+		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile \
 		--target runtime \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \

@@ -6,6 +6,10 @@ ARG ARCH=x86_64
 ARG ENABLE_COORDINATOR="false"
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 
+RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
+USER graphscope
+WORKDIR /home/graphscope
+
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 
@@ -87,6 +91,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
+COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
