@@ -5,7 +5,8 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
@@ -79,7 +80,7 @@ public class KafkaProcessor {
         try {
             recover();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
 
         this.persistOffsetsScheduler =
@@ -156,7 +157,7 @@ public class KafkaProcessor {
         if (recoveredOffset != -1) { // if -1, then assume it's a fresh store
             try (LogReader ignored = logService.createReader(storeId, recoveredOffset + 1)) {
             } catch (Exception e) {
-                throw new IOException(
+                throw new IllegalStateException(
                         "recovered queue [0] offset [" + recoveredOffset + "] is not available", e);
             }
         }
@@ -193,7 +194,7 @@ public class KafkaProcessor {
         try {
             replayWAL();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
         // -1 stands for poll from latest
         try (LogReader reader = logService.createReader(storeId, -1)) {
@@ -204,7 +205,7 @@ public class KafkaProcessor {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -246,7 +247,7 @@ public class KafkaProcessor {
         try {
             writerAgent.writeStore(builder.build());
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 

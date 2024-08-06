@@ -25,7 +25,7 @@
 #include "grape/worker/comm_spec.h"
 #include "vineyard/common/util/blocking_queue.h"
 
-#include "proto/error_codes.pb.h"
+#include "proto/error/coordinator.pb.h"
 #include "proto/graph_def.pb.h"
 #include "proto/types.pb.h"
 

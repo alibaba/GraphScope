@@ -24,7 +24,7 @@
 
 #include "vineyard/graph/utils/error.h"  // IWYU pragma: export
 
-#include "proto/error_codes.pb.h"  // IWYU pragma: export
+#include "proto/error/coordinator.pb.h"  // IWYU pragma: export
 
 namespace gs {
 
@@ -35,12 +35,19 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
   case vineyard::ErrorCode::kVineyardError:
     return rpc::Code::VINEYARD_ERROR;
   case vineyard::ErrorCode::kNetworkError:
-    return rpc::Code::NETWORK_ERROR;
+    return rpc::Code::NETWORK_FAILURE;
   case vineyard::ErrorCode::kUnimplementedMethod:
-    return rpc::Code::UNIMPLEMENTED_ERROR;
+    return rpc::Code::UNIMPLEMENTED;
   default:
     return rpc::Code::ANALYTICAL_ENGINE_INTERNAL_ERROR;
   }
+}
+
+inline std::string formatEnumValue(const vineyard::ErrorCode& value) {
+  std::stringstream ss;
+  // Format the integer value with leading zeros (4 digits)
+  ss << "02-" << std::setw(4) << std::setfill('0') << static_cast<int>(value);
+  return ss.str();
 }
 
 #ifndef __FRAME_MAKE_GS_ERROR
@@ -49,7 +56,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << static_cast<int>(code) << " at "                          \
+               << gs::formatEnumValue(code) << " at "                       \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \
@@ -68,7 +75,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << static_cast<int>(code) << " at "                          \
+               << gs::formatEnumValue(code) << " at "                       \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \
