@@ -28,7 +28,7 @@ from gs_interactive.models import *
     
 
 from gs_interactive.tests.conftest import create_vertex_only_modern_graph, start_service_on_graph,interactive_driver
-from gs_interactive.tests.conftest import interactive_session, create_procedure, delete_running_graph, create_modern_graph, create_partial_modern_graph,run_cypher_test_suite, call_procedure
+from gs_interactive.tests.conftest import create_procedure, delete_running_graph, create_modern_graph, create_partial_modern_graph,run_cypher_test_suite, call_procedure
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph, import_data_to_partial_modern_graph, import_data_to_full_modern_graph
 
 
@@ -42,7 +42,7 @@ cypher_queries = [
     "MATCH(a)-[b]->(c) return c.id",
 ]
 
-def test_query_on_vertex_only_graph(interactive_driver, interactive_session, neo4j_session, create_vertex_only_modern_graph):
+def test_query_on_vertex_only_graph(interactive_session, neo4j_session, create_vertex_only_modern_graph):
     """
     Test Query on a graph with only a vertex-only schema defined, no data is imported.
     """
@@ -54,7 +54,7 @@ def test_query_on_vertex_only_graph(interactive_driver, interactive_session, neo
     import_data_to_vertex_only_modern_graph(interactive_session, create_vertex_only_modern_graph)
     run_cypher_test_suite(neo4j_session, create_vertex_only_modern_graph, cypher_queries)
 
-def test_query_on_partial_graph(interactive_driver, interactive_session,neo4j_session, create_partial_modern_graph):
+def test_query_on_partial_graph(interactive_session,neo4j_session, create_partial_modern_graph):
     """
     Test Query on a graph with the partial schema of modern graph defined, no data is imported.
     """
@@ -67,7 +67,7 @@ def test_query_on_partial_graph(interactive_driver, interactive_session,neo4j_se
     import_data_to_partial_modern_graph(interactive_session, create_partial_modern_graph)
     run_cypher_test_suite(neo4j_session, create_partial_modern_graph, cypher_queries)
     
-def test_query_on_full_modern_graph(interactive_driver, interactive_session, neo4j_session, create_modern_graph):
+def test_query_on_full_modern_graph(interactive_session, neo4j_session, create_modern_graph):
     """
     Test Query on a graph with full schema of modern graph defined, no data is imported.
     """

@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    query.DoQuery(sess, input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery16 test";
   }
 

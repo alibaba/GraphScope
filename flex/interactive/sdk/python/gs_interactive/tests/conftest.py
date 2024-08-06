@@ -440,3 +440,5 @@ def create_procedure(sess: Session, graph_id: str, name: str, query: str, descri
 def start_service_on_graph(interactive_session, graph_id : str):
     resp = interactive_session.start_service(StartServiceRequest(graph_id=graph_id))
     assert resp.is_ok()
+    # wait one second to let compiler get the new graph
+    time.sleep(1)

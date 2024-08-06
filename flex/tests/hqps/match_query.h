@@ -1043,7 +1043,7 @@ struct MatchQuery16expr0 {
 };
 
 // Auto generated query class definition
-class MatchQuery16 : public CypherInternalPbWriteAppBase {
+class MatchQuery16 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -1097,8 +1097,8 @@ class MatchQuery16 : public CypherInternalPbWriteAppBase {
   }
 
   // Wrapper query function for query class
-  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder,
-               Encoder& encoder) override {
+  bool Query(const GraphDBSession& sess, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     gs::MutableCSRInterface graph(sess);
