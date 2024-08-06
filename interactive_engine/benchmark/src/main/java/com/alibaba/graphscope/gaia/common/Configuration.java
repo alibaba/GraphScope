@@ -28,9 +28,7 @@ public class Configuration {
         }
     }
 
-    public static final String CLIENT_OPT = "client.opt";
     public static final String QUERY_SUFFIX = "query.suffix";
-    public static final String SERVER_ENDPOINT = "server.endpoint";
     public static final String AUTH_USERNAME = "username";
     public static final String AUTH_PASSWORD = "password";
 

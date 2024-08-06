@@ -16,12 +16,11 @@
 package com.alibaba.graphscope.gaia.benchmark;
 
 import com.alibaba.graphscope.gaia.clients.GraphClient;
-import com.alibaba.graphscope.gaia.clients.cypher.CypherGraphClient;
-import com.alibaba.graphscope.gaia.clients.gremlin.GremlinGraphClient;
-import com.alibaba.graphscope.gaia.clients.kuzu.KuzuGraphClient;
+import com.alibaba.graphscope.gaia.clients.GraphSystem;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
+import com.alibaba.graphscope.gaia.utils.BenchmarkSystemUtil;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 
@@ -40,52 +39,32 @@ public class InteractiveBenchmark {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
 
-        String clientOpt = configuration.getString(Configuration.CLIENT_OPT);
-        String serverEndpoint = configuration.getString(Configuration.SERVER_ENDPOINT);
+        // compared systems
+        List<GraphSystem> comparedSystems = BenchmarkSystemUtil.initSystems(configuration);
+
+        // benchmark queries
+        List<CommonQuery> ldbcQueryList = QueryUtil.initQueryList(configuration);
+        String expectedResultsPath =
+                configuration.getString(Configuration.EXPECTED_RESULTS_PATH, null);
+        BenchmarkResultComparator comparator = new BenchmarkResultComparator(expectedResultsPath);
+
+        // running settings
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
         int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
         int operationCount = configuration.getInt(Configuration.OPERATION_COUNT_EVERY_QUERY, 10);
         boolean printQueryName = configuration.getBoolean(Configuration.PRINT_QUERY_NAME, true);
         boolean printQueryResult = configuration.getBoolean(Configuration.PRINT_QUERY_RESULT, true);
-        String username = configuration.getString(Configuration.AUTH_USERNAME, "");
-        String password = configuration.getString(Configuration.AUTH_PASSWORD, "");
-
-        List<CommonQuery> ldbcQueryList = QueryUtil.initQueryList(configuration);
 
         AtomicInteger atomicQueryCount = new AtomicInteger(operationCount * threadCount);
         AtomicInteger atomicParameterIndex = new AtomicInteger(0);
-
-        String expectedResultsPath =
-                configuration.getString(Configuration.EXPECTED_RESULTS_PATH, null);
-        BenchmarkResultComparator comparator = new BenchmarkResultComparator(expectedResultsPath);
 
         class MyRunnable implements Runnable {
             private GraphClient client;
             BenchmarkResultComparator comparator;
 
-            public MyRunnable(
-                    String endpoint,
-                    String username,
-                    String password,
-                    BenchmarkResultComparator comparator) {
-                try {
-                    if ("gremlin".equalsIgnoreCase(clientOpt)) {
-                        this.client = new GremlinGraphClient(endpoint, username, password);
-                    } else if ("cypher".equalsIgnoreCase(clientOpt)) {
-                        this.client = new CypherGraphClient(endpoint, username, password);
-                    } else if ("kuzu".equalsIgnoreCase(clientOpt)) {
-                        // for kuzu, it is the db name
-                        this.client = new KuzuGraphClient(endpoint);
-                    } else {
-                        throw new IllegalArgumentException(
-                                "Unsupported query language: " + clientOpt);
-                    }
-                    this.comparator = comparator;
-                    System.out.println("Connect success.");
-                } catch (Exception e) {
-                    System.err.println("Connect failure, caused by : " + e);
-                    throw new RuntimeException(e);
-                }
+            public MyRunnable(GraphClient client, BenchmarkResultComparator comparator) {
+                this.comparator = comparator;
+                System.out.println("Connect success.");
             }
 
             @Override
@@ -127,31 +106,40 @@ public class InteractiveBenchmark {
             }
         }
 
-        ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
+        for (GraphSystem system : comparedSystems) {
+            String name = system.getName();
+            GraphClient client = system.getClient();
+            System.out.println("Start to benchmark system: " + name);
 
-        long startTime = System.currentTimeMillis();
-        for (int i = 0; i < threadCount; i++) {
-            threadPool.submit(new MyRunnable(serverEndpoint, username, password, comparator));
-        }
+            ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
 
-        threadPool.shutdown();
+            long startTime = System.currentTimeMillis();
 
-        while (true) {
-            if (threadPool.isTerminated()) {
-                long endTime = System.currentTimeMillis();
-                long executeTime = endTime - startTime;
-                long queryCount = operationCount * threadCount;
-                float qps = (float) queryCount / executeTime * 1000;
-                System.out.println(
-                        "query count: "
-                                + queryCount
-                                + "; execute time(ms): "
-                                + executeTime
-                                + "; qps: "
-                                + qps);
-                System.exit(0);
+            for (int i = 0; i < threadCount; i++) {
+                threadPool.submit(new MyRunnable(client, comparator));
             }
-            Thread.sleep(10);
+
+            threadPool.shutdown();
+
+            while (true) {
+                if (threadPool.isTerminated()) {
+                    long endTime = System.currentTimeMillis();
+                    long executeTime = endTime - startTime;
+                    long queryCount = operationCount * threadCount;
+                    float qps = (float) queryCount / executeTime * 1000;
+                    System.out.println(
+                            "System: "
+                                    + name
+                                    + "; query count: "
+                                    + queryCount
+                                    + "; execute time(ms): "
+                                    + executeTime
+                                    + "; qps: "
+                                    + qps);
+                    break;
+                }
+                Thread.sleep(10);
+            }
         }
     }
 }
