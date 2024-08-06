@@ -328,7 +328,7 @@ bool Schema::get_sort_on_compaction(const std::string& src_label,
   label_t edge = get_edge_label_id(label);
   uint32_t index = generate_edge_label(src, dst, edge);
   THROW_EXCEPTION_IF(
-      index >= sort_on_compactions_.size(),
+      sort_on_compactions_.find(index) == sort_on_compactions_.end(),
       "Fail to get sort on compaction: " + std::to_string(index) +
           ", out of range of sort_on_compactions_ " +
           std::to_string(sort_on_compactions_.size()));
