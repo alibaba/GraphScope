@@ -42,8 +42,7 @@ all: coordinator analytical interactive learning
 graphscope: all
 
 dev-wheel:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope && \
+	cd $(WORKING_DIR)../ && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
@@ -52,15 +51,13 @@ dev-wheel:
 
 
 manylinux2014-ext:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope  && \
+	cd $(WORKING_DIR)/.. && \
 	docker build \
 		-t graphscope/manylinux2014:ext-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:
 	cd $(WORKING_DIR) && \
-	cd ../python/graphscope  && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \

@@ -38,13 +38,13 @@ RUN mkdir -p /var/log/graphscope && chown -R graphscope:graphscope /var/log/grap
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
-    cd /home/graphscope/gsctl && \
+    cd /home/graphscope/GraphScope/python/graphscope/gsctl && \
     python3 -m pip install click packaging && \
     python3 gsctl.py install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
-    cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl
+    cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope
 
 RUN python3 -m pip --no-cache install pyyaml --user
 
