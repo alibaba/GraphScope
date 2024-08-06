@@ -2,6 +2,8 @@ cff-version: 1.2.0
 message: >-
   If you use this software, please cite our paper using the
   metadata from this file.
+preferred-citation:
+  type: article
 title: 'GraphScope Flex: LEGO-like Graph Computing Stack'
 authors:
   - given-names: Tao
