@@ -567,8 +567,10 @@ class HuoYan : public WriteAppBase {
     LOG(INFO) << "Got start oid: " << start_oid;
     vid_t start_vid;
     if (!txn.GetVertexIndex(comp_label_id_, Any::From(start_oid), start_vid)) {
-      LOG(ERROR) << "Start oid: " << start_oid << ", not found";
-      return false;
+      LOG(WARNING) << "Start oid: " << start_oid << ", not found";
+      output.put_string("{}");
+      txn.Commit();
+      return true;
     }
     results_creator_->set_start_vid(encode_vid(comp_label_id_, start_vid));
     LOG(INFO) << "start vid: " << start_vid;
