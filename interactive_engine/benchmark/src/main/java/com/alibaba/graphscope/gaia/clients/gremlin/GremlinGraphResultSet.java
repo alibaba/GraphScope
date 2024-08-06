@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia.clients.impls;
+package com.alibaba.graphscope.gaia.clients.gremlin;
 
 import com.alibaba.graphscope.gaia.clients.GraphResultSet;
 

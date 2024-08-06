@@ -16,9 +16,9 @@
 package com.alibaba.graphscope.gaia.benchmark;
 
 import com.alibaba.graphscope.gaia.clients.GraphClient;
-import com.alibaba.graphscope.gaia.clients.impls.CypherGraphClient;
-import com.alibaba.graphscope.gaia.clients.impls.GremlinGraphClient;
-import com.alibaba.graphscope.gaia.clients.impls.KuzuGraphClient;
+import com.alibaba.graphscope.gaia.clients.cypher.CypherGraphClient;
+import com.alibaba.graphscope.gaia.clients.gremlin.GremlinGraphClient;
+import com.alibaba.graphscope.gaia.clients.kuzu.KuzuGraphClient;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;

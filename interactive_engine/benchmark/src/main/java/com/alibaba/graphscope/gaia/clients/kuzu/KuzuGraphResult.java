@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia.clients.impls;
+package com.alibaba.graphscope.gaia.clients.kuzu;
 
 import com.alibaba.graphscope.gaia.clients.GraphResultSet;
 import com.kuzudb.KuzuFlatTuple;
