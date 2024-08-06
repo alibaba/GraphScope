@@ -15,20 +15,31 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
-import com.alibaba.graphscope.groot.common.util.ExceptionUtils;
+import com.alibaba.graphscope.proto.Code;
 
 public class GrootException extends RuntimeException {
+    private final int componentCode = 6;
 
     private int errorCode;
 
-    public GrootException(ExceptionUtils.ErrorCode code, String msg) {
-        super(msg);
-        this.errorCode = code.toInt();
+    public GrootException(Code code) {
+        super();
+        this.errorCode = code.getNumber();
     }
 
-    public GrootException(ExceptionUtils.ErrorCode code, Throwable e, String msg) {
-        super(msg, e);
-        this.errorCode = code.toInt();
+    public GrootException(Code code, Throwable t) {
+        super(t);
+        this.errorCode = code.getNumber();
+    }
+
+    public GrootException(Code code, String msg) {
+        super(msg);
+        this.errorCode = code.getNumber();
+    }
+
+    public GrootException(Code code, String msg, Throwable t) {
+        super(msg, t);
+        this.errorCode = code.getNumber();
     }
 
     public int getErrorCode() {
@@ -53,5 +64,11 @@ public class GrootException extends RuntimeException {
 
     public GrootException() {
         super();
+    }
+
+    @Override
+    public String getMessage() {
+        String ec = String.format("%02d-%04d", componentCode, errorCode);
+        return String.format("ec=%s, %s", ec, super.getMessage());
     }
 }
