@@ -103,7 +103,7 @@ def test_procedure_creation(interactive_session, neo4j_session, create_modern_gr
     print("[Test procedure creation]")
 
     # create procedure with description contains spaces,',', and special characters '!','@','#','$','%','^','&','*','(',')'
-    a_proc_id = create_procedure(interactive_session, create_modern_graph, "test_proc", "MATCH(n: software) return count(n);", "This is a test procedure, with special characters: !@#$%^&*()")
+    a_proc_id = create_procedure(interactive_session, create_modern_graph, "test_proc_1", "MATCH(n: software) return count(n);", "This is a test procedure, with special characters: !@#$%^&*()")
     print("Procedure id: ", a_proc_id)
     start_service_on_graph(interactive_session, create_modern_graph)
     call_procedure(neo4j_session, create_modern_graph, a_proc_id)
