@@ -294,8 +294,9 @@ class MutableCSRInterface {
       const label_id_t& label_id, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    // auto label_id = db_session_.schema().get_vertex_label_id(label);
-    CHECK(label_id < db_session_.schema().vertex_label_num());
+    THROW_EXCEPTION_IF(label_id >= db_session_.schema().vertex_label_num(),
+                       InvalidArgument,
+                       "Invalid label id: " + std::to_string(label_id));
     std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<std::tuple<T...>> props(vids.size());
@@ -388,7 +389,9 @@ class MutableCSRInterface {
     std::vector<std::tuple<T...>> props(total_size);
     std::vector<label_t> label_ids;
     for (label_id_t label : labels) {
-      CHECK(label < db_session_.schema().vertex_label_num());
+      THROW_EXCEPTION_IF(label >= db_session_.schema().vertex_label_num(),
+                         InvalidArgument,
+                         "Invalid label id: " + std::to_string(label));
       label_ids.emplace_back(label);
     }
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
@@ -571,8 +574,6 @@ class MutableCSRInterface {
                                                  edge_label_id);
       auto csr1 = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                  edge_label_id);
-      // CHECK(csr0);
-      // CHECK(csr1);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr0, csr1, vids);
     } else {
       // LOG(FATAL) << "Not implemented - " << direction_str;

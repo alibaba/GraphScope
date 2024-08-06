@@ -412,7 +412,6 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair, const Collection<T>& set,
       const GRAPH_INTERFACE& graph) {
-    CHECK(ordering_pair.name == "None" || ordering_pair.name == "none");
     return CollectionPropGetter<ORDER_PAIR::tag_id, T>();
   }
 };
