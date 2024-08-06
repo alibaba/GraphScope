@@ -480,9 +480,12 @@ class TypedColumn<std::string_view> : public ColumnBase {
         size_t basic_avg_width =
             (basic_buffer_.data_size() + basic_buffer_.size() - 1) /
             basic_buffer_.size();
-        extra_buffer_.resize(extra_size_, extra_size_ * basic_avg_width);
+        //  extra_size_ * basic_avg_width may be smaller than pos_.load()
+        extra_buffer_.resize(
+            extra_size_, std::max(extra_size_ * basic_avg_width, pos_.load()));
       } else {
-        extra_buffer_.resize(extra_size_, extra_size_ * width_);
+        extra_buffer_.resize(extra_size_,
+                             std::max(extra_size_ * width_, pos_.load()));
       }
     }
     // resize `data` of basic_buffer

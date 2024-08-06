@@ -69,6 +69,8 @@ std::shared_ptr<IContextColumn> SDSLEdgeColumnBuilder::finish() {
   auto ret =
       std::make_shared<SDSLEdgeColumn>(dir_, label_, prop_type_, sub_types_);
   ret->edges_.swap(edges_);
+  // shrink to fit
+  prop_col_->resize(edges_.size());
   ret->prop_col_ = prop_col_;
   return ret;
 }
