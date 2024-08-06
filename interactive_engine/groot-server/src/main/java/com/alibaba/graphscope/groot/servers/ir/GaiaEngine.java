@@ -19,7 +19,7 @@ package com.alibaba.graphscope.groot.servers.ir;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.GaiaInternalException;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.servers.jna.GaiaLibrary;
 import com.alibaba.graphscope.groot.servers.jna.GaiaPortsResponse;
@@ -82,7 +82,7 @@ public class GaiaEngine implements ExecutorEngine {
     public void start() {
         try (GaiaPortsResponse gaiaPortsResponse = GaiaLibrary.INSTANCE.startEngine(this.pointer)) {
             if (!gaiaPortsResponse.success) {
-                throw new GrootException(gaiaPortsResponse.errMsg);
+                throw new GaiaInternalException(gaiaPortsResponse.errMsg);
             }
             engineNodeProvider.apply(gaiaPortsResponse.enginePort);
             rpcNodeProvider.apply(gaiaPortsResponse.rpcPort);

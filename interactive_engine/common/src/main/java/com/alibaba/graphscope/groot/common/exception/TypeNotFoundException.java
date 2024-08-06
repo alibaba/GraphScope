@@ -15,20 +15,23 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
-public class GraphElementNotFoundException extends GraphSchemaException {
-    public GraphElementNotFoundException() {
-        super();
+import com.alibaba.graphscope.proto.Code;
+
+public class TypeNotFoundException extends GrootException {
+
+    public TypeNotFoundException(Throwable t) {
+        super(Code.TYPE_NOT_FOUND, t);
     }
 
-    public GraphElementNotFoundException(Exception exception) {
-        super(exception);
+    public TypeNotFoundException(String message) {
+        super(Code.TYPE_NOT_FOUND, message);
     }
 
-    public GraphElementNotFoundException(String message) {
-        super(message);
+    public TypeNotFoundException(String msg, Throwable t) {
+        super(Code.TYPE_NOT_FOUND, msg, t);
     }
 
-    public GraphElementNotFoundException(String message, Exception exception) {
-        super(message, exception);
+    public TypeNotFoundException() {
+        super(Code.TYPE_NOT_FOUND);
     }
 }

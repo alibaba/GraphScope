@@ -30,7 +30,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: actions/cache@v3
       with:
@@ -372,7 +372,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
@@ -400,7 +400,7 @@ jobs:
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build
       run: |
@@ -416,7 +416,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Download aocc compiler
       run: |
@@ -445,7 +445,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install latest libgrape-lite
       if: false

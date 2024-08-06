@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.common.exception.DdlException;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
 import com.alibaba.graphscope.proto.groot.SchemaGrpc;
 import com.alibaba.graphscope.proto.groot.SubmitBatchDdlRequest;
