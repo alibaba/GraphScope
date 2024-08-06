@@ -21,6 +21,7 @@ package com.alibaba.graphscope.common.ir.type;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
 
@@ -33,7 +34,10 @@ public class ExplicitRecordType extends RelRecordType {
     private final RelDataType explicitType;
 
     public ExplicitRecordType(RelDataType explicitType) {
-        super(StructKind.FULLY_QUALIFIED, ImmutableList.of(), false);
+        super(
+                StructKind.FULLY_QUALIFIED,
+                ImmutableList.of(new RelDataTypeFieldImpl("", 0, explicitType)),
+                false);
         this.explicitType = Objects.requireNonNull(explicitType);
     }
 

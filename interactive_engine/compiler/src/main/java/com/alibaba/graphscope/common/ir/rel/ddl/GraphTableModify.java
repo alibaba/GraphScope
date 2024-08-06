@@ -104,7 +104,7 @@ public class GraphTableModify extends TableModify {
             return new RelRecordType(
                     ImmutableList.of(
                             new RelDataTypeFieldImpl(
-                                    getAliasName(), getAliasId(), getTable().getRowType())));
+                                    getAliasName(), getAliasId(), target.getSingleSchemaType())));
         }
 
         @Override

@@ -50,6 +50,7 @@ public class DataSourceTableScan extends AbstractBindableTableScan implements Da
                 target.getAliasName(),
                 AliasNameWithId.DEFAULT);
         this.target = Objects.requireNonNull(target);
+        setSchemaType(target.getSingleSchemaType());
     }
 
     @Override

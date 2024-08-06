@@ -77,8 +77,8 @@ public class WriteOpTest {
     public void load_csv_create_edge_test() {
         String query =
                 "LOAD CSV FROM \"xxx/*.csv.gz\" AS row FIELDTERMINATOR '|'\n"
-                        + "CREATE (comment:PERSON {id: row[0]})-[k:KNOWS {creationDate:"
-                        + " row[1]}]->(PERSON:PLACE {id: row[2]}) Return k;";
+                        + "CREATE (p1:PERSON {id: row[0]})-[k:KNOWS {creationDate:"
+                        + " row[1]}]->(p2:PERSON {id: row[2]}) Return k;";
         GraphBuilder builder =
                 com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before = com.alibaba.graphscope.cypher.antlr4.Utils.eval(query, builder).build();
@@ -89,7 +89,7 @@ public class WriteOpTest {
                     + " mappings=FieldMappings{mappings=[Entry{source=row[1],"
                     + " target=_.creationDate}]}, srcVertex=Vertex{table=[PERSON],"
                     + " mappings=FieldMappings{mappings=[Entry{source=row[0], target=_.id}]}},"
-                    + " dstVertex=Vertex{table=[PLACE],"
+                    + " dstVertex=Vertex{table=[PERSON],"
                     + " mappings=FieldMappings{mappings=[Entry{source=row[2], target=_.id}]}}}],"
                     + " alias=[k])\n"
                     + "    LoadCSVTableScan(tableConfig=[{isAll=false, tables=[xxx/*.csv.gz]}],"
@@ -113,6 +113,27 @@ public class WriteOpTest {
                     + " alias=[forum], target=[Vertex{table=[FORUM],"
                     + " mappings=FieldMappings{mappings=[Entry{source=row[1], target=_.id}]}}])\n"
                     + "    LoadCSVTableScan(tableConfig=[{isAll=false, tables=[xxx/*.csv.gz]}],"
+                    + " alias=[row])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void load_csv_match_vertex_2_test() {
+        String query =
+                "LOAD CSV FROM $csv_file AS row FIELDTERMINATOR '|'\n"
+                        + "CREATE (:COMMENT {id: row[1]})-[:HASCREATOR]->(:PERSON {id: row[2]})";
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before = com.alibaba.graphscope.cypher.antlr4.Utils.eval(query, builder).build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "Insert(operation=[INSERT], target=[Edge{table=[HASCREATOR],"
+                    + " mappings=FieldMappings{mappings=[]}, srcVertex=Vertex{table=[COMMENT],"
+                    + " mappings=FieldMappings{mappings=[Entry{source=row[1], target=_.id}]}},"
+                    + " dstVertex=Vertex{table=[PERSON],"
+                    + " mappings=FieldMappings{mappings=[Entry{source=row[2], target=_.id}]}}}],"
+                    + " alias=[_])\n"
+                    + "  LoadCSVTableScan(tableConfig=[{isAll=false, tables=[csv_file]}],"
                     + " alias=[row])",
                 after.explain().trim());
     }
@@ -183,6 +204,51 @@ public class WriteOpTest {
                     + " tables=[CONTAINEROF]}], alias=[PATTERN_VERTEX$1], startAlias=[forum],"
                     + " opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
+                    + " alias=[forum], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void load_csv_delete_vertex_2_test() {
+        String query =
+                "LOAD CSV FROM $csv_file AS row FIELDTERMINATOR '|'\n"
+                    + "MATCH (person:PERSON {id: row[1]})\n"
+                    + "OPTIONAL MATCH (person)<-[:HASMODERATOR]-(forum:FORUM) Where forum.title"
+                    + " STARTS WITH 'Album' or forum is NULL\n"
+                    + "OPTIONAL MATCH"
+                    + " (forum)-[:CONTAINEROF]->(:POST)<-[:REPLYOF*0..10]-(message:COMMENT|POST)\n"
+                    + "DETACH DELETE person, forum, message";
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before = com.alibaba.graphscope.cypher.antlr4.Utils.eval(query, builder).build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "Delete(operation=[DELETE], deleteExprs=[[person, forum, message]])\n"
+                    + "  LogicalJoin(condition=[=(forum, forum)], joinType=[left])\n"
+                    + "    LogicalFilter(condition=[OR(POSIX REGEX CASE SENSITIVE(forum.title,"
+                    + " _UTF-8'^Album.*'), IS NULL(forum))])\n"
+                    + "      LogicalJoin(condition=[=(person, person)], joinType=[left])\n"
+                    + "        DataSourceTableScan(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], target=[Vertex{table=[PERSON],"
+                    + " mappings=FieldMappings{mappings=[Entry{source=row[1], target=_.id}]}}])\n"
+                    + "          LoadCSVTableScan(tableConfig=[{isAll=false, tables=[csv_file]}],"
+                    + " alias=[row])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[HASMODERATOR]}], alias=[forum], startAlias=[person], opt=[IN],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
+                    + " alias=[message], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[REPLYOF]}], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "], fetch=[10], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
+                    + " start_alias=[PATTERN_VERTEX$1])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[CONTAINEROF]}], alias=[PATTERN_VERTEX$1], startAlias=[forum],"
+                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
                     + " alias=[forum], opt=[VERTEX])",
                 after.explain().trim());
     }

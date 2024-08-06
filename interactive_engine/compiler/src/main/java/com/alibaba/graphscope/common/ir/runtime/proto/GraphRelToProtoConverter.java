@@ -40,7 +40,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraCypherWrite;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
@@ -1289,13 +1288,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 source instanceof LoadCSVTableScan,
                 "[LOAD CSV]: cannot convert external source [" + source + "] to ir physical");
         LoadCSVTable csvTable = ((LoadCSVTableScan) source).getCSVTable();
-        GraphSchemaType targetType = (GraphSchemaType) targetGraph.getOptTable().getRowType();
-        Preconditions.checkArgument(
-                !targetType.fuzzy(),
-                "[LOAD CSV]: cannot convert optTable graph with fuzzy types ["
-                        + targetType
-                        + "] to ir physical");
-        GraphLabelType.Entry labelEntry = targetType.getLabelType().getLabelsEntry().get(0);
+        GraphLabelType.Entry labelEntry =
+                targetGraph.getSingleSchemaType().getLabelType().getSingleLabelEntry();
         // current we only support loading from a single csv
         GraphAlgebraCypherWrite.Load.ColumnMappings.Input singleInput =
                 protoLoadInput(csvTable.getSource());

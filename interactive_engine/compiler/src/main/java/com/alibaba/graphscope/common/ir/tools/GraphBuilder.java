@@ -739,7 +739,8 @@ public class GraphBuilder extends RelBuilder {
             RelNode topNode, RelDataTypeField targetField, Set<String> uniqueFieldNames) {
         if (!(AliasInference.removeAlias(topNode)
                 || topNode instanceof Join
-                || topNode instanceof AbstractLogicalMatch)) {
+                || topNode instanceof AbstractLogicalMatch
+                || topNode instanceof DataSourceOperation)) {
             for (RelNode child : topNode.getInputs()) {
                 if (visitField(child, targetField, uniqueFieldNames)) {
                     return true;

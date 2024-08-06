@@ -18,10 +18,16 @@
 
 package com.alibaba.graphscope.common.ir.rel.type;
 
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.google.common.base.Preconditions;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Define the optTable graph which the modification is operated on
@@ -49,6 +55,9 @@ public abstract class TargetGraph {
         return aliasName;
     }
 
+    // return non-fuzzy element type
+    public abstract GraphSchemaType getSingleSchemaType();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -70,6 +79,17 @@ public abstract class TargetGraph {
         }
 
         @Override
+        public GraphSchemaType getSingleSchemaType() {
+            GraphSchemaType targetType = (GraphSchemaType) optTable.getRowType();
+            Preconditions.checkArgument(
+                    !targetType.fuzzy(),
+                    "invalid target vertex type, should have only one single label, but is ["
+                            + targetType.getLabelType().getLabelsEntry()
+                            + "]");
+            return targetType;
+        }
+
+        @Override
         public String toString() {
             return "Vertex{"
                     + "table="
@@ -86,6 +106,35 @@ public abstract class TargetGraph {
 
         public Edge(RelOptTable optTable, FieldMappings mappings, String aliasName) {
             super(optTable, mappings, aliasName);
+        }
+
+        @Override
+        public GraphSchemaType getSingleSchemaType() {
+            GraphSchemaType targetType = (GraphSchemaType) optTable.getRowType();
+            GraphLabelType.Entry singleSrc =
+                    this.srcVertex.getSingleSchemaType().getLabelType().getSingleLabelEntry();
+            GraphLabelType.Entry singleDst =
+                    this.dstVertex.getSingleSchemaType().getLabelType().getSingleLabelEntry();
+            List<GraphLabelType.Entry> srcDstFiltering =
+                    targetType.getLabelType().getLabelsEntry().stream()
+                            .filter(
+                                    k ->
+                                            (k.getSrcLabel() != null
+                                                    && k.getSrcLabel().equals(singleSrc.getLabel())
+                                                    && k.getDstLabel() != null
+                                                    && k.getDstLabel()
+                                                            .equals(singleDst.getLabel())))
+                            .collect(Collectors.toList());
+            Preconditions.checkArgument(
+                    srcDstFiltering.size() == 1,
+                    "invalid target edge type, should have only one single label, but is ["
+                            + srcDstFiltering
+                            + "]");
+            return new GraphSchemaType(
+                    targetType.getScanOpt(),
+                    new GraphLabelType(srcDstFiltering.get(0)),
+                    targetType.getFieldList(),
+                    targetType.isNullable());
         }
 
         public Edge withSrcVertex(TargetGraph srcVertex) {
