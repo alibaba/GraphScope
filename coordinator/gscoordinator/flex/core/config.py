@@ -124,7 +124,5 @@ BATCHSIZE = 4096
 BASEID = os.environ.get("BASEID", None)
 PROJECT = os.environ.get("PROJECT", "graphscope")
 STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)
-# treat pod ip as accessible ip
-POD_ACCESSIBLE = (
-    str_to_bool(os.environ["POD_ACCESSIBLE"]) if "POD_ACCESSIBLE" in os.environ else False
-)
+# pod network type
+POD_NETWORK_PLUGIN_TYPE = os.environ.get("POD_NETWORK_PLUGIN_TYPE", "flannel")

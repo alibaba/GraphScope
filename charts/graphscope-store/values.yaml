@@ -316,9 +316,9 @@ portal:
   ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
   ##
   schedulerName: ""
-  ## Treat pod ip as accessible ip
+  ## pod network plugin type
   ##
-  podAccessible: false
+  podNetworkPluginType: flannel
   ## resource request and limit
   resources: {}
   ## Custom environment variables

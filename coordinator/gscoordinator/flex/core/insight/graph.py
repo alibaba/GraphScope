@@ -34,7 +34,7 @@ from gscoordinator.flex.core.config import GROOT_PASSWORD
 from gscoordinator.flex.core.config import GROOT_USERNAME
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import NAMESPACE
-from gscoordinator.flex.core.config import POD_ACCESSIBLE
+from gscoordinator.flex.core.config import POD_NETWORK_PLUGIN_TYPE
 from gscoordinator.flex.core.scheduler import schedule
 from gscoordinator.flex.core.utils import data_type_to_groot
 from gscoordinator.flex.core.utils import get_internal_ip
@@ -83,7 +83,7 @@ class GrootGraph(object):
             return
 
         try:
-            if POD_ACCESSIBLE:
+            if POD_NETWORK_PLUGIN_TYPE == "terway":
                 # frontend statefulset and service name
                 frontend_pod_name = "{0}-graphscope-store-frontend-0".format(
                     INSTANCE_NAME
@@ -312,7 +312,7 @@ def get_groot_graph_from_k8s():
         tz.tzlocal()
     ).strftime("%Y/%m/%d %H:%M:%S")
     # service endpoints: [grpc_endpoint, gremlin_endpoint]
-    if POD_ACCESSIBLE:
+    if POD_NETWORK_PLUGIN_TYPE == "terway":
         frontend_pod_name = "{0}-graphscope-store-frontend-0".format(INSTANCE_NAME)
         pod = core_api.read_namespaced_pod(frontend_pod_name, NAMESPACE)
         endpoints = [
