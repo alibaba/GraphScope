@@ -109,8 +109,10 @@ class GetVertex {
       const GRAPH_INTERFACE& graph, const SET_T& set,
       const GetVOpt<LabelT, num_labels, EXPRESSION, T...>& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
-    CHECK(v_opt == VOpt::Itself)
-        << "Can only get v from vertex set with v_opt == vopt::Itself";
+    if (v_opt != VOpt::Itself) {
+      throw std::runtime_error(
+          "Can only get v from vertex set with v_opt == vopt::Itself");
+    }
     auto v_labels = get_v_opt.v_labels_;
     auto props = get_v_opt.props_;
     auto expr = get_v_opt.expr_;
@@ -236,7 +238,9 @@ class GetVertex {
     std::sort(labels.begin(), labels.end());
     labels.erase(std::unique(labels.begin(), labels.end()), labels.end());
     // Can only be one label.
-    CHECK(labels.size() == 1);
+    if (labels.size() != 1) {
+      throw std::runtime_error("Path set should have only one label");
+    }
     // if req_labels is empty, then use the label from path set.
     if (req_label_vec.empty()) {
       req_label_vec.push_back(labels[0]);
