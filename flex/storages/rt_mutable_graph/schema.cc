@@ -215,9 +215,6 @@ const std::vector<PropertyType>& Schema::get_edge_properties(
 
 const std::vector<PropertyType>& Schema::get_edge_properties(
     label_t src_label, label_t dst_label, label_t label) const {
-  // CHECK(src_label < vlabel_indexer_.size());
-  // CHECK(dst_label < vlabel_indexer_.size());
-  // CHECK(label < elabel_indexer_.size());
   THROW_EXCEPTION_IF(
       src_label >= vlabel_indexer_.size(),
       "vertex label " + std::to_string(src_label) + " not found");
@@ -260,9 +257,6 @@ const std::vector<std::string>& Schema::get_edge_property_names(
     const std::string& src_label, const std::string& dst_label,
     const std::string& label) const {
   label_t src, dst, edge;
-  // CHECK(vlabel_indexer_.get_index(src_label, src));
-  // CHECK(vlabel_indexer_.get_index(dst_label, dst));
-  // CHECK(elabel_indexer_.get_index(label, edge));
   THROW_EXCEPTION_IF(!vlabel_indexer_.get_index(src_label, src),
                      "vertex label " + src_label + " not found");
   THROW_EXCEPTION_IF(!vlabel_indexer_.get_index(dst_label, dst),
@@ -276,9 +270,6 @@ const std::vector<std::string>& Schema::get_edge_property_names(
 const std::vector<std::string>& Schema::get_edge_property_names(
     const label_t& src_label, const label_t& dst_label,
     const label_t& label) const {
-  // CHECK(src_label < vlabel_indexer_.size());
-  // CHECK(dst_label < vlabel_indexer_.size());
-  // CHECK(label < elabel_indexer_.size());
   THROW_EXCEPTION_IF(
       src_label >= vlabel_indexer_.size(),
       "vertex label " + std::to_string(src_label) + " not found");
