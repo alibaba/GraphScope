@@ -18,8 +18,7 @@
 
 import base64
 import datetime
-
-imoprt logging
+import logging
 import os
 import tempfile
 
