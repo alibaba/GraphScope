@@ -12,6 +12,7 @@ public class GraphSystem {
     public String getName() {
         return name;
     }
+
     public GraphClient getClient() {
         return client;
     }

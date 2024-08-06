@@ -26,8 +26,7 @@ public class QueryUtil {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
         List<CommonQuery> queryList = new ArrayList<>();
-        String defaultSuffix = "." + configuration.getString(Configuration.CLIENT_OPT);
-        String suffix = configuration.getString(Configuration.QUERY_SUFFIX, defaultSuffix);
+        String suffix = "." + configuration.getString(Configuration.QUERY_SUFFIX);
 
         if (configuration.getBoolean(Configuration.ALL_QUERIES_ENABLE, false)) {
             // New logic to automatically add all queries in the specified directory

@@ -8,9 +8,12 @@ import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GremlinGraphClient implements GraphClient {
     private final Client client;
+    private static Logger logger = LoggerFactory.getLogger(GremlinGraphClient.class);
 
     public GremlinGraphClient(String endpoint, String username, String password) {
         String[] address = endpoint.split(":");
@@ -24,7 +27,11 @@ public class GremlinGraphClient implements GraphClient {
             cluster.credentials(username, password);
         }
         Client gremlinClient = cluster.create().connect();
+        if (gremlinClient == null) {
+            throw new RuntimeException("Failed to create client with gremlin server");
+        }
         this.client = gremlinClient;
+        logger.info("Connected to gremlin server at " + endpoint);
     }
 
     @Override

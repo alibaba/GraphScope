@@ -63,6 +63,7 @@ public class InteractiveBenchmark {
             BenchmarkResultComparator comparator;
 
             public MyRunnable(GraphClient client, BenchmarkResultComparator comparator) {
+                this.client = client;
                 this.comparator = comparator;
                 System.out.println("Connect success.");
             }
@@ -107,6 +108,8 @@ public class InteractiveBenchmark {
         }
 
         for (GraphSystem system : comparedSystems) {
+            // TODO: fix atomicQueryCount and atomicParameterIndex when dealing with multiple
+            // systems
             String name = system.getName();
             GraphClient client = system.getClient();
             System.out.println("Start to benchmark system: " + name);

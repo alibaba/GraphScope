@@ -7,9 +7,12 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CypherGraphClient implements GraphClient {
     private final Session session;
+    private static Logger logger = LoggerFactory.getLogger(CypherGraphClient.class);
 
     public CypherGraphClient(String endpoint, String username, String password) {
         String uri = "bolt://" + endpoint;
@@ -18,6 +21,7 @@ public class CypherGraphClient implements GraphClient {
         if (session == null) {
             throw new RuntimeException("Failed to create session with neo4j server");
         }
+        logger.info("Connected to neo4j server at " + endpoint);
     }
 
     @Override

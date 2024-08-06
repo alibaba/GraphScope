@@ -44,6 +44,10 @@ public class CommonQuery {
         this.parameters = getParameters(parameterFile);
     }
 
+    public String getQueryName() {
+        return queryName;
+    }
+
     public HashMap<String, String> getSingleParameter(int index) {
         return parameters.get(index % parameters.size());
     }

@@ -39,11 +39,10 @@ public class Configuration {
 
     public static final String THREAD_COUNT = "benchmark.thread.count";
     public static final String WARMUP_EVERY_QUERY = "benchmark.warmup.every.query";
-    public static final String OPERATION_COUNT_EVERY_QUERY = "benchmark.operation.count.every.query";
+    public static final String OPERATION_COUNT_EVERY_QUERY =
+            "benchmark.operation.count.every.query";
     public static final String PRINT_QUERY_NAME = "benchmark.print.query.name";
     public static final String PRINT_QUERY_RESULT = "benchmark.print.query.result";
-
-   
 
     public Optional<String> getOption(String key) {
         String value = settings.get(key);
