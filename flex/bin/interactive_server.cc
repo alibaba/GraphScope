@@ -171,7 +171,9 @@ int main(int argc, char** argv) {
       "start-compiler", bpo::value<bool>()->default_value(false),
       "whether or not to start compiler")(
       "memory-level,m", bpo::value<unsigned>()->default_value(1),
-      "memory allocation strategy");
+      "memory allocation strategy")("enable-adhoc-handler",
+                                    bpo::value<bool>()->default_value(false),
+                                    "whether to enable adhoc handler");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -203,7 +205,7 @@ int main(int argc, char** argv) {
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
-  service_config.enable_adhoc_handler = true;
+  service_config.enable_adhoc_handler = vm["enable-adhoc-handler"].as<bool>();
 
   auto& db = gs::GraphDB::get();
 
@@ -233,7 +235,9 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
         service_config.default_graph);
-    gs::init_codegen_proxy(vm, engine_config_file);
+    if (service_config.enable_adhoc_handler) {
+      gs::init_codegen_proxy(vm, engine_config_file);
+    }
   } else {
     LOG(INFO) << "Start query service only";
     std::string graph_schema_path, data_path;
@@ -257,7 +261,9 @@ int main(int argc, char** argv) {
     }
 
     // The schema is loaded just to get the plugin dir and plugin list
-    gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
+    if (service_config.enable_adhoc_handler) {
+      gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
+    }
     db.Close();
     auto load_res =
         db.Open(schema_res.value(), data_path, service_config.shard_num);

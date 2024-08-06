@@ -7,7 +7,8 @@ import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
-import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.QueueRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
@@ -118,7 +119,7 @@ public class KafkaAppender {
         boolean suc = this.ingestBuffer.offer(new IngestTask(requestId, operationBatch, callback));
         if (!suc) {
             logger.warn("ingest buffer is full");
-            throw new IngestRejectException("add ingestTask to buffer failed");
+            throw new QueueRejectException("add ingestTask to buffer failed");
         }
     }
 

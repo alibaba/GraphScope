@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.Partitioner;
@@ -35,7 +36,7 @@ public class DataBuildPartitionerOdps extends Partitioner {
         try {
             keyBytes = ((String) key.get(0)).getBytes(DataBuildMapperOdps.charSet);
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("PartitionerOdps: Should not have happened " + e);
+            throw new InvalidArgumentException("PartitionerOdps: Should not have happened " + e);
         }
         ByteBuffer keyBuf = ByteBuffer.wrap(keyBytes);
         long partitionKey = keyBuf.getLong(8);

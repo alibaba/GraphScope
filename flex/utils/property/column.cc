@@ -144,7 +144,9 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return nullptr;
     }
   } else {
-    if (type == PropertyType::kBool) {
+    if (type == PropertyType::kEmpty) {
+      return std::make_shared<TypedColumn<grape::EmptyType>>(strategy);
+    } else if (type == PropertyType::kBool) {
       return std::make_shared<BoolColumn>(strategy);
     } else if (type == PropertyType::kInt32) {
       return std::make_shared<IntColumn>(strategy);

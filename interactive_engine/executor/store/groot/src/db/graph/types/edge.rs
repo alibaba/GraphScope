@@ -385,11 +385,11 @@ impl EdgeManagerInner {
                 }
             }
             let msg = format!("no {:?} is alive at {}", kind, si);
-            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_kind, si, kind);
+            let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, get_edge_kind, si, kind);
             return Err(err);
         }
         let msg = format!("edge {:?} not found", kind);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_kind, si, kind);
+        let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, get_edge_kind, si, kind);
         Err(err)
     }
 
@@ -400,11 +400,11 @@ impl EdgeManagerInner {
                 return Ok(info.clone());
             }
             let msg = format!("edge#{} is not alive at {}", label, si);
-            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_info, si, label);
+            let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, get_edge_info, si, label);
             return Err(err);
         }
         let msg = format!("edge#{} not found", label);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_info, si, label);
+        let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, get_edge_info, si, label);
         Err(err)
     }
 
@@ -426,7 +426,7 @@ impl EdgeManagerInner {
     fn create_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
         if self.info_map.contains_key(&label) {
             let msg = format!("edge#{} already exists", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_edge_type);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, create_edge_type);
             return Err(err);
         }
         let info = EdgeInfo::new(si, label);
@@ -440,7 +440,7 @@ impl EdgeManagerInner {
     fn update_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
         if !self.info_map.contains_key(&label) {
             let msg = format!("edge#{} not found.", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_edge_type);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, update_edge_type);
             return Err(err);
         }
         if let Some(info) = self.info_map.get(&label) {
@@ -460,7 +460,7 @@ impl EdgeManagerInner {
             return Ok(());
         }
         let msg = format!("edge#{} not found", label);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, drop_edge_type, si, label);
+        let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, drop_edge_type, si, label);
         Err(err)
     }
 
@@ -478,7 +478,7 @@ impl EdgeManagerInner {
             return Ok(());
         }
         let msg = format!("edge#{} not found", kind.edge_label_id);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_kind, si, kind);
+        let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, get_edge_kind, si, kind);
         Err(err)
     }
 
@@ -488,7 +488,7 @@ impl EdgeManagerInner {
             return Ok(());
         }
         let msg = format!("edge#{:?} not found", kind);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, remove_edge_kind, si, kind);
+        let err = gen_graph_err!(ErrorCode::TYPE_NOT_FOUND, msg, remove_edge_kind, si, kind);
         Err(err)
     }
 

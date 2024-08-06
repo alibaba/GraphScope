@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.exception.UnsupportedOperationException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;

@@ -489,7 +489,6 @@ class GroupByOp {
         }
         auto data_ele = gs::get_from_tuple<GROUP_KEY::col_id>(data_tuple);
         int32_t ind = insert_to_keyed_set(keyed_set_builder, key_ele, data_ele);
-        // CHECK(ind != -1);
         if (ind != -1) {
           insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
                                       data_tuple, ind);

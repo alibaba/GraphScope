@@ -5,7 +5,7 @@ use protobuf::Message;
 
 use super::table_manager::*;
 use super::types::*;
-use crate::db::api::GraphErrorCode::InvalidData;
+use crate::db::api::ErrorCode::INVALID_DATA;
 use crate::db::api::*;
 use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::parse_pb;
@@ -128,7 +128,7 @@ impl Meta {
                             "current label idx {}, create label id {}",
                             current_label_idx, label_id
                         );
-                        return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                        return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
                     }
                     graph_def.add_type(label_id, x.type_def.clone())?;
                     graph_def.put_vertex_table_id(label_id, x.table_id);
@@ -155,7 +155,7 @@ impl Meta {
                             "current label idx {}, create label id {}",
                             current_label_idx, label_id
                         );
-                        return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                        return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
                     }
                     graph_def.add_type(label_id, x.type_def.clone())?;
                     graph_def.set_label_idx(label_id);
@@ -223,7 +223,7 @@ impl Meta {
                         label_id, x.table_id, x.si, x.type_def
                     );
                     let mut graph_def = self.graph_def_lock.lock()?;
-                    graph_def.update_type(label_id, x.type_def.clone());
+                    let _ = graph_def.update_type(label_id, x.type_def.clone());
                     graph_def.increase_version();
                     vertex_manager_builder.update_type(x.si, x.label_id, &x.type_def)?;
                 }
@@ -231,7 +231,7 @@ impl Meta {
                     let label_id = x.type_def.get_label_id();
                     info!("AddEdgeProperty label {:?}, si {:?}, typedef {:?}", label_id, x.si, x.type_def);
                     let mut graph_def = self.graph_def_lock.lock()?;
-                    graph_def.update_type(label_id, x.type_def.clone());
+                    let _ = graph_def.update_type(label_id, x.type_def.clone());
                     graph_def.increase_version();
                     edge_manager_builder.update_edge_type(x.si, x.label_id, &x.type_def)?;
                 }
@@ -245,7 +245,7 @@ impl Meta {
         let current_version = graph_def.get_version();
         if current_version >= schema_version {
             let msg = format!("current schema version {} >= {}", current_version, schema_version);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_vertex_type);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, create_vertex_type);
             return Err(err);
         }
         Ok(())
@@ -302,7 +302,7 @@ impl Meta {
             let current_label_idx = graph_def.get_label_idx();
             if current_label_idx >= label_id {
                 let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
-                return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
             }
             graph_def.add_type(label_id, type_def.clone())?;
             graph_def.put_vertex_table_id(label_id, table_id);
@@ -330,7 +330,7 @@ impl Meta {
                         "Property with name '{}' already exists in type for label_id {}",
                         new_property_name, label_id
                     );
-                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                    return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
                 }
                 cloned.add_property(new_property.clone());
             }
@@ -338,14 +338,13 @@ impl Meta {
             let item = AddVertexPropertyItem::new(si, schema_version, label_id, table_id, cloned.clone());
             self.write_item(item)?;
             {
-                let current_label_idx = graph_def.get_label_idx();
                 graph_def.update_type(label_id, cloned.clone())?;
                 graph_def.increase_version();
             }
             Ok((Table::new(si, table_id), cloned))
         } else {
             let msg = format!("current label id {} not exist.", label_id);
-            return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+            return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
         }
     }
 
@@ -374,7 +373,7 @@ impl Meta {
             let current_label_idx = graph_def.get_label_idx();
             if current_label_idx >= label_id {
                 let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
-                return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
             }
             graph_def.add_type(type_def.get_label_id(), type_def.clone())?;
             graph_def.set_label_idx(label_id);
@@ -399,7 +398,7 @@ impl Meta {
                         "Property with name '{}' already exists in type for label_id {}",
                         new_property_name, label_id
                     );
-                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                    return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
                 }
                 cloned.add_property(new_property.clone());
             }
@@ -407,14 +406,13 @@ impl Meta {
             let item = AddEdgePropertyItem::new(si, schema_version, label_id, cloned.clone());
             self.write_item(item)?;
             {
-                let current_label_idx = graph_def.get_label_idx();
                 graph_def.update_type(label_id, cloned.clone())?;
                 graph_def.increase_version();
             }
             Ok(cloned)
         } else {
             let msg = format!("current label id {} not exist.", label_id);
-            return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+            return Err(GraphError::new(ErrorCode::INVALID_OPERATION, msg));
         }
     }
 
@@ -470,7 +468,7 @@ impl Meta {
                     let table_id = id.to_be() + 1;
                     if table_id >= 0 {
                         let msg = format!("cannot assign any more table id");
-                        let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, get_next_table_id);
+                        let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, get_next_table_id);
                         return Err(err);
                     }
                     Ok(table_id)
@@ -542,7 +540,7 @@ impl MetaItem {
 fn common_parse_key<'a>(k: &'a [u8], prefix: &str, size: usize) -> GraphResult<Vec<&'a str>> {
     if transform::bytes_to_i64(&k[0..8])?.to_be() != META_TABLE_ID {
         let msg = format!("invalid meta key");
-        let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, common_parse_key, k, prefix, size);
+        let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, common_parse_key, k, prefix, size);
         return Err(err);
     }
     let key = res_unwrap!(transform::bytes_to_str(&k[8..]), common_parse_key, k, prefix, size)?;
@@ -551,7 +549,7 @@ fn common_parse_key<'a>(k: &'a [u8], prefix: &str, size: usize) -> GraphResult<V
         return Ok(items);
     }
     let msg = format!("invalid key {}", key);
-    let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, common_parse_key, k, prefix, size);
+    let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, common_parse_key, k, prefix, size);
     Err(err)
 }
 
@@ -600,7 +598,7 @@ impl ItemCommon for PrepareDataLoadItem {
         let target_pb = self.target.to_proto();
         let bytes = target_pb
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -641,7 +639,7 @@ impl ItemCommon for CommitDataLoadItem {
         let target_pb = self.target.to_proto();
         let bytes = target_pb
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -691,7 +689,7 @@ impl ItemCommon for CreateVertexTypeItem {
         let typedef_pb = self.type_def.to_proto()?;
         let bytes = typedef_pb
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -799,7 +797,7 @@ impl ItemCommon for AddEdgeKindItem {
             .edge_kind
             .to_proto()
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -871,7 +869,7 @@ impl ItemCommon for RemoveEdgeKindItem {
             .edge_kind
             .to_proto()
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -921,7 +919,7 @@ impl ItemCommon for AddVertexPropertyItem {
         let typedef_pb = self.type_def.to_proto()?;
         let bytes = typedef_pb
             .write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }

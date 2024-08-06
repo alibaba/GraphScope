@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.IngestorWriteClient;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
@@ -162,7 +162,7 @@ public class Coordinator extends NodeBase {
         try {
             this.rpcServer.start();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         this.discovery.start();
         this.channelManager.start();

@@ -89,6 +89,14 @@ spec:
           env:
             - name: ROLE
               value: "frontend"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           ports:
             - name: grpc
               containerPort: {{ .Values.frontend.service.servicePort }}

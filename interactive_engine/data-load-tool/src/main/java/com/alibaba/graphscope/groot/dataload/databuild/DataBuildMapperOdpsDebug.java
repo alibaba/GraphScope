@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
@@ -94,7 +95,7 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
             outKey.set(0, getEdgeKeyEncoded(in));
             context.write(outKey);
         } else {
-            throw new IllegalArgumentException("Invalid label " + labelId);
+            throw new InvalidArgumentException("Invalid label " + labelId);
         }
     }
 
@@ -111,7 +112,7 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         return concatenateItemsByIndices(items, indices);
     }
 
-    private String getEdgeRawKeys(ColumnMappingInfo info, String[] items) throws IOException {
+    private String getEdgeRawKeys(ColumnMappingInfo info, String[] items) {
         Map<Integer, Integer> srcPkColMap = info.getSrcPkColMap();
         Map<Integer, Integer> dstPkColMap = info.getDstPkColMap();
 
@@ -120,11 +121,10 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         return concatenateItemsByIndices(items, pkIds);
     }
 
-    private static String concatenateItemsByIndices(String[] array, List<Integer> indices)
-            throws IOException {
+    private static String concatenateItemsByIndices(String[] array, List<Integer> indices) {
         StringBuilder builder = new StringBuilder();
         if (indices.isEmpty()) {
-            throw new IOException("indices are empty!");
+            throw new InvalidArgumentException("indices are empty!");
         }
         for (int index : indices) {
             builder.append(array[index]).append(",");

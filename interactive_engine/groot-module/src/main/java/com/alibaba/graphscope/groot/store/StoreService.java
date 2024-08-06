@@ -18,6 +18,8 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -101,7 +103,7 @@ public class StoreService {
                 GraphPartition partition = makeGraphPartition(this.storeConfigs, partitionId);
                 this.idToPartition.put(partitionId, partition);
             } catch (IOException e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         }
         initMetrics();
