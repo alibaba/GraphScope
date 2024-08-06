@@ -402,7 +402,7 @@ impl Encoder {
         //     if let Some(data) = props.get(info.prop_id) {
         //         if !check_fixed_prop_len(info.r#type, data) {
         //             let msg = format!("invalid {:?} data", info.r#type);
-        //             let err = gen_graph_err!(GraphErrorCode::InvalidData, msg);
+        //             let err = gen_graph_err!(GraphErrorCode::INVALID_DATA, msg);
         //             return Err(err);
         //         }
         //     }
@@ -498,7 +498,7 @@ fn check_var_len_prop(r#type: ValueType, data: &[u8]) -> GraphResult<()> {
                 return Ok(());
             }
             let msg = format!("string is not utf-8");
-            let err = gen_graph_err!(GraphErrorCode::InvalidData, msg);
+            let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg);
             return Err(err);
         }
         ValueType::Bytes => {
@@ -523,7 +523,7 @@ fn check_var_len_prop(r#type: ValueType, data: &[u8]) -> GraphResult<()> {
         _ => unreachable!(),
     }
     let msg = format!("invalid {:?} data, length is not right", r#type);
-    let err = gen_graph_err!(GraphErrorCode::InvalidData, msg);
+    let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg);
     Err(err)
 }
 
@@ -548,13 +548,13 @@ impl CodecManager {
         let mut max_version = res_unwrap!(self.lock.lock(), add_codec, si, codec)?;
         if self.versions.get_latest_version() >= si {
             let msg = format!("si#{} is too small, cannot add", si);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_codec, si, codec);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, add_codec, si, codec);
             return Err(err);
         }
         let version = codec.get_version();
         if version <= *max_version {
             let msg = format!("current max codec version is {}, you cannot add a older one", *max_version);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_codec, si, codec);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, add_codec, si, codec);
             return Err(err);
         }
         let codec = Arc::new(codec);
@@ -563,7 +563,7 @@ impl CodecManager {
 
         let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
             let msg = "get map reference return `None`".to_string();
-            gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si)
+            gen_graph_err!(ErrorCode::INVALID_DATA, msg, get_map, si)
         })?;
         let mut map_clone = map_ref.clone();
         map_clone.insert(version, codec);
@@ -582,12 +582,12 @@ impl CodecManager {
             let map = self.get_map(&guard);
             let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
                 let msg = "get map reference return `None`".to_string();
-                gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si)
+                gen_graph_err!(ErrorCode::INVALID_DATA, msg, get_map, si)
             })?;
             return get_codec(map_ref, version).map(|codec| Encoder::new(codec));
         }
         let msg = format!("codec not found at si#{}", si);
-        let err = gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, si);
+        let err = gen_graph_err!(ErrorCode::NOT_FOUND, msg, get_encoder, si);
         Err(err)
     }
 
@@ -598,14 +598,14 @@ impl CodecManager {
             let map = self.get_map(&guard);
             let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
                 let msg = "get map reference return `None`".to_string();
-                gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si, version)
+                gen_graph_err!(ErrorCode::INVALID_DATA, msg, get_map, si, version)
             })?;
             let src = res_unwrap!(get_codec(map_ref, version), get_decoder, si, version)?;
             let target = res_unwrap!(get_codec(map_ref, target_version), get_decoder, si, version)?;
             return Ok(Decoder::new(target, src));
         }
         let msg = format!("codec not found at si#{}", si);
-        let err = gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_decoder, si, version);
+        let err = gen_graph_err!(ErrorCode::NOT_FOUND, msg, get_decoder, si, version);
         Err(err)
     }
 
@@ -616,7 +616,7 @@ impl CodecManager {
         let map = self.get_map(&guard);
         let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
             let msg = "get map reference return `None`".to_string();
-            gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, version)
+            gen_graph_err!(ErrorCode::INVALID_DATA, msg, get_map, version)
         })?;
         let mut map_clone = map_ref.clone();
         if map_clone.remove(&version).is_some() {
@@ -639,7 +639,7 @@ impl CodecManager {
 fn get_codec(map: &CodecMap, version: CodecVersion) -> GraphResult<Arc<Codec>> {
     map.get(&version).cloned().ok_or_else(|| {
         let msg = format!("codec of version#{} not found", version);
-        gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, version)
+        gen_graph_err!(ErrorCode::NOT_FOUND, msg, get_encoder, version)
     })
 }
 
