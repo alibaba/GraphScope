@@ -42,7 +42,7 @@ COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
     cd /home/graphscope/gsctl && \
-    python3 -m pip install click && \
+    python3 -m pip install click packaging && \
     python3 gsctl.py install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
     cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl
 

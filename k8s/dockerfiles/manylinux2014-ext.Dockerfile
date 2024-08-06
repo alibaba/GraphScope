@@ -6,6 +6,11 @@ FROM centos:7 AS builder
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
+
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
+        sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
+        sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo;
+
 RUN yum install sudo -y && \
     yum update glibc-common -y  && \
     sudo localedef -i en_US -f UTF-8 en_US.UTF-8 && \    
@@ -18,7 +23,7 @@ ENV LANG=en_US.utf-8
 
 COPY gsctl ./gsctl
 RUN cd ./gsctl && \
-    python3 -m pip install click && \ 
+    python3 -m pip install click packaging && \ 
     python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d  -j $(nproc) && \
     rm -fr /root/gsctl
 
@@ -35,6 +40,10 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     rm -rf doc hadoop/client  hadoop/mapreduce  hadoop/tools  hadoop/yarn
 
 FROM centos:7
+
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
+        sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
+        sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo;
 
 COPY --from=builder /opt/graphscope /opt/graphscope
 COPY --from=builder /opt/openmpi /opt/openmpi
