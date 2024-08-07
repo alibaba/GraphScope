@@ -42,7 +42,8 @@ all: coordinator analytical interactive learning
 graphscope: all
 
 dev-wheel:
-	cd $(WORKING_DIR)../ && \
+	cd $(WORKING_DIR) && \
+	cd ../python/graphscope && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
@@ -51,13 +52,15 @@ dev-wheel:
 
 
 manylinux2014-ext:
-	cd $(WORKING_DIR)/.. && \
+	cd $(WORKING_DIR) && \
+	cd ../python/graphscope  && \
 	docker build \
 		-t graphscope/manylinux2014:ext-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:
-	cd $(WORKING_DIR)/.. && \
+	cd $(WORKING_DIR) && \
+	cd ../python/graphscope  && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
@@ -65,7 +68,8 @@ graphscope-dev:
 		-f $(DOCKERFILES_DIR)/graphscope-dev.Dockerfile .
 
 vineyard-dev:
-	cd $(WORKING_DIR)/.. && \
+	cd $(WORKING_DIR) && \
+	cd ../python/graphscope  && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
@@ -146,7 +150,6 @@ interactive-experimental:
 		-t graphscope/interactive-experimental:${VERSION} \
 		-f $(DOCKERFILES_DIR)/interactive-experimental.Dockerfile .
 
-	
 # flex interactive 
 flex-interactive:
 	cd $(WORKING_DIR)/.. && \
