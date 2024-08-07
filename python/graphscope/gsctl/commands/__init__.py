@@ -22,8 +22,8 @@ import click
 
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
-
-# from graphscope.gsctl.commands.insight.graph import cli as insight_graph
+from graphscope.gsctl.commands.insight.glob import cli as insight
+from graphscope.gsctl.commands.insight.graph import cli as insight_graph
 from graphscope.gsctl.commands.interactive.glob import cli as interactive
 from graphscope.gsctl.commands.interactive.graph import cli as interactive_graph
 from graphscope.gsctl.config import Context
@@ -45,7 +45,7 @@ def is_interactive_mode(flex):
 def is_insight_mode(flex):
     return (
         flex["engine"] == "Gaia"
-        and flex["storage"] == "MutableCSR"
+        and flex["storage"] == "MutablePersistent"
         and flex["frontend"] == "Cypher/Gremlin"
     )
 
@@ -116,7 +116,21 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
                 info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif is_insight_mode(context.flex):
-        commands = click.CommandCollection(sources=[common])
-        # commands = click.CommandCollection(sources=[common, insight_graph])
+        if context.context == "global":
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info("Using GLOBAL.", fg="green", bold=True)
+                info(
+                    "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
+                )
+            commands = click.CommandCollection(sources=[common, insight])
+        else:
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info(
+                    f"Using GRAPH {context.graph_name}(id={context.context}).",
+                    fg="green",
+                    bold=True,
+                )
+                info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
+            commands = click.CommandCollection(sources=[common, insight_graph])
 
     return commands
