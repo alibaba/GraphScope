@@ -112,7 +112,7 @@ std::shared_ptr<IAccessor> create_edge_property_path_accessor(
   if (txn.schema().has_multi_props_edge()) {
     for (auto label : labels) {
       auto& properties = txn.schema().get_edge_properties(
-          label.src_label, label.dst_label, label.dst_label);
+          label.src_label, label.dst_label, label.edge_label);
       if (properties.size() > 1) {
         multip_properties = true;
         break;
