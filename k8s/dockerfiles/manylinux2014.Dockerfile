@@ -41,6 +41,10 @@ RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
+    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
+    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo;
+
 # Install jdk-11
 RUN yum install -y sudo vim && \
     yum install python3-pip -y && \
