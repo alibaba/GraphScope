@@ -137,14 +137,15 @@ boost::leaf::result<void> BuildArray(
   return {};
 }
 
-static constexpr const char* JAVA_LOADER_CLASS =
-    "com/alibaba/graphscope/loader/impl/FileLoader";
-static constexpr const char* JAVA_LOADER_CREATE_METHOD = "create";
+static constexpr const char* JAVA_LOADER_FACTORY_CLASS =
+    "com/alibaba/graphscope/loader/LoaderFactory";
+static constexpr const char* JAVA_BASE_LOADER_CLASS =
+    "com/alibaba/graphscope/loader/LoaderBase";
+static constexpr const char* JAVA_LOADER_CREATE_METHOD = "createLoader";
 static constexpr const char* JAVA_LOADER_CREATE_SIG =
-    "(Ljava/net/URLClassLoader;)Lcom/alibaba/graphscope/loader/impl/"
-    "FileLoader;";
-static constexpr const char* JAVA_LOADER_LOAD_VE_METHOD =
-    "loadVerticesAndEdges";
+    "(ILjava/net/"
+    "URLClassLoader;)Lcom/alibaba/graphscope/loader/LoaderBase;";
+static constexpr const char* JAVA_LOADER_LOAD_VE_METHOD = "loadVertices";
 static constexpr const char* JAVA_LOADER_LOAD_VE_SIG =
     "(Ljava/lang/String;Ljava/lang/String;)I";
 static constexpr const char* JAVA_LOADER_LOAD_E_METHOD = "loadEdges";
@@ -389,16 +390,19 @@ class JavaLoaderInvoker {
     gs::JNIEnvMark m;
     if (m.env()) {
       JNIEnv* env = m.env();
-      jclass loader_class =
-          LoadClassWithClassLoader(env, gs_class_loader_obj, JAVA_LOADER_CLASS);
-      CHECK_NOTNULL(loader_class);
+      jclass factory_class = LoadClassWithClassLoader(
+          env, gs_class_loader_obj, JAVA_LOADER_FACTORY_CLASS);
+      jclass base_loader_class = LoadClassWithClassLoader(
+          env, gs_class_loader_obj, JAVA_BASE_LOADER_CLASS);
+      CHECK_NOTNULL(factory_class);
+      CHECK_NOTNULL(base_loader_class);
       // construct java loader obj.
       jmethodID create_method = env->GetStaticMethodID(
-          loader_class, JAVA_LOADER_CREATE_METHOD, JAVA_LOADER_CREATE_SIG);
+          factory_class, JAVA_LOADER_CREATE_METHOD, JAVA_LOADER_CREATE_SIG);
       CHECK(create_method);
 
       java_loader_obj = env->NewGlobalRef(env->CallStaticObjectMethod(
-          loader_class, create_method, gs_class_loader_obj));
+          factory_class, create_method, worker_id_, gs_class_loader_obj));
 
       if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
@@ -409,7 +413,7 @@ class JavaLoaderInvoker {
       CHECK(java_loader_obj);
 
       jmethodID loader_method = env->GetMethodID(
-          loader_class, JAVA_LOADER_INIT_METHOD, JAVA_LOADER_INIT_SIG);
+          base_loader_class, JAVA_LOADER_INIT_METHOD, JAVA_LOADER_INIT_SIG);
       CHECK_NOTNULL(loader_method);
 
       env->CallVoidMethod(java_loader_obj, loader_method, worker_id_,
@@ -524,8 +528,8 @@ class JavaLoaderInvoker {
     gs::JNIEnvMark m;
     if (m.env()) {
       JNIEnv* env = m.env();
-      jclass loader_class =
-          LoadClassWithClassLoader(env, gs_class_loader_obj, JAVA_LOADER_CLASS);
+      jclass loader_class = LoadClassWithClassLoader(env, gs_class_loader_obj,
+                                                     JAVA_BASE_LOADER_CLASS);
       CHECK_NOTNULL(loader_class);
 
       jmethodID loader_method = env->GetMethodID(
@@ -560,8 +564,8 @@ class JavaLoaderInvoker {
     gs::JNIEnvMark m;
     if (m.env()) {
       JNIEnv* env = m.env();
-      jclass loader_class =
-          LoadClassWithClassLoader(env, gs_class_loader_obj, JAVA_LOADER_CLASS);
+      jclass loader_class = LoadClassWithClassLoader(env, gs_class_loader_obj,
+                                                     JAVA_BASE_LOADER_CLASS);
       CHECK_NOTNULL(loader_class);
 
       jmethodID loader_method = env->GetMethodID(

@@ -62,10 +62,10 @@
       <groupId>com.alibaba.fastffi</groupId>
       <artifactId>annotation-processor</artifactId>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
+    </dependency> -->
   </dependencies>
 
   <build>

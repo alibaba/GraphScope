@@ -8,6 +8,11 @@ ARG CI=false
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+# uninstall openjdk-11 and install openjdk-8
+RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
+    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk maven && \
+    sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
+
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
@@ -24,7 +29,11 @@ RUN cd /home/graphscope/GraphScope/ && \
         cp wheelhouse/*.whl /home/graphscope/install/ && \
         cd ../coordinator && \
         python3 setup.py bdist_wheel && \
-        cp dist/*.whl /home/graphscope/install/; \
+        cp dist/*.whl /home/graphscope/install/ && \
+        cd ../analytical_engine/java/ && \
+        mvn clean package -DskipTests -Dmaven.antrun.skip=true && \
+        cp grape-runtime/target/grape-runtime-*-shaded.jar /home/graphscope/install/lib/ && \
+        cp grape-giraph/target/grape-giraph-*-shaded.jar /home/graphscope/install/lib/; \
     fi
 
 ############### RUNTIME: Coordinator #######################
@@ -37,6 +46,9 @@ RUN apt-get update -y && \
     apt-get install -y sudo python3-pip openmpi-bin curl tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y openjdk-8-jdk && \
+    update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 

@@ -62,6 +62,12 @@ FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder-java
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
+    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk && sudo ln -s /usr/lib/jvm/java-8-openjdk-amd64/ /usr/lib/jvm/default-java && \
+    sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version && \
+    sudo apt-get install -y maven
+
+
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/analytical-java /home/graphscope/install; \
@@ -81,6 +87,7 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
+# FROM graphscope/vineyard-dev:main-x86_64 AS analytical-java
 FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION AS analytical-java
 COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
 ENV LLVM11_HOME=/opt/llvm11
@@ -90,6 +97,10 @@ ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
 USER root
+RUN apt purge -y openjdk* && apt purge -y default-jre* && \
+    apt-get update && apt-get install -y openjdk-8-jdk && sudo ln -s /usr/lib/jvm/java-8-openjdk-amd64/ /usr/lib/jvm/default-java && \
+    update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version && \
+    sudo apt-get install -y maven
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
 RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs

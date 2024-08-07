@@ -41,16 +41,16 @@
     <benchmark.resultformat>json</benchmark.resultformat>
     <benchmark.runs>1</benchmark.runs>
     <benchmark.warmups>0</benchmark.warmups>
-    <hadoop-core.version>1.2.1</hadoop-core.version>
+<!--    <hadoop-core.version>1.2.1</hadoop-core.version>-->
     <jmh.version>1.21</jmh.version>
     <skip.perf.benchmarks>true</skip.perf.benchmarks>
   </properties>
   <dependencies>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop-core.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-core</artifactId>-->
+<!--      <version>${hadoop-core.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
@@ -69,6 +69,10 @@
       <groupId>org.apache.giraph</groupId>
       <artifactId>giraph-core</artifactId>
       <version>1.3.0-hadoop2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -94,6 +98,12 @@
             </goals>
             <phase>package</phase>
             <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <artifactSet>
+                <excludes>
+                <exclude>org.slf4j:*</exclude>
+                </excludes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
@@ -104,6 +114,9 @@
                     <exclude>org/python/**</exclude>
                     <exclude>org/eclipse/**</exclude>
                     <exclude>it/unimi/dsi/fastutil/**</exclude>
+                    <exclude>org/apache/logging/**</exclude>
+                    <exclude>org/apache/log4j/**</exclude>
+                    <exclude>org/sl4j/**</exclude>
                   </excludes>
                 </filter>
               </filters>

@@ -49,6 +49,7 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
+#include "java_pie/java_pie_projected_default_app.h"
 #include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
 #include "proto/graph_def.pb.h"
@@ -58,7 +59,6 @@ namespace bl = boost::leaf;
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
-
 void output_nd_array(const grape::CommSpec& comm_spec,
                      std::unique_ptr<grape::InArchive> arc,
                      const std::string& output_path, int data_type_expected) {
@@ -93,6 +93,12 @@ void output_nd_array(const grape::CommSpec& comm_spec,
         int64_t v;
         oarc >> v;
         assembled_ostream << v << std::endl;
+      }
+    } else if (data_type_expected == 8) {
+      for (int64_t i = 0; i < length1; ++i) {
+        std::string s;
+        oarc >> s;
+        assembled_ostream << s << std::endl;
       }
     } else if (data_type_expected == vineyard::TypeToInt<double>::value) {
       for (int64_t i = 0; i < length1; ++i) {
@@ -159,6 +165,12 @@ void output_data_frame(const grape::CommSpec& comm_spec,
     } else if (expected_data_type == vineyard::TypeToInt<int64_t>::value) {
       for (int64_t i = 0; i < length; ++i) {
         int64_t data;
+        oarc >> data;
+        assembled_col2_ostream << data << std::endl;
+      }
+    } else if (expected_data_type == 8) {
+      for (int64_t i = 0; i < length; ++i) {
+        std::string data;
         oarc >> data;
         assembled_col2_ostream << data << std::endl;
       }

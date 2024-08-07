@@ -1,24 +1,4 @@
-/*
- * Copyright 2021 Alibaba Group Holding Limited.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  	http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.alibaba.graphscope.loader.impl;
-
-import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
-import static com.alibaba.graphscope.utils.FileUtils.getNumLinesOfFile;
-
-import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
 import com.alibaba.graphscope.graph.impl.VertexImpl;
 import com.alibaba.graphscope.loader.GraphDataBufferManager;
@@ -26,7 +6,6 @@ import com.alibaba.graphscope.loader.LoaderBase;
 import com.alibaba.graphscope.stdcxx.FFIByteVecVector;
 import com.alibaba.graphscope.stdcxx.FFIIntVecVector;
 import com.google.common.base.Preconditions;
-
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.edge.Edge;
@@ -47,52 +26,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Load from a file on system.
- */
-public class FileLoader implements LoaderBase {
-    private static Logger logger = LoggerFactory.getLogger(FileLoader.class);
+import static com.alibaba.graphscope.loader.LoaderUtils.*;
+import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
-    private static AtomicInteger LOADER_ID = new AtomicInteger(0);
-    private static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
-    private static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
+public class DefaultLoader implements LoaderBase {
+    protected static AtomicInteger LOADER_ID = new AtomicInteger(0);
+    protected static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
+    protected static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
+    private static Logger logger = LoggerFactory.getLogger(DefaultLoader.class);
+    private static int BATCH_SIZE = 1024;
+    protected int loaderId;
+    protected int threadNum;
+    protected int workerId;
+    protected int workerNum;
+    protected Class<? extends VertexInputFormat> vertexInputFormatClz;
+    protected Class<? extends EdgeInputFormat> edgeInputFormatClz;
+    protected VertexInputFormat vertexInputFormat;
+    protected EdgeInputFormat edgeInputFormat;
 
-    private int loaderId;
-    private int threadNum;
-    private int workerId;
-    private int workerNum;
-    private Class<? extends VertexInputFormat> vertexInputFormatClz;
-    private Class<? extends EdgeInputFormat> edgeInputFormatClz;
-    //    private Class<? extends VertexReader> vertexReaderClz;
-    private VertexInputFormat vertexInputFormat;
-    private EdgeInputFormat edgeInputFormat;
+    protected ExecutorService executor;
 
-    private ExecutorService executor;
-    //    private static String inputPath;
+    protected Method createVertexReaderMethod;
+    protected Method createEdgeReaderMethod;
 
-    private Method createVertexReaderMethod;
-    private Method createEdgeReaderMethod;
-
-    private GraphDataBufferManager proxy;
-    private Field vertexIdField;
-    private Field vertexValueField;
-    private Field vertexEdgesField;
-    private Field VIFBufferedReaderField;
-    private Field EIFBufferedReaderField;
-    private InputSplit inputSplit =
+    protected GraphDataBufferManager proxy;
+    protected Field vertexIdField;
+    protected Field vertexValueField;
+    protected Field vertexEdgesField;
+    protected Field VIFBufferedReaderField;
+    protected Field EIFBufferedReaderField;
+    protected InputSplit inputSplit =
             new InputSplit() {
                 @Override
                 public long getLength() throws IOException, InterruptedException {
@@ -104,18 +76,19 @@ public class FileLoader implements LoaderBase {
                     return new String[0];
                 }
             };
-    private Configuration configuration = new Configuration();
-    private GiraphConfiguration giraphConfiguration = new GiraphConfiguration(configuration);
-    private TaskAttemptID taskAttemptID = new TaskAttemptID();
-    private TaskAttemptContext taskAttemptContext =
-            new TaskAttemptContext(configuration, taskAttemptID);
 
-    private Class<? extends WritableComparable> giraphOidClass;
-    private Class<? extends Writable> giraphVDataClass;
-    private Class<? extends Writable> giraphEDataClass;
-    private URLClassLoader classLoader;
+    protected Configuration configuration = new Configuration();
+    protected GiraphConfiguration giraphConfiguration = new GiraphConfiguration(configuration);
+    protected TaskAttemptID taskAttemptID = new TaskAttemptID();
+    protected TaskAttemptContext taskAttemptContext =
+            new DummyTaskAttemptContext();
 
-    public FileLoader(int id, URLClassLoader classLoader) {
+    protected Class<? extends WritableComparable> giraphOidClass;
+    protected Class<? extends Writable> giraphVDataClass;
+    protected Class<? extends Writable> giraphEDataClass;
+    protected URLClassLoader classLoader;
+
+    public DefaultLoader(int id, URLClassLoader classLoader) {
         this.classLoader = classLoader;
         logger.info("FileLoader using classLoader {} to load vif and eif", classLoader);
         this.giraphConfiguration.setClassLoader(this.classLoader);
@@ -136,12 +109,12 @@ public class FileLoader implements LoaderBase {
         }
     }
 
-    public static FileLoader create(URLClassLoader cl) {
-        synchronized (FileLoader.class) {
-            return new FileLoader(LOADER_ID.getAndAdd(1), cl);
-        }
+    @Override
+    public int concurrency() {
+        return threadNum;
     }
 
+    @Override
     public void init(
             int workerId,
             int workerNum,
@@ -183,8 +156,9 @@ public class FileLoader implements LoaderBase {
      * @param inputPath
      * @return Return an integer contains type params info.
      */
-    public int loadVerticesAndEdges(String inputPath, String vformatClass)
-            throws ExecutionException, InterruptedException, ClassNotFoundException {
+    @Override
+    public int loadVertices(String inputPath, String vformatClass)
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         logger.info("vertex input path {}, vformat class{}", inputPath, vformatClass.toString());
         giraphConfiguration.setVertexInputFormatClass(
                 (Class<? extends VertexInputFormat>) this.classLoader.loadClass(vformatClass));
@@ -206,15 +180,16 @@ public class FileLoader implements LoaderBase {
             e.printStackTrace();
             logger.error(e.getMessage());
         }
-        loadVertices(inputPath);
+        loadVerticesImpl(inputPath);
 
         // Finish output stream, such that offset == size;
         proxy.finishAdding();
         return generateTypeInt(giraphOidClass, giraphVDataClass, giraphEDataClass);
     }
 
+    @Override
     public void loadEdges(String inputPath, String eformatClass)
-            throws ExecutionException, InterruptedException, ClassNotFoundException {
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         logger.debug("edge input path {}", inputPath);
         giraphConfiguration.setEdgeInputFormatClass(
                 (Class<? extends EdgeInputFormat>) this.classLoader.loadClass(eformatClass));
@@ -240,7 +215,20 @@ public class FileLoader implements LoaderBase {
         proxy.finishAdding();
     }
 
-    private void loadVertices(String inputPath) throws ExecutionException, InterruptedException {
+    private void inferGiraphTypesFromJSON(Class<? extends VertexInputFormat> child) {
+        Class<?>[] classList = getTypeArguments(VertexInputFormat.class, child);
+        Preconditions.checkArgument(classList.length == 3);
+        giraphOidClass = (Class<? extends WritableComparable>) classList[0];
+        giraphVDataClass = (Class<? extends Writable>) classList[1];
+        giraphEDataClass = (Class<? extends Writable>) classList[2];
+        logger.info(
+                "infer from json params: oid {}, vdata {}, edata {}",
+                giraphOidClass.getName(),
+                giraphVDataClass.getName(),
+                giraphEDataClass.getName());
+    }
+
+    protected void loadVerticesImpl(String inputPath) throws ExecutionException, InterruptedException, IOException {
         // Try to get number of lines
         long numOfLines = getNumLinesOfFile(inputPath);
         logger.info(
@@ -266,9 +254,8 @@ public class FileLoader implements LoaderBase {
         Future[] futures = new Future[threadNum];
 
         for (int i = 0; i < threadNum; ++i) {
-            VertexLoaderCallable vertexLoaderCallable =
-                    new VertexLoaderCallable(
-                            i, inputPath, Math.min(cur, end), Math.min(cur + chunkSize, end));
+            AbstractVertexLoaderCallable vertexLoaderCallable =
+                    new AbstractVertexLoaderCallable(i, inputPath, Math.min(cur, end), Math.min(cur + chunkSize, end));
             futures[i] = executor.submit(vertexLoaderCallable);
             cur += chunkSize;
         }
@@ -280,7 +267,16 @@ public class FileLoader implements LoaderBase {
         logger.info("[vertices] worker {} loaded {} lines ", workerId, sum);
     }
 
-    private void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException {
+    BufferedReader createBufferedReader(String inputPath) throws IOException {
+        if (inputPath.startsWith("hdfs://")) {
+            return createHdfsBufferedReader(inputPath);
+        } else {
+            FileReader fileReader = new FileReader(inputPath);
+            return new BufferedReader(fileReader);
+        }
+    }
+
+    protected void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException, IOException {
         // Try to get number of lines
         long numOfLines = getNumLinesOfFile(filePath);
         long linesPerWorker = (numOfLines + (workerNum - 1)) / workerNum;
@@ -300,8 +296,8 @@ public class FileLoader implements LoaderBase {
         Future[] futures = new Future[threadNum];
 
         for (int i = 0; i < threadNum; ++i) {
-            EdgeLoaderCallable edgeLoaderCallable =
-                    new EdgeLoaderCallable(
+            DefaultLoader.AbstractEdgeLoaderCallable edgeLoaderCallable =
+                    new DefaultLoader.AbstractEdgeLoaderCallable(
                             i, filePath, Math.min(cur, end), Math.min(cur + chunkSize, end));
             futures[i] = executor.submit(edgeLoaderCallable);
             cur += chunkSize;
@@ -314,35 +310,7 @@ public class FileLoader implements LoaderBase {
         logger.info("[edges] worker {} loaded {} lines ", workerId, sum);
     }
 
-    @Override
-    public LoaderBase.TYPE loaderType() {
-        return TYPE.FileLoader;
-    }
-
-    @Override
-    public int concurrency() {
-        return threadNum;
-    }
-
-    private void inferGiraphTypesFromJSON(Class<? extends VertexInputFormat> child) {
-        Class<?>[] classList = getTypeArguments(VertexInputFormat.class, child);
-        Preconditions.checkArgument(classList.length == 3);
-        giraphOidClass = (Class<? extends WritableComparable>) classList[0];
-        giraphVDataClass = (Class<? extends Writable>) classList[1];
-        giraphEDataClass = (Class<? extends Writable>) classList[2];
-        logger.info(
-                "infer from json params: oid {}, vdata {}, edata {}",
-                giraphOidClass.getName(),
-                giraphVDataClass.getName(),
-                giraphEDataClass.getName());
-    }
-
-    @Override
-    public String toString() {
-        return FileLoader.class.toString() + "@" + loaderId;
-    }
-
-    class VertexLoaderCallable implements Callable<Long> {
+    public class AbstractVertexLoaderCallable implements Callable<Long> {
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;
@@ -350,12 +318,11 @@ public class FileLoader implements LoaderBase {
         private long end; // exclusive
         private VertexReader vertexReader;
 
-        public VertexLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
+        public AbstractVertexLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = V_CALLABLE_ID.getAndAdd(1);
             try {
-                FileReader fileReader = new FileReader(inputPath);
-                bufferedReader = new BufferedReader(fileReader);
-            } catch (FileNotFoundException e) {
+                bufferedReader = createBufferedReader(inputPath);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -376,20 +343,15 @@ public class FileLoader implements LoaderBase {
             this.end = endLine;
             //            proxy.reserveNumVertices((int) this.end - (int) this.start);
             logger.info(
-                    "File loader {} creating vertex loader callable: {}, file : {}, reader {},"
+                    "Abstract loader {} creating vertex loader callable: {}, file : {}, reader {},"
                             + " thread id {}, from {} to {}",
-                    FileLoader.this,
-                    VertexLoaderCallable.this,
+                    DefaultLoader.this,
+                    AbstractVertexLoaderCallable.this,
                     inputPath,
                     bufferedReader,
                     threadId,
                     startLine,
                     endLine);
-        }
-
-        @Override
-        public String toString() {
-            return VertexLoaderCallable.class.toString() + "@" + callableId;
         }
 
         /**
@@ -434,7 +396,7 @@ public class FileLoader implements LoaderBase {
         }
     }
 
-    class EdgeLoaderCallable implements Callable<Long> {
+    public class AbstractEdgeLoaderCallable implements Callable<Long> {
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;
@@ -442,12 +404,11 @@ public class FileLoader implements LoaderBase {
         private long end; // exclusive
         private EdgeReader edgeReader;
 
-        public EdgeLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
+        public AbstractEdgeLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = E_CALLABLE_ID.getAndAdd(1);
             try {
-                FileReader fileReader = new FileReader(inputPath);
-                bufferedReader = new BufferedReader(fileReader);
-            } catch (FileNotFoundException e) {
+                bufferedReader = createBufferedReader(inputPath);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -470,18 +431,13 @@ public class FileLoader implements LoaderBase {
             logger.info(
                     "File loader {} creating edge callable: {}, file : {}, reader {}, thread id {},"
                             + " from {} to {}",
-                    FileLoader.this,
-                    EdgeLoaderCallable.this,
+                    DefaultLoader.this,
+                    AbstractEdgeLoaderCallable.this,
                     inputPath,
                     bufferedReader,
                     threadId,
                     startLine,
                     endLine);
-        }
-
-        @Override
-        public String toString() {
-            return EdgeLoaderCallable.class.toString() + "@" + callableId;
         }
 
         /**
@@ -520,4 +476,5 @@ public class FileLoader implements LoaderBase {
             return cnt - start;
         }
     }
+
 }

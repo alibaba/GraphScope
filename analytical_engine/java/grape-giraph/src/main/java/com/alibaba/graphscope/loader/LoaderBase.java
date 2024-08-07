@@ -15,16 +15,42 @@
  */
 package com.alibaba.graphscope.loader;
 
+import com.alibaba.graphscope.stdcxx.FFIByteVecVector;
+import com.alibaba.graphscope.stdcxx.FFIIntVecVector;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
 /**
  * Base interface defines behavior for a loader.
  */
 public interface LoaderBase {
 
-    LoaderBase.TYPE loaderType();
+    void init(
+            int workerId,
+            int workerNum,
+            int threadNum,
+            FFIByteVecVector vidBuffers,
+            FFIByteVecVector vertexDataBuffers,
+            FFIByteVecVector edgeSrcIdBuffers,
+            FFIByteVecVector edgeDstIdBuffers,
+            FFIByteVecVector edgeDataBuffers,
+            FFIIntVecVector vidOffsets,
+            FFIIntVecVector vertexDataOffsets,
+            FFIIntVecVector edgeSrcIdOffsets,
+            FFIIntVecVector edgeDstIdOffsets,
+            FFIIntVecVector edgeDataOffsets);
+
+    /**
+     * @param inputPath The path of input file.
+     * @param vformatClass The class name of vertex format.
+     * @return Return an integer contains type params info.
+     */
+    int loadVertices(String inputPath, String vformatClass)
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException;
+
+    void loadEdges(String inputPath, String eformatClass) throws ExecutionException, InterruptedException, ClassNotFoundException, IOException;
 
     int concurrency();
 
-    enum TYPE {
-        FileLoader,
-    }
 }

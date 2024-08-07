@@ -38,6 +38,11 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         offset = 0;
     }
 
+    @Override
+    public void close() {
+        vector.delete();
+    }
+
     public void resize(long size) {
         vector.resize(size);
     }

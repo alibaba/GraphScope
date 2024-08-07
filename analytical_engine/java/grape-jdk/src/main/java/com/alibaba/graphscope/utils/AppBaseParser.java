@@ -120,13 +120,23 @@ public class AppBaseParser {
         } else {
             return false;
         }
+        // The type params are: I, V, E, M, C, we need to return uint64_t for vid.
         String typeParamNames[] = new String[types.length];
-        for (int i = 0; i < types.length; ++i) {
-            typeParamNames[i] = writableToJava(types[i].getTypeName());
-        }
+        typeParamNames[0] = writableToJava(types[0].getTypeName());
+        typeParamNames[1] = "java.lang.Long";
+        typeParamNames[2] = writableToJava(types[1].getTypeName());
+        typeParamNames[3] = writableToJava(types[2].getTypeName());
+//        for (int i = 0; i < types.length; ++i) {
+//            if (i == 1) {
+//                typeParamNames[1] = "java.lang.Long";
+//            }
+//            else {
+//                typeParamNames[i] = writableToJava(types[i].getTypeName());
+//            }
+//        }
         logger.info("TypeParams: " + String.join(",", typeParamNames));
         logger.info("ContextType:vertex_data");
-        logger.info("VertexData: " + typeParamNames[1]);
+        logger.info("VertexData: " + typeParamNames[2]);
         return true;
     }
 
@@ -177,11 +187,11 @@ public class AppBaseParser {
     }
 
     private static String writableToJava(String typeName) {
-        if (typeName.contains("DoubleWritable")) {
+        if (typeName.equals("org.apache.hadoop.io.DoubleWritable")) {
             return "java.lang.Double";
-        } else if (typeName.contains("IntWritable")) {
+        } else if (typeName.equals("org.apache.hadoop.io.IntWritable")) {
             return "java.lang.Integer";
-        } else if (typeName.contains("LongWritable")) {
+        } else if (typeName.equals("org.apache.hadoop.io.LongWritable")) {
             return "java.lang.Long";
         } else {
             return "com.alibaba.graphscope.ds.StringView";
