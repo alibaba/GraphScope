@@ -10,7 +10,7 @@ endif
 ARCH := $(shell uname -m)
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.22.0
+VINEYARD_VERSION ?= v0.23.0
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
@@ -149,6 +149,18 @@ interactive-experimental:
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t graphscope/interactive-experimental:${VERSION} \
 		-f $(DOCKERFILES_DIR)/interactive-experimental.Dockerfile .
+
+# flex interactive 
+flex-interactive:
+	cd $(WORKING_DIR)/.. && \
+	docker build \
+		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile \
+		--target runtime \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg ARCH=${ARCH} \
+		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
+		-t graphscope/interactive:${VERSION} .
 
 learning:
 	cd $(WORKING_DIR)/.. && \
