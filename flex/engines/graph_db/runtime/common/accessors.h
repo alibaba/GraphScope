@@ -395,6 +395,7 @@ class EdgeIdPathAccessor : public IAccessor {
  private:
   const IEdgeColumn& edge_col_;
 };
+
 template <typename T>
 class EdgePropertyPathAccessor : public IAccessor {
  public:
@@ -402,6 +403,44 @@ class EdgePropertyPathAccessor : public IAccessor {
   EdgePropertyPathAccessor(const ReadTransaction& txn,
                            const std::string& prop_name, const Context& ctx,
                            int tag)
+      : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {}
+
+  RTAny eval_path(size_t idx) const override {
+    const auto& e = col_.get_edge(idx);
+    return RTAny(std::get<3>(e));
+  }
+
+  elem_t typed_eval_path(size_t idx) const {
+    const auto& e = col_.get_edge(idx);
+    elem_t ret;
+    ConvertAny<T>::to(std::get<3>(e), ret);
+    return ret;
+  }
+
+  bool is_optional() const override { return col_.is_optional(); }
+
+  RTAny eval_path(size_t idx, int) const override {
+    if (!col_.has_value(idx)) {
+      return RTAny(RTAnyType::kNull);
+    }
+    return eval_path(idx);
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override {
+    return col_.builder();
+  }
+
+ private:
+  const IEdgeColumn& col_;
+};
+
+template <typename T>
+class MultiPropsEdgePropertyPathAccessor : public IAccessor {
+ public:
+  using elem_t = T;
+  MultiPropsEdgePropertyPathAccessor(const ReadTransaction& txn,
+                                     const std::string& prop_name,
+                                     const Context& ctx, int tag)
       : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
     const auto& labels = col_.get_labels();
     vertex_label_num_ = txn.schema().vertex_label_num();
@@ -512,7 +551,32 @@ class EdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
   EdgePropertyEdgeAccessor(const ReadTransaction& txn,
-                           const std::string& name) {
+                           const std::string& name) {}
+
+  elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                         const Any& data, size_t idx) const {
+    T ret;
+    ConvertAny<T>::to(data, ret);
+    return ret;
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    LOG(FATAL) << "not supposed to reach here...";
+    return RTAny();
+  }
+
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    return RTAny(data);
+  }
+};
+
+template <typename T>
+class MultiPropsEdgePropertyEdgeAccessor : public IAccessor {
+ public:
+  using elem_t = T;
+  MultiPropsEdgePropertyEdgeAccessor(const ReadTransaction& txn,
+                                     const std::string& name) {
     edge_label_num_ = txn.schema().edge_label_num();
     vertex_label_num_ = txn.schema().vertex_label_num();
     indexs.resize(2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
