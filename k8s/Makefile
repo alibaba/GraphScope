@@ -57,7 +57,7 @@ manylinux2014-ext:
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:
-	cd $(WORKING_DIR) && \
+	cd $(WORKING_DIR)/.. && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
@@ -65,8 +65,7 @@ graphscope-dev:
 		-f $(DOCKERFILES_DIR)/graphscope-dev.Dockerfile .
 
 vineyard-dev:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope  && \
+	cd $(WORKING_DIR)/.. && \
 	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
