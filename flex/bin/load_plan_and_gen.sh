@@ -106,10 +106,10 @@ query: |
 
 
 cypher_to_plan() {
-  if [ $# -ne 8 ]; then
+  if [ $# -lt 8 ] || [ $# -gt 9 ]; then
     echo "Usage: cypher_to_plan <query_name> <input_file> <output_plan file>"
     echo "                      <output_yaml_file> <ir_compiler_properties> <graph_schema_path>"
-    echo "                      <procedure_name> <procedure_description>" 
+    echo "                      <procedure_name> <procedure_description> [statistic_path]" 
     echo " but receive: "$#
     exit 1
   fi
@@ -123,6 +123,11 @@ cypher_to_plan() {
   # get procedure_name and procedure_description
   procedure_name=$7
   procedure_description=$8
+  if [ $# -eq 9 ]; then
+    statistic_path=$9
+  else
+    statistic_path=""
+  fi
 
   # find java executable
   info "IR compiler properties = ${ir_compiler_properties}"
@@ -171,11 +176,10 @@ EOM
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
-  # if env var CBO_GLOGUE_SCHEMA exits, set to properti graph.planner.cbo.glogue.schema
-  if [ ! -z ${CBO_GLOGUE_SCHEMA} ]; then
-    cmd="${cmd} -Dgraph.planner.cbo.glogue.schema=${CBO_GLOGUE_SCHEMA}"
-  fi
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
+  if [ ! -z ${statistic_path} ]; then
+    cmd="${cmd} -Dgraph.statistics=${statistic_path}"
+  fi
   cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} ${extra_arg_config_file}"
   info "running physical plan generation with ${cmd}"
   eval ${cmd}
@@ -196,9 +200,9 @@ EOM
 
 compile_hqps_so() {
   #check input params size eq 2 or 3
-  if [ $# -gt 7 ] || [ $# -lt 4 ]; then
+  if [ $# -gt 8 ] || [ $# -lt 4 ]; then
     echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file>  <graph_schema_file> "
-    echo "          [output_dir] [stored_procedure_name] [stored_procedure_description]"
+    echo "          [statistic_path] [output_dir] [stored_procedure_name] [stored_procedure_description]"
     exit 1
   fi
   input_path=$1
@@ -223,6 +227,12 @@ compile_hqps_so() {
     procedure_description=""
   fi
 
+  if [ $# -ge 8 ]; then
+    statistic_path=$8
+  else
+    statistic_path=""
+  fi
+
   info "Input path = ${input_path}"
   info "Work dir = ${work_dir}"
   info "ir compiler properties = ${ir_compiler_properties}"
@@ -230,6 +240,7 @@ compile_hqps_so() {
   info "Output dir = ${output_dir}"
   info "Procedure name = ${procedure_name}"
   info "Procedure description = ${procedure_description}"
+  info "Statistic path = ${statistic_path}"
 
   last_file_name=$(basename ${input_path})
 
@@ -283,7 +294,7 @@ compile_hqps_so() {
     output_pb_path="${cur_dir}/${procedure_name}.pb"
     cypher_to_plan ${procedure_name} ${input_path} ${output_pb_path} \
       ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path} \
-      ${procedure_name} "${procedure_description}"
+      ${procedure_name} "${procedure_description}" ${statistic_path}
 
     info "----------------------------"
     info "Codegen from cypher query done."
@@ -552,6 +563,10 @@ run() {
       PROCEDURE_DESCRIPTION="${i#*=}"
       shift # past argument=value
       ;;
+    --statistic_path=*)
+      STATISTIC_PATH="${i#*=}"
+      shift # past argument=value
+      ;;
     -* | --*)
       err "Unknown option $i"
       exit 1
@@ -569,6 +584,7 @@ run() {
   echo "Output path            ="${OUTPUT_DIR}
   echo "Procedure name         ="${PROCEDURE_NAME}
   echo "Procedure description  ="${PROCEDURE_DESCRIPTION}
+  echo "Statistic path         ="${STATISTIC_PATH}
 
   find_resources
 
@@ -596,7 +612,7 @@ run() {
       PROCEDURE_NAME="${PROCEDURE_NAME%.cc}"
       PROCEDURE_NAME="${PROCEDURE_NAME%.pb}"
     fi
-    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}"
+    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}" ${STATISTIC_PATH}
 
   # else if engine_type equals pegasus
   elif [ ${ENGINE_TYPE} == "pegasus" ]; then
