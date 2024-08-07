@@ -347,6 +347,9 @@ compile_hqps_so() {
 
   # strip the output_so_path
   strip ${output_so_path}
+  # clean the cmake directory, the cmake files may take up a lot of space
+  cmd="rm -rf ${cur_dir}/CMakeFiles"
+  eval ${cmd}
 
   ################### now copy ##########################
   # if dst_so_path eq output_so_path, skip copying.
