@@ -21,6 +21,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/core/null_record.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/utils/exception.h"
 
 #include "flex/engines/hqps_db/database/adj_list.h"
 #include "grape/utils/bitset.h"
@@ -295,7 +296,6 @@ class MutableCSRInterface {
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
     THROW_EXCEPTION_IF(label_id >= db_session_.schema().vertex_label_num(),
-                       InvalidArgument,
                        "Invalid label id: " + std::to_string(label_id));
     std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
@@ -390,7 +390,6 @@ class MutableCSRInterface {
     std::vector<label_t> label_ids;
     for (label_id_t label : labels) {
       THROW_EXCEPTION_IF(label >= db_session_.schema().vertex_label_num(),
-                         InvalidArgument,
                          "Invalid label id: " + std::to_string(label));
       label_ids.emplace_back(label);
     }

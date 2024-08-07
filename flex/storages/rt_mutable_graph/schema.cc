@@ -14,15 +14,11 @@
  */
 
 #include "flex/storages/rt_mutable_graph/schema.h"
+#include "flex/utils/exception.h"
 
 #include <yaml-cpp/yaml.h>
 
 namespace gs {
-
-#define THROW_EXCEPTION_IF(cond, msg) \
-  if (cond) {                         \
-    throw std::runtime_error(msg);    \
-  }
 
 Schema::Schema() = default;
 Schema::~Schema() = default;
