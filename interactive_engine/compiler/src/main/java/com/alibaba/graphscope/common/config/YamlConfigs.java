@@ -26,6 +26,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.io.File;
+import java.nio.file.Path;
 
 public class YamlConfigs extends Configs {
     private static ImmutableMap<String, ValueGetter> valueGetterMap;
@@ -114,7 +116,7 @@ public class YamlConfigs extends Configs {
                             try {
                                 if (workspace != null && subdir != null && graphName != null) {
                                     File schemaFile =
-                                            new File(GraphConfig.GRAPH_SCHEMA.get(configs));
+                                            new File(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
                                     if (!schemaFile.exists()
                                             || !schemaFile.getName().endsWith(".yaml")) {
                                         return null;
@@ -140,7 +142,7 @@ public class YamlConfigs extends Configs {
                 .put(
                         "graph.stored.procedures.enable.lists",
                         (Configs configs) -> {
-                            File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
+                            File schemaFile = new File(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
                             if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
                                 return null;
                             }
