@@ -20,6 +20,8 @@ import com.alibaba.graphscope.gaia.clients.GraphResultSet;
 import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -32,6 +34,8 @@ public class CommonQuery {
     String queryName;
     String queryPattern;
     private ArrayList<HashMap<String, String>> parameters;
+        private static Logger logger = LoggerFactory.getLogger(CommonQuery.class);
+
 
     public CommonQuery(String queryName, String queryFile) throws Exception {
         this.queryName = queryName;
@@ -76,7 +80,7 @@ public class CommonQuery {
                 if (printResult) {
                     printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
                 }
-                System.out.println(printInfo);
+                logger.info(printInfo);
             }
             if (!comparator.isEmpty()) {
                 comparator.compareResults(queryName, result.getRight());

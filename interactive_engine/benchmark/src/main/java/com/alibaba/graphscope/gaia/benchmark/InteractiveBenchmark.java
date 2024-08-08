@@ -55,16 +55,21 @@ public class InteractiveBenchmark {
         boolean printQueryName = configuration.getBoolean(Configuration.PRINT_QUERY_NAME, true);
         boolean printQueryResult = configuration.getBoolean(Configuration.PRINT_QUERY_RESULT, true);
 
-        AtomicInteger atomicQueryCount = new AtomicInteger(operationCount * threadCount);
-        AtomicInteger atomicParameterIndex = new AtomicInteger(0);
-
         class MyRunnable implements Runnable {
             private GraphClient client;
             BenchmarkResultComparator comparator;
+            AtomicInteger atomicQueryCount;
+            AtomicInteger atomicParameterIndex;
 
-            public MyRunnable(GraphClient client, BenchmarkResultComparator comparator) {
+            public MyRunnable(
+                    GraphClient client,
+                    BenchmarkResultComparator comparator,
+                    AtomicInteger atomicQueryCount,
+                    AtomicInteger atomicParameterIndex) {
                 this.client = client;
                 this.comparator = comparator;
+                this.atomicQueryCount = atomicQueryCount;
+                this.atomicParameterIndex = atomicParameterIndex;
                 System.out.println("Connect success.");
             }
 
@@ -108,8 +113,8 @@ public class InteractiveBenchmark {
         }
 
         for (GraphSystem system : comparedSystems) {
-            // TODO: fix atomicQueryCount and atomicParameterIndex when dealing with multiple
-            // systems
+            AtomicInteger atomicQueryCount = new AtomicInteger(operationCount * threadCount);
+            AtomicInteger atomicParameterIndex = new AtomicInteger(0);
             String name = system.getName();
             GraphClient client = system.getClient();
             System.out.println("Start to benchmark system: " + name);
@@ -119,7 +124,8 @@ public class InteractiveBenchmark {
             long startTime = System.currentTimeMillis();
 
             for (int i = 0; i < threadCount; i++) {
-                threadPool.submit(new MyRunnable(client, comparator));
+                threadPool.submit(
+                        new MyRunnable(client, comparator, atomicQueryCount, atomicParameterIndex));
             }
 
             threadPool.shutdown();
