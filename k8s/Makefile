@@ -154,13 +154,13 @@ interactive-experimental:
 flex-interactive:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
-		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile \
 		--target runtime \
+		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg ARCH=${ARCH} \
-		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
-		-t graphscope/interactive:${VERSION} .
+		-t graphscope/interactive:${VERSION}  \
+		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile .
 
 learning:
 	cd $(WORKING_DIR)/.. && \
