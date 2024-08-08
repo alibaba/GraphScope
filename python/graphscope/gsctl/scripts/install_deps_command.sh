@@ -234,6 +234,9 @@ install_basic_packages_universal() {
   elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
     if [[ "${OS_VERSION}" -eq "7" ]]; then
       ${SUDO} yum install -y ${BASIC_PACKAGES_CENTOS_7[*]}
+      # change the source for centos-release-scl-rh
+      sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*scl*
+      sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*scl*
       ${SUDO} yum install -y ${ADDITIONAL_PACKAGES_CENTOS_7[*]}
     else
       if [[ "${OS_PLATFORM}" == *"Aliyun"* ]]; then 
