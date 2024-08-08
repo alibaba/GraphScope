@@ -43,6 +43,7 @@ public class Configuration {
             "benchmark.operation.count.every.query";
     public static final String PRINT_QUERY_NAME = "benchmark.print.query.name";
     public static final String PRINT_QUERY_RESULT = "benchmark.print.query.result";
+    public static final String BENCHMARK_RESULT_LOG_PATH = "benchmark.result.log.path";
 
     public Optional<String> getOption(String key) {
         String value = settings.get(key);

@@ -8,6 +8,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.alibaba.graphscope.gaia.common.Configuration;
+import com.alibaba.graphscope.gaia.utils.PropertyUtil;
+
 public class CollectResult {
 
     static class QueryResult {
@@ -134,7 +137,13 @@ public class CollectResult {
     }
 
     public static void main(String[] args) {
-        analyzeLog(
-                "./log/benchmark.log");
+         if (args.length != 1) {
+            System.out.println("Error, Usage: <interactive-benchmark.properties>");
+            return;
+        }
+        Properties properties = PropertyUtil.getProperties(args[0], false);
+        Configuration configuration = new Configuration(properties);
+        String logPath = configuration.getString(Configuration.BENCHMARK_RESULT_LOG_PATH, "");
+        analyzeLog(logPath);
     }
 }
