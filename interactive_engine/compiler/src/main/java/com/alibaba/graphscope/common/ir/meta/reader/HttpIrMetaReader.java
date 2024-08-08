@@ -108,6 +108,12 @@ public class HttpIrMetaReader implements IrMetaReader {
         }
     }
 
+    // todo: implement when backend is admin http service
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) {
+        return true;
+    }
+
     private HttpResponse<String> sendRequest(String requestUri)
             throws IOException, InterruptedException {
         HttpRequest request =
