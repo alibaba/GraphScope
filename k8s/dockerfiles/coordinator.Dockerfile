@@ -1,8 +1,9 @@
 # Coordinator of graphscope engines
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
 
 ARG CI=false
 
@@ -46,8 +47,7 @@ RUN useradd -m graphscope -u 1001 \
 RUN sudo mkdir -p /var/log/graphscope \
   && sudo chown -R graphscope:graphscope /var/log/graphscope
 
-RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
-    curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/$arch/kubectl
+RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/$ARCH/kubectl
 RUN chmod +x /usr/bin/kubectl
 
 COPY ./interactive_engine/assembly/src/bin/graphscope/giectl /opt/graphscope/bin/giectl

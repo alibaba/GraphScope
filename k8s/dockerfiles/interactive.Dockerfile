@@ -1,9 +1,10 @@
 # Interactive engine
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
 ARG RUNTIME_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-ARCH AS builder
 
 ARG CI=false
 
@@ -52,8 +53,8 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:ext AS ext
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:$ARCH AS ext
+FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION-ARCH AS executor
 
 ENV RUST_BACKTRACE=1
 
@@ -71,8 +72,7 @@ RUN sudo chmod +x /opt/hadoop-3.3.0/bin/*
 # set the CLASSPATH for hadoop, must run after install java
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
-RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
-    sudo env arch=$arch curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$arch/kubectl
+RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$ARCH/kubectl
 RUN sudo chmod +x /usr/bin/kubectl
 
 # gaia_executor, giectl

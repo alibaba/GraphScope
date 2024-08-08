@@ -97,7 +97,7 @@ BASIC_PACKAGES_LINUX=("file" "curl" "wget" "git" "sudo")
 BASIC_PACKAGES_UBUNTU=("${BASIC_PACKAGES_LINUX[@]}" "build-essential" "cmake" "libunwind-dev" "python3-pip")
 
 BASIC_PACKAGES_CENTOS_8=("${BASIC_PACKAGES_LINUX[@]}" "epel-release" "libunwind-devel" "libcurl-devel" "perl" "which")
-BASIC_PACKAGES_CENTOS_7=("${BASIC_PACKAGES_CENTOS_8[@]}" "centos-release-scl-rh")
+BASIC_PACKAGES_CENTOS_7=("${BASIC_PACKAGES_CENTOS_8[@]}" "centos-release-scl-rh" "centos-release-scl" "scl-utils")
 ADDITIONAL_PACKAGES_CENTOS_8=("gcc-c++" "python38-devel")
 ADDITIONAL_PACKAGES_CENTOS_7=("make" "devtoolset-8-gcc-c++" "rh-python38-python-pip" "rh-python38-python-devel")
 
@@ -234,14 +234,18 @@ install_basic_packages_universal() {
   elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
     if [[ "${OS_VERSION}" -eq "7" ]]; then
       ${SUDO} yum install -y ${BASIC_PACKAGES_CENTOS_7[*]}
+      # change the source for centos-release-scl-rh
+      ${SUDO} sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*scl*
+      ${SUDO} sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*scl*
+      ${SUDO} sed -i 's|# baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*scl*
       ${SUDO} yum install -y ${ADDITIONAL_PACKAGES_CENTOS_7[*]}
     else
       if [[ "${OS_PLATFORM}" == *"Aliyun"* ]]; then 
         ${SUDO} yum install -y 'dnf-command(config-manager)'
         ${SUDO} dnf install -y epel-release --allowerasing
       else
-        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        ${SUDO} sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        ${SUDO} sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         ${SUDO} yum install -y 'dnf-command(config-manager)'
         ${SUDO} dnf install -y epel-release
         ${SUDO} dnf config-manager --set-enabled powertools
@@ -324,7 +328,12 @@ install_dependencies_analytical_universal() {
 }
 
 install_interactive_deps() {
-  install_hiactor "${install_prefix}"
+  # seastar can not be built on macos and centos7
+  if [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+      install_hiactor "${install_prefix}"
+  else
+      warning "Skip installing dependencies for flex interactive on ${OS_PLATFORM}."
+  fi
 }
 
 write_env_config() {
@@ -414,12 +423,7 @@ install_deps_for_dev() {
     install_rust_universal
     install_cppkafka "${deps_prefix}" "${install_prefix}"
     # install dependencies for flex interactive
-    # can not install on macos since seastar can not be built on macos
-    if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-      warning "Skip installing dependencies for flex interactive on macOS."
-    else
-      install_interactive_deps
-    fi
+    install_interactive_deps
   fi
 
   write_env_config
