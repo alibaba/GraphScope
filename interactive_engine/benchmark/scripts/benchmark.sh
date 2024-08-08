@@ -13,14 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CURR_DIR=$(pwd)
+base_dir=$(cd $(dirname $0); pwd)
 
-# Default class to run
-CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark
-cd "$(dirname "$0")"
-cd ../target
-tar -xf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
-cd gaia-benchmark-0.0.1-SNAPSHOT
-CONF_DIR=./config/interactive-benchmark.properties
-java -cp '.:lib/*' $CLASS_TO_RUN "$CONF_DIR"
-cd $CURR_DIR
+# build the benchmark
+printf "Building the benchmark...\n"
+cd ${base_dir}/..
+make build
+
+# run the benchmark
+printf "Running the benchmark...\n"
+cd ${base_dir}/..
+if make run > interactive-benchmark.log 2>&1 & then
+    # record the pid of the benchmark process
+    benchmark_pid=$!
+
+    # wait for the benchmark process to finish
+    wait $benchmark_pid
+
+    # check the exit code of the benchmark process
+    if [ $? -eq 0 ]; then
+        # collect the benchmark result
+        printf "Collecting the benchmark result...\n"
+        cd ${base_dir}/.. && make collect 
+    else
+        printf "Benchmark run failed. Check interactive-benchmark.log for details.\n"
+        exit 1
+    fi
+else
+    printf "Failed to start the benchmark run.\n"
+    exit 1
+fi
