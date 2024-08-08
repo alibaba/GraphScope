@@ -237,7 +237,7 @@ class RunningDeploymentInfo(Model):
         :param storage: The storage of this RunningDeploymentInfo.
         :type storage: str
         """
-        allowed_values = ["MutableCSR"]  # noqa: E501
+        allowed_values = ["MutableCSR", "MutablePersistent"]  # noqa: E501
         if storage not in allowed_values:
             raise ValueError(
                 "Invalid value for `storage` ({0}), must be one of {1}"

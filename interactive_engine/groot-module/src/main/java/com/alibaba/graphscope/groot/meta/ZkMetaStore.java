@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.meta;
 
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -48,7 +48,7 @@ public class ZkMetaStore implements MetaStore {
         try {
             stat = this.curator.checkExists().forPath(fullPath);
         } catch (Exception e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         return stat != null;
     }
@@ -60,7 +60,7 @@ public class ZkMetaStore implements MetaStore {
         try {
             data = this.curator.getData().forPath(fullPath);
         } catch (Exception e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         }
         return data;
     }
@@ -75,7 +75,7 @@ public class ZkMetaStore implements MetaStore {
                 this.curator.create().creatingParentsIfNeeded().forPath(fullPath, content);
             }
         } catch (Exception e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -85,7 +85,7 @@ public class ZkMetaStore implements MetaStore {
         try {
             this.curator.delete().forPath(fullPath);
         } catch (Exception e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         }
     }
 }

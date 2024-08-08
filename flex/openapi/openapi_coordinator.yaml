@@ -98,6 +98,44 @@ components:
           type: string
           enum:
             - MutableCSR
+            - MutablePersistent
+
+    ResourceUsage:
+      required:
+        - host
+        - timestamp
+        - usage
+      properties:
+        host:
+          type: string
+        timestamp:
+          type: string
+        usage:
+          type: string
+
+    GetResourceUsageResponse:
+      required:
+        - cpu_usage
+        - memory_usage
+      properties:
+        cpu_usage:
+          type: array
+          items:
+             $ref: '#/components/schemas/ResourceUsage'
+        memory_usage:
+          type: array
+          items:
+             $ref: '#/components/schemas/ResourceUsage'
+
+    GetStorageUsageResponse:
+      required:
+        - storage_usage
+      properties:
+        storage_usage:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
 
     NodeStatus:
       required:
@@ -118,10 +156,58 @@ components:
           type: number
           format: double
 
+    PodStatus:
+      required:
+        - name
+        - image
+        - labels
+        - node
+        - status
+        - restart_count
+        - cpu_usage
+        - memory_usage
+        - creation_time
+      properties:
+        name:
+          type: string
+        image:
+          type: array
+          items:
+            type: string
+        labels:
+          type: object
+          additionalProperties: true
+        node:
+          type: string
+        status:
+          type: string
+        restart_count:
+          type: integer
+          format: int32
+        cpu_usage:
+          type: integer
+          format: int32
+        memory_usage:
+          type: integer
+          format: int32
+        timestamp:
+          type: string
+        creation_time:
+          type: string
+        component_belong_to:
+          type: string
+
+    GetPodLogResponse:
+      required:
+        - log
+      properties:
+        log:
+          type: object
+          additionalProperties: true
+
     RunningDeploymentStatus:
       required:
         - cluster_type
-        - nodes
       properties:
         cluster_type:
           type: string
@@ -131,8 +217,13 @@ components:
         nodes:
           type: array
           items:
-            oneOf:
-              - $ref: '#/components/schemas/NodeStatus'
+            $ref: '#/components/schemas/NodeStatus'
+        pods:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PodStatus'
 
     StartServiceRequest:
       x-body-name: start_service_request
@@ -297,7 +388,6 @@ components:
             required:
               - source_vertex
               - destination_vertex
-              - relation
             properties:
               source_vertex:
                 type: string
@@ -450,7 +540,6 @@ components:
         - $ref: '#/components/schemas/BaseVertexType'
         - type: object
           required:
-            - type_id
             - properties
           properties:
             type_id:
@@ -467,8 +556,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseEdgeType'
         - type: object
-          required:
-            - type_id
           properties:
             type_id:
               type: integer
@@ -662,6 +749,14 @@ components:
             - once
             - day
             - week
+
+    DataloadingMRJobConfig:
+      x-body-name: dataloading_mr_job_config
+      required:
+        - config
+      properties:
+        config:
+          type: string
 
     JobStatus:
       required:
@@ -871,7 +966,7 @@ paths:
 
   /api/v1/deployment/status:
     get:
-      description: Deployment status
+      description: Get deployment status of cluster
       tags: [Deployment]
       operationId: getDeploymentStatus
       responses:
@@ -888,6 +983,131 @@ paths:
                     cpu_usage: 83.0
                     memory_usage: 37.5
                     disk_usage: 97
+                pods:
+                  coordinator:
+                    - name: dztest283-graphscope-store-coordinator-0
+                      image:
+                        - graphscope-store:0.28.0
+                      labels:
+                        app.kubernetes.io/version: 3.4.0
+                      node: i-uf6f9rdd1wh126dg2y1p
+                      status: Running
+                      restart_count: 0
+                      cpu_usage: 2
+                      memory_usage: 597
+                      timestamp: "2024/07/19 16:40:04"
+                      creation_time: "2024/07/03 11:08:57"
+                      component_belong_to: coordinator
+                  store:
+                    - name: dztest283-graphscope-store-store-0
+                      image:
+                        - graphscope-store:0.28.0
+                      labels:
+                        app.kubernetes.io/version: 3.4.0
+                      node: i-uf6f9rdd1wh126dg2y1p
+                      status: Running
+                      restart_count: 0
+                      cpu_usage: 2
+                      memory_usage: 597
+                      timestamp: "2024/07/19 16:40:04"
+                      creation_time: "2024/07/03 11:08:57"
+                      component_belong_to: store
+                    - name: dztest283-graphscope-store-store-1
+                      image:
+                        - graphscope-store:0.28.0
+                      labels:
+                        app.kubernetes.io/version: 3.4.0
+                      node: i-uf6f9rdd1wh126dg2y1p
+                      status: Running
+                      restart_count: 0
+                      cpu_usage: 2
+                      memory_usage: 597
+                      timestamp: "2024/07/19 16:40:04"
+                      creation_time: "2024/07/03 11:08:57"
+                      component_belong_to: store
+        500:
+          $ref: "#/components/responses/500"
+
+  /api/v1/deployment/log:
+    get:
+      description: "[Deprecated] Get kubernetes pod's log"
+      tags: [Deployment]
+      operationId: getDeploymentPodLog
+      parameters:
+        - name: pod_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: component
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from_cache
+          in: query
+          required: true
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Successfully returned the pod's log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPodLogResponse'
+              example:
+                container1: "line1\nline2\nline3"
+                container2: "line1\nline2\nline3"
+        500:
+          $ref: "#/components/responses/500"
+
+  /api/v1/deployment/resource/usage:
+    get:
+      description: "[Deprecated] Get resource usage(cpu/memory) of cluster"
+      tags: [Deployment]
+      operationId: getDeploymentResourceUsage
+      responses:
+        200:
+          description: Successfully returned the resource usage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceUsageResponse'
+              example:
+                cpu_usage:
+                  - host: dztest283-graphscope-store-store-0
+                    timestamp: "2024/07/19 13:15:12"
+                    usage: 52
+                  - host: dztest283-graphscope-store-store-1
+                    timestamp: "2024/07/19 13:16:12"
+                    usage: 90
+                memory_usage:
+                  - host: dztest283-graphscope-store-store-0
+                    timestamp: "2024/07/19 13:15:12"
+                    usage: 152
+                  - host: dztest283-graphscope-store-store-1
+                    timestamp: "2024/07/19 13:16:12"
+                    usage: 290
+
+        500:
+          $ref: "#/components/responses/500"
+
+  /api/v1/deployment/storage/usage:
+    get:
+      description: "[Deprecated] Get storage usage of Groot"
+      tags: [Deployment]
+      operationId: getStorageUsage
+      responses:
+        200:
+          description: Successfully returned the resource usage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStorageUsageResponse'
+              example:
+                dztest283-graphscope-store-store-0: 72.2
+                dztest283-graphscope-store-store-1: 91.7
         500:
           $ref: "#/components/responses/500"
 
@@ -1623,6 +1843,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: delete_scheduler
+          in: query
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: Successfuly cancelled the job
@@ -1663,9 +1888,9 @@ paths:
           $ref: "#/components/responses/500"
 
   /api/v1/graph/{graph_id}/dataloading/config:
-    get:
+    post:
       tags: [Job]
-      description: Get the data loading configuration
+      description: Post to get the data loading configuration for MapReduce Task
       operationId: getDataloadingJobConfig
       parameters:
         - name: graph_id
@@ -1673,13 +1898,20 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataloadingJobConfig'
+        required: true
       responses:
         200:
-          description: Successfully returned the dataloading job configuration
+          description: Successfully returned the job configuration for MapReduce Task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataloadingJobConfig'
+                $ref: '#/components/schemas/DataloadingMRJobConfig'
+              example: "split.size=32\nseparator=\\\\|\ngraph.endpoint=11.11.11.11:55556\nproject=graphscope"
         500:
           $ref: "#/components/responses/500"
 

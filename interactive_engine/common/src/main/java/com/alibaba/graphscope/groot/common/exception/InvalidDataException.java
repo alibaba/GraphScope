@@ -15,9 +15,23 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
+import com.alibaba.graphscope.proto.Code;
+
 public class InvalidDataException extends GrootException {
 
     public InvalidDataException(String msg) {
-        super(msg);
+        super(Code.INVALID_DATA, msg);
+    }
+
+    public InvalidDataException(String msg, Throwable t) {
+        super(Code.INVALID_DATA, msg, t);
+    }
+
+    public InvalidDataException() {
+        super(Code.INVALID_DATA);
+    }
+
+    public InvalidDataException(Throwable t) {
+        super(Code.INVALID_DATA, t);
     }
 }
