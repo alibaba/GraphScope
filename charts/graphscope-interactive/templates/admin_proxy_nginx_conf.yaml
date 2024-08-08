@@ -15,26 +15,18 @@ data:
   nginx.conf: |  
     events {}
     http {  
-         upstream backend_servers {
-          {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
-          {{- $replicaCount := .Values.secondary.replicaCount | int }}  
-          {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
-          {{- $port := .Values.secondary.service.adminPort | int }}
-          {{- range $i := until $replicaCount }}  
-            server {{ printf "%s-%d.%s:%d" $baseName $i $serviceName $port }};
-          {{- end }}
-        }
-
+        resovler {{ .Values.dnsConfig.nameservers }};
         server {  
             {{- $adminPort := .Values.primary.service.adminPort | int }}
             listen $adminPort;  
             location / {  
                 content_by_lua_block {  
                     local http = require "resty.http"  
-                    local res = {}  
-                    local success = true  
-                    local count = 0  
-                    local error_message = nil  -- Initialize a variable to capture error messages  
+                    local res = {}
+                    local success = true
+                    local count = 0
+                    local statu_code = 0
+                    local error_message = nil  -- Initialize a variable to capture error messages
 
 
                     local urls = {  
@@ -55,6 +47,8 @@ data:
                     }
 
                     local original_headers = ngx.req.get_headers()  
+                    local request_uri=ngx.var.request_uri
+                    local method = ngx.req.get_method()
 
                     -- Create a table for modified headers  
                     local backend_headers = {}  
@@ -69,17 +63,19 @@ data:
 
 
                     for _, backend in ipairs(urls) do  
+                        -- full_uri is backend + request_uri
+                        local full_uri = backend .. request_uri
                         local httpc = http.new()  
                         local response, err  
 
                         if method == "GET" then  
-                            response, err = httpc:request_uri(backend, {  
+                            response, err = httpc:request_uri(full_uri, {  
                                 method = "GET",  
                             })  
                         elseif method == "POST" then  
                             ngx.req.read_body()  -- Read the request body  
                             local body_data = ngx.req.get_body_data()  
-                            response, err = httpc:request_uri(backend, {  
+                            response, err = httpc:request_uri(full_uri, {  
                                 method = "POST",  
                                 body = body_data,  
                                 headers = backend_headers
@@ -87,42 +83,50 @@ data:
                         elseif method == "PUT" then  
                             ngx.req.read_body()  -- Read the request body  
                             local body_data = ngx.req.get_body_data()  
-                            response, err = httpc:request_uri(backend, {  
+                            response, err = httpc:request_uri(full_uri, {  
                                 method = "PUT",  
                                 body = body_data,  
                                 headers = backend_headers
                             })  
                         elseif method == "DELETE" then  
-                            response, err = httpc:request_uri(backend, {  
+                            response, err = httpc:request_uri(full_uri, {  
                                 method = "DELETE",  
                             })  
                         end  
 
-                        if response and response.status < 200 or response.status >= 300 then  
-                            success = false  
-                            if not error_message then  -- Capture the error message from the first failed request  
-                                error_message = response.body or "Failed request without a body."  
-                            end 
-                        end  
-                        if response then  
-                            res[#res + 1] = response.body  
-                        else  
-                            ngx.log(ngx.ERR, "Failed to request: ", err)  
-                            success = false  
-                            if not error_message then  -- Capture error when no response  
-                                error_message = "Error: " .. err  
-                            end  
-                        end  
-                    end  
+                        if response ~= nil then
+                            if response.status < 200 or response.status >= 300 then
+                                success = false
+                                if not error_message then  -- Capture the error message from the first failed request
+                                    error_message = response.body or "Failed request without a body."
+                                    status_code = response.status
+                                end
+                            end
+                        end
+                        if response ~= nil then
+                            res[#res + 1] = response.body
+                        else
+                            if err ~= nil then
+                                ngx.log(ngx.ERR, "Failed to request: ", err)
+                                success = false
+                                if not error_message then  -- Capture error when no response
+                                    error_message = "Error: " .. err
+                                end
+                            else
+                                success = false
+                                error_message = "Not found"
+                            end
+                        end
+                    end
 
                     if success then  
-                        ngx.exit(200)  
-                        -- return the first successful response
+                        ngx.status = status_code
                         ngx.say(res[1])
+                        ngx.exit(status_code)
                     else  
-                        ngx.status = 500  
+                        ngx.status = status_code  
                         ngx.say(error_message or "An unspecified error occurred.")  
-                        ngx.exit(500) 
+                        ngx.exit(status_code) 
                     end  
                 }  
             }  
