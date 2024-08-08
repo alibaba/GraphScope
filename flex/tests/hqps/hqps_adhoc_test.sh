@@ -188,6 +188,7 @@ run_cypher_test(){
   else
     echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
   fi
+  rm -rf /tmp/neo4j-* || true
 }
 
 
