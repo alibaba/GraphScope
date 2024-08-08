@@ -24,7 +24,6 @@ warnings.filterwarnings("ignore", category=Warning)
 import time
 
 import pytest
-from click.testing import CliRunner
 
 from graphscope.gsctl.impl import bind_datasource_in_batch
 from graphscope.gsctl.impl import connect_coordinator
@@ -203,10 +202,6 @@ modern_graph_datasource = {
         }
     ],
 }
-
-
-person_csv_content = "id|name|age\n1|marko|29\n2|vadas|27\n4|josh|32\n6|peter|35"
-person_knows_person_csv_content = "person.id|person.id|weight\n1|2|0.5\n1|4|1.0"
 
 
 class TestE2EInteractive(object):

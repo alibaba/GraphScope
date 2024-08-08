@@ -17,6 +17,7 @@ from gscoordinator.flex.core import client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
+@handle_api_exception()
 def create_edge_type(graph_id, create_edge_type=None):  # noqa: E501
     """create_edge_type
 
@@ -31,7 +32,7 @@ def create_edge_type(graph_id, create_edge_type=None):  # noqa: E501
     """
     if connexion.request.is_json:
         create_edge_type = CreateEdgeType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.create_edge_type(graph_id, create_edge_type)
 
 
 @handle_api_exception()
@@ -50,6 +51,7 @@ def create_graph(create_graph_request):  # noqa: E501
     return client_wrapper.create_graph(create_graph_request)
 
 
+@handle_api_exception()
 def create_vertex_type(graph_id, create_vertex_type):  # noqa: E501
     """create_vertex_type
 
@@ -64,9 +66,10 @@ def create_vertex_type(graph_id, create_vertex_type):  # noqa: E501
     """
     if connexion.request.is_json:
         create_vertex_type = CreateVertexType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.create_vertex_type(graph_id, create_vertex_type)
 
 
+@handle_api_exception()
 def delete_edge_type_by_name(graph_id, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
     """delete_edge_type_by_name
 
@@ -83,7 +86,9 @@ def delete_edge_type_by_name(graph_id, type_name, source_vertex_type, destinatio
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.delete_edge_type_by_name(
+        graph_id, type_name, source_vertex_type, destination_vertex_type
+    )
 
 
 @handle_api_exception()
@@ -100,6 +105,7 @@ def delete_graph_by_id(graph_id):  # noqa: E501
     return client_wrapper.delete_graph_by_id(graph_id)
 
 
+@handle_api_exception()
 def delete_vertex_type_by_name(graph_id, type_name):  # noqa: E501
     """delete_vertex_type_by_name
 
@@ -112,7 +118,7 @@ def delete_vertex_type_by_name(graph_id, type_name):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.delete_vertex_type_by_name(graph_id, type_name)
 
 
 @handle_api_exception()
@@ -143,6 +149,7 @@ def get_schema_by_id(graph_id):  # noqa: E501
     return client_wrapper.get_schema_by_id(graph_id)
 
 
+@handle_api_exception()
 def import_schema_by_id(graph_id, create_graph_schema_request):  # noqa: E501
     """import_schema_by_id
 
@@ -157,7 +164,7 @@ def import_schema_by_id(graph_id, create_graph_schema_request):  # noqa: E501
     """
     if connexion.request.is_json:
         create_graph_schema_request = CreateGraphSchemaRequest.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.import_schema(graph_id, create_graph_schema_request)
 
 
 @handle_api_exception()
