@@ -214,7 +214,8 @@ static void put_column_names_option(const LoadingConfig& loading_config,
                                     bool header_row,
                                     const std::string& file_path,
                                     char delimiter,
-                                    arrow::csv::ReadOptions& read_options) {
+                                    arrow::csv::ReadOptions& read_options,
+                                    size_t len) {
   std::vector<std::string> all_column_names;
   if (header_row) {
     all_column_names = read_header(file_path, delimiter, loading_config);
@@ -242,12 +243,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
              << gs::to_string(all_column_names);
   } else {
     // just get the number of columns.
-    size_t num_cols = 0;
-    {
-      auto tmp = read_header(file_path, delimiter, loading_config);
-      num_cols = tmp.size();
-    }
-    all_column_names.resize(num_cols);
+    all_column_names.resize(len);
     for (size_t i = 0; i < all_column_names.size(); ++i) {
       all_column_names[i] = std::string("f") + std::to_string(i);
     }
@@ -255,6 +251,14 @@ static void put_column_names_option(const LoadingConfig& loading_config,
   read_options.column_names = all_column_names;
   VLOG(10) << "Got all column names: " << all_column_names.size()
            << gs::to_string(all_column_names);
+}
+
+static void put_null_values(const LoadingConfig& loading_config,
+                            arrow::csv::ConvertOptions& convert_options) {
+  auto null_values = loading_config.GetNullValues();
+  for (auto& null_value : null_values) {
+    convert_options.null_values.emplace_back(null_value);
+  }
 }
 
 std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
@@ -384,11 +388,14 @@ void CSVFragmentLoader::fillVertexReaderMeta(
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
+  auto property_names = schema_.get_vertex_property_names(v_label);
   put_column_names_option(loading_config_, header_row, v_file,
-                          parse_options.delimiter, read_options);
+                          parse_options.delimiter, read_options,
+                          property_names.size() + 1);
   put_escape_char_option(loading_config_, parse_options);
   put_quote_char_option(loading_config_, parse_options);
   put_block_size_option(loading_config_, read_options);
+  put_null_values(loading_config_, convert_options);
 
   // parse all column_names
 
@@ -522,11 +529,16 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
+  auto edge_prop_names =
+      schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
+
   put_column_names_option(loading_config_, header_row, e_file,
-                          parse_options.delimiter, read_options);
+                          parse_options.delimiter, read_options,
+                          edge_prop_names.size() + 2);
   put_escape_char_option(loading_config_, parse_options);
   put_quote_char_option(loading_config_, parse_options);
   put_block_size_option(loading_config_, read_options);
+  put_null_values(loading_config_, convert_options);
 
   auto src_dst_cols =
       loading_config_.GetEdgeSrcDstCol(src_label_id, dst_label_id, label_id);
@@ -558,7 +570,11 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
         schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
     for (size_t i = 0; i < edge_prop_names.size(); ++i) {
       auto property_name = edge_prop_names[i];
-      included_col_names.emplace_back(property_name);
+      if (loading_config_.GetHasHeaderRow()) {
+        included_col_names.emplace_back(property_name);
+      } else {
+        included_col_names.emplace_back(read_options.column_names[i + 2]);
+      }
       mapped_property_names.emplace_back(property_name);
     }
   } else {
@@ -581,7 +597,11 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
                      << read_options.column_names[col_id];
         }
       }
-      included_col_names.emplace_back(col_name);
+      if (loading_config_.GetHasHeaderRow()) {
+        included_col_names.emplace_back(col_name);
+      } else {
+        included_col_names.emplace_back(read_options.column_names[col_id]);
+      }
       mapped_property_names.emplace_back(property_name);
     }
   }

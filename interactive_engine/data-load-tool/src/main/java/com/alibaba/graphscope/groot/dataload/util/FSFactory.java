@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.aliyun.odps.mapred.conf.JobConf;
 
 import java.io.IOException;
@@ -15,9 +16,9 @@ public class FSFactory {
         } else if (dataSinkType.equalsIgnoreCase("OSS")) {
             return new OSSFS(conf);
         } else if (dataSinkType.equalsIgnoreCase("HDFS")) {
-            throw new IOException("HDFS as a data sink is not supported in ODPS");
+            throw new InvalidArgumentException("HDFS as a data sink is not supported in ODPS");
         } else {
-            throw new IOException("Unsupported data sink: " + dataSinkType);
+            throw new InvalidArgumentException("Unsupported data sink: " + dataSinkType);
         }
     }
 }

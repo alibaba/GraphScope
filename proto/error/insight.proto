@@ -1,0 +1,123 @@
+/**
+ *
+ * The file proto/attr_value.proto is referred and derived from project
+ * tensorflow,
+ *
+ *    https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/attr_value.proto
+ *
+ * which has the following license:
+ *
+ *
+ Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ ==============================================================================
+ */
+syntax = "proto3";
+
+option java_package = "com.alibaba.graphscope.proto";
+option java_multiple_files = true;
+
+// component-04: GIE Insight Server (vineyard + groot)
+enum Code {
+    // Not an error; returned on success.
+    OK = 0;
+    CANCELLED = 1;
+    // Arguments of operations is invalid / in a wrong format.
+    INVALID_ARGUMENT = 2;
+    // Timeout, used when an operation fail to return result in an specific time.
+    TIMEOUT = 3;
+    // Required resources cannot be found.
+    NOT_FOUND = 4;
+    // File or resources already existed.
+    ALREADY_EXISTS = 5;
+    RESOURCE_EXHAUSTED = 6;
+    // Functionality not implemented yet
+    UNIMPLEMENTED = 7;
+    // Client doesn't have the permission.
+    PERMISSION_DENIED = 8;
+    // Compile graph frame or app frame failed.
+    COMPILATION_FAILURE = 9;
+    PORT_IN_USE = 10;
+    UNSUPPORTED_OPERATION = 11;
+    ILLEGAL_STATE = 12;
+    // Network is unreachable
+    NETWORK_FAILURE = 13;
+
+    // try to get a property in ValueType1, but the it's real type is ValueType2 and it's not ValueType1 and
+    // compatible to ValueType1
+    // ValueTypeMismatch = 100;
+    VALUE_TYPE_MISMATCH = 100;
+    // get lock failed
+    // LockFailed = 101;
+    LOCK_FAILED = 101;
+    // too many data of old versions in graph store, maybe something error with garbage collection
+    // usuage trigger when modifing the schema
+    // TooManyVersions = 102;
+    TOO_MANY_VERSIONS = 102;
+    // some fatal bug in graph store
+    // GraphStoreBug = 103;
+    BACKUP_FAILED = 103;
+    // user's operation is invalid, like: create a type that already exists
+    // InvalidOperation = 104;
+    INVALID_OPERATION = 104;
+    // when try to insert data, the type exists in storage but isn't visible at that moment
+    // DataNotExists = 105;
+    DATA_NOT_EXISTS = 105;
+    // error in external storage like rocksdb
+    // ExternalStorageError = 106;
+    EXTERNAL_STORAGE_ERROR = 106;
+    // decode property from bytes failed, maybe caused by corrupted binary data in storage,
+    // or by using the wrong decoder, 
+    // DecodeError = 107;
+    INVALID_DATA = 107;
+    // operations or features is not supported, e.g. delete from a secondary instance
+    // NotSupported = 108;
+
+    // PropertyAlreadyExist = 109;
+    TYPE_NOT_FOUND = 108;
+    PROPERTY_NOT_FOUND = 109;
+    // TypeAlreadyExist = 111;
+    // RelationShipAlreadyExist = 113;
+    // RelationShipNotExist = 114;
+
+    // client-frontend related
+    // RealtimeWriteFailed = 110;
+    REALTIME_WRITE_FAILED = 110;
+    // ServiceNotReady = 111;
+    SERVICE_NOT_READY = 111;
+    // QueueReject = 112;
+    QUEUE_REJECT = 112;
+
+    // query related
+    // QueryFailed = 113;
+    QUERY_FAILED = 113;
+    // QueryCancelled = 114;
+    // QUERY_CANCELLED = 114;
+
+    // IllegalSchema = 115;
+    ILLEGAL_SCHEMA = 115;
+
+    // e.g. delete property
+    // UnSupportedMetaOperation = 115;
+    // e.g. list, map, set
+    // DataTypeNotValid = 109;
+    INVALID_DATA_TYPE = 116;
+
+    INTERNAL = 117;
+
+    GAIA_INTERNAL_ERROR = 118;
+
+    DDL_ERROR = 119;
+
+}

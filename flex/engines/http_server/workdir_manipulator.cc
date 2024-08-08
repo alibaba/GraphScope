@@ -16,6 +16,10 @@
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 
+#include <boost/uuid/uuid.hpp>             // uuid class
+#include <boost/uuid/uuid_generators.hpp>  // generators
+#include <boost/uuid/uuid_io.hpp>          // streaming operators etc.
+
 // Write a macro to define the function, to check whether a filed presents in a
 // json object.
 #define CHECK_JSON_FIELD(json, field)                                         \
@@ -105,7 +109,8 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       YAML::Node plugin_node;
       plugin_node["name"] = plugin.name;
       plugin_node["library"] = plugin.library;
-      plugin_node["description"] = plugin.description;
+      // quote the description, since it may contain space.
+      plugin_node["description"] = "\"" + plugin.description + "\"";
       if (plugin.params.size() > 0) {
         YAML::Node params_node;
         for (auto& param : plugin.params) {
@@ -525,7 +530,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     auto new_description = json["description"];
     VLOG(10) << "Update description: "
              << new_description;  // update description
-    plugin_node["description"] = new_description.get<std::string>();
+    // quote the description, since it may contain space.
+    plugin_node["description"] =
+        "\"" + new_description.get<std::string>() + "\"";
   }
 
   bool enabled;
@@ -665,8 +672,8 @@ gs::Result<std::string> WorkDirManipulator::CreateFile(
   }
 
   // get the timestamp as the file name
-  auto time_stamp = std::to_string(gs::GetCurrentTimeStamp());
-  auto file_name = GetUploadDir() + "/" + time_stamp;
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  auto file_name = GetUploadDir() + "/" + boost::uuids::to_string(uuid);
   std::ofstream fout(file_name);
   if (!fout.is_open()) {
     return {gs::Status(gs::StatusCode::PermissionError, "Fail to open file")};
@@ -951,6 +958,11 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
       .then_wrapped([plugin_id = plugin_id, output_dir](auto&& f) {
         try {
           auto res = f.get();
+          if (!res.ok()) {
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error("Fail to generate procedure, error: " +
+                                   res.status().error_message()));
+          }
           std::string so_file;
           {
             std::stringstream ss;

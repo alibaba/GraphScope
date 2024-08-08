@@ -828,9 +828,11 @@ class BaseEngine {
     auto& head_y = ctx_y.GetMutableHead();
     auto left_repeat_array = ctx_x.ObtainOffsetFromTag(real_alias_x - 1);
     auto right_repeat_array = ctx_y.ObtainOffsetFromTag(real_alias_y - 1);
-    CHECK(left_repeat_array.size() == right_repeat_array.size())
-        << "left size " << left_repeat_array.size() << " right size "
-        << right_repeat_array.size();
+    if (left_repeat_array.size() != right_repeat_array.size()) {
+      throw std::runtime_error("The two context has different repeat size.: " +
+                               std::to_string(left_repeat_array.size()) + ", " +
+                               std::to_string(right_repeat_array.size()));
+    }
 
     std::vector<size_t> active_indices, new_offsets;
     std::tie(active_indices, new_offsets) =
@@ -867,7 +869,11 @@ class BaseEngine {
     }
     grape::Bitset bitset;
     bitset.init(max_vid + 1);
-    CHECK(left_repeat_array.size() == right_repeat_array.size());
+    if (left_repeat_array.size() != right_repeat_array.size()) {
+      throw std::runtime_error("The two context has different repeat size.: " +
+                               std::to_string(left_repeat_array.size()) + ", " +
+                               std::to_string(right_repeat_array.size()));
+    }
     for (size_t i = 0; i + 1 < left_repeat_array.size(); ++i) {
       auto x_start = left_repeat_array[i];
       auto x_end = left_repeat_array[i + 1];

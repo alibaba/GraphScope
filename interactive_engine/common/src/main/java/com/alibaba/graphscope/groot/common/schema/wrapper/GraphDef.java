@@ -13,10 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.wrapper;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.InvalidSchemaException;
-import com.alibaba.graphscope.groot.common.exception.TypeDefNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.*;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultEdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphEdge;
@@ -101,7 +98,7 @@ public class GraphDef implements GraphSchema {
                 GraphVertex dstGraphVertex = this.vertexTypes.get(edgeKind.getDstVertexLabelId());
                 Long tableId = edgeTableIds.get(edgeKind);
                 if (tableId == null) {
-                    throw new IllegalArgumentException("no valid table id for [" + edgeKind + "]");
+                    throw new InvalidArgumentException("no valid table id for [" + edgeKind + "]");
                 }
                 edgeRelations.add(new DefaultEdgeRelation(srcGraphVertex, dstGraphVertex, tableId));
             }
@@ -124,7 +121,7 @@ public class GraphDef implements GraphSchema {
         LabelId labelId = typeDef.getTypeLabelId();
         Long tableId = vertexTableIds.get(labelId);
         if (tableId == null) {
-            throw new InvalidSchemaException("no valid table id for [" + typeDef.getLabel() + "]");
+            throw new IllegalSchemaException("no valid table id for [" + typeDef.getLabel() + "]");
         }
         return new DefaultGraphVertex(typeDef, tableId);
     }
@@ -224,7 +221,7 @@ public class GraphDef implements GraphSchema {
     public TypeDef getTypeDef(String label) {
         LabelId labelId = this.labelToId.get(label);
         if (labelId == null) {
-            throw new TypeDefNotFoundException("no such label [" + label + "]");
+            throw new NotFoundException("no such label [" + label + "]");
         }
         return getTypeDef(labelId);
     }
@@ -250,30 +247,30 @@ public class GraphDef implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(String label) throws GraphElementNotFoundException {
+    public GraphElement getElement(String label) throws TypeNotFoundException {
         LabelId labelId = labelToId.get(label);
         if (labelId == null) {
-            throw new GraphElementNotFoundException("schema element not found for label " + label);
+            throw new TypeNotFoundException("schema element not found for label " + label);
         }
         return convertVertexEdgeType(idToType.get(labelId));
     }
 
     @Override
-    public GraphElement getElement(int labelId) throws GraphElementNotFoundException {
+    public GraphElement getElement(int labelId) throws TypeNotFoundException {
         TypeDef typeDef = idToType.get(new LabelId(labelId));
         return convertVertexEdgeType(typeDef);
     }
 
     private GraphElement convertVertexEdgeType(TypeDef typeDef) {
         if (null == typeDef) {
-            throw new RuntimeException("No type def with given label id/name");
+            throw new InvalidArgumentException("No type def with given label id/name");
         }
         if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
             return getVertexType(typeDef);
         } else if (typeDef.getTypeEnum() == TypeEnum.EDGE) {
             return getEdgeType(typeDef);
         } else {
-            throw new IllegalArgumentException("Not support type value " + typeDef.getTypeEnum());
+            throw new InvalidArgumentException("Not support type value " + typeDef.getTypeEnum());
         }
     }
 
@@ -288,23 +285,22 @@ public class GraphDef implements GraphSchema {
     }
 
     @Override
-    public Integer getPropertyId(String propertyName) throws GraphPropertyNotFoundException {
+    public Integer getPropertyId(String propertyName) throws PropertyNotFoundException {
         if (propertyNameToId.containsKey(propertyName)) {
             return propertyNameToId.get(propertyName);
         }
 
-        throw new GraphPropertyNotFoundException("property " + propertyName + " not exist");
+        throw new PropertyNotFoundException("property " + propertyName + " not exist");
     }
 
     @Override
-    public String getPropertyName(int propertyId) throws GraphPropertyNotFoundException {
+    public String getPropertyName(int propertyId) throws PropertyNotFoundException {
         for (Map.Entry<String, Integer> entry : propertyNameToId.entrySet()) {
             if (entry.getValue() == propertyId) {
                 return entry.getKey();
             }
         }
-        throw new GraphPropertyNotFoundException(
-                "property not exist for property id " + propertyId);
+        throw new PropertyNotFoundException("property not exist for property id " + propertyId);
     }
 
     @Override

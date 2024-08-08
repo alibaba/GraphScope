@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 
 import org.apache.calcite.plan.RelOptCluster;
@@ -57,7 +57,7 @@ public class GraphOptSchema implements RelOptSchema {
         try {
             GraphElement element = rootSchema.getElement(labelName);
             return createRelOptTable(tableName, element);
-        } catch (GraphElementNotFoundException e) {
+        } catch (TypeNotFoundException e) {
             throw Static.RESOURCE.tableNotFound(labelName).ex();
         }
     }
