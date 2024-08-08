@@ -117,7 +117,14 @@ nginx:
     registry: reg.docker.alibaba-inc.com
     repository: "7brs/interactive"
     tag: "nginx-debug"
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
+  
+openresty:
+  image:
+    registry: reg.docker.alibaba-inc.com
+    repository: "7brs/interactive"
+    tag: "openresty-debug"
+    pullPolicy: Always
 
 ## GraphScope Interactive parameters
 ##

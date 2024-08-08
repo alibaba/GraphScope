@@ -159,8 +159,8 @@ spec:
           #     mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
           #     subPath: engine_config.yaml
         - name: admin-nginx
-          image: {{ include "graphscope-interactive.nginx.image" . }} 
-          imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
+          image: {{ include "graphscope-interactive.openresty.image" . }} 
+          imagePullPolicy: {{ .Values.openresty.image.pullPolicy | quote }}
           # command: ["sleep", "infinity"]
           ports:
             - name: query-port
