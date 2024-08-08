@@ -17,7 +17,7 @@ QUIET_OPT := --quiet
 build:
 	cd $(CUR_DIR) && mvn clean package ${QUIET_OPT} && \
 	cd target && \
-	tar zxvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz -q
+	tar zxvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz > /dev/null
 
 clean:
 	cd $(CUR_DIR) && mvn clean

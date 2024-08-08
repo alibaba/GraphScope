@@ -13,7 +13,7 @@ public class BenchmarkResultComparator {
     private Map<String, String> expectedResults;
 
     public BenchmarkResultComparator(String expectedResultsPath) {
-        if (expectedResultsPath != null) {
+        if (expectedResultsPath != null && !expectedResultsPath.isEmpty()) {
             try (Reader reader = Files.newBufferedReader(Paths.get(expectedResultsPath)); ) {
                 Gson gson = new Gson();
                 Type type = new TypeToken<Map<String, String>>() {}.getType();

@@ -17,12 +17,10 @@ base_dir=$(cd $(dirname $0); pwd)
 
 # build the benchmark
 printf "Building the benchmark...\n"
-cd ${base_dir}/..
 make build
 
 # run the benchmark
 printf "Running the benchmark...\n"
-cd ${base_dir}/..
 if make run > interactive-benchmark.log 2>&1 & then
     # record the pid of the benchmark process
     benchmark_pid=$!
@@ -34,7 +32,7 @@ if make run > interactive-benchmark.log 2>&1 & then
     if [ $? -eq 0 ]; then
         # collect the benchmark result
         printf "Collecting the benchmark result...\n"
-        cd ${base_dir}/.. && make collect 
+        make collect 
     else
         printf "Benchmark run failed. Check interactive-benchmark.log for details.\n"
         exit 1

@@ -1,5 +1,8 @@
 package com.alibaba.graphscope.gaia.benchmark;
 
+import com.alibaba.graphscope.gaia.common.Configuration;
+import com.alibaba.graphscope.gaia.utils.PropertyUtil;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -7,9 +10,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.alibaba.graphscope.gaia.common.Configuration;
-import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 
 public class CollectResult {
 
@@ -137,7 +137,7 @@ public class CollectResult {
     }
 
     public static void main(String[] args) {
-         if (args.length != 1) {
+        if (args.length != 1) {
             System.out.println("Error, Usage: <interactive-benchmark.properties>");
             return;
         }

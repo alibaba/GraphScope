@@ -43,7 +43,7 @@ public class InteractiveBenchmark {
         List<GraphSystem> comparedSystems = BenchmarkSystemUtil.initSystems(configuration);
 
         // benchmark queries
-        List<CommonQuery> ldbcQueryList = QueryUtil.initQueryList(configuration);
+        List<CommonQuery> queryList = QueryUtil.initQueryList(configuration);
         String expectedResultsPath =
                 configuration.getString(Configuration.EXPECTED_RESULTS_PATH, null);
         BenchmarkResultComparator comparator = new BenchmarkResultComparator(expectedResultsPath);
@@ -77,7 +77,7 @@ public class InteractiveBenchmark {
             public void run() {
                 for (int index = 0; index < warmUpCount; index++) {
                     System.out.println("Begin Warm up ....");
-                    CommonQuery commonQuery = ldbcQueryList.get(index % ldbcQueryList.size());
+                    CommonQuery commonQuery = queryList.get(index % queryList.size());
                     HashMap<String, String> queryParameter = commonQuery.getSingleParameter(index);
 
                     commonQuery.processGraphQuery(
@@ -87,9 +87,8 @@ public class InteractiveBenchmark {
                 while (true) {
                     int currentValue = atomicQueryCount.getAndDecrement();
                     if (currentValue > 0) {
-                        int queryIndex = currentValue % ldbcQueryList.size();
-                        CommonQuery commonQuery =
-                                ldbcQueryList.get(queryIndex % ldbcQueryList.size());
+                        int queryIndex = currentValue % queryList.size();
+                        CommonQuery commonQuery = queryList.get(queryIndex % queryList.size());
                         int parameterIndex = 0;
                         if (queryIndex == 0) {
                             parameterIndex = atomicParameterIndex.getAndIncrement();
