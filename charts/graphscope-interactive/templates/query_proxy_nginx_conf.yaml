@@ -27,7 +27,7 @@ data:
 
         server {  
             {{- $queryPort := .Values.primary.service.queryPort | int }}
-            listen $queryPort;  
+            listen {{ $queryPort }};  
             server_name localhost;  
 
             location / {  

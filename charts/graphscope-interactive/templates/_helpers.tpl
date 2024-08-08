@@ -121,6 +121,23 @@ Return the proper graphscope-interactive primary image name
 {{- end -}}
 {{- end -}}
 
+{{/*
+Return the proper graphscope-interactive primary image name
+*/}}
+{{- define "graphscope-interactive.openresty.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.openresty.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 
 {{/*
 Return the proper graphscope-interactive secondary image name

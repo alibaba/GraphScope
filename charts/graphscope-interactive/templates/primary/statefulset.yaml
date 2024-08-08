@@ -73,98 +73,12 @@ spec:
         {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.initContainers "context" $) | nindent 8 }}
         {{- end }}
       containers:
-        # - name: proxy-admin
-        #   image: {{ include "graphscope-interactive.primary.image" . }}
-        #   imagePullPolicy: {{ .Values.primary.image.pullPolicy | quote }}
-          # # command: ["sleep", "infinity"]
-          # command:
-          #   - /bin/bash
-          #   - -c
-          #   - |
-          #     POD_NAME=$MY_POD_NAME
-          #     if [ -z "$POD_NAME" ]; then
-          #       POD_NAME=$(hostname)
-          #     fi
-          #     echo "POD_NAME: $POD_NAME"
-          #     secondary_pod_dns_names=""
-          #     # cnt=1
-          #     # for i from 0 to $SECONDARY_REPLICAS
-          #     for ((i=0; i<SECONDARY_REPLICAS; i++)); do
-          #       secondary_pod_dns_names="$secondary_pod_dns_names,${SECONDARY_POD_NAME_PREFIX}-$i.${SECONDARY_SERVICE_NAME}:${SECONDARY_ADMIN_PORT}"
-          #     #   cnt=$((cnt+1))
-          #     done
-          #     # secondary_pod_dns_names="${SECONDARY_SERVICE_NAME}:${SECONDARY_ADMIN_PORT}"
-          #     # if secondary_pod_dns_names size > 0, remove the first comma
-          #     if [ ${#secondary_pod_dns_names} -gt 0 ]; then
-          #       secondary_pod_dns_names=${secondary_pod_dns_names:1}
-          #     fi
-          #     echo "secondary_pod_dns_names: $secondary_pod_dns_names"
-          #     echo "cnt: $cnt"
-          #     sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
-          #     cmd="/opt/flex/bin/entrypoint.sh -t proxy -e $secondary_pod_dns_names -p $PRIMARY_ADMIN_PORT --hang-until-success ${HANG_UNTIL_SUCCESS}"
-          #     echo "cmd: $cmd"
-          #     eval $cmd
-          #     # sleep infinity
-          # env:
-          #   - name: INSTANCE_NAME
-          #     value: {{ .Release.Name | quote }}
-          #   - name: INTERACTIVE_WORKSPACE
-          #     value: {{ .Values.workspace | quote }}
-          #   - name: PRIMARY_SERVICE_HOST
-          #     value: {{ $primaryFullName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
-          #   - name: SECONDARY_POD_NAME_PREFIX
-          #     value: {{ $secondaryFullName }}
-          #   - name: SECONDARY_SERVICE_NAME
-          #     value: {{ $secondaryFullName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
-          #   - name: SECONDARY_REPLICAS
-          #     value: {{ .Values.secondary.replicaCount | quote }}
-          #   - name: SECONDARY_QUERY_PORT
-          #     value: {{ .Values.secondary.service.queryPort | quote }}
-          #   - name: SECONDARY_ADMIN_PORT
-          #     value: {{ .Values.secondary.service.adminPort | quote }}
-          #   - name: PRIMARY_QUERY_PORT
-          #     value: {{ .Values.primary.service.queryPort | quote }}
-          #   - name: PRIMARY_ADMIN_PORT
-          #     value: {{ .Values.primary.service.adminPort | quote }}
-          #   - name: ENGINE_CONFIG_PATH
-          #     value: {{ include "graphscope-interactive.engineConfigPath" . }}
-          #   - name: REAL_ENGINE_CONFIG_PATH
-          #     value: {{ include "graphscope-interactive.realEngineConfigPath" . }}
-          #   - name: ENGINE_BINARY_PATH
-          #     value: {{ include "graphscope-interactive.engineBinaryPath" . }}
-          #   - name: ENGINE_SHARD_NUM
-          #     value: {{ .Values.primary.threadNumPerWorker | quote }}
-          #   - name: BULK_LOADER_BINARY_PATH
-          #     value: /opt/flex/bin/bulk_loader
-          #   - name: DEFAULT_GRAPH_NAME
-          #     value: {{ .Values.defaultGraph }}
-          #   - name: HANG_UNTIL_SUCCESS
-          #     value: {{ .Values.primary.hangUntilSuccess | quote }}
-          #   - name: ODPS_ACCESS_ID
-          #     value: {{ .Values.odps.access.id | quote }}
-          #   - name: ODPS_ACCESS_KEY
-          #     value: {{ .Values.odps.access.key | quote }}
-          #   - name: ODPS_ENDPOINT
-          #     value: {{ .Values.odps.endpoint | quote }}
-          # ports:
-          #   - name: admin-port
-          #     containerPort: {{ .Values.primary.service.adminPort }}
-          # {{- if .Values.primary.resources }}
-          # resources: {{- toYaml .Values.primary.resources | nindent 12 }}
-          # {{- end }}
-          # volumeMounts:
-          #   - name: workspace
-          #     mountPath: {{ .Values.workspace }}
-          #   - name: config
-          #     mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
-          #     subPath: engine_config.yaml
         - name: admin-nginx
           image: {{ include "graphscope-interactive.openresty.image" . }} 
           imagePullPolicy: {{ .Values.openresty.image.pullPolicy | quote }}
-          # command: ["sleep", "infinity"]
+          command: ["sleep", "infinity"]
+          #command: ["openresty", "-g",  "daemon off;"]
           ports:
-            - name: query-port
-              containerPort: {{ .Values.primary.service.queryPort }}
             - name: admin-port 
               containerPort: {{ .Values.primary.service.adminPort }}
           {{- if .Values.primary.resources }}
@@ -177,17 +91,14 @@ spec:
               mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
               subPath: engine_config.yaml
             - name: admin-proxy-nginx-config  
-              mountPath: /etc/nginx/nginx.conf  
+              mountPath: /usr/local/openresty/nginx/conf/nginx.conf  
               subPath: nginx.conf
         - name: proxy-nginx
           image: {{ include "graphscope-interactive.nginx.image" . }} 
           imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
-          # command: ["sleep", "infinity"]
           ports:
             - name: query-port
               containerPort: {{ .Values.primary.service.queryPort }}
-            - name: admin-port 
-              containerPort: {{ .Values.primary.service.adminPort }}
           {{- if .Values.primary.resources }}
           resources: {{- toYaml .Values.primary.resources | nindent 12 }}
           {{- end }}

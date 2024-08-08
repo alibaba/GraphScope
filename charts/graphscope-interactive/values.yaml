@@ -467,11 +467,13 @@ secondary:
   ##
   resources: 
     limits:
-      cpu: 640000m
-      memory: 400Gi
+      cpu: 320000m
+      #memory: 400Gi
+      memory: 100Gi
     requests:
-      cpu: 64000m
-      memory: 300Gi
+      cpu: 32000m
+      #memory: 300Gi
+      memory: 100Gi
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -531,7 +533,8 @@ secondary:
       - ReadWriteOnce # read and write by a single node.
     ## Persistent Volume size
     ##
-    size: 300Gi
+    # size: 300Gi
+    size: 100Gi
     ## selector can be used to match an existing PersistentVolume
     ## selector:
     ##   matchLabels:

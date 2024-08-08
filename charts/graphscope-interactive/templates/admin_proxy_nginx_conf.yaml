@@ -18,7 +18,7 @@ data:
         resovler {{ .Values.dnsConfig.nameservers }};
         server {  
             {{- $adminPort := .Values.primary.service.adminPort | int }}
-            listen $adminPort;  
+            listen {{ $adminPort }};  
             location / {  
                 content_by_lua_block {  
                     local http = require "resty.http"  
@@ -34,15 +34,13 @@ data:
                         {{- $replicaCount := .Values.secondary.replicaCount | int }}  
                         {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
                         {{- $port := .Values.secondary.service.adminPort | int }}
-                        -- If replica == 1, just add one
                         {{- if eq $replicaCount 1 }}
-                          {{ printf "\"http://%s-0.%s:%d\"" $baseName $serviceName $port }}
+                        {{ printf "http://%s-0.%s:%d" $baseName $serviceName $port | quote }}
                         {{- else }}
-                        -- for first 0 - replica -1
-                        {{- range $i := until $replicaCount - 1 }}  
-                          {{ printf "\"http://%s-$i.%s:%d\"," $baseName $serviceName $port }}
+                        {{- range $i := until (sub $replicaCount 1 | int )  }}  
+                        {{ printf "\"http://%s-$i.%s:%d\"," $baseName $serviceName $port  }}
                         {{- end }}
-                        {{ printf "\"http://%s-%d.%s:%d\"" $baseName $replicaCount-1 $serviceName $port }};
+                        {{ printf "http://%s-%d.%s:%d" $baseName (sub $replicaCount 1) $serviceName $port | quote }}
                         {{- end }}
                     }
 
