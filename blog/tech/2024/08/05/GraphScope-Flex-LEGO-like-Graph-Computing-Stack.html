@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">GraphScope Flex: LEGO-like Graph Computing Stack</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2024-08-05">05 Aug 2024</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2024-08-05">05 Aug 2024</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">GraphScope Flex: LEGO-like Graph Computing Stack</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/flex-title.jpg" alt="title" />
+From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile. 
+The GraphScope team presented their paper “<a href="https://arxiv.org/abs/2312.12107">GraphScope Flex: LEGO-like Graph Computing Stack</a>” at the SIGMOD Industry Session. 
+This article introduces the main content of that paper.</p>
+
+<h3 id="diversified-graph-computing-demands">Diversified Graph Computing Demands</h3>
+<p>Graph computing encompasses a wide range of types, commonly including graph analytics, graph interactive queries, and graph neural networks (GNNs). Previous graph computing systems typically cater to a specific type of graph computation. In a complex workflow, which may involve multiple types of graph computing tasks, users often need to employ multiple graph computing systems to complete this intricate process.</p>
+
+<p>To address these issues, we developed and open-sourced the industry’s first one-stop graph computing system, GraphScope, in 2020. As illustrated in the figure below, GraphScope integrates a Graph Analytics Engine (GAE), a Graph Interactive Engine (GIE), and a Graph Learning Engine (GLE) to support different types of graph computations. Additionally, GraphScope includes an immutable in-memory graph storage system called <a href="https://github.com/v6d-io/v6d">Vineyard</a>, which allows various computing engines to share data through shared memory. To reduce the learning curve for users, GraphScope extends Gremlin as a unified query language and offers a simple and user-friendly Python interface.</p>
+
+<p><img src="/blog/assets/images/graphscope-arch.jpg" alt="gs" /></p>
+
+<p>In real scenarios, we find that the demand for graph computing is highly diverse. The diagram below illustrates Alibaba’s real graph computing scenarios, where graph data may consist of immutable data stored in memory, may come from external data sources that are continuously updated, or may originate from files in a data lake. The workloads of graph computing are also quite varied. For example, Workload 1 represents running a ranking algorithm (e.g., PageRank) on the graph, which is a typical graph analytics task. Workload 2 represents running a fraud detection model based on graph neural networks on the graph. Workload 3 requires processing a large number of queries related to product recommendations in a short amount of time. Workload 4 represents the need to perform real-time online query operations on graph data through a WebUI, while Workload 5 represents data analysts needing to conduct BI analysis on graph data, aiming to obtain analytical results in the shortest time possible.</p>
+
+<p><img src="/blog/assets/images/diverse-graph.jpg" alt="diverse" /></p>
+
+<p>From the examples mentioned above, it is clear that the diversity of graph computing is reflected in various aspects such as storage, workloads, and performance metrics of interest. In light of this diversity, the one-stop design of GraphScope appears inadequate to handle such varied requirements.</p>
+
+<h4 id="diversity-of-graph-types-and-storage">Diversity of Graph Types and Storage</h4>
+<p>Firstly, there is a diversity in both graph types and graph storage. On one hand, there are multiple graph representation models currently available, as illustrated below. Common models include simple graphs, weighted graphs, sparse matrices/tensors, labeled property graphs, and RDF (Resource Description Framework) graphs. On the other hand, the storage characteristics of graph data also exhibit diversity, including in-memory vs. external storage, mutable vs. immutable data, and support for multi-versioning, among others. Therefore, the use of the property graph model with immutable in-memory storage, such as Vineyard in GraphScope, struggles to adapt to this diversity.</p>
+
+<p><img src="/blog/assets/images/diverse-store.jpg" alt="diverse-store" /></p>
+
+<h4 id="diversity-of-graph-computing-paradigms-and-query-interfaces">Diversity of Graph Computing Paradigms and Query Interfaces</h4>
+<p>Secondly, the types of graph computing are highly diverse, encompassing various workloads such as graph analytics, graph querying, and graph neural networks. Moreover, different types of graph computing tasks typically employ different programming interfaces and query languages. Even within the same type of graph computation, there are multiple commonly used programming interfaces and query languages, making it difficult to expect users to express all workloads using a single, unified interface or language. For example, <a href="https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing">common programming interfaces for graph analytics tasks</a> include Pregel, GAS, and PIE, while frequently used query languages in the graph querying domain include Gremlin, Cypher, and GQL. Additionally, popular graph neural network systems like <a href="https://www.dgl.ai/">DGL</a> and <a href="https://www.pyg.org/">PyG</a> utilize different programming interfaces. Consequently, the use of a unified programming/query language in GraphScope faces challenges in addressing the diversity of computing paradigms and query interfaces.</p>
+
+<h4 id="diversity-of-performance-requirements-in-graph-computing">Diversity of Performance Requirements in Graph Computing</h4>
+<p>Finally, even with the same data and the same type of workload, the performance metrics we focus on may vary across different scenarios. For example, in tasks related to graph querying, when faced with a scenario that requires handling a large number of simple queries in a short time, our primary performance metric is system throughput. Conversely, in a scenario involving a small number of complex queries, the focus shifts to low latency, meaning that the system must return results for individual queries in the shortest time possible. Since any given system or component is typically optimized for a specific performance metric, a single component in GraphScope struggles to effectively meet multiple performance requirements simultaneously.</p>
+
+<h3 id="graphscope-flex-modular-design-inspired-by-lego">GraphScope Flex: Modular Design Inspired by LEGO</h3>
+
+<p>To better address the increasingly diverse needs of graph computing, we have designed the next-generation architecture of GraphScope, known as GraphScope Flex. This architecture adopts a modular design philosophy, allowing users to freely select appropriate components based on specific task requirements, much like building with LEGO bricks.</p>
+
+<p>The architecture of GraphScope Flex, as shown in the diagram below, is divided into three layers: the storage layer, the execution engine layer, and the frontend layer. Each layer contains a rich set of components that have been highly optimized for different objectives.</p>
+
+<p><img src="/blog/assets/images/flex-arch.jpg" alt="flex-arch" /></p>
+
+<p>When given a specific task, users simply need to select the components that meet their requirements from each layer. They can then use the building tool, <code class="language-plaintext highlighter-rouge">flexbuild</code>, provided by GraphScope Flex to construct a graph computing system tailored to their needs. Specifically, each layer in GraphScope Flex includes the following components.</p>
+
+<h4 id="storage-layer">Storage Layer</h4>
+<p>The storage layer currently supports several types of storage: immutable in-memory storage (Vineyard), standard data file format for graph (<a href="https://graphar.apache.org/">GraphAr</a>), multi-version mutable storage (<a href="https://github.com/graphscope/gart">GART</a>), and mutable in-memory storage (mCSR). Each storage type has different access interfaces. To shield the execution engines from the interface discrepancies of various storage types, GraphScope Flex adopts a standardized graph access interface called <a href="https://github.com/GraphScope/GRIN">GRIN</a>, requiring all storage implementations to comply with this interface. This way, all upper-layer computing engines can access all graph storage using a single, uniform interface. In the future, if new storage options are added to the storage layer, users won’t need to worry about compatibility issues resulting from these extensions.</p>
+
+<h4 id="execution-engine-layer">Execution Engine Layer</h4>
+<p><code class="language-plaintext highlighter-rouge">GRAPE</code> is a high-performance distributed engine designed for graph analysis tasks, optimized for computation and communication on the CPU. Recently, it has introduced support for GPU, leveraging the high computing power of GPUs and high-speed interconnects like NVLink to accelerate graph analysis tasks. GRAPE provides external programming models such as Pregel, PIE, and FLASH, facilitating the development of customized graph analysis algorithms for users.</p>
+
+<p>For graph querying tasks, the <code class="language-plaintext highlighter-rouge">GraphIR</code> module translates user-written queries in Cypher or Gremlin into a query language-agnostic intermediate representation. The <code class="language-plaintext highlighter-rouge">Graph Query Optimizer</code> module employs both Rule-based Optimization (RBO) and Cost-based Optimization (CBO) techniques to optimize this intermediate representation. Depending on the performance metrics of interest, the <code class="language-plaintext highlighter-rouge">Hiactor Codegen</code> module generates physical execution plans that can be executed on the <code class="language-plaintext highlighter-rouge">Hiactor</code> component, a low-level parallel engine suitable for high-throughput scenarios. If the goal is to minimize the execution time of individual queries, the <code class="language-plaintext highlighter-rouge">Gaia Codegen</code> module will generate physical execution plans for execution on the <code class="language-plaintext highlighter-rouge">Gaia</code> component, a dataflow engine that automatically parallelizes queries to reduce execution time.</p>
+
+<p>To support graph neural networks, the <code class="language-plaintext highlighter-rouge">Graph-Learn</code> module handles graph sampling operations, offering support for both CPU and GPU. On the GPU platform, it incorporates an efficient caching mechanism to further accelerate the graph sampling speed. Additionally, the back-end tensor execution module supports both <code class="language-plaintext highlighter-rouge">PyTorch</code> and <code class="language-plaintext highlighter-rouge">TensorFlow</code>, allowing users to choose according to their needs.</p>
+
+<h4 id="frontend-layer">Frontend Layer</h4>
+<p>The frontend layer includes a rich set of algorithm packages and provides various SDKs and APIs for external services. The <code class="language-plaintext highlighter-rouge">Builtin Apps</code> module includes common graph analysis algorithms, such as PageRank and shortest path. The <code class="language-plaintext highlighter-rouge">GNN Models</code> module encompasses popular graph neural network models like GCN, PinSAGE, and GraphSAGE. The <code class="language-plaintext highlighter-rouge">Cypher</code> and <code class="language-plaintext highlighter-rouge">Gremlin</code> modules allow users to perform graph query operations directly using Cypher and Gremlin query languages. Furthermore, the application layer exposes RESTful/WebSocket APIs, making it easy for users to integrate GraphScope Flex with other systems, and provides C++, Python, and Java SDKs to facilitate the development of custom graph algorithm applications.</p>
+
+<h3 id="real-world-use-cases-of-graphscope-flex">Real-World Use Cases of GraphScope Flex</h3>
+
+<h4 id="company-equity-analysis">Company Equity Analysis</h4>
+<p>In the task of company equity analysis, we need to identify the ultimate controller of a company, i.e., the individual who controls more than 50% of the company’s equity. An individual may exert influence through multiple layers of companies, so we need to start from a particular individual and calculate both the equity they directly hold and the equity held through other companies. While this process can be expressed and executed using SQL on a relational database, it is often very inefficient. For instance, on a real dataset containing 300 million individuals/companies and 1.5 billion equity holding records, it can take over an hour in a relational database to compute the desired results without yielding any output.</p>
+
+<p>Given the interconnected nature of equity structures, we can transform this problem into a graph analytics task. First, we need to convert the equity relationships into a graph data structure, where the vertices represent individuals or companies, and the edges represent the equity holding relationships.</p>
+
+<p><img src="/blog/assets/images/equity-analysis.jpg" alt="equity" /></p>
+
+<p>We then select the components illustrated in the diagram below to build a graph analytical system for completing the company equity analysis task.
+To achieve higher performance, we choose the in-memory graph storage, <code class="language-plaintext highlighter-rouge">Vineyard</code>, for the storage layer.
+We select <code class="language-plaintext highlighter-rouge">GRAPE</code> as the execution engine for the graph analysis algorithms in the wxecution engine layer.
+Users can write the equity analysis logic using the SDK, leveraging the Pregel/PIE interfaces exposed by GRAPE in the frontend layer.
+With this configuration, GraphScope Flex can process the same dataset and obtain results in just 15 minutes, demonstrating a significant improvement in efficiency compared to traditional methods. This showcases the flexibility and power of GraphScope Flex in handling complex analysis tasks effectively.</p>
+
+<p><img src="/blog/assets/images/equity-arch.jpg" alt="equity-arch" /></p>
+
+<h4 id="real-time-fraud-detection">Real-Time Fraud Detection</h4>
+
+<p>E-commerce platforms need to perform real-time checks on each order to determine whether it involves fraudulent activities such as order brushing. As shown in the image below, the e-commerce platform has marked a portion of accounts as fraudulent accounts (fraud seeds). We can consider accounts that frequently have a “co-purchase” relationship with these fraudulent accounts as highly suspicious fraudulent accounts as well.</p>
+
+<p><img src="/blog/assets/images/fraud-graph.jpg" alt="fraud-graph" /></p>
+
+<p>To express the “co-purchase” relationship mentioned above, we can use the following Cypher statement. Therefore, this fraud detection issue is well suited to be transformed into a graph computing problem.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MATCH (v:Account{id:1})-[b1:BUY]-&gt;(:Item)&lt;-[b2:BUY]-(s:Account)
+WHERE s.id IN SEEDS AND b1.date-b2.date &lt; 5 /*within 5 days*/
+WITH v, COUNT(s) AS cnt1
+MATCH (v)-[:KNOWS]-(f:Account), (f)-[b1:BUY]-&gt;(:Item)&lt;-[b2:BUY]-(s:
+          Account) WHERE s.id IN SEEDS WITH v, cnt1, COUNT(s) AS cnt2
+WHERE w1 * cnt1 + w2 * cnt2 &gt; threshold
+RETURN v
+</code></pre></div></div>
+
+<p>To achieve real-time fraud detection, we can select the components shown in the diagram to construct a graph computing system. Considering that order data is continuously arriving, we have chosen the <code class="language-plaintext highlighter-rouge">GART</code> component, which supports multi-version variable memory graph storage.
+At the execution engine layer, since we need to handle a large volume of orders in a short time, the core metric we need to focus on is system throughput. Therefore, we have selected the <code class="language-plaintext highlighter-rouge">Hiactor Codegen</code> and <code class="language-plaintext highlighter-rouge">Hiactor</code> components, along with the <code class="language-plaintext highlighter-rouge">GraphIR</code> component and the <code class="language-plaintext highlighter-rouge">Graph Query Optimizer</code> component, to receive queries written in Cypher from the frontend layer.
+With this deployment plan on real datasets, we can achieve performance exceeding 350,000 QPS.</p>
+
+<p><img src="/blog/assets/images/fraud-arch.jpg" alt="fraud-arch" /></p>
+
+<h4 id="friendship-relationship-prediction">Friendship Relationship Prediction</h4>
+
+<p>When e-commerce platforms make product recommendations, a very important strategy is to recommend products liked by a user’s friends. However, the friendship relationship data among users on e-commerce platforms is often incomplete, so it is necessary to predict whether a friendship exists between two users. Since graphs can naturally depict the relationships among users, this issue can also be transformed into a graph computing problem. Currently, the industry commonly uses graph neural networks to handle graph-based friendship relationship prediction tasks.</p>
+
+<p>Based on e-commerce data, we can first construct a graph as shown in the diagram, where each vertex represents users, products, comments, etc., and edges represent friendships, purchases, comments, etc. In graph neural network models, such as those represented by the NCN algorithm, calculations like “common friends” need to be performed on the graph, as two users with many common friends are more likely to have a friendship.</p>
+
+<p><img src="/blog/assets/images/rec-graph.jpg" alt="rec-graph" /></p>
+
+<p>To deploy a system for friendship relationship prediction based on GraphScope Flex, we can select the components shown in the diagram from GraphScope Flex. In this setup, the <code class="language-plaintext highlighter-rouge">Vineyard</code> component in the storage layer models the data as a property graph and stores it in memory. The <code class="language-plaintext highlighter-rouge">Graph-Learn</code> component is responsible for calculating common friends, neighbor sampling, and other operations, while the <code class="language-plaintext highlighter-rouge">PyTorch</code> module is used for graph neural network inference. At the frontend layer, users can invoke the inference service through the Python SDK.</p>
+
+<p><img src="/blog/assets/images/rec-arch.jpg" alt="rec-arch" /></p>
+
+<h3 id="high-performance-and-continuous-iteration">High Performance and Continuous Iteration</h3>
+
+<p>Thanks to the modular design of GraphScope Flex, it has achieved efficient performance across a variety of workloads. Notably, in the internationally recognized benchmark for transactional online query scenarios, LDBC-SNB, GraphScope Flex achieved <a href="https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark">a performance that surpasses the previous record holder by 2.6 times</a>, securing the top position.
+We will also publish articles in the future to provide detailed information about the design of each module, so stay tuned!</p>
+
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=GraphScope Flex: LEGO-like Graph Computing Stack&amp;url=https://graphscope.io/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

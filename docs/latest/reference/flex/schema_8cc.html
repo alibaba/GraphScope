@@ -68,6 +68,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">schema.cc File Reference</div>  </div>
@@ -136,6 +137,11 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs_1_1config__parsing"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html">gs::config_parsing</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a1e28f99f6044b12dd538dd062685aea5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="schema_8cc.html#a1e28f99f6044b12dd538dd062685aea5">THROW_EXCEPTION_IF</a>(cond,  msg)</td></tr>
+<tr class="separator:a1e28f99f6044b12dd538dd062685aea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ad65d7cce91ab0e271607b70e11089e58"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#ad65d7cce91ab0e271607b70e11089e58">gs::config_parsing::RelationToEdgeStrategy</a> (const std::string &amp;rel_str, EdgeStrategy &amp;ie_strategy, EdgeStrategy &amp;oe_strategy)</td></tr>
@@ -167,6 +173,38 @@ Functions</h2></td></tr>
 <tr class="memitem:a62b90a878ec9026365c033de0ce28434"><td class="memItemLeft" align="right" valign="top">static Status&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a62b90a878ec9026365c033de0ce28434">gs::config_parsing::parse_schema_config_file</a> (const std::string &amp;path, Schema &amp;schema)</td></tr>
 <tr class="separator:a62b90a878ec9026365c033de0ce28434"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a1e28f99f6044b12dd538dd062685aea5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e28f99f6044b12dd538dd062685aea5">&#9670;&nbsp;</a></span>THROW_EXCEPTION_IF</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define THROW_EXCEPTION_IF</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">cond, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">msg&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keywordflow">if</span> (cond) {                         \</div>
+<div class="line">    throw std::runtime_error(msg);    \</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -1,7 +1,8 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classgs_1_1AppFactoryBase.html" title=" " alt="" coords="5,81,155,108"/>
-<area shape="rect" id="node2" href="$classgs_1_1HQPSAdhocReadAppFactory.html" title=" " alt="" coords="204,5,431,32"/>
-<area shape="rect" id="node3" href="$classgs_1_1HQPSAdhocWriteAppFactory.html" title=" " alt="" coords="203,56,432,83"/>
-<area shape="rect" id="node4" href="$classgs_1_1ServerAppFactory.html" title=" " alt="" coords="238,107,397,133"/>
-<area shape="rect" id="node5" href="$classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="214,157,421,184"/>
+<area shape="rect" id="node1" href="$classgs_1_1AppFactoryBase.html" title=" " alt="" coords="5,107,155,133"/>
+<area shape="rect" id="node2" href="$classgs_1_1AdhocReadAppFactory.html" title=" " alt="" coords="222,5,413,32"/>
+<area shape="rect" id="node3" href="$classgs_1_1HQPSAdhocReadAppFactory.html" title=" " alt="" coords="204,56,431,83"/>
+<area shape="rect" id="node4" href="$classgs_1_1HQPSAdhocWriteAppFactory.html" title=" " alt="" coords="203,107,432,133"/>
+<area shape="rect" id="node5" href="$classgs_1_1ServerAppFactory.html" title=" " alt="" coords="238,157,397,184"/>
+<area shape="rect" id="node6" href="$classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="214,208,421,235"/>
 </map>

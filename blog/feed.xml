@@ -5,9 +5,130 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 31 Jul 2024 02:46:46 +0000</pubDate>
-    <lastBuildDate>Wed, 31 Jul 2024 02:46:46 +0000</lastBuildDate>
+    <pubDate>Mon, 05 Aug 2024 07:40:22 +0000</pubDate>
+    <lastBuildDate>Mon, 05 Aug 2024 07:40:22 +0000</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
+    
+      <item>
+        <title>GraphScope Flex: LEGO-like Graph Computing Stack</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/flex-title.jpg&quot; alt=&quot;title&quot; /&gt;
+From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile. 
+The GraphScope team presented their paper “&lt;a href=&quot;https://arxiv.org/abs/2312.12107&quot;&gt;GraphScope Flex: LEGO-like Graph Computing Stack&lt;/a&gt;” at the SIGMOD Industry Session. 
+This article introduces the main content of that paper.&lt;/p&gt;
+
+&lt;h3 id=&quot;diversified-graph-computing-demands&quot;&gt;Diversified Graph Computing Demands&lt;/h3&gt;
+&lt;p&gt;Graph computing encompasses a wide range of types, commonly including graph analytics, graph interactive queries, and graph neural networks (GNNs). Previous graph computing systems typically cater to a specific type of graph computation. In a complex workflow, which may involve multiple types of graph computing tasks, users often need to employ multiple graph computing systems to complete this intricate process.&lt;/p&gt;
+
+&lt;p&gt;To address these issues, we developed and open-sourced the industry’s first one-stop graph computing system, GraphScope, in 2020. As illustrated in the figure below, GraphScope integrates a Graph Analytics Engine (GAE), a Graph Interactive Engine (GIE), and a Graph Learning Engine (GLE) to support different types of graph computations. Additionally, GraphScope includes an immutable in-memory graph storage system called &lt;a href=&quot;https://github.com/v6d-io/v6d&quot;&gt;Vineyard&lt;/a&gt;, which allows various computing engines to share data through shared memory. To reduce the learning curve for users, GraphScope extends Gremlin as a unified query language and offers a simple and user-friendly Python interface.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/graphscope-arch.jpg&quot; alt=&quot;gs&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In real scenarios, we find that the demand for graph computing is highly diverse. The diagram below illustrates Alibaba’s real graph computing scenarios, where graph data may consist of immutable data stored in memory, may come from external data sources that are continuously updated, or may originate from files in a data lake. The workloads of graph computing are also quite varied. For example, Workload 1 represents running a ranking algorithm (e.g., PageRank) on the graph, which is a typical graph analytics task. Workload 2 represents running a fraud detection model based on graph neural networks on the graph. Workload 3 requires processing a large number of queries related to product recommendations in a short amount of time. Workload 4 represents the need to perform real-time online query operations on graph data through a WebUI, while Workload 5 represents data analysts needing to conduct BI analysis on graph data, aiming to obtain analytical results in the shortest time possible.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/diverse-graph.jpg&quot; alt=&quot;diverse&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;From the examples mentioned above, it is clear that the diversity of graph computing is reflected in various aspects such as storage, workloads, and performance metrics of interest. In light of this diversity, the one-stop design of GraphScope appears inadequate to handle such varied requirements.&lt;/p&gt;
+
+&lt;h4 id=&quot;diversity-of-graph-types-and-storage&quot;&gt;Diversity of Graph Types and Storage&lt;/h4&gt;
+&lt;p&gt;Firstly, there is a diversity in both graph types and graph storage. On one hand, there are multiple graph representation models currently available, as illustrated below. Common models include simple graphs, weighted graphs, sparse matrices/tensors, labeled property graphs, and RDF (Resource Description Framework) graphs. On the other hand, the storage characteristics of graph data also exhibit diversity, including in-memory vs. external storage, mutable vs. immutable data, and support for multi-versioning, among others. Therefore, the use of the property graph model with immutable in-memory storage, such as Vineyard in GraphScope, struggles to adapt to this diversity.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/diverse-store.jpg&quot; alt=&quot;diverse-store&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;diversity-of-graph-computing-paradigms-and-query-interfaces&quot;&gt;Diversity of Graph Computing Paradigms and Query Interfaces&lt;/h4&gt;
+&lt;p&gt;Secondly, the types of graph computing are highly diverse, encompassing various workloads such as graph analytics, graph querying, and graph neural networks. Moreover, different types of graph computing tasks typically employ different programming interfaces and query languages. Even within the same type of graph computation, there are multiple commonly used programming interfaces and query languages, making it difficult to expect users to express all workloads using a single, unified interface or language. For example, &lt;a href=&quot;https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing&quot;&gt;common programming interfaces for graph analytics tasks&lt;/a&gt; include Pregel, GAS, and PIE, while frequently used query languages in the graph querying domain include Gremlin, Cypher, and GQL. Additionally, popular graph neural network systems like &lt;a href=&quot;https://www.dgl.ai/&quot;&gt;DGL&lt;/a&gt; and &lt;a href=&quot;https://www.pyg.org/&quot;&gt;PyG&lt;/a&gt; utilize different programming interfaces. Consequently, the use of a unified programming/query language in GraphScope faces challenges in addressing the diversity of computing paradigms and query interfaces.&lt;/p&gt;
+
+&lt;h4 id=&quot;diversity-of-performance-requirements-in-graph-computing&quot;&gt;Diversity of Performance Requirements in Graph Computing&lt;/h4&gt;
+&lt;p&gt;Finally, even with the same data and the same type of workload, the performance metrics we focus on may vary across different scenarios. For example, in tasks related to graph querying, when faced with a scenario that requires handling a large number of simple queries in a short time, our primary performance metric is system throughput. Conversely, in a scenario involving a small number of complex queries, the focus shifts to low latency, meaning that the system must return results for individual queries in the shortest time possible. Since any given system or component is typically optimized for a specific performance metric, a single component in GraphScope struggles to effectively meet multiple performance requirements simultaneously.&lt;/p&gt;
+
+&lt;h3 id=&quot;graphscope-flex-modular-design-inspired-by-lego&quot;&gt;GraphScope Flex: Modular Design Inspired by LEGO&lt;/h3&gt;
+
+&lt;p&gt;To better address the increasingly diverse needs of graph computing, we have designed the next-generation architecture of GraphScope, known as GraphScope Flex. This architecture adopts a modular design philosophy, allowing users to freely select appropriate components based on specific task requirements, much like building with LEGO bricks.&lt;/p&gt;
+
+&lt;p&gt;The architecture of GraphScope Flex, as shown in the diagram below, is divided into three layers: the storage layer, the execution engine layer, and the frontend layer. Each layer contains a rich set of components that have been highly optimized for different objectives.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/flex-arch.jpg&quot; alt=&quot;flex-arch&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;When given a specific task, users simply need to select the components that meet their requirements from each layer. They can then use the building tool, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flexbuild&lt;/code&gt;, provided by GraphScope Flex to construct a graph computing system tailored to their needs. Specifically, each layer in GraphScope Flex includes the following components.&lt;/p&gt;
+
+&lt;h4 id=&quot;storage-layer&quot;&gt;Storage Layer&lt;/h4&gt;
+&lt;p&gt;The storage layer currently supports several types of storage: immutable in-memory storage (Vineyard), standard data file format for graph (&lt;a href=&quot;https://graphar.apache.org/&quot;&gt;GraphAr&lt;/a&gt;), multi-version mutable storage (&lt;a href=&quot;https://github.com/graphscope/gart&quot;&gt;GART&lt;/a&gt;), and mutable in-memory storage (mCSR). Each storage type has different access interfaces. To shield the execution engines from the interface discrepancies of various storage types, GraphScope Flex adopts a standardized graph access interface called &lt;a href=&quot;https://github.com/GraphScope/GRIN&quot;&gt;GRIN&lt;/a&gt;, requiring all storage implementations to comply with this interface. This way, all upper-layer computing engines can access all graph storage using a single, uniform interface. In the future, if new storage options are added to the storage layer, users won’t need to worry about compatibility issues resulting from these extensions.&lt;/p&gt;
+
+&lt;h4 id=&quot;execution-engine-layer&quot;&gt;Execution Engine Layer&lt;/h4&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRAPE&lt;/code&gt; is a high-performance distributed engine designed for graph analysis tasks, optimized for computation and communication on the CPU. Recently, it has introduced support for GPU, leveraging the high computing power of GPUs and high-speed interconnects like NVLink to accelerate graph analysis tasks. GRAPE provides external programming models such as Pregel, PIE, and FLASH, facilitating the development of customized graph analysis algorithms for users.&lt;/p&gt;
+
+&lt;p&gt;For graph querying tasks, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphIR&lt;/code&gt; module translates user-written queries in Cypher or Gremlin into a query language-agnostic intermediate representation. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph Query Optimizer&lt;/code&gt; module employs both Rule-based Optimization (RBO) and Cost-based Optimization (CBO) techniques to optimize this intermediate representation. Depending on the performance metrics of interest, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor Codegen&lt;/code&gt; module generates physical execution plans that can be executed on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor&lt;/code&gt; component, a low-level parallel engine suitable for high-throughput scenarios. If the goal is to minimize the execution time of individual queries, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaia Codegen&lt;/code&gt; module will generate physical execution plans for execution on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaia&lt;/code&gt; component, a dataflow engine that automatically parallelizes queries to reduce execution time.&lt;/p&gt;
+
+&lt;p&gt;To support graph neural networks, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph-Learn&lt;/code&gt; module handles graph sampling operations, offering support for both CPU and GPU. On the GPU platform, it incorporates an efficient caching mechanism to further accelerate the graph sampling speed. Additionally, the back-end tensor execution module supports both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PyTorch&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TensorFlow&lt;/code&gt;, allowing users to choose according to their needs.&lt;/p&gt;
+
+&lt;h4 id=&quot;frontend-layer&quot;&gt;Frontend Layer&lt;/h4&gt;
+&lt;p&gt;The frontend layer includes a rich set of algorithm packages and provides various SDKs and APIs for external services. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Builtin Apps&lt;/code&gt; module includes common graph analysis algorithms, such as PageRank and shortest path. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GNN Models&lt;/code&gt; module encompasses popular graph neural network models like GCN, PinSAGE, and GraphSAGE. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cypher&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gremlin&lt;/code&gt; modules allow users to perform graph query operations directly using Cypher and Gremlin query languages. Furthermore, the application layer exposes RESTful/WebSocket APIs, making it easy for users to integrate GraphScope Flex with other systems, and provides C++, Python, and Java SDKs to facilitate the development of custom graph algorithm applications.&lt;/p&gt;
+
+&lt;h3 id=&quot;real-world-use-cases-of-graphscope-flex&quot;&gt;Real-World Use Cases of GraphScope Flex&lt;/h3&gt;
+
+&lt;h4 id=&quot;company-equity-analysis&quot;&gt;Company Equity Analysis&lt;/h4&gt;
+&lt;p&gt;In the task of company equity analysis, we need to identify the ultimate controller of a company, i.e., the individual who controls more than 50% of the company’s equity. An individual may exert influence through multiple layers of companies, so we need to start from a particular individual and calculate both the equity they directly hold and the equity held through other companies. While this process can be expressed and executed using SQL on a relational database, it is often very inefficient. For instance, on a real dataset containing 300 million individuals/companies and 1.5 billion equity holding records, it can take over an hour in a relational database to compute the desired results without yielding any output.&lt;/p&gt;
+
+&lt;p&gt;Given the interconnected nature of equity structures, we can transform this problem into a graph analytics task. First, we need to convert the equity relationships into a graph data structure, where the vertices represent individuals or companies, and the edges represent the equity holding relationships.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/equity-analysis.jpg&quot; alt=&quot;equity&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We then select the components illustrated in the diagram below to build a graph analytical system for completing the company equity analysis task.
+To achieve higher performance, we choose the in-memory graph storage, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Vineyard&lt;/code&gt;, for the storage layer.
+We select &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRAPE&lt;/code&gt; as the execution engine for the graph analysis algorithms in the wxecution engine layer.
+Users can write the equity analysis logic using the SDK, leveraging the Pregel/PIE interfaces exposed by GRAPE in the frontend layer.
+With this configuration, GraphScope Flex can process the same dataset and obtain results in just 15 minutes, demonstrating a significant improvement in efficiency compared to traditional methods. This showcases the flexibility and power of GraphScope Flex in handling complex analysis tasks effectively.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/equity-arch.jpg&quot; alt=&quot;equity-arch&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;real-time-fraud-detection&quot;&gt;Real-Time Fraud Detection&lt;/h4&gt;
+
+&lt;p&gt;E-commerce platforms need to perform real-time checks on each order to determine whether it involves fraudulent activities such as order brushing. As shown in the image below, the e-commerce platform has marked a portion of accounts as fraudulent accounts (fraud seeds). We can consider accounts that frequently have a “co-purchase” relationship with these fraudulent accounts as highly suspicious fraudulent accounts as well.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/fraud-graph.jpg&quot; alt=&quot;fraud-graph&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To express the “co-purchase” relationship mentioned above, we can use the following Cypher statement. Therefore, this fraud detection issue is well suited to be transformed into a graph computing problem.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MATCH (v:Account{id:1})-[b1:BUY]-&amp;gt;(:Item)&amp;lt;-[b2:BUY]-(s:Account)
+WHERE s.id IN SEEDS AND b1.date-b2.date &amp;lt; 5 /*within 5 days*/
+WITH v, COUNT(s) AS cnt1
+MATCH (v)-[:KNOWS]-(f:Account), (f)-[b1:BUY]-&amp;gt;(:Item)&amp;lt;-[b2:BUY]-(s:
+          Account) WHERE s.id IN SEEDS WITH v, cnt1, COUNT(s) AS cnt2
+WHERE w1 * cnt1 + w2 * cnt2 &amp;gt; threshold
+RETURN v
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;To achieve real-time fraud detection, we can select the components shown in the diagram to construct a graph computing system. Considering that order data is continuously arriving, we have chosen the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GART&lt;/code&gt; component, which supports multi-version variable memory graph storage.
+At the execution engine layer, since we need to handle a large volume of orders in a short time, the core metric we need to focus on is system throughput. Therefore, we have selected the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor Codegen&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor&lt;/code&gt; components, along with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphIR&lt;/code&gt; component and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph Query Optimizer&lt;/code&gt; component, to receive queries written in Cypher from the frontend layer.
+With this deployment plan on real datasets, we can achieve performance exceeding 350,000 QPS.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/fraud-arch.jpg&quot; alt=&quot;fraud-arch&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;friendship-relationship-prediction&quot;&gt;Friendship Relationship Prediction&lt;/h4&gt;
+
+&lt;p&gt;When e-commerce platforms make product recommendations, a very important strategy is to recommend products liked by a user’s friends. However, the friendship relationship data among users on e-commerce platforms is often incomplete, so it is necessary to predict whether a friendship exists between two users. Since graphs can naturally depict the relationships among users, this issue can also be transformed into a graph computing problem. Currently, the industry commonly uses graph neural networks to handle graph-based friendship relationship prediction tasks.&lt;/p&gt;
+
+&lt;p&gt;Based on e-commerce data, we can first construct a graph as shown in the diagram, where each vertex represents users, products, comments, etc., and edges represent friendships, purchases, comments, etc. In graph neural network models, such as those represented by the NCN algorithm, calculations like “common friends” need to be performed on the graph, as two users with many common friends are more likely to have a friendship.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/rec-graph.jpg&quot; alt=&quot;rec-graph&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To deploy a system for friendship relationship prediction based on GraphScope Flex, we can select the components shown in the diagram from GraphScope Flex. In this setup, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Vineyard&lt;/code&gt; component in the storage layer models the data as a property graph and stores it in memory. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph-Learn&lt;/code&gt; component is responsible for calculating common friends, neighbor sampling, and other operations, while the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PyTorch&lt;/code&gt; module is used for graph neural network inference. At the frontend layer, users can invoke the inference service through the Python SDK.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/rec-arch.jpg&quot; alt=&quot;rec-arch&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;high-performance-and-continuous-iteration&quot;&gt;High Performance and Continuous Iteration&lt;/h3&gt;
+
+&lt;p&gt;Thanks to the modular design of GraphScope Flex, it has achieved efficient performance across a variety of workloads. Notably, in the internationally recognized benchmark for transactional online query scenarios, LDBC-SNB, GraphScope Flex achieved &lt;a href=&quot;https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark&quot;&gt;a performance that surpasses the previous record holder by 2.6 times&lt;/a&gt;, securing the top position.
+We will also publish articles in the future to provide detailed information about the design of each module, so stay tuned!&lt;/p&gt;
+
+</description>
+        <pubDate>Mon, 05 Aug 2024 01:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>GraphScope&apos;s Perspective Sharing at the SIGMOD 2024 Panel: The Future of Graph Analytics</title>
@@ -973,101 +1094,6 @@ In this post, we will introduce &lt;a href=&quot;https://github.com/alibaba/Grap
         <pubDate>Tue, 29 Aug 2023 00:10:42 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>FLASH: A Programming Model for Distributed Graph Algorithms</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-16-title-picture.jpg&quot; alt=&quot;flash-model&quot; /&gt;
-In this post, we will introduce &lt;a href=&quot;https://graphscope.io/publication/flash.pdf&quot;&gt;FLASH&lt;/a&gt;, which is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. It makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.&lt;/p&gt;
-
-&lt;h3 id=&quot;motivation&quot;&gt;Motivation&lt;/h3&gt;
-
-&lt;p&gt;The majority of recent graph processing frameworks only focus on a handful of fix-point graph algorithms such as breadth-first search, PageRank, shortest path, etc. It leaves the distributed computation of a large variety of graph algorithms suffering from low efficiency, limited expressiveness, or high implementation complexity with existing frameworks. The well-known vertex-centric implementation of a graph algorithm follows a common iterative, single-phased and value-propagation-based (short of ISVP) pattern: the algorithm runs iteratively until convergence, and in each iteration, all vertices receive messages from their neighbors to update their own states, then they send the updated states as messages to the neighbors for the next iteration. Such high-level abstraction brings productivity to some extent to users, however, at the sacrifice of expressiveness. This abstraction, while designed specifically for the ISVP algorithms, is almost infeasible to be applied to a large variety of algorithms that are not of the kind. At the same time, modern graph scenarios bring in the needs of more advanced and complex graph algorithms, which poses a big challenge for existing graph processing frameworks.&lt;/p&gt;
-
-&lt;p&gt;After investigating representative distributed graph algorithms, including many non-ISVP ones, we have distilled three requirements that are critical for programming them efficiently and productively in a distributed context, namely (1) flexible control flow; (2) operations on vertex subsets; and (3) beyond-neighborhood communication. However, existing graph frameworks all fall short in meeting these requirements. Therefore, there is a need to design a new programming model which fulfills all of the three requirements, and supports to program in a distributed context.&lt;/p&gt;
-
-&lt;h3 id=&quot;the-flash-programming-model&quot;&gt;The FLASH Programming Model&lt;/h3&gt;
-
-&lt;h4 id=&quot;overview&quot;&gt;Overview&lt;/h4&gt;
-
-&lt;p&gt;FLASH follows the &lt;a href=&quot;https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html&quot;&gt;vertex-centric&lt;/a&gt; philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication.&lt;/p&gt;
-
-&lt;p&gt;The FLASH programming model is based on &lt;a href=&quot;https://github.com/jshun/ligra&quot;&gt;Ligra&lt;/a&gt; to inherit its support for the requirements of flexible control flow and operations on vertex subsets. By further enabling beyond-neighborhood communication, FLASH improves the expressiveness for programming a diverse variety of graph algorithms. Since Ligra is a single-machine parallel library, FLASH makes an extension to the distributed context, for which it must handle communication, synchronization, data races and task scheduling. To do so, a middleware called FlashWare is proposed that hides all the above details for distribution, and provides the capability to apply multiple system optimizations automatically and adaptively at the runtime.&lt;/p&gt;
-
-&lt;p&gt;We have implemented &lt;a href=&quot;https://github.com/alibaba/GraphScope/blob/main/python/graphscope/analytical/app/flash/__init__.py&quot;&gt;70+ graph algorithms&lt;/a&gt; with FLASH for 40+ different commonly used applications, and we can now program much more succinct codes using the FLASH programming interfaces, which also helps productivity. The evaluation results demonstrate FLASH’s capability of expressing many advanced algorithms (takes up to 92% less lines of code), while providing a satisfactory performance at the same time.&lt;/p&gt;
-
-&lt;h4 id=&quot;flash-api&quot;&gt;FLASH API&lt;/h4&gt;
-
-&lt;p&gt;FLASH is a functional programming model specific for distributed graph processing. It follows the Bulk Synchronous Parallel (BSP) computing paradigm with each of the primary functions constitutes a single superstep. It utilizes the &lt;em&gt;VertexSubset&lt;/em&gt; type which represents a set of vertices of the graph &lt;em&gt;G&lt;/em&gt;, containing a set of indices for all vertices in this set. The properties of vertices are maintained only once for a graph, shared by all &lt;em&gt;VertexSubset&lt;/em&gt;s. The following describes the APIs of FLASH based on &lt;em&gt;VertexSubset&lt;/em&gt;.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;em&gt;VSize&lt;/em&gt;: This function returns the size of a &lt;em&gt;VertexSubset&lt;/em&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;VSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;em&gt;VertexMap&lt;/em&gt;: This interface applies the map function to each vertex in &lt;em&gt;U&lt;/em&gt; that passes the condition checking function &lt;em&gt;F&lt;/em&gt;. The indices of the output vertices form the resulting &lt;em&gt;VertexSubset&lt;/em&gt;. Specially, the &lt;em&gt;M&lt;/em&gt; function could be omitted for implementing the filter semantics, with the vertex data unchanged.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;VertexMap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-                       &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                       &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;em&gt;EdgeMap&lt;/em&gt;: For a graph &lt;em&gt;G(V,E)&lt;/em&gt;, EdgeMap applies the update logic to the specific edges with source vertex in &lt;em&gt;U&lt;/em&gt; and target vertex satisfying &lt;em&gt;C&lt;/em&gt;. &lt;em&gt;H&lt;/em&gt; represents the edge set to conduct updates, which is &lt;em&gt;E&lt;/em&gt; in common cases. We allow the users to define arbitrary edge sets they want dynamically at runtime, even virtual edges generated during the algorithm’s execution. The edge set can be defined through defining a function which maps a source vertex index to a set of indices of the targets. We also provide some pre-defined operators for convenience, such as reverse edges, or edges with targets in a specific &lt;em&gt;VertexSubset&lt;/em&gt;. This extension makes the communication beyond the neighborhood-exchange limitation.
-If a chosen edge passes the condition checking &lt;em&gt;F&lt;/em&gt;, the map function &lt;em&gt;M&lt;/em&gt; is applied on it. The output of the function &lt;em&gt;M&lt;/em&gt; represents a temporary new value of the target vertex. This new value is applied immediately and sequentially if it is in the pull mode, while in the push mode, another parameter &lt;em&gt;R&lt;/em&gt; is required to apply all the temporary new values on a specific vertex to get its final value. The updated target vertices form the output set of &lt;em&gt;EdgeMap&lt;/em&gt;. The reduce function &lt;em&gt;R&lt;/em&gt; should be associative and commutative to ensure correctness, or it is not required for sequentially applying &lt;em&gt;M&lt;/em&gt;, i.e., to run EdgeMap always in the pull mode. The function &lt;em&gt;C&lt;/em&gt; is useful in algorithms where a value associated with a vertex only needs to be updated once. FLASH provides a default function &lt;em&gt;CTrue&lt;/em&gt; which always returns true, since the user does not need this functionality sometimes. Similarly, the &lt;em&gt;F&lt;/em&gt; function of EdgeMap and VertexMap can also be supplied using &lt;em&gt;CTrue&lt;/em&gt;, if it is unnecessary.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EdgeMap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-                     &lt;span class=&quot;n&quot;&gt;EdgeSet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;H&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Other auxiliary APIs are provided by FLASH for conveniently conducting set operations (including &lt;em&gt;Union&lt;/em&gt;, &lt;em&gt;Minus&lt;/em&gt;, &lt;em&gt;Intersect&lt;/em&gt;, &lt;em&gt;Add&lt;/em&gt;, &lt;em&gt;Contain&lt;/em&gt;, etc.), traversing all vertices in a set (&lt;em&gt;Traverse&lt;/em&gt;), getting the data value of a single vertex (&lt;em&gt;GetV&lt;/em&gt;) and so on.&lt;/p&gt;
-
-&lt;h4 id=&quot;strong-expressiveness&quot;&gt;Strong Expressiveness&lt;/h4&gt;
-
-&lt;p&gt;Besides expressing existing vertex-centric algorithms, FLASH provides the possibility of expressing more advanced algorithms. It is the first distributed graph processing model that satisfies all of the three critical requirements for programming non-ISVP algorithms.&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;FLASH allows the users to define the arbitrary control flow by combining the primitives, thus it can naturally support multi-phased algorithms. In traditional vertex-centric models, these algorithms are supported in an awkward way since they only allow to provide a single user-defined function.&lt;/li&gt;
-  &lt;li&gt;The &lt;em&gt;VertexSubset&lt;/em&gt; structure supplements the perspective of a single vertex, allowing to conduct updates on arbitrary vertices. Multiple vertex subsets can be maintained at the same time, they can even be defined in a recursive function. Without this feature, a framework has to start from the whole graph every time and pick up specific vertices every time.&lt;/li&gt;
-  &lt;li&gt;FLASH allows the users to provide the arbitrary edge set they want to transfer messages, even when the edges do not exist in the original graph. Therefore, algorithms that contain communication beyond neighborhood can be expressed intuitively.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;implementation&quot;&gt;Implementation&lt;/h3&gt;
-
-&lt;h4 id=&quot;architecture&quot;&gt;Architecture&lt;/h4&gt;
-
-&lt;p&gt;The architecture of FLASH contains several main components, as shown in the following figure. The first is a code generator which takes the high-level FLASH APIs as input, and generates execution code to be run on the second component named FlashWare, which is a middleware designed and optimized for the FLASH model and is implemented based on the fundamental modules of GraphScope. The FlashWare executes the code produced by the code generator on the distributed runtime, utilizing the ability of parallel computing and communication ability of GraphScope.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-16-flash-architecture.jpg&quot; alt=&quot;flash-architecture&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 1: The architecture of FLASH. &lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;optimizations&quot;&gt;Optimizations&lt;/h4&gt;
-
-&lt;p&gt;Some optimizations are introduced in the implementation of the FLASH model:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;During graph processing, the type of an active set may be dense or sparse, FLASH could dispatch different computation kernels for different types of the active set: the push mode for sparse active sets and the pull mode for dense active sets. This auto-switch scheme is proved to be useful for real-world graphs. Also, FLASH ’s dual mode processing is optional: users may choose to execute in only one mode through calling EdgeMapDense/EdgeMapSparse, instead of EdgeMap.&lt;/li&gt;
-  &lt;li&gt;FLASH utilizes separate threads to execute message passing, while other threads perform parallel vertex-centric processing, thus the computation and communication tasks are co-scheduled, leading to a performance improvement.&lt;/li&gt;
-  &lt;li&gt;In some cases, there are multiple vertex properties, but not all of them are critical. A property is critical only if it is accessed by other vertices, thus the update to the master need to be broadcasted to its mirrors. On the contrary, if it is only useful in local computation, it is not critical. This optimization reduces the size of a single message from the total size of all properties to only that of critical properties.&lt;/li&gt;
-  &lt;li&gt;Another way to eliminate redundant messages is to communicate with only the necessary mirrors. For normal graph applications, the messages are transferred along the edges. Therefore, a vertex should only broadcast to the partitions that contain at least one neighbor of this vertex. Only in the cases that the programmers define virtual edges for EdgeMap, which beyond the scope of &lt;em&gt;E&lt;/em&gt;, FlashWare synchronizes the update on a vertex to all partitions, thus this optimization is disabled.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Wed, 16 Aug 2023 03:10:42 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</guid>
         
         
         <category>Tech</category>
