@@ -42,8 +42,15 @@ data:
                         {{- $replicaCount := .Values.secondary.replicaCount | int }}  
                         {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
                         {{- $port := .Values.secondary.service.adminPort | int }}
-                        {{- range $i := until $replicaCount }}  
-                          {{ printf "http://%s-%d.%s:%d" $baseName $i $serviceName $port }};
+                        -- If replica == 1, just add one
+                        {{- if eq $replicaCount 1 }}
+                          {{ printf "\"http://%s-0.%s:%d\"" $baseName $serviceName $port }}
+                        {{- else }}
+                        -- for first 0 - replica -1
+                        {{- range $i := until $replicaCount - 1 }}  
+                          {{ printf "\"http://%s-$i.%s:%d\"," $baseName $serviceName $port }}
+                        {{- end }}
+                        {{ printf "\"http://%s-%d.%s:%d\"" $baseName $replicaCount-1 $serviceName $port }};
                         {{- end }}
                     }
 
@@ -110,6 +117,8 @@ data:
 
                     if success then  
                         ngx.exit(200)  
+                        -- return the first successful response
+                        ngx.say(res[1])
                     else  
                         ngx.status = 500  
                         ngx.say(error_message or "An unspecified error occurred.")  
