@@ -76,7 +76,9 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_key()) {
-          getter_ = create_edge_property_path_accessor(ctx, tag, type_);
+          auto name = pt.key().name();
+          getter_ =
+              create_edge_property_path_accessor(txn, name, ctx, tag, type_);
         } else if (pt.has_label()) {
           getter_ = create_edge_label_path_accessor(ctx, tag);
         } else {
@@ -125,7 +127,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_key()) {
-          getter_ = create_edge_property_edge_accessor(type_);
+          auto name = pt.key().name();
+          getter_ = create_edge_property_edge_accessor(txn, name, type_);
         } else {
           LOG(FATAL) << "not support";
         }
