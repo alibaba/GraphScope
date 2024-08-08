@@ -37,6 +37,7 @@ fi
 
 # Test3: run gremlin standard tests on distributed experimental store via calcite-based ir
 # start distributed engine service and load modern graph
+export DISTRIBUTED_ENV=true
 cd ${base_dir}/../executor/ir/target/release &&
 RUST_LOG=info DATA_PATH=/tmp/gstest/modern_graph_exp_bin PARTITION_ID=0 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_0 &
 cd ${base_dir}/../executor/ir/target/release &&
@@ -54,6 +55,7 @@ if [ $exit_code -ne 0 ]; then
     echo "ir\(calcite-based\) gremlin integration with proto physical test on distributed experimental store fail"
     exit 1
 fi
+unset DISTRIBUTED_ENV
 
 # Test4: run cypher movie tests on experimental store via ir-core
 cd ${base_dir}/../executor/ir/target/release && DATA_PATH=/tmp/gstest/movie_graph_exp_bin RUST_LOG=info ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config &
