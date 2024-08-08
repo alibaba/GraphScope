@@ -17,11 +17,11 @@ data:
     http {  
         upstream my_service_1 {
           {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
-          {{- $replicaCount := .Values.backend.replicas }}  
+          {{- $replicaCount := .Values.secondary.replicaCount | int }}  
           {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
-          {{- $port := .Values.secondary.service.queryPort }}
+          {{- $port := .Values.secondary.service.queryPort | int }}
           {{- range $i := until $replicaCount }}  
-            server {{ printf "%s-%d.%s:%d" $baseName (add $i 1) $serviceName $port }};
+            server {{ printf "%s-%d.%s:%d" $baseName $i $serviceName $port }};
           {{- end }}
         }
 
