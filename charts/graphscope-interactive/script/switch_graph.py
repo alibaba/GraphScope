@@ -115,7 +115,7 @@ def get_service_status(sess: Session):
 def get_current_running_graph(sess: Session):
     resp = sess.get_service_status()
     if not resp.is_ok():
-        report_message("Failed to get service
+        report_message("Failed to get service status")
     status = resp.get_value()
     return status.graph.id
 
