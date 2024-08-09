@@ -5,7 +5,7 @@ directories:
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: modern_graph
+default_graph: ldbc
 compute_engine:
   type: hiactor
   workers:
@@ -13,12 +13,13 @@ compute_engine:
   thread_num_per_worker: 1
   store:
     type: cpp-mcsr
-  metadata_store:
-    type: file # file/sqlite/etcd
 compiler:
+  physical:
+    opt:
+      config: proto # default is ffi
   planner:
     is_on: true
-    opt: RBO
+    opt: CBO
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule
