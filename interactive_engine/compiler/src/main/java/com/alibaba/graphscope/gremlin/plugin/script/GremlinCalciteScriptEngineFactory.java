@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.script;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 
 import org.apache.tinkerpop.gremlin.jsr223.AbstractGremlinScriptEngineFactory;
@@ -68,8 +69,10 @@ public class GremlinCalciteScriptEngineFactory extends AbstractGremlinScriptEngi
             try {
                 Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
                 QueryCache queryCache = (QueryCache) globalBindings.get("graph.query.cache");
+                GraphPlanner graphPlanner = (GraphPlanner) globalBindings.get("graph.planner");
                 IrMeta irMeta = (IrMeta) globalBindings.get("graph.meta");
-                QueryCache.Key cacheKey = queryCache.createKey(script, irMeta);
+                QueryCache.Key cacheKey =
+                        queryCache.createKey(graphPlanner.instance(script, irMeta));
                 return queryCache.get(cacheKey);
             } catch (ExecutionException e) {
                 return new RuntimeException(e);

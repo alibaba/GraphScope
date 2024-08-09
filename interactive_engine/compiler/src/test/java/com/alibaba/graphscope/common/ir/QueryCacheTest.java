@@ -41,15 +41,21 @@ public class QueryCacheTest {
                                 new LogicalPlanVisitor(builder, irMeta)
                                         .visit(new CypherAntlr4Parser().parse(q)),
                         new GraphRelOptimizer(configs));
-        QueryCache cache = new QueryCache(configs, graphPlanner);
-        QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
+        QueryCache cache = new QueryCache(configs);
+        QueryCache.Key key1 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {name: 'ma'}) Return n", Utils.schemaMeta));
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[n], fusedFilter=[[=(_.name, _UTF-8'ma')]], opt=[VERTEX])",
                 key1.logicalPlan.explain().trim());
-        QueryCache.Key key2 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
-        QueryCache.Key key3 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);
+        QueryCache.Key key2 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {name: 'ma'}) Return n", Utils.schemaMeta));
+        QueryCache.Key key3 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {age: 10}) Return n", Utils.schemaMeta));
         Assert.assertEquals(key1, key2);
         Assert.assertNotEquals(key1, key3);
     }
@@ -65,10 +71,16 @@ public class QueryCacheTest {
                                 new LogicalPlanVisitor(builder, irMeta)
                                         .visit(new CypherAntlr4Parser().parse(q)),
                         new GraphRelOptimizer(configs));
-        QueryCache cache = new QueryCache(configs, graphPlanner);
-        QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
-        QueryCache.Key key2 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);
-        QueryCache.Key key3 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
+        QueryCache cache = new QueryCache(configs);
+        QueryCache.Key key1 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {name: 'ma'}) Return n", Utils.schemaMeta));
+        QueryCache.Key key2 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {age: 10}) Return n", Utils.schemaMeta));
+        QueryCache.Key key3 =
+                cache.createKey(
+                        graphPlanner.instance("Match (n {name: 'ma'}) Return n", Utils.schemaMeta));
         QueryCache.Value value1 = cache.get(key1);
         QueryCache.Value value2 = cache.get(key2);
         QueryCache.Value value3 = cache.get(key3);
