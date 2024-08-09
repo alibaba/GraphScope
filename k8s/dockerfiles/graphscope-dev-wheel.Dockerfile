@@ -1,10 +1,9 @@
-# the manylinux2014 image is based on manylinux2014, including all necessary
-# dependencies except vineyard for graphscope's wheel package.
-# It's tagged as the graphscope/graphscope-dev:wheel
+# build `graphscope/graphscope-dev:wheel-{v6d_version}-{arch}` image based on manylinux,
+# including all dependencies for building graphscope wheel package.
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-#FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
-FROM $REGISTRY/graphscope/manylinux2014:ext AS ext
+FROM $REGISTRY/graphscope/manylinux2014:$ARCH AS builder
 
 # build form https://github.com/sighingnow/manylinux/tree/dyn-rebase
 # usually we don't need to change this image unless the underlying python needs to be updated
@@ -34,8 +33,8 @@ ENV RUST_BACKTRACE=1
 # ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
 
 # Copy the thirdparty c++ dependencies, maven, and hadoop
-COPY --from=ext /opt/graphscope /opt/graphscope
-COPY --from=ext /opt/openmpi /opt/openmpi
+COPY --from=builder /opt/graphscope /opt/graphscope
+COPY --from=builder /opt/openmpi /opt/openmpi
 RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 
 RUN useradd -m graphscope -u 1001 \
@@ -54,12 +53,12 @@ RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /op
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
-RUN cd /home/graphscope/gsctl && \
-    sudo python3 -m pip install click && \ 
+RUN cd /home/graphscope/GraphScope && \
+    sudo python3 -m pip install click packaging && \
     python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
-    cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl && \
+    sudo rm -rf /home/graphscope/GraphScope && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
