@@ -58,13 +58,6 @@ dev-wheel:
 		-t graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
 
-manylinux2014-ext:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope  && \
-	docker build \
-		-t graphscope/manylinux2014:ext-${ARCH} \
-		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
-
 graphscope-dev:
 	cd $(WORKING_DIR) && \
 	cd ../python/graphscope  && \
