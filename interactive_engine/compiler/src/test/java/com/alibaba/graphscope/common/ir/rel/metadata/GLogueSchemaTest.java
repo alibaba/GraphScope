@@ -43,10 +43,12 @@ public class GLogueSchemaTest {
         // test get type cardinality
         Assert.assertEquals(4.0, g.getVertexTypeCardinality(person), delta);
         Assert.assertEquals(2.0, g.getVertexTypeCardinality(software), delta);
-        Assert.assertEquals(0.0, g.getVertexTypeCardinality(2), delta);
         Assert.assertEquals(2.0, g.getEdgeTypeCardinality(knows), delta);
         Assert.assertEquals(4.0, g.getEdgeTypeCardinality(creates), delta);
-        Assert.assertEquals(0.0, g.getEdgeTypeCardinality(new EdgeTypeId(0, 0, 2)), delta);
+
+        // when query a type that is not in the schema, return 1.0
+        Assert.assertEquals(1.0, g.getVertexTypeCardinality(2), delta);
+        Assert.assertEquals(1.0, g.getEdgeTypeCardinality(new EdgeTypeId(0, 0, 2)), delta);
 
         // test get types
         Assert.assertEquals(2, g.getAdjEdgeTypes(person).size());
