@@ -25,6 +25,7 @@ import "schema.proto";
 import "type.proto";
 import "algebra.proto";
 import "google/protobuf/wrappers.proto";
+import "cypher_write.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -298,6 +299,11 @@ message PhysicalOpr {
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
+
+      // write operators
+      cypher.Set set = 33;
+      cypher.Load load = 34;
+      cypher.Delete delete = 35;
     }
   }
   message MetaData {

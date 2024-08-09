@@ -94,7 +94,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     public RelDataType deriveRowType() {
         List<GraphSchemaType> tableTypes = new ArrayList<>();
         List<RelOptTable> tables = ObjectUtils.requireNonEmpty(this.tableConfig.getTables());
-        RelDataTypeFactory typeFactory = tables.get(0).getRelOptSchema().getTypeFactory();
+        RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
         for (RelOptTable table : tables) {
             GraphSchemaType type = (GraphSchemaType) table.getRowType();
             // flat fuzzy labels to the list

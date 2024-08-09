@@ -47,12 +47,67 @@ oC_ProcedureName
 oC_ProcedureResultField
      :  oC_SymbolicName ;
 
+oC_UpdatingClause
+      : oC_Create
+      | oC_Delete
+      | oC_Set
+      | oC_LoadCSV
+      ;
+
+CREATE : ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'E' | 'e' ) ;
+
+oC_Create
+      :  CREATE SP? oC_Pattern ;
+
+oC_Set
+   :  SET SP? oC_SetItem ( SP? ',' SP? oC_SetItem )* ;
+
+SET : ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' ) ;
+
+oC_SetItem
+       :  ( oC_PropertyOrLabelsExpression SP? '=' SP? oC_Expression )
+           | ( oC_Variable SP? '=' SP? oC_Expression )
+           ;
+
+oC_Delete
+      :  ( DETACH SP )? DELETE SP? oC_Expression ( SP? ',' SP? oC_Expression )* ;
+
+DETACH : ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'C' | 'c' ) ( 'H' | 'h' ) ;
+
+DELETE : ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'T' | 't' ) ( 'E' | 'e' ) ;
+
+oC_LoadCSV
+    : LOAD SP CSV ( SP oC_WithHeaders )? SP FROM SP oC_Expression SP AS SP oC_Variable ( SP oC_FieldTerminator )?;
+
+LOAD: ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'A' | 'a' ) ( 'D' | 'd' );
+
+CSV: ( 'C' | 'c' ) ( 'S' | 's' ) ( 'V' | 'v' );
+
+oC_WithHeaders
+    : WITH SP HEADERS
+    ;
+
+HEADERS: ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'S' | 's' );
+
+oC_FieldTerminator
+    : FIELDTERMINATOR SP oC_Expression ;
+
+FIELDTERMINATOR: ( 'F' | 'f' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'O' | 'o' ) ( 'R' | 'r' );
+
+FROM: ( 'F' | 'f' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'M' | 'm' );
+
 CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 
 YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
-     :  oC_Match ( SP? ( oC_Match | oC_With ) )* ( SP oC_Return ) ;
+     : ( ( oC_ReadQueryPart | oC_UpdatingClause ) SP? )* SP? oC_ReadQueryPart ( SP oC_Return )
+     | ( ( oC_ReadQueryPart | oC_UpdatingClause ) SP? )* SP? oC_UpdatingClause ( SP oC_Return )?
+     ;
+
+oC_ReadQueryPart
+    : oC_Match ( SP? ( oC_Match | oC_With ) )*
+    ;
 
 oC_Match
      :  ( OPTIONAL SP )? MATCH SP? oC_Pattern ( SP? oC_Where )? ;

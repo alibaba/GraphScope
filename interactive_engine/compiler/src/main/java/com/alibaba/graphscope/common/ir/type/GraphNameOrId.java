@@ -64,4 +64,15 @@ public class GraphNameOrId {
         NAME,
         ID
     }
+
+    @Override
+    public String toString() {
+        switch (opt) {
+            case ID:
+                return String.valueOf(id);
+            case NAME:
+            default:
+                return name;
+        }
+    }
 }

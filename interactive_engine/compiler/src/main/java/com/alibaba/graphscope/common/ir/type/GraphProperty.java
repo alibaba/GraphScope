@@ -25,8 +25,6 @@ public class GraphProperty {
     public static final String ALL_KEY = "~all";
     public static final String ID_KEY = "~id";
     public static final String LABEL_KEY = "~label";
-    public static final String START_V_KEY = "~start_v";
-    public static final String END_V_KEY = "~end_v";
 
     private final Opt opt;
     private final @Nullable GraphNameOrId key;
