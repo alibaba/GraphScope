@@ -94,28 +94,34 @@ def report_message(message: str):
     print(response.text)
 
 
-def restart_service(sess: Session, graph_id: str):
+def restart_service(sess: Session, graph_id: str, report_error: bool):
     resp = sess.start_service(
         start_service_request=StartServiceRequest(graph_id=graph_id)
     )
     if not resp.is_ok():
-        report_message(f"Failed to restart service, graph_id: {graph_id}")
+        if report_error:
+            report_message(f"Failed to restart service, graph_id: {graph_id}")
+        raise Exception(f"Failed to restart service, graph_id: {graph_id}")
     print("restart service successfully")
 
 
-def get_service_status(sess: Session):
+def get_service_status(sess: Session, report_error: bool):
     resp = sess.get_service_status()
     if not resp.is_ok():
-        report_message("Failed to get service status")
+        if report_error:
+            report_message("Failed to get service status")
+        raise Exception("Failed to get service status")
     print("service status: ", resp.get_value())
     status = resp.get_value()
     print("service running is now running on graph", status.graph.id)
 
 
-def get_current_running_graph(sess: Session):
+def get_current_running_graph(sess: Session, report_error: bool):
     resp = sess.get_service_status()
     if not resp.is_ok():
-        report_message("Failed to get service status")
+        if report_error:
+            report_message("Failed to get service status")
+        raise Exception("Failed to get service status")
     status = resp.get_value()
     return status.graph.id
 
@@ -129,11 +135,13 @@ def list_graph(sess: Session):
     print("list graph: ", graph_id_arr)
 
 
-def check_graph_exits(sess: Session, graph_id: str):
+def check_graph_exits(sess: Session, graph_id: str, report_error: bool):
     resp = sess.get_graph_schema(graph_id=graph_id)
     print("check graph exits: ", resp.is_ok())
     if not resp.is_ok():
-        report_message(f"Failed to get graph schema, graph_id: {graph_id}")
+        if report_error:
+            report_message(f"Failed to get graph schema, graph_id: {graph_id}")
+        raise Exception(f"Failed to get graph schema, graph_id: {graph_id}")
     print("graph exits: ", resp.get_value())
 
 
@@ -145,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--graph_id", type=str, default=None, required=False)
     parser.add_argument("--validate-reporting", type=bool, default=False)
+    parser.add_argument("--report-error", type=bool, default=False)
 
     # finish
     args = parser.parse_args()
@@ -156,7 +165,7 @@ if __name__ == "__main__":
     driver = Driver(args.endpoint)
     sess = driver.session()
     # get current running graph
-    old_graph = get_current_running_graph(sess)
+    old_graph = get_current_running_graph(sess, args.report_error)
     print("-----------------Finish getting current running graph-----------------")
     print("old graph: ", old_graph)
 
@@ -169,16 +178,16 @@ if __name__ == "__main__":
     print("new graph: ", graph_id)
 
     # check if graph_id exists
-    check_graph_exits(sess, graph_id)
+    check_graph_exits(sess, graph_id, args.report_error)
 
     start_time = time.time()
-    restart_service(sess, graph_id)
+    restart_service(sess, graph_id, args.report_error)
     end_time = time.time()
     execution_time = end_time - start_time
     print("-----------------Finish restarting service-----------------")
     print(f"restart service cost {execution_time:.6f}seconds")
 
-    get_service_status(sess)
+    get_service_status(sess, args.report_error)
     print("-----------------Finish getting service status-----------------")
 
     list_graph(sess)
@@ -187,8 +196,11 @@ if __name__ == "__main__":
     delete_graph = sess.delete_graph(old_graph)
     print("delete graph res: ", delete_graph)
     if not delete_graph.is_ok():
-        report_message(f"Failed to delete graph {old_graph}")
+        if args.report_error:
+            report_message(f"Failed to delete graph {old_graph}")
+        raise Exception(f"fail to delete graph {old_graph}")
 
-    report_message(
-        f"Switched to graph {graph_id} successfully, restart service cost {execution_time:.6f}seconds"
-    )
+    if args.report_error:
+        report_message(
+            f"Switched to graph {graph_id} successfully, restart service cost {execution_time:.6f}seconds"
+        )
