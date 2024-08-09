@@ -25,4 +25,6 @@ public interface SchemaFetcher {
     int getPartitionNum();
 
     int getVersion();
+
+    boolean statisticsEnabled();
 }

@@ -55,6 +55,6 @@ public class GrootIrMetaReader implements IrMetaReader {
     // groot
     @Override
     public boolean syncStatsEnabled(GraphId graphId) {
-        return true;
+        return schemaFetcher.statisticsEnabled();
     }
 }

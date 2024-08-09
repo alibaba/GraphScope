@@ -14,6 +14,9 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.UnimplementedException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
@@ -30,20 +33,22 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
 
     private final SnapshotCache snapshotCache;
     private final MetaService metaService;
-    // If this is a secondary instance, then always use the latest snapshot ID.
-    private final boolean isSecondary;
+    private final boolean collectStatistics;
 
     public WrappedSchemaFetcher(
-            SnapshotCache snapshotCache, MetaService metaService, boolean isSecondary) {
+            SnapshotCache snapshotCache, MetaService metaService, Configs configs) {
         this.snapshotCache = snapshotCache;
         this.metaService = metaService;
-        this.isSecondary = isSecondary;
+        // If this is a secondary instance, then always use the latest snapshot ID.
+        // boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
+        this.collectStatistics = CommonConfig.COLLECT_STATISTICS.get(configs);
     }
 
     @Override
     public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
         long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
+        // if (isSecondary) {long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;}
         // Always retrieve the latest snapshot id to avoid inconsistency.
         long snapshotId = MAX_SNAPSHOT_ID;
         GraphSchema schema = snapshotSchema.getGraphDef();
@@ -63,5 +68,10 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
     @Override
     public int getVersion() {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public boolean statisticsEnabled() {
+        return collectStatistics;
     }
 }
