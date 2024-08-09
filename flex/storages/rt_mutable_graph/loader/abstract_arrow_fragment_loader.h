@@ -55,9 +55,14 @@ void set_column(gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
   size_t cur_ind = 0;
   for (auto j = 0; j < array->num_chunks(); ++j) {
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
+    size_t size = col->size();
     for (auto k = 0; k < casted->length(); ++k) {
-      col->set_any(offset[cur_ind++],
-                   std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+      if (offset[cur_ind] >= size) {
+        cur_ind++;
+      } else {
+        col->set_any(offset[cur_ind++],
+                     std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+      }
     }
   }
 }
@@ -107,7 +112,7 @@ struct _add_vertex {
       for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
           VLOG(2) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
-          offset.emplace_back(std::numeric_limits<vid_t>::max());
+          offset.emplace_back(std::numeric_limits<size_t>::max());
         } else {
           offset.emplace_back(vid);
         }
@@ -120,7 +125,7 @@ struct _add_vertex {
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
             VLOG(2) << "Duplicate vertex id: " << str_view << "..";
-            offset.emplace_back(std::numeric_limits<vid_t>::max());
+            offset.emplace_back(std::numeric_limits<size_t>::max());
           } else {
             offset.emplace_back(vid);
           }
@@ -133,7 +138,7 @@ struct _add_vertex {
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
             VLOG(2) << "Duplicate vertex id: " << str_view << "..";
-            offset.emplace_back(std::numeric_limits<vid_t>::max());
+            offset.emplace_back(std::numeric_limits<size_t>::max());
           } else {
             offset.emplace_back(vid);
           }

@@ -132,3 +132,6 @@ test_codegen_on_ldbc_cbo
 test_codegen_on_ldbc_rbo
 test_codegen_on_movie_rbo
 test_codegen_on_graph_algo
+
+rm -rf /tmp/codegen
+rm -rf /tmp/plugin

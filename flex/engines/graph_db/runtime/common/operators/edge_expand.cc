@@ -63,11 +63,13 @@ Context EdgeExpand::expand_edge_without_predicate(
       PropertyType pt = PropertyType::kEmpty;
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
+
       } else if (!props.empty()) {
         pt = props[0];
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt,
+                                    props);
 
       label_t dst_label = params.labels[0].dst_label;
       foreach_vertex(input_vertex_list,
@@ -99,11 +101,16 @@ Context EdgeExpand::expand_edge_without_predicate(
           params.labels[0].src_label, params.labels[0].dst_label,
           params.labels[0].edge_label);
       PropertyType pt = PropertyType::kEmpty;
+
       if (!props.empty()) {
         pt = props[0];
       }
+      if (props.size() > 1) {
+        pt = PropertyType::kRecordView;
+      }
 
-      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt,
+                                    props);
       label_t src_label = params.labels[0].src_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
@@ -170,6 +177,7 @@ Context EdgeExpand::expand_edge_without_predicate(
     auto labels =
         get_expand_label_set(txn, label_set, params.labels, params.dir);
     std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
+    std::vector<std::vector<PropertyType>> props_vec;
     for (auto& triplet : labels) {
       auto& props = txn.schema().get_edge_properties(
           triplet.src_label, triplet.dst_label, triplet.edge_label);
@@ -177,6 +185,10 @@ Context EdgeExpand::expand_edge_without_predicate(
       if (!props.empty()) {
         pt = props[0];
       }
+      if (props.size() > 1) {
+        pt = PropertyType::kRecordView;
+      }
+      props_vec.emplace_back(props);
       label_props.emplace_back(triplet, pt);
     }
     if (params.dir == Direction::kOut || params.dir == Direction::kIn) {
@@ -186,7 +198,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         if (params.dir == Direction::kOut) {
           auto& triplet = labels[0];
           SDSLEdgeColumnBuilder builder(Direction::kOut, triplet,
-                                        label_props[0].second);
+                                        label_props[0].second, props_vec[0]);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.src_label) {
@@ -206,7 +218,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         } else if (params.dir == Direction::kIn) {
           auto& triplet = labels[0];
           SDSLEdgeColumnBuilder builder(Direction::kIn, triplet,
-                                        label_props[0].second);
+                                        label_props[0].second, props_vec[0]);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.dst_label) {

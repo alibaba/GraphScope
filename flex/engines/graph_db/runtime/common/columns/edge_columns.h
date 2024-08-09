@@ -50,11 +50,12 @@ class OptionalSDSLEdgeColumnBuilder;
 class SDSLEdgeColumn : public IEdgeColumn {
  public:
   SDSLEdgeColumn(Direction dir, const LabelTriplet& label,
-                 PropertyType prop_type)
+                 PropertyType prop_type,
+                 const std::vector<PropertyType>& sub_types = {})
       : dir_(dir),
         label_(label),
         prop_type_(prop_type),
-        prop_col_(CreateColumn(prop_type, StorageStrategy::kMem)) {
+        prop_col_(CreateColumn(prop_type, StorageStrategy::kMem, sub_types)) {
     prop_col_->open_in_memory("");
   }
 
@@ -633,11 +634,14 @@ class BDMLEdgeColumn : public IEdgeColumn {
 class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
   SDSLEdgeColumnBuilder(Direction dir, const LabelTriplet& label,
-                        PropertyType prop_type)
+                        PropertyType prop_type,
+                        const std::vector<PropertyType>& sub_types = {})
       : dir_(dir),
         label_(label),
         prop_type_(prop_type),
-        prop_col_(CreateColumn(prop_type, StorageStrategy::kMem)) {
+        prop_col_(CreateColumn(prop_type, StorageStrategy::kMem, sub_types)),
+        sub_types_(sub_types),
+        cap_(0) {
     prop_col_->open_in_memory("");
   }
   ~SDSLEdgeColumnBuilder() = default;
@@ -649,8 +653,16 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
   }
   void push_back_opt(vid_t src, vid_t dst, const Any& data) {
     edges_.emplace_back(src, dst);
+
     size_t len = edges_.size();
-    prop_col_->resize(len);
+
+    if (cap_ == 0) {
+      prop_col_->resize(len);
+      cap_ = len;
+    } else if (len >= cap_) {
+      prop_col_->resize(len * 2);
+      cap_ = len * 2;
+    }
     prop_col_->set_any(len - 1, data);
   }
   void push_back_endpoints(vid_t src, vid_t dst) {
@@ -666,6 +678,8 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
   std::vector<std::pair<vid_t, vid_t>> edges_;
   PropertyType prop_type_;
   std::shared_ptr<ColumnBase> prop_col_;
+  std::vector<PropertyType> sub_types_;
+  size_t cap_;
 };
 
 class BDSLEdgeColumnBuilder : public IContextColumnBuilder {
