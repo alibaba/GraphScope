@@ -6,8 +6,10 @@ ifeq ($(REGISTRY),)
     REGISTRY := registry.cn-hongkong.aliyuncs.com
 endif
 
-# x86_64 or aarch64
-ARCH := $(shell uname -m)
+PLATFORM          := $(shell uname -m)
+# can be: x86_64, aarch64
+ARCH              := $(subst x86_64,amd64,$(subst aarch64,arm64,$(PLATFORM)))
+
 
 VERSION ?= latest
 VINEYARD_VERSION ?= v0.23.0
@@ -41,22 +43,20 @@ interactive: interactive-frontend interactive-executor
 all: coordinator analytical interactive learning
 graphscope: all
 
-dev-wheel:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope && \
+manylinux2014:
+	cd $(WORKING_DIR)/../ && \
 	docker build \
+		-t graphscope/manylinux2014:${ARCH} \
+		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
+
+dev-wheel:
+	cd $(WORKING_DIR)../ && \
+	docker build \
+		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-${ARCH} \
-		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
-
-
-manylinux2014-ext:
-	cd $(WORKING_DIR) && \
-	cd ../python/graphscope  && \
-	docker build \
-		-t graphscope/manylinux2014:ext-${ARCH} \
-		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
+		-f $(DOCKERFILES_DIR)/graphscope-dev-wheel.Dockerfile .
 
 graphscope-dev:
 	cd $(WORKING_DIR) && \
