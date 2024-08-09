@@ -1118,6 +1118,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
   auto running_graph_res = metadata_store_->GetRunningGraph();
   nlohmann::json res;
   if (query_port != 0) {
+    res["statistics_enabled"] = true;  // default is true
     res["status"] =
         graph_db_service.is_actors_running() ? "Running" : "Stopped";
     res["hqps_port"] = query_port;

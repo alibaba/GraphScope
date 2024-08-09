@@ -110,8 +110,20 @@ public class HttpIrMetaReader implements IrMetaReader {
 
     // todo: implement when backend is admin http service
     @Override
-    public boolean syncStatsEnabled(GraphId graphId) {
-        return true;
+    public boolean syncStatsEnabled(GraphId graphId) throws IOException {
+        try {
+            HttpResponse<String> response =
+                    sendRequest(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+            String res = response.body();
+            Preconditions.checkArgument(
+                    response.statusCode() == 200,
+                    "read service status fail, status code: %s, error message: %s",
+                    response.statusCode(),
+                    res);
+            return getStaticEnabled(res);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private HttpResponse<String> sendRequest(String requestUri)
@@ -133,5 +145,15 @@ public class HttpIrMetaReader implements IrMetaReader {
         GraphId graphId = new GraphId(metaMap.get("id"));
         Yaml yaml = new Yaml();
         return Pair.with(graphId, yaml.dump(metaMap));
+    }
+
+    private boolean getStaticEnabled(String metaInJson) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(metaInJson);
+        Map<String, Object> rootMap = mapper.convertValue(rootNode, Map.class);
+        if (rootMap.containsKey("statistics_enabled")) {
+            return (boolean) rootMap.get("statistics_enabled");
+        }
+        return false; // default value
     }
 }
