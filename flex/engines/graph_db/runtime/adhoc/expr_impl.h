@@ -97,15 +97,27 @@ class WithInExpr : public ExprBase {
       for (size_t idx = 0; idx < len; ++idx) {
         container_.push_back(array.i32_array().item(idx));
       }
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      CHECK(array.item_case() == common::Value::kStrArray);
+      size_t len = array.str_array().item_size();
+      for (size_t idx = 0; idx < len; ++idx) {
+        container_.push_back(array.str_array().item(idx));
+      }
     } else {
       LOG(FATAL) << "not implemented";
     }
   }
 
   RTAny eval_path(size_t idx) const override {
-    auto val = TypedConverter<T>::to_typed(key_->eval_path(idx));
-    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
-                                      val) != container_.end());
+    if constexpr (std::is_same_v<T, std::string>) {
+      auto val = std::string(key_->eval_path(idx).as_string());
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    } else {
+      auto val = TypedConverter<T>::to_typed(key_->eval_path(idx));
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    }
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -113,14 +125,18 @@ class WithInExpr : public ExprBase {
     if (any_val.is_null()) {
       return RTAny::from_bool(false);
     }
-    auto val = TypedConverter<T>::to_typed(any_val);
-    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
-                                      val) != container_.end());
+    return eval_path(idx);
   }
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    auto val = TypedConverter<T>::to_typed(key_->eval_vertex(label, v, idx));
-    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
-                                      val) != container_.end());
+    if constexpr (std::is_same_v<T, std::string>) {
+      auto val = std::string(key_->eval_vertex(label, v, idx).as_string());
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    } else {
+      auto val = TypedConverter<T>::to_typed(key_->eval_vertex(label, v, idx));
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    }
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
@@ -128,14 +144,22 @@ class WithInExpr : public ExprBase {
     if (any_val.is_null()) {
       return RTAny::from_bool(false);
     }
-    auto val = TypedConverter<T>::to_typed(any_val);
-    return RTAny::from_bool(std::find(container_.begin(), container_.end(),
-                                      val) != container_.end());
+    return eval_vertex(label, v, idx);
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
-    LOG(FATAL) << "not implemented";
+    if constexpr (std::is_same_v<T, std::string>) {
+      auto val =
+          std::string(key_->eval_edge(label, src, dst, data, idx).as_string());
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    } else {
+      auto val = TypedConverter<T>::to_typed(
+          key_->eval_edge(label, src, dst, data, idx));
+      return RTAny::from_bool(std::find(container_.begin(), container_.end(),
+                                        val) != container_.end());
+    }
     return RTAny::from_bool(false);
   }
   RTAnyType type() const override { return RTAnyType::kBoolValue; }

@@ -19,8 +19,9 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List
-from graphscope.flex.rest.models.running_deployment_status_nodes_inner import RunningDeploymentStatusNodesInner
+from typing import Any, ClassVar, Dict, List, Optional
+from graphscope.flex.rest.models.node_status import NodeStatus
+from graphscope.flex.rest.models.pod_status import PodStatus
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -29,8 +30,9 @@ class RunningDeploymentStatus(BaseModel):
     RunningDeploymentStatus
     """ # noqa: E501
     cluster_type: StrictStr
-    nodes: List[RunningDeploymentStatusNodesInner]
-    __properties: ClassVar[List[str]] = ["cluster_type", "nodes"]
+    nodes: Optional[List[NodeStatus]] = None
+    pods: Optional[Dict[str, List[PodStatus]]] = None
+    __properties: ClassVar[List[str]] = ["cluster_type", "nodes", "pods"]
 
     @field_validator('cluster_type')
     def cluster_type_validate_enum(cls, value):
@@ -85,6 +87,15 @@ class RunningDeploymentStatus(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['nodes'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each value in pods (dict of array)
+        _field_dict_of_array = {}
+        if self.pods:
+            for _key in self.pods:
+                if self.pods[_key] is not None:
+                    _field_dict_of_array[_key] = [
+                        _item.to_dict() for _item in self.pods[_key]
+                    ]
+            _dict['pods'] = _field_dict_of_array
         return _dict
 
     @classmethod
@@ -98,7 +109,15 @@ class RunningDeploymentStatus(BaseModel):
 
         _obj = cls.model_validate({
             "cluster_type": obj.get("cluster_type"),
-            "nodes": [RunningDeploymentStatusNodesInner.from_dict(_item) for _item in obj["nodes"]] if obj.get("nodes") is not None else None
+            "nodes": [NodeStatus.from_dict(_item) for _item in obj["nodes"]] if obj.get("nodes") is not None else None,
+            "pods": dict(
+                (_k,
+                        [PodStatus.from_dict(_item) for _item in _v]
+                        if _v is not None
+                        else None
+                )
+                for _k, _v in obj.get("pods", {}).items()
+            )
         })
         return _obj
 

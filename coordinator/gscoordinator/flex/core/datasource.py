@@ -22,6 +22,8 @@ import pickle
 
 from gscoordinator.flex.core.config import WORKSPACE
 
+logger = logging.getLogger("graphscope")
+
 
 class DataSourceManager(object):
     """Management class for data source mapping"""
@@ -36,21 +38,21 @@ class DataSourceManager(object):
     def try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._pickle_path):
-                logging.info(
+                logger.info(
                     "Recover data source mapping from file %s",
                     self._pickle_path,
                 )
                 with open(self._pickle_path, "rb") as f:
                     self._datasource_mapping = pickle.load(f)
         except Exception as e:
-            logging.warn("Failed to recover data source mapping: %s", str(e))
+            logger.warn("Failed to recover data source mapping: %s", str(e))
 
     def dump_to_disk(self):
         try:
             with open(self._pickle_path, "wb") as f:
                 pickle.dump(self._datasource_mapping, f)
         except Exception as e:
-            logging.warn("Failed to dump data source mapping: %s", str(e))
+            logger.warn("Failed to dump data source mapping: %s", str(e))
 
     def get_edge_full_label(
         self,
@@ -59,6 +61,33 @@ class DataSourceManager(object):
         destination_vertex_type: str,
     ) -> str:
         return f"{source_vertex_type}_{type_name}_{destination_vertex_type}"
+
+    def vertex_mapping_exists(self, graph_id: str, vertex_type: str) -> bool:
+        if graph_id not in self._datasource_mapping:
+            raise RuntimeError(
+                f"Failed to get vertex mapping: graph {graph_id} not exists."
+            )
+        if vertex_type in self._datasource_mapping[graph_id]["vertices"]:
+            return True
+        return False
+
+    def edge_mappings_exists(
+        self,
+        graph_id: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> bool:
+        if graph_id not in self._datasource_mapping:
+            raise RuntimeError(
+                f"Failed to get vertex mapping: graph {graph_id} not exists."
+            )
+        elabel = self.get_edge_full_label(
+            edge_type, source_vertex_type, destination_vertex_type
+        )
+        if elabel in self._datasource_mapping[graph_id]["edges"]:
+            return True
+        return False
 
     def get_vertex_datasource(self, graph_id: str, vertex_type: str) -> dict:
         rlt = {}

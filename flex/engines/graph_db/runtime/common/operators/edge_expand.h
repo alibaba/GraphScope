@@ -56,8 +56,12 @@ class EdgeExpand {
         if (!props.empty()) {
           pt = props[0];
         }
+        if (props.size() > 1) {
+          pt = PropertyType::kRecordView;
+        }
 
-        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt,
+                                      props);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -91,8 +95,12 @@ class EdgeExpand {
         if (!props.empty()) {
           pt = props[0];
         }
+        if (props.size() > 1) {
+          pt = PropertyType::kRecordView;
+        }
 
-        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt,
+                                      props);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {

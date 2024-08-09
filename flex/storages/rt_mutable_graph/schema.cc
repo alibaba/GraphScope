@@ -20,7 +20,7 @@
 
 namespace gs {
 
-Schema::Schema() = default;
+Schema::Schema() : has_multi_props_edge_(false){};
 Schema::~Schema() = default;
 
 void Schema::Clear() {
@@ -40,6 +40,7 @@ void Schema::Clear() {
   max_vnum_.clear();
   plugin_name_to_path_and_id_.clear();
   plugin_dir_.clear();
+  has_multi_props_edge_ = false;
 }
 
 void Schema::add_vertex_label(
@@ -75,6 +76,9 @@ void Schema::add_edge_label(const std::string& src_label,
   uint32_t label_id =
       generate_edge_label(src_label_id, dst_label_id, edge_label_id);
   eproperties_[label_id] = properties;
+  if (properties.size() > 1) {
+    has_multi_props_edge_ = true;
+  }
   oe_strategy_[label_id] = oe;
   ie_strategy_[label_id] = ie;
   oe_mutability_[label_id] = oe_mutable;
@@ -389,6 +393,13 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
       ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
       v_descriptions_ >> e_descriptions_ >> description_ >> version_;
+  has_multi_props_edge_ = false;
+  for (auto& eprops : eproperties_) {
+    if (eprops.second.size() > 1) {
+      has_multi_props_edge_ = true;
+      break;
+    }
+  }
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -1311,6 +1322,8 @@ void Schema::SetDescription(const std::string& description) {
 
 void Schema::SetVersion(const std::string& version) { version_ = version; }
 std::string Schema::GetVersion() const { return version_; }
+
+bool Schema::has_multi_props_edge() const { return has_multi_props_edge_; }
 
 // check whether prop in vprop_names, or is the primary key
 bool Schema::vertex_has_property(const std::string& label,

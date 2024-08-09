@@ -1,10 +1,14 @@
-ARG ARCH=x86_64
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:v0.0.4 AS builder
+# Coordinator of graphscope engines
 
-ARG ARCH
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+ARG ARCH=x86_64
 ARG ENABLE_COORDINATOR="false"
 
-COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
+USER graphscope
+WORKDIR /home/graphscope
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -29,6 +33,8 @@ cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_
 -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
 -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
 -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
+
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
@@ -55,7 +61,7 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 
 ########################### RUNTIME IMAGE ###########################
 
-from ubuntu:22.04 as final_image
+from ubuntu:22.04 as runtime
 ARG ARCH
 ARG ENABLE_COORDINATOR="false"
 
@@ -85,12 +91,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
+COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
-COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
 # change the default graph name.

@@ -32,7 +32,7 @@ class GetVertexType(BaseModel):
     type_name: StrictStr
     primary_keys: List[StrictStr]
     x_csr_params: Optional[BaseVertexTypeXCsrParams] = None
-    type_id: StrictInt
+    type_id: Optional[StrictInt] = None
     properties: List[GetPropertyMeta]
     description: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["type_name", "primary_keys", "x_csr_params", "type_id", "properties", "description"]
