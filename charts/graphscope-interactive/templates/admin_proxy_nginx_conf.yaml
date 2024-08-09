@@ -31,7 +31,6 @@ data:
                     local count = 0
                     local status_code = 0
                     local error_message = nil  -- Initialize a variable to capture error messages
-                    local response_equal = true
 
 
                     local urls = {  
@@ -98,24 +97,16 @@ data:
                         end  
 
                         if response ~= nil then
+                            status_code = response.status
+                            res[#res + 1] = response.body
                             if response.status < 200 or response.status >= 300 then
                                 success = false
                                 if not error_message then  -- Capture the error message from the first failed request
                                     error_message = response.body or "Failed request without a body."
-                                    status_code = response.status
                                 end
                             end
-                        end
-                        if response ~= nil then
-                            -- If the response body is different from the first response body, set response_equal to false
-                            local count = #res
-                            if count > 0 and response.body ~= res[1] then
-                                response_equal = false
-                                success = false
-                                break
-                            end
-                            res[#res + 1] = response.body
                         else
+                            status_code = 500
                             if err ~= nil then
                                 ngx.log(ngx.ERR, "Failed to request: ", err)
                                 success = false
@@ -134,15 +125,9 @@ data:
                         ngx.say(res[1])
                         ngx.exit(status_code)
                     else 
-                        if response_equal then
-                            ngx.status = status_code
-                            ngx.say(res[1])
-                            ngx.exit(status_code)
-                        else
-                            ngx.status = 500
-                            ngx.say("Responses from replicas are not equal." .. arrayToString(res))
-                            ngx.exit(500)
-                        end
+                        ngx.status = status_code
+                        ngx.say(error_message)
+                        ngx.exit(status_code)
                     end  
                 }  
             }  
