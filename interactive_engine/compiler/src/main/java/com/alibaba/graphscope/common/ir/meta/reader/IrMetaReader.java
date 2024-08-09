@@ -30,4 +30,7 @@ public interface IrMetaReader {
 
     // get statistics from a graph referenced by graphId
     GraphStatistics readStats(GraphId graphId) throws IOException;
+
+    // a synchronous invocation to check whether statistics functionality is enabled in the backend
+    boolean syncStatsEnabled(GraphId graphId) throws IOException;
 }
