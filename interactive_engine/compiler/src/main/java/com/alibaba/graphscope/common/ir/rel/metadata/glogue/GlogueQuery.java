@@ -62,6 +62,10 @@ public class GlogueQuery {
         return glogue.getMaxPatternSize();
     }
 
+    public Double getLabelConstraintsDeltaCost(PatternEdge edge, PatternVertex target) {
+        return glogue.schema.getLabelConstraintsDeltaCost(edge, target);
+    }
+
     @Override
     public String toString() {
         return glogue.toString();

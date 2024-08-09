@@ -41,7 +41,10 @@ public class Glogue {
 
     private static Logger logger = LoggerFactory.getLogger(Glogue.class);
 
+    protected final GlogueSchema schema;
+
     public Glogue(GlogueSchema schema, int maxPatternSize) {
+        this.schema = schema;
         glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         roots = new ArrayList<>();
         maxPatternId = 0;

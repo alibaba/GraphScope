@@ -52,6 +52,9 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
             double weight = glogueEdge.getExtendStep().getWeight();
             double srcPatternCount = mq.getRowCount(node.getInput(0));
             double dRows = weight * srcPatternCount;
+            if (glogueEdge.getExtendStep().getExtendEdges().size() > 1) {
+                dRows *= plannerConfig.getIntersectCostFactor();
+            }
             double dCpu = dRows + 1;
             double dIo = mq.getRowCount(node);
             return costFactory.makeCost(dRows, dCpu, dIo);
