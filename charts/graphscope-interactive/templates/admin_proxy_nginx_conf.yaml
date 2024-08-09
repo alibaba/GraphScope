@@ -21,12 +21,17 @@ data:
             listen {{ $adminPort }};  
             location / {  
                 content_by_lua_block {  
+                    function arrayToString(arr, separator)  
+                        separator = separator or ", " -- Default separator if not provided  
+                        return table.concat(arr, separator)  
+                    end 
                     local http = require "resty.http"  
                     local res = {}
                     local success = true
                     local count = 0
                     local status_code = 0
                     local error_message = nil  -- Initialize a variable to capture error messages
+                    local response_equal = true
 
 
                     local urls = {  
@@ -102,6 +107,13 @@ data:
                             end
                         end
                         if response ~= nil then
+                            -- If the response body is different from the first response body, set response_equal to false
+                            local count = #res
+                            if count > 0 and response.body ~= res[1] then
+                                response_equal = false
+                                success = false
+                                break
+                            end
                             res[#res + 1] = response.body
                         else
                             if err ~= nil then
@@ -121,10 +133,16 @@ data:
                         ngx.status = status_code
                         ngx.say(res[1])
                         ngx.exit(status_code)
-                    else  
-                        ngx.status = status_code  
-                        ngx.say(error_message or "An unspecified error occurred.")  
-                        ngx.exit(status_code) 
+                    else 
+                        if response_equal then
+                            ngx.status = status_code
+                            ngx.say(res[1])
+                            ngx.exit(status_code)
+                        else
+                            ngx.status = 500
+                            ngx.say("Responses from replicas are not equal." .. arrayToString(res))
+                            ngx.exit(500)
+                        end
                     end  
                 }  
             }  
