@@ -32,6 +32,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
@@ -700,7 +701,10 @@ public class GraphTypeInference {
         boolean isNullable = originalType == null ? false : originalType.isNullable();
         if (newLabels.size() == 1) {
             return new GraphSchemaType(
-                    opt, new GraphLabelType(newLabels), ImmutableList.of(), isNullable);
+                    opt,
+                    new GraphLabelType(newLabels),
+                    getOriginalFields(newLabels.get(0), originalType),
+                    isNullable);
         } else {
             List<GraphSchemaType> fuzzyTypes =
                     newLabels.stream()
@@ -709,10 +713,22 @@ public class GraphTypeInference {
                                             new GraphSchemaType(
                                                     opt,
                                                     new GraphLabelType(ImmutableList.of(k)),
-                                                    ImmutableList.of()))
+                                                    getOriginalFields(k, originalType)))
                             .collect(Collectors.toList());
             return GraphSchemaType.create(fuzzyTypes, builder.getTypeFactory(), isNullable);
         }
+    }
+
+    private List<RelDataTypeField> getOriginalFields(
+            GraphLabelType.Entry labelEntry, @Nullable GraphSchemaType originalType) {
+        if (originalType == null) return ImmutableList.of();
+        List<GraphSchemaType> candidates = originalType.getSchemaTypeAsList();
+        for (GraphSchemaType candidate : candidates) {
+            if (candidate.getLabelType().getLabelsEntry().contains(labelEntry)) {
+                return candidate.getFieldList();
+            }
+        }
+        return ImmutableList.of();
     }
 
     private class RelGraph {
