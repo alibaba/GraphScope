@@ -143,7 +143,7 @@ public class CollectResult {
         }
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
-        String logPath = configuration.getString(Configuration.BENCHMARK_RESULT_LOG_PATH, "");
+        String logPath = configuration.getString(Configuration.BENCH_RESULT_LOG_PATH, "");
         analyzeLog(logPath);
     }
 }

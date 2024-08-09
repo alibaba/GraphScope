@@ -19,7 +19,7 @@ import com.alibaba.graphscope.gaia.clients.GraphClient;
 import com.alibaba.graphscope.gaia.clients.GraphSystem;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
-import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
+import com.alibaba.graphscope.gaia.utils.ResultComparator;
 import com.alibaba.graphscope.gaia.utils.BenchmarkSystemUtil;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
@@ -45,25 +45,28 @@ public class InteractiveBenchmark {
         // benchmark queries
         List<CommonQuery> queryList = QueryUtil.initQueryList(configuration);
         String expectedResultsPath =
-                configuration.getString(Configuration.EXPECTED_RESULTS_PATH, null);
-        BenchmarkResultComparator comparator = new BenchmarkResultComparator(expectedResultsPath);
+                configuration.getString(Configuration.QUERY_EXPECTED_PATH, null);
+        ResultComparator comparator = new ResultComparator(expectedResultsPath);
 
         // running settings
-        int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
-        int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
-        int operationCount = configuration.getInt(Configuration.OPERATION_COUNT_EVERY_QUERY, 10);
-        boolean printQueryName = configuration.getBoolean(Configuration.PRINT_QUERY_NAME, true);
-        boolean printQueryResult = configuration.getBoolean(Configuration.PRINT_QUERY_RESULT, true);
+        int threadCount = configuration.getInt(Configuration.BENCH_THREAD_COUNT, 1);
+        int warmUpCount = configuration.getInt(Configuration.BENCH_WARMUP_EVERY_QUERY, 0);
+        int operationCount =
+                configuration.getInt(Configuration.BENCH_OPERATION_COUNT_EVERY_QUERY, 10);
+        boolean printQueryName =
+                configuration.getBoolean(Configuration.BENCH_PRINT_QUERY_NAME, true);
+        boolean printQueryResult =
+                configuration.getBoolean(Configuration.BENCH_PRINT_QUERY_RESULT, true);
 
         class MyRunnable implements Runnable {
             private GraphClient client;
-            BenchmarkResultComparator comparator;
+            ResultComparator comparator;
             AtomicInteger atomicQueryCount;
             AtomicInteger atomicParameterIndex;
 
             public MyRunnable(
                     GraphClient client,
-                    BenchmarkResultComparator comparator,
+                    ResultComparator comparator,
                     AtomicInteger atomicQueryCount,
                     AtomicInteger atomicParameterIndex) {
                 this.client = client;

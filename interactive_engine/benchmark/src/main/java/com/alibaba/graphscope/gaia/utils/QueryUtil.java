@@ -78,11 +78,11 @@ public class QueryUtil {
 
     public static List<CommonQuery> initQueryList(Configuration configuration) throws Exception {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
-        String parameterDir = configuration.getString(Configuration.PARAMETER_DIR, null);
+        String parameterDir = configuration.getString(Configuration.QUERY_PARAMETER_DIR, null);
         List<CommonQuery> queryList = new ArrayList<>();
-        String suffix = "." + configuration.getString(Configuration.QUERY_SUFFIX);
+        String suffix = "." + configuration.getString(Configuration.QUERY_FILE_SUFFIX);
 
-        if (configuration.getBoolean(Configuration.ALL_QUERIES_ENABLE, false)) {
+        if (configuration.getBoolean(Configuration.QUERY_ALL_ENABLE, false)) {
             // Automatically add all queries in the specified directory
             File dir = new File(queryDir);
             if (dir.isDirectory()) {

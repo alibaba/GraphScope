@@ -9,10 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class BenchmarkResultComparator {
+public class ResultComparator {
     private Map<String, String> expectedResults;
 
-    public BenchmarkResultComparator(String expectedResultsPath) {
+    public ResultComparator(String expectedResultsPath) {
         if (expectedResultsPath != null && !expectedResultsPath.isEmpty()) {
             try (Reader reader = Files.newBufferedReader(Paths.get(expectedResultsPath)); ) {
                 Gson gson = new Gson();
@@ -24,7 +24,7 @@ public class BenchmarkResultComparator {
         }
     }
 
-    public BenchmarkResultComparator(Map<String, String> expectedResults) {
+    public ResultComparator(Map<String, String> expectedResults) {
         this.expectedResults = expectedResults;
     }
 

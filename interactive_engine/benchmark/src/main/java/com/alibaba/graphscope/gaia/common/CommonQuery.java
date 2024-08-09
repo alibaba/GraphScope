@@ -17,7 +17,7 @@ package com.alibaba.graphscope.gaia.common;
 
 import com.alibaba.graphscope.gaia.clients.GraphClient;
 import com.alibaba.graphscope.gaia.clients.GraphResultSet;
-import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
+import com.alibaba.graphscope.gaia.utils.ResultComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -57,7 +57,7 @@ public class CommonQuery {
             HashMap<String, String> singleParameter,
             boolean printResult,
             boolean printQuery,
-            BenchmarkResultComparator comparator) {
+            ResultComparator comparator) {
         try {
             String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
             long startTime = System.currentTimeMillis();
