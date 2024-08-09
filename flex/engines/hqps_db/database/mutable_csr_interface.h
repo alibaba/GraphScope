@@ -411,8 +411,6 @@ class MutableCSRInterface {
                           std::vector<column_tuple_t>& columns,
                           const std::vector<vertex_id_t>& vids,
                           const grape::Bitset& bitset) const {
-    // auto index_seq = std::make_index_sequence<sizeof...(T)>{};
-
     {
       auto& column_tuple0 = columns[0];
       auto& column_tuple1 = columns[1];
@@ -575,7 +573,6 @@ class MutableCSRInterface {
                                                  edge_label_id);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr0, csr1, vids);
     } else {
-      // LOG(FATAL) << "Not implemented - " << direction_str;
       throw std::runtime_error("Not implemented - " + direction_str);
     }
   }
