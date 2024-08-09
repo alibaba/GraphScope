@@ -88,7 +88,10 @@ jobs:
       run: |
         . ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
+        # the ir-core based test
         mvn test -P gremlin-test
+        # the gopt based test
+        mvn test -Dgremlin.script.language.name=antlr_gremlin_calcite -Dgraph.physical.opt=proto -Dgraph.planner.opt=CBO -P gremlin-test
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v4
