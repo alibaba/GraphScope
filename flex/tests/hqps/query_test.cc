@@ -241,5 +241,17 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish MatchQuery15 test";
   }
 
+  {
+    gs::MatchQuery16 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    query.Query(sess, input, output);
+    LOG(INFO) << "Finish MatchQuery16 test";
+  }
+
   LOG(INFO) << "Finish context test.";
 }

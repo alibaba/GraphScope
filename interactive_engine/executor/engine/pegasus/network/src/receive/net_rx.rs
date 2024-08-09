@@ -278,6 +278,10 @@ impl InboxRegister {
     pub(crate) fn register(&self, channel_id: u128, tx: &MessageSender<Payload>) -> Result<(), NetError> {
         self.inner.register(channel_id, tx.clone())
     }
+
+    pub(crate) fn from_same_receiver(&self, other: &InboxRegister) -> bool {
+        Arc::ptr_eq(&self.inner, &other.inner)
+    }
 }
 
 #[cfg(test)]

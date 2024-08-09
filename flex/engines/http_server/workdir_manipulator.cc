@@ -16,6 +16,10 @@
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 
+#include <boost/uuid/uuid.hpp>             // uuid class
+#include <boost/uuid/uuid_generators.hpp>  // generators
+#include <boost/uuid/uuid_io.hpp>          // streaming operators etc.
+
 // Write a macro to define the function, to check whether a filed presents in a
 // json object.
 #define CHECK_JSON_FIELD(json, field)                                         \
@@ -668,8 +672,8 @@ gs::Result<std::string> WorkDirManipulator::CreateFile(
   }
 
   // get the timestamp as the file name
-  auto time_stamp = std::to_string(gs::GetCurrentTimeStamp());
-  auto file_name = GetUploadDir() + "/" + time_stamp;
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  auto file_name = GetUploadDir() + "/" + boost::uuids::to_string(uuid);
   std::ofstream fout(file_name);
   if (!fout.is_open()) {
     return {gs::Status(gs::StatusCode::PermissionError, "Fail to open file")};

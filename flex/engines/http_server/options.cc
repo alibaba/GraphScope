@@ -17,13 +17,8 @@
 
 namespace server {
 
+uint32_t shard_admin_concurrency = 2;  // at least 2, to allow restarting
 uint32_t shard_query_concurrency = 16;
-uint32_t shard_update_concurrency = 4;
 uint32_t shard_adhoc_concurrency = 4;
-uint32_t shard_admin_graph_concurrency = 1;
-uint32_t shard_admin_procedure_concurrency = 1;
-uint32_t shard_admin_node_concurrency = 1;
-uint32_t shard_admin_job_concurrency = 1;
-uint32_t shard_admin_service_concurrency = 1;
 
 }  // namespace server

@@ -1,0 +1,1 @@
+Match (p)-[]->(:Organisation)-[]->(:Place) Return count(p);

@@ -142,6 +142,30 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
+                        "interactive.admin.endpoint",
+                        (Configs configs) -> {
+                            String host = configs.get("http_service.default_listen_address");
+                            String port = configs.get("http_service.admin_port");
+                            if (host != null) {
+                                if (port != null) {
+                                    return "http://" + host + ":" + port;
+                                }
+                            }
+                            return null;
+                        })
+                .put(
+                        "interactive.query.endpoint",
+                        (Configs configs) -> {
+                            String host = configs.get("http_service.default_listen_address");
+                            String port = configs.get("http_service.query_port");
+                            if (host != null) {
+                                if (port != null) {
+                                    return "http://" + host + ":" + port;
+                                }
+                            }
+                            return null;
+                        })
+                .put(
                         "neo4j.bolt.server.disabled",
                         (Configs configs) ->
                                 configs.get("compiler.endpoint.bolt_connector.disabled"))

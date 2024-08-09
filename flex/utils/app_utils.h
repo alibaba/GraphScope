@@ -40,6 +40,8 @@ class Encoder {
 
   void put_byte(uint8_t v);
 
+  void put_bytes(const char* data, size_t size);
+
   size_t skip_byte();
 
   void put_byte_at(size_t pos, uint8_t v);
@@ -70,6 +72,8 @@ class Decoder {
   int64_t get_long();
 
   std::string_view get_string();
+
+  std::string_view get_bytes();
 
   std::string_view get_small_string();
 

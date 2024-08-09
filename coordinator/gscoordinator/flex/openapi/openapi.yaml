@@ -433,9 +433,95 @@ paths:
       tags:
       - Deployment
       x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
+  /api/v1/deployment/log:
+    get:
+      description: "[Deprecated] Get kubernetes pod's log"
+      operationId: get_deployment_pod_log
+      parameters:
+      - explode: true
+        in: query
+        name: pod_name
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: component
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: from_cache
+        required: true
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                container1: |-
+                  line1
+                  line2
+                  line3
+                container2: |-
+                  line1
+                  line2
+                  line3
+              schema:
+                $ref: '#/components/schemas/GetPodLogResponse'
+          description: Successfully returned the pod's log
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
+  /api/v1/deployment/resource/usage:
+    get:
+      description: "[Deprecated] Get resource usage(cpu/memory) of cluster"
+      operationId: get_deployment_resource_usage
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                cpu_usage:
+                - host: dztest283-graphscope-store-store-0
+                  timestamp: 2024/07/19 13:15:12
+                  usage: 52
+                - host: dztest283-graphscope-store-store-1
+                  timestamp: 2024/07/19 13:16:12
+                  usage: 90
+                memory_usage:
+                - host: dztest283-graphscope-store-store-0
+                  timestamp: 2024/07/19 13:15:12
+                  usage: 152
+                - host: dztest283-graphscope-store-store-1
+                  timestamp: 2024/07/19 13:16:12
+                  usage: 290
+              schema:
+                $ref: '#/components/schemas/GetResourceUsageResponse'
+          description: Successfully returned the resource usage
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
   /api/v1/deployment/status:
     get:
-      description: Deployment status
+      description: Get deployment status of cluster
       operationId: get_deployment_status
       responses:
         "200":
@@ -448,9 +534,74 @@ paths:
                   cpu_usage: 83.0
                   memory_usage: 37.5
                   disk_usage: 97
+                pods:
+                  coordinator:
+                  - name: dztest283-graphscope-store-coordinator-0
+                    image:
+                    - graphscope-store:0.28.0
+                    labels:
+                      app.kubernetes.io/version: 3.4.0
+                    node: i-uf6f9rdd1wh126dg2y1p
+                    status: Running
+                    restart_count: 0
+                    cpu_usage: 2
+                    memory_usage: 597
+                    timestamp: 2024/07/19 16:40:04
+                    creation_time: 2024/07/03 11:08:57
+                    component_belong_to: coordinator
+                  store:
+                  - name: dztest283-graphscope-store-store-0
+                    image:
+                    - graphscope-store:0.28.0
+                    labels:
+                      app.kubernetes.io/version: 3.4.0
+                    node: i-uf6f9rdd1wh126dg2y1p
+                    status: Running
+                    restart_count: 0
+                    cpu_usage: 2
+                    memory_usage: 597
+                    timestamp: 2024/07/19 16:40:04
+                    creation_time: 2024/07/03 11:08:57
+                    component_belong_to: store
+                  - name: dztest283-graphscope-store-store-1
+                    image:
+                    - graphscope-store:0.28.0
+                    labels:
+                      app.kubernetes.io/version: 3.4.0
+                    node: i-uf6f9rdd1wh126dg2y1p
+                    status: Running
+                    restart_count: 0
+                    cpu_usage: 2
+                    memory_usage: 597
+                    timestamp: 2024/07/19 16:40:04
+                    creation_time: 2024/07/03 11:08:57
+                    component_belong_to: store
               schema:
                 $ref: '#/components/schemas/RunningDeploymentStatus'
           description: Successfully returned the deployment status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
+  /api/v1/deployment/storage/usage:
+    get:
+      description: "[Deprecated] Get storage usage of Groot"
+      operationId: get_storage_usage
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                dztest283-graphscope-store-store-0: 72.2
+                dztest283-graphscope-store-store-1: 91.7
+              schema:
+                $ref: '#/components/schemas/GetStorageUsageResponse'
+          description: Successfully returned the resource usage
         "500":
           content:
             application/json:
@@ -803,8 +954,8 @@ paths:
       - Job
       x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
   /api/v1/graph/{graph_id}/dataloading/config:
-    get:
-      description: Get the data loading configuration
+    post:
+      description: Post to get the data loading configuration for MapReduce Task
       operationId: get_dataloading_job_config
       parameters:
       - explode: false
@@ -814,13 +965,24 @@ paths:
         schema:
           type: string
         style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataloadingJobConfig'
+        required: true
       responses:
         "200":
           content:
             application/json:
+              example: |-
+                split.size=32
+                separator=\\|
+                graph.endpoint=11.11.11.11:55556
+                project=graphscope
               schema:
-                $ref: '#/components/schemas/DataloadingJobConfig'
-          description: Successfully returned the dataloading job configuration
+                $ref: '#/components/schemas/DataloadingMRJobConfig'
+          description: Successfully returned the job configuration for MapReduce Task
         "500":
           content:
             application/json:
@@ -1677,6 +1839,13 @@ paths:
         schema:
           type: string
         style: simple
+      - explode: true
+        in: query
+        name: delete_scheduler
+        required: false
+        schema:
+          type: boolean
+        style: form
       responses:
         "200":
           content:
@@ -1904,6 +2073,7 @@ components:
         storage:
           enum:
           - MutableCSR
+          - MutablePersistent
           title: storage
           type: string
       required:
@@ -1915,6 +2085,71 @@ components:
       - storage
       - version
       title: RunningDeploymentInfo
+    ResourceUsage:
+      example:
+        usage: usage
+        host: host
+        timestamp: timestamp
+      properties:
+        host:
+          title: host
+          type: string
+        timestamp:
+          title: timestamp
+          type: string
+        usage:
+          title: usage
+          type: string
+      required:
+      - host
+      - timestamp
+      - usage
+      title: ResourceUsage
+    GetResourceUsageResponse:
+      example:
+        memory_usage:
+        - usage: usage
+          host: host
+          timestamp: timestamp
+        - usage: usage
+          host: host
+          timestamp: timestamp
+        cpu_usage:
+        - usage: usage
+          host: host
+          timestamp: timestamp
+        - usage: usage
+          host: host
+          timestamp: timestamp
+      properties:
+        cpu_usage:
+          items:
+            $ref: '#/components/schemas/ResourceUsage'
+          title: cpu_usage
+          type: array
+        memory_usage:
+          items:
+            $ref: '#/components/schemas/ResourceUsage'
+          title: memory_usage
+          type: array
+      required:
+      - cpu_usage
+      - memory_usage
+      title: GetResourceUsageResponse
+    GetStorageUsageResponse:
+      example:
+        storage_usage:
+          key: 0.8008281904610115
+      properties:
+        storage_usage:
+          additionalProperties:
+            format: double
+            type: number
+          title: storage_usage
+          type: object
+      required:
+      - storage_usage
+      title: GetStorageUsageResponse
     NodeStatus:
       example:
         name: name
@@ -1943,6 +2178,85 @@ components:
       - memory_usage
       - name
       title: NodeStatus
+    PodStatus:
+      example:
+        creation_time: creation_time
+        image:
+        - image
+        - image
+        node: node
+        restart_count: 5
+        name: name
+        memory_usage: 2
+        cpu_usage: 5
+        component_belong_to: component_belong_to
+        labels:
+          key: ""
+        status: status
+        timestamp: timestamp
+      properties:
+        name:
+          title: name
+          type: string
+        image:
+          items:
+            type: string
+          title: image
+          type: array
+        labels:
+          additionalProperties: true
+          title: labels
+          type: object
+        node:
+          title: node
+          type: string
+        status:
+          title: status
+          type: string
+        restart_count:
+          format: int32
+          title: restart_count
+          type: integer
+        cpu_usage:
+          format: int32
+          title: cpu_usage
+          type: integer
+        memory_usage:
+          format: int32
+          title: memory_usage
+          type: integer
+        timestamp:
+          title: timestamp
+          type: string
+        creation_time:
+          title: creation_time
+          type: string
+        component_belong_to:
+          title: component_belong_to
+          type: string
+      required:
+      - cpu_usage
+      - creation_time
+      - image
+      - labels
+      - memory_usage
+      - name
+      - node
+      - restart_count
+      - status
+      title: PodStatus
+    GetPodLogResponse:
+      example:
+        log:
+          key: ""
+      properties:
+        log:
+          additionalProperties: true
+          title: log
+          type: object
+      required:
+      - log
+      title: GetPodLogResponse
     RunningDeploymentStatus:
       example:
         nodes:
@@ -1954,6 +2268,36 @@ components:
           memory_usage: 6.027456183070403
           disk_usage: 1.4658129805029452
           cpu_usage: 0.8008281904610115
+        pods:
+          key:
+          - creation_time: creation_time
+            image:
+            - image
+            - image
+            node: node
+            restart_count: 5
+            name: name
+            memory_usage: 2
+            cpu_usage: 5
+            component_belong_to: component_belong_to
+            labels:
+              key: ""
+            status: status
+            timestamp: timestamp
+          - creation_time: creation_time
+            image:
+            - image
+            - image
+            node: node
+            restart_count: 5
+            name: name
+            memory_usage: 2
+            cpu_usage: 5
+            component_belong_to: component_belong_to
+            labels:
+              key: ""
+            status: status
+            timestamp: timestamp
         cluster_type: HOSTS
       properties:
         cluster_type:
@@ -1964,12 +2308,18 @@ components:
           type: string
         nodes:
           items:
-            $ref: '#/components/schemas/RunningDeploymentStatus_nodes_inner'
+            $ref: '#/components/schemas/NodeStatus'
           title: nodes
           type: array
+        pods:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/PodStatus'
+            type: array
+          title: pods
+          type: object
       required:
       - cluster_type
-      - nodes
       title: RunningDeploymentStatus
     StartServiceRequest:
       example:
@@ -2611,7 +2961,6 @@ components:
             type: string
         required:
         - properties
-        - type_id
         type: object
       example:
         type_name: type_name
@@ -2651,8 +3000,6 @@ components:
             type: array
           description:
             type: string
-        required:
-        - type_id
         type: object
       example:
         type_name: type_name
@@ -3270,6 +3617,17 @@ components:
       - vertices
       title: DataloadingJobConfig
       x-body-name: dataloading_job_config
+    DataloadingMRJobConfig:
+      example:
+        config: config
+      properties:
+        config:
+          title: config
+          type: string
+      required:
+      - config
+      title: DataloadingMRJobConfig
+      x-body-name: dataloading_mr_job_config
     JobStatus:
       example:
         start_time: start_time
@@ -3537,10 +3895,6 @@ components:
           format: binary
           type: string
       type: object
-    RunningDeploymentStatus_nodes_inner:
-      oneOf:
-      - $ref: '#/components/schemas/NodeStatus'
-      title: RunningDeploymentStatus_nodes_inner
     ServiceStatus_sdk_endpoints:
       example:
         gremlin: gremlin
@@ -3615,7 +3969,6 @@ components:
           $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params'
       required:
       - destination_vertex
-      - relation
       - source_vertex
       title: BaseEdgeType_vertex_type_pair_relations_inner
     ColumnMapping_column:

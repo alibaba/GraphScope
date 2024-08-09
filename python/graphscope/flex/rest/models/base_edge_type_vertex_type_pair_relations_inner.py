@@ -30,13 +30,16 @@ class BaseEdgeTypeVertexTypePairRelationsInner(BaseModel):
     """ # noqa: E501
     source_vertex: StrictStr
     destination_vertex: StrictStr
-    relation: StrictStr
+    relation: Optional[StrictStr] = None
     x_csr_params: Optional[BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams] = None
     __properties: ClassVar[List[str]] = ["source_vertex", "destination_vertex", "relation", "x_csr_params"]
 
     @field_validator('relation')
     def relation_validate_enum(cls, value):
         """Validates the enum"""
+        if value is None:
+            return value
+
         if value not in set(['MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE']):
             raise ValueError("must be one of enum values ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE')")
         return value

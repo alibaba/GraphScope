@@ -79,7 +79,7 @@ inline void from_json(const nlohmann::json& j, PropertyType& p) {
         j["primitive_type"].get<std::string>());
   } else if (j.contains("string")) {
     if (j["string"].contains("long_text")) {
-      p = PropertyType::StringView();
+      p = PropertyType::String();
     } else if (j.contains("string") && j["string"].contains("var_char")) {
       if (j["string"]["var_char"].contains("max_length")) {
         p = PropertyType::Varchar(
@@ -105,6 +105,14 @@ inline void from_json(const nlohmann::json& j, PropertyType& p) {
 
 inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
+}
+
+inline std::string jsonToString(const nlohmann::json& json) {
+  if (json.is_string()) {
+    return json.get<std::string>();
+  } else {
+    return json.dump();
+  }
 }
 
 class FlexException : public std::exception {
