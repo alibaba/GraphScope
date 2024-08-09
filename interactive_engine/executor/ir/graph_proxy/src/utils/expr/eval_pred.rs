@@ -17,8 +17,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::{BorrowObject, Object};
-use ir_common::error::ParsePbError;
-use ir_common::expr_parse::error::{ExprError, ExprResult};
+use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
@@ -330,7 +329,7 @@ impl Predicates {
 }
 
 #[allow(dead_code)]
-fn process_predicates(rpn_tokens: Vec<common_pb::ExprOpr>) -> ExprResult<Option<Predicates>> {
+fn process_predicates(rpn_tokens: Vec<common_pb::ExprOpr>) -> ParsePbResult<Predicates> {
     use common_pb::expr_opr::Item;
     use common_pb::Logical;
     let mut stack: Vec<Predicates> = Vec::new();
@@ -356,22 +355,24 @@ fn process_predicates(rpn_tokens: Vec<common_pb::ExprOpr>) -> ExprResult<Option<
                             let rhs = stack
                                 .pop()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported("missing right for binary operator".to_string())
+                                    ParsePbError::ParseError(
+                                        "missing right for binary operator".to_string(),
+                                    )
                                 })?
                                 .take_operand()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported(
+                                    ParsePbError::ParseError(
                                         "missing right operand for binary operator".to_string(),
                                     )
                                 })?;
                             let lhs = stack
                                 .pop()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported("missing left for binary operator".to_string())
+                                    ParsePbError::ParseError("missing left for binary operator".to_string())
                                 })?
                                 .take_operand()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported(
+                                    ParsePbError::ParseError(
                                         "missing left operand for binary operator".to_string(),
                                     )
                                 })?;
@@ -386,35 +387,41 @@ fn process_predicates(rpn_tokens: Vec<common_pb::ExprOpr>) -> ExprResult<Option<
                             let operand = stack
                                 .pop()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported("missing operand for unary operator".to_string())
+                                    ParsePbError::ParseError(
+                                        "missing operand for unary operator".to_string(),
+                                    )
                                 })?
                                 .take_operand()
                                 .ok_or_else(|| {
-                                    ExprError::unsupported("missing operand for unary operator".to_string())
+                                    ParsePbError::ParseError(
+                                        "missing operand for unary operator".to_string(),
+                                    )
                                 })?;
                             stack.push(Predicates::Unary(UnaryPredicate { operand, cmp: logical }));
                         }
                         Logical::Not => {
                             let pred = stack.pop().ok_or_else(|| {
-                                ExprError::unsupported("missing predicates for unary operator".to_string())
+                                ParsePbError::ParseError(
+                                    "missing predicates for unary operator".to_string(),
+                                )
                             })?;
                             stack.push(Predicates::Not(Box::new(pred)));
                         }
                         Logical::And => {
                             let rhs = stack.pop().ok_or_else(|| {
-                                ExprError::unsupported("missing right for And operator".to_string())
+                                ParsePbError::ParseError("missing right for And operator".to_string())
                             })?;
                             let lhs = stack.pop().ok_or_else(|| {
-                                ExprError::unsupported("missing left for And operator".to_string())
+                                ParsePbError::ParseError("missing left for And operator".to_string())
                             })?;
                             stack.push(Predicates::And((Box::new(lhs), Box::new(rhs))));
                         }
                         Logical::Or => {
                             let rhs = stack.pop().ok_or_else(|| {
-                                ExprError::unsupported("missing right for Or operator".to_string())
+                                ParsePbError::ParseError("missing right for Or operator".to_string())
                             })?;
                             let lhs = stack.pop().ok_or_else(|| {
-                                ExprError::unsupported("missing left for Or operator".to_string())
+                                ParsePbError::ParseError("missing left for Or operator".to_string())
                             })?;
                             stack.push(Predicates::Or((Box::new(lhs), Box::new(rhs))));
                         }
@@ -423,11 +430,15 @@ fn process_predicates(rpn_tokens: Vec<common_pb::ExprOpr>) -> ExprResult<Option<
                 Item::Const(_) | Item::Var(_) | Item::Vars(_) | Item::VarMap(_) | Item::Map(_) => {
                     stack.push(Predicates::SingleItem(opr.try_into()?));
                 }
-                _ => return Err(ExprError::unsupported(format!("Item {:?}", item))),
+                _ => return Err(ParsePbError::Unsupported(format!("Item {:?}", item))),
             }
         }
     }
-    Ok(stack.pop())
+    if stack.len() != 1 {
+        Err(ParsePbError::ParseError(format!("{:?} in predicate parsing", stack)))
+    } else {
+        Ok(stack.pop().unwrap())
+    }
 }
 
 #[derive(Debug)]
@@ -458,12 +469,19 @@ impl TryFrom<common_pb::Expression> for PEvaluator {
     fn try_from(expr: common_pb::Expression) -> Result<Self, Self::Error> {
         let suffix_oprs = to_suffix_expr(expr.operators.clone())
             .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
-        if let Some(pred) = process_predicates(suffix_oprs.clone())
-            .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?
-        {
-            Ok(Self::Predicates(pred))
-        } else {
-            Ok(Self::General(suffix_oprs.try_into()?))
+        let pred_res = process_predicates(suffix_oprs.clone());
+        match pred_res {
+            Ok(pred) => {
+                return Ok(Self::Predicates(pred));
+            }
+            Err(err) => match err {
+                ParsePbError::Unsupported(_) => {
+                    // fall back to general evaluator
+                    let eval = Evaluator::try_from(expr)?;
+                    Ok(Self::General(eval))
+                }
+                _ => Err(err),
+            },
         }
     }
 }
