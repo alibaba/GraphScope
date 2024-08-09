@@ -178,13 +178,21 @@ impl Context<()> for NoneContext {}
 impl TryFrom<common_pb::Expression> for Evaluator {
     type Error = ParsePbError;
 
-    fn try_from(suffix_tree: common_pb::Expression) -> ParsePbResult<Self>
+    fn try_from(expression: common_pb::Expression) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
-        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.operators.len());
-        let suffix_oprs = to_suffix_expr(suffix_tree.operators)
+        let suffix_oprs = to_suffix_expr(expression.operators)
             .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+        suffix_oprs.try_into()
+    }
+}
+
+impl TryFrom<Vec<common_pb::ExprOpr>> for Evaluator {
+    type Error = ParsePbError;
+
+    fn try_from(suffix_oprs: Vec<common_pb::ExprOpr>) -> ParsePbResult<Self> {
+        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_oprs.len());
         for unit in suffix_oprs {
             inner_tree.push(InnerOpr::try_from(unit)?);
         }
@@ -825,7 +833,7 @@ impl InnerOpr {
 mod tests {
     use ahash::HashMap;
     use dyn_type::DateTimeFormats;
-    use ir_common::expr_parse::str_to_expr_pb;
+    use ir_common::{expr_parse::str_to_expr_pb, generated::physical::physical_opr::operator};
 
     use super::*;
     use crate::apis::{DynDetails, Vertex};
@@ -1345,6 +1353,66 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_eval_extract_02() {
+        // expression: 0.date1.day >= 9, fall back to general evaluator
+        // date1: "2020-08-08"
+        // datetime2: "2020-08-09 10:11:12.100"
+        let mut operators1 = str_to_expr_pb("@0.date1".to_string())
+            .unwrap()
+            .operators;
+        let mut operators2 = str_to_expr_pb("@0.datetime2".to_string())
+            .unwrap()
+            .operators;
+        let extract_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: common_pb::extract::Interval::Day as i32,
+            })),
+        };
+        operators1.push(extract_opr.clone());
+        operators2.push(extract_opr);
+        let cmp_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Ge as i32)),
+        };
+        operators1.push(cmp_opr.clone());
+        operators2.push(cmp_opr);
+        let right = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::I32(9)),
+            })),
+        };
+        operators1.push(right.clone());
+        operators2.push(right);
+        let expr1 = common_pb::Expression { operators: operators1 };
+        let expr2 = common_pb::Expression { operators: operators2 };
+
+        let eval1 = PEvaluator::try_from(expr1).unwrap();
+        let eva2 = PEvaluator::try_from(expr2).unwrap();
+        match eval1 {
+            PEvaluator::Predicates(_) => panic!("should fall back to general evaluator"),
+            PEvaluator::General(_) => assert!(true),
+        }
+        match eva2 {
+            PEvaluator::Predicates(_) => panic!("should fall back to general evaluator"),
+            PEvaluator::General(_) => assert!(true),
+        }
+        let ctxt = prepare_context_with_date();
+        assert_eq!(
+            eval1
+                .eval_bool::<_, Vertices>(Some(&ctxt))
+                .unwrap(),
+            false
+        );
+        assert_eq!(
+            eva2.eval_bool::<_, Vertices>(Some(&ctxt))
+                .unwrap(),
+            true
+        );
+    }
+
     fn gen_regex_expression(to_match: &str, pattern: &str) -> common_pb::Expression {
         let mut regex_expr = common_pb::Expression { operators: vec![] };
         let left = common_pb::ExprOpr {
@@ -1375,8 +1443,14 @@ mod tests {
         // So use gen_regex_expression() to help generate expression
         let cases: Vec<(&str, &str)> = vec![
             ("Josh", r"^J"),                                                    // startWith, true
+            ("Josh", r"^J.*"),                                                  // startWith, true
+            ("josh", r"^J.*"),                                                  // startWith, false
+            ("BJosh", r"^J.*"),                                                 // startWith, false
             ("Josh", r"J.*"),                                                   // true
             ("Josh", r"h$"),                                                    // endWith, true
+            ("Josh", r".*h$"),                                                  // endWith, true
+            ("JosH", r".*h$"),                                                  // endWith, false
+            ("JoshB", r".*h$"),                                                 // endWith, false
             ("Josh", r".*h"),                                                   // true
             ("Josh", r"os"),                                                    // true
             ("Josh", r"A.*"),                                                   // false
@@ -1389,7 +1463,13 @@ mod tests {
         let expected: Vec<Object> = vec![
             object!(true),
             object!(true),
+            object!(false),
+            object!(false),
             object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
             object!(true),
             object!(true),
             object!(false),
