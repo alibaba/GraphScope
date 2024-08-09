@@ -196,8 +196,11 @@ if __name__ == "__main__":
     delete_graph = sess.delete_graph(old_graph)
     print("delete graph res: ", delete_graph)
     if not delete_graph.is_ok():
-        report_message(f"Failed to delete graph {old_graph}")
+        if args.report_error:
+            report_message(f"Failed to delete graph {old_graph}")
+        raise Exception(f"fail to delete graph {old_graph}")
 
-    report_message(
-        f"Switched to graph {graph_id} successfully, restart service cost {execution_time:.6f}seconds"
-    )
+    if args.report_error:
+        report_message(
+            f"Switched to graph {graph_id} successfully, restart service cost {execution_time:.6f}seconds"
+        )
