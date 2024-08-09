@@ -19,6 +19,8 @@ data:
         server {  
             {{- $adminPort := .Values.primary.service.adminPort | int }}
             listen {{ $adminPort }};  
+            client_body_buffer_size     10M;
+            client_max_body_size        10M;
             location / {  
                 content_by_lua_block {  
                     function arrayToString(arr, separator)  
@@ -120,6 +122,7 @@ data:
                         end
                     end
 
+                    ngx.header.content_type = 'application/json'
                     if success then  
                         ngx.status = status_code
                         ngx.say(res[1])
