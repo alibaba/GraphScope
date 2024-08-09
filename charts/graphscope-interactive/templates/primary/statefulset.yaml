@@ -76,8 +76,8 @@ spec:
         - name: admin-nginx
           image: {{ include "graphscope-interactive.openresty.image" . }} 
           imagePullPolicy: {{ .Values.openresty.image.pullPolicy | quote }}
-          command: ["sleep", "infinity"]
-          #command: ["openresty", "-g",  "daemon off;"]
+          #command: ["sleep", "infinity"]
+          command: ["openresty", "-g",  "daemon off;"]
           ports:
             - name: admin-port 
               containerPort: {{ .Values.primary.service.adminPort }}

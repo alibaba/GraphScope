@@ -15,7 +15,7 @@ data:
   nginx.conf: |  
     events {}
     http {  
-        resovler {{ .Values.dnsConfig.nameservers }};
+        resolver {{ first .Values.dnsConfig.nameservers }};
         server {  
             {{- $adminPort := .Values.primary.service.adminPort | int }}
             listen {{ $adminPort }};  
@@ -25,7 +25,7 @@ data:
                     local res = {}
                     local success = true
                     local count = 0
-                    local statu_code = 0
+                    local status_code = 0
                     local error_message = nil  -- Initialize a variable to capture error messages
 
 
@@ -38,7 +38,7 @@ data:
                         {{ printf "http://%s-0.%s:%d" $baseName $serviceName $port | quote }}
                         {{- else }}
                         {{- range $i := until (sub $replicaCount 1 | int )  }}  
-                        {{ printf "\"http://%s-$i.%s:%d\"," $baseName $serviceName $port  }}
+                        {{ printf "\"http://%s-%d.%s:%d\"," $baseName $i $serviceName $port  }}
                         {{- end }}
                         {{ printf "http://%s-%d.%s:%d" $baseName (sub $replicaCount 1) $serviceName $port | quote }}
                         {{- end }}
