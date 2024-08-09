@@ -21,7 +21,8 @@ import os
 import time
 import unittest
 
-import pytest
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
@@ -355,9 +356,8 @@ class TestDriver(unittest.TestCase):
 
     def createCppProcedure(self):
         self._cpp_proc_name = "test_procedure_cpp"
-        # read strings from file ../../java/src/test/resources/sample_app.cc
         app_path = os.path.join(
-            os.path.dirname(__file__), "../../java/src/test/resources/sample_app.cc"
+            os.path.dirname(__file__), "../../../java/src/test/resources/sample_app.cc"
         )
         if not os.path.exists(app_path):
             raise Exception("sample_app.cc not found")
@@ -380,8 +380,6 @@ class TestDriver(unittest.TestCase):
         )
         assert resp.is_ok()
         print("restart: ", resp.get_value())
-        # wait 5 seconds
-        time.sleep(5)
         # get service status
         resp = self._sess.get_service_status()
         assert resp.is_ok()
@@ -477,7 +475,6 @@ class TestDriver(unittest.TestCase):
         )
         assert start_service_res.is_ok()
         print("finish restartOnNewGraph")
-        time.sleep(5)
 
     def getStatistics(self):
         resp = self._sess.get_graph_statistics(self._graph_id)
@@ -504,8 +501,6 @@ class TestDriver(unittest.TestCase):
             start_service_request=StartServiceRequest(graph_id=self._graph_id)
         )
         assert start_res.is_ok()
-        # wait 5 seconds
-        time.sleep(5)
 
     def callProcedureWithHttp(self):
         req = QueryRequest(
