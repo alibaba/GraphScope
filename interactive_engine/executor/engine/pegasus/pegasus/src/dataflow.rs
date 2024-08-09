@@ -14,11 +14,16 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Write;
 use std::fs::File;
+use std::net::SocketAddr;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
+
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_network::{InboxRegister, NetData};
 
 use crate::api::meta::OperatorInfo;
 use crate::channel_id::ChannelInfo;
@@ -41,10 +46,16 @@ pub struct DataflowBuilder {
     operators: Rc<RefCell<Vec<OperatorBuilder>>>,
     edges: Rc<RefCell<Vec<Edge>>>,
     sinks: Rc<RefCell<Vec<usize>>>,
+    pub msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
+    pub recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
 }
 
 impl DataflowBuilder {
-    pub(crate) fn new(worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>) -> Self {
+    pub(crate) fn new(
+        worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>,
+        msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
+        recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
+    ) -> Self {
         DataflowBuilder {
             worker_id,
             config: config.clone(),
@@ -53,6 +64,8 @@ impl DataflowBuilder {
             event_emitter,
             ch_index: Rc::new(RefCell::new(1)),
             sinks: Rc::new(RefCell::new(vec![])),
+            msg_senders,
+            recv_register,
         }
     }
 
@@ -85,7 +98,7 @@ impl DataflowBuilder {
         let index = self.operators.borrow().len() + 1;
         let info = OperatorInfo::new(name, index, scope_level);
         let core = Box::new(construct(&info));
-        let op_b = OperatorBuilder::new(info, GeneralOperator::Simple(core));
+        let op_b = OperatorBuilder::new(info, GeneralOperator::Simple(core), self.worker_id);
         self.operators.borrow_mut().push(op_b);
         OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }
@@ -100,7 +113,7 @@ impl DataflowBuilder {
         let index = self.operators.borrow().len() + 1;
         let info = OperatorInfo::new(name, index, scope_level);
         let core = Box::new(construct(&info));
-        let op_b = OperatorBuilder::new(info, GeneralOperator::Notifiable(core));
+        let op_b = OperatorBuilder::new(info, GeneralOperator::Notifiable(core), self.worker_id);
         self.operators.borrow_mut().push(op_b);
         OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }
@@ -131,19 +144,24 @@ impl DataflowBuilder {
         let mut op_names = vec![];
         op_names.push("root".to_owned());
         let mut depends = Dependency::default();
-        sch.add_schedule_op(0, 0, vec![], vec![]);
+        sch.add_schedule_op(self.worker_id, 0, 0, vec![], vec![]);
         let sinks = self.sinks.replace(vec![]);
         depends.set_sinks(sinks);
         for e in self.edges.borrow().iter() {
             depends.add(e);
         }
-
         for (i, mut op_b) in builds.drain(..).enumerate() {
             let op_index = op_b.index();
             assert_eq!(i + 1, op_index, "{:?}", op_b.info);
             let inputs_notify = op_b.take_inputs_notify();
             let outputs_cancel = op_b.build_outputs_cancel();
-            sch.add_schedule_op(op_index, op_b.info.scope_level, inputs_notify, outputs_cancel);
+            sch.add_schedule_op(
+                self.worker_id,
+                op_index,
+                op_b.info.scope_level,
+                inputs_notify,
+                outputs_cancel,
+            );
             let op = op_b.build();
             op_names.push(op.info.name.clone());
             if report {
@@ -197,6 +215,8 @@ impl Clone for DataflowBuilder {
             ch_index: self.ch_index.clone(),
             edges: self.edges.clone(),
             sinks: self.sinks.clone(),
+            msg_senders: self.msg_senders,
+            recv_register: self.recv_register,
         }
     }
 }

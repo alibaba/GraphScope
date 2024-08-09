@@ -81,8 +81,7 @@ impl DynPeers {
         DynPeers { mask: PeerSet::Partial(set) }
     }
 
-    pub fn all() -> Self {
-        let peers = crate::worker_id::get_current_worker().total_peers();
+    pub fn all(peers: u32) -> Self {
         DynPeers { mask: PeerSet::All(peers) }
     }
 
@@ -245,14 +244,9 @@ impl EndOfScope {
         self.global_total_send += other.global_total_send;
     }
 
-    pub fn update_peers(&mut self, mut peers: DynPeers) {
+    pub fn update_peers(&mut self, mut peers: DynPeers, total_peers: u32) {
         if peers.value() == 0 {
-            let owner = if self.tag.len() == 0 {
-                0
-            } else {
-                let peers = crate::worker_id::get_current_worker().total_peers();
-                self.tag.current_uncheck() % peers
-            };
+            let owner = if self.tag.len() == 0 { 0 } else { self.tag.current_uncheck() % total_peers };
             peers = DynPeers::single(owner);
         }
         trace_worker!("update peers from {:?} to {:?} of scope {:?}", self.peers, peers, self.tag);
@@ -267,11 +261,10 @@ impl EndOfScope {
         &self.peers
     }
 
-    pub(crate) fn contains_source(&self, src: u32) -> bool {
+    pub(crate) fn contains_source(&self, src: u32, total_peers: u32) -> bool {
         if !self.tag.is_root() {
             // get owner worker index of subtask
-            let owner_index =
-                self.tag.current_uncheck() % crate::worker_id::get_current_worker().total_peers();
+            let owner_index = self.tag.current_uncheck() % total_peers;
             if owner_index != src {
                 // current worker has input
                 self.peers.value() > 0 && self.peers.contains_source(src)
