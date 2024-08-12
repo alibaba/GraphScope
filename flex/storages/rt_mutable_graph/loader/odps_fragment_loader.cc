@@ -355,6 +355,8 @@ Result<bool> ODPSFragmentLoader::LoadFragment() {
 
     basic_fragment_loader_.LoadFragment();
   } catch (const std::exception& e) {
+    auto work_dir = basic_fragment_loader_.work_dir();
+    printDiskRemaining(work_dir);
     LOG(ERROR) << "Failed to load fragment: " << e.what();
     return Result<bool>(StatusCode::InternalError,
                         "Load fragment failed: " + std::string(e.what()),

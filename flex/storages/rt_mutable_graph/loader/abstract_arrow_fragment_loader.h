@@ -34,6 +34,8 @@
 namespace gs {
 
 // The interface providing visitor pattern for RecordBatch.
+
+void printDiskRemaining(std::string path);
 class IRecordBatchSupplier {
  public:
   virtual ~IRecordBatchSupplier() = default;
