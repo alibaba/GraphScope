@@ -45,9 +45,6 @@ if [ ! -f ${CBO_ENGINE_CONFIG_PATH} ]; then
 fi
 
 
-# kill service when exit
-trap kill_service EXIT
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
@@ -94,7 +91,7 @@ test_codegen_on_ldbc_rbo(){
         echo $cmd
         eval ${cmd} || exit 1
     done
-    sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ../tests/hqps/engine_config_test.yaml
+    sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${RBO_ENGINE_CONFIG_PATH}
 }
 
 test_codegen_on_movie_rbo(){
@@ -109,7 +106,7 @@ test_codegen_on_movie_rbo(){
         echo $cmd
         eval ${cmd} || exit 1
     done
-    sed -i 's/default_graph: movies/default_graph: modern_graph/g' ../tests/hqps/engine_config_test.yaml
+    sed -i 's/default_graph: movies/default_graph: modern_graph/g' ${RBO_ENGINE_CONFIG_PATH}
 }
 
 test_codegen_on_graph_algo(){
@@ -125,7 +122,7 @@ test_codegen_on_graph_algo(){
         echo $cmd
         eval ${cmd} || exit 1
     done
-    sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ../tests/hqps/engine_config_test.yaml
+    sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ${RBO_ENGINE_CONFIG_PATH}
 }
 
 test_codegen_on_ldbc_cbo
