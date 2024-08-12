@@ -12,11 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/statvfs.h>
 
-#include "flex/storages/rt_mutable_graph/loader/abstract_arrow_fragment_loader.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/storages/rt_mutable_graph/loader/abstract_arrow_fragment_loader.h"
 
 namespace gs {
+
+void printDiskRemaining(const std::string& path) {
+  struct statvfs buf;
+  if (statvfs(path.c_str(), &buf) == 0) {
+    LOG(INFO) << "Disk remaining: " << buf.f_bsize * buf.f_bavail / 1024 / 1024
+              << "MB";
+  }
+}
 
 bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
   if (data_type->Equals(arrow::int64()) || data_type->Equals(arrow::uint64()) ||
