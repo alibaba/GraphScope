@@ -20,4 +20,4 @@ sphinxemoji
 sphinxext-opengraph
 tomli
 wheel
-setuptools==65.7.0
+setuptools==70.0.0

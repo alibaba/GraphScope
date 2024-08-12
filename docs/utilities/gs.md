@@ -41,7 +41,7 @@ Default, the `gsctl` provide helper functions and utilities that can be run usin
 
 ### Client/Server Mode
 
-To switch to the client/server mode, use the `gsctl connect` command. By default, this command connects gsctl to a launched coordinator using the configuration file located at `${HOME}/.gsctl`;  If `--coordinator-endpoint` parameter is specified, it will treat it as the current context and override the configuration file.
+To switch to the client/server mode, use the `gsctl connect` command. By default, this command connects gsctl to a launched coordinator using the configuration file located at `${HOME}/.gsctl`;  If `--coordinator-endpoint` parameter is specified, it will treat it as current context and override the configuration file.
 
 Once connected, you can use `gsctl` to communicate with the coordinator which serves the specific Flex product behind it.
 

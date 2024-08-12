@@ -22,7 +22,6 @@ import java.util.List;
 
 /**
  * All APIs about procedure management.
- * TODO(zhanglei): differ between ProcedureRequest and Procedure
  */
 public interface ProcedureInterface {
     Result<CreateProcedureResponse> createProcedure(

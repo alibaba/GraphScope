@@ -16,6 +16,7 @@ package com.alibaba.graphscope.groot.store.jna;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.exception.ExternalStorageErrorException;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.backup.GraphPartitionBackup;
@@ -103,7 +104,7 @@ public class JnaGraphStore implements GraphPartition {
                         this.pointer, snapshotId, dataBytes, dataBytes.length)) {
             if (!response.success()) {
                 String errMsg = response.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
             return response.hasDdl();
         }
@@ -114,7 +115,7 @@ public class JnaGraphStore implements GraphPartition {
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphDefBlob(this.pointer)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
             return GraphDefPb.parseFrom(jnaResponse.getData());
         }
@@ -125,7 +126,7 @@ public class JnaGraphStore implements GraphPartition {
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphStatistics(this.pointer, si)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
             return Statistics.parseFrom(jnaResponse.getData());
         }
@@ -156,7 +157,7 @@ public class JnaGraphStore implements GraphPartition {
         try (JnaResponse response =
                 GraphLibrary.INSTANCE.garbageCollectSnapshot(this.pointer, snapshotId)) {
             if (!response.success()) {
-                throw new IOException(response.getErrMsg());
+                throw new ExternalStorageErrorException(response.getErrMsg());
             }
         }
     }
@@ -166,7 +167,7 @@ public class JnaGraphStore implements GraphPartition {
         ensurePointer();
         try (JnaResponse response = GraphLibrary.INSTANCE.tryCatchUpWithPrimary(this.pointer)) {
             if (!response.success()) {
-                throw new IOException(response.getErrMsg());
+                throw new ExternalStorageErrorException(response.getErrMsg());
             }
         }
     }
@@ -176,7 +177,7 @@ public class JnaGraphStore implements GraphPartition {
         ensurePointer();
         try (JnaResponse response = GraphLibrary.INSTANCE.reopenSecondary(this.pointer, wait_sec)) {
             if (!response.success()) {
-                throw new IOException(response.getErrMsg());
+                throw new ExternalStorageErrorException(response.getErrMsg());
             }
         }
     }
@@ -186,14 +187,14 @@ public class JnaGraphStore implements GraphPartition {
         ensurePointer();
         try (JnaResponse response = GraphLibrary.INSTANCE.compact(this.pointer)) {
             if (!response.success()) {
-                throw new IOException(response.getErrMsg());
+                throw new ExternalStorageErrorException(response.getErrMsg());
             }
         }
     }
 
     private void ensurePointer() throws IOException {
         if (this.pointer == null) {
-            throw new IOException("JNA pointer is null");
+            throw new ExternalStorageErrorException("JNA pointer is null");
         }
     }
 }

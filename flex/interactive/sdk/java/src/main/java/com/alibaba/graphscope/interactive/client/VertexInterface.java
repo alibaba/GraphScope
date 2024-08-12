@@ -22,7 +22,7 @@ import com.alibaba.graphscope.interactive.models.*;
  * Create/Update/Read/Delete vertex
  */
 public interface VertexInterface {
-    Result<String> addVertex(String graphId, VertexRequest request);
+    Result<String> addVertex(String graphId, VertexEdgeRequest request);
 
     Result<String> updateVertex(String graphId, VertexRequest request);
 

@@ -23,7 +23,7 @@ jobs:
   pegasus-build:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build & Test
       run: |
@@ -51,7 +51,7 @@ jobs:
 #  k8s-test:
 #    runs-on: [self-hosted, ubuntu2004]
 #    steps:
-#    - uses: actions/checkout@v3
+#    - uses: actions/checkout@v4
 #
 #    - name: Detect the tmate session
 #      run: |

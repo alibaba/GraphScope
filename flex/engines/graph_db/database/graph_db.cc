@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/app/adhoc_app.h"
 #include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -404,12 +405,12 @@ void GraphDB::initApps(
   }
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
-#ifdef BUILD_HQPS
   app_factories_[Schema::HQPS_ADHOC_READ_PLUGIN_ID] =
       std::make_shared<HQPSAdhocReadAppFactory>();
   app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
       std::make_shared<HQPSAdhocWriteAppFactory>();
-#endif  // BUILD_HQPS
+  app_factories_[Schema::ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<AdhocReadAppFactory>();
 
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {

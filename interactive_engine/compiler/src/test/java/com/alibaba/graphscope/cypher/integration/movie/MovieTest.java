@@ -126,7 +126,6 @@ public class MovieTest {
 
     @Test
     public void run_movie_query16_test() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query16_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -134,7 +133,6 @@ public class MovieTest {
 
     @Test
     public void run_movie_query17_test() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query17_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -142,7 +140,6 @@ public class MovieTest {
 
     @Test
     public void run_movie_query18_test() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query18_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -150,7 +147,6 @@ public class MovieTest {
 
     @Test
     public void run_movie_query19_test() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query19_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());

@@ -21,6 +21,7 @@
 #include <string>
 #include <tuple>
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/utils/exception.h"
 
 namespace gs {
 
@@ -607,8 +608,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                ++it) {
             // override previous settings.
             auto key = it->first.as<std::string>();
-            VLOG(1) << "Got metadata key: " << key
-                    << " value: " << it->second.as<std::string>();
+            if (key != reader_options::NULL_VALUES) {
+              VLOG(1) << "Got metadata key: " << key
+                      << " value: " << it->second.as<std::string>();
+            }
             if (reader_options::CSV_META_KEY_WORDS.find(key) !=
                 reader_options::CSV_META_KEY_WORDS.end()) {
               if (key == reader_options::BATCH_SIZE_KEY) {
@@ -618,6 +621,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                 auto block_size = parse_block_size(block_size_str);
                 load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
                     std::to_string(block_size);
+              } else if (key == reader_options::NULL_VALUES) {
+                // special case for null values
+                auto null_values = it->second.as<std::vector<std::string>>();
+                load_config.null_values_ = null_values;
               } else {
                 load_config.metadata_[key] = it->second.as<std::string>();
               }
@@ -844,6 +851,10 @@ bool LoadingConfig::GetIsDoubleQuoting() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
+const std::vector<std::string>& LoadingConfig::GetNullValues() const {
+  return null_values_;
+}
+
 int32_t LoadingConfig::GetBatchSize() const {
   if (metadata_.find(reader_options::BATCH_SIZE_KEY) == metadata_.end()) {
     return reader_options::DEFAULT_BLOCK_SIZE;
@@ -882,8 +893,9 @@ LoadingConfig::GetEdgeLoadingMeta() const {
 
 const std::vector<std::tuple<size_t, std::string, std::string>>&
 LoadingConfig::GetVertexColumnMappings(label_t label_id) const {
-  CHECK(vertex_column_mappings_.find(label_id) !=
-        vertex_column_mappings_.end());
+  THROW_EXCEPTION_IF(
+      vertex_column_mappings_.find(label_id) == vertex_column_mappings_.end(),
+      "Vertex label id not found in vertex column mappings");
   return vertex_column_mappings_.at(label_id);
 }
 
@@ -891,7 +903,9 @@ const std::vector<std::tuple<size_t, std::string, std::string>>&
 LoadingConfig::GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
                                      label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);
-  CHECK(edge_column_mappings_.find(key) != edge_column_mappings_.end());
+  THROW_EXCEPTION_IF(
+      edge_column_mappings_.find(key) == edge_column_mappings_.end(),
+      "Edge label id not found in edge column mappings");
   return edge_column_mappings_.at(key);
 }
 
@@ -900,7 +914,8 @@ const std::pair<std::vector<std::pair<std::string, size_t>>,
 LoadingConfig::GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);
-  CHECK(edge_src_dst_col_.find(key) != edge_src_dst_col_.end());
+  THROW_EXCEPTION_IF(edge_src_dst_col_.find(key) == edge_src_dst_col_.end(),
+                     "Edge label id not found in edge column mappings");
   return edge_src_dst_col_.at(key);
 }
 

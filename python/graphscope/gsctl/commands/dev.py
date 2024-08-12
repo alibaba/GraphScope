@@ -125,9 +125,7 @@ def interactive(app, graphscope_repo):
     """Build Interactive for high throughput scenarios"""
     if graphscope_repo is None:
         graphscope_repo = default_graphscope_repo_path
-    interactive_build_dir = os.path.join(
-        graphscope_repo, "flex", "interactive", "docker"
-    )
+    interactive_build_dir = os.path.join(graphscope_repo, "k8s")
     if not os.path.exists(interactive_build_dir) or not os.path.isdir(
         interactive_build_dir
     ):
@@ -136,7 +134,7 @@ def interactive(app, graphscope_repo):
             fg="red",
         )
         return
-    cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
+    cmd = ["make", "flex-interactive", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
 
 

@@ -18,8 +18,8 @@
 
 import inspect
 
-from graphscope.proto import error_codes_pb2
 from graphscope.proto import op_def_pb2
+from graphscope.proto.error import coordinator_pb2
 
 # All kinds of GraphScope error.
 __all__ = [
@@ -49,7 +49,7 @@ __all__ = [
 class _ReprableString(str):
     """A special class that prevents `repr()` adding extra `""` to `str`.
 
-    It is used to optimize the user experiences to preseve `\n` when printing exceptions.
+    It is used to optimize the user experiences to preserve `\n` when printing exceptions.
     """
 
     def __repr__(self) -> str:
@@ -149,27 +149,69 @@ class RetriesExceededError(GSError):
     pass
 
 
+class CancelledError(GSError):
+    pass
+
+
+class ResourceExhaustedError(GSError):
+    pass
+
+
+class PortInUseError(GSError):
+    pass
+
+
+class UnsupportedOperationError(GSError):
+    pass
+
+
+class IllegalStateError(GSError):
+    pass
+
+
+class NetworkFailureError(GSError):
+    pass
+
+
+class ConnectionError(GSError):
+    pass
+
+
+class GremlinQueryError(GSError):
+    pass
+
+
+class WorkerResultsInconsistentError(GSError):
+    pass
+
+
 _gs_error_types = {
-    error_codes_pb2.TIMEOUT_ERROR: TimeoutError,
-    error_codes_pb2.NOT_FOUND_ERROR: NotFoundError,
-    error_codes_pb2.CONNECTION_ERROR: ConnectionError,
-    error_codes_pb2.VINEYARD_ERROR: VineyardError,
-    error_codes_pb2.COMPILATION_ERROR: CompilationError,
-    error_codes_pb2.ALREADY_EXISTS_ERROR: AlreadyExistsError,
-    error_codes_pb2.UDF_INTERNAL_ERROR: UDFInternalError,
-    error_codes_pb2.UNAVAILABLE_ERROR: UnavailableError,
-    error_codes_pb2.INVALID_ARGUMENT_ERROR: InvalidArgumentError,
-    error_codes_pb2.PERMISSION_DENIED_ERROR: PermissionDeniedError,
-    error_codes_pb2.NETWORK_ERROR: NetworkError,
-    error_codes_pb2.K8S_ERROR: K8sError,
-    error_codes_pb2.UNIMPLEMENTED_ERROR: UnimplementedError,
-    error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR: AnalyticalEngineInternalError,
-    error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR: InteractiveEngineInternalError,
-    error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR: LearningEngineInternalError,
-    error_codes_pb2.COORDINATOR_INTERNAL_ERROR: CoordinatorInternalError,
-    error_codes_pb2.UNKNOWN_ERROR: UnknownError,
-    error_codes_pb2.FATAL_ERROR: FatalError,
-    error_codes_pb2.RETRIES_EXCEEDED_ERROR: RetriesExceededError,
+    coordinator_pb2.CANCELLED: CancelledError,
+    coordinator_pb2.INVALID_ARGUMENT: InvalidArgumentError,
+    coordinator_pb2.TIMEOUT: TimeoutError,
+    coordinator_pb2.NOT_FOUND: NotFoundError,
+    coordinator_pb2.ALREADY_EXISTS: AlreadyExistsError,
+    coordinator_pb2.RESOURCE_EXHAUSTED: ResourceExhaustedError,
+    coordinator_pb2.UNIMPLEMENTED: UnimplementedError,
+    coordinator_pb2.PERMISSION_DENIED: PermissionDeniedError,
+    coordinator_pb2.COMPILATION_FAILURE: CompilationError,
+    coordinator_pb2.PORT_IN_USE: PortInUseError,
+    coordinator_pb2.UNSUPPORTED_OPERATION: UnsupportedOperationError,
+    coordinator_pb2.ILLEGAL_STATE: IllegalStateError,
+    coordinator_pb2.NETWORK_FAILURE: NetworkFailureError,
+    coordinator_pb2.CONNECTION_ERROR: ConnectionError,
+    coordinator_pb2.VINEYARD_ERROR: VineyardError,
+    coordinator_pb2.UDF_INTERNAL_ERROR: UDFInternalError,
+    coordinator_pb2.K8S_ERROR: K8sError,
+    coordinator_pb2.GREMLIN_QUERY_ERROR: GremlinQueryError,
+    coordinator_pb2.RETRIES_EXCEEDED_ERROR: RetriesExceededError,
+    coordinator_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR: AnalyticalEngineInternalError,
+    coordinator_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR: InteractiveEngineInternalError,
+    coordinator_pb2.LEARNING_ENGINE_INTERNAL_ERROR: LearningEngineInternalError,
+    coordinator_pb2.COORDINATOR_INTERNAL_ERROR: CoordinatorInternalError,
+    coordinator_pb2.WORKER_RESULTS_INCONSISTENT_ERROR: WorkerResultsInconsistentError,
+    coordinator_pb2.UNKNOWN_ERROR: UnknownError,
+    coordinator_pb2.FATAL_ERROR: FatalError,
 }
 
 

@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
@@ -68,12 +68,12 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(String s) throws GraphElementNotFoundException {
+    public GraphElement getElement(String s) throws TypeNotFoundException {
         return this.graphSchema.getElement(s);
     }
 
     @Override
-    public GraphElement getElement(int i) throws GraphElementNotFoundException {
+    public GraphElement getElement(int i) throws TypeNotFoundException {
         return this.graphSchema.getElement(i);
     }
 
@@ -88,12 +88,12 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public Integer getPropertyId(String s) throws GraphPropertyNotFoundException {
+    public Integer getPropertyId(String s) throws PropertyNotFoundException {
         return this.graphSchema.getPropertyId(s);
     }
 
     @Override
-    public String getPropertyName(int i) throws GraphPropertyNotFoundException {
+    public String getPropertyName(int i) throws PropertyNotFoundException {
         return this.graphSchema.getPropertyName(i);
     }
 
