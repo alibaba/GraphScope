@@ -20,6 +20,41 @@
 
 namespace gs {
 
+void read_file(const std::string& filename, void* buffer, size_t size,
+               size_t num) {
+  FILE* fin = fopen(filename.c_str(), "r");
+  if (fin == nullptr) {
+    LOG(FATAL) << "Failed to open file " << filename << ", " << strerror(errno);
+  }
+  size_t ret_len = 0;
+  if ((ret_len = fread(buffer, size, num, fin)) != num) {
+    LOG(FATAL) << "Failed to read file " << filename << ", expected " << num
+               << ", got " << ret_len << ", " << strerror(errno);
+  }
+  int ret = 0;
+  if ((ret = fclose(fin)) != 0) {
+    LOG(FATAL) << "Failed to close file " << filename << ", error code: " << ret
+               << " " << strerror(errno);
+  }
+}
+
+void write_file(const std::string& filename, const void* buffer, size_t size,
+                size_t num) {
+  FILE* fout = fopen(filename.c_str(), "w");
+  if (fout == nullptr) {
+    LOG(FATAL) << "Failed to open file " << filename << ", " << strerror(errno);
+  }
+  size_t ret_len = 0;
+  if ((ret_len = fwrite(buffer, size, num, fout)) != num) {
+    LOG(FATAL) << "Failed to write file " << filename << ", expected " << num
+               << ", got " << ret_len << ", " << strerror(errno);
+  }
+  int ret = 0;
+  if ((ret = fclose(fout)) != 0) {
+    LOG(FATAL) << "Failed to close file " << filename << ", error code: " << ret
+               << " " << strerror(errno);
+  }
+}
 template class SingleMutableCsr<grape::EmptyType>;
 template class MutableCsr<grape::EmptyType>;
 
