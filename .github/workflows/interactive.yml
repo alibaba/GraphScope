@@ -203,7 +203,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_codegen_cbo_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ./engine_config_test_cbo.yaml
+        bash hqps_codegen_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ./engine_config_test_cbo.yaml
 
     - name: Test cypher&cpp procedure generation and loading
       env:
