@@ -109,7 +109,6 @@ public class KafkaAppender {
             String requestId, OperationBatch operationBatch, IngestCallback callback) {
         checkStarted();
         // logger.info("ingestBatch requestId [{}]", requestId);
-        logger.info("ingestBatch size: {}", operationBatch.getOperationCount());
         if (this.ingestSnapshotId.get() == -1L) {
             throw new IllegalStateException("ingestor has no valid ingestSnapshotId");
         }
@@ -160,7 +159,8 @@ public class KafkaAppender {
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
                     int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
-                    logger.info("Log writer append partitionId [{}], batch size: {}", storeId, batch.getOperationCount());
+                    // logger.info("Log writer append storeId [{}], batch size: {}", storeId,
+                    // batch.getOperationCount());
                     logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                 }
             } catch (Exception e) {
@@ -199,7 +199,6 @@ public class KafkaAppender {
         Function<Integer, OperationBatch.Builder> storeDataBatchBuilderFunc =
                 k -> OperationBatch.newBuilder();
         String traceId = operationBatch.getTraceId();
-        logger.info("Before split batch, size: {}", operationBatch.getOperationCount());
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {
@@ -224,11 +223,6 @@ public class KafkaAppender {
                 }
             }
         }
-        int count = 0;
-        for (OperationBatch.Builder v : storeToBatchBuilder.values()) {
-            count += v.getOperationCount();
-        }
-        logger.info("After split batch, size: {}", count);
         return storeToBatchBuilder;
     }
 
@@ -295,7 +289,6 @@ public class KafkaAppender {
                             + "]");
         }
         try {
-            logger.info("ingest marker batch, size: {}", MARKER_BATCH.getOperationCount());
             ingestBatch(
                     "marker",
                     MARKER_BATCH,

@@ -115,7 +115,8 @@ public class KafkaProcessor {
         if (this.persistOffsetsScheduler != null) {
             this.persistOffsetsScheduler.shutdown();
             try {
-                boolean ignored  =this.persistOffsetsScheduler.awaitTermination(3000, TimeUnit.MILLISECONDS);
+                boolean ignored =
+                        this.persistOffsetsScheduler.awaitTermination(3000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 // Ignore
             }
