@@ -80,7 +80,7 @@ public class IrLdbcTest {
 
     @Test
     public void run_ldbc_7_test() {
-        // skip this test in pegasus (actually exp-store) since the date format is different 
+        // skip this test in pegasus (actually exp-store) since the date format is different
         assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
