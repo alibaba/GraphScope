@@ -2,9 +2,9 @@
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 ARG ARCH=x86_64
 ARG ENABLE_COORDINATOR="false"
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
