@@ -17,73 +17,63 @@ package com.alibaba.graphscope.interactive.client.common;
 
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
+import com.alibaba.graphscope.proto.Code;
 
 /**
  * Mapping http status code to our status code, along with a message
  */
 public class Status {
-    enum StatusCode {
-        kOk, // 200
-        kBadRequest, // 400
-        kForbidden, // 403
-        kNotFound, // 404
-        kServerInternalError, // 500
-        kServiceUnavailable, // 503
-        kUnknown, // default
-    }
 
-    private final StatusCode code;
+    private final Code code;
     private final String message;
 
     public Status() {
-        this.code = StatusCode.kUnknown;
+        this.code = Code.OK;
         this.message = "";
     }
 
     public boolean IsOk() {
-        return this.code == StatusCode.kOk;
+        return this.code == Code.OK;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public StatusCode getCode() {
+    public Code getCode() {
         return this.code;
     }
 
-    public Status(StatusCode code, String message) {
+    public Status(Code code, String message) {
         this.code = code;
         this.message = message;
     }
 
     public static Status ok(String message) {
-        return new Status(StatusCode.kOk, message);
+        return new Status(Code.OK, message);
     }
 
     public static Status badRequest(String message) {
-        return new Status(StatusCode.kBadRequest, message);
+        return new Status(Code.BAD_REQUEST, message);
     }
 
     public static Status serverInternalError(String message) {
-        return new Status(StatusCode.kServerInternalError, message);
+        return new Status(Code.INTERNAL_ERROR, message);
     }
 
     public static Status fromException(ApiException exception) {
         // mapping exception's http code to our status code
         switch (exception.getCode()) {
             case 400:
-                return new Status(StatusCode.kBadRequest, exception.getMessage());
+                return new Status(Code.BAD_REQUEST, exception.getMessage());
             case 403:
-                return new Status(StatusCode.kForbidden, exception.getMessage());
+                return new Status(Code.PERMISSION_DENIED, exception.getMessage());
             case 404:
-                return new Status(StatusCode.kNotFound, exception.getMessage());
-            case 500:
-                return new Status(StatusCode.kServerInternalError, exception.getMessage());
+                return new Status(Code.NOT_FOUND, exception.getMessage());
             case 503:
-                return new Status(StatusCode.kServiceUnavailable, exception.getMessage());
+                return new Status(Code.SERVICE_UNAVAILABLE, exception.getMessage());
             default:
-                return new Status(StatusCode.kUnknown, exception.getMessage());
+                return new Status(Code.INTERNAL_ERROR, exception.getMessage());
         }
     }
 
@@ -91,23 +81,21 @@ public class Status {
         // mapping response's http code to our status code
         switch (response.getStatusCode()) {
             case 200:
-                return new Status(StatusCode.kOk, "");
+                return new Status(Code.OK,"OK");
             case 400:
-                return new Status(StatusCode.kBadRequest, "");
+                return new Status(Code.BAD_REQUEST, "Bad request");
             case 403:
-                return new Status(StatusCode.kForbidden, "");
+                return new Status(Code.PERMISSION_DENIED, "Permission denied");
             case 404:
-                return new Status(StatusCode.kNotFound, "");
-            case 500:
-                return new Status(StatusCode.kServerInternalError, "");
+                return new Status(Code.NOT_FOUND, "Not found");
             case 503:
-                return new Status(StatusCode.kServiceUnavailable, "");
+                return new Status(Code.SERVICE_UNAVAILABLE, "Service unavailable");
             default:
-                return new Status(StatusCode.kUnknown, "");
+                return new Status(Code.INTERNAL_ERROR, "Internal error");
         }
     }
 
     public static Status Ok() {
-        return new Status(StatusCode.kOk, "");
+        return new Status(Code.OK, "");
     }
 }
