@@ -19,10 +19,10 @@ import com.alibaba.graphscope.gaia.clients.GraphClient;
 import com.alibaba.graphscope.gaia.clients.GraphSystem;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
-import com.alibaba.graphscope.gaia.utils.ResultComparator;
 import com.alibaba.graphscope.gaia.utils.BenchmarkSystemUtil;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
+import com.alibaba.graphscope.gaia.utils.ResultComparator;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;

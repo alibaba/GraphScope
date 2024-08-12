@@ -55,7 +55,7 @@ public class CollectResult {
                 } else {
                     Matcher matcher = queryNamePattern.matcher(line);
                     if (matcher.find()) {
-                        String queryName = matcher.group(1).trim(); // 获取匹配到的 queryName
+                        String queryName = matcher.group(1).trim();
                         if (line.contains("ExecuteTimeMS")) {
                             long execTime =
                                     Long.parseLong(
@@ -93,16 +93,23 @@ public class CollectResult {
                                                             system + " P99",
                                                             system + " Count"
                                                         }))
-                                .collect(Collectors.joining(" | "))
-                        + " |");
+                                .collect(Collectors.joining(" | ")));
 
         System.out.println(
-                "|-----------| "
+                "| --------- | "
                         + systemQueryResults.keySet().stream()
-                                .map(
+                                .flatMap(
                                         system ->
-                                                "|----------|----------|----------|----------|----------|")
-                                .collect(Collectors.joining(" "))
+                                                Arrays.stream(
+                                                        new String[] {
+                                                            "---------",
+                                                            "---------",
+                                                            "---------",
+                                                            "---------",
+                                                            "---------",
+                                                            "---------"
+                                                        }))
+                                .collect(Collectors.joining(" | "))
                         + " |");
 
         List<String> sortedQueryNames =
