@@ -54,6 +54,9 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && \
         python3 setup.py build_proto && python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
+        cd ${HOME}/GraphScope/python && \
+        export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
