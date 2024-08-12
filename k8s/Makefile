@@ -162,10 +162,10 @@ flex-interactive:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 		--target runtime \
-		--build-arg ARCH=$(ARCH) \
 		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg PLATFORM=${PLATFORM} \
 		--build-arg ARCH=${ARCH} \
 		-t graphscope/interactive:${VERSION}  \
 		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile .

@@ -1,10 +1,10 @@
 # Coordinator of graphscope engines
 
+ARG PLATFORM=x86_64
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
-ARG ARCH=x86_64
 ARG ENABLE_COORDINATOR="false"
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
@@ -63,7 +63,7 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 ########################### RUNTIME IMAGE ###########################
 
 from ubuntu:22.04 as runtime
-ARG ARCH
+ARG PLATFORM=x86_64
 ARG ENABLE_COORDINATOR="false"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -107,42 +107,42 @@ RUN sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
 
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libsnappy*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libgflags*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_filesystem*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libhwloc*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libglog*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libyaml-cpp*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libmpi*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_program_options*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_filesystem*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_thread*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libcrypto*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libopen-rte*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libhwloc*.so* /usr/lib/$PLATFORM-linux-gnu/
 
 # libunwind for arm64 seems not installed here, and seems not needed for aarch64(tested)
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libunwind*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-pal*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libltdl*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libevent*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libutf8proc*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libre2*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libunwind*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libarrow.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libopen-pal*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libevent*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libutf8proc*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libre2*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libprotobuf* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libfmt*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* /usr/lib/$PLATFORM-linux-gnu/
 
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/openmpi/include/ /opt/flex/include
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/openmpi/include/ /opt/flex/include
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 
-RUN sudo rm -rf /usr/lib/$ARCH-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcuda.so && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcudart.so && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libicudata.so*
+RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libcuda.so && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libcudart.so && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libicudata.so*
 
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \
