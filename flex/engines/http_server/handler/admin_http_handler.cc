@@ -38,7 +38,7 @@ admin_query_result generate_final_result(
   if (result_val.size() != 1) {
     LOG(INFO) << "Only one file uploading is supported";
     return admin_query_result{gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Only one file uploading is supported"))};
   }
   for (auto& res : result_val) {

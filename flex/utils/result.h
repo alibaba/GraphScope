@@ -21,32 +21,13 @@
 #include <string>
 #include <vector>
 
+#include "flex/error_pb/interactive.pb.h"
+
 #include "glog/logging.h"
 
 namespace gs {
-enum class StatusCode {
-  OK = 0,
-  InValidArgument = 1,
-  UnsupportedOperator = 2,
-  AlreadyExists = 3,
-  NotExists = 4,
-  CodegenError = 5,
-  UninitializedStatus = 6,
-  InvalidSchema = 7,
-  PermissionError = 8,
-  IllegalOperation = 9,
-  InternalError = 10,
-  InvalidImportFile = 11,
-  IOError = 12,
-  NotFound = 13,
-  QueryFailed = 14,
-  ReopenError = 15,
-  ErrorOpenMeta = 16,
-  SQlExecutionError = 17,
-  SqlBindingError = 18,
-  Unimplemented = 19,
-  AlreadyLocked = 20,
-};
+
+using StatusCode = gs::flex::interactive::Code;
 
 class Status {
  public:
@@ -59,6 +40,8 @@ class Status {
   StatusCode error_code() const;
 
   static Status OK();
+
+  std::string ToString() const;
 
  private:
   StatusCode error_code_;
@@ -79,7 +62,7 @@ template <typename T>
 class Result {
  public:
   using ValueType = T;
-  Result() : status_(StatusCode::UninitializedStatus) {}
+  Result() : status_(StatusCode::OK) {}
   Result(const ValueType& value) : status_(StatusCode::OK), value_(value) {}
   Result(ValueType&& value)
       : status_(StatusCode::OK), value_(std::move(value)) {}

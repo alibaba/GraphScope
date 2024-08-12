@@ -28,16 +28,7 @@ from gs_interactive.exceptions import (
     ServiceException,
     UnauthorizedException,
 )
-
-
-class StatusCode(Enum):
-    OK = 0
-    BAD_REQUEST = 1
-    FORBIDDEN = 2
-    NOT_FOUND = 3
-    SERVER_INTERNAL_ERROR = 4
-    SERVICE_UNAVAILABLE = 5
-    UNKNOWN = 6
+from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
 
 
 class Status:
@@ -67,7 +58,7 @@ class Status:
     # static method create a server internal error object
     @staticmethod
     def server_internal_error(message: str):
-        return Status(StatusCode.SERVER_INTERNAL_ERROR, message)
+        return Status(StatusCode.INTERNAL_ERROR, message)
 
     @staticmethod
     def from_exception(exception: ApiException):
@@ -75,16 +66,14 @@ class Status:
         if isinstance(exception, BadRequestException):
             return Status(StatusCode.BAD_REQUEST, str(exception))
         elif isinstance(exception, ForbiddenException):
-            return Status(StatusCode.FORBIDDEN, str(exception))
+            return Status(StatusCode.PERMISSION_DENIED, str(exception))
         elif isinstance(exception, NotFoundException):
             return Status(StatusCode.NOT_FOUND, str(exception))
-        elif isinstance(exception, UnauthorizedException):
-            return Status(StatusCode.BAD_REQUEST, str(exception))
         elif isinstance(exception, ServiceException):
             if (exception.status == 503):
                 return Status(StatusCode.SERVICE_UNAVAILABLE, str(exception))
             else:
-                return Status(StatusCode.SERVER_INTERNAL_ERROR, str(exception))
+                return Status(StatusCode.INTERNAL_ERROR, str(exception))
         return Status(
             StatusCode.UNKNOWN, "Unknown Error from exception " + str(exception)
         )
@@ -97,13 +86,13 @@ class Status:
         if response.status_code == 400:
             return Status(StatusCode.BAD_REQUEST, "Bad Request")
         if response.status_code == 403:
-            return Status(StatusCode.FORBIDDEN, "Forbidden")
+            return Status(StatusCode.PERMISSION_DENIED, "Forbidden")
         if response.status_code == 404:
             return Status(StatusCode.NOT_FOUND, "Not Found")
         if response.status_code == 401:
             return Status(StatusCode.BAD_REQUEST, "Unauthorized")
         if response.status_code == 500:
-            return Status(StatusCode.SERVER_INTERNAL_ERROR, "Internal Server Error")
+            return Status(StatusCode.INTERNAL_ERROR, "Internal Server Error")
         if response.status_code == 503:
             return Status(StatusCode.SERVICE_UNAVAILABLE, "Service Unavailable")
         return Status(StatusCode.UNKNOWN, "Unknown Error")
