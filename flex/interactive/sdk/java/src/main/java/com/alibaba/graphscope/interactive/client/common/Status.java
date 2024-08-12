@@ -81,7 +81,7 @@ public class Status {
         // mapping response's http code to our status code
         switch (response.getStatusCode()) {
             case 200:
-                return new Status(Code.OK,"OK");
+                return new Status(Code.OK, "OK");
             case 400:
                 return new Status(Code.BAD_REQUEST, "Bad request");
             case 403:
