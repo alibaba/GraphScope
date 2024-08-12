@@ -135,14 +135,27 @@ def list_graph(sess: Session):
     print("list graph: ", graph_id_arr)
 
 
-def check_graph_exits(sess: Session, graph_id: str, report_error: bool):
-    resp = sess.get_graph_schema(graph_id=graph_id)
+def check_graph_exits_and_ready(sess: Session, graph_id: str, report_error: bool):
+    resp = sess.get_graph_meta(graph_id=graph_id)
     print("check graph exits: ", resp.is_ok())
     if not resp.is_ok():
         if report_error:
             report_message(f"Failed to get graph schema, graph_id: {graph_id}")
         raise Exception(f"Failed to get graph schema, graph_id: {graph_id}")
     print("graph exits: ", resp.get_value())
+    # check whether the graph contains loading config and has one procedures
+    meta = resp.get_value()
+    if meta.data_import_config is None:
+        if report_error:
+            report_message(f"Graph {graph_id} does not contain loading config")
+        raise Exception(f"Graph {graph_id} does not contain loading config")
+    print("graph has loading config")
+
+    # check whether the graph has one procedures
+    if meta.stored_procedures is None or len(meta.stored_procedures) != 1:
+        if report_error:
+            report_message(f"Graph {graph_id} does not contain one procedures")
+        raise Exception(f"Graph {graph_id} does not contain one procedures")
 
 
 if __name__ == "__main__":
@@ -178,7 +191,7 @@ if __name__ == "__main__":
     print("new graph: ", graph_id)
 
     # check if graph_id exists
-    check_graph_exits(sess, graph_id, args.report_error)
+    check_graph_exits_and_ready(sess, graph_id, args.report_error)
 
     start_time = time.time()
     restart_service(sess, graph_id, args.report_error)
