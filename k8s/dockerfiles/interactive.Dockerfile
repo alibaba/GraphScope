@@ -54,7 +54,7 @@ WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:$ARCH AS ext
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION-ARCH AS executor
+FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION-$ARCH AS executor
 
 ENV RUST_BACKTRACE=1
 
