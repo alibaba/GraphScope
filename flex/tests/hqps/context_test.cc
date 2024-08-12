@@ -31,6 +31,8 @@
 #include "glog/logging.h"
 #include "grape/types.h"
 
+#include "nlohmann/json.hpp"
+
 struct VertexSetTest {};
 struct EdgeSetTest {};
 

@@ -96,7 +96,12 @@ std::string merge_graph_and_plugin_meta(
 
   nlohmann::json res;
   for (auto& graph_meta : res_graph_metas) {
-    res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
+    try {
+      res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Fail to parse graph meta: " << e.what()
+                 << graph_meta.ToJson();
+    }
   }
   return res.empty() ? "{}" : res.dump();
 }
@@ -348,20 +353,38 @@ gs::Status invoke_delete_plugin_meta(
 
 // util functions
 
-std::string to_json_str(const std::vector<gs::PluginMeta>& plugin_metas) {
-  nlohmann::json res;
-  for (auto& plugin_meta : plugin_metas) {
-    res.push_back(nlohmann::json::parse(plugin_meta.ToJson()));
+gs::Result<seastar::sstring> to_json_str(
+    const std::vector<gs::PluginMeta>& plugin_metas) {
+  try {
+    nlohmann::json res;
+    for (auto& plugin_meta : plugin_metas) {
+      res.push_back(nlohmann::json::parse(plugin_meta.ToJson()));
+    }
+    return res.empty() ? gs::Result<seastar::sstring>("{}")
+                       : gs::Result<seastar::sstring>(res.dump());
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Fail to parse plugin meta from json string: " << e.what();
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to parse plugin meta: " + std::string(e.what())));
   }
-  return res.empty() ? "{}" : res.dump();
 }
 
-std::string to_json_str(const std::vector<gs::JobMeta>& job_metas) {
-  nlohmann::json res;
-  for (auto& job_meta : job_metas) {
-    res.push_back(nlohmann::json::parse(job_meta.ToJson(true)));
+gs::Result<seastar::sstring> to_json_str(
+    const std::vector<gs::JobMeta>& job_metas) {
+  try {
+    nlohmann::json res;
+    for (auto& job_meta : job_metas) {
+      res.push_back(nlohmann::json::parse(job_meta.ToJson()));
+    }
+    return res.empty() ? gs::Result<seastar::sstring>("{}")
+                       : gs::Result<seastar::sstring>(res.dump());
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Fail to parse job meta from json string: " << e.what();
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to parse job meta: " + std::string(e.what())));
   }
-  return res.empty() ? "{}" : res.dump();
 }
 
 admin_actor::~admin_actor() {
@@ -711,7 +734,7 @@ seastar::future<admin_query_result> admin_actor::get_procedures_by_graph_name(
                             graph_meta_res.value().plugin_metas.begin(),
                             graph_meta_res.value().plugin_metas.end());
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(to_json_str(all_plugin_metas)));
+        to_json_str(all_plugin_metas));
   } else {
     LOG(ERROR) << "Fail to get all procedures: "
                << get_all_procedure_res.status().error_message();
@@ -1145,7 +1168,15 @@ seastar::future<admin_query_result> admin_actor::service_status(
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
+          try {
+            res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
+          } catch (std::exception& e) {
+            LOG(ERROR) << "Fail to parse graph meta: " << e.what();
+            return seastar::make_exception_future<admin_query_result>(
+                gs::Status(
+                    gs::StatusCode::InternalError,
+                    "Fail to parse graph meta: " + std::string(e.what())));
+          }
         } else {
           LOG(ERROR) << "Fail to get all procedures: "
                      << get_all_procedure_res.status().error_message();
@@ -1221,9 +1252,8 @@ seastar::future<admin_query_result> admin_actor::list_jobs(
   auto list_res = metadata_store_->GetAllJobMeta();
   if (list_res.ok()) {
     VLOG(10) << "Successfully list jobs";
-    auto list_job_metas_str = to_json_str(list_res.value());
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(std::move(list_job_metas_str)));
+        to_json_str(list_res.value()));
   } else {
     LOG(ERROR) << "Fail to list jobs: " << list_res.status().error_message();
     return seastar::make_ready_future<admin_query_result>(list_res.status());
