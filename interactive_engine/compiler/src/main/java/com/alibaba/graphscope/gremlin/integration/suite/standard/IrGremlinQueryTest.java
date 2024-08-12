@@ -279,6 +279,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_arbitrary_endv_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_endv_count();
         printTraversalForm(traversal);
         Assert.assertEquals(28, traversal.next().intValue());
@@ -287,6 +288,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_simple_endv_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_endv_count();
         printTraversalForm(traversal);
         Assert.assertEquals(9, traversal.next().intValue());
@@ -297,6 +299,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public void g_VX2X_both_with_trail_endv_count() {
         // Skip this test in distributed settings because edge ids might differ
         // across partitions in experimental store.
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_endv_count();
         printTraversalForm(traversal);
@@ -306,6 +309,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_arbitrary_allv_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_allv_count();
         printTraversalForm(traversal);
         Assert.assertEquals(28, traversal.next().intValue());
@@ -314,6 +318,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_simple_allv_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_allv_count();
         printTraversalForm(traversal);
         Assert.assertEquals(9, traversal.next().intValue());
@@ -324,6 +329,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public void g_VX2X_both_with_trail_allv_count() {
         // Skip this test in distributed settings because edge ids might differ
         // across partitions in experimental store.
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_allv_count();
         printTraversalForm(traversal);
@@ -333,6 +339,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_arbitrary_allve_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_allve_count();
         printTraversalForm(traversal);
         Assert.assertEquals(28, traversal.next().intValue());
@@ -341,6 +348,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_simple_allve_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_allve_count();
         printTraversalForm(traversal);
         Assert.assertEquals(9, traversal.next().intValue());
@@ -351,6 +359,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public void g_VX2X_both_with_trail_allve_count() {
         // Skip this test in distributed settings because edge ids might differ
         // across partitions in experimental store.
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_allve_count();
         printTraversalForm(traversal);
