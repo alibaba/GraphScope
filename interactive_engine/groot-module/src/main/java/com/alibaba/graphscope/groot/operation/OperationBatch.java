@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.proto.groot.OperationBatchPb;
 import com.alibaba.graphscope.proto.groot.OperationPb;
 

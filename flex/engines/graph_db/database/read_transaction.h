@@ -286,6 +286,13 @@ class ReadTransaction {
 
   void Abort();
 
+  const MutablePropertyFragment& graph() const;
+
+  const std::shared_ptr<ColumnBase> get_vertex_property_column(
+      uint8_t label, const std::string& col_name) const {
+    return graph_.get_vertex_table(label).get_column(col_name);
+  }
+
   class vertex_iterator {
    public:
     vertex_iterator(label_t label, vid_t cur, vid_t num,

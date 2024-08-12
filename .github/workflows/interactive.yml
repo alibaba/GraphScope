@@ -30,7 +30,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: actions/cache@v3
       with:
@@ -82,7 +82,7 @@ jobs:
 
         # build compiler
         cd ${GIE_HOME}/
-        mvn clean install -Pexperimental -DskipTests
+        mvn clean install -Pexperimental -DskipTests -q
 
     - name: Prepare dataset and workspace
       env:
@@ -166,6 +166,13 @@ jobs:
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
         sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
         sed -i 's/thread_num_per_worker: 4/thread_num_per_worker: 1/g' ./engine_config_test.yaml
+  
+    - name: Robustness test 
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
 
     - name: Sample Query test
       env:
@@ -245,6 +252,7 @@ jobs:
 
         #set back
         sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+        rm -rf /tmp/codegen
 
     - name: Test cypher&cpp procedure generation and loading
       env:
@@ -305,7 +313,7 @@ jobs:
         sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
         sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
         cd ${GITHUB_WORKSPACE}/interactive_engine/
-        mvn clean install -Pexperimental -DskipTests
+        mvn clean install -Pexperimental -DskipTests -q
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
@@ -372,7 +380,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
@@ -400,7 +408,7 @@ jobs:
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build
       run: |
@@ -416,7 +424,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Download aocc compiler
       run: |
@@ -445,7 +453,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install latest libgrape-lite
       if: false

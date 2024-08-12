@@ -31,11 +31,13 @@ class Schema {
   // How many built-in plugins are there.
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
-  static constexpr uint8_t MAX_PLUGIN_ID = 253;
+  static constexpr uint8_t MAX_PLUGIN_ID = 252;
   static constexpr uint8_t HQPS_ADHOC_READ_PLUGIN_ID = 254;
   static constexpr uint8_t HQPS_ADHOC_WRITE_PLUGIN_ID = 255;
+  static constexpr uint8_t ADHOC_READ_PLUGIN_ID = 253;
   static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
   static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
+  static constexpr const char* ADHOC_READ_PLUGIN_ID_STR = "\xFD";
   static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
   static constexpr const char* VARCHAR_KEY = "varchar";
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
@@ -224,6 +226,8 @@ class Schema {
 
   std::string GetVersion() const;
 
+  bool has_multi_props_edge() const;
+
  private:
   label_t vertex_label_to_index(const std::string& label);
 
@@ -255,6 +259,7 @@ class Schema {
   std::string plugin_dir_;
   std::string description_;
   std::string version_;
+  bool has_multi_props_edge_;
 };
 
 }  // namespace gs

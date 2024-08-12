@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.impl;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
@@ -104,7 +105,7 @@ public class DefaultGraphVertex implements GraphVertex {
                 return graphProperty;
             }
         }
-        throw new IllegalArgumentException("Can't get graph property for id " + propId);
+        throw new InvalidArgumentException("Can't get graph property for id " + propId);
     }
 
     @Override
@@ -114,7 +115,7 @@ public class DefaultGraphVertex implements GraphVertex {
                 return graphProperty;
             }
         }
-        throw new IllegalArgumentException("Can't get graph property for name " + propName);
+        throw new InvalidArgumentException("Can't get graph property for name " + propName);
     }
 
     @Override

@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.discovery;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -115,7 +115,7 @@ public class ZkDiscovery implements NodeDiscovery {
                 this.serviceCaches.add(serviceCache);
             }
         } catch (Exception e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         logger.info("ZkDiscovery started");
     }

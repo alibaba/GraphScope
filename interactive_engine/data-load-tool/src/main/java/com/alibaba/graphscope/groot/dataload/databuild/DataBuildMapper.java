@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
@@ -101,7 +102,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
             this.outKey.set(in.getArray(), in.getOffset(), in.getLength());
             context.write(this.outKey, this.outVal);
         } else {
-            throw new IllegalArgumentException("Invalid label " + labelId);
+            throw new InvalidArgumentException("Invalid label " + labelId);
         }
     }
 }

@@ -51,6 +51,14 @@ class Driver:
             self._gremlin_endpoint = gremlin_endpoint
         self._session = None
         self.init_host_and_port()
+        self._neo4j_driver = None
+
+    def close(self):
+        if self._neo4j_driver is not None:
+            self._neo4j_driver.close()
+    
+    def __del(self):
+        self.close()
 
     def init_host_and_port(self):
         # prepend http:// to self._admin_endpoint
@@ -118,7 +126,9 @@ class Driver:
     def getNeo4jSessionImpl(self, **config) -> Neo4jSession:
         if self._cypher_endpoint is None:
             self._cypher_endpoint = self.getNeo4jEndpoint()
-        return GraphDatabase.driver(self._cypher_endpoint, auth=None).session(**config)
+        if self._neo4j_driver is None:
+            self._neo4j_driver = GraphDatabase.driver(self._cypher_endpoint, auth=None)
+        return self._neo4j_driver.session(**config)
 
     def getNeo4jEndpoint(self) -> str:
         """
