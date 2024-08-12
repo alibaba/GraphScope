@@ -84,8 +84,11 @@ class mmap_array {
   void reset() {
     if (data_ != NULL && mmap_size_ != 0) {
       if (munmap(data_, mmap_size_) != 0) {
-        LOG(FATAL) << "Failed to mummap file [ " << filename_ << " ] "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to mummap file [ " << filename_ << " ] "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     }
     data_ = NULL;
@@ -93,8 +96,11 @@ class mmap_array {
     mmap_size_ = 0;
     if (fd_ != -1) {
       if (close(fd_) != 0) {
-        LOG(FATAL) << "Failed to close file [ " << filename_ << " ] "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to close file [ " << filename_ << " ] "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       fd_ = -1;
     }
@@ -107,8 +113,11 @@ class mmap_array {
     reset();
     if (old_filename != "" && std::filesystem::exists(old_filename)) {
       if (std::filesystem::remove(old_filename) == 0) {
-        LOG(FATAL) << "Failed to remove file [ " << old_filename << " ] "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to remove file [ " << old_filename << " ] "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     }
   }
@@ -126,8 +135,10 @@ class mmap_array {
       bool creat = !std::filesystem::exists(filename_);
       fd_ = ::open(filename_.c_str(), O_RDWR | O_CREAT, 0777);
       if (fd_ == -1) {
-        LOG(FATAL) << "Failed to open file [" << filename_ << "], "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to open file [" << filename_ << "], " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if (creat) {
         std::filesystem::perms readWritePermission =
@@ -138,8 +149,11 @@ class mmap_array {
                                      std::filesystem::perm_options::add,
                                      errorCode);
         if (errorCode) {
-          LOG(FATAL) << "Failed to set read/write permission for file: "
-                     << filename << " " << errorCode.message() << std::endl;
+          std::stringstream ss;
+          ss << "Failed to set read/write permission for file: " << filename
+             << " " << errorCode.message() << std::endl;
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
       }
 
@@ -152,13 +166,19 @@ class mmap_array {
         data_ = reinterpret_cast<T*>(
             mmap(NULL, mmap_size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0));
         if (data_ == MAP_FAILED) {
-          LOG(FATAL) << "Failed to mmap file [" << filename_ << "], "
-                     << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to mmap file [" << filename_ << "], "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
         int rt = madvise(data_, mmap_size_, MADV_RANDOM | MADV_WILLNEED);
         if (rt != 0) {
-          LOG(FATAL) << "Failed to madvise file [" << filename_ << "], "
-                     << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to madvise file [" << filename_ << "], "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
       }
     } else {
@@ -166,8 +186,11 @@ class mmap_array {
         size_t file_size = std::filesystem::file_size(filename_);
         fd_ = ::open(filename_.c_str(), O_RDWR, 0777);
         if (fd_ == -1) {
-          LOG(FATAL) << "Failed to open file [" << filename_ << "], "
-                     << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to open file [" << filename_ << "], "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
         size_ = file_size / sizeof(T);
         mmap_size_ = file_size;
@@ -177,8 +200,11 @@ class mmap_array {
           data_ = reinterpret_cast<T*>(mmap(
               NULL, mmap_size_, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd_, 0));
           if (data_ == MAP_FAILED) {
-            LOG(FATAL) << "Failed to mmap file [" << filename_ << "], "
-                       << strerror(errno);
+            std::stringstream ss;
+            ss << "Failed to mmap file [" << filename_ << "], "
+               << strerror(errno);
+            LOG(ERROR) << ss.str();
+            throw std::runtime_error(ss.str());
           }
         }
       }
@@ -198,16 +224,25 @@ class mmap_array {
         if (data_ != MAP_FAILED) {
           FILE* fin = fopen(filename.c_str(), "rb");
           if (fin == NULL) {
-            LOG(FATAL) << "Failed to open file [ " << filename << " ], "
-                       << strerror(errno);
+            std::stringstream ss;
+            ss << "Failed to open file [ " << filename << " ], "
+               << strerror(errno);
+            LOG(ERROR) << ss.str();
+            throw std::runtime_error(ss.str());
           }
           if (fread(data_, sizeof(T), size_, fin) != size_) {
-            LOG(FATAL) << "Failed to fread file [ " << filename << " ], "
-                       << strerror(errno);
+            std::stringstream ss;
+            ss << "Failed to fread file [ " << filename << " ], "
+               << strerror(errno);
+            LOG(ERROR) << ss.str();
+            throw std::runtime_error(ss.str());
           }
           if (fclose(fin) != 0) {
-            LOG(FATAL) << "Failed to fclose file [ " << filename << " ], "
-                       << strerror(errno);
+            std::stringstream ss;
+            ss << "Failed to fclose file [ " << filename << " ], "
+               << strerror(errno);
+            LOG(ERROR) << ss.str();
+            throw std::runtime_error(ss.str());
           }
         } else {
           LOG(ERROR) << "allocating hugepage failed, " << strerror(errno)
@@ -228,26 +263,40 @@ class mmap_array {
       std::error_code errorCode;
       std::filesystem::rename(old_filename, filename, errorCode);
       if (errorCode) {
-        LOG(FATAL) << "Failed to rename file " << old_filename << " to "
-                   << filename << " " << errorCode.message() << std::endl;
+        std::stringstream ss;
+        ss << "Failed to rename file " << old_filename << " to " << filename
+           << " " << errorCode.message() << std::endl;
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     } else {
       FILE* fout = fopen(filename.c_str(), "wb");
       if (fout == NULL) {
-        LOG(FATAL) << "Failed to open file [ " << filename << " ], "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to open file [ " << filename << " ], " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if (fwrite(data_, sizeof(T), size_, fout) != size_) {
-        LOG(FATAL) << "Failed to fwrite file [ " << filename << " ], "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to fwrite file [ " << filename << " ], "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if (fflush(fout) != 0) {
-        LOG(FATAL) << "Failed to fflush file [ " << filename << " ], "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to fflush file [ " << filename << " ], "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if (fclose(fout) != 0) {
-        LOG(FATAL) << "Failed to fclose file [ " << filename << " ], "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to fclose file [ " << filename << " ], "
+           << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       reset();
     }
@@ -259,8 +308,11 @@ class mmap_array {
                                  std::filesystem::perm_options::add, errorCode);
 
     if (errorCode) {
-      LOG(FATAL) << "Failed to set read permission for file: " << filename
-                 << " " << errorCode.message() << std::endl;
+      std::stringstream ss;
+      ss << "Failed to set read permission for file: " << filename << " "
+         << errorCode.message() << std::endl;
+      LOG(ERROR) << ss.str();
+      throw std::runtime_error(ss.str());
     }
   }
 
@@ -272,14 +324,20 @@ class mmap_array {
     if (sync_to_file_) {
       if (data_ != NULL && mmap_size_ != 0) {
         if (munmap(data_, mmap_size_) != 0) {
-          LOG(FATAL) << "Failed to mummap file [ " << filename_ << " ], "
-                     << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to mummap file [ " << filename_ << " ], "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
       }
       size_t new_mmap_size = size * sizeof(T);
       int rt = ftruncate(fd_, new_mmap_size);
       if (rt == -1) {
-        LOG(FATAL) << "Failed to ftruncate " << rt << ", " << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to ftruncate " << rt << ", " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if (new_mmap_size == 0) {
         data_ = NULL;
@@ -287,7 +345,10 @@ class mmap_array {
         data_ = reinterpret_cast<T*>(mmap(
             NULL, new_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0));
         if (data_ == MAP_FAILED) {
-          LOG(FATAL) << "Failed to mmap, " << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to mmap, " << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
       }
       size_ = size;
@@ -314,7 +375,10 @@ class mmap_array {
               mmap(NULL, new_mmap_size, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
           if (new_data == MAP_FAILED) {
-            LOG(FATAL) << "mmap failed " << strerror(errno);
+            std::stringstream ss;
+            ss << "mmap failed " << strerror(errno);
+            LOG(ERROR) << ss.str();
+            throw std::runtime_error(ss.str());
           }
         }
 

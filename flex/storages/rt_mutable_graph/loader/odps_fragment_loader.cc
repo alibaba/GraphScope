@@ -347,12 +347,20 @@ std::shared_ptr<IFragmentLoader> ODPSFragmentLoader::Make(
 }
 void ODPSFragmentLoader::init() { odps_read_client_.init(); }
 
-void ODPSFragmentLoader::LoadFragment() {
-  init();
-  loadVertices();
-  loadEdges();
+Result<bool> ODPSFragmentLoader::LoadFragment() {
+  try {
+    init();
+    loadVertices();
+    loadEdges();
 
-  basic_fragment_loader_.LoadFragment();
+    basic_fragment_loader_.LoadFragment();
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Failed to load fragment: " << e.what();
+    return Result<bool>(StatusCode::InternalError,
+                        "Load fragment failed: " + std::string(e.what()),
+                        false);
+  }
+  return Result<bool>(true);
 }
 
 // odps_table_path is like /project_name/table_name/partition_name

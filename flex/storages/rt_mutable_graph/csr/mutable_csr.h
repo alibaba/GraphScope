@@ -408,18 +408,22 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
                                         new_snapshot_dir + "/" + name + ".nbr",
                                         errorCode);
       if (errorCode) {
-        LOG(FATAL) << "Failed to create hard link from " << nbr_list_.filename()
-                   << " to " << new_snapshot_dir + "/" + name + ".snbr"
-                   << ", error code: " << errorCode << " "
-                   << errorCode.message();
+        std::stringstream ss;
+        ss << "Failed to create hard link from " << nbr_list_.filename()
+           << " to " << new_snapshot_dir + "/" + name + ".snbr"
+           << ", error code: " << errorCode << " " << errorCode.message();
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     } else {
       FILE* fout =
           fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
       std::string filename = new_snapshot_dir + "/" + name + ".nbr";
       if (fout == nullptr) {
-        LOG(FATAL) << "Failed to open nbr list " << filename << ", "
-                   << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to open nbr list " << filename << ", " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
 
       for (size_t i = 0; i < vnum; ++i) {
@@ -427,19 +431,28 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         if ((ret = fwrite(adj_lists_[i].data(), sizeof(nbr_t),
                           adj_lists_[i].capacity(), fout)) !=
             static_cast<size_t>(adj_lists_[i].capacity())) {
-          LOG(FATAL) << "Failed to write nbr list " << filename << ", expected "
-                     << adj_lists_[i].capacity() << ", got " << ret << ", "
-                     << strerror(errno);
+          std::stringstream ss;
+          ss << "Failed to write nbr list " << filename << ", expected "
+             << adj_lists_[i].capacity() << ", got " << ret << ", "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
         }
       }
       int ret = 0;
       if ((ret = fflush(fout)) != 0) {
-        LOG(FATAL) << "Failed to flush nbr list " << filename
-                   << ", error code: " << ret << " " << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to flush nbr list " << filename << ", error code: " << ret
+           << " " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
       if ((ret = fclose(fout)) != 0) {
-        LOG(FATAL) << "Failed to close nbr list " << filename
-                   << ", error code: " << ret << " " << strerror(errno);
+        std::stringstream ss;
+        ss << "Failed to close nbr list " << filename << ", error code: " << ret
+           << " " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     }
   }
@@ -818,10 +831,12 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
                                         new_snapshot_dir + "/" + name + ".snbr",
                                         errorCode);
       if (errorCode) {
-        LOG(FATAL) << "Failed to create hard link from " << nbr_list_.filename()
-                   << " to " << new_snapshot_dir + "/" + name + ".snbr"
-                   << ", error code: " << errorCode << " "
-                   << errorCode.message();
+        std::stringstream ss;
+        ss << "Failed to create hard link from " << nbr_list_.filename()
+           << " to " << new_snapshot_dir + "/" + name + ".snbr"
+           << ", error code: " << errorCode << " " << errorCode.message();
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
     } else {
       write_file(new_snapshot_dir + "/" + name + ".snbr", nbr_list_.data(),
