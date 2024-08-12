@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptUtil;
@@ -360,34 +361,36 @@ public class GraphLogicalPathExpand extends SingleRel {
     public GraphLogicalPathExpand copy(RelTraitSet traitSet, List<RelNode> inputs) {
         GraphLogicalPathExpand copy;
         if (this.fused != null) {
-            copy = new GraphLogicalPathExpand(
-                    (GraphOptCluster) getCluster(),
-                    ImmutableList.of(),
-                    inputs.get(0),
-                    this.fused,
-                    getOffset(),
-                    getFetch(),
-                    getResultOpt(),
-                    getPathOpt(),
-                    getUntilCondition(),
-                    getAliasName(),
-                    getStartAlias(),
-                    isOptional());
+            copy =
+                    new GraphLogicalPathExpand(
+                            (GraphOptCluster) getCluster(),
+                            ImmutableList.of(),
+                            inputs.get(0),
+                            this.fused,
+                            getOffset(),
+                            getFetch(),
+                            getResultOpt(),
+                            getPathOpt(),
+                            getUntilCondition(),
+                            getAliasName(),
+                            getStartAlias(),
+                            isOptional());
         } else {
-            copy = new GraphLogicalPathExpand(
-                    (GraphOptCluster) getCluster(),
-                    ImmutableList.of(),
-                    inputs.get(0),
-                    this.expand,
-                    this.getV,
-                    getOffset(),
-                    getFetch(),
-                    getResultOpt(),
-                    getPathOpt(),
-                    getUntilCondition(),
-                    getAliasName(),
-                    getStartAlias(),
-                    isOptional());
+            copy =
+                    new GraphLogicalPathExpand(
+                            (GraphOptCluster) getCluster(),
+                            ImmutableList.of(),
+                            inputs.get(0),
+                            this.expand,
+                            this.getV,
+                            getOffset(),
+                            getFetch(),
+                            getResultOpt(),
+                            getPathOpt(),
+                            getUntilCondition(),
+                            getAliasName(),
+                            getStartAlias(),
+                            isOptional());
         }
         copy.setCachedCost(this.cachedCost);
         return copy;
@@ -407,6 +410,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     @Override
     public double estimateRowCount(RelMetadataQuery mq) {
-        return cachedCost instanceof DetailedExpandCost ? ((DetailedExpandCost) cachedCost).getExpandFilteringRows() : super.estimateRowCount(mq);
+        return cachedCost instanceof DetailedExpandCost
+                ? ((DetailedExpandCost) cachedCost).getExpandFilteringRows()
+                : super.estimateRowCount(mq);
     }
 }

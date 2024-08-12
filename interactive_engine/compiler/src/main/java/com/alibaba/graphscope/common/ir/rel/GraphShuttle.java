@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.rel;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.logical.LogicalJoin;

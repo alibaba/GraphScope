@@ -50,6 +50,7 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
@@ -517,7 +518,8 @@ public class GraphIOProcessor {
             } else if (rel instanceof LogicalJoin) {
                 LogicalJoin join = (LogicalJoin) rel;
                 return new LogicalJoin(
-                        ((GraphOptCluster)join.getCluster()).copy(new LocalState().withCachedCost(cost)),
+                        ((GraphOptCluster) join.getCluster())
+                                .copy(new LocalState().withCachedCost(cost)),
                         join.getTraitSet(),
                         join.getHints(),
                         join.getLeft(),
@@ -531,7 +533,8 @@ public class GraphIOProcessor {
             } else if (rel instanceof MultiJoin) {
                 MultiJoin join = (MultiJoin) rel;
                 return new MultiJoin(
-                        ((GraphOptCluster)join.getCluster()).copy(new LocalState().withCachedCost(cost)),
+                        ((GraphOptCluster) join.getCluster())
+                                .copy(new LocalState().withCachedCost(cost)),
                         join.getInputs(),
                         join.getJoinFilter(),
                         join.getRowType(),
@@ -607,7 +610,9 @@ public class GraphIOProcessor {
             Pattern original = new Pattern(intersect.getGlogueEdge().getSrcPattern());
             // convert to GraphLogicalExpand if only one extend edge
             if (extendEdges.size() == 1) {
-                return addCachedCost(createExpandGetV(extendEdges.get(0), glogueEdge, edgeDetails, child), estimateCost(original, intersect, 0));
+                return addCachedCost(
+                        createExpandGetV(extendEdges.get(0), glogueEdge, edgeDetails, child),
+                        estimateCost(original, intersect, 0));
             }
             // convert to Multi-Way join
             RelOptTable commonTable = new CommonOptTable(child);
@@ -654,7 +659,14 @@ public class GraphIOProcessor {
                                     .collect(Collectors.toList()),
                             ImmutableMap.of(),
                             null);
-            return addCachedCost(rel, new RelOptCostImpl(mq.getRowCount(new GraphPattern(intersect.getCluster(), intersect.getTraitSet(), glogueEdge.getDstPattern()))));
+            return addCachedCost(
+                    rel,
+                    new RelOptCostImpl(
+                            mq.getRowCount(
+                                    new GraphPattern(
+                                            intersect.getCluster(),
+                                            intersect.getTraitSet(),
+                                            glogueEdge.getDstPattern()))));
         }
 
         @Override
@@ -780,12 +792,13 @@ public class GraphIOProcessor {
                 builder.project(concatExprs, concatAliases, true);
             }
             RelNode rel = builder.build();
-            RelOptCost cost = new RelOptCostImpl(
-                    mq.getRowCount(
-                            new GraphPattern(
-                                    decomposition.getCluster(),
-                                    decomposition.getTraitSet(),
-                                    decomposition.getParentPatten())));
+            RelOptCost cost =
+                    new RelOptCostImpl(
+                            mq.getRowCount(
+                                    new GraphPattern(
+                                            decomposition.getCluster(),
+                                            decomposition.getTraitSet(),
+                                            decomposition.getParentPatten())));
             return addCachedCost(rel, cost);
         }
 

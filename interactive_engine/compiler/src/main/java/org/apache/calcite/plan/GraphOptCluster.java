@@ -17,8 +17,8 @@
 package org.apache.calcite.plan;
 
 import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
-
 import com.alibaba.graphscope.gremlin.Utils;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
@@ -44,7 +44,14 @@ public class GraphOptCluster extends RelOptCluster {
             AtomicInteger nextCorrel,
             Map<String, RelNode> mapCorrelToRel,
             AliasIdGenerator idGenerator) {
-        this(planner, typeFactory, rexBuilder, nextCorrel, mapCorrelToRel, idGenerator, new LocalState());
+        this(
+                planner,
+                typeFactory,
+                rexBuilder,
+                nextCorrel,
+                mapCorrelToRel,
+                idGenerator,
+                new LocalState());
     }
 
     protected GraphOptCluster(
@@ -71,14 +78,17 @@ public class GraphOptCluster extends RelOptCluster {
     }
 
     public GraphOptCluster copy(LocalState localState) {
-        return new GraphOptCluster(
-                getPlanner(),
-                getTypeFactory(),
-                getRexBuilder(),
-                Utils.getFieldValue(RelOptCluster.class, this, "nextCorrel"),
-                Utils.getFieldValue(RelOptCluster.class, this, "mapCorrelToRel"),
-                idGenerator,
-                localState);
+        GraphOptCluster copy =
+                new GraphOptCluster(
+                        getPlanner(),
+                        getTypeFactory(),
+                        getRexBuilder(),
+                        Utils.getFieldValue(RelOptCluster.class, this, "nextCorrel"),
+                        Utils.getFieldValue(RelOptCluster.class, this, "mapCorrelToRel"),
+                        idGenerator,
+                        localState);
+        copy.setMetadataQuerySupplier(this.getMetadataQuerySupplier());
+        return copy;
     }
 
     public AliasIdGenerator getIdGenerator() {

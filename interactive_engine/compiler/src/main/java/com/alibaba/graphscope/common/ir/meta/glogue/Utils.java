@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -153,7 +154,7 @@ public class Utils {
                 : new FuzzyPatternEdge(
                         src,
                         dst,
-                        edge.getEdgeTypeIds(),
+                        Lists.newArrayList(edge.getEdgeTypeIds()),
                         0,
                         edge.getDirection() == PatternDirection.BOTH,
                         edge.getElementDetails());

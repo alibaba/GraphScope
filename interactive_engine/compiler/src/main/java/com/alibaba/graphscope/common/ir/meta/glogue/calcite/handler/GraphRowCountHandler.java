@@ -28,6 +28,9 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.Lists;
+
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -36,6 +39,7 @@ import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.rules.MultiJoin;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -127,15 +131,26 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     return mq.getRowCount(subset);
                 }
             }
-        }  else if (node instanceof AbstractBindableTableScan) {
+        } else if (node instanceof AbstractBindableTableScan) {
             return getRowCount((AbstractBindableTableScan) node, mq);
         } else if (node instanceof GraphLogicalPathExpand) {
             return node.estimateRowCount(mq);
         } else if (node instanceof GraphPhysicalExpand) {
             return node.estimateRowCount(mq);
-        }
-        else if (node instanceof Join) {
-            return mdRowCount.getRowCount((Join) node, mq);
+        } else if (node instanceof GraphPhysicalGetV) {
+            return node.estimateRowCount(mq);
+        } else if (node instanceof MultiJoin) {
+            GraphOptCluster optCluster = (GraphOptCluster) node.getCluster();
+            RelOptCost cachedCost = optCluster.getLocalState().getCachedCost();
+            if (cachedCost != null) {
+                return cachedCost.getRows();
+            }
+        } else if (node instanceof Join) {
+            GraphOptCluster optCluster = (GraphOptCluster) node.getCluster();
+            RelOptCost cachedCost = optCluster.getLocalState().getCachedCost();
+            return cachedCost != null
+                    ? cachedCost.getRows()
+                    : mdRowCount.getRowCount((Join) node, mq);
         } else if (node instanceof Union) {
             return mdRowCount.getRowCount((Union) node, mq);
         } else if (node instanceof Filter) {

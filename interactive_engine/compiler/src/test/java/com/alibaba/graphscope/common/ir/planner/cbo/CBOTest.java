@@ -7,9 +7,8 @@ import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelVisitor;
-import org.apache.calcite.rel.rules.MultiJoin;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -125,42 +124,24 @@ public class CBOTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-//        Assert.assertEquals(
-//                "root:\n"
-//                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-//                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
-//                    + " distinct=false}]])\n"
-//                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
-//                    + " alias=[person2], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
-//                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, COMMENT,"
-//                    + " PERSON)]], alias=[person1], startAlias=[comment], opt=[OUT],"
-//                    + " physicalOpt=[VERTEX])\n"
-//                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT, POST)]],"
-//                    + " alias=[comment], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
-//                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
-//                    + " tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT],"
-//                    + " physicalOpt=[VERTEX])\n"
-//                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
-//                    + " alias=[forum], opt=[VERTEX])",
-//                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
-        // System.out.println(after.getCluster().getMetadataQuery().getRowCount(after.getInput(0)));
-        PrintEstimatedRows printer = new PrintEstimatedRows();
-        printer.go(after);
-    }
-
-    private class PrintEstimatedRows extends RelVisitor {
-
-        @Override
-        public void visit(RelNode node, int ordinal, RelNode parent) {
-            System.out.println(node.getCluster().getMetadataQuery().getRowCount(node));
-            if (node instanceof MultiJoin) {
-                System.out.println("Multi Join Start");
-            }
-            super.visit(node, ordinal, parent);
-            if (node instanceof MultiJoin) {
-                System.out.println("Multi Join End");
-            }
-        }
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[person2], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, COMMENT,"
+                    + " PERSON)]], alias=[person1], startAlias=[comment], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT, POST)]],"
+                    + " alias=[comment], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
+                    + " alias=[forum], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 
     @Test
@@ -178,41 +159,39 @@ public class CBOTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-//        Assert.assertEquals(
-//                "root:\n"
-//                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-//                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
-//                    + " distinct=false}]])\n"
-//                    + "  MultiJoin(joinFilter=[=(person2, person2)], isFullOuterJoin=[false],"
-//                    + " joinTypes=[[INNER, INNER, INNER]], outerJoinConditions=[[NULL, NULL,"
-//                    + " NULL]], projFields=[[ALL, ALL, ALL]])\n"
-//                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, POST)]],"
-//                    + " alias=[person2], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
-//                    + "      CommonTableScan(table=[[common#-775303540]])\n"
-//                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
-//                    + " alias=[person2], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
-//                    + "      CommonTableScan(table=[[common#-775303540]])\n"
-//                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
-//                    + " alias=[person2], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
-//                    + "      CommonTableScan(table=[[common#-775303540]])\n"
-//                    + "common#-775303540:\n"
-//                    + "MultiJoin(joinFilter=[=(person1, person1)], isFullOuterJoin=[false],"
-//                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
-//                    + " projFields=[[ALL, ALL]])\n"
-//                    + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, POST)]],"
-//                    + " alias=[person1], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
-//                    + "    CommonTableScan(table=[[common#-1025398524]])\n"
-//                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
-//                    + " alias=[person1], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
-//                    + "    CommonTableScan(table=[[common#-1025398524]])\n"
-//                    + "common#-1025398524:\n"
-//                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[CONTAINEROF]}],"
-//                    + " alias=[post], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
-//                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
-//                    + " alias=[forum], opt=[VERTEX])",
-//                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
-        PrintEstimatedRows printer = new PrintEstimatedRows();
-        printer.go(after);
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(person2, person2)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER, INNER]], outerJoinConditions=[[NULL, NULL,"
+                    + " NULL]], projFields=[[ALL, ALL, ALL]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, POST)]],"
+                    + " alias=[person2], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-775303540]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
+                    + " alias=[person2], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-775303540]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[person2], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-775303540]])\n"
+                    + "common#-775303540:\n"
+                    + "MultiJoin(joinFilter=[=(person1, person1)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, POST)]],"
+                    + " alias=[person1], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "    CommonTableScan(table=[[common#-1025398524]])\n"
+                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[person1], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "    CommonTableScan(table=[[common#-1025398524]])\n"
+                    + "common#-1025398524:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[CONTAINEROF]}],"
+                    + " alias=[post], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
+                    + " alias=[forum], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 
     @Test

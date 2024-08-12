@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;

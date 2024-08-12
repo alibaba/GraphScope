@@ -31,6 +31,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
@@ -67,7 +68,7 @@ public class Utils {
     public static final GraphBuilder mockGraphBuilder(GraphRelOptimizer optimizer, IrMeta irMeta) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
-        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery(irMeta, optCluster));
+        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery(irMeta));
         return (GraphBuilder)
                 relBuilderFactory.create(
                         optCluster, new GraphOptSchema(optCluster, irMeta.getSchema()));

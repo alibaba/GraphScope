@@ -25,4 +25,8 @@ public class LocalState {
         this.cachedCost = cost;
         return this;
     }
+
+    public RelOptCost getCachedCost() {
+        return this.cachedCost;
+    }
 }

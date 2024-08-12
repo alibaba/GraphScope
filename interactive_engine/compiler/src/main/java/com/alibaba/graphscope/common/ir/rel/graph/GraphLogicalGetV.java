@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -96,6 +97,8 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
 
     @Override
     public double estimateRowCount(RelMetadataQuery mq) {
-        return cachedCost instanceof DetailedExpandCost ? ((DetailedExpandCost) cachedCost).getGetVFilteringRows() : super.estimateRowCount(mq);
+        return cachedCost instanceof DetailedExpandCost
+                ? ((DetailedExpandCost) cachedCost).getGetVFilteringRows()
+                : super.estimateRowCount(mq);
     }
 }
