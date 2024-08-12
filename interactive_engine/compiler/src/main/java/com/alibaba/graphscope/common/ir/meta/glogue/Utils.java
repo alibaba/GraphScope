@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -124,5 +125,37 @@ public class Utils {
             }
         }
         return true;
+    }
+
+    public static PatternEdge convert(
+            ExtendEdge edge, PatternVertex querySrc, PatternVertex queryDst) {
+        PatternVertex src, dst;
+        switch (edge.getDirection()) {
+            case OUT:
+            case BOTH:
+                src = querySrc;
+                dst = queryDst;
+                break;
+            case IN:
+            default:
+                src = queryDst;
+                dst = querySrc;
+                break;
+        }
+        return (edge.getEdgeTypeIds().size() == 1)
+                ? new SinglePatternEdge(
+                        src,
+                        dst,
+                        edge.getEdgeTypeId(),
+                        0,
+                        edge.getDirection() == PatternDirection.BOTH,
+                        edge.getElementDetails())
+                : new FuzzyPatternEdge(
+                        src,
+                        dst,
+                        edge.getEdgeTypeIds(),
+                        0,
+                        edge.getDirection() == PatternDirection.BOTH,
+                        edge.getElementDetails());
     }
 }

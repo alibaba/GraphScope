@@ -16,17 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.rel;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.rules.MultiJoin;
 
 /**
@@ -98,6 +93,10 @@ public abstract class GraphShuttle extends RelShuttleImpl {
     }
 
     public RelNode visit(MultiJoin join) {
+        return visitChildren(join);
+    }
+
+    public RelNode visit(LogicalJoin join) {
         return visitChildren(join);
     }
 

@@ -21,24 +21,24 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.commons.lang3.ObjectUtils;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
-
-import javax.annotation.Nullable;
 
 public class GraphPhysicalGetV extends SingleRel {
     private final GraphOpt.PhysicalGetVOpt physicalOpt;
@@ -150,6 +150,11 @@ public class GraphPhysicalGetV extends SingleRel {
                         inputs.get(0),
                         fusedGetV,
                         getPhysicalOpt());
+        GraphOptCluster optCluster = (GraphOptCluster) copy.getCluster();
+        RelOptCost cost = optCluster.getRelToCost().get(this);
+        if (cost != null) {
+            optCluster.getRelToCost().put(copy, cost);
+        }
         return copy;
     }
 
@@ -159,5 +164,10 @@ public class GraphPhysicalGetV extends SingleRel {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    @Override
+    public double estimateRowCount(RelMetadataQuery mq) {
+        return fusedGetV != null ? fusedGetV.estimateRowCount(mq) : super.estimateRowCount(mq);
     }
 }

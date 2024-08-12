@@ -16,18 +16,19 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.meta.glogue.DetailedExpandCost;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -104,6 +105,7 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             copy.setFilters(this.getFilters());
         }
         copy.setSchemaType((GraphSchemaType) this.getRowType().getFieldList().get(0).getType());
+        copy.setCachedCost(this.cachedCost);
         return copy;
     }
 
@@ -113,5 +115,10 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    @Override
+    public double estimateRowCount(RelMetadataQuery mq) {
+        return cachedCost instanceof DetailedExpandCost ? ((DetailedExpandCost) cachedCost).getExpandFilteringRows() : super.estimateRowCount(mq);
     }
 }

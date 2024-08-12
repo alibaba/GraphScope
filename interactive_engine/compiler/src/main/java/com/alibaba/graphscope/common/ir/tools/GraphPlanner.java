@@ -86,7 +86,7 @@ public class GraphPlanner {
     public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
-        RelMetadataQuery mq = optimizer.createMetaDataQuery(irMeta);
+        RelMetadataQuery mq = optimizer.createMetaDataQuery(irMeta, optCluster);
         if (mq != null) {
             optCluster.setMetadataQuerySupplier(() -> mq);
         }

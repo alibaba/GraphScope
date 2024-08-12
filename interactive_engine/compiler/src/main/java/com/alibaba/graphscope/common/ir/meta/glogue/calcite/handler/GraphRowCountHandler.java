@@ -21,16 +21,13 @@ import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphJoinDecomposition;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -109,18 +106,17 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     }
                 }
             }
-            throw new UnsupportedOperationException(
-                    "estimate count for pattern " + pattern + " is unsupported yet");
-        } else if (node instanceof TableScan) {
-            return getRowCount((TableScan) node, mq);
-        } else if (node instanceof Filter) {
-            return mdRowCount.getRowCount((Filter) node, mq);
-        } else if (node instanceof Aggregate) {
-            return mdRowCount.getRowCount((Aggregate) node, mq);
-        } else if (node instanceof Sort) {
-            return mdRowCount.getRowCount((Sort) node, mq);
-        } else if (node instanceof Project) {
-            return mdRowCount.getRowCount((Project) node, mq);
+            double totalRowCount = 1.0d;
+            for (PatternEdge edge : pattern.getEdgeSet()) {
+                totalRowCount *= countEstimator.estimate(edge);
+            }
+            for (PatternVertex vertex : pattern.getVertexSet()) {
+                int degree = pattern.getEdgesOf(vertex).size();
+                if (degree > 0) {
+                    totalRowCount /= Math.pow(countEstimator.estimate(vertex), degree - 1);
+                }
+            }
+            return totalRowCount;
         } else if (node instanceof RelSubset) {
             return mq.getRowCount(((RelSubset) node).getOriginal());
         } else if (node instanceof GraphExtendIntersect || node instanceof GraphJoinDecomposition) {
@@ -131,15 +127,33 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     return mq.getRowCount(subset);
                 }
             }
-        } else if (node instanceof Join) {
+        }  else if (node instanceof AbstractBindableTableScan) {
+            return getRowCount((AbstractBindableTableScan) node, mq);
+        } else if (node instanceof GraphLogicalPathExpand) {
+            return node.estimateRowCount(mq);
+        } else if (node instanceof GraphPhysicalExpand) {
+            return node.estimateRowCount(mq);
+        }
+        else if (node instanceof Join) {
             return mdRowCount.getRowCount((Join) node, mq);
         } else if (node instanceof Union) {
             return mdRowCount.getRowCount((Union) node, mq);
+        } else if (node instanceof Filter) {
+            return mdRowCount.getRowCount((Filter) node, mq);
+        } else if (node instanceof Aggregate) {
+            return mdRowCount.getRowCount((Aggregate) node, mq);
+        } else if (node instanceof Sort) {
+            return mdRowCount.getRowCount((Sort) node, mq);
+        } else if (node instanceof Project) {
+            return mdRowCount.getRowCount((Project) node, mq);
         }
         throw new IllegalArgumentException("can not estimate row count for the node=" + node);
     }
 
-    private double getRowCount(TableScan rel, RelMetadataQuery mq) {
+    private double getRowCount(AbstractBindableTableScan rel, RelMetadataQuery mq) {
+        if (rel.getCachedCost() != null) {
+            return rel.estimateRowCount(mq);
+        }
         if (rel instanceof GraphLogicalSource || rel instanceof GraphLogicalGetV) {
             List<Integer> vertexTypeIds = Utils.getVertexTypeIds(rel);
             PatternVertex vertex =

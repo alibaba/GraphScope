@@ -93,12 +93,12 @@ public class GraphRelOptimizer {
         return relPlanner;
     }
 
-    public @Nullable RelMetadataQuery createMetaDataQuery(IrMeta irMeta) {
+    public @Nullable RelMetadataQuery createMetaDataQuery(IrMeta irMeta, GraphOptCluster optCluster) {
         if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
             GlogueQuery gq = this.glogueHolder.getGlogue();
             Preconditions.checkArgument(gq != null, "glogue is not ready");
             return new GraphRelMetadataQuery(
-                    new GraphMetadataHandlerProvider(this.matchPlanner, gq, this.config));
+                    new GraphMetadataHandlerProvider(this.matchPlanner, gq, this.config), optCluster);
         }
         return null;
     }

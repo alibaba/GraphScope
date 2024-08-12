@@ -17,20 +17,12 @@
 package com.alibaba.graphscope.common.ir.planner.rules;
 
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptTable;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.TransformationRule;
 import org.apache.calcite.tools.RelBuilderFactory;
@@ -217,7 +209,19 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
         public void onMatch(RelOptRuleCall call) {
             GraphLogicalGetV getV = call.rel(0);
             GraphLogicalExpand expand = call.rel(1);
-            call.transformTo(transform(getV, expand, expand.getInput(0)));
+            RelNode after = transform(getV, expand, expand.getInput(0));
+            call.transformTo(after);
+            GraphOptCluster optCluster = (GraphOptCluster) after.getCluster();
+            RelOptCost cost = optCluster.getRelToCost().get(getV);
+            if (cost != null) {
+                if (after instanceof GraphPhysicalGetV) {
+                    optCluster.getRelToCost().put(after, cost);
+                    after = after.getInput(0);
+                }
+                if (after instanceof GraphPhysicalExpand) {
+                    optCluster.getRelToCost().put(after, cost);
+                }
+            }
         }
 
         public static class Config implements RelRule.Config {
@@ -316,6 +320,11 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                             pathExpand.getStartAlias(),
                             pathExpand.isOptional());
             call.transformTo(afterPathExpand);
+            GraphOptCluster optCluster = (GraphOptCluster) afterPathExpand.getCluster();
+            RelOptCost cost = optCluster.getRelToCost().get(pathExpand);
+            if (cost != null) {
+                optCluster.getRelToCost().put(afterPathExpand, cost);
+            }
         }
 
         public static class Config implements RelRule.Config {

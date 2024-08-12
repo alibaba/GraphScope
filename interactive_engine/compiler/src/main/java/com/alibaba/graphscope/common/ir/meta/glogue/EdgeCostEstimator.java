@@ -29,7 +29,7 @@ public abstract class EdgeCostEstimator<T> {
 
     public abstract T estimate(Pattern srcPattern, PatternEdge edge, PatternVertex target);
 
-    static class Join extends EdgeCostEstimator<ExpandJoin> {
+    public static class Join extends EdgeCostEstimator<ExpandJoin> {
         public Join(CountHandler handler) {
             super(handler);
         }
@@ -40,13 +40,14 @@ public abstract class EdgeCostEstimator<T> {
         }
     }
 
-    static class Extend extends EdgeCostEstimator<Double> {
+    public static class Extend extends EdgeCostEstimator<DetailedExpandCost> {
         public Extend(CountHandler handler) {
             super(handler);
         }
 
         @Override
-        public Double estimate(Pattern srcPattern, PatternEdge edge, PatternVertex target) {
+        public DetailedExpandCost estimate(
+                Pattern srcPattern, PatternEdge edge, PatternVertex target) {
             PatternVertex src = Utils.getExtendFromVertex(edge, target);
             double targetSelectivity = target.getElementDetails().getSelectivity();
             if (Double.compare(targetSelectivity, 1.0d) != 0) {
@@ -82,7 +83,13 @@ public abstract class EdgeCostEstimator<T> {
             pattern.addVertex(edge.getSrcVertex());
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
-            return handler.handle(pattern) + handler.labelConstraintsDeltaCost(edge, target);
+            double patternCost = handler.handle(pattern);
+            double expandCost = patternCost + handler.labelConstraintsDeltaCost(edge, target);
+            double expandFilteringCost = expandCost * edgeSelectivity;
+            double getVCost = patternCost * edgeSelectivity;
+            double getVFilteringCost = getVCost * targetSelectivity;
+            return new DetailedExpandCost(
+                    expandCost, expandFilteringCost, getVCost, getVFilteringCost);
         }
     }
 }

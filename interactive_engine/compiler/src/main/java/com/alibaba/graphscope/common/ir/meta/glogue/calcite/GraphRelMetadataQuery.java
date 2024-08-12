@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.ExternalMeta
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.MetadataHandlerProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;

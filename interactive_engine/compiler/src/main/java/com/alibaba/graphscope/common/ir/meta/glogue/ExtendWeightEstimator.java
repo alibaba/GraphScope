@@ -68,7 +68,7 @@ public class ExtendWeightEstimator {
             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
             double weight =
                     (edges.size() == 1)
-                            ? edgeCostEstimator.estimate(null, edges.get(0), target)
+                            ? edgeCostEstimator.estimate(null, edges.get(0), target).getExpandRows()
                             : handler.handle(pattern);
             for (PatternVertex vertex : extendFromVertices) {
                 weight /= handler.handle(new Pattern(vertex));
