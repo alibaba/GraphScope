@@ -403,8 +403,16 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
     if (reuse_nbr_list && !nbr_list_.filename().empty() &&
         std::filesystem::exists(nbr_list_.filename())) {
+      std::error_code errorCode;
       std::filesystem::create_hard_link(nbr_list_.filename(),
-                                        new_snapshot_dir + "/" + name + ".nbr");
+                                        new_snapshot_dir + "/" + name + ".nbr",
+                                        errorCode);
+      if (errorCode) {
+        LOG(FATAL) << "Failed to create hard link from " << nbr_list_.filename()
+                   << " to " << new_snapshot_dir + "/" + name + ".snbr"
+                   << ", error code: " << errorCode << " "
+                   << errorCode.message();
+      }
     } else {
       FILE* fout =
           fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");

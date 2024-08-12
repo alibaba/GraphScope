@@ -40,7 +40,7 @@ void read_file(const std::string& filename, void* buffer, size_t size,
 
 void write_file(const std::string& filename, const void* buffer, size_t size,
                 size_t num) {
-  FILE* fout = fopen(filename.c_str(), "w");
+  FILE* fout = fopen(filename.c_str(), "wb");
   if (fout == nullptr) {
     LOG(FATAL) << "Failed to open file " << filename << ", " << strerror(errno);
   }
