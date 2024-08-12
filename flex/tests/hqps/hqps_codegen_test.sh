@@ -88,7 +88,7 @@ test_codegen_on_ldbc_rbo(){
     done
     for i in 1 2 3 4 5 6 7 8 9 11 12; # 10 is not supported now
     do
-        cmd="${CODEGEN_SCRIPT} -e=hqps -i=${FLEX_HOME}}/resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
+        cmd="${CODEGEN_SCRIPT} -e=hqps -i=${FLEX_HOME}/resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
         cmd=${cmd}" -o=/tmp/plugin --ir_conf=${RBO_ENGINE_CONFIG_PATH} "
         cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
         echo $cmd
