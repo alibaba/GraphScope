@@ -19,7 +19,7 @@
 
 namespace gs {
 
-void printDiskRemaing(std::string path) {
+void printDiskRemaining(const std::string& path) {
   struct statvfs buf;
   if (statvfs(path.c_str(), &buf) == 0) {
     LOG(INFO) << "Disk remaining: " << buf.f_bsize * buf.f_bavail / 1024 / 1024
