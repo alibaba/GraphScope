@@ -142,16 +142,6 @@ jobs:
           # pull_request: use default vineyard_version
           make vineyard-dev
         fi
-        # upload artifact
-        cd ${GITHUB_WORKSPACE}
-        docker save graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64 -o vineyard_dev_${VINEYARD_VERSION}_amd64_image
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: vineyard_dev_amd64_image
-        path: ${{ github.workspace }}/vineyard_dev_${{ github.event.inputs.v6d_version }}_amd64_image
-        retention-days: 5
 
     - name: Release Image
       if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -217,7 +207,8 @@ jobs:
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}
 
   build-vineyard-runtime-image-amd64:
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
+    # only trigger this step in 'workflow_dispatch' event, since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }} || (github.event_name == 'pull_request')
     runs-on: ubuntu-20.04
     needs: [build-vineyard-dev-image-amd64]
     steps:
@@ -225,18 +216,9 @@ jobs:
       with:
         submodules: true
 
-    - uses: actions/download-artifact@v4
-      with:
-        name: vineyard_dev_amd64_image
-        path: artifacts
-
     - name: Build Image
       run: |
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-        # base image
-        ls -la artifacts
-        sudo docker load artifacts/vineyard_dev_${VINEYARD_VERSION}_amd64_image
-        sudo docker tag graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64 ${{ env.REGISTRY }}/graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64
         # build vineyard runtime image with specified v6d version
         cd ${GITHUB_WORKSPACE}/k8s
         if [[ -n ${VINEYARD_VERSION} ]]; then
