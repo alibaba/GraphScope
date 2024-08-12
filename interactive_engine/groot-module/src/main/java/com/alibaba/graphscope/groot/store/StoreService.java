@@ -252,10 +252,6 @@ public class StoreService {
                                 // Ignore Marker
                                 // Only support partition operation for now
                                 GraphPartition partition = this.idToPartition.get(partitionId);
-                                logger.info(
-                                        "write store partition {}, size: {}",
-                                        partitionId,
-                                        batch.getOperationCount());
                                 if (partition == null) {
                                     throw new IllegalStateException(
                                             "partition ["
