@@ -52,6 +52,7 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
@@ -517,10 +518,17 @@ public class GraphIOProcessor {
                 singleVertex =
                         (singleVertex instanceof SinglePatternVertex)
                                 ? new SinglePatternVertex(
-                                singleVertex.getVertexTypeIds().get(0), singleVertex.getId())
-                                : new FuzzyPatternVertex(singleVertex.getVertexTypeIds(), singleVertex.getId());
+                                        singleVertex.getVertexTypeIds().get(0),
+                                        singleVertex.getId())
+                                : new FuzzyPatternVertex(
+                                        singleVertex.getVertexTypeIds(), singleVertex.getId());
             }
-            double patternCount = mq.getRowCount(new GraphPattern(graph.getCluster(), graph.getTraitSet(), new Pattern(singleVertex)));
+            double patternCount =
+                    mq.getRowCount(
+                            new GraphPattern(
+                                    graph.getCluster(),
+                                    graph.getTraitSet(),
+                                    new Pattern(singleVertex)));
             return new DetailedSourceCost(patternCount, patternCount * selectivity);
         }
 

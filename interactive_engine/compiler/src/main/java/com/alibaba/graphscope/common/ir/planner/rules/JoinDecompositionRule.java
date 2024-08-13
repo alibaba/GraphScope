@@ -557,15 +557,16 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             Pattern buildPattern,
             double buildCount,
             List<JoinVertex> jointVertices) {
-        if (probeCount > buildCount) {
-            return createJoinDecomposition(
-                    graphPattern,
-                    buildPattern,
-                    buildCount,
-                    probePattern,
-                    probeCount,
-                    jointVertices.stream().map(JoinVertex::reverse).collect(Collectors.toList()));
-        }
+        //        if (probeCount > buildCount) {
+        //            return createJoinDecomposition(
+        //                    graphPattern,
+        //                    buildPattern,
+        //                    buildCount,
+        //                    probePattern,
+        //                    probeCount,
+        //
+        // jointVertices.stream().map(JoinVertex::reverse).collect(Collectors.toList()));
+        //        }
         Pattern pattern = graphPattern.getPattern();
         List<GraphJoinDecomposition.JoinVertexPair> jointVertexPairs =
                 jointVertices.stream()

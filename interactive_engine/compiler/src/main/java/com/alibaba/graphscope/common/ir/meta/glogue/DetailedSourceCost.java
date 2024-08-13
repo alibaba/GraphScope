@@ -40,9 +40,11 @@ public class DetailedSourceCost extends RelOptCostImpl {
 
     @Override
     public String toString() {
-        return "DetailedSourceCost{" +
-                "labelFilteringRows=" + labelFilteringRows +
-                ", predicateFilteringRows=" + predicateFilteringRows +
-                '}';
+        return "DetailedSourceCost{"
+                + "labelFilteringRows="
+                + labelFilteringRows
+                + ", predicateFilteringRows="
+                + predicateFilteringRows
+                + '}';
     }
 }

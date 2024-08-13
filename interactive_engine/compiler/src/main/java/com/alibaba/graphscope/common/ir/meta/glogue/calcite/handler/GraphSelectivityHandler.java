@@ -54,8 +54,6 @@ public class GraphSelectivityHandler extends RelMdSelectivity
             RelNode node, RelMetadataQuery mq, @Nullable RexNode condition) {
         if (node instanceof TableScan) {
             return getSelectivity((TableScan) node, mq, condition);
-        } else if (node instanceof TableScan) {
-            return getSelectivity((TableScan) node, mq, condition);
         } else if (node instanceof Filter) {
             return getSelectivity((Filter) node, mq, condition);
         } else if (node instanceof Aggregate) {
@@ -69,7 +67,7 @@ public class GraphSelectivityHandler extends RelMdSelectivity
         } else if (node instanceof Union) {
             return getSelectivity((Union) node, mq, condition);
         }
-        throw new IllegalArgumentException("can not estimate selectivity for the node=" + node);
+        return RelMdUtil.guessSelectivity(condition);
     }
 
     @Override

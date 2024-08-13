@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class EdgeCostEstimator<T> {
@@ -61,13 +62,14 @@ public abstract class EdgeCostEstimator<T> {
                     edgeCost.getGetVFilteringRows() * srcPatternCount / intersectVertexCount);
         }
 
-        private DetailedExpandCost estimateEdge(PatternEdge edge, PatternVertex src, PatternVertex target) {
+        private DetailedExpandCost estimateEdge(
+                PatternEdge edge, PatternVertex src, PatternVertex target) {
             double targetSelectivity = target.getElementDetails().getSelectivity();
             if (Double.compare(targetSelectivity, 1.0d) != 0) {
                 target =
                         (target instanceof SinglePatternVertex)
                                 ? new SinglePatternVertex(
-                                target.getVertexTypeIds().get(0), target.getId())
+                                        target.getVertexTypeIds().get(0), target.getId())
                                 : new FuzzyPatternVertex(target.getVertexTypeIds(), target.getId());
             }
             double edgeSelectivity = edge.getElementDetails().getSelectivity();
@@ -78,19 +80,19 @@ public abstract class EdgeCostEstimator<T> {
                 edge =
                         edge instanceof SinglePatternEdge
                                 ? new SinglePatternEdge(
-                                edgeSrc,
-                                edgeDst,
-                                edge.getEdgeTypeIds().get(0),
-                                edge.getId(),
-                                edge.isBoth(),
-                                edge.getElementDetails())
+                                        edgeSrc,
+                                        edgeDst,
+                                        edge.getEdgeTypeIds().get(0),
+                                        edge.getId(),
+                                        edge.isBoth(),
+                                        edge.getElementDetails())
                                 : new FuzzyPatternEdge(
-                                edgeSrc,
-                                edgeDst,
-                                edge.getEdgeTypeIds(),
-                                edge.getId(),
-                                edge.isBoth(),
-                                edge.getElementDetails());
+                                        edgeSrc,
+                                        edgeDst,
+                                        edge.getEdgeTypeIds(),
+                                        edge.getId(),
+                                        edge.isBoth(),
+                                        edge.getElementDetails());
             }
             Pattern pattern = new Pattern();
             pattern.addVertex(edge.getSrcVertex());

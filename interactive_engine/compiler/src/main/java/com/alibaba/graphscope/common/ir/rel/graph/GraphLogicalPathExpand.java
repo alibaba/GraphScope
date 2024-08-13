@@ -408,6 +408,10 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.cachedCost = cost;
     }
 
+    public RelOptCost getCachedCost() {
+        return this.cachedCost;
+    }
+
     @Override
     public double estimateRowCount(RelMetadataQuery mq) {
         return cachedCost instanceof DetailedExpandCost
