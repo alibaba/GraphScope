@@ -591,6 +591,8 @@ graphPlannerRules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, Exp
 gremlinScriptLanguageName: antlr_gremlin_traversal
 graphPhysicalOpt: ffi
 queryExecutionTimeoutMs: 600000
+graphPlannerJoinMinPatternSize: 5
+graphPlannerCboGlogueSize: 3
 
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
