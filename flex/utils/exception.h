@@ -12,21 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef UTILS_EXCEPTION_H_
+#define UTILS_EXCEPTION_H_
 
-#ifndef STORAGES_RT_MUTABLE_GRAPH_LOADER_FRAGMENT_LOADER_H_
-#define STORAGES_RT_MUTABLE_GRAPH_LOADER_FRAGMENT_LOADER_H_
+#define THROW_EXCEPTION_IF(cond, msg) \
+  if (cond) {                         \
+    throw std::runtime_error(msg);    \
+  }
 
-#include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
-
-namespace gs {
-
-// For different input format, we should implement different fragment loader.
-class IFragmentLoader {
- public:
-  virtual ~IFragmentLoader() = default;
-  virtual Result<bool> LoadFragment() = 0;
-};
-
-}  // namespace gs
-
-#endif  // STORAGES_RT_MUTABLE_GRAPH_LOADER_FRAGMENT_LOADER_H_
+#endif  // UTILS_EXCEPTION_H_
