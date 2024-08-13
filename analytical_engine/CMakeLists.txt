@@ -289,7 +289,7 @@ endif()
 execute_process(COMMAND python3 ../proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-file(GLOB PROTO_CPP_FILES "proto/*.cc")
+file(GLOB PROTO_CPP_FILES "proto/*.cc" "proto/error/*.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets

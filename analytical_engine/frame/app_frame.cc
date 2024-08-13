@@ -120,7 +120,7 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           bl::result<nullptr_t>& wrapper_error) {
+           bl::result<std::nullptr_t>& wrapper_error) {
   __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
       wrapper_error, detail::Query(worker_handler, query_args, context_key,
                                    frag_wrapper, ctx_wrapper));

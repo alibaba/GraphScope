@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.tests.gremlin;
 
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -51,7 +51,7 @@ public class GrootGraphProvider extends AbstractGraphProvider implements AutoClo
                         .getResourceAsStream("gremlin-test.config")) {
             properties.load(ins);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
         properties.put(Graph.GRAPH, GrootGraph.class.getName());
         if (this.storeDataPath == null) {
@@ -80,7 +80,7 @@ public class GrootGraphProvider extends AbstractGraphProvider implements AutoClo
             loadedGraphs.add(graphData);
         } catch (URISyntaxException | IOException e) {
             logger.error("load schema failed", e);
-            throw new GrootException(e);
+            throw new InvalidArgumentException(e);
         } catch (InterruptedException e) {
             logger.error("load data failed", e);
         }

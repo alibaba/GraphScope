@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.store.external;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.ExternalStorageErrorException;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.tunnel.TunnelException;
@@ -56,7 +57,7 @@ public class VolumeStorage extends ExternalStorage {
                 }
             }
         } catch (TunnelException e) {
-            throw new IOException(e);
+            throw new ExternalStorageErrorException(e);
         }
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;

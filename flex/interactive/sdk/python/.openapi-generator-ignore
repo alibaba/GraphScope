@@ -26,6 +26,7 @@
 README.md
 setup.py
 gs_interactive/client
+gs_interactive/models/long_text.py
 requirements.txt
 test-requirements.txt
 test/

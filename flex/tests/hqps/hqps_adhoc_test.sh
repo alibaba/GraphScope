@@ -104,7 +104,11 @@ start_engine_service(){
     fi
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
-    
+
+    if [ "${TEST_TYPE}" == "gremlin" ]; then
+      cmd="${cmd} --enable-adhoc-handler=true"
+    fi
+
     info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
@@ -184,6 +188,7 @@ run_cypher_test(){
   else
     echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
   fi
+  rm -rf /tmp/neo4j-* || true
 }
 
 

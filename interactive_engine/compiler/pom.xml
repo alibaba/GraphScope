@@ -147,6 +147,10 @@
             <artifactId>opentelemetry-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+        </dependency>
+        <dependency>
             <!-- Not managed by opentelemetry-bom -->
             <groupId>io.opentelemetry.semconv</groupId>
             <artifactId>opentelemetry-semconv</artifactId>
@@ -161,6 +165,10 @@
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-ext</artifactId>
             <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>interactive</artifactId>
         </dependency>
     </dependencies>
 

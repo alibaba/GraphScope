@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.exception.UnimplementedException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
@@ -61,6 +62,6 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
 
     @Override
     public int getVersion() {
-        throw new UnsupportedOperationException();
+        throw new UnimplementedException();
     }
 }

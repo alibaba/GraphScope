@@ -94,6 +94,7 @@ class JavaPIEPropertyContext : public JavaContextBase<FRAG_T> {
 
   std::shared_ptr<gs::IContextWrapper> CreateInnerCtxWrapper(
       const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper) {
+    JavaContextBase<FRAG_T>::WriteBackJVMHeapToCppContext();
     std::string java_ctx_type_name = getJavaCtxTypeName(this->context_object());
     VLOG(1) << "Java ctx type name" << java_ctx_type_name;
     if (java_ctx_type_name == "LabeledVertexDataContext") {

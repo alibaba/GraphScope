@@ -144,15 +144,17 @@ Result<std::vector<PluginMeta>> DefaultGraphMetaStore::GetAllPluginMeta(
     return Result<std::vector<PluginMeta>>(res.status());
   }
   std::vector<PluginMeta> metas;
-  VLOG(10) << "Found plugin metas: " << res.move_value().size();
   for (auto& pair : res.move_value()) {
     auto plugin_meta = PluginMeta::FromJson(pair.second);
     if (plugin_meta.bound_graph == graph_id) {
       metas.push_back(plugin_meta);
     }
   }
-  VLOG(10) << "Found plugin metas belong to graph " << graph_id << ": "
-           << metas.size();
+  // Sort the plugin metas by create time.
+  std::sort(metas.begin(), metas.end(),
+            [](const PluginMeta& a, const PluginMeta& b) {
+              return a.creation_time < b.creation_time;
+            });
   return Result<std::vector<PluginMeta>>(metas);
 }
 

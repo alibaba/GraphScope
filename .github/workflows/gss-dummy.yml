@@ -11,6 +11,9 @@ on:
       - '!python/graphscope/client/**'
       - '!charts/graphscope-store/**'
       - '!.github/workflows/gss.yml'
+      - '!flex/openapi/openapi_coordinator.yaml'
+      - '!coordinator/gscoordinator/flex/**'
+      - '!python/graphscope/gsctl/**'
       - 'interactive_engine/**.md'
       - 'charts/graphscope-store/**.md'
 
