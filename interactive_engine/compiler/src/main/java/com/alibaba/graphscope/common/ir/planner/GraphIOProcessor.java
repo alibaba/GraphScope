@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.planner;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.CountHandler;
 import com.alibaba.graphscope.common.ir.meta.glogue.DetailedExpandCost;
+import com.alibaba.graphscope.common.ir.meta.glogue.DetailedSourceCost;
 import com.alibaba.graphscope.common.ir.meta.glogue.EdgeCostEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
@@ -51,7 +52,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
@@ -507,8 +507,21 @@ public class GraphIOProcessor {
                 builder.filter(value.getFilter());
             }
             RelNode rel = builder.build();
-            addCachedCost(rel, new RelOptCostImpl(mq.getRowCount(graph)));
+            addCachedCost(rel, getSourceCost(graph, vertex));
             return rel;
+        }
+
+        private DetailedSourceCost getSourceCost(GraphPattern graph, PatternVertex singleVertex) {
+            double selectivity = singleVertex.getElementDetails().getSelectivity();
+            if (Double.compare(selectivity, 1.0d) < 0) {
+                singleVertex =
+                        (singleVertex instanceof SinglePatternVertex)
+                                ? new SinglePatternVertex(
+                                singleVertex.getVertexTypeIds().get(0), singleVertex.getId())
+                                : new FuzzyPatternVertex(singleVertex.getVertexTypeIds(), singleVertex.getId());
+            }
+            double patternCount = mq.getRowCount(new GraphPattern(graph.getCluster(), graph.getTraitSet(), new Pattern(singleVertex)));
+            return new DetailedSourceCost(patternCount, patternCount * selectivity);
         }
 
         private RelNode addCachedCost(RelNode rel, RelOptCost cost) {
