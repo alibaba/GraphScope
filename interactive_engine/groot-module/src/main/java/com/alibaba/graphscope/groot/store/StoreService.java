@@ -220,7 +220,6 @@ public class StoreService {
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
-        long start = System.currentTimeMillis();
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
@@ -268,7 +267,9 @@ public class StoreService {
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
-                            }
+                            } //  else {
+                            //     logger.debug("marker batch ignored");
+                            // }
                         } catch (Exception ex) {
                             metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId));
                             logger.error(
@@ -298,8 +299,9 @@ public class StoreService {
         }
         future.get();
         if (batchNeedRetry.size() > 0) {
+            logger.warn("Write batch failed, will retry. failure count: {}", batchNeedRetry.size());
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 // Ignore
             }

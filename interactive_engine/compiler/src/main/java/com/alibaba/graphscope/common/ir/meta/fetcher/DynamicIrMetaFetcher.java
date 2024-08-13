@@ -52,12 +52,12 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
         this.scheduler = new ScheduledThreadPoolExecutor(2);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncMeta(),
-                0,
+                2000,
                 GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncStats(statsEnabled == null ? false : statsEnabled),
-                0,
+                2000,
                 GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
     }
