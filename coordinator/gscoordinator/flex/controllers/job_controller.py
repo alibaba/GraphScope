@@ -5,6 +5,7 @@ from typing import Union
 
 from gscoordinator.flex.models.create_dataloading_job_response import CreateDataloadingJobResponse  # noqa: E501
 from gscoordinator.flex.models.dataloading_job_config import DataloadingJobConfig  # noqa: E501
+from gscoordinator.flex.models.dataloading_mr_job_config import DataloadingMRJobConfig  # noqa: E501
 from gscoordinator.flex.models.error import Error  # noqa: E501
 from gscoordinator.flex.models.job_status import JobStatus  # noqa: E501
 from gscoordinator.flex import util
@@ -14,31 +15,37 @@ from gscoordinator.flex.core import handle_api_exception
 
 
 @handle_api_exception()
-def delete_job_by_id(job_id):  # noqa: E501
+def delete_job_by_id(job_id, delete_scheduler=None):  # noqa: E501
     """delete_job_by_id
 
     Delete job by ID # noqa: E501
 
-    :param job_id: 
+    :param job_id:
     :type job_id: str
+    :param delete_scheduler:
+    :type delete_scheduler: bool
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.delete_job_by_id(job_id)
+    return client_wrapper.delete_job_by_id(job_id, delete_scheduler)
 
 
 @handle_api_exception()
-def get_dataloading_job_config(graph_id):  # noqa: E501
+def get_dataloading_job_config(graph_id, dataloading_job_config):  # noqa: E501
     """get_dataloading_job_config
 
-    Get the data loading configuration # noqa: E501
+    Post to get the data loading configuration for MapReduce Task # noqa: E501
 
     :param graph_id:
     :type graph_id: str
+    :param dataloading_job_config:
+    :type dataloading_job_config: dict | bytes
 
-    :rtype: Union[DataloadingJobConfig, Tuple[DataloadingJobConfig, int], Tuple[DataloadingJobConfig, int, Dict[str, str]]
+    :rtype: Union[DataloadingMRJobConfig, Tuple[DataloadingMRJobConfig, int], Tuple[DataloadingMRJobConfig, int, Dict[str, str]]
     """
-    return client_wrapper.get_dataloading_job_config(graph_id)
+    if connexion.request.is_json:
+        dataloading_job_config = DataloadingJobConfig.from_dict(connexion.request.get_json())  # noqa: E501
+    return client_wrapper.get_dataloading_job_config(graph_id, dataloading_job_config)
 
 
 @handle_api_exception()

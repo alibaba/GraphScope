@@ -18,7 +18,7 @@
 #include "stdlib.h"
 
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
@@ -64,7 +64,7 @@ void blockSignal(int sig) {
 }
 
 // When graph_schema is not specified, codegen proxy will use the running graph
-// schema in hqps_service
+// schema in graph_db_service
 void init_codegen_proxy(const bpo::variables_map& vm,
                         const std::string& engine_config_file,
                         const std::string& graph_schema_file = "") {
@@ -171,7 +171,9 @@ int main(int argc, char** argv) {
       "start-compiler", bpo::value<bool>()->default_value(false),
       "whether or not to start compiler")(
       "memory-level,m", bpo::value<unsigned>()->default_value(1),
-      "memory allocation strategy");
+      "memory allocation strategy")("enable-adhoc-handler",
+                                    bpo::value<bool>()->default_value(false),
+                                    "whether to enable adhoc handler");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -203,6 +205,7 @@ int main(int argc, char** argv) {
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
+  service_config.enable_adhoc_handler = vm["enable-adhoc-handler"].as<bool>();
 
   auto& db = gs::GraphDB::get();
 
@@ -232,7 +235,9 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
         service_config.default_graph);
-    gs::init_codegen_proxy(vm, engine_config_file);
+    if (service_config.enable_adhoc_handler) {
+      gs::init_codegen_proxy(vm, engine_config_file);
+    }
   } else {
     LOG(INFO) << "Start query service only";
     std::string graph_schema_path, data_path;
@@ -256,7 +261,9 @@ int main(int argc, char** argv) {
     }
 
     // The schema is loaded just to get the plugin dir and plugin list
-    gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
+    if (service_config.enable_adhoc_handler) {
+      gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
+    }
     db.Close();
     auto load_res =
         db.Open(schema_res.value(), data_path, service_config.shard_num);
@@ -266,8 +273,8 @@ int main(int argc, char** argv) {
     }
   }
 
-  server::HQPSService::get().init(service_config);
-  server::HQPSService::get().run_and_wait_for_exit();
+  server::GraphDBService::get().init(service_config);
+  server::GraphDBService::get().run_and_wait_for_exit();
 
 #ifdef HAVE_OPENTELEMETRY_CPP
   otel::cleanUpTracer();

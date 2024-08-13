@@ -58,8 +58,7 @@ namespace bl = boost::leaf;
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
-using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+
 void output_nd_array(const grape::CommSpec& comm_spec,
                      std::unique_ptr<grape::InArchive> arc,
                      const std::string& output_path, int data_type_expected) {
@@ -92,6 +91,12 @@ void output_nd_array(const grape::CommSpec& comm_spec,
     } else if (data_type_expected == 4) {
       for (int64_t i = 0; i < length1; ++i) {
         int64_t v;
+        oarc >> v;
+        assembled_ostream << v << std::endl;
+      }
+    } else if (data_type_expected == vineyard::TypeToInt<double>::value) {
+      for (int64_t i = 0; i < length1; ++i) {
+        double v;
         oarc >> v;
         assembled_ostream << v << std::endl;
       }
@@ -151,9 +156,15 @@ void output_data_frame(const grape::CommSpec& comm_spec,
         oarc >> data;
         assembled_col2_ostream << data << std::endl;
       }
-    } else if (expected_data_type == 4) {
+    } else if (expected_data_type == vineyard::TypeToInt<int64_t>::value) {
       for (int64_t i = 0; i < length; ++i) {
         int64_t data;
+        oarc >> data;
+        assembled_col2_ostream << data << std::endl;
+      }
+    } else if (expected_data_type == vineyard::TypeToInt<double>::value) {
+      for (int64_t i = 0; i < length; ++i) {
+        double data;
         oarc >> data;
         assembled_col2_ostream << data << std::endl;
       }
@@ -260,7 +271,8 @@ void QueryProperty(vineyard::Client& client,
 
     // 1. Test data frame
     {
-      // auto selectors = gs::gs::Selector::ParseSelectors(s_selectors).value();
+      // auto selectors =
+      // gs::gs::Selector::ParseSelectors(s_selectors).value();
       std::unique_ptr<grape::InArchive> arc = std::move(
           vp_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
       std::string java_data_frame_out_prefix = out_prefix + "/java";
@@ -298,7 +310,8 @@ void QueryProperty(vineyard::Client& client,
 
     // 1. Test data frame
     {
-      // auto selectors = gs::gs::Selector::ParseSelectors(s_selectors).value();
+      // auto selectors =
+      // gs::gs::Selector::ParseSelectors(s_selectors).value();
       std::unique_ptr<grape::InArchive> arc = std::move(
           vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
       std::string java_data_frame_out_prefix = out_prefix + "/java";
@@ -325,13 +338,13 @@ void QueryProperty(vineyard::Client& client,
   }
 }
 
-void QueryProjected(vineyard::Client& client,
-                    std::shared_ptr<ProjectedFragmentType> fragment,
-                    const grape::CommSpec& comm_spec,
-                    const std::string& app_name, const std::string& out_prefix,
-                    const std::string& basic_params,
-                    const std::string& selector_string,
-                    const std::string& selectors_string) {
+template <typename ProjectedFragmentType>
+void QueryProjected(
+    vineyard::Client& client, std::shared_ptr<ProjectedFragmentType> fragment,
+    const grape::CommSpec& comm_spec, const std::string& app_name,
+    const std::string& out_prefix, const std::string& basic_params,
+    const std::string& selector_string, const std::string& selectors_string,
+    int32_t expected_data_type, vineyard::AnyType expected_tensor_type) {
   using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -375,18 +388,19 @@ void QueryProjected(vineyard::Client& client,
       std::string java_out_prefix =
           out_prefix + "/java_projected_assembled_ndarray.dat";
       output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      4);  // 4 for int64_t
+                      expected_data_type);  // 4 for int64_t
     }
     VLOG(1) << "[0] java projected finish test ndarray";
 
     // 1. Test data frame
     {
-      // auto selectors = gs::gs::Selector::ParseSelectors(s_selectors).value();
+      // auto selectors =
+      // gs::gs::Selector::ParseSelectors(s_selectors).value();
       std::unique_ptr<grape::InArchive> arc = std::move(
           vp_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
       std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
       output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        4);
+                        expected_data_type);
     }
 
     VLOG(1) << "[1] java projected finish test dataframe";
@@ -397,10 +411,9 @@ void QueryProjected(vineyard::Client& client,
       CHECK(tmp);
       vineyard::ObjectID ndarray_object = tmp.value();
       std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  // 4
       output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
                                       java_v6d_tensor_prefix,
-                                      expected_data_type);
+                                      expected_tensor_type);
     }
     VLOG(1) << "[2] java projected finish test vineyard tensor";
 
@@ -414,18 +427,17 @@ void QueryProjected(vineyard::Client& client,
       std::string java_out_prefix =
           out_prefix + "/java_projected_assembled_ndarray.dat";
       output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      4);  // 4 for int64_t
+                      expected_data_type);  // 4 for int64_t
     }
     VLOG(1) << "[0] java projected finish test ndarray";
 
     // 1. Test data frame
     {
-      // auto selectors = gs::gs::Selector::ParseSelectors(s_selectors).value();
       std::unique_ptr<grape::InArchive> arc = std::move(
           vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
       std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
       output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        4);
+                        expected_data_type);
     }
 
     VLOG(1) << "[1] java projected finish test dataframe";
@@ -436,17 +448,22 @@ void QueryProjected(vineyard::Client& client,
       CHECK(tmp);
       vineyard::ObjectID ndarray_object = tmp.value();
       std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  // 4
-      output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
-                                      java_v6d_tensor_prefix,
-                                      expected_data_type);
+      if (expected_tensor_type == vineyard::AnyType::Double) {
+        output_vineyard_tensor<double>(client, ndarray_object, comm_spec,
+                                       java_v6d_tensor_prefix,
+                                       expected_tensor_type);
+      } else if (expected_tensor_type == vineyard::AnyType::Int64) {
+        output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
+                                        java_v6d_tensor_prefix,
+                                        expected_tensor_type);
+      } else {
+        LOG(FATAL) << "Unregonizable data type " << expected_tensor_type;
+      }
     }
     VLOG(1) << "[2] java projected finish test vineyard tensor";
-
   } else {
     LOG(ERROR) << "Unrecognized ctx type: " << ctx_wrapper->context_type();
   }
-  //  auto selector = gs::LabeledSelector::parse("r:label0.property0").value();
 }
 
 // Running test doesn't require codegen.
@@ -501,8 +518,13 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     QueryProperty(client, fragment, comm_spec, app_name, "/tmp", basic_params,
                   selector_string, selectors_string);
   } else {  // 3. run projected
-    pt.put("frag_name",
-           "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>");
+    if (app_name.find("SSSP") != std::string::npos) {
+      pt.put("frag_name",
+             "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>");
+    } else {
+      pt.put("frag_name",
+             "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>");
+    }
     std::stringstream ss;
     boost::property_tree::json_parser::write_json(ss, pt);
     std::string basic_params = ss.str();
@@ -510,13 +532,6 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     VLOG(1) << "running projected";
     VLOG(1) << "vertex properties num: " << fragment->vertex_property_num(0);
     VLOG(1) << "edge properties num: " << fragment->edge_property_num(0);
-    std::shared_ptr<ProjectedFragmentType> projected_fragment =
-        ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
-    // test get data
-    using vertex_t = ProjectedFragmentType::vertex_t;
-    vertex_t vertex;
-    projected_fragment->GetInnerVertex(4, vertex);
-    VLOG(1) << "source vertex" << vertex.GetValue();
     {
       std::string selector_string;
       std::string selectors_string;
@@ -539,8 +554,35 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
           selectors_string = gs::generate_selectors(selector_list);
         }
       }
-      QueryProjected(client, projected_fragment, comm_spec, app_name, "/tmp",
-                     basic_params, selector_string, selectors_string);
+      if (app_name.find("SSSP") != std::string::npos) {
+        using ProjectedFragmentType =
+            gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
+        std::shared_ptr<ProjectedFragmentType> projected_fragment =
+            ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+        // test get data
+        using vertex_t = ProjectedFragmentType::vertex_t;
+        vertex_t vertex;
+        projected_fragment->GetInnerVertex(4, vertex);
+        VLOG(1) << "source vertex" << vertex.GetValue();
+        QueryProjected(client, projected_fragment, comm_spec, app_name, "/tmp",
+                       basic_params, selector_string, selectors_string,
+                       vineyard::TypeToInt<double>::value,
+                       vineyard::AnyType::Double);
+      } else {
+        using ProjectedFragmentType =
+            gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+        std::shared_ptr<ProjectedFragmentType> projected_fragment =
+            ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+        // test get data
+        using vertex_t = ProjectedFragmentType::vertex_t;
+        vertex_t vertex;
+        projected_fragment->GetInnerVertex(4, vertex);
+        VLOG(1) << "source vertex" << vertex.GetValue();
+        QueryProjected(client, projected_fragment, comm_spec, app_name, "/tmp",
+                       basic_params, selector_string, selectors_string,
+                       vineyard::TypeToInt<int64_t>::value,
+                       vineyard::AnyType::Int64);
+      }
     }
   }
 }

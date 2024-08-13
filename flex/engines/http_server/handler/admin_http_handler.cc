@@ -29,17 +29,6 @@
 
 namespace server {
 
-std::string trim_slash(const std::string& origin) {
-  std::string res = origin;
-  if (res.front() == '/') {
-    res.erase(res.begin());
-  }
-  if (res.back() == '/') {
-    res.pop_back();
-  }
-  return res;
-}
-
 // Only returns success if all results are success
 // But currently, only one file uploading is supported.
 admin_query_result generate_final_result(
@@ -240,7 +229,6 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
     auto dst_executor = executor_idx_;
 
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "POST") {
       if (path.find("dataloading") != seastar::sstring::npos) {
@@ -488,7 +476,6 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
     auto dst_executor = executor_idx_;
 
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "POST") {
       // Then param[action] should exists
@@ -524,8 +511,6 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
             std::runtime_error("Unsupported action: " + action));
       }
     } else {
-      // get status
-      LOG(INFO) << "GET with action: status";
       return admin_actor_refs_[dst_executor]
           .service_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](
@@ -695,7 +680,7 @@ seastar::future<> admin_http_handler::set_routes() {
     {
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_procedure_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure");
@@ -705,7 +690,7 @@ seastar::future<> admin_http_handler::set_routes() {
     {
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_procedure_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure");
@@ -716,7 +701,7 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_procedure_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -729,7 +714,7 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_procedure_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -741,7 +726,7 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_procedure_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -754,24 +739,24 @@ seastar::future<> admin_http_handler::set_routes() {
     // List all graphs.
     r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/v1/graph"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_graph_concurrency));
+                                            shard_admin_concurrency));
     // Create a new Graph
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/graph"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_graph_concurrency));
+                                            shard_admin_concurrency));
 
     // Delete a graph
     r.add(SEASTAR_DELETE,
           seastar::httpd::url("/v1/graph").remainder("graph_id"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_graph_concurrency));
+                                            shard_admin_concurrency));
     {
       // uploading file to server
       r.add(seastar::httpd::operation_type::POST,
             seastar::httpd::url("/v1/file/upload"),
             new admin_file_upload_handler_impl(interactive_admin_group_id,
-                                               shard_admin_graph_concurrency));
+                                               shard_admin_concurrency));
     }
 
     // Get graph metadata
@@ -780,7 +765,7 @@ seastar::future<> admin_http_handler::set_routes() {
       // /v1/graph/{graph_id}/schema
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_graph_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id", false);
       // Get graph schema
       r.add(match_rule, seastar::httpd::operation_type::GET);
@@ -789,7 +774,7 @@ seastar::future<> admin_http_handler::set_routes() {
     {  // load data to graph
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_graph_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/dataloading");
@@ -798,7 +783,7 @@ seastar::future<> admin_http_handler::set_routes() {
     {  // Get Graph Schema
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_graph_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/schema");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
@@ -806,7 +791,7 @@ seastar::future<> admin_http_handler::set_routes() {
       // Get running graph statistics
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_graph_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/statistics");
@@ -818,18 +803,18 @@ seastar::future<> admin_http_handler::set_routes() {
       r.add(seastar::httpd::operation_type::GET,
             seastar::httpd::url("/v1/node/status"),
             new admin_http_node_handler_impl(interactive_admin_group_id,
-                                             shard_admin_node_concurrency));
+                                             shard_admin_concurrency));
 
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_service_handler_impl(
-              interactive_admin_group_id, shard_admin_service_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
       match_rule->add_str("/v1/service").add_param("action");
       r.add(match_rule, seastar::httpd::operation_type::POST);
 
       r.add(seastar::httpd::operation_type::GET,
             seastar::httpd::url("/v1/service/status"),
-            new admin_http_service_handler_impl(
-                interactive_admin_group_id, shard_admin_service_concurrency));
+            new admin_http_service_handler_impl(interactive_admin_group_id,
+                                                shard_admin_concurrency));
     }
 
     {
@@ -901,17 +886,17 @@ seastar::future<> admin_http_handler::set_routes() {
       // job request handling.
       r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/v1/job"),
             new admin_http_job_handler_impl(interactive_admin_group_id,
-                                            shard_admin_job_concurrency));
+                                            shard_admin_concurrency));
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_job_handler_impl(
-              interactive_admin_group_id, shard_admin_job_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency));
 
       match_rule->add_str("/v1/job").add_param("job_id");
       r.add(match_rule, seastar::httpd::operation_type::GET);
 
       r.add(SEASTAR_DELETE, seastar::httpd::url("/v1/job").remainder("job_id"),
             new admin_http_job_handler_impl(interactive_admin_group_id,
-                                            shard_admin_job_concurrency));
+                                            shard_admin_concurrency));
     }
 
     return seastar::make_ready_future<>();

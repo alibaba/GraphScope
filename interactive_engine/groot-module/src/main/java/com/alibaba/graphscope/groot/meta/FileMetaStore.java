@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.meta;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidDataException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +79,8 @@ public class FileMetaStore implements MetaStore {
                 int ignored = is.read(res);
                 long realCrc = getCRC32Checksum(res);
                 if (realCrc != crc) {
-                    throw new IOException("Checksum mismatch for " + file.getAbsolutePath());
+                    throw new InvalidDataException(
+                            "Checksum mismatch for " + file.getAbsolutePath());
                 }
             }
         }
@@ -111,7 +114,7 @@ public class FileMetaStore implements MetaStore {
         } else if (res1 != null) {
             return res1;
         } else {
-            throw new IOException("File maybe corrupted: " + path);
+            throw new InvalidDataException("File maybe corrupted: " + path);
         }
     }
 

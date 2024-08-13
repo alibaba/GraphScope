@@ -16,8 +16,8 @@
 #include "grape/util.h"
 
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
-#include "flex/engines/http_server/service/graph_db_service.h"
 
 #include <boost/program_options.hpp>
 #include <seastar/core/alien.hh>
@@ -99,7 +99,14 @@ int main(int argc, char** argv) {
 
   // start service
   LOG(INFO) << "GraphScope http server start to listen on port " << http_port;
-  server::GraphDBService::get().init(shard_num, http_port, enable_dpdk);
+
+  server::ServiceConfig service_config;
+  service_config.shard_num = shard_num;
+  service_config.dpdk_mode = enable_dpdk;
+  service_config.query_port = http_port;
+  service_config.start_admin_service = false;
+  service_config.start_compiler = false;
+  server::GraphDBService::get().init(service_config);
   server::GraphDBService::get().run_and_wait_for_exit();
 
   return 0;

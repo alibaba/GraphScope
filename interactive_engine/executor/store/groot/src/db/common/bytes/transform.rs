@@ -27,7 +27,7 @@ pub fn bytes_to_i64(buf: &[u8]) -> GraphResult<i64> {
         Ok(reader.read_i64(0))
     } else {
         let msg = format!("bytes with length {} cannot transform to i64", buf.len());
-        let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, bytes_to_i64);
+        let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, bytes_to_i64);
         Err(err)
     }
 }
@@ -42,6 +42,6 @@ pub fn i64_to_arr(x: i64) -> [u8; 8] {
 pub fn bytes_to_str(buf: &[u8]) -> GraphResult<&str> {
     std::str::from_utf8(buf).map_err(|e| {
         let msg = format!("{:?}", e);
-        gen_graph_err!(GraphErrorCode::InvalidData, msg, bytes_to_str)
+        gen_graph_err!(ErrorCode::INVALID_DATA, msg, bytes_to_str)
     })
 }

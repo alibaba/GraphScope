@@ -234,6 +234,7 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | loading_config.format.metadata.double_quote | true |  Whether a quote inside a value is double-quoted | No |
 | loading_config.format.metadata.escaping | false | Whether escaping is used | No |
 | loading_config.format.metadata.escape_char | '\\' | Escaping character (if `escaping` is true) | No |
+| loading_config.format.metadata.null_values | [] | Recognized spellings for null values | No |
 | loading_config.format.metadata.batch_size | 4MB | The size of batch for reading from files | No |
 | loading_config.x_csr_params.parallelism | 1 | Number of threads used for bulk loading | No |
 | loading_config.x_csr_params.build_csr_in_mem | false | Whether to build csr fully in memory | No |
@@ -274,9 +275,10 @@ The **loading_config** section defines the primary settings for data loading. Th
 	- loading_config.format.metadata.quoting: Whether quoting is used
 	- loading_config.format.metadata.quote_char: Quoting character (if `quoting` is true)
 	- loading_config.format.metadata.double_quote:  Whether a quote inside a value is double-quoted
-  - loading_config.format.metadata.escape_char: Whether escaping is used
+	- loading_config.format.metadata.escaping: Whether escaping is used
 	- loading_config.format.metadata.escape_char: Escaping character (if `escaping` is true)
 	- loading_config.format.metadata.block_size: The size of batch for reading from files
+	- loading_config.format.metadata.null_values: Recognized spellings for null values
 
 ### Vertex Mappings
 The **vertex_mappings** section outlines how raw data maps to graph vertices based on the defined schema. 

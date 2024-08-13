@@ -131,7 +131,6 @@ class PathExpand {
     for (auto j = range.start_; j < range.limit_; ++j) {
       next_path.clear();
       auto& cur_offset_vec = other_offsets[j];
-      CHECK(cur_path.size() == vertices_vec.size());
       next_path.resize(vertices_vec.size());
 
       for (size_t i = 0; i < vertices_vec.size(); ++i) {

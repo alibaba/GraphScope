@@ -19,6 +19,7 @@ package com.alibaba.graphscope.groot.servers.ir;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateClient;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -87,7 +88,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
             queryQueue.put(status);
             return irMeta;
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 

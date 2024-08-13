@@ -26,6 +26,12 @@
 
 namespace gs {
 
+void read_file(const std::string& filename, void* buffer, size_t size,
+               size_t num);
+
+void write_file(const std::string& filename, const void* buffer, size_t size,
+                size_t num);
+
 template <typename EDATA_T>
 class MutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
@@ -391,28 +397,63 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
 
     if (need_cap_list) {
-      FILE* fcap_out =
-          fopen((new_snapshot_dir + "/" + name + ".cap").c_str(), "wb");
-      CHECK_EQ(fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out),
-               cap_list.size());
-      fflush(fcap_out);
-      fclose(fcap_out);
+      write_file(new_snapshot_dir + "/" + name + ".cap", cap_list.data(),
+                 sizeof(int), cap_list.size());
     }
 
     if (reuse_nbr_list && !nbr_list_.filename().empty() &&
         std::filesystem::exists(nbr_list_.filename())) {
+      std::error_code errorCode;
       std::filesystem::create_hard_link(nbr_list_.filename(),
-                                        new_snapshot_dir + "/" + name + ".nbr");
+                                        new_snapshot_dir + "/" + name + ".nbr",
+                                        errorCode);
+      if (errorCode) {
+        std::stringstream ss;
+        ss << "Failed to create hard link from " << nbr_list_.filename()
+           << " to " << new_snapshot_dir + "/" + name + ".snbr"
+           << ", error code: " << errorCode << " " << errorCode.message();
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
+      }
     } else {
       FILE* fout =
           fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
-      for (size_t i = 0; i < vnum; ++i) {
-        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
-                        adj_lists_[i].capacity(), fout),
-                 adj_lists_[i].capacity());
+      std::string filename = new_snapshot_dir + "/" + name + ".nbr";
+      if (fout == nullptr) {
+        std::stringstream ss;
+        ss << "Failed to open nbr list " << filename << ", " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
       }
-      fflush(fout);
-      fclose(fout);
+
+      for (size_t i = 0; i < vnum; ++i) {
+        size_t ret{};
+        if ((ret = fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                          adj_lists_[i].capacity(), fout)) !=
+            static_cast<size_t>(adj_lists_[i].capacity())) {
+          std::stringstream ss;
+          ss << "Failed to write nbr list " << filename << ", expected "
+             << adj_lists_[i].capacity() << ", got " << ret << ", "
+             << strerror(errno);
+          LOG(ERROR) << ss.str();
+          throw std::runtime_error(ss.str());
+        }
+      }
+      int ret = 0;
+      if ((ret = fflush(fout)) != 0) {
+        std::stringstream ss;
+        ss << "Failed to flush nbr list " << filename << ", error code: " << ret
+           << " " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
+      }
+      if ((ret = fclose(fout)) != 0) {
+        std::stringstream ss;
+        ss << "Failed to close nbr list " << filename << ", error code: " << ret
+           << " " << strerror(errno);
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
+      }
     }
   }
 
@@ -510,10 +551,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
     if (std::filesystem::exists(meta_file_path)) {
-      FILE* meta_file_fd = fopen(meta_file_path.c_str(), "r");
-      CHECK_EQ(fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
-               1);
-      fclose(meta_file_fd);
+      read_file(meta_file_path, &unsorted_since_, sizeof(timestamp_t), 1);
+
     } else {
       unsorted_since_ = 0;
     }
@@ -521,10 +560,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump_meta(const std::string& prefix) const {
     std::string meta_file_path = prefix + ".meta";
-    FILE* meta_file_fd = fopen((prefix + ".meta").c_str(), "wb");
-    CHECK_EQ(fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd), 1);
-    fflush(meta_file_fd);
-    fclose(meta_file_fd);
+    write_file(meta_file_path, &unsorted_since_, sizeof(timestamp_t), 1);
   }
 
   grape::SpinLock* locks_;
@@ -768,9 +804,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       size_t old_size = nbr_list_.size();
       nbr_list_.reset();
       nbr_list_.resize(v_cap);
-      FILE* fin = fopen((prefix + ".snbr").c_str(), "r");
-      CHECK_EQ(fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin), old_size);
-      fclose(fin);
+      read_file(prefix + ".snbr", nbr_list_.data(), sizeof(nbr_t), old_size);
       for (size_t k = old_size; k != v_cap; ++k) {
         nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
       }
@@ -792,13 +826,21 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
             const std::string& new_snapshot_dir) override {
     if ((!nbr_list_.filename().empty() &&
          std::filesystem::exists(nbr_list_.filename()))) {
-      std::filesystem::create_hard_link(
-          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+      std::error_code errorCode;
+      std::filesystem::create_hard_link(nbr_list_.filename(),
+                                        new_snapshot_dir + "/" + name + ".snbr",
+                                        errorCode);
+      if (errorCode) {
+        std::stringstream ss;
+        ss << "Failed to create hard link from " << nbr_list_.filename()
+           << " to " << new_snapshot_dir + "/" + name + ".snbr"
+           << ", error code: " << errorCode << " " << errorCode.message();
+        LOG(ERROR) << ss.str();
+        throw std::runtime_error(ss.str());
+      }
     } else {
-      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
-      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
-      fflush(fp);
-      fclose(fp);
+      write_file(new_snapshot_dir + "/" + name + ".snbr", nbr_list_.data(),
+                 sizeof(nbr_t), nbr_list_.size());
     }
   }
 
