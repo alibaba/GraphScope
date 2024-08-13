@@ -108,7 +108,6 @@ public class HttpIrMetaReader implements IrMetaReader {
         }
     }
 
-    // todo: implement when backend is admin http service
     @Override
     public boolean syncStatsEnabled(GraphId graphId) throws IOException {
         try {

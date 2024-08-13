@@ -51,8 +51,6 @@ public class GrootIrMetaReader implements IrMetaReader {
         return schemaFetcher.getStatistics();
     }
 
-    // todo: a synchronous invocation to check whether statistics functionality is enabled in the
-    // groot
     @Override
     public boolean syncStatsEnabled(GraphId graphId) {
         return schemaFetcher.statisticsEnabled();
