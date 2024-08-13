@@ -16,7 +16,6 @@ package com.alibaba.graphscope.groot.frontend;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.UnimplementedException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
