@@ -562,9 +562,6 @@ Status GraphDBOperations::updateEdge(std::vector<EdgeData>&& edge_data,
                                      GraphDBSession& session) {
   try {
     const auto& edge = edge_data[0];
-    if (edge.property_value.type == PropertyType::kEmpty) {
-      return Status::OK();
-    }
     auto txn = session.GetReadTransaction();
     vid_t src_vid, dst_vid;
     if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
