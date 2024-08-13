@@ -50,12 +50,12 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
         this.scheduler = new ScheduledThreadPoolExecutor(2);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncMeta(),
-                0,
+                2000,
                 GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncStats(),
-                0,
+                2000,
                 GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
     }
@@ -88,7 +88,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 syncStats();
             }
         } catch (Exception e) {
-            logger.warn("failed to read meta data, error is {}", e);
+            logger.warn("failed to read meta data", e);
         }
     }
 
@@ -110,7 +110,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 }
             }
         } catch (Exception e) {
-            logger.warn("failed to read graph statistics, error is {}", e);
+            logger.warn("failed to read graph statistics", e);
         } finally {
             if (this.currentState != null
                     && tracker != null
