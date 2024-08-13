@@ -85,6 +85,8 @@ public class FFITypeFactoryhelper {
             return "std::string";
         } else if (clz.getName() == StringView.class.getName()) {
             return "std::string";
+        } else if (clz.getName() == StdString.class.getName()) {
+            return "std::string";
         } else {
             logger.error("Must be one of long, double, integer, but got: " + clz.getName());
             return "null";

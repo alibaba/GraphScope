@@ -52,7 +52,7 @@ jobs:
       gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Detect the tmate session
       run: |
@@ -207,7 +207,7 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -257,7 +257,7 @@ jobs:
         tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-${{ github.sha }}
         path: |
@@ -270,9 +270,9 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -320,7 +320,7 @@ jobs:
 
       - name: Upload GIE log
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: gie-log
@@ -338,10 +338,10 @@ jobs:
         deployment: ["standalone", "distributed"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
       with:
         path: artifacts
@@ -407,7 +407,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -429,7 +429,7 @@ jobs:
             - 'python/graphscope/nx/convert_matrix.py'
             - 'python/graphscope/nx/tests/convert/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
@@ -496,7 +496,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -516,7 +516,7 @@ jobs:
           io:
             - 'python/graphscope/nx/readwrite/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts

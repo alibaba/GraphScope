@@ -299,7 +299,15 @@ void MutablePropertyFragment::Compact(uint32_t version) {
 void MutablePropertyFragment::Dump(const std::string& work_dir,
                                    uint32_t version) {
   std::string snapshot_dir_path = snapshot_dir(work_dir, version);
-  std::filesystem::create_directories(snapshot_dir_path);
+  std::error_code errorCode;
+  std::filesystem::create_directories(snapshot_dir_path, errorCode);
+  if (errorCode) {
+    std::stringstream ss;
+    ss << "Failed to create snapshot directory: " << snapshot_dir_path << ", "
+       << errorCode.message();
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
   std::vector<size_t> vertex_num(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     vertex_num[i] = lf_indexers_[i].size();

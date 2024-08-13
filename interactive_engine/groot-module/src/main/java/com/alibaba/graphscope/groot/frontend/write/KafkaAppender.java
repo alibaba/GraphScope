@@ -7,7 +7,8 @@ import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
-import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.QueueRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
@@ -22,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +40,7 @@ public class KafkaAppender {
 
     private final int storeCount;
     private final int partitionCount;
-    private final int bufferSize;
-    private BlockingQueue<IngestTask> ingestBuffer;
+    private final BlockingQueue<IngestTask> ingestBuffer;
     private Thread ingestThread;
 
     private boolean shouldStop = false;
@@ -57,9 +54,9 @@ public class KafkaAppender {
         this.queue = CommonConfig.NODE_IDX.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.partitionCount = metaService.getPartitionCount();
-        this.bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
+        int bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
         this.ingestSnapshotId = new AtomicLong(-1);
-        this.ingestBuffer = new ArrayBlockingQueue<>(this.bufferSize);
+        this.ingestBuffer = new ArrayBlockingQueue<>(bufferSize);
         initMetrics();
     }
 
@@ -118,7 +115,7 @@ public class KafkaAppender {
         boolean suc = this.ingestBuffer.offer(new IngestTask(requestId, operationBatch, callback));
         if (!suc) {
             logger.warn("ingest buffer is full");
-            throw new IngestRejectException("add ingestTask to buffer failed");
+            throw new QueueRejectException("add ingestTask to buffer failed");
         }
     }
 
@@ -162,7 +159,8 @@ public class KafkaAppender {
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
                     int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
-                    // logger.info("Log writer append partitionId [{}]", storeId);
+                    // logger.info("Log writer append storeId [{}], batch size: {}", storeId,
+                    // batch.getOperationCount());
                     logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                 }
             } catch (Exception e) {
@@ -200,6 +198,7 @@ public class KafkaAppender {
         Map<Integer, OperationBatch.Builder> storeToBatchBuilder = new HashMap<>();
         Function<Integer, OperationBatch.Builder> storeDataBatchBuilderFunc =
                 k -> OperationBatch.newBuilder();
+        String traceId = operationBatch.getTraceId();
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {
@@ -208,6 +207,9 @@ public class KafkaAppender {
                     OperationBatch.Builder batchBuilder =
                             storeToBatchBuilder.computeIfAbsent(i, storeDataBatchBuilderFunc);
                     batchBuilder.addOperationBlob(operationBlob);
+                    if (traceId != null) {
+                        batchBuilder.setTraceId(traceId);
+                    }
                 }
             } else {
                 int partitionId =
@@ -216,6 +218,9 @@ public class KafkaAppender {
                 OperationBatch.Builder batchBuilder =
                         storeToBatchBuilder.computeIfAbsent(storeId, storeDataBatchBuilderFunc);
                 batchBuilder.addOperationBlob(operationBlob);
+                if (traceId != null) {
+                    batchBuilder.setTraceId(traceId);
+                }
             }
         }
         return storeToBatchBuilder;

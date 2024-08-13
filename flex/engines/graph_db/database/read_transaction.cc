@@ -30,6 +30,8 @@ void ReadTransaction::Commit() { release(); }
 
 void ReadTransaction::Abort() { release(); }
 
+const MutablePropertyFragment& ReadTransaction::graph() const { return graph_; }
+
 ReadTransaction::vertex_iterator::vertex_iterator(
     label_t label, vid_t cur, vid_t num, const MutablePropertyFragment& graph)
     : label_(label), cur_(cur), num_(num), graph_(graph) {}

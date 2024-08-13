@@ -16,7 +16,8 @@
 package com.alibaba.graphscope.groot.common.meta;
 
 import com.alibaba.graphscope.groot.common.exception.GrootException;
-import com.alibaba.graphscope.groot.common.util.ExceptionUtils;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
+import com.alibaba.graphscope.groot.common.exception.InvalidDataTypeException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -89,8 +90,7 @@ public class DataType {
         }
 
         if (!isValid(expression)) {
-            throw new GrootException(
-                    ExceptionUtils.ErrorCode.DataTypeNotValid,
+            throw new InvalidDataTypeException(
                     "expression is not valid, subType "
                             + "must be primitiveTypes: "
                             + InternalDataType.primitiveTypes);
@@ -170,7 +170,7 @@ public class DataType {
             case DOUBLE:
                 return 8;
             default:
-                throw new RuntimeException("unreachable!");
+                throw new InternalException("unreachable!");
         }
     }
 

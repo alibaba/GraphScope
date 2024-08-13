@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 

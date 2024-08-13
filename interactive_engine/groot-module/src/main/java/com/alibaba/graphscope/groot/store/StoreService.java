@@ -18,7 +18,10 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
@@ -59,6 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class StoreService {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private static final Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final Configs storeConfigs;
     private final int storeId;
@@ -99,7 +103,7 @@ public class StoreService {
                 GraphPartition partition = makeGraphPartition(this.storeConfigs, partitionId);
                 this.idToPartition.put(partitionId, partition);
             } catch (IOException e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         }
         initMetrics();
@@ -216,7 +220,6 @@ public class StoreService {
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
-        long start = System.currentTimeMillis();
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
@@ -258,16 +261,23 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
+                                metricLogger.info(
+                                        buildMetricJsonLog(true, batch, start, partitionId));
                                 attrs.put("success", true).put("message", "");
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
-                            }
+                            } //  else {
+                            //     logger.debug("marker batch ignored");
+                            // }
                         } catch (Exception ex) {
+                            metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId));
                             logger.error(
-                                    "write to partition [{}] failed, snapshotId [{}].",
+                                    "write to partition [{}] failed, snapshotId [{}], traceId"
+                                            + " [{}].",
                                     partitionId,
                                     snapshotId,
+                                    batch.getTraceId(),
                                     ex);
                             attrs.put("message", ex.getMessage());
                             String msg = "Not supported operation in secondary mode";
@@ -289,13 +299,30 @@ public class StoreService {
         }
         future.get();
         if (batchNeedRetry.size() > 0) {
+            logger.warn("Write batch failed, will retry. failure count: {}", batchNeedRetry.size());
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 // Ignore
             }
         }
         return batchNeedRetry;
+    }
+
+    private String buildMetricJsonLog(
+            boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
+        String traceId = operationBatch.getTraceId();
+        long current = System.currentTimeMillis();
+        int batchSize = operationBatch.getOperationCount();
+        return Utils.buildMetricJsonLog(
+                succeed,
+                traceId,
+                batchSize,
+                partitionId,
+                (current - start),
+                current,
+                "writeDb",
+                "write");
     }
 
     public GraphDefPb getGraphDefBlob() throws IOException {

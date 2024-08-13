@@ -2,7 +2,8 @@ package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.common.exception.NotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
@@ -17,6 +18,7 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
+import com.alibaba.graphscope.proto.groot.RequestOptionsPb;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -87,9 +89,11 @@ public class GraphWriter {
             String requestId,
             String writeSession,
             List<WriteRequest> writeRequests,
+            RequestOptionsPb optionsPb,
             CompletionCallback<Long> callback) {
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
+        String upTraceId = optionsPb == null ? null : optionsPb.getTraceId();
         for (WriteRequest writeRequest : writeRequests) {
             OperationType operationType = writeRequest.getOperationType();
             DataRecord dataRecord = writeRequest.getDataRecord();
@@ -119,10 +123,11 @@ public class GraphWriter {
                     addClearEdgePropertiesOperation(batchBuilder, schema, dataRecord);
                     break;
                 default:
-                    throw new IllegalArgumentException(
+                    throw new InvalidArgumentException(
                             "Invalid operationType [" + operationType + "]");
             }
         }
+        batchBuilder.setTraceId(upTraceId);
         OperationBatch operationBatch = batchBuilder.build();
         long startTime = System.currentTimeMillis();
         AttributesBuilder attrs = Attributes.builder();
@@ -180,7 +185,7 @@ public class GraphWriter {
         EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         if (edgeId.id == 0) {
             // This is for update edge, if edgeInnerId is 0, generate new id, incase there isn't
-            // such a edge
+            // such an edge
             edgeId.id = edgeIdGenerator.getNextId();
         }
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
@@ -296,7 +301,7 @@ public class GraphWriter {
                     (propertyName, valString) -> {
                         GraphProperty propertyDef = graphElement.getProperty(propertyName);
                         if (propertyDef == null) {
-                            throw new PropertyDefNotFoundException(
+                            throw new NotFoundException(
                                     "property ["
                                             + propertyName
                                             + "] not found in ["

@@ -32,7 +32,7 @@ impl RocksDB {
             .expect("invalid config, missing store.data.path");
         let db = DB::open(&opts, path).map_err(|e| {
             let msg = format!("open rocksdb at {} failed: {}", path, e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open, options, path)
+            gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg, open, options, path)
         })?;
         let ret = RocksDB { db: Atomic::new(Arc::new(db)), options: options.clone(), is_secondary: false };
         Ok(ret)
@@ -41,7 +41,7 @@ impl RocksDB {
     pub fn open_as_secondary(options: &HashMap<String, String>) -> GraphResult<Self> {
         let db = RocksDB::open_helper(options, false).map_err(|e| {
             let msg = format!("open rocksdb at {:?}, error: {:?}", options, e);
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
+            gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg, open_as_secondary)
         })?;
 
         let ret = RocksDB { db: Atomic::new(Arc::new(db)), options: options.clone(), is_secondary: true };
@@ -71,6 +71,9 @@ impl RocksDB {
     }
 
     fn replace_db(&self, db: DB) {
+        // To force any deferred work to run, we need the epoch to move forward two times.
+        epoch::pin().flush();
+        epoch::pin().flush();
         let guard = epoch::pin();
         let new_db = Arc::new(db);
         let new_db_shared = Owned::new(new_db).into_shared(&guard);
@@ -92,9 +95,6 @@ impl RocksDB {
                 drop(old_db_shared.into_owned())
             })
         }
-        // To force any deferred work to run, we need the epoch to move forward two times.
-        epoch::pin().flush();
-        epoch::pin().flush();
         info!("RocksDB {:} replaced", path);
     }
 
@@ -107,13 +107,13 @@ impl RocksDB {
                 Ok(None) => Ok(None),
                 Err(e) => {
                     let msg = format!("rocksdb.get failed because {}", e.into_string());
-                    let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+                    let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
                     Err(err)
                 }
             }
         } else {
             let msg = format!("rocksdb.get failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -128,11 +128,11 @@ impl RocksDB {
         if let Some(db) = unsafe { db_shared.as_ref() } {
             db.put(key, val).map_err(|e| {
                 let msg = format!("rocksdb.put failed because {}", e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })
         } else {
             let msg = format!("rocksdb.put failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -147,11 +147,11 @@ impl RocksDB {
         if let Some(db) = unsafe { db_shared.as_ref() } {
             db.delete(key).map_err(|e| {
                 let msg = format!("rocksdb.delete failed because {}", e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })
         } else {
             let msg = format!("rocksdb.delete failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -163,7 +163,7 @@ impl RocksDB {
             Ok(StorageIter::RocksDB(RocksDBIter::new_prefix(db.clone(), prefix, guard)))
         } else {
             let msg = format!("rocksdb.scan_prefix failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -175,7 +175,7 @@ impl RocksDB {
             Ok(StorageIter::RocksDB(RocksDBIter::new_start(db.clone(), start, guard)))
         } else {
             let msg = format!("rocksdb.scan_from failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -187,7 +187,7 @@ impl RocksDB {
             Ok(StorageIter::RocksDB(RocksDBIter::new_range(db.clone(), start, end, guard)))
         } else {
             let msg = format!("rocksdb.new_range failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -205,7 +205,7 @@ impl RocksDB {
             batch.delete_range(start, end);
             db.write(batch).map_err(|e| {
                 let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })?;
             let mut val = false;
             if let Some(conf_str) = self
@@ -220,7 +220,7 @@ impl RocksDB {
             Ok(())
         } else {
             let msg = format!("rocksdb.delete_range failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -240,7 +240,7 @@ impl RocksDB {
             Ok(())
         } else {
             let msg = format!("rocksdb.compact failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -258,11 +258,11 @@ impl RocksDB {
             db.ingest_external_file_opts(&options, files.to_vec())
                 .map_err(|e| {
                     let msg = format!("rocksdb.load file {:?} failed because {}", files, e.into_string());
-                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                    gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
                 })
         } else {
             let msg = format!("rocksdb.load failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -274,11 +274,11 @@ impl RocksDB {
                 backup_path.to_string(),
                 e.into_string()
             );
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
         })?;
         let env = Env::new().map_err(|e| {
             let msg = format!("Gen rocksdb Env failed because {}", e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
         })?;
         let backup_engine = BackupEngine::open(&backup_opts, &env).map_err(|e| {
             let msg = format!(
@@ -286,7 +286,7 @@ impl RocksDB {
                 backup_path.to_string(),
                 e.into_string()
             );
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
         })?;
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
@@ -295,7 +295,7 @@ impl RocksDB {
             Ok(Box::from(ret))
         } else {
             let msg = format!("open rocksdb backup engine failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -307,7 +307,7 @@ impl RocksDB {
             Ok(Box::new(Scan::new(db.clone(), prefix, guard)))
         } else {
             let msg = format!("rocksdb.new_scan failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -321,11 +321,11 @@ impl RocksDB {
         if let Some(db) = unsafe { db_shared.as_ref() } {
             db.try_catch_up_with_primary().map_err(|e| {
                 let msg = format!("rocksdb.try_catch_up_with_primary failed because {:?}", e);
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })
         } else {
             let msg = format!("rocksdb.try_catch_up_with_primary failed because the acquired db is `None`");
-            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            let err = gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg);
             Err(err)
         }
     }
@@ -338,7 +338,7 @@ impl RocksDB {
             std::thread::sleep(Duration::from_secs(wait_sec));
             let db = RocksDB::open_helper(&self.options, true).map_err(|e| {
                 let msg = format!("open rocksdb at {:?}, error: {:?}", self.options, e);
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg, open_as_secondary)
             })?;
             let ret = db.try_catch_up_with_primary();
             if ret.is_err() {
@@ -381,12 +381,12 @@ impl RocksDBBackupEngine {
             .create_new_backup(&self.db)
             .map_err(|e| {
                 let msg = format!("create new rocksdb backup failed, because {}", e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })?;
         let after = self.get_backup_list();
         if after.len() != before.len() + 1 {
             let msg = "get new created rocksdb backup id failed".to_string();
-            return Err(gen_graph_err!(GraphErrorCode::ExternalStorageError, msg));
+            return Err(gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg));
         }
         let new_backup_id = *after.iter().max().unwrap();
         Ok(new_backup_id)
@@ -410,7 +410,7 @@ impl RocksDBBackupEngine {
                     backup_id,
                     e.into_string()
                 );
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })?;
         Ok(())
     }
@@ -421,7 +421,7 @@ impl RocksDBBackupEngine {
             .map_err(|e| {
                 let msg =
                     format!("rocksdb backup {} verify failed, because {}", backup_id, e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
             })?;
         Ok(())
     }

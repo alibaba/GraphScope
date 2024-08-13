@@ -501,4 +501,52 @@ int Day::day() const { return value.internal.day; }
 
 int Day::hour() const { return value.internal.hour; }
 
+Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
+  if (type == gs::PropertyType::Int32()) {
+    return gs::Any(static_cast<int32_t>(std::stoi(value)));
+  } else if (type == gs::PropertyType::Date()) {
+    return gs::Any(gs::Date(static_cast<int64_t>(std::stoll(value))));
+  } else if (type == gs::PropertyType::Day()) {
+    return gs::Any(gs::Day(static_cast<int64_t>(std::stoll(value))));
+  } else if (type == gs::PropertyType::String() || type == gs::PropertyType::StringMap()) {
+    return gs::Any(std::string(value));
+  } else if (type == gs::PropertyType::Int64()) {
+    return gs::Any(static_cast<int64_t>(std::stoll(value)));
+  } else if (type == gs::PropertyType::Double()) {
+    return gs::Any(std::stod(value));
+  } else if (type == gs::PropertyType::UInt32()) {
+    return gs::Any(static_cast<uint32_t>(std::stoul(value)));
+  } else if (type == gs::PropertyType::UInt64()) {
+    return gs::Any(static_cast<uint64_t>(std::stoull(value)));
+  } else if (type == gs::PropertyType::Bool()) {
+    auto lower = value;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    if (lower == "true") {
+      return gs::Any(true);
+    } else if (lower == "false") {
+      return gs::Any(false);
+    } else {
+      LOG(FATAL) << "Invalid bool value: " << value;
+    }
+  } else if (type == gs::PropertyType::Float()) {
+    return gs::Any(std::stof(value));
+  } else if (type == gs::PropertyType::UInt8()) {
+    return gs::Any(static_cast<uint8_t>(std::stoul(value)));
+  } else if (type == gs::PropertyType::UInt16()) {
+    return gs::Any(static_cast<uint16_t>(std::stoul(value)));
+  } else if (type == gs::PropertyType::VertexGlobalId()) {
+    return gs::Any(gs::GlobalId(static_cast<uint64_t>(std::stoull(value))));
+  } else if (type == gs::PropertyType::Label()) {
+    return gs::Any(gs::LabelKey(static_cast<uint8_t>(std::stoul(value))));
+  } else if (type == gs::PropertyType::Empty()) {
+    return gs::Any();
+  } else if (type == gs::PropertyType::StringView()) {
+    return gs::Any(std::string_view(value));
+  } else {
+    LOG(FATAL) << "Unsupported type: " << type;
+  }
+  return gs::Any();
+}
+
 }  // namespace gs

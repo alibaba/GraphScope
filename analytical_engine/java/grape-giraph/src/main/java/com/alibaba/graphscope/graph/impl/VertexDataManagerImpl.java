@@ -112,9 +112,9 @@ public class VertexDataManagerImpl<
             // We need to form all vdata as a stream, so java writables can read from this stream.
             Iterable<Vertex<GRAPE_VID_T>> iterable;
             if (conf.getGrapeVidClass().equals(Long.class)) {
-                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.vertices().longIterable();
+                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.innerVertices().longIterable();
             } else if (conf.getGrapeVidClass().equals(Integer.class)) {
-                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.vertices().intIterable();
+                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.innerVertices().intIterable();
             } else {
                 throw new IllegalStateException(
                         "No recognizable vid" + conf.getGrapeVidClass().getName());

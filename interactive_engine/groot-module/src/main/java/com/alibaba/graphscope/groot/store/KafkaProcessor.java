@@ -5,7 +5,8 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
@@ -29,9 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class KafkaProcessor {
@@ -46,7 +45,7 @@ public class KafkaProcessor {
     private final ObjectMapper objectMapper;
     private ScheduledExecutorService persistOffsetsScheduler;
     private Thread pollThread;
-
+    private Thread processThread;
     private final boolean isSecondary;
     private final long offsetsPersistIntervalMs;
     private final WriterAgent writerAgent;
@@ -56,6 +55,8 @@ public class KafkaProcessor {
     public static int storeId = 0;
     private volatile boolean shouldStop = true;
     List<OperationType> typesDDL;
+
+    BlockingQueue<ConsumerRecord<LogEntry, LogEntry>> queue;
 
     public KafkaProcessor(
             Configs configs,
@@ -73,13 +74,16 @@ public class KafkaProcessor {
 
         storeId = CommonConfig.NODE_IDX.get(configs);
         offsetsPersistIntervalMs = CoordinatorConfig.OFFSETS_PERSIST_INTERVAL_MS.get(configs);
+
+        int queueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
+        queue = new ArrayBlockingQueue<>(queueSize);
     }
 
     public void start() {
         try {
             recover();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
 
         this.persistOffsetsScheduler =
@@ -87,13 +91,7 @@ public class KafkaProcessor {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "persist-offsets-scheduler", logger));
         this.persistOffsetsScheduler.scheduleWithFixedDelay(
-                () -> {
-                    try {
-                        updateQueueOffsets();
-                    } catch (Exception e) {
-                        logger.error("error in updateQueueOffsets, ignore", e);
-                    }
-                },
+                this::updateQueueOffsets,
                 offsetsPersistIntervalMs,
                 offsetsPersistIntervalMs,
                 TimeUnit.MILLISECONDS);
@@ -102,20 +100,23 @@ public class KafkaProcessor {
         this.pollThread.setName("store-kafka-poller");
         this.pollThread.setDaemon(true);
         this.pollThread.start();
+
+        this.processThread = new Thread(this::processRecords);
+        this.processThread.setName("store-kafka-record-processor");
+        this.processThread.setDaemon(true);
+        this.processThread.start();
+
         logger.info("Kafka processor started");
     }
 
     public void stop() {
         this.shouldStop = true;
-        try {
-            updateQueueOffsets();
-        } catch (IOException ex) {
-            logger.error("update queue offset failed", ex);
-        }
+        updateQueueOffsets();
         if (this.persistOffsetsScheduler != null) {
             this.persistOffsetsScheduler.shutdown();
             try {
-                this.persistOffsetsScheduler.awaitTermination(3000, TimeUnit.MILLISECONDS);
+                boolean ignored =
+                        this.persistOffsetsScheduler.awaitTermination(3000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 // Ignore
             }
@@ -156,13 +157,13 @@ public class KafkaProcessor {
         if (recoveredOffset != -1) { // if -1, then assume it's a fresh store
             try (LogReader ignored = logService.createReader(storeId, recoveredOffset + 1)) {
             } catch (Exception e) {
-                throw new IOException(
+                throw new IllegalStateException(
                         "recovered queue [0] offset [" + recoveredOffset + "] is not available", e);
             }
         }
     }
 
-    private void updateQueueOffsets() throws IOException {
+    private void updateQueueOffsets() {
         List<Long> queueOffsets = this.queueOffsetsRef.get();
         List<Long> newQueueOffsets = new ArrayList<>(queueOffsets);
         boolean changed = false;
@@ -175,8 +176,12 @@ public class KafkaProcessor {
             }
         }
         if (changed) {
-            persistObject(newQueueOffsets, QUEUE_OFFSETS_PATH);
-            this.queueOffsetsRef.set(newQueueOffsets);
+            try {
+                persistObject(newQueueOffsets, QUEUE_OFFSETS_PATH);
+                this.queueOffsetsRef.set(newQueueOffsets);
+            } catch (IOException e) {
+                logger.error("error in updateQueueOffsets, ignore", e);
+            }
         }
     }
 
@@ -193,18 +198,18 @@ public class KafkaProcessor {
         try {
             replayWAL();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
         // -1 stands for poll from latest
         try (LogReader reader = logService.createReader(storeId, -1)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {
-                    processRecord(record);
+                    queue.add(record);
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -225,6 +230,7 @@ public class KafkaProcessor {
                         .requestId("")
                         .queueId(storeId)
                         .snapshotId(snapshotId)
+                        .traceId(operationBatch.getTraceId())
                         .offset(offset);
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
@@ -245,7 +251,7 @@ public class KafkaProcessor {
         try {
             writerAgent.writeStore(builder.build());
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -254,18 +260,31 @@ public class KafkaProcessor {
         long replayFrom = queueOffsetsRef.get().get(0) + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", storeId, replayFrom);
         if (replayFrom == 0) {
-            logger.warn("It may not useful to replay from the 0 offset, skipped");
+            logger.warn("It may not be expected to replay from the 0 offset, skipped");
             return;
         }
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, replayFrom)) {
             ConsumerRecord<LogEntry, LogEntry> record;
             while ((record = logReader.readNextRecord()) != null) {
-                processRecord(record);
+                queue.put(record);
                 replayCount++;
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
+    }
+
+    private void processRecords() {
+        while (true) {
+            try {
+                ConsumerRecord<LogEntry, LogEntry> record = queue.take();
+                processRecord(record);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private List<OperationType> prepareDDLTypes() {

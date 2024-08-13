@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -64,7 +66,7 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
                 ByteBuffer buffer = ByteBuffer.wrap(key.copyBytes());
                 long tableId = buffer.getLong(0) >> 1;
                 long hashId = buffer.getLong(8);
-                throw new IOException(
+                throw new InvalidArgumentException(
                         "Write SST Error! TableId: [" + tableId + "], hashId: [" + hashId + "]", e);
             }
         }
@@ -74,7 +76,7 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
             try {
                 sstFileWriter.finish();
             } catch (RocksDBException e) {
-                throw new IOException(e);
+                throw new InvalidArgumentException(e);
             }
             fs.copyFromLocalFile(true, new Path(fileName), path);
         }
@@ -91,7 +93,7 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
         try {
             return new SstRecordWriter(fs, file);
         } catch (RocksDBException e) {
-            throw new IOException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 }

@@ -107,4 +107,15 @@ return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
       std::move(rep));
 }
 
+std::string trim_slash(const std::string& origin) {
+  std::string res = origin;
+  if (res.front() == '/') {
+    res.erase(res.begin());
+  }
+  if (res.back() == '/') {
+    res.pop_back();
+  }
+  return res;
+}
+
 }  // namespace server
