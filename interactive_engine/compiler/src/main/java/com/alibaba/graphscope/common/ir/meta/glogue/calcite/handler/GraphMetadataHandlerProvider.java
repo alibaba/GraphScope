@@ -93,4 +93,8 @@ public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
                         Proxy.newProxyInstance(
                                 getClass().getClassLoader(), new Class[] {handlerClass}, handler));
     }
+
+    public GlogueQuery getGlogueQuery() {
+        return this.glogueQuery;
+    }
 }

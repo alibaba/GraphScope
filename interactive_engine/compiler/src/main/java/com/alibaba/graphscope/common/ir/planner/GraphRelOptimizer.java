@@ -259,7 +259,9 @@ public class GraphRelOptimizer {
                                     ruleConfig =
                                             ExtendIntersectRule.Config.DEFAULT
                                                     .withMaxPatternSizeInGlogue(
-                                                            config.getGlogueSize());
+                                                            config.getGlogueSize())
+                                                    .withLabelConstraintsEnabled(
+                                                            config.labelConstraintsEnabled());
                                 } else if (k.equals(JoinDecompositionRule.class.getSimpleName())) {
                                     ruleConfig =
                                             JoinDecompositionRule.Config.DEFAULT
