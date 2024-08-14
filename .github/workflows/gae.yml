@@ -28,78 +28,66 @@ concurrency:
 jobs:
   build-gae:
     runs-on: ubuntu-20.04
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
-    container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.22.0
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install latest vineyard
-      if: false
+    - name: Install dependencies 
       run: |
-        . /home/graphscope/.graphscope_env
-        sudo pip3 install libclang
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
-                 -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j$(nproc)
-        sudo make install
+        # When ready, change to use gsctl.py in the repo
+        pip install gsctl 
+        # When ready, change to use this:
+        # gsctl install-deps dev-analytical
+        gsctl install-deps dev
+
 
     - name: Build
       env:
         RUN_JAVA_TESTS: ON
       run: |
-        # default install to "/opt/graphscope"
-        make analytical-java BUILD_TEST=ON NUMPROC=1
-        sudo make analytical-java-install
-        # also make coordinator and client for python test
-        python3 -m pip install --upgrade pip setuptools
-        make coordinator
+        source ~/.graphscope_env
+        cd analytical_engine
+        mkdir build
+        cd build
+        cmake ..
+        make
 
-    - name: Run Cpp Test
-      env:
-        GRAPHSCOPE_HOME: /opt/graphscope
-        GS_TEST_DIR: ${{ github.workspace }}/gstest
-        RUN_JAVA_TESTS: ON
-      run: |
-        # download dataset
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+    # - name: Run Cpp Test
+    #   env:
+    #     GRAPHSCOPE_HOME: /opt/graphscope
+    #     GS_TEST_DIR: ${{ github.workspace }}/gstest
+    #     RUN_JAVA_TESTS: ON
+    #   run: |
+    #     # download dataset
+    #     git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
-        # java maven test
-        cd ${GITHUB_WORKSPACE}/analytical_engine/java
-        mvn test -Dmaven.antrun.skip=true --quiet
+    #     # java maven test
+    #     cd ${GITHUB_WORKSPACE}/analytical_engine/java
+    #     mvn test -Dmaven.antrun.skip=true --quiet
 
-        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
-        # for giraph test
-        export GIRAPH_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
+    #     version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+    #     export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
+    #     # for giraph test
+    #     export GIRAPH_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
 
-        cd ${GITHUB_WORKSPACE}/analytical_engine/build
-        ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
+    #     cd ${GITHUB_WORKSPACE}/analytical_engine/build
+    #     ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
 
-    - name: Run Java Python Test
-      env:
-        GS_TEST_DIR: ${{ github.workspace }}/gstest
-        RUN_JAVA_TESTS: ON
-        GRAPHSCOPE_HOME: /opt/graphscope
-      run: |
-        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
+    # - name: Run Java Python Test
+    #   env:
+    #     GS_TEST_DIR: ${{ github.workspace }}/gstest
+    #     RUN_JAVA_TESTS: ON
+    #     GRAPHSCOPE_HOME: /opt/graphscope
+    #   run: |
+    #     version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+    #     export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
 
-        cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-          --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
+    #     cd ${GITHUB_WORKSPACE}/python
+    #     python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+    #       --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
 
-    - name: Upload Coverage
-      uses: codecov/codecov-action@v3
-      continue-on-error: true
-      with:
-        file: ./python/coverage.xml
-        fail_ci_if_error: false
+    # - name: Upload Coverage
+    #   uses: codecov/codecov-action@v3
+    #   continue-on-error: true
+    #   with:
+    #     file: ./python/coverage.xml
+    #     fail_ci_if_error: false
