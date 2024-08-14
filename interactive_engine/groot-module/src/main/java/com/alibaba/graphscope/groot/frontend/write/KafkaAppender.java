@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +40,7 @@ public class KafkaAppender {
 
     private final int storeCount;
     private final int partitionCount;
-    private final int bufferSize;
-    private BlockingQueue<IngestTask> ingestBuffer;
+    private final BlockingQueue<IngestTask> ingestBuffer;
     private Thread ingestThread;
 
     private boolean shouldStop = false;
@@ -58,9 +54,9 @@ public class KafkaAppender {
         this.queue = CommonConfig.NODE_IDX.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.partitionCount = metaService.getPartitionCount();
-        this.bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
+        int bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
         this.ingestSnapshotId = new AtomicLong(-1);
-        this.ingestBuffer = new ArrayBlockingQueue<>(this.bufferSize);
+        this.ingestBuffer = new ArrayBlockingQueue<>(bufferSize);
         initMetrics();
     }
 
@@ -163,7 +159,8 @@ public class KafkaAppender {
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
                     int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
-                    // logger.info("Log writer append partitionId [{}]", storeId);
+                    // logger.info("Log writer append storeId [{}], batch size: {}", storeId,
+                    // batch.getOperationCount());
                     logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                 }
             } catch (Exception e) {
