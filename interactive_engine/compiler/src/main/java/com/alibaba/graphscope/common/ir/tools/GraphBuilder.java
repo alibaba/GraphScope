@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -33,8 +31,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -43,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -69,6 +66,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -323,16 +322,22 @@ public class GraphBuilder extends RelBuilder {
                             .inferTypes(single);
         }
         RelNode input = size() > 0 ? peek() : null;
-        // unwrap match if there is only one source operator in the sentence
-        RelNode match =
-                (input == null && single instanceof GraphLogicalSource)
-                        ? single
-                        : GraphLogicalSingleMatch.create(
-                                (GraphOptCluster) cluster,
-                                null,
-                                null,
-                                single,
-                                (input == null) ? opt : GraphOpt.Match.INNER);
+//        // unwrap match if there is only one source operator in the sentence
+//        RelNode match =
+//                (input == null && single instanceof GraphLogicalSource)
+//                        ? single
+//                        : GraphLogicalSingleMatch.create(
+//                                (GraphOptCluster) cluster,
+//                                null,
+//                                null,
+//                                single,
+//                                (input == null) ? opt : GraphOpt.Match.INNER);
+        RelNode match = GraphLogicalSingleMatch.create(
+                (GraphOptCluster) cluster,
+                null,
+                null,
+                single,
+                (input == null) ? opt : GraphOpt.Match.INNER);
         if (input == null) {
             push(match);
         } else {

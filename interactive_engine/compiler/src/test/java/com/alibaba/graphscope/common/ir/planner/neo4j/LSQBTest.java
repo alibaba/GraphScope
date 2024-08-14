@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -364,5 +365,21 @@ public class LSQBTest {
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[person2], opt=[VERTEX])",
                 after.explain().trim());
+    }
+
+    @Test
+    public void tmp_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a {firstName: 'marko'}) Return count(a);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        System.out.println(after.explain());
+//        PrintEstimatedRows printer = new PrintEstimatedRows();
+//        printer.go(after);
+        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
+        System.out.println(source.getCachedCost());
     }
 }
