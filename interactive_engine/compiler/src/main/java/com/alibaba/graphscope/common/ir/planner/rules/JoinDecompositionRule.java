@@ -40,7 +40,9 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         int queueCapacity = config.getJoinQueueCapacity();
         PriorityQueue<GraphJoinDecomposition> decompositionQueue =
                 new PriorityQueue<>(queueCapacity, comparator.reversed()); // max heap
-        (new JoinByVertex(graphPattern, mq, decompositionQueue, queueCapacity)).addDecompositions();
+        if (getMaxEdgeNum(graphPattern.getPattern()) > 2) {
+            (new JoinByVertex(graphPattern, mq, decompositionQueue, queueCapacity)).addDecompositions();
+        }
         if (config.getForeignKeyMeta() != null) {
             (new JoinByForeignKey(graphPattern, mq, decompositionQueue, queueCapacity))
                     .addDecompositions();
@@ -605,6 +607,18 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             }
         }
         return maxVertexNum;
+    }
+
+    private int getMaxEdgeNum(Pattern pattern) {
+        int maxEdgeNum = pattern.getEdgeNumber();
+        for (PatternEdge edge : pattern.getEdgeSet()) {
+            if (edge.getElementDetails().getRange() != null) {
+                PathExpandRange range = edge.getElementDetails().getRange();
+                int maxHop = range.getOffset() + range.getFetch() - 1;
+                maxEdgeNum += (maxHop - 1);
+            }
+        }
+        return maxEdgeNum;
     }
 
     public static class Config implements RelRule.Config {

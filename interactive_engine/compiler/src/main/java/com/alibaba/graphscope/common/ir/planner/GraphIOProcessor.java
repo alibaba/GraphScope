@@ -157,7 +157,8 @@ public class GraphIOProcessor {
                     .getVertexSet()
                     .forEach(
                             k -> {
-                                if (inputPattern.getEdgesOf(k).stream()
+                                Set<PatternEdge> edges = inputPattern.getEdgesOf(k);
+                                if (!edges.isEmpty() && edges.stream()
                                         .allMatch(e -> e.getElementDetails().isOptional())) {
                                     k.getElementDetails().setOptional(true);
                                 }
@@ -496,6 +497,9 @@ public class GraphIOProcessor {
                     pattern != null && pattern.getVertexNumber() == 1,
                     "can not convert pattern %s to any logical operator",
                     pattern);
+            double count = mq.getRowCount(graph);
+            System.out.println("pattern is " + graph.getPattern());
+            System.out.println("pattern count is " + count);
             PatternVertex vertex = pattern.getVertexSet().iterator().next();
             VertexDataKey key = new VertexDataKey(pattern.getVertexOrder(vertex));
             DataValue value = getVertexValue(key, details, vertex);
@@ -515,20 +519,19 @@ public class GraphIOProcessor {
         private DetailedSourceCost getSourceCost(GraphPattern graph, PatternVertex singleVertex) {
             double selectivity = singleVertex.getElementDetails().getSelectivity();
             if (Double.compare(selectivity, 1.0d) < 0) {
-                singleVertex =
+                PatternVertex newVertex =
                         (singleVertex instanceof SinglePatternVertex)
                                 ? new SinglePatternVertex(
                                         singleVertex.getVertexTypeIds().get(0),
                                         singleVertex.getId())
                                 : new FuzzyPatternVertex(
                                         singleVertex.getVertexTypeIds(), singleVertex.getId());
+                graph = new GraphPattern(
+                        graph.getCluster(),
+                        graph.getTraitSet(),
+                        new Pattern(newVertex));
             }
-            double patternCount =
-                    mq.getRowCount(
-                            new GraphPattern(
-                                    graph.getCluster(),
-                                    graph.getTraitSet(),
-                                    new Pattern(singleVertex)));
+            double patternCount = mq.getRowCount(graph);
             return new DetailedSourceCost(patternCount, patternCount * selectivity);
         }
 
