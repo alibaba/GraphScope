@@ -89,7 +89,10 @@ jobs:
         echo 'If you are using a "manual" build mode for one or more of the' \
           'languages you are analyzing, replace this with the commands to build' \
           'your code, for example:'
-        echo '  make GRAPE'
+        echo 'Install dependencies'
+        pip install gsctl
+        gsctl install-deps dev
+        echo 'Making GRAPE'
         cd analytical_engine
         mkdir build
         cd build
