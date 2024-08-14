@@ -20,6 +20,58 @@
 
 namespace gs {
 
+void read_file(const std::string& filename, void* buffer, size_t size,
+               size_t num) {
+  FILE* fin = fopen(filename.c_str(), "r");
+  if (fin == nullptr) {
+    std::stringstream ss;
+    ss << "Failed to open file " << filename << ", " << strerror(errno);
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+  size_t ret_len = 0;
+  if ((ret_len = fread(buffer, size, num, fin)) != num) {
+    std::stringstream ss;
+    ss << "Failed to read file " << filename << ", expected " << num << ", got "
+       << ret_len << ", " << strerror(errno);
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+  int ret = 0;
+  if ((ret = fclose(fin)) != 0) {
+    std::stringstream ss;
+    ss << "Failed to close file " << filename << ", error code: " << ret << " "
+       << strerror(errno);
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+}
+
+void write_file(const std::string& filename, const void* buffer, size_t size,
+                size_t num) {
+  FILE* fout = fopen(filename.c_str(), "wb");
+  if (fout == nullptr) {
+    std::stringstream ss;
+    ss << "Failed to open file " << filename << ", " << strerror(errno);
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+  size_t ret_len = 0;
+  if ((ret_len = fwrite(buffer, size, num, fout)) != num) {
+    std::stringstream ss;
+    ss << "Failed to write file " << filename << ", expected " << num
+       << ", got " << ret_len << ", " << strerror(errno);
+    LOG(ERROR) << ss.str();
+  }
+  int ret = 0;
+  if ((ret = fclose(fout)) != 0) {
+    std::stringstream ss;
+    ss << "Failed to close file " << filename << ", error code: " << ret << " "
+       << strerror(errno);
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+}
 template class SingleMutableCsr<grape::EmptyType>;
 template class MutableCsr<grape::EmptyType>;
 

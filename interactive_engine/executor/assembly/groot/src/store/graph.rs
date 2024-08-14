@@ -528,11 +528,11 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
             // sleep 2 min for the underlying storage catch latest changes.
             match graph_store_ptr.reopen(120) {
                 Ok(_) => {
-                    info!("Reopened store");
+                    info!("Reopened store after try catchup with primary");
                     JnaResponse::new_success()
                 }
                 Err(e) => {
-                    let msg = format!("Reopen failed: {:?}", e);
+                    let msg = format!("Reopen failed after try catchup with primary: {:?}", e);
                     error!("{}", msg);
                     JnaResponse::new_error(&msg)
                 }
