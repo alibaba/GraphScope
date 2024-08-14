@@ -65,21 +65,40 @@ std::string GraphMeta::ToJson() const {
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
   if (!data_import_config.empty()) {
-    json["data_import_config"] = nlohmann::json::parse(data_import_config);
+    try {
+      json["data_import_config"] = nlohmann::json::parse(data_import_config);
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Invalid data_import_config: " << data_import_config << " "
+                 << e.what();
+    }
   }
-  json["schema"] = nlohmann::json::parse(schema);
+  try {
+    json["schema"] = nlohmann::json::parse(schema);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid schema: " << schema << " " << e.what();
+  }
   json["stored_procedures"] = nlohmann::json::array();
   for (auto& plugin_meta : plugin_metas) {
-    json["stored_procedures"].push_back(
-        nlohmann::json::parse(plugin_meta.ToJson()));
+    try {
+      json["stored_procedures"].push_back(
+          nlohmann::json::parse(plugin_meta.ToJson()));
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson() << " "
+                 << e.what();
+    }
   }
   json["store_type"] = store_type;
   return json.dump();
 }
 
 GraphMeta GraphMeta::FromJson(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  return GraphMeta::FromJson(j);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    return GraphMeta::FromJson(j);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid json string: " << json_str << " " << e.what();
+    return GraphMeta();
+  }
 }
 
 GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
@@ -119,8 +138,13 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
 }
 
 PluginMeta PluginMeta::FromJson(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  return PluginMeta::FromJson(j);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    return PluginMeta::FromJson(j);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid json string: " << json_str << " " << e.what();
+    return PluginMeta();
+  }
 }
 
 PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
@@ -217,33 +241,46 @@ void PluginMeta::setParamsFromJsonString(const std::string& json_str) {
       json_str == "nu") {
     return;
   }
-  auto j = nlohmann::json::parse(json_str);
-  if (j.is_array()) {
-    for (auto& param : j) {
-      Parameter p;
-      p.name = param["name"].get<std::string>();
-      p.type = param["type"].get<PropertyType>();
-      params.push_back(p);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    if (j.is_array()) {
+      for (auto& param : j) {
+        Parameter p;
+        p.name = param["name"].get<std::string>();
+        p.type = param["type"].get<PropertyType>();
+        params.push_back(p);
+      }
+    } else {
+      LOG(ERROR) << "Invalid params string: " << json_str;
     }
-  } else {
-    LOG(ERROR) << "Invalid params string: " << json_str;
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid params string: " << json_str << " " << e.what();
   }
 }
 
 void PluginMeta::setReturnsFromJsonString(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  for (auto& ret : j) {
-    Parameter p;
-    p.name = ret["name"].get<std::string>();
-    p.type = ret["type"].get<PropertyType>();
-    returns.push_back(p);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    for (auto& ret : j) {
+      Parameter p;
+      p.name = ret["name"].get<std::string>();
+      p.type = ret["type"].get<PropertyType>();
+      returns.push_back(p);
+    }
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid returns string: " << json_str << " " << e.what();
   }
 }
 
 void PluginMeta::setOptionFromJsonString(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  for (auto& opt : j.items()) {
-    option[opt.key()] = opt.value().get<std::string>();
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    for (auto& opt : j.items()) {
+      option[opt.key()] = opt.value().get<std::string>();
+    }
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid option string: " << json_str;
+    return;
   }
 }
 
@@ -265,8 +302,14 @@ std::string JobMeta::ToJson(bool print_log) const {
 }
 
 JobMeta JobMeta::FromJson(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  return JobMeta::FromJson(j);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    return JobMeta::FromJson(j);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Fail to parse JobMeta from json: " << json_str << " "
+               << e.what();
+    return JobMeta();
+  }
 }
 
 JobMeta JobMeta::FromJson(const nlohmann::json& json) {
@@ -354,7 +397,11 @@ std::string CreateGraphMetaRequest::ToString() const {
   nlohmann::json json;
   json["name"] = name;
   json["description"] = description;
-  json["schema"] = nlohmann::json::parse(schema);
+  try {
+    json["schema"] = nlohmann::json::parse(schema);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid schema: " << schema << " " << e.what();
+  }
   if (data_update_time.has_value()) {
     json["data_update_time"] = data_update_time.value();
   } else {
@@ -363,8 +410,13 @@ std::string CreateGraphMetaRequest::ToString() const {
   json["creation_time"] = creation_time;
   json["stored_procedures"] = nlohmann::json::array();
   for (auto& plugin_meta : plugin_metas) {
-    json["stored_procedures"].push_back(
-        nlohmann::json::parse(plugin_meta.ToJson()));
+    try {
+      json["stored_procedures"].push_back(
+          nlohmann::json::parse(plugin_meta.ToJson()));
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson() << " "
+                 << e.what();
+    }
   }
   return json.dump();
 }
@@ -438,8 +490,14 @@ std::string CreatePluginMetaRequest::ToString() const {
 
 CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     const std::string& json) {
-  auto j = nlohmann::json::parse(json);
-  return CreatePluginMetaRequest::FromJson(j);
+  try {
+    auto j = nlohmann::json::parse(json);
+    return CreatePluginMetaRequest::FromJson(j);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "CreatePluginMetaRequest::FromJson error: " << json << ", "
+               << e.what();
+    return CreatePluginMetaRequest();
+  }
 }
 
 CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
@@ -561,7 +619,8 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
       request.enable = j["enable"].get<bool>();
     }
   } catch (const std::exception& e) {
-    LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what();
+    LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what() << " "
+               << json;
   }
   return request;
 }
@@ -741,8 +800,16 @@ std::string GraphStatistics::ToJson() const {
 }
 
 Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
-  auto j = nlohmann::json::parse(json_str);
-  return GraphStatistics::FromJson(j);
+  try {
+    auto j = nlohmann::json::parse(json_str);
+    return GraphStatistics::FromJson(j);
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "Invalid json string: " << json_str << " " << e.what();
+    return Result<GraphStatistics>(Status(
+        StatusCode::InternalError,
+        "Invalid json string when parsing graph statistics : " + json_str +
+            " " + e.what()));
+  }
 }
 
 Result<GraphStatistics> GraphStatistics::FromJson(const nlohmann::json& json) {
