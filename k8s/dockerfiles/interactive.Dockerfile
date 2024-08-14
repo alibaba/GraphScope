@@ -72,7 +72,8 @@ RUN sudo chmod +x /opt/hadoop-3.3.0/bin/*
 # set the CLASSPATH for hadoop, must run after install java
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
-RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$ARCH/kubectl
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
+    sudo env arch=$arch curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$arch/kubectl
 RUN sudo chmod +x /usr/bin/kubectl
 
 # gaia_executor, giectl
