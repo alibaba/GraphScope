@@ -96,7 +96,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
-COPY --from=builder /opt/graphscope/include/* /opt/flex/include/
+COPY --from=builder /opt/graphscope/include/ /opt/flex/include/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
