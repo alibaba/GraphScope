@@ -92,6 +92,7 @@ jobs:
         echo 'Install dependencies'
         pip install gsctl
         gsctl install-deps dev
+        source ~/.graphscope_env
         echo 'Making GRAPE'
         cd analytical_engine
         mkdir build
