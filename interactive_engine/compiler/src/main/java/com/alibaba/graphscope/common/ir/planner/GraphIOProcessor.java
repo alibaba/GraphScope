@@ -158,8 +158,10 @@ public class GraphIOProcessor {
                     .forEach(
                             k -> {
                                 Set<PatternEdge> edges = inputPattern.getEdgesOf(k);
-                                if (!edges.isEmpty() && edges.stream()
-                                        .allMatch(e -> e.getElementDetails().isOptional())) {
+                                if (!edges.isEmpty()
+                                        && edges.stream()
+                                                .allMatch(
+                                                        e -> e.getElementDetails().isOptional())) {
                                     k.getElementDetails().setOptional(true);
                                 }
                             });
@@ -526,10 +528,9 @@ public class GraphIOProcessor {
                                         singleVertex.getId())
                                 : new FuzzyPatternVertex(
                                         singleVertex.getVertexTypeIds(), singleVertex.getId());
-                graph = new GraphPattern(
-                        graph.getCluster(),
-                        graph.getTraitSet(),
-                        new Pattern(newVertex));
+                graph =
+                        new GraphPattern(
+                                graph.getCluster(), graph.getTraitSet(), new Pattern(newVertex));
             }
             double patternCount = mq.getRowCount(graph);
             return new DetailedSourceCost(patternCount, patternCount * selectivity);

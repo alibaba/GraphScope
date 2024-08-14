@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.rules.MultiJoin;
@@ -61,7 +62,7 @@ public class LSQBTest {
                                 "3",
                                 "graph.planner.rules",
                                 "FilterIntoJoinRule, FilterMatchRule, JoinDecompositionRule,"
-                                    + " ExtendIntersectRule, , ExpandGetVFusionRule"));
+                                        + " ExtendIntersectRule, , ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 Utils.mockIrMeta(
@@ -370,18 +371,18 @@ public class LSQBTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "MATCH (p: PERSON{id: 933})-[k:KNOWS*1..4]-(f: PERSON)-[:ISLOCATEDIN]->(city),\n" +
-                                        "                           (f)-[:WORKAT]->()-[:ISLOCATEDIN]->(:PLACE),\n" +
-                                        "                           (f)-[:STUDYAT]->()-[:ISLOCATEDIN]->(:PLACE)\n" +
-                                        "                     WHERE f.firstName = \"Mikhail\" AND f.id <> 933\n" +
-                                        "                     Return count(p);",
+                                "MATCH (message:COMMENT)-[:HASTAG]->(tag:TAG),\n"
+                                    + "      (message:COMMENT)-[:HASCREATOR]->(creator:PERSON),\n"
+                                    + "      (liker:PERSON)-[:LIKES]->(message:COMMENT),\n"
+                                    + "      (comment:COMMENT)-[:REPLYOF]->(message:COMMENT)\n"
+                                    + "RETURN COUNT(message);",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
         PrintEstimatedRows printer = new PrintEstimatedRows();
         printer.go(after);
-//        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
-//        System.out.println(source.getCachedCost());
+        //        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
+        //        System.out.println(source.getCachedCost());
     }
 }

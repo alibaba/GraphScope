@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
+import com.google.common.base.Preconditions;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -57,10 +58,41 @@ public abstract class EdgeCostEstimator<T> {
             double srcIntersectCount = getIntersectCount(src);
             double targetIntersectCount = getTargetIntersectCount(srcPattern, target);
             return new DetailedExpandCost(
-                    edgeCost.getExpandRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
-                    edgeCost.getExpandFilteringRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
-                    edgeCost.getGetVRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
-                    edgeCost.getGetVFilteringRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount));
+                    getExpandCost(
+                            edgeCost.getExpandRows(),
+                            srcPatternCount,
+                            srcIntersectCount,
+                            targetIntersectCount),
+                    getExpandCost(
+                            edgeCost.getExpandFilteringRows(),
+                            srcPatternCount,
+                            srcIntersectCount,
+                            targetIntersectCount),
+                    getExpandCost(
+                            edgeCost.getGetVRows(),
+                            srcPatternCount,
+                            srcIntersectCount,
+                            targetIntersectCount),
+                    getExpandCost(
+                            edgeCost.getGetVFilteringRows(),
+                            srcPatternCount,
+                            srcIntersectCount,
+                            targetIntersectCount));
+        }
+
+        private double getExpandCost(
+                double edgeRows,
+                double srcPatternCount,
+                double srcIntersectCount,
+                double targetIntersectCount) {
+            Preconditions.checkArgument(
+                    Double.compare(srcIntersectCount, 0.0d) != 0,
+                    "srcIntersectCount should not be 0");
+            Preconditions.checkArgument(
+                    Double.compare(targetIntersectCount, 0.0d) != 0,
+                    "targetIntersectCount should not be 0");
+            return Math.max(
+                    edgeRows * (srcPatternCount / srcIntersectCount / targetIntersectCount), 1.0d);
         }
 
         private double getIntersectCount(PatternVertex vertex) {
@@ -97,7 +129,7 @@ public abstract class EdgeCostEstimator<T> {
                                         edge.getEdgeTypeIds().get(0),
                                         edge.getId(),
                                         edge.isBoth(),
-                                createDetailsWithNoFilter(edge.getElementDetails()))
+                                        createDetailsWithNoFilter(edge.getElementDetails()))
                                 : new FuzzyPatternEdge(
                                         edgeSrc,
                                         edgeDst,
@@ -111,7 +143,10 @@ public abstract class EdgeCostEstimator<T> {
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
             double patternCost = handler.handle(pattern);
-            double expandCost = patternCost + handler.labelConstraintsDeltaCost(edge, target) / src.getElementDetails().getSelectivity();
+            double expandCost =
+                    patternCost
+                            + handler.labelConstraintsDeltaCost(edge, target)
+                                    * src.getElementDetails().getSelectivity();
             double expandFilteringCost = expandCost * edgeSelectivity;
             double getVCost = patternCost * edgeSelectivity;
             double getVFilteringCost = getVCost * targetSelectivity;
@@ -120,7 +155,13 @@ public abstract class EdgeCostEstimator<T> {
         }
 
         private ElementDetails createDetailsWithNoFilter(ElementDetails original) {
-            return new ElementDetails(1.0d, original.getRange(), original.getPxdInnerGetVTypes(), original.getResultOpt(), original.getPathOpt(), original.isOptional());
+            return new ElementDetails(
+                    1.0d,
+                    original.getRange(),
+                    original.getPxdInnerGetVTypes(),
+                    original.getResultOpt(),
+                    original.getPathOpt(),
+                    original.isOptional());
         }
     }
 }

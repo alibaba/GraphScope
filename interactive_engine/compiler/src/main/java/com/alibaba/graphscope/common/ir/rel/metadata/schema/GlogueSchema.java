@@ -22,8 +22,10 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
+
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 import org.slf4j.Logger;
@@ -149,35 +151,48 @@ public class GlogueSchema {
         edge.getEdgeTypeIds()
                 .forEach(
                         edgeTypeId -> {
-                            EdgeTypeId key = (direction == PatternDirection.OUT) ?
-                                    new EdgeTypeId(edgeTypeId.getSrcLabelId(), edgeTypeId.getEdgeLabelId(), -1) :
-                                    new EdgeTypeId(-1, edgeTypeId.getEdgeLabelId(), edgeTypeId.getDstLabelId());
+                            EdgeTypeId key =
+                                    (direction == PatternDirection.OUT)
+                                            ? new EdgeTypeId(
+                                                    edgeTypeId.getSrcLabelId(),
+                                                    edgeTypeId.getEdgeLabelId(),
+                                                    -1)
+                                            : new EdgeTypeId(
+                                                    -1,
+                                                    edgeTypeId.getEdgeLabelId(),
+                                                    edgeTypeId.getDstLabelId());
                             if (visited.contains(key)) {
                                 return;
                             }
                             visited.add(key);
-                            AtomicDouble edgeDeltaCost = new AtomicDouble(0.0d);
+                            List<EdgeTypeId> candidates = Lists.newArrayList();
                             edgeTypeCardinality.forEach(
                                     (k, v) -> {
                                         switch (direction) {
                                             case OUT:
                                                 if (edgeTypeId.getSrcLabelId() == k.getSrcLabelId()
-                                                        && edgeTypeId.getEdgeLabelId() == k.getEdgeLabelId()
-                                                        && !edge.getEdgeTypeIds().contains(k)) {
-                                                    edgeDeltaCost.addAndGet(v);
+                                                        && edgeTypeId.getEdgeLabelId()
+                                                                == k.getEdgeLabelId()) {
+                                                    candidates.add(k);
                                                 }
                                                 break;
                                             case IN:
                                                 if (edgeTypeId.getDstLabelId() == k.getDstLabelId()
-                                                        && edgeTypeId.getEdgeLabelId() == k.getEdgeLabelId()
-                                                        && !edge.getEdgeTypeIds().contains(k)) {
-                                                    edgeDeltaCost.addAndGet(v);
+                                                        && edgeTypeId.getEdgeLabelId()
+                                                                == k.getEdgeLabelId()) {
+                                                    candidates.add(k);
                                                 }
                                                 break;
                                             default:
                                         }
                                     });
-                            deltaCost.addAndGet(edgeDeltaCost.doubleValue());
+                            if (!edge.getEdgeTypeIds().containsAll(candidates)) {
+                                double deltaSum = 0.0d;
+                                for (EdgeTypeId candidate : candidates) {
+                                    deltaSum += getEdgeTypeCardinality(candidate);
+                                }
+                                deltaCost.addAndGet(deltaSum);
+                            }
                         });
         return deltaCost.get();
     }

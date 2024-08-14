@@ -41,7 +41,8 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         PriorityQueue<GraphJoinDecomposition> decompositionQueue =
                 new PriorityQueue<>(queueCapacity, comparator.reversed()); // max heap
         if (getMaxEdgeNum(graphPattern.getPattern()) > 2) {
-            (new JoinByVertex(graphPattern, mq, decompositionQueue, queueCapacity)).addDecompositions();
+            (new JoinByVertex(graphPattern, mq, decompositionQueue, queueCapacity))
+                    .addDecompositions();
         }
         if (config.getForeignKeyMeta() != null) {
             (new JoinByForeignKey(graphPattern, mq, decompositionQueue, queueCapacity))
