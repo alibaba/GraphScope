@@ -22,8 +22,8 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
-
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
 
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
@@ -145,36 +145,39 @@ public class GlogueSchema {
 
     private Double getLabelConstraintsDeltaCost(PatternEdge edge, PatternDirection direction) {
         AtomicDouble deltaCost = new AtomicDouble(0.0d);
+        Set<EdgeTypeId> visited = Sets.newHashSet();
         edge.getEdgeTypeIds()
                 .forEach(
                         edgeTypeId -> {
+                            EdgeTypeId key = (direction == PatternDirection.OUT) ?
+                                    new EdgeTypeId(edgeTypeId.getSrcLabelId(), edgeTypeId.getEdgeLabelId(), -1) :
+                                    new EdgeTypeId(-1, edgeTypeId.getEdgeLabelId(), edgeTypeId.getDstLabelId());
+                            if (visited.contains(key)) {
+                                return;
+                            }
+                            visited.add(key);
                             AtomicDouble edgeDeltaCost = new AtomicDouble(0.0d);
-                            AtomicInteger endIdCounter = new AtomicInteger(0);
                             edgeTypeCardinality.forEach(
                                     (k, v) -> {
                                         switch (direction) {
                                             case OUT:
                                                 if (edgeTypeId.getSrcLabelId() == k.getSrcLabelId()
-                                                        && edgeTypeId.getEdgeLabelId()
-                                                                == k.getEdgeLabelId()) {
+                                                        && edgeTypeId.getEdgeLabelId() == k.getEdgeLabelId()
+                                                        && !edge.getEdgeTypeIds().contains(k)) {
                                                     edgeDeltaCost.addAndGet(v);
-                                                    endIdCounter.addAndGet(1);
                                                 }
                                                 break;
                                             case IN:
                                                 if (edgeTypeId.getDstLabelId() == k.getDstLabelId()
-                                                        && edgeTypeId.getEdgeLabelId()
-                                                                == k.getEdgeLabelId()) {
+                                                        && edgeTypeId.getEdgeLabelId() == k.getEdgeLabelId()
+                                                        && !edge.getEdgeTypeIds().contains(k)) {
                                                     edgeDeltaCost.addAndGet(v);
-                                                    endIdCounter.addAndGet(1);
                                                 }
                                                 break;
                                             default:
                                         }
                                     });
-                            if (endIdCounter.get() > 1) {
-                                deltaCost.addAndGet(edgeDeltaCost.doubleValue());
-                            }
+                            deltaCost.addAndGet(edgeDeltaCost.doubleValue());
                         });
         return deltaCost.get();
     }

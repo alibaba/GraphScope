@@ -54,12 +54,24 @@ public abstract class EdgeCostEstimator<T> {
             DetailedExpandCost edgeCost = estimateEdge(edge, src, target);
             if (srcPattern == null) return edgeCost;
             double srcPatternCount = handler.handle(srcPattern);
-            double intersectVertexCount = handler.handle(new Pattern(src));
+            double srcIntersectCount = getIntersectCount(src);
+            double targetIntersectCount = getTargetIntersectCount(srcPattern, target);
             return new DetailedExpandCost(
-                    edgeCost.getExpandRows() * srcPatternCount / intersectVertexCount,
-                    edgeCost.getExpandFilteringRows() * srcPatternCount / intersectVertexCount,
-                    edgeCost.getGetVRows() * srcPatternCount / intersectVertexCount,
-                    edgeCost.getGetVFilteringRows() * srcPatternCount / intersectVertexCount);
+                    edgeCost.getExpandRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
+                    edgeCost.getExpandFilteringRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
+                    edgeCost.getGetVRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount),
+                    edgeCost.getGetVFilteringRows() * (srcPatternCount / srcIntersectCount / targetIntersectCount));
+        }
+
+        private double getIntersectCount(PatternVertex vertex) {
+            return handler.handle(new Pattern(vertex));
+        }
+
+        private double getTargetIntersectCount(Pattern pattern, PatternVertex target) {
+            if (!pattern.containsVertex(target)) {
+                return 1.0d;
+            }
+            return getIntersectCount(target);
         }
 
         private DetailedExpandCost estimateEdge(
@@ -85,21 +97,21 @@ public abstract class EdgeCostEstimator<T> {
                                         edge.getEdgeTypeIds().get(0),
                                         edge.getId(),
                                         edge.isBoth(),
-                                        edge.getElementDetails())
+                                new ElementDetails())
                                 : new FuzzyPatternEdge(
                                         edgeSrc,
                                         edgeDst,
                                         edge.getEdgeTypeIds(),
                                         edge.getId(),
                                         edge.isBoth(),
-                                        edge.getElementDetails());
+                                        new ElementDetails());
             }
             Pattern pattern = new Pattern();
             pattern.addVertex(edge.getSrcVertex());
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
             double patternCost = handler.handle(pattern);
-            double expandCost = patternCost + handler.labelConstraintsDeltaCost(edge, target);
+            double expandCost = patternCost + handler.labelConstraintsDeltaCost(edge, target) / src.getElementDetails().getSelectivity();
             double expandFilteringCost = expandCost * edgeSelectivity;
             double getVCost = patternCost * edgeSelectivity;
             double getVFilteringCost = getVCost * targetSelectivity;

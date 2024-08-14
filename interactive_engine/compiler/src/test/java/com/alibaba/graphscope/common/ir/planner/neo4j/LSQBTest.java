@@ -25,11 +25,9 @@ import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.rules.MultiJoin;
@@ -372,14 +370,16 @@ public class LSQBTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (a {id: 1}) Return count(a);",
+                                "MATCH (person:PERSON {id: 933})<-[:HASCREATOR]-(message)<-[like:LIKES]-(liker:PERSON),\n" +
+                                        "                           (liker)-[k:KNOWS]-(person)\n" +
+                                        "                     RETURN count(person);",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        System.out.println(after.explain());
-//        PrintEstimatedRows printer = new PrintEstimatedRows();
-//        printer.go(after);
-        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
-        System.out.println(source.getCachedCost());
+        System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
+        PrintEstimatedRows printer = new PrintEstimatedRows();
+        printer.go(after);
+//        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
+//        System.out.println(source.getCachedCost());
     }
 }
