@@ -97,14 +97,14 @@ public abstract class EdgeCostEstimator<T> {
                                         edge.getEdgeTypeIds().get(0),
                                         edge.getId(),
                                         edge.isBoth(),
-                                new ElementDetails())
+                                createDetailsWithNoFilter(edge.getElementDetails()))
                                 : new FuzzyPatternEdge(
                                         edgeSrc,
                                         edgeDst,
                                         edge.getEdgeTypeIds(),
                                         edge.getId(),
                                         edge.isBoth(),
-                                        new ElementDetails());
+                                        createDetailsWithNoFilter(edge.getElementDetails()));
             }
             Pattern pattern = new Pattern();
             pattern.addVertex(edge.getSrcVertex());
@@ -117,6 +117,10 @@ public abstract class EdgeCostEstimator<T> {
             double getVFilteringCost = getVCost * targetSelectivity;
             return new DetailedExpandCost(
                     expandCost, expandFilteringCost, getVCost, getVFilteringCost);
+        }
+
+        private ElementDetails createDetailsWithNoFilter(ElementDetails original) {
+            return new ElementDetails(1.0d, original.getRange(), original.getPxdInnerGetVTypes(), original.getResultOpt(), original.getPathOpt(), original.isOptional());
         }
     }
 }
