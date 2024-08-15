@@ -36,10 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -120,6 +117,7 @@ public class GraphRelOptimizer {
             }
             physicalPlanner.setRoot(relOptimized);
             RelNode physicalOptimized = physicalPlanner.findBestExp();
+            clear();
             return physicalOptimized;
         }
         return before;
@@ -314,5 +312,23 @@ public class GraphRelOptimizer {
                     });
         }
         return new GraphHepPlanner(hepBuilder.build());
+    }
+
+    private void clear() {
+        List<RelOptRule> logicalRBORules = this.relPlanner.getRules();
+        this.relPlanner.clear();
+        for (RelOptRule rule : logicalRBORules) {
+            this.relPlanner.addRule(rule);
+        }
+        List<RelOptRule> logicalCBORules = this.matchPlanner.getRules();
+        this.matchPlanner.clear();
+        for (RelOptRule rule : logicalCBORules) {
+            this.matchPlanner.addRule(rule);
+        }
+        List<RelOptRule> physicalRBORules = this.physicalPlanner.getRules();
+        this.physicalPlanner.clear();
+        for (RelOptRule rule : physicalRBORules) {
+            this.physicalPlanner.addRule(rule);
+        }
     }
 }
