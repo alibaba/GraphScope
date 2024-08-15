@@ -25,10 +25,9 @@ import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.RelMdSelectivity;
 import org.apache.calcite.rel.metadata.RelMdUtil;
@@ -54,18 +53,6 @@ public class GraphSelectivityHandler extends RelMdSelectivity
             RelNode node, RelMetadataQuery mq, @Nullable RexNode condition) {
         if (node instanceof TableScan) {
             return getSelectivity((TableScan) node, mq, condition);
-        } else if (node instanceof Filter) {
-            return getSelectivity((Filter) node, mq, condition);
-        } else if (node instanceof Aggregate) {
-            return getSelectivity((Aggregate) node, mq, condition);
-        } else if (node instanceof Sort) {
-            return getSelectivity((Sort) node, mq, condition);
-        } else if (node instanceof Project) {
-            return getSelectivity((Project) node, mq, condition);
-        } else if (node instanceof Join) {
-            return getSelectivity((Join) node, mq, condition);
-        } else if (node instanceof Union) {
-            return getSelectivity((Union) node, mq, condition);
         }
         return RelMdUtil.guessSelectivity(condition);
     }
