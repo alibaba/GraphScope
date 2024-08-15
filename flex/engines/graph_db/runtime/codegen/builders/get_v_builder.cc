@@ -5,8 +5,19 @@ class GetVBuilder {
  public:
   GetVBuilder(BuildingContext& context) : context_(context) {};
   std::string Build(const physical::GetV& opr) {
+    /** int tag = -1;
+    if (opr.has_tag()) {
+      tag = opr.tag().value();
+    }
+    VOpt opt = parse_opt(opr.opt());
+
+    int alias = -1;
+    if (opr.has_alias()) {
+      alias = opr.alias().value();
+    }
+    */
     std::stringstream ss;
-    ss << "GetVBuilder::Build()";
+
     return ss.str();
   }
   BuildingContext& context_;

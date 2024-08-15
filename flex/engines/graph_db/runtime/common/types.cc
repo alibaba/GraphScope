@@ -141,6 +141,24 @@ std::string join_kind_2_str(JoinKind kind) {
     return "unknown";
   }
 }
+
+VOpt parse_opt(const physical::GetV_VOpt& opt) {
+  if (opt == physical::GetV_VOpt::GetV_VOpt_START) {
+    return VOpt::kStart;
+  } else if (opt == physical::GetV_VOpt::GetV_VOpt_END) {
+    return VOpt::kEnd;
+  } else if (opt == physical::GetV_VOpt::GetV_VOpt_OTHER) {
+    return VOpt::kOther;
+  } else if (opt == physical::GetV_VOpt::GetV_VOpt_BOTH) {
+    return VOpt::kBoth;
+  } else if (opt == physical::GetV_VOpt::GetV_VOpt_ITSELF) {
+    return VOpt::kItself;
+  } else {
+    LOG(FATAL) << "unexpected GetV::Opt";
+    return VOpt::kItself;
+  }
+}
+
 uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid) {
   // encode label_id and vid to a unique vid
   GlobalId global_id(label_id, vid);

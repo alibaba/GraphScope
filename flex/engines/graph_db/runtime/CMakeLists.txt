@@ -12,7 +12,6 @@ install_flex_target(runtime_adhoc)
 file(GLOB_RECURSE CODEGEN_SOURCES "codegen/*.cc" "common/types.cc")
 add_library(runtime_codegen SHARED ${CODEGEN_SOURCES})
 target_link_libraries(runtime_codegen hqps_plan_proto flex_utils flex_rt_mutable_graph)
-install_flex_target(runtime_codegen)
 
 add_executable(codegen codegen/codegen.cc)
 target_link_libraries(codegen runtime_codegen)

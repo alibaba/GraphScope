@@ -22,23 +22,6 @@ namespace gs {
 
 namespace runtime {
 
-VOpt parse_opt(const physical::GetV_VOpt& opt) {
-  if (opt == physical::GetV_VOpt::GetV_VOpt_START) {
-    return VOpt::kStart;
-  } else if (opt == physical::GetV_VOpt::GetV_VOpt_END) {
-    return VOpt::kEnd;
-  } else if (opt == physical::GetV_VOpt::GetV_VOpt_OTHER) {
-    return VOpt::kOther;
-  } else if (opt == physical::GetV_VOpt::GetV_VOpt_BOTH) {
-    return VOpt::kBoth;
-  } else if (opt == physical::GetV_VOpt::GetV_VOpt_ITSELF) {
-    return VOpt::kItself;
-  } else {
-    LOG(FATAL) << "unexpected GetV::Opt";
-    return VOpt::kItself;
-  }
-}
-
 Context eval_get_v(const physical::GetV& opr, const ReadTransaction& txn,
                    Context&& ctx,
                    const std::map<std::string, std::string>& params) {

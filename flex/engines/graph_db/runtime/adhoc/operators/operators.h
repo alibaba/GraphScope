@@ -21,6 +21,7 @@
 
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 #include "flex/utils/app_utils.h"
 
 namespace gs {

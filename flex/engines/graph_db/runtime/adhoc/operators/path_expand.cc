@@ -15,7 +15,8 @@
 
 #include "flex/engines/graph_db/runtime/common/operators/path_expand.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
-#include "flex/engines/graph_db/runtime/adhoc/utils.h"
+// #include "flex/engines/graph_db/runtime/adhoc/utils.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 
 namespace gs {
 

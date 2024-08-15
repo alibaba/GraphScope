@@ -19,16 +19,10 @@
 #include "flex/engines/graph_db/runtime/common/columns/path_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 
 namespace gs {
 namespace runtime {
-
-struct GetVParams {
-  VOpt opt;
-  int tag;
-  std::vector<label_t> tables;
-  int alias;
-};
 
 std::vector<label_t> extract_labels(const std::vector<LabelTriplet>& labels,
                                     const std::vector<label_t>& tables,

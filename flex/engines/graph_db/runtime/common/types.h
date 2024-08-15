@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "flex/proto_generated_gie/physical.pb.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/type.pb.h"
 
@@ -126,6 +127,8 @@ std::string dir_2_str(Direction dir);
 std::string vopt_2_str(VOpt opt);
 
 std::string join_kind_2_str(JoinKind kind);
+
+VOpt parse_opt(const physical::GetV_VOpt& opt);
 
 struct LabelTriplet {
   LabelTriplet(label_t src, label_t dst, label_t edge)

@@ -29,13 +29,6 @@ namespace gs {
 
 namespace runtime {
 
-Direction parse_direction(const physical::EdgeExpand_Direction& dir);
-
-std::vector<label_t> parse_tables(const algebra::QueryParams& query_params);
-
-std::vector<LabelTriplet> parse_label_triplets(
-    const physical::PhysicalOpr_MetaData& meta);
-
 std::shared_ptr<IContextColumn> create_column(
     const common::IrDataType& data_type);
 
