@@ -166,6 +166,7 @@ inline std::string get_latest_snapshot(const std::string& work_dir) {
   {
     FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
     CHECK_EQ(fread(&version, sizeof(uint32_t), 1, fin), 1);
+    fclose(fin);
   }
   return snapshots_dir + "/" + std::to_string(version);
 }
