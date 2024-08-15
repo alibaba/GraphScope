@@ -26,6 +26,9 @@ mod generated {
     pub mod job_proto {
         tonic::include_proto!("job_proto");
     }
+    pub mod insight_error {
+        tonic::include_proto!("insight_error");
+    }
 }
 
 #[rustfmt::skip]
@@ -35,8 +38,11 @@ mod generated {
     pub mod protocol;
     #[path = "job_proto.rs"]
     pub mod job_proto;
+    #[path = "insight_error.rs"]
+    pub mod insight_error;
 }
 
+pub use generated::insight_error;
 pub use generated::job_proto as job_pb;
 pub use generated::protocol as pb;
 
