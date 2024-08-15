@@ -98,6 +98,12 @@ jobs:
         cmake -DBUILD_TESTS=OFF \
               -DENABLE_JAVA_SDK=OFF ..
         make
+        echo 'Clean extra artifacts to free device space.'
+        du -hcd1 ~ /opt/graphscope || true
+        rm -rf /opt/vineyard/bin/run_* || true
+        rm -rf ~/.local || true
+        rm -rf ~/.rustup || true
+        du -hcd1 ~ /opt/graphscope || true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
