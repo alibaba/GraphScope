@@ -22,7 +22,7 @@ class LimitBuilder {
   int upper_;
 };
 
-std::string BuildLimit(BuildingContext& context, const algebra::Limit& opr) {
+std::string build_limit(BuildingContext& context, const algebra::Limit& opr) {
   LimitBuilder builder(context);
   int lower = 0;
   int upper = std::numeric_limits<int>::max();

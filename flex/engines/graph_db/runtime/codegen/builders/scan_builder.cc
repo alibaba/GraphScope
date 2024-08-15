@@ -227,7 +227,7 @@ class ScanBuilder {
   BuildingContext& context_;
 };
 
-std::string BuildScan(BuildingContext& context, const physical::Scan& opr) {
+std::string build_scan(BuildingContext& context, const physical::Scan& opr) {
   return ScanBuilder(context).Build(opr);
 }
 }  // namespace runtime

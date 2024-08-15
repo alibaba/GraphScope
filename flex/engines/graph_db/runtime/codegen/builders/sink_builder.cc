@@ -16,7 +16,7 @@ class SinkBuilder {
   BuildingContext& context_;
 };
 
-std::string BuildSink(BuildingContext& context) {
+std::string build_sink(BuildingContext& context) {
   SinkBuilder builder(context);
   return builder.Build();
 }

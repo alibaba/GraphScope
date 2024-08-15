@@ -22,7 +22,7 @@ class GetVBuilder {
   }
   BuildingContext& context_;
 };
-std::string BuildGetV(BuildingContext& context, const physical::GetV& opr) {
+std::string build_get_v(BuildingContext& context, const physical::GetV& opr) {
   return GetVBuilder(context).Build(opr);
 }
 }  // namespace runtime

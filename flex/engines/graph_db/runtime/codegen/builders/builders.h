@@ -27,13 +27,13 @@ limitations under the License.
 namespace gs {
 namespace runtime {
 
-std::string BuildScan(BuildingContext& context, const physical::Scan& opr);
+std::string build_scan(BuildingContext& context, const physical::Scan& opr);
 
-std::string BuildSink(BuildingContext& context);
+std::string build_sink(BuildingContext& context);
 
-std::string BuildLimit(BuildingContext& context, const algebra::Limit& opr);
+std::string build_limit(BuildingContext& context, const algebra::Limit& opr);
 
-std::string BuildGetV(BuildingContext& context, const physical::GetV& opr);
+std::string build_get_v(BuildingContext& context, const physical::GetV& opr);
 
 }  // namespace runtime
 }  // namespace gs

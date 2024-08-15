@@ -18,14 +18,14 @@ class Codegen {
       CHECK(opr.has_opr()) << "Operator is not set in physical plan";
       switch (opr.opr().op_kind_case()) {
       case physical::PhysicalOpr_Operator::OpKindCase::kScan:
-        ss << BuildScan(context, opr.opr().scan());
+        ss << build_scan(context, opr.opr().scan());
         LOG(INFO) << ss.str();
         break;
       case physical::PhysicalOpr_Operator::OpKindCase::kSink:
-        ss << BuildSink(context);
+        ss << build_sink(context);
         break;
       case physical::PhysicalOpr_Operator::OpKindCase::kLimit:
-        ss << BuildLimit(context, opr.opr().limit());
+        ss << build_limit(context, opr.opr().limit());
         break;
       default:
         break;
