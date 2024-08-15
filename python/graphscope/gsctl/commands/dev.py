@@ -21,6 +21,7 @@
 import io
 import os
 import subprocess
+import sys
 
 import click
 from packaging import version
@@ -62,6 +63,8 @@ def run_shell_cmd(cmd, workingdir):
     )
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         print(line.rstrip())
+    proc.wait()
+    sys.exit(proc.returncode)
 
 
 @click.group()

@@ -78,4 +78,10 @@ public class LocalIrMetaReader implements IrMetaReader {
                 (statsURI.getScheme() == null) ? Path.of(statsURI.getPath()) : Path.of(statsURI);
         return new IrGraphStatistics(new FileInputStream(statsPath.toFile()));
     }
+
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) {
+        String statsUri = GraphConfig.GRAPH_META_STATISTICS_URI.get(configs);
+        return !statsUri.isEmpty();
+    }
 }
