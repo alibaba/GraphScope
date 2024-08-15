@@ -76,7 +76,6 @@ minikube service coordinator-service-<release-name> --url
 ```
 
 For more usage, you could refer to [minikube's accessing tutorial](https://minikube.sigs.k8s.io/docs/handbook/accessing/).
-
 ````
 
 ```python
