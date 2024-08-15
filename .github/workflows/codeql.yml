@@ -84,11 +84,9 @@ jobs:
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
     - if: matrix.build-mode == 'manual'
+      name: Cpp Manual Build and Analysis
       shell: bash
       run: |
-        echo 'If you are using a "manual" build mode for one or more of the' \
-          'languages you are analyzing, replace this with the commands to build' \
-          'your code, for example:'
         echo 'Install dependencies'
         pip install gsctl
         gsctl install-deps dev
@@ -97,7 +95,8 @@ jobs:
         cd analytical_engine
         mkdir build
         cd build
-        cmake -DBUILD_TESTS=OFF ..
+        cmake -DBUILD_TESTS=OFF \
+              -DENABLE_JAVA_SDK=OFF ..
         make
 
     - name: Perform CodeQL Analysis
