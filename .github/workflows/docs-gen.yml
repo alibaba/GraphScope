@@ -1,0 +1,79 @@
+name: Docs Generation
+
+on:
+  push:
+    branches:
+      - main
+      - 'xjb/*'
+    tags:
+      - "v*"
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Generate Docs
+      shell: bash
+      run: |
+        # Install pip dependencies, build builtin gar, and generate proto stuffs.
+        sudo apt update
+        sudo apt install -y doxygen graphviz
+
+        # generate a tagged version
+        cd ${GITHUB_WORKSPACE}
+        make graphscope-docs
+
+        # generate a stable version
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+        if [ ! -z "$tag" ];
+        then
+          export TAG_VER=stable
+          make graphscope-docs
+        fi
+
+    - name: Upload Docs
+      if: ${{ github.event_name == 'push' && github.repository == 'alibaba/GraphScope' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+      shell: bash
+      run: |
+        shopt -s extglob
+
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+
+        git fetch origin gh-pages --no-recurse-submodules
+        git checkout gh-pages
+
+        cd docs/
+
+        if [ -d "_build/latest" ];
+        then
+            rm -rf latest
+            cp -R _build/latest/html ./latest
+        else
+            rm -rf latest
+            cp -R _build/${tag}/html ./latest
+
+            rm -rf ${tag}
+            cp -R _build/${tag}/html ./${tag}
+        fi
+
+        if [ -d "_build/stable" ];
+        then
+            rm -rf !(_build|latest|stable|v*)
+            cp -R _build/stable/html/* ./
+        fi
+
+        rm -rf _build/
+        rm -rf ../flex/ || true
+        rm -rf ../learning_engine/ || true
+        rm -rf ../python || true
+        rm -rf ../analytical_engine/java || true
+
+        git add -A
+        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>" -s --date="$(date -R)"
+        git push -f origin gh-pages
+

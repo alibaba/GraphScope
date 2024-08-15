@@ -1,20 +1,11 @@
-name: Docs
+name: Docs Generation
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
-      - docs
-      - dev/docs
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - main
-      - docs
-      - dev/docs
-
 jobs:
   build:
     runs-on: ubuntu-20.04
