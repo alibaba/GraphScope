@@ -661,7 +661,9 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
       sink_any(prop, e->mutable_properties(0)->mutable_value());
     } else if (prop_names.size() > 1) {
       auto rv = prop.AsRecordView();
-      CHECK(rv.size() == prop_names.size());
+      if (rv.size() != prop_names.size()) {
+        LOG(ERROR) << "record view size not match with prop names";
+      }
       for (size_t i = 0; i < prop_names.size(); ++i) {
         auto props = e->add_properties();
         props->mutable_key()->set_name(prop_names[i]);
