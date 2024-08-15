@@ -103,6 +103,8 @@ jobs:
         rm -rf /opt/vineyard/bin/run_* || true
         rm -rf ~/.local || true
         rm -rf ~/.rustup || true
+        # PWD: /analytical_engine/build
+        bash ../../.github/free-disk-space.sh || true
         du -hcd1 ~ /opt/graphscope || true
 
     - name: Perform CodeQL Analysis
