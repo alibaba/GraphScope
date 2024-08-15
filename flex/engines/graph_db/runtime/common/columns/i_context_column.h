@@ -27,14 +27,6 @@ namespace gs {
 
 namespace runtime {
 
-enum class ContextColumnType {
-  kVertex,
-  kEdge,
-  kValue,
-  kPath,
-  kOptionalValue,
-};
-
 class ISigColumn {
  public:
   ISigColumn() = default;

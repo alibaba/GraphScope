@@ -158,7 +158,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
 
   bool scan_oid;
   if (is_find_vertex(scan_opr, params, label, vertex_id, alias, scan_oid)) {
-    return Scan::find_vertex(txn, label, vertex_id, alias, scan_oid);
+    return Scan::find_vertex_with_id(txn, label, vertex_id, alias, scan_oid);
   }
 
   const auto& opt = scan_opr.scan_opt();
@@ -191,7 +191,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                      expr->eval_vertex(label, vid, 0).as_bool();
             });
       } else {
-        return Scan::scan_gid_vertex(
+        return Scan::filter_gids(
             txn, scan_params,
             [&expr, oids](label_t label, vid_t vid) {
               return expr->eval_vertex(label, vid, 0).as_bool();
@@ -213,7 +213,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                      oids.end();
             });
       } else {
-        return Scan::scan_gid_vertex(
+        return Scan::filter_gids(
             txn, scan_params, [](label_t, vid_t) { return true; }, oids);
       }
     }

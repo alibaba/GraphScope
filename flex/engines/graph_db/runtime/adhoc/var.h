@@ -27,12 +27,6 @@ namespace gs {
 
 namespace runtime {
 
-enum class VarType {
-  kVertexVar,
-  kEdgeVar,
-  kPathVar,
-};
-
 class VarGetterBase {
  public:
   virtual ~VarGetterBase() = default;

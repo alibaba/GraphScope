@@ -341,7 +341,7 @@ class VertexPropertyVertexAccessor : public IAccessor {
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
     if (property_columns_[label] == nullptr) {
-      return RTAny();
+      return RTAny(RTAnyType::kNull);
     }
     return TypedConverter<T>::from_typed(property_columns_[label]->get_view(v));
   }
@@ -653,6 +653,8 @@ class ParamAccessor : public IAccessor {
     val_ = TypedConverter<T>::typed_from_string(params.at(key));
   }
 
+  T operator()() const { return val_; }
+
   T typed_eval_path(size_t) const { return val_; }
   T typed_eval_vertex(label_t, vid_t, size_t) const { return val_; }
   T typed_eval_edge(const LabelTriplet&, vid_t, vid_t, const Any&,
@@ -716,6 +718,7 @@ class ConstAccessor : public IAccessor {
  public:
   using elem_t = T;
   ConstAccessor(const T& val) : val_(val) {}
+  T operator()() const { return val_; }
 
   T typed_eval_path(size_t) const { return val_; }
   T typed_eval_vertex(label_t, vid_t, size_t) const { return val_; }

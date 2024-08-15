@@ -146,58 +146,6 @@ class MapImpl {
   const std::vector<RTAny>* values;
 };
 
-class RTAnyType {
- public:
-  enum class RTAnyTypeImpl {
-    kVertex,
-    kEdge,
-    kI64Value,
-    kU64Value,
-    kI32Value,
-    kF64Value,
-    kBoolValue,
-    kStringValue,
-    kVertexSetValue,
-    kStringSetValue,
-    kUnknown,
-    kDate32,
-    kPath,
-    kNull,
-    kTuple,
-    kList,
-    kMap,
-  };
-  static const RTAnyType kVertex;
-  static const RTAnyType kEdge;
-  static const RTAnyType kI64Value;
-  static const RTAnyType kU64Value;
-  static const RTAnyType kI32Value;
-  static const RTAnyType kF64Value;
-  static const RTAnyType kBoolValue;
-  static const RTAnyType kStringValue;
-  static const RTAnyType kVertexSetValue;
-  static const RTAnyType kStringSetValue;
-  static const RTAnyType kUnknown;
-  static const RTAnyType kDate32;
-  static const RTAnyType kPath;
-  static const RTAnyType kNull;
-  static const RTAnyType kTuple;
-  static const RTAnyType kList;
-  static const RTAnyType kMap;
-
-  RTAnyType() : type_enum_(RTAnyTypeImpl::kUnknown) {}
-  RTAnyType(const RTAnyType& other)
-      : type_enum_(other.type_enum_), null_able_(other.null_able_) {}
-  RTAnyType(RTAnyTypeImpl type) : type_enum_(type), null_able_(false) {}
-  RTAnyType(RTAnyTypeImpl type, bool null_able)
-      : type_enum_(type), null_able_(null_able) {}
-  bool operator==(const RTAnyType& other) const {
-    return type_enum_ == other.type_enum_;
-  }
-  RTAnyTypeImpl type_enum_;
-  bool null_able_;
-};
-
 class Map {
  public:
   static Map make_map(MapImpl impl) {
@@ -212,8 +160,6 @@ class Map {
 
   MapImpl map_;
 };
-
-RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt);
 
 union RTAnyValue {
   RTAnyValue() : vset(NULL) {}

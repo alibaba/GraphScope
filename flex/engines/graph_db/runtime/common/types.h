@@ -18,9 +18,11 @@
 
 #include <string>
 
+#include "flex/proto_generated_gie/results.pb.h"
+#include "flex/proto_generated_gie/type.pb.h"
+
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/types.h"
-
 namespace gs {
 
 namespace runtime {
@@ -49,6 +51,81 @@ enum class JoinKind {
   kAntiJoin,
   kLeftOuterJoin,
 };
+
+// identify the type of accessor
+enum class VarType {
+  kVertexVar,
+  kEdgeVar,
+  kPathVar,
+};
+
+enum class ContextColumnType {
+  kVertex,
+  kEdge,
+  kValue,
+  kPath,
+  kOptionalValue,
+};
+
+class RTAnyType {
+ public:
+  enum class RTAnyTypeImpl {
+    kVertex,
+    kEdge,
+    kI64Value,
+    kU64Value,
+    kI32Value,
+    kF64Value,
+    kBoolValue,
+    kStringValue,
+    kVertexSetValue,
+    kStringSetValue,
+    kUnknown,
+    kDate32,
+    kPath,
+    kNull,
+    kTuple,
+    kList,
+    kMap,
+  };
+  static const RTAnyType kVertex;
+  static const RTAnyType kEdge;
+  static const RTAnyType kI64Value;
+  static const RTAnyType kU64Value;
+  static const RTAnyType kI32Value;
+  static const RTAnyType kF64Value;
+  static const RTAnyType kBoolValue;
+  static const RTAnyType kStringValue;
+  static const RTAnyType kVertexSetValue;
+  static const RTAnyType kStringSetValue;
+  static const RTAnyType kUnknown;
+  static const RTAnyType kDate32;
+  static const RTAnyType kPath;
+  static const RTAnyType kNull;
+  static const RTAnyType kTuple;
+  static const RTAnyType kList;
+  static const RTAnyType kMap;
+
+  RTAnyType() : type_enum_(RTAnyTypeImpl::kUnknown) {}
+  RTAnyType(const RTAnyType& other)
+      : type_enum_(other.type_enum_), null_able_(other.null_able_) {}
+  RTAnyType(RTAnyTypeImpl type) : type_enum_(type), null_able_(false) {}
+  RTAnyType(RTAnyTypeImpl type, bool null_able)
+      : type_enum_(type), null_able_(null_able) {}
+  bool operator==(const RTAnyType& other) const {
+    return type_enum_ == other.type_enum_;
+  }
+  RTAnyTypeImpl type_enum_;
+  bool null_able_;
+};
+
+RTAnyType parse_from_ir_data_type(const common::IrDataType& dt);
+
+std::string dir_2_str(Direction dir);
+
+std::string vopt_2_str(VOpt opt);
+
+std::string join_kind_2_str(JoinKind kind);
 
 struct LabelTriplet {
   LabelTriplet(label_t src, label_t dst, label_t edge)
