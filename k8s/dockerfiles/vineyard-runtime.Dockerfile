@@ -1,9 +1,10 @@
 # The vineyard-runtime image including all vineyard-related
 # dependencies that could graphscope interactive engine.
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/vineyard-dev:$BUILDER_VERSION AS builder
+FROM $REGISTRY/graphscope/vineyard-dev:$BUILDER_VERSION-$ARCH AS builder
 
 FROM ubuntu:22.04 AS runtime
 
