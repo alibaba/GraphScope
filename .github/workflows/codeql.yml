@@ -98,8 +98,9 @@ jobs:
         mkdir build
         cd build
         cmake ..
-        make
-        exit 1
+        # TODO: change to vanilla make when ready
+        make analytical-java
+        # make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
