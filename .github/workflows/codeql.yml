@@ -97,10 +97,8 @@ jobs:
         cd analytical_engine
         mkdir build
         cd build
-        cmake ..
-        # TODO: change to vanilla make when ready
-        make analytical-java
-        # make
+        cmake -DBUILD_TESTS=OFF ..
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
