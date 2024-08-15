@@ -200,7 +200,7 @@ public class GraphTypeInference {
                 return createSchemaType(GraphOpt.Source.VERTEX, commonLabels, childType);
             }
             throw new IllegalArgumentException(
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node "
                             + child
                             + " with node "
@@ -211,7 +211,7 @@ public class GraphTypeInference {
                 || child instanceof GraphLogicalExpand) {
             Preconditions.checkArgument(
                     parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node %s with node %s",
                     child,
                     parent);
@@ -224,7 +224,7 @@ public class GraphTypeInference {
                 RelDataType otherVType = relGraph.getNeighborsType(child);
                 Preconditions.checkArgument(
                         otherVType != null && otherVType instanceof GraphSchemaType,
-                        "graph generic type error: invalid opt %s in node %s",
+                        "graph schema type error: invalid opt %s in node %s",
                         getV.getOpt(),
                         getV);
                 otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
@@ -237,7 +237,7 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalPathExpand) {
             Preconditions.checkArgument(
                     parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node %s with node %s",
                     child,
                     parent);
@@ -263,7 +263,7 @@ public class GraphTypeInference {
             return pathTypeInfer.inferPathType();
         }
         throw new IllegalArgumentException(
-                "graph generic type error: unable to establish an extension relationship between"
+                "graph schema type error: unable to establish an extension relationship between"
                         + " node "
                         + child
                         + " with node "
@@ -316,7 +316,7 @@ public class GraphTypeInference {
                 return pathTypeInfer.inferPathType();
             }
             throw new IllegalArgumentException(
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node "
                             + child
                             + " with node "
@@ -327,7 +327,7 @@ public class GraphTypeInference {
                 || child instanceof GraphLogicalExpand) {
             Preconditions.checkArgument(
                     parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node %s with node %s",
                     child,
                     parent);
@@ -339,7 +339,7 @@ public class GraphTypeInference {
                 RelDataType otherVType = relGraph.getNeighborsType(child);
                 Preconditions.checkArgument(
                         otherVType != null && otherVType instanceof GraphSchemaType,
-                        "graph generic type error: invalid opt %s in node %s",
+                        "graph schema type error: invalid opt %s in node %s",
                         getV.getOpt(),
                         getV);
                 otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
@@ -353,7 +353,7 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalPathExpand) {
             Preconditions.checkArgument(
                     parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
+                    "graph schema type error: unable to establish an extension relationship"
                             + " between node %s with node %s",
                     child,
                     parent);
@@ -383,7 +383,7 @@ public class GraphTypeInference {
                     (GraphSchemaType) parentType);
         }
         throw new IllegalArgumentException(
-                "graph generic type error: unable to establish an extension relationship between"
+                "graph schema type error: unable to establish an extension relationship between"
                         + " node "
                         + child
                         + " with node "
@@ -853,7 +853,7 @@ public class GraphTypeInference {
                     });
             Preconditions.checkArgument(
                     !expandTypes.isEmpty() && !getVTypes.isEmpty(),
-                    "cannot find any path within hops of [%s, %s] between startV type [%s] and endV"
+                    "graph schema type error: cannot find any path within hops of [%s, %s] between startV type [%s] and endV"
                             + " type [%s] with the expand type constraints [%s]",
                     minHop,
                     maxHop,
