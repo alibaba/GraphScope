@@ -34,17 +34,16 @@ use opentelemetry::{
     trace::{Span, SpanKind, Tracer},
     KeyValue,
 };
-use opentelemetry_otlp::{ExportConfig, Protocol, TonicExporterBuilder, WithExportConfig};
+use opentelemetry_otlp::{TonicExporterBuilder, WithExportConfig};
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::resource::{
     EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
 };
-use opentelemetry_sdk::trace::BatchConfigBuilder;
 use opentelemetry_sdk::Resource;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
-use pegasus::errors::{ErrorKind, JobExecError};
+use pegasus::errors::JobExecError;
 use pegasus::result::{FromStreamExt, ResultSink};
 use pegasus::{Configuration, Data, JobConf, ServerConf};
 use pegasus_network::config::ServerAddr;
@@ -55,6 +54,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
 use tonic::{Code, Request, Response, Status};
 
+use crate::error::ServerError;
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
 use crate::job::{JobAssembly, JobDesc};
@@ -103,24 +103,12 @@ impl FromStreamExt<Vec<u8>> for RpcSink {
     fn on_error(&mut self, error: Box<dyn Error + Send>) {
         self.had_error.store(true, Ordering::SeqCst);
         let status = if let Some(e) = error.downcast_ref::<JobExecError>() {
-            match e.kind {
-                ErrorKind::WouldBlock(_) => {
-                    Status::internal(format!("[Execution Error] WouldBlock: {}", error))
-                }
-                ErrorKind::Interrupted => {
-                    Status::internal(format!("[Execution Error] Interrupted: {}", error))
-                }
-                ErrorKind::IOError => Status::internal(format!("[Execution Error] IOError: {}", error)),
-                ErrorKind::IllegalScopeInput => {
-                    Status::internal(format!("[Execution Error] IllegalScopeInput: {}", error))
-                }
-                ErrorKind::Canceled => {
-                    Status::deadline_exceeded(format!("[Execution Error] Canceled: {}", error))
-                }
-                _ => Status::unknown(format!("[Execution Error]: {}", error)),
-            }
+            let server_error = ServerError::from(e);
+            Status::internal(format!("{:?}", server_error))
         } else {
-            Status::unknown(format!("[Unknown Error]: {}", error))
+            let server_error =
+                ServerError::new(crate::insight_error::Code::UnknownError, error.to_string());
+            Status::unknown(format!("{:?}", server_error))
         };
 
         self.tx.send(Err(status)).ok();
@@ -235,7 +223,7 @@ where
         info!("trace_id : {}, job conf {:?}", trace_id_hex, conf);
         span.set_attributes(vec![
             KeyValue::new("job.name", conf.job_name.clone()),
-            KeyValue::new("job.id", conf.job_id.to_string()),
+            KeyValue::new("job.id", job_id.to_string()),
         ]);
         let cx = opentelemetry::Context::current_with_span(span);
         let _guard = cx.clone().attach();
@@ -243,7 +231,10 @@ where
 
         if let Err(e) = ret {
             error!("trace_id:{}, submit job {} failure: {:?}", trace_id_hex, job_id, e);
-            Err(Status::unknown(format!("submit job error {}", e)))
+            let server_error = ServerError::from(&e)
+                .with_details("TraceId", trace_id_hex)
+                .with_details("QueryId", job_id.to_string());
+            Err(Status::internal(format!("{:?}", server_error)))
         } else {
             Ok(Response::new(UnboundedReceiverStream::new(rx)))
         }
