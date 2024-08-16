@@ -83,6 +83,10 @@ jobs:
         cmake -DBUILD_TESTS=OFF ..
         make
 
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
+
     # - name: Run Cpp Test
     #   env:
     #     GRAPHSCOPE_HOME: /opt/graphscope
