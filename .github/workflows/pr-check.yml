@@ -9,9 +9,7 @@ jobs:
   PR-Check:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
-      contents: write
 
     steps:
     - name: Conventional PR Check
@@ -54,6 +52,7 @@ jobs:
         ignoreLabels: |
           bot
           ignore-semantic-pull-request
+        wip: true
 
     - name: Checkout Code
       uses: actions/checkout@v4
