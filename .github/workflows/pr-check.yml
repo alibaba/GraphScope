@@ -1,14 +1,13 @@
 name: PR Check
 
 on:
-  workflow_dispatch:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
 jobs:
   PR-Check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
@@ -63,7 +62,7 @@ jobs:
         fetch-depth: 1
 
     - name: Setup Java11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -225,10 +224,9 @@ jobs:
       with:
         header: pr-docs-change-required
         message: |
-          echo " ❌ Uh oh! ❌ \n
-            We suggest that a PR with type @feat should has corresponding documentations. \n
-            If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
-          exit 1
+          ❌ Uh oh! ❌
+          We suggest that a PR with type feat/refactor should be well documented. 
+          If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation.
 
     # Delete a previous comment when the issue has been resolved
     - name: Delete Comment if Docs changes committed
@@ -244,6 +242,6 @@ jobs:
       with:
         header: pr-preview-url
         message: |
-          Please check the preview of the documentation changes here: \n
+          Please check the preview of the documentation changes at
           [${{ steps.preview.outputs.url }}](${{ steps.preview.outputs.url }})
     
