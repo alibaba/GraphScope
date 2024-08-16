@@ -66,8 +66,8 @@ public class LSQBTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 Utils.mockIrMeta(
-                        "schema/movie.json",
-                        "statistics/movie_statistics_1.json",
+                        "schema/ldbc.json",
+                        "statistics/ldbc1_statistics.json",
                         optimizer.getGlogueHolder());
     }
 
@@ -371,9 +371,11 @@ public class LSQBTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (a)-[c:ACTED_IN*5..6]-(b) \n" +
-                                        "Where a.name = 'Kean' AND b.name = 'Top Gun'\n" +
-                                        "Return c;",
+                                " MATCH (p: PERSON{id: 933})-[:KNOWS*1..5]-(f: PERSON)-[:ISLOCATEDIN]->(city),\n" +
+                                        "                                   (f)-[:WORKAT]->()-[:ISLOCATEDIN]->(:PLACE),\n" +
+                                        "                                   (f)-[:STUDYAT]->()-[:ISLOCATEDIN]->(:PLACE)\n" +
+                                        "                             WHERE f.firstName = \"Mikhail\" AND f.id <> 933\n" +
+                                        "                             Return count(p);",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
