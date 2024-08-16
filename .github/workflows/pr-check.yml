@@ -184,7 +184,7 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         projectName: graphscope-docs-preview
-        directory: /docs/_build/latest/html
+        directory: docs/_build/latest/html
 
     - name: Regex on PR Title (for the next step)
       uses: actions-ecosystem/action-regex-match@v2
