@@ -14,6 +14,13 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'analytical_engine/**'
+      - 'interactive_engine/**'
+      - 'learning_engine/**'
+      - 'coordinator/**'
+      - 'flex/**'
+      - 'python/**'
   # Commented out to save time; reopen after install-deps refactored.
   # pull_request:
   #   branches: [ "main" ]
