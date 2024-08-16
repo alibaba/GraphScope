@@ -31,26 +31,24 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
-
-    - name: Cache Environment with installed dependencies
-      id: cache-deps
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-deps
+      
+    - name: Try to restore cache-deps
+      uses: actions/cache/restore@v4
+      id: cache-restore
       with:
-        key: ${{ runner.os }}-build-${{ env.cache-name }}
+        key: ${{ runner.os }}-deps-cache
         path: |
-         - ~/.graphscope_env
-         - ~/.cache
-         - ~/.local
-         - ~/.rustup
-         - ~/.cargo
-         - ~/.cmake
-         - /opt/graphscope
-         - /opt/vineyard
+          ~/.graphscope_env
+          ~/.cache
+          ~/.local
+          ~/.rustup
+          ~/.cargo
+          ~/.cmake
+          /opt/graphscope
+          /opt/vineyard
 
     - name: Install dependencies
-      if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+      if: steps.cache-restore.outputs.cache-hit != 'true' 
       run: |
         # When ready, change to use gsctl.py in the repo
         pip install gsctl 
@@ -58,6 +56,21 @@ jobs:
         # gsctl install-deps dev-analytical
         gsctl install-deps dev
         bash ../../.github/free-disk-space.sh || true
+
+    - name: Cache deps
+      if: steps.cache-restore.outputs.cache-hit != 'true' 
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ runner.os }}-deps-cache
+        path: |
+          ~/.graphscope_env
+          ~/.cache
+          ~/.local
+          ~/.rustup
+          ~/.cargo
+          ~/.cmake
+          /opt/graphscope
+          /opt/vineyard    
 
     - name: Build
       env:
