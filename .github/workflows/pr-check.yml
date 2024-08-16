@@ -1,90 +1,197 @@
-name: PR-Check
+name: PR Check
 
 on:
+  workflow_dispatch:
   pull_request:
-    types:
-      - opened
-      - reopened
-      - edited
-      - synchronize
     branches:
       - main
 
 jobs:
-  conventional-pr-check:
+  PR-Check:
     runs-on: ubuntu-20.04
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
         submodules: true
-        fetch-depth: 0
+        fetch-depth: 1
 
-    - uses: amannn/action-semantic-pull-request@v5
+    - name: Setup Java11
+      uses: actions/setup-java@v3
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
+    - name: Cpp Format and Lint Check
+      run: |
+        # install clang-format
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
+
+        # run format
+        cd analytical_engine/
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| clang-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo "|    make gsa_clformat"
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with clang-format-8, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+
+        files_to_format=$(git ls-files *.java)
+
+        # run formatter in-place
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| google-java-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files **/*.java)'
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with google-java-format-1.13.0, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Python Format and Lint Check
+      run: |
+        echo "Checking formatting for $GITHUB_REPOSITORY"
+        pip3 install -r coordinator/requirements-dev.txt
+        pip3 install -r python/requirements-dev.txt
+        pushd python
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+        popd
+        pushd coordinator
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+
+    - name: Generate Docs
+      shell: bash
+      run: |
+        # Install pip dependencies, build builtin gar, and generate proto stuffs.
+        sudo apt update
+        sudo apt install -y doxygen graphviz
+
+        # generate a tagged version
+        cd ${GITHUB_WORKSPACE}
+        make graphscope-docs
+
+        # generate a stable version
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+        if [ ! -z "$tag" ];
+        then
+          export TAG_VER=stable
+          make graphscope-docs
+        fi
+        # Preview on comment will be attached by Cloudflare if files in /docs changed.
+
+    - name: Conventional PR Check
+      uses: amannn/action-semantic-pull-request@v5
       id: pr-convention
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          # Types allowed (newline-delimited).
-          # Default: https://github.com/commitizen/conventional-commit-types
-          types: |
-            build
-            ci
-            docs
-            feat
-            fix
-            perf
-            refactor
-            test
-            chore
-          # Scopes allowed (newline-delimited).
-          scopes: |
-            core
-            python
-            k8s
-            coordinator
-            one
-            interactive
-            insight
-            analytical
-            learning
-            flex
-          # A scope can be not provided.
-          requireScope: false
-          disallowScopes: |
-            release
-            [A-Z]+
-          # If the PR contains one of these newline-delimited labels, the
-          # validation is skipped.
-          ignoreLabels: |
-            bot
-            ignore-semantic-pull-request
+        # Types allowed (newline-delimited).
+        # Default: https://github.com/commitizen/conventional-commit-types
+        types: |
+          build
+          ci
+          docs
+          feat
+          fix
+          perf
+          refactor
+          test
+          chore
+        # Scopes allowed (newline-delimited).
+        scopes: |
+          core
+          python
+          k8s
+          coordinator
+          one
+          interactive
+          insight
+          analytical
+          learning
+          flex
+        # A scope can be not provided.
+        requireScope: false
+        disallowScopes: |
+          release
+          [A-Z]+
+        # If the PR contains one of these newline-delimited labels, the
+        # validation is skipped.
+        ignoreLabels: |
+          bot
+          ignore-semantic-pull-request
 
-  feature-docs-check:
-    runs-on: ubuntu-20.04
-    needs: conventional-pr-check
-    steps:
-    - uses: dorny/paths-filter@v2
-      id: doc-changes
+    - name: Get PR Changes
+      uses: dorny/paths-filter@v3
+      id: changes
       with:
         filters: |
-          src:
+          docs:
             - 'docs/**'
 
-    - uses: actions-ecosystem/action-regex-match@v2
+    - name: Regex on PR Title
+      uses: actions-ecosystem/action-regex-match@v2
       id: pr-regex-match
       with:
         text: ${{ github.event.pull_request.title }}
         regex: 'feat.*|refactor.*'
 
-    - if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.src == 'false' }}
+    - name: Check Docs Changes for PR with feat or refactor
+      if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.docs == 'false' }}
       run: |
         # echo "title=${{ github.event.pull_request.title }}"
         # echo "steps.pr-regex-match.outputs.match=${{ steps.pr-regex-match.outputs.match }}"
         # echo "steps.doc-changes.outputs.src=${{ steps.doc-changes.outputs.src }}"
         echo " ❌ Uh oh! ❌ \n
-             We suggest that a PR with type @feat should has corresponding documentations. \n
-             If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
+           We suggest that a PR with type @feat should has corresponding documentations. \n
+           If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
         exit 1
