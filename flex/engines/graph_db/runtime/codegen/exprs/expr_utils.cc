@@ -184,79 +184,86 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
   }
   auto expr_name = context.GetNextExprName();
   auto ctx_name = context.GetCurCtxName();
-  std::stringstream ss;
+  std::string ss;
   if (var.has_tag() || var_type == VarType::kPathVar) {
     if (context.get_column_type(tag) == ContextColumnType::kVertex) {
       if (var.has_property()) {
         auto pt = var.property();
         if (pt.has_id()) {
-          ss << "VertexGIdPathAccessor " << expr_name << "(" << ctx_name << ", "
-             << tag << ");\n";
-          return {ss.str(), expr_name, RTAnyType::kI64Value};
+          ss += "VertexGIdPathAccessor ";
+          ss +=
+              expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+          return {ss, expr_name, RTAnyType::kI64Value};
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            ss << "VertexIdPathAccessor " << expr_name << "(txn, " << ctx_name
-               << ", " << tag << ");\n";
-            return {ss.str(), expr_name, RTAnyType::kI64Value};
+            ss += "VertexIdPathAccessor ";
+            ss += expr_name + "(txn, " + ctx_name + ", " + std::to_string(tag) +
+                  ");\n";
+            return {ss, expr_name, RTAnyType::kI64Value};
           } else {
-            ss << "VertexPropertyPathAccessor<" << type2str(type) << "> "
-               << expr_name << "(txn, " << ctx_name << ", " << tag << ", \""
-               << pt.key().name() << "\");\n";
-            return {ss.str(), expr_name, type};
+            ss += "VertexPropertyPathAccessor<";
+            ss += type2str(type) + "> " + expr_name + "(txn, " + ctx_name +
+                  ", " + std::to_string(tag) + ", \"" + pt.key().name() +
+                  "\");\n";
+            return {ss, expr_name, type};
           }
         } else if (pt.has_label()) {
-          ss << "VertexLabelPathAccessor " << expr_name << "(" << ctx_name
-             << ", " << tag << ");\n";
-          return {ss.str(), expr_name, RTAnyType::kI32Value};
+          ss += "VertexLabelPathAccessor ";
+          ss +=
+              expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+          return {ss, expr_name, RTAnyType::kI32Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
       } else {
-        ss << "VertexPathAccessor " << expr_name << "(" << ctx_name << ", "
-           << tag << ");\n";
-        return {ss.str(), expr_name, RTAnyType::kVertex};
+        ss += "VertexPathAccessor ";
+        ss += expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+        return {ss, expr_name, RTAnyType::kVertex};
       }
     } else if (context.get_column_type(tag) == ContextColumnType::kValue ||
                context.get_column_type(tag) ==
                    ContextColumnType::kOptionalValue) {
       auto elem_type = context.get_elem_type(tag);
-      ss << "ContextValueAccessor<" << type2str(elem_type) << ">" << expr_name
-         << "(" << ctx_name << ", " << tag << ");\n";
+      ss += "ContextValueAccessor<";
+      ss += type2str(elem_type) + ">" + expr_name + "(" + ctx_name + ", " +
+            std::to_string(tag) + ");\n";
     } else if (context.get_column_type(tag) == ContextColumnType::kEdge) {
       if (var.has_property()) {
         auto& pt = var.property();
         if (pt.has_key()) {
           auto name = pt.key().name();
-          ss << "EdgePropertyPathAccessor<" << type2str(type) << "> "
-             << expr_name << "(" << ctx_name << ", " << tag << ", \"" << name
-             << "\");\n";
-          return {ss.str(), expr_name, type};
+          ss += "EdgePropertyPathAccessor<";
+          ss += type2str(type) + "> " + expr_name + "(" + ctx_name + ", " +
+                std::to_string(tag) + ", \"" + name + "\");\n";
+          return {ss, expr_name, type};
         } else if (pt.has_label()) {
-          ss << "EdgeLabelPathAccessor " << expr_name << "(" << ctx_name << ", "
-             << tag << ");\n";
-          return {ss.str(), expr_name, RTAnyType::kI32Value};
+          ss += "EdgeLabelPathAccessor ";
+          ss +=
+              expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+          return {ss, expr_name, RTAnyType::kI32Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
       } else {
-        ss << "EdgeIdPathAccessor " << expr_name << "(" << ctx_name << ", "
-           << tag << ");\n";
-        return {ss.str(), expr_name, RTAnyType::kEdge};
+        ss += "EdgeIdPathAccessor ";
+        ss += expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+        return {ss, expr_name, RTAnyType::kEdge};
       }
     } else if (context.get_column_type(tag) == ContextColumnType::kPath) {
       if (var.has_property()) {
         auto& pt = var.property();
         if (pt.has_len()) {
-          ss << "PathLenPathAccessor " << expr_name << "(" << ctx_name << ", "
-             << tag << ");\n";
-          return {ss.str(), expr_name, RTAnyType::kI32Value};
+          ss += "PathLenPathAccessor ";
+          ss +=
+              expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+          return {ss, expr_name, RTAnyType::kI32Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
       } else {
-        ss << "PathIdPathAccessor " << expr_name << "(" << ctx_name << ", "
-           << tag << ");\n";
-        return {ss.str(), expr_name, RTAnyType::kPath};
+        ss += "PathIdPathAccessor ";
+        ss += expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
+        return {ss, expr_name, RTAnyType::kPath};
       }
     } else {
       LOG(FATAL) << "not support" << var.DebugString();
@@ -266,20 +273,24 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
       if (var.has_property()) {
         auto& pt = var.property();
         if (pt.has_id()) {
-          ss << "VertexGIdVertexAccessor " << expr_name << "();\n";
-          return {ss.str(), expr_name, RTAnyType::kI64Value};
+          ss += "VertexGIdVertexAccessor ";
+          ss += expr_name + "();\n";
+          return {ss, expr_name, RTAnyType::kI64Value};
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            ss << "VertexIdVertexAccessor " << expr_name << "(txn);\n";
-            return {ss.str(), expr_name, RTAnyType::kI64Value};
+            ss += "VertexIdVertexAccessor ";
+            ss += expr_name + "(txn);\n";
+            return {ss, expr_name, RTAnyType::kI64Value};
           } else {
-            ss << "VertexPropertyVertexAccessor<" << type2str(type) << "> "
-               << expr_name << "(txn, \"" << pt.key().name() << "\");\n";
-            return {ss.str(), expr_name, type};
+            ss += "VertexPropertyVertexAccessor<";
+            ss += type2str(type) + "> " + expr_name + "(txn, \"" +
+                  pt.key().name() + "\");\n";
+            return {ss, expr_name, type};
           }
         } else if (pt.has_label()) {
-          ss << "VertexLabelVertexAccessor " << expr_name << "();\n";
-          return {ss.str(), expr_name, RTAnyType::kI32Value};
+          ss += "VertexLabelVertexAccessor ";
+          ss += expr_name + "();\n";
+          return {ss, expr_name, RTAnyType::kI32Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
@@ -289,9 +300,11 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
         auto& pt = var.property();
         if (pt.has_key()) {
           auto name = pt.key().name();
-          ss << "EdgePropertyVertexAccessor<" << type2str(type) << "> "
-             << expr_name << "(txn, \"" << name << "\");\n";
-          return {ss.str(), expr_name, type};
+          ss += "EdgePropertyVertexAccessor<";
+
+          ss +=
+              type2str(type) + "> " + expr_name + "(txn, \"" + name + "\");\n";
+          return {ss, expr_name, type};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
@@ -302,7 +315,7 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
       LOG(FATAL) << "not support" << var.DebugString();
     }
   }
-  return {ss.str(), expr_name, RTAnyType::kNull};
+  return {ss, expr_name, RTAnyType::kNull};
 }
 
 }  // namespace runtime

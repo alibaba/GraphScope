@@ -19,6 +19,8 @@ limitations under the License.
 #include <string>
 
 #include "flex/engines/graph_db/runtime/codegen/building_context.h"
+#include "flex/engines/graph_db/runtime/codegen/exprs/expr_builder.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 #include "flex/proto_generated_gie/algebra.pb.h"
 #include "flex/proto_generated_gie/common.pb.h"
 #include "flex/proto_generated_gie/expr.pb.h"

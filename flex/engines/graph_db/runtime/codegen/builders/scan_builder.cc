@@ -1,5 +1,4 @@
 #include "flex/engines/graph_db/runtime/codegen/builders/builders.h"
-#include "flex/engines/graph_db/runtime/codegen/exprs/expr_builder.h"
 #include "flex/engines/graph_db/runtime/codegen/exprs/expr_utils.h"
 #include "flex/engines/graph_db/runtime/codegen/utils/utils.h"
 #include "flex/engines/graph_db/runtime/common/utils.h"
@@ -127,17 +126,20 @@ class ScanBuilder {
       int alias;
       bool scan_oid;
       std::string expr_name, expr_str;
-      std::stringstream ss;
+      std::string ss;
       if (is_find_vertex(scan_opr, label, vertex_id, alias, scan_oid, expr_name,
                          expr_str)) {
-        auto ctx = context_.GetNextCtxName();
-        ss << expr_str << "\n";
-        ss << ctx << " = find_vertex(txn, " << static_cast<int>(label) << ", "
-           << expr_name << ", " << alias << ", "
-           << (scan_oid ? "true" : "false") << ");\n";
+        auto ctx = context_.GetCurCtxName();
         context_.set_alias(alias, ContextColumnType::kVertex,
                            RTAnyType::kVertex);
-        return ss.str();
+        ss += expr_str + "\n auto ";
+        ss += ctx + " = find_vertex(txn, " +
+              std::to_string(static_cast<int>(label)) + ", " + expr_name +
+              ", " + std::to_string(alias) + ", " +
+              (scan_oid ? "true" : "false") + ");\n";
+        context_.set_alias(alias, ContextColumnType::kVertex,
+                           RTAnyType::kVertex);
+        return ss;
       }
     }
     const auto& opt = scan_opr.scan_opt();
@@ -155,39 +157,39 @@ class ScanBuilder {
     for (const auto& table : scan_opr_params.tables()) {
       scan_params.tables.push_back(table.id());
     }
+    auto ctx_name = context_.GetCurCtxName();
 
     if (scan_opr_params.has_predicate()) {
-      auto [name, str] =
-          BuildExpr(context_, scan_opr_params.predicate(), VarType::kVertexVar);
+      auto [name, str] = build_expr(context_, scan_opr_params.predicate(),
+                                    VarType::kVertexVar);
       if (scan_opr.has_idx_predicate()) {
         const auto& idx_predicate = scan_opr.idx_predicate();
         std::vector<int64_t> oids;
         bool scan_oid;
         CHECK(parse_idx_predicate(idx_predicate, oids, scan_oid))
             << "Invalid idx predicate";
-        std::stringstream ss;
-        ss << str << "\n";
+        std::string ss;
+        ss += str + "\n auto ";
         if (scan_oid) {
-          ss << "Scan::filter_oids(txn, " << scan_params.toString() << ", ["
-             << name << "](label_t label, vid_t vid){\n return " << name
-             << ".typed_eval_vertex(label, vid, 0);\n"
-             << "}, ";
+          ss += ctx_name + " = Scan::filter_oids(txn, " +
+                scan_params.toString() + ", [" + name +
+                "](label_t label, vid_t vid){\n return " + name +
+                ".typed_eval_vertex(label, vid, 0);\n" + "}, ";
         } else {
-          ss << "Scan::filter_gids(txn, " << scan_params.toString() << ", ["
-             << name << "](label_t label, vid_t vid){\n return " << name
-             << ".typed_eval_vertex(label, vid, 0);\n"
-             << "}, ";
+          ss += ctx_name + " = Scan::filter_gids(txn, " +
+                scan_params.toString() + ", [" + name +
+                "](label_t label, vid_t vid){\n return " + name +
+                ".typed_eval_vertex(label, vid, 0);\n" + "}, ";
         }
-        ss << vec_2_str(oids) << ");\n";
-        return ss.str();
+        ss += vec_2_str(oids) + ");\n";
+        return ss;
       } else {
-        std::stringstream ss;
-        ss << str << "\n";
-        ss << "Scan::scan_vertex(txn, " << scan_params.toString() << ", ["
-           << name << "](label_t label, vid_t vid){\n return " << name
-           << ".typed_eval_vertex(label, vid, 0);\n"
-           << "});\n";
-        return ss.str();
+        std::string ss;
+        ss += str + "\n auto ";
+        ss += ctx_name + " = Scan::scan_vertex(txn, " + scan_params.toString() +
+              ", [" + name + "](label_t label, vid_t vid){\n return " + name +
+              ".typed_eval_vertex(label, vid, 0);\n" + "});\n";
+        return ss;
       }
     }
     if (scan_opr.has_idx_predicate()) {
@@ -197,28 +199,25 @@ class ScanBuilder {
       CHECK(parse_idx_predicate(idx_predicate, oids, scan_oid))
           << "Invalid idx predicate";
       if (scan_oid) {
-        std::stringstream ss;
-        ss << "Scan::filter_oids(txn, " << scan_params.toString()
-           << "[](label_t label, vid_t vid){\n"
-           << "return true;\n"
-           << "}, " << vec_2_str(oids) << ");\n";
-        return ss.str();
+        std::string ss{"auto "};
+
+        ss += ctx_name + " = Scan::filter_oids(txn, " + scan_params.toString() +
+              "[](label_t label, vid_t vid){\n" + "return true;\n" + "}, " +
+              vec_2_str(oids) + ");\n";
+        return ss;
       } else {
-        std::stringstream ss;
-        ss << "Scan::filter_gids(txn, " << scan_params.toString()
-           << "[](label_t label, vid_t vid){\n"
-           << "return true;\n"
-           << "}, " << vec_2_str(oids) << ");\n";
-        return ss.str();
+        std::string ss{"auto "};
+        ss += ctx_name + " = Scan::filter_gids(txn, " + scan_params.toString() +
+              "[](label_t label, vid_t vid){\n    return true;\n" + "}, " +
+              vec_2_str(oids) + ");\n";
+        return ss;
       }
 
     } else {
-      std::stringstream ss;
-      ss << "Scan::scan_vertex(txn, " << scan_params.toString()
-         << "[](label_t label, vid_t vid){\n"
-         << "return true;\n"
-         << "});\n";
-      return ss.str();
+      std::string ss{"auto "};
+      ss += ctx_name + " = Scan::scan_vertex(txn, " + scan_params.toString() +
+            "[](label_t label, vid_t vid){\n    return true;\n});\n";
+      return ss;
     }
     LOG(FATAL) << "not support to reach here";
     return "";

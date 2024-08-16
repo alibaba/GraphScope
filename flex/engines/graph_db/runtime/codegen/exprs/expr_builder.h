@@ -13,26 +13,26 @@ class ExprBuilder {
       : context_(context), var_type_(VarType::kPathVar) {}
 
   std::pair<std::string, RTAnyType> buildExpression(
-      std::stack<common::ExprOpr>& opr_stack, std::stringstream& ss) {
+      std::stack<common::ExprOpr>& opr_stack, std::string& ss) {
     auto opr = opr_stack.top();
     opr_stack.pop();
     switch (opr.item_case()) {
     case common::ExprOpr::kConst: {
       auto value = opr.const_();
       auto [str, expr_name, type] = value_pb_2_str(context_, value);
-      ss << str << "\n";
+      ss += str + "\n";
       return {expr_name, type};
     }
     case common::ExprOpr::kVar: {
       auto var = opr.var();
       auto [str, expr_name, type] = var_pb_2_str(context_, var, var_type_);
-      ss << str << "\n";
+      ss += str + "\n";
       return {expr_name, type};
     }
     case common::ExprOpr::kParam: {
       auto param = opr.param();
       auto [str, expr_name, type] = param_pb_2_str(context_, param);
-      ss << str << "\n";
+      ss += str + "\n";
       return {expr_name, type};
     }
     case common::ExprOpr::kExtract: {
@@ -51,14 +51,17 @@ class ExprBuilder {
         auto [left, left_type] = buildExpression(opr_stack, ss);
         auto [right, right_type] = buildExpression(opr_stack, ss);
         auto expr_name = context_.GetNextExprName();
-        ss << "BinaryOpExpr " << expr_name << "(" << left << ", " << right
-           << ", " << logical_2_str(opr.logical()) << "());\n";
+        ss += "BinaryOpExpr ";
+        ss += expr_name + "(" + left + ", " + right + ", " +
+              logical_2_str(opr.logical()) + "());\n";
         return {expr_name, RTAnyType::kBoolValue};
       }
       case common::Logical::NOT: {
         auto [left, left_type] = buildExpression(opr_stack, ss);
         auto expr_name = context_.GetNextExprName();
-        ss << "UnaryOpExpr " << expr_name << " (" << left << ", NotOp());\n";
+        ss += "UnaryOpExpr ";
+
+        ss += expr_name + " (" + left + ", NotOp());\n";
         return {expr_name, RTAnyType::kBoolValue};
       }
       case common::Logical::EQ:
@@ -70,9 +73,10 @@ class ExprBuilder {
         auto [left, left_type] = buildExpression(opr_stack, ss);
         auto [right, right_type] = buildExpression(opr_stack, ss);
         auto expr_name = context_.GetNextExprName();
-        ss << "BinaryOpExpr " << expr_name << "(" << left << ", " << right
-           << ", " << logical_2_str(opr.logical()) << "<" << type2str(left_type)
-           << ">());\n";
+        ss += "BinaryOpExpr ";
+        ss += expr_name + "(" + left + ", " + right + ", " +
+              logical_2_str(opr.logical()) + "<" + type2str(left_type) +
+              ">());\n";
         return {expr_name, RTAnyType::kBoolValue};
       }
       default:
@@ -90,9 +94,9 @@ class ExprBuilder {
         auto [left, left_type] = buildExpression(opr_stack, ss);
         auto [right, right_type] = buildExpression(opr_stack, ss);
         auto expr_name = context_.GetNextExprName();
-        ss << "BinaryOpExpr " << expr_name << " (" << left << ", " << right
-           << ", " << arith_2_str(opr.arith()) << "<" << type2str(left_type)
-           << ">);\n";
+        ss += "BinaryOpExpr ";
+        ss += expr_name + " (" + left + ", " + right + ", " +
+              arith_2_str(opr.arith()) + "<" + type2str(left_type) + ">);\n";
         return {expr_name, left_type};
       }
       default:
@@ -103,15 +107,16 @@ class ExprBuilder {
     case common::ExprOpr::kVars: {
       auto op = opr.vars();
       auto expr_name = context_.GetNextExprName();
-      ss << "TupleExpr " << expr_name << "(";
+      ss += "TupleExpr ";
+      ss += expr_name + "(";
       for (int i = 0; i < op.keys_size(); ++i) {
         auto key = op.keys(i);
         auto [str, expr_name, type] = var_pb_2_str(context_, key, var_type_);
-        ss << expr_name;
+        ss += expr_name;
         if (i != op.keys_size() - 1) {
-          ss << ", ";
+          ss += ", ";
         } else {
-          ss << ");\n";
+          ss += ");\n";
         }
       }
       return {expr_name, RTAnyType::kTuple};
@@ -120,6 +125,7 @@ class ExprBuilder {
       LOG(FATAL) << "Unsupported operator type: " << opr.item_case();
       break;
     }
+    return {"", RTAnyType::kUnknown};
   }
   static inline int get_priority(const common::ExprOpr& opr) {
     switch (opr.item_case()) {
@@ -229,9 +235,9 @@ class ExprBuilder {
       opr_stack2.push(opr_stack.top());
       opr_stack.pop();
     }
-    std::stringstream ss;
+    std::string ss;
     auto [name, type] = buildExpression(opr_stack2, ss);
-    return {name, ss.str()};
+    return {name, ss};
   }
 
   ExprBuilder& varType(VarType var_type) {
@@ -246,7 +252,7 @@ class ExprBuilder {
   VarType var_type_;
 };
 // expr name, expr string
-std::pair<std::string, std::string> BuildExpr(
+std::pair<std::string, std::string> build_expr(
     BuildingContext& context, const common::Expression& expr,
     VarType var_type = VarType::kPathVar);
 
