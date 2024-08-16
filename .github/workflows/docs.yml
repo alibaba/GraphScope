@@ -1,10 +1,9 @@
-name: Docs Generation
+name: Docs Deployment
 
 on:
   push:
     branches:
       - main
-      - 'xjb/*' # for testing
     tags:
       - "v*"
 jobs:
