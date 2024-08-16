@@ -37,7 +37,7 @@ jobs:
         fi
 
     - name: Upload Docs
-      if: ${{ github.event_name == 'push' && github.repository == 'alibaba/GraphScope' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+      if: ${{ github.repository == 'alibaba/GraphScope' }}
       shell: bash
       run: |
         shopt -s extglob

@@ -219,16 +219,9 @@ jobs:
         header: pr-title-lint-error
         delete: true
 
-    - name: Regex on PR Title (for the next step)
-      uses: actions-ecosystem/action-regex-match@v2
-      id: pr-regex-match
-      with:
-        text: ${{ github.event.pull_request.title }}
-        regex: 'feat.*|refactor.*'
-
     - name: Comments if Docs not present/changed while required
       uses: marocchino/sticky-pull-request-comment@v2
-      if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.docs == 'false' }}
+      if: ${{ ( github.event.pull_request.title == 'feat.*' || github.event.pull_request.title == 'refactor.*' ) && steps.doc-changes.outputs.docs == 'false' }}
       with:
         header: pr-docs-change-required
         message: |
@@ -241,10 +234,9 @@ jobs:
     - name: Delete Comment if Docs changes committed
       if: ${{ steps.changes.outputs.docs}}
       uses: marocchino/sticky-pull-request-comment@v2
-        with:   
-          header: pr-docs-change-required
-          delete: true
-
+      with:
+        header: pr-docs-change-required
+        delete: true
 
     - name: Comments with the PR Preview URL
       uses: marocchino/sticky-pull-request-comment@v2
