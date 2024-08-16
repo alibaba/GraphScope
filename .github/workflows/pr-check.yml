@@ -244,6 +244,7 @@ jobs:
       if: ${{ steps.changes.outputs.docs}}
       with:
         header: pr-preview-url
+        append: true
         message: |
           Please check the preview of the documentation changes at
           [${{ steps.preview.outputs.url }}](${{ steps.preview.outputs.url }})
