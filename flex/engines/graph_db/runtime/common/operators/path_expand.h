@@ -23,20 +23,11 @@
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 
 namespace gs {
 
 namespace runtime {
-
-struct PathExpandParams {
-  int start_tag;
-  std::vector<LabelTriplet> labels;
-  int alias;
-  Direction dir;
-  int hop_lower;
-  int hop_upper;
-  std::set<int> keep_cols;
-};
 
 class PathExpand {
  public:

@@ -44,6 +44,14 @@ std::string build_edge_expand(BuildingContext& context,
 
 std::string build_select(BuildingContext& context, const algebra::Select& opr);
 
+std::string build_path_expand_v(BuildingContext& context,
+                                const physical::PathExpand& opr,
+                                const physical::PhysicalOpr_MetaData& meta,
+                                int alias);
+
+std::string build_path_expand_p(BuildingContext& context,
+                                const physical::PathExpand& opr,
+                                const physical::PhysicalOpr_MetaData& meta);
 }  // namespace runtime
 }  // namespace gs
 #endif  // RUNTIME_CODEGEN_BUILDERS_BUILDERS_H_

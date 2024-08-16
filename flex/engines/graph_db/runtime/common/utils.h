@@ -92,6 +92,48 @@ struct EdgeExpandParams {
   }
 };
 
+struct PathExpandParams {
+  int start_tag;
+  std::vector<LabelTriplet> labels;
+  int alias;
+  Direction dir;
+  int hop_lower;
+  int hop_upper;
+  std::set<int> keep_cols;
+
+  PathExpandParams(int start_tag, const std::vector<LabelTriplet>& labels,
+                   int alias, Direction dir, int hop_lower, int hop_upper,
+                   const std::set<int>& keep_cols = {})
+      : start_tag(start_tag),
+        labels(labels),
+        alias(alias),
+        dir(dir),
+        hop_lower(hop_lower),
+        hop_upper(hop_upper),
+        keep_cols(keep_cols) {}
+  PathExpandParams() = default;
+
+  std::string to_string() const {
+    std::string ss;
+    ss += "PathExpandParams(";
+    ss += std::to_string(start_tag) + ", ";
+    ss += "{";
+    for (size_t i = 0; i < labels.size(); ++i) {
+      if (i + 1 == labels.size()) {
+        ss += "LabelTriplet" + labels[i].to_string();
+      } else {
+        ss += "LabelTriplet" + labels[i].to_string() + ", ";
+      }
+    }
+    ss += "}, ";
+    ss += dir_2_str(dir) + ", ";
+    ss += std::to_string(hop_lower) + ", ";
+    ss += std::to_string(hop_upper);
+    ss += ")";
+    return ss;
+  }
+};
+
 }  // namespace runtime
 }  // namespace gs
 

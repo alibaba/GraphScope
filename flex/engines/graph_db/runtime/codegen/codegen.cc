@@ -39,6 +39,29 @@ class Codegen {
       case physical::PhysicalOpr_Operator::OpKindCase::kSelect:
         ss += build_select(context, opr.opr().select());
         break;
+      case physical::PhysicalOpr_Operator::OpKindCase::kPath:
+        if ((i + 1) < opr_num) {
+          const auto& next_opr = plan_.plan(i + 1);
+          // alias of cur opr should same as next opr ?
+          if (next_opr.opr().has_vertex() &&
+              opr.opr().path().result_opt() ==
+                  physical::PathExpand_ResultOpt::PathExpand_ResultOpt_END_V &&
+              opr.opr().path().base().edge_expand().expand_opt() ==
+                  physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
+            int alias = -1;
+            if (next_opr.opr().vertex().has_alias()) {
+              alias = next_opr.opr().vertex().alias().value();
+            }
+            ss += build_path_expand_v(context, opr.opr().path(),
+                                      opr.meta_data(0), alias);
+            ++i;
+            break;
+          } else {
+            ss += build_path_expand_p(context, opr.opr().path(),
+                                      opr.meta_data(0));
+            break;
+          }
+        }
 
       default:
         break;
