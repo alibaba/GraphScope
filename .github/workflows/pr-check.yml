@@ -12,7 +12,9 @@ jobs:
   PR-Check:
     runs-on: ubuntu-latest
     permissions:
+      issues: write
       pull-requests: write
+      contents: write
 
     steps:
     - name: Conventional PR Check
