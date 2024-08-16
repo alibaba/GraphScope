@@ -14,8 +14,9 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # Commented out to save time; reopen after install-deps refactored.
+  # pull_request:
+  #   branches: [ "main" ]
   schedule:
     - cron: '38 20 * * 5'
 
