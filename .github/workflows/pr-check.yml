@@ -13,6 +13,7 @@ jobs:
       issues: write
       pull-requests: write
       contents: write
+
     steps:
     - name: Conventional PR Check
       uses: amannn/action-semantic-pull-request@v5
@@ -179,12 +180,44 @@ jobs:
         # Preview on comment will be attached by Cloudflare if files in /docs changed.
 
     - name: Preview on Cloudflare
+      id: preview
       uses: cloudflare/pages-action@v1
+      if: ${{ steps.changes.outputs.docs}}
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         projectName: graphscope-docs-preview
         directory: docs/_build/latest/html
+
+    ###########################################################################
+    # Steps to give feedbacks by commentting PR
+    ###########################################################################
+    - name: Comments if PR Title is not conventional
+      id: lint_pr_title
+      uses: marocchino/sticky-pull-request-comment@v2
+      # When the previous steps fails, the workflow would stop. By adding this
+      # condition you can continue the execution with the populated error message.
+      if: always() && (steps.pr-convention.outputs.error_message != null)
+      with:
+        header: pr-title-lint-error
+        message: |
+          Hey there and thank you for opening this pull request! 👋🏼
+          
+          We require pull request titles to follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/) \
+          and it looks like your proposed title needs to be adjusted.
+
+          Details:
+          ```
+          ${{ steps.pr-convention.outputs.error_message }}
+          ```
+
+    # Delete a previous comment when the issue has been resolved
+    - name: Delete Comment if PR Title is conventional
+      if: ${{ steps.lint_pr_title.outputs.error_message == null }}
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:   
+        header: pr-title-lint-error
+        delete: true
 
     - name: Regex on PR Title (for the next step)
       uses: actions-ecosystem/action-regex-match@v2
@@ -193,13 +226,32 @@ jobs:
         text: ${{ github.event.pull_request.title }}
         regex: 'feat.*|refactor.*'
 
-    - name: Check Docs Changes for PR with feat or refactor
+    - name: Comments if Docs not present/changed while required
+      uses: marocchino/sticky-pull-request-comment@v2
       if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.docs == 'false' }}
-      run: |
-        # echo "title=${{ github.event.pull_request.title }}"
-        # echo "steps.pr-regex-match.outputs.match=${{ steps.pr-regex-match.outputs.match }}"
-        # echo "steps.doc-changes.outputs.src=${{ steps.doc-changes.outputs.src }}"
-        echo " ❌ Uh oh! ❌ \n
-           We suggest that a PR with type @feat should has corresponding documentations. \n
-           If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
-        exit 1
+      with:
+        header: pr-docs-change-required
+        message: |
+          echo " ❌ Uh oh! ❌ \n
+            We suggest that a PR with type @feat should has corresponding documentations. \n
+            If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
+          exit 1
+
+    # Delete a previous comment when the issue has been resolved
+    - name: Delete Comment if Docs changes committed
+      if: ${{ steps.changes.outputs.docs}}
+      uses: marocchino/sticky-pull-request-comment@v2
+        with:   
+          header: pr-docs-change-required
+          delete: true
+
+
+    - name: Comments with the PR Preview URL
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: ${{ steps.changes.outputs.docs}}
+      with:
+        header: pr-preview-url
+        message: |
+          Please check the preview of the documentation changes here: \n
+          [${{ steps.preview.outputs.url }}](${{ steps.preview.outputs.url }})
+    
