@@ -32,15 +32,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies 
-      run: |
-        # When ready, change to use gsctl.py in the repo
-        pip install gsctl 
-        # When ready, change to use this:
-        # gsctl install-deps dev-analytical
-        gsctl install-deps dev
-        bash ../../.github/free-disk-space.sh || true
-
     - name: Cache Environment with installed dependencies
       id: cache-deps
       uses: actions/cache@v3
@@ -58,6 +49,15 @@ jobs:
          - /opt/graphscope
          - /opt/vineyard
 
+    - name: Install dependencies
+      if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+      run: |
+        # When ready, change to use gsctl.py in the repo
+        pip install gsctl 
+        # When ready, change to use this:
+        # gsctl install-deps dev-analytical
+        gsctl install-deps dev
+        bash ../../.github/free-disk-space.sh || true
 
     - name: Build
       env:
