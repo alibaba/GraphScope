@@ -4,6 +4,9 @@ on:
   pull_request_target:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   PR-Check:
@@ -243,4 +246,3 @@ jobs:
         message: |
           Please check the preview of the documentation changes at
           [${{ steps.preview.outputs.url }}](${{ steps.preview.outputs.url }})
-    
