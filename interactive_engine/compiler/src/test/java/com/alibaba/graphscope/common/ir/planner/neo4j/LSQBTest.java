@@ -380,8 +380,8 @@ public class LSQBTest {
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
-        PrintEstimatedRows printer = new PrintEstimatedRows();
-        printer.go(after);
+//        PrintEstimatedRows printer = new PrintEstimatedRows();
+//        printer.go(after);
         //        GraphLogicalSource source = (GraphLogicalSource) after.getInput(0);
         //        System.out.println(source.getCachedCost());
     }

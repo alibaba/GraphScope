@@ -500,8 +500,8 @@ public class GraphIOProcessor {
                     "can not convert pattern %s to any logical operator",
                     pattern);
             double count = mq.getRowCount(graph);
-            System.out.println("pattern is " + graph.getPattern());
-            System.out.println("pattern count is " + count);
+//            System.out.println("pattern is " + graph.getPattern());
+//            System.out.println("pattern count is " + count);
             PatternVertex vertex = pattern.getVertexSet().iterator().next();
             VertexDataKey key = new VertexDataKey(pattern.getVertexOrder(vertex));
             DataValue value = getVertexValue(key, details, vertex);
@@ -539,9 +539,9 @@ public class GraphIOProcessor {
         private RelNode addCachedCost(RelNode rel, RelOptCost cost) {
             if (rel instanceof AbstractBindableTableScan) {
                 ((AbstractBindableTableScan) rel).setCachedCost(cost);
-                System.out.println("class " + rel.getClass() + " cost is " + cost);
+//                System.out.println("class " + rel.getClass() + " cost is " + cost);
             } else if (rel instanceof GraphLogicalPathExpand) {
-                System.out.println("path expand cost is " + cost);
+//                System.out.println("path expand cost is " + cost);
                 ((GraphLogicalPathExpand) rel).setCachedCost(cost);
             } else if (rel instanceof LogicalJoin) {
                 LogicalJoin join = (LogicalJoin) rel;
