@@ -105,12 +105,13 @@ void Context::set_with_reshuffle_beta(int alias,
       columns[alias] = nullptr;
     }
   }
+  /**
   for (size_t k = 0; k < columns.size(); ++k) {
     if (keep_cols.find(k) == keep_cols.end() && columns[k] != nullptr) {
       columns[k].reset();
       columns[k] = nullptr;
     }
-  }
+  }*/
 
   reshuffle(offsets);
 
