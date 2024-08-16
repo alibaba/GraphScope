@@ -138,6 +138,10 @@ public class OperationBatch implements Iterable<OperationBlob> {
             return this;
         }
 
+        public int getOperationCount() {
+            return operationBlobs.size();
+        }
+
         public OperationBatch build() {
             this.built = true;
             return new OperationBatch(latestSnapshotId, operationBlobs, traceId);
