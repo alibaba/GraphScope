@@ -14,6 +14,47 @@ jobs:
       pull-requests: write
       contents: write
     steps:
+    - name: Conventional PR Check
+      uses: amannn/action-semantic-pull-request@v5
+      id: pr-convention
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # Types allowed (newline-delimited).
+        # Default: https://github.com/commitizen/conventional-commit-types
+        types: |
+          build
+          ci
+          docs
+          feat
+          fix
+          perf
+          refactor
+          test
+          chore
+        # Scopes allowed (newline-delimited).
+        scopes: |
+          core
+          python
+          k8s
+          coordinator
+          one
+          interactive
+          insight
+          analytical
+          learning
+          flex
+        # A scope can be not provided.
+        requireScope: false
+        disallowScopes: |
+          release
+          [A-Z]+
+        # If the PR contains one of these newline-delimited labels, the
+        # validation is skipped.
+        ignoreLabels: |
+          bot
+          ignore-semantic-pull-request
+
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
@@ -25,6 +66,14 @@ jobs:
       with:
          distribution: 'zulu'
          java-version: '11'
+
+    - name: Get PR Changes
+      uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        filters: |
+          docs:
+            - 'docs/**'    
 
     - name: Cpp Format and Lint Check
       run: |
@@ -129,56 +178,15 @@ jobs:
         fi
         # Preview on comment will be attached by Cloudflare if files in /docs changed.
 
-    - name: Conventional PR Check
-      uses: amannn/action-semantic-pull-request@v5
-      id: pr-convention
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Preview on Cloudflare
+      uses: cloudflare/pages-action@v1
       with:
-        # Types allowed (newline-delimited).
-        # Default: https://github.com/commitizen/conventional-commit-types
-        types: |
-          build
-          ci
-          docs
-          feat
-          fix
-          perf
-          refactor
-          test
-          chore
-        # Scopes allowed (newline-delimited).
-        scopes: |
-          core
-          python
-          k8s
-          coordinator
-          one
-          interactive
-          insight
-          analytical
-          learning
-          flex
-        # A scope can be not provided.
-        requireScope: false
-        disallowScopes: |
-          release
-          [A-Z]+
-        # If the PR contains one of these newline-delimited labels, the
-        # validation is skipped.
-        ignoreLabels: |
-          bot
-          ignore-semantic-pull-request
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        projectName: graphscope-docs-preview
+        directory: /docs/_build/latest/html
 
-    - name: Get PR Changes
-      uses: dorny/paths-filter@v3
-      id: changes
-      with:
-        filters: |
-          docs:
-            - 'docs/**'
-
-    - name: Regex on PR Title
+    - name: Regex on PR Title (for the next step)
       uses: actions-ecosystem/action-regex-match@v2
       id: pr-regex-match
       with:
