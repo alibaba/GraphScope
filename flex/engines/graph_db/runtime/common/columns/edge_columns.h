@@ -127,6 +127,9 @@ class SDSLEdgeColumn : public IEdgeColumn {
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
 
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
+
   std::shared_ptr<IContextColumn> dup() const override;
 
   template <typename FUNC_T>
@@ -228,6 +231,9 @@ class OptionalSDSLEdgeColumn : public IEdgeColumn {
 
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
 
   std::shared_ptr<IContextColumn> dup() const override;
 
@@ -356,6 +362,9 @@ class BDSLEdgeColumn : public IEdgeColumn {
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
 
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
+
   std::shared_ptr<IContextColumn> dup() const override;
 
   template <typename FUNC_T>
@@ -414,6 +423,9 @@ class OptionalBDSLEdgeColumn : public IEdgeColumn {
 
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
 
   std::shared_ptr<IContextColumn> dup() const override;
 
@@ -506,6 +518,9 @@ class SDMLEdgeColumn : public IEdgeColumn {
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
 
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
+
   std::shared_ptr<IContextColumn> dup() const override;
 
   template <typename FUNC_T>
@@ -594,6 +609,9 @@ class BDMLEdgeColumn : public IEdgeColumn {
 
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
 
   std::shared_ptr<IContextColumn> dup() const override;
 

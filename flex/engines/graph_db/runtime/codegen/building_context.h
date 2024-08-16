@@ -42,8 +42,8 @@ class BuildingContext {
 
   void set_alias(int32_t alias, ContextColumnType type, RTAnyType elem_type) {
     if (column_types_.size() <= static_cast<size_t>(alias + 1)) {
-      column_types_.resize(alias + 2);
-      elem_types_.resize(alias + 2);
+      column_types_.resize(alias + 2, ContextColumnType::kUnknown);
+      elem_types_.resize(alias + 2, RTAnyType::kUnknown);
     }
     column_types_[alias + 1] = type;
     elem_types_[alias + 1] = elem_type;

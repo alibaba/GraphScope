@@ -36,6 +36,18 @@ std::shared_ptr<IContextColumn> GeneralPathColumn::shuffle(
   builder.set_path_impls(path_impls_);
   return builder.finish();
 }
+
+std::shared_ptr<IContextColumn> GeneralPathColumn::slice(size_t start,
+                                                         size_t end) const {
+  GeneralPathColumnBuilder builder;
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_opt(data_[i]);
+  }
+  builder.set_path_impls(path_impls_);
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumnBuilder> GeneralPathColumn::builder() const {
   auto builder = std::make_shared<GeneralPathColumnBuilder>();
   builder->set_path_impls(path_impls_);

@@ -47,6 +47,8 @@ class Context {
 
   void reshuffle(const std::vector<size_t>& offsets);
 
+  void slice(size_t start, size_t end);
+
   std::shared_ptr<IContextColumn> get(int alias);
 
   const std::shared_ptr<IContextColumn> get(int alias) const;

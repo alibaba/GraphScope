@@ -6,7 +6,14 @@ class LimitBuilder {
  public:
   LimitBuilder(BuildingContext& context) : context_(context) {};
 
-  std::string Build() { return ""; }
+  std::string Build() {
+    std::string ss;
+    auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();
+    ss += nxt_ctx + " = Limit::limit(" + cur_ctx + ", " +
+          std::to_string(lower_) + ", " + std::to_string(upper_) + ");\n";
+
+    return ss;
+  }
 
   LimitBuilder& Lower(int lower) {
     lower_ = lower;
@@ -30,9 +37,7 @@ std::string build_limit(BuildingContext& context, const algebra::Limit& opr) {
     lower = std::max(lower, static_cast<int>(opr.range().lower()));
     upper = std::min(upper, static_cast<int>(opr.range().upper()));
   }
-
-  // TODO
-  return builder.Build();
+  return builder.Lower(lower).Upper(upper).Build();
 }
 }  // namespace runtime
 }  // namespace gs

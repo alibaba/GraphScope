@@ -15,6 +15,7 @@ class Codegen {
     BuildingContext context;
     for (int i = 0; i < opr_num; i++) {
       const auto& opr = plan_.plan(i);
+
       CHECK(opr.has_opr()) << "Operator is not set in physical plan";
       switch (opr.opr().op_kind_case()) {
       case physical::PhysicalOpr_Operator::OpKindCase::kScan:
@@ -62,7 +63,11 @@ class Codegen {
             break;
           }
         }
-
+      case physical::PhysicalOpr_Operator::OpKindCase::kOrderBy: {
+        ss += build_order_by(context, opr.opr().order_by());
+        LOG(INFO) << ss;
+        break;
+      }
       default:
         break;
       }

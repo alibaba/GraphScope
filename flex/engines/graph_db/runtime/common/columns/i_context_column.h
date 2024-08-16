@@ -184,6 +184,13 @@ class IContextColumn {
     return nullptr;
   }
 
+  // slice [begin, end]
+  virtual std::shared_ptr<IContextColumn> slice(size_t begin,
+                                                size_t end) const {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+    return nullptr;
+  }
+
   virtual std::shared_ptr<IContextColumn> union_col(
       std::shared_ptr<IContextColumn> other) const {
     LOG(FATAL) << "not implemented for " << this->column_info();

@@ -53,6 +53,9 @@ class GeneralPathColumn : public IPathColumn {
   std::shared_ptr<IContextColumn> dup() const override;
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t start,
+                                        size_t end) const override;
   RTAnyType elem_type() const override { return RTAnyType::kPath; }
   RTAny get_elem(size_t idx) const override { return RTAny(data_[idx]); }
   const Path& get_path(size_t idx) const override { return data_[idx]; }

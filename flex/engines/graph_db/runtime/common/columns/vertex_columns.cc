@@ -28,6 +28,16 @@ std::shared_ptr<IContextColumn> SLVertexColumn::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> SLVertexColumn::slice(size_t start,
+                                                      size_t end) const {
+  SLVertexColumnBuilder builder(label_);
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_opt(vertices_[i]);
+  }
+  return builder.finish();
+}
+
 void SLVertexColumn::generate_dedup_offset(std::vector<size_t>& offsets) const {
   offsets.clear();
 #if 0
@@ -108,6 +118,16 @@ std::shared_ptr<IContextColumn> MSVertexColumn::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> MSVertexColumn::slice(size_t start,
+                                                      size_t end) const {
+  MLVertexColumnBuilder builder;
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_vertex(get_vertex(i));
+  }
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> MSVertexColumn::dup() const {
   MSVertexColumnBuilder builder;
   for (auto& pair : vertices_) {
@@ -147,6 +167,16 @@ std::shared_ptr<IContextColumn> MLVertexColumn::shuffle(
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
     builder.push_back_vertex(vertices_[offset]);
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> MLVertexColumn::slice(size_t start,
+                                                      size_t end) const {
+  MLVertexColumnBuilder builder(labels_);
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_vertex(vertices_[i]);
   }
   return builder.finish();
 }
@@ -230,6 +260,16 @@ std::shared_ptr<IContextColumn> OptionalSLVertexColumn::shuffle(
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
     builder.push_back_opt(vertices_[offset]);
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> OptionalSLVertexColumn::slice(
+    size_t start, size_t end) const {
+  OptionalSLVertexColumnBuilder builder(label_);
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_opt(vertices_[i]);
   }
   return builder.finish();
 }

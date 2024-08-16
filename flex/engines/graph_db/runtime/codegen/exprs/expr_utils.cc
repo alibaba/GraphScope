@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "flex/engines/graph_db/runtime/codegen/exprs/expr_utils.h"
+#include "flex/engines/graph_db/runtime/codegen/utils/utils.h"
 
 namespace gs {
 namespace runtime {
@@ -211,7 +212,7 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
           ss += "VertexLabelPathAccessor ";
           ss +=
               expr_name + "(" + ctx_name + ", " + std::to_string(tag) + ");\n";
-          return {ss, expr_name, RTAnyType::kI32Value};
+          return {ss, expr_name, RTAnyType::kI64Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
@@ -290,7 +291,7 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
         } else if (pt.has_label()) {
           ss += "VertexLabelVertexAccessor ";
           ss += expr_name + "();\n";
-          return {ss, expr_name, RTAnyType::kI32Value};
+          return {ss, expr_name, RTAnyType::kI64Value};
         } else {
           LOG(FATAL) << "not support" << var.DebugString();
         }
@@ -318,5 +319,34 @@ std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
   return {ss, expr_name, RTAnyType::kNull};
 }
 
+std::string array_2_str(const common::Value& array, RTAnyType type) {
+  if (type == RTAnyType::kI64Value) {
+    CHECK(array.item_case() == common::Value::kI64Array);
+    size_t len = array.i64_array().item_size();
+    std::vector<int64_t> vec;
+    for (size_t idx = 0; idx < len; ++idx) {
+      vec.push_back(array.i64_array().item(idx));
+    }
+    return vec_2_str(vec);
+  } else if (type == RTAnyType::kI32Value) {
+    CHECK(array.item_case() == common::Value::kI32Array) << array.item_case();
+    size_t len = array.i32_array().item_size();
+    std::vector<int32_t> vec;
+    for (size_t idx = 0; idx < len; ++idx) {
+      vec.push_back(array.i32_array().item(idx));
+    }
+    return vec_2_str(vec);
+  } else if (type == RTAnyType::kStringValue) {
+    CHECK(array.item_case() == common::Value::kStrArray);
+    size_t len = array.str_array().item_size();
+    std::vector<std::string> vec;
+    for (size_t idx = 0; idx < len; ++idx) {
+      vec.push_back(array.str_array().item(idx));
+    }
+    return vec_2_str(vec);
+  } else {
+    LOG(FATAL) << "not support";
+  }
+}
 }  // namespace runtime
 }  // namespace gs

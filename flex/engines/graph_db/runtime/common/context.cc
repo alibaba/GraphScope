@@ -117,6 +117,35 @@ void Context::set_with_reshuffle_beta(int alias,
 
   set(alias, col);
 }
+void Context::slice(size_t begin, size_t end) {
+  bool head_shuffled = false;
+  std::vector<std::shared_ptr<IContextColumn>> new_cols;
+
+  for (auto col : columns) {
+    if (col == nullptr) {
+      new_cols.push_back(nullptr);
+
+      continue;
+    }
+    if (col == head) {
+      head = col->slice(begin, end);
+      new_cols.push_back(head);
+      head_shuffled = true;
+    } else {
+      new_cols.push_back(col->slice(begin, end));
+    }
+  }
+  if (!head_shuffled && head != nullptr) {
+    head = head->slice(begin, end);
+  }
+  std::swap(new_cols, columns);
+  std::vector<std::shared_ptr<ValueColumn<size_t>>> new_idx_columns;
+  for (auto& idx_col : idx_columns) {
+    new_idx_columns.emplace_back(std::dynamic_pointer_cast<ValueColumn<size_t>>(
+        idx_col->slice(begin, end)));
+  }
+  std::swap(new_idx_columns, idx_columns);
+}
 
 void Context::reshuffle(const std::vector<size_t>& offsets) {
   bool head_shuffled = false;

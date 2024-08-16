@@ -52,6 +52,9 @@ std::string build_path_expand_v(BuildingContext& context,
 std::string build_path_expand_p(BuildingContext& context,
                                 const physical::PathExpand& opr,
                                 const physical::PhysicalOpr_MetaData& meta);
+
+std::string build_order_by(BuildingContext& context,
+                           const algebra::OrderBy& opr);
 }  // namespace runtime
 }  // namespace gs
 #endif  // RUNTIME_CODEGEN_BUILDERS_BUILDERS_H_

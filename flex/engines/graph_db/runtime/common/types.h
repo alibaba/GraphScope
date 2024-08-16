@@ -66,6 +66,7 @@ enum class ContextColumnType {
   kValue,
   kPath,
   kOptionalValue,
+  kUnknown,
 };
 
 class RTAnyType {

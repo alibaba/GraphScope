@@ -68,6 +68,9 @@ class ValueColumn : public IValueColumn<T> {
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
 
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
+
   RTAnyType elem_type() const override { return TypedConverter<T>::type(); }
   RTAny get_elem(size_t idx) const override {
     return TypedConverter<T>::from_typed(data_[idx]);
@@ -139,6 +142,9 @@ class ValueColumn<std::string_view> : public IValueColumn<std::string_view> {
   RTAnyType elem_type() const override { return RTAnyType::kStringValue; }
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
+
   std::shared_ptr<IContextColumn> dup() const override;
 
   RTAny get_elem(size_t idx) const override {
@@ -228,6 +234,9 @@ class ListValueColumn : public IValueColumn<List> {
   std::shared_ptr<IContextColumn> dup() const override;
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kList;
     return type;
@@ -334,6 +343,19 @@ std::shared_ptr<IContextColumn> ListValueColumn<T>::shuffle(
   return builder.finish();
 }
 
+template <typename T>
+std::shared_ptr<IContextColumn> ListValueColumn<T>::slice(size_t begin,
+                                                          size_t end) const {
+  ListValueColumnBuilder<T> builder;
+  builder.reserve(end - begin + 1);
+  for (size_t i = begin; i < end; ++i) {
+    builder.push_back_opt(data_[i]);
+  }
+  builder.set_list_data(list_data_);
+  builder.set_list_impls(list_impls_);
+  return builder.finish();
+}
+
 class MapValueColumnBuilder;
 
 class MapValueColumn : public IValueColumn<Map> {
@@ -357,6 +379,9 @@ class MapValueColumn : public IValueColumn<Map> {
 
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
 
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kMap;
@@ -461,6 +486,16 @@ class OptionalValueColumn : public IValueColumn<T> {
     return builder.finish();
   }
 
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override {
+    OptionalValueColumnBuilder<T> builder;
+    builder.reserve(end - begin + 1);
+    for (size_t i = begin; i < end; ++i) {
+      builder.push_back_opt(data_[i], valid_[i]);
+    }
+    return builder.finish();
+  }
+
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return std::dynamic_pointer_cast<IContextColumnBuilder>(
         std::make_shared<OptionalValueColumnBuilder<T>>());
@@ -544,6 +579,9 @@ class OptionalValueColumn<std::string_view>
 
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> slice(size_t begin,
+                                        size_t end) const override;
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kStringValue;
     type.null_able_ = true;
@@ -697,6 +735,17 @@ std::shared_ptr<IContextColumn> ValueColumn<T>::shuffle(
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
     builder.push_back_opt(data_[offset]);
+  }
+  return builder.finish();
+}
+
+template <typename T>
+std::shared_ptr<IContextColumn> ValueColumn<T>::slice(size_t begin,
+                                                      size_t end) const {
+  ValueColumnBuilder<T> builder;
+  builder.reserve(end - begin);
+  for (size_t i = begin; i <= end; ++i) {
+    builder.push_back_opt(data_[i]);
   }
   return builder.finish();
 }

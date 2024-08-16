@@ -65,6 +65,36 @@ std::shared_ptr<IContextColumn> SDSLEdgeColumn::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> SDSLEdgeColumn::slice(size_t begin,
+                                                      size_t end) const {
+  std::vector<PropertyType> sub_types;
+  if (prop_type_ == PropertyType::kRecordView) {
+    sub_types = std::dynamic_pointer_cast<TypedColumn<RecordView>>(prop_col_)
+                    ->sub_types();
+  }
+  SDSLEdgeColumnBuilder builder(dir_, label_, prop_type_, sub_types);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  if (prop_type_ == PropertyType::kEmpty) {
+    for (auto off = begin; off <= end; ++off) {
+      const auto& e = edges_[off];
+
+      builder.push_back_endpoints(e.first, e.second);
+    }
+  } else {
+    auto& ret_props = *builder.prop_col_;
+    ret_props.resize(new_row_num);
+    for (size_t idx = begin; idx <= end; ++idx) {
+      size_t off = idx;
+      const auto& e = edges_[off];
+      builder.push_back_endpoints(e.first, e.second);
+      ret_props.set_any(idx, prop_col_->get(off));
+    }
+  }
+
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> SDSLEdgeColumnBuilder::finish() {
   auto ret =
       std::make_shared<SDSLEdgeColumn>(dir_, label_, prop_type_, sub_types_);
@@ -104,6 +134,19 @@ std::shared_ptr<IContextColumn> BDSLEdgeColumn::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> BDSLEdgeColumn::slice(size_t begin,
+                                                      size_t end) const {
+  BDSLEdgeColumnBuilder builder(label_, prop_type_);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  for (size_t idx = begin; idx <= end; ++idx) {
+    const auto& e = get_edge(idx);
+    builder.push_back_opt(std::get<1>(e), std::get<2>(e), std::get<3>(e),
+                          std::get<4>(e));
+  }
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> BDSLEdgeColumnBuilder::finish() {
   auto ret = std::make_shared<BDSLEdgeColumn>(label_, prop_type_);
   ret->edges_.swap(edges_);
@@ -130,6 +173,21 @@ std::shared_ptr<IContextColumn> SDMLEdgeColumn::shuffle(
   for (size_t idx = 0; idx < new_row_num; ++idx) {
     size_t off = offsets[idx];
     const auto& e = edges_[off];
+    auto index = std::get<0>(e);
+    auto offset = std::get<3>(e);
+    builder.push_back_opt(index, std::get<1>(e), std::get<2>(e),
+                          prop_cols_[index]->get(offset));
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> SDMLEdgeColumn::slice(size_t begin,
+                                                      size_t end) const {
+  SDMLEdgeColumnBuilder builder(dir_, edge_labels_);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  for (size_t idx = begin; idx <= end; ++idx) {
+    const auto& e = edges_[idx];
     auto index = std::get<0>(e);
     auto offset = std::get<3>(e);
     builder.push_back_opt(index, std::get<1>(e), std::get<2>(e),
@@ -174,6 +232,22 @@ std::shared_ptr<IContextColumn> BDMLEdgeColumn::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> BDMLEdgeColumn::slice(size_t begin,
+                                                      size_t end) const {
+  BDMLEdgeColumnBuilder builder(labels_);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  for (size_t idx = begin; idx <= end; ++idx) {
+    const auto& e = edges_[idx];
+    auto index = std::get<0>(e);
+    auto offset = std::get<3>(e);
+    auto dir = std::get<4>(e) ? Direction::kOut : Direction::kIn;
+    builder.push_back_opt(index, std::get<1>(e), std::get<2>(e),
+                          prop_cols_[index]->get(offset), dir);
+  }
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> BDMLEdgeColumnBuilder::finish() {
   auto ret = std::make_shared<BDMLEdgeColumn>(labels_);
   ret->edges_.swap(edges_);
@@ -194,6 +268,20 @@ std::shared_ptr<IContextColumn> OptionalBDSLEdgeColumn::shuffle(
   }
   return builder.finish();
 }
+
+std::shared_ptr<IContextColumn> OptionalBDSLEdgeColumn::slice(
+    size_t begin, size_t end) const {
+  OptionalBDSLEdgeColumnBuilder builder(label_, prop_type_);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  for (size_t idx = begin; idx <= end; ++idx) {
+    const auto& e = get_edge(idx);
+    builder.push_back_opt(std::get<1>(e), std::get<2>(e), std::get<3>(e),
+                          std::get<4>(e));
+  }
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> OptionalBDSLEdgeColumn::dup() const {
   OptionalBDSLEdgeColumnBuilder builder(label_, prop_type_);
   builder.reserve(edges_.size());
@@ -220,6 +308,18 @@ std::shared_ptr<IContextColumn> OptionalSDSLEdgeColumn::shuffle(
   for (size_t idx = 0; idx < new_row_num; ++idx) {
     size_t off = offsets[idx];
     const auto& e = get_edge(off);
+    builder.push_back_opt(std::get<1>(e), std::get<2>(e), std::get<3>(e));
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> OptionalSDSLEdgeColumn::slice(
+    size_t begin, size_t end) const {
+  OptionalSDSLEdgeColumnBuilder builder(dir_, label_, prop_type_);
+  size_t new_row_num = end - begin + 1;
+  builder.reserve(new_row_num);
+  for (size_t idx = begin; idx <= end; ++idx) {
+    const auto& e = get_edge(idx);
     builder.push_back_opt(std::get<1>(e), std::get<2>(e), std::get<3>(e));
   }
   return builder.finish();

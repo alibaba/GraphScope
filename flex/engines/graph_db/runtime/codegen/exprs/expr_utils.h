@@ -23,6 +23,8 @@ std::string type2str(const RTAnyType& type);
 std::tuple<std::string, std::string, RTAnyType> var_pb_2_str(
     BuildingContext& context, const common::Variable& var, VarType var_type);
 
+std::string array_2_str(const common::Value& array, RTAnyType type);
+
 }  // namespace runtime
 }  // namespace gs
 #endif

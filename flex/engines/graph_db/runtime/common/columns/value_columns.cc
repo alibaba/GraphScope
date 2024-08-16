@@ -29,6 +29,16 @@ std::shared_ptr<IContextColumn> ValueColumn<std::string_view>::shuffle(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> ValueColumn<std::string_view>::slice(
+    size_t start, size_t end) const {
+  ValueColumnBuilder<std::string_view> builder;
+  builder.reserve(end - start + 1);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_opt(data_[i]);
+  }
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> ValueColumn<std::string_view>::dup() const {
   ValueColumnBuilder<std::string_view> builder;
   for (auto v : data_) {
@@ -41,6 +51,15 @@ std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
     const std::vector<size_t>& offsets) const {
   OptionalValueColumnBuilder<std::string_view> builder;
   for (size_t i : offsets) {
+    builder.push_back_opt(data_[i], valid_[i]);
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::slice(
+    size_t start, size_t end) const {
+  OptionalValueColumnBuilder<std::string_view> builder;
+  for (size_t i = start; i < end; ++i) {
     builder.push_back_opt(data_[i], valid_[i]);
   }
   return builder.finish();
@@ -71,6 +90,17 @@ std::shared_ptr<IContextColumn> MapValueColumn::shuffle(
   builder.set_keys(keys_);
   for (auto offset : offsets) {
     builder.push_back_opt(values_[offset]);
+  }
+  return builder.finish();
+}
+
+std::shared_ptr<IContextColumn> MapValueColumn::slice(size_t start,
+                                                      size_t end) const {
+  MapValueColumnBuilder builder;
+  builder.reserve(end - start + 1);
+  builder.set_keys(keys_);
+  for (size_t i = start; i < end; ++i) {
+    builder.push_back_opt(values_[i]);
   }
   return builder.finish();
 }

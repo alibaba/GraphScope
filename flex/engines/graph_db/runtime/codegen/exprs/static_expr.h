@@ -233,7 +233,7 @@ class WithInExpr {
 
  private:
   const EXPR& expr_;
-  const std::vector<typename EXPR::elem_t>& list_;
+  std::vector<typename EXPR::elem_t> list_;
 };
 
 template <typename T>

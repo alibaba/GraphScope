@@ -79,6 +79,18 @@ class ExprBuilder {
               ">());\n";
         return {expr_name, RTAnyType::kBoolValue};
       }
+      case common::Logical::WITHIN: {
+        auto [left, left_type] = buildExpression(opr_stack, ss);
+        auto right = opr_stack.top();
+        opr_stack.pop();
+        auto arr = array_2_str(right.const_(), left_type);
+        auto expr_name = context_.GetNextExprName();
+
+        ss += "WithInExpr ";
+        ss += expr_name + "(" + left + ", " + arr + ");\n";
+        return {expr_name, RTAnyType::kBoolValue};
+      }
+
       default:
         LOG(FATAL) << "Unsupported logical operator: " << opr.logical();
         break;
