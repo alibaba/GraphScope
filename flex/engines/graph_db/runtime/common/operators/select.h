@@ -28,9 +28,17 @@ class Select {
   static void select(Context& ctx, const PRED_T& pred) {
     size_t row_num = ctx.row_num();
     std::vector<size_t> offsets;
-    for (size_t k = 0; k < row_num; ++k) {
-      if (pred(k)) {
-        offsets.push_back(k);
+    if (pred.is_optional()) {
+      for (size_t k = 0; k < row_num; ++k) {
+        if (pred(k, 0)) {
+          offsets.push_back(k);
+        }
+      }
+    } else {
+      for (size_t k = 0; k < row_num; ++k) {
+        if (pred(k)) {
+          offsets.push_back(k);
+        }
       }
     }
 

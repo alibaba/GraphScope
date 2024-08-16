@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "flex/engines/graph_db/runtime/codegen/building_context.h"
 #include "flex/engines/graph_db/runtime/codegen/exprs/expr_builder.h"
+#include "flex/engines/graph_db/runtime/codegen/utils/utils.h"
 #include "flex/engines/graph_db/runtime/common/utils.h"
 #include "flex/proto_generated_gie/algebra.pb.h"
 #include "flex/proto_generated_gie/common.pb.h"
@@ -36,6 +37,12 @@ std::string build_sink(BuildingContext& context);
 std::string build_limit(BuildingContext& context, const algebra::Limit& opr);
 
 std::string build_get_v(BuildingContext& context, const physical::GetV& opr);
+
+std::string build_edge_expand(BuildingContext& context,
+                              const physical::EdgeExpand& opr,
+                              const physical::PhysicalOpr_MetaData& meta);
+
+std::string build_select(BuildingContext& context, const algebra::Select& opr);
 
 }  // namespace runtime
 }  // namespace gs

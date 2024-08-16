@@ -32,14 +32,14 @@ class GetVBuilder {
           auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();
           ss += "auto ";
           ss += (cur_ctx + " = GetV::get_vertex_from_vertices(txn, std::move(" +
-                 cur_ctx + "), " + get_v_params.toString() + ", " + expr_name +
-                 ");\n");
+                 cur_ctx + "), " + get_v_params.to_string() +
+                 ", VertexPredicate(" + expr_name + "));\n");
           return ss;
         } else if (opt == VOpt::kEnd || opt == VOpt::kStart) {
           auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();
           ss += "auto ";
           ss += (nxt_ctx + " = GetV::get_vertex_from_edges(txn, std::move(" +
-                 cur_ctx + "), " + get_v_params.toString() + ", " + expr_name +
+                 cur_ctx + "), " + get_v_params.to_string() + ", " + expr_name +
                  ");\n");
           return ss;
         }
@@ -50,7 +50,7 @@ class GetVBuilder {
           auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();
           ss += "auto ";
           ss += (nxt_ctx + " = GetV::get_vertex_from_edges(txn, std::move(" +
-                 cur_ctx + "), " + get_v_params.toString() +
+                 cur_ctx + "), " + get_v_params.to_string() +
                  ", [](size_t){\nreturn true;});\n ");
           return ss;
         }

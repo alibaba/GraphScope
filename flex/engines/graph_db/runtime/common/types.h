@@ -135,9 +135,9 @@ struct LabelTriplet {
       : src_label(src), dst_label(dst), edge_label(edge) {}
 
   std::string to_string() const {
-    return "(" + std::to_string(static_cast<int>(src_label)) + "-" +
-           std::to_string(static_cast<int>(edge_label)) + "-" +
-           std::to_string(static_cast<int>(dst_label)) + ")";
+    return "(" + std::to_string(static_cast<int>(src_label)) + "," +
+           std::to_string(static_cast<int>(dst_label)) + "," +
+           std::to_string(static_cast<int>(edge_label)) + ")";
   }
 
   bool operator==(const LabelTriplet& rhs) const {

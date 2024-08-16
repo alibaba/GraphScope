@@ -1,7 +1,4 @@
 #include "flex/engines/graph_db/runtime/codegen/builders/builders.h"
-#include "flex/engines/graph_db/runtime/codegen/exprs/expr_utils.h"
-#include "flex/engines/graph_db/runtime/codegen/utils/utils.h"
-#include "flex/engines/graph_db/runtime/common/utils.h"
 
 namespace gs {
 namespace runtime {
@@ -172,12 +169,12 @@ class ScanBuilder {
         ss += str + "\n auto ";
         if (scan_oid) {
           ss += ctx_name + " = Scan::filter_oids(txn, " +
-                scan_params.toString() + ", [" + name +
+                scan_params.to_string() + ", [" + name +
                 "](label_t label, vid_t vid){\n return " + name +
                 ".typed_eval_vertex(label, vid, 0);\n" + "}, ";
         } else {
           ss += ctx_name + " = Scan::filter_gids(txn, " +
-                scan_params.toString() + ", [" + name +
+                scan_params.to_string() + ", [" + name +
                 "](label_t label, vid_t vid){\n return " + name +
                 ".typed_eval_vertex(label, vid, 0);\n" + "}, ";
         }
@@ -186,8 +183,9 @@ class ScanBuilder {
       } else {
         std::string ss;
         ss += str + "\n auto ";
-        ss += ctx_name + " = Scan::scan_vertex(txn, " + scan_params.toString() +
-              ", [" + name + "](label_t label, vid_t vid){\n return " + name +
+        ss += ctx_name + " = Scan::scan_vertex(txn, " +
+              scan_params.to_string() + ", [" + name +
+              "](label_t label, vid_t vid){\n return " + name +
               ".typed_eval_vertex(label, vid, 0);\n" + "});\n";
         return ss;
       }
@@ -201,13 +199,14 @@ class ScanBuilder {
       if (scan_oid) {
         std::string ss{"auto "};
 
-        ss += ctx_name + " = Scan::filter_oids(txn, " + scan_params.toString() +
-              "[](label_t label, vid_t vid){\n" + "return true;\n" + "}, " +
-              vec_2_str(oids) + ");\n";
+        ss += ctx_name + " = Scan::filter_oids(txn, " +
+              scan_params.to_string() + "[](label_t label, vid_t vid){\n" +
+              "return true;\n" + "}, " + vec_2_str(oids) + ");\n";
         return ss;
       } else {
         std::string ss{"auto "};
-        ss += ctx_name + " = Scan::filter_gids(txn, " + scan_params.toString() +
+        ss += ctx_name + " = Scan::filter_gids(txn, " +
+              scan_params.to_string() +
               "[](label_t label, vid_t vid){\n    return true;\n" + "}, " +
               vec_2_str(oids) + ");\n";
         return ss;
@@ -215,7 +214,7 @@ class ScanBuilder {
 
     } else {
       std::string ss{"auto "};
-      ss += ctx_name + " = Scan::scan_vertex(txn, " + scan_params.toString() +
+      ss += ctx_name + " = Scan::scan_vertex(txn, " + scan_params.to_string() +
             "[](label_t label, vid_t vid){\n    return true;\n});\n";
       return ss;
     }

@@ -31,6 +31,14 @@ class Codegen {
         ss += build_get_v(context, opr.opr().vertex());
         LOG(INFO) << ss;
         break;
+      case physical::PhysicalOpr_Operator::OpKindCase::kEdge:
+        ss += build_edge_expand(context, opr.opr().edge(), opr.meta_data(0));
+        LOG(INFO) << ss;
+        break;
+
+      case physical::PhysicalOpr_Operator::OpKindCase::kSelect:
+        ss += build_select(context, opr.opr().select());
+        break;
 
       default:
         break;

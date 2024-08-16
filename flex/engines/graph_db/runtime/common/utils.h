@@ -25,7 +25,7 @@ struct ScanParams {
       : alias(alias), tables(tables) {}
   ScanParams() = default;
 
-  std::string toString() const {
+  std::string to_string() const {
     std::stringstream ss;
     ss << "ScanParams(" << alias << ", ";
     ss << "{";
@@ -49,7 +49,7 @@ struct GetVParams {
   GetVParams(VOpt opt, int tag, const std::vector<label_t>& tables, int alias)
       : opt(opt), tag(tag), tables(tables), alias(alias) {}
   GetVParams() = default;
-  std::string toString() const {
+  std::string to_string() const {
     std::stringstream ss;
     ss << "GetVParams(" << vopt_2_str(opt) << ", " << tag << ", ";
     ss << "{";
@@ -61,6 +61,33 @@ struct GetVParams {
       }
     }
     ss << "}, " << alias << ")";
+    return ss.str();
+  }
+};
+
+struct EdgeExpandParams {
+  int v_tag;
+  std::vector<LabelTriplet> labels;
+  int alias;
+  Direction dir;
+
+  EdgeExpandParams(int v_tag, const std::vector<LabelTriplet>& labels,
+                   int alias, Direction dir)
+      : v_tag(v_tag), labels(labels), alias(alias), dir(dir) {}
+  EdgeExpandParams() = default;
+
+  std::string to_string() const {
+    std::stringstream ss;
+    ss << "EdgeExpandParams(" << v_tag << ", ";
+    ss << "{";
+    for (size_t i = 0; i < labels.size(); ++i) {
+      if (i + 1 == labels.size()) {
+        ss << "LabelTriplet" << labels[i].to_string();
+      } else {
+        ss << "LabelTriplet" << labels[i].to_string() << ", ";
+      }
+    }
+    ss << "}, " << alias << ", " << dir_2_str(dir) << ")";
     return ss.str();
   }
 };

@@ -22,18 +22,12 @@
 #include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/utils.h"
 
 #include "glog/logging.h"
 
 namespace gs {
 namespace runtime {
-
-struct EdgeExpandParams {
-  int v_tag;
-  std::vector<LabelTriplet> labels;
-  int alias;
-  Direction dir;
-};
 
 class EdgeExpand {
  public:

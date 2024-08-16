@@ -20,6 +20,20 @@ namespace gs {
 
 namespace runtime {
 
+template <typename T>
+class is_optional_test {
+ private:
+  template <typename U>
+  static auto test(int) -> decltype(std::declval<U>().is_optional(),
+                                    std::true_type());
+
+  template <typename U>
+  static std::false_type test(...);
+
+ public:
+  static constexpr bool value = decltype(test<T>(0))::value;
+};
+
 template <typename EXPR, typename OP>
 struct UnaryOpExpr {
   UnaryOpExpr(const EXPR& expr, OP&& op) : expr_(expr), op_(op) {}
@@ -298,6 +312,19 @@ struct PathPredicate {
 
   bool operator()(size_t path_idx) const {
     return expr_.typed_eval_path(path_idx);
+  }
+
+  bool is_optional() const {
+    return is_optional_test<EXPR>::value && expr_.is_optional();
+  }
+
+  bool operator()(size_t path_idx, int) const {
+    // typed_eval_path(idx, 0) return std::optional<bool>
+    auto val = expr_.typed_eval_path(path_idx, 0);
+    if (val.has_value()) {
+      return val.value();
+    }
+    return false;
   }
 
   const EXPR& expr_;
