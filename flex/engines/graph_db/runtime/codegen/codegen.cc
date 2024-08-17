@@ -68,6 +68,11 @@ class Codegen {
         LOG(INFO) << ss;
         break;
       }
+      case physical::PhysicalOpr_Operator::OpKindCase::kDedup: {
+        ss += build_dedup(context, opr.opr().dedup());
+        LOG(INFO) << ss;
+        break;
+      }
       default:
         break;
       }

@@ -26,7 +26,6 @@ namespace gs {
 
 namespace runtime {
 
-
 class Dedup {
  public:
   static void dedup(const ReadTransaction& txn, Context& ctx,
@@ -34,6 +33,26 @@ class Dedup {
   static void dedup(const ReadTransaction& txn, Context& ctx,
                     const std::vector<size_t>& cols,
                     const std::vector<std::function<RTAny(size_t)>>& vars);
+  template <typename... Keys>
+  static Context dedup(const ReadTransaction& txn, Context&& ctx) {
+    auto row_num = ctx.row_num();
+    std::vector<size_t> offsets;
+    std::vector<std::tuple<decltype(std::declval<Keys>()(0))...>> vars;
+    for (size_t i = 0; i < row_num; ++i) {
+      offsets.emplace_back(i);
+      vars.emplace_back(Keys(i)...);
+    }
+    std::sort(offsets.begin(), offsets.end(),
+              [&vars](size_t a, size_t b) { return vars[a] < vars[b]; });
+    std::vector<size_t> vec;
+    for (size_t i = 0; i < offsets.size(); ++i) {
+      if (i == 0 || vars[offsets[i]] != vars[offsets[i - 1]]) {
+        vec.emplace_back(offsets[i]);
+      }
+    }
+    ctx.reshuffle(vec);
+    return ctx;
+  }
 };
 
 }  // namespace runtime

@@ -55,6 +55,8 @@ std::string build_path_expand_p(BuildingContext& context,
 
 std::string build_order_by(BuildingContext& context,
                            const algebra::OrderBy& opr);
+
+std::string build_dedup(BuildingContext& context, const algebra::Dedup& opr);
 }  // namespace runtime
 }  // namespace gs
 #endif  // RUNTIME_CODEGEN_BUILDERS_BUILDERS_H_
