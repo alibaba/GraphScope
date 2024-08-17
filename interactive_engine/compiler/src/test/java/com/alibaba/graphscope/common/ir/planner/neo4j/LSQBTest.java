@@ -371,7 +371,7 @@ public class LSQBTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                " MATCH (p: PERSON{id: 933})-[:KNOWS*1..5]-(f: PERSON)-[:ISLOCATEDIN]->(city),\n" +
+                                " MATCH (p: PERSON{id: 933})-[:KNOWS*4..5]-(f: PERSON)-[:ISLOCATEDIN]->(city),\n" +
                                         "                                   (f)-[:WORKAT]->()-[:ISLOCATEDIN]->(:PLACE),\n" +
                                         "                                   (f)-[:STUDYAT]->()-[:ISLOCATEDIN]->(:PLACE)\n" +
                                         "                             WHERE f.firstName = \"Mikhail\" AND f.id <> 933\n" +

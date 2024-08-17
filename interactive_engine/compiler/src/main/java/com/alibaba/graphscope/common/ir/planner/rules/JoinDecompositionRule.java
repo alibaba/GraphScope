@@ -404,61 +404,64 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 PatternVertex src = edge.getSrcVertex();
                 PatternVertex dst = edge.getDstVertex();
                 if (maxHop >= config.getMinPatternSize() - 1 && maxHop == minHop) {
-                    for (int i = 0; i <= minHop; ++i) {
-                        for (int j = 1; j <= maxHop - 1; ++j) {
-                            if (i <= j && (minHop - i) <= (maxHop - j)) {
-                                // split the path expand into two path expands
-                                // probe part: [i, j]
-                                // build part: [minHop - i, maxHop - j]
-                                // todo: re-infer the type of innerV, which should be inferred from
-                                // union types of all possible intermediate getV
-                                PatternVertex splitVertex = createSplitVertex(dst);
-                                PatternEdge probeSplit =
-                                        createSplitEdge(
-                                                edge,
-                                                src,
-                                                splitVertex,
-                                                new PathExpandRange(i, j - i + 1));
-                                PatternEdge buildSplit =
-                                        createSplitEdge(
-                                                edge,
-                                                splitVertex,
-                                                dst,
-                                                new PathExpandRange(
-                                                        minHop - i, maxHop - j - (minHop - i) + 1));
-                                Pattern probeClone = new Pattern(probePattern);
-                                probeClone.addVertex(splitVertex);
-                                probeClone.addEdge(src, splitVertex, probeSplit);
-                                probeClone.reordering();
-                                Pattern buildClone = new Pattern(buildPattern);
-                                buildClone.addVertex(splitVertex);
-                                buildClone.addEdge(splitVertex, dst, buildSplit);
-                                buildClone.reordering();
-                                double probeCount =
-                                        mq.getRowCount(
-                                                new GraphPattern(
-                                                        graphPattern.getCluster(),
-                                                        graphPattern.getTraitSet(),
-                                                        probeClone));
-                                double buildCount =
-                                        mq.getRowCount(
-                                                new GraphPattern(
-                                                        graphPattern.getCluster(),
-                                                        graphPattern.getTraitSet(),
-                                                        buildClone));
-                                // todo: maintain the order map for the new split vertex
-                                GraphJoinDecomposition decomposition =
-                                        createJoinDecomposition(
-                                                graphPattern,
-                                                probeClone,
-                                                probeCount,
-                                                buildClone,
-                                                buildCount,
-                                                Lists.newArrayList(new JoinVertex(splitVertex)));
-                                addDecompositionToQueue(decomposition);
-                            }
-                        }
+//                    for (int i = 0; i <= minHop; ++i) {
+//                        for (int j = 1; j <= maxHop - 1; ++j) {
+//                            if (i <= j && (minHop - i) <= (maxHop - j)) {
+                    for (int i = 1; i < maxHop; ++i) {
+                        int j = i;
+                        // split the path expand into two path expands
+                        // probe part: [i, j]
+                        // build part: [minHop - i, maxHop - j]
+                        // todo: re-infer the type of innerV, which should be inferred from
+                        // union types of all possible intermediate getV
+                        PatternVertex splitVertex = createSplitVertex(dst);
+                        PatternEdge probeSplit =
+                                createSplitEdge(
+                                        edge,
+                                        src,
+                                        splitVertex,
+                                        new PathExpandRange(i, j - i + 1));
+                        PatternEdge buildSplit =
+                                createSplitEdge(
+                                        edge,
+                                        splitVertex,
+                                        dst,
+                                        new PathExpandRange(
+                                                minHop - i, maxHop - j - (minHop - i) + 1));
+                        Pattern probeClone = new Pattern(probePattern);
+                        probeClone.addVertex(splitVertex);
+                        probeClone.addEdge(src, splitVertex, probeSplit);
+                        probeClone.reordering();
+                        Pattern buildClone = new Pattern(buildPattern);
+                        buildClone.addVertex(splitVertex);
+                        buildClone.addEdge(splitVertex, dst, buildSplit);
+                        buildClone.reordering();
+                        double probeCount =
+                                mq.getRowCount(
+                                        new GraphPattern(
+                                                graphPattern.getCluster(),
+                                                graphPattern.getTraitSet(),
+                                                probeClone));
+                        double buildCount =
+                                mq.getRowCount(
+                                        new GraphPattern(
+                                                graphPattern.getCluster(),
+                                                graphPattern.getTraitSet(),
+                                                buildClone));
+                        // todo: maintain the order map for the new split vertex
+                        GraphJoinDecomposition decomposition =
+                                createJoinDecomposition(
+                                        graphPattern,
+                                        probeClone,
+                                        probeCount,
+                                        buildClone,
+                                        buildCount,
+                                        Lists.newArrayList(new JoinVertex(splitVertex)));
+                        addDecompositionToQueue(decomposition);
                     }
+//                            }
+//                        }
+//                    }
                 }
             }
         }

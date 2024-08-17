@@ -631,7 +631,7 @@ public class GraphIOProcessor {
                     createSubDetails(
                             glogueEdge.getSrcPattern(),
                             glogueEdge.getSrcToTargetOrderMapping(),
-                            null);
+                            null, null);
             ExtendStep extendStep = glogueEdge.getExtendStep();
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
@@ -705,18 +705,19 @@ public class GraphIOProcessor {
                     decomposition.getOrderMappings().getRightToTargetOrderMap();
             List<GraphJoinDecomposition.JoinVertexPair> jointVertices =
                     decomposition.getJoinVertexPairs();
-            Map<DataKey, DataValue> parentVertexDetails =
-                    getJointVertexDetails(jointVertices, probeOrderMap, buildOrderMap);
+            DataValue defaultValue = new DataValue(generatePxdSplitAlias(), null, null);
+            Map<@Nullable DataKey, DataValue> parentVertexDetails =
+                    getJointVertexDetails(jointVertices, probeOrderMap, buildOrderMap, defaultValue);
             Map<DataKey, DataValue> probeDetails =
                     createSubDetails(
                             decomposition.getProbePattern(),
                             probeOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 0));
+                            new ParentPattern(decomposition.getParentPatten(), 0), defaultValue);
             Map<DataKey, DataValue> buildDetails =
                     createSubDetails(
                             decomposition.getBuildPattern(),
                             buildOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 1));
+                            new ParentPattern(decomposition.getParentPatten(), 1), defaultValue);
             RelNode joinLeft = decomposition.getLeft();
             RelNode joinRight = decomposition.getRight();
             this.details = probeDetails;
@@ -832,6 +833,10 @@ public class GraphIOProcessor {
             return addCachedCost(rel, cost);
         }
 
+        private String generatePxdSplitAlias() {
+            return "PATTERN_SPLIT_VERTEX$" + UUID.randomUUID().hashCode();
+        }
+
         private GraphOpt.GetV getConcatDirection(PatternVertex concatVertex, RelNode splitPattern) {
             ConcatDirectionVisitor visitor = new ConcatDirectionVisitor(concatVertex);
             visitor.go(splitPattern);
@@ -879,16 +884,17 @@ public class GraphIOProcessor {
 
         private RexGraphVariable convert(
                 JoinVertexEntry<Integer> joinVertex,
-                Map<DataKey, DataValue> vertexDetails,
+                Map<@Nullable DataKey, DataValue> vertexDetails,
                 Map<Integer, Integer> orderMap,
                 Pattern pattern) {
             Integer orderId = orderMap.get(joinVertex.getVertex());
-            if (orderId == null) {
-                orderId = -1;
-            }
+//            if (orderId == null) {
+//                orderId = -1;
+//            }
+            VertexDataKey vertexKey = (orderId == null) ? null : new VertexDataKey(orderId);
             DataValue value =
                     getVertexValue(
-                            new VertexDataKey(orderId),
+                            vertexKey,
                             vertexDetails,
                             pattern.getVertexByOrder(joinVertex.getVertex()));
             return joinVertex.getKeyName() != null
@@ -896,10 +902,11 @@ public class GraphIOProcessor {
                     : builder.variable(value.getAlias());
         }
 
-        private Map<DataKey, DataValue> getJointVertexDetails(
+        private Map<@Nullable DataKey, DataValue> getJointVertexDetails(
                 List<GraphJoinDecomposition.JoinVertexPair> jointVertices,
                 Map<Integer, Integer> probeOrderMap,
-                Map<Integer, Integer> buildOrderMap) {
+                Map<Integer, Integer> buildOrderMap,
+                DataValue defaultValue) {
             Map<DataKey, DataValue> vertexDetails = Maps.newHashMap();
             jointVertices.forEach(
                     k -> {
@@ -918,6 +925,9 @@ public class GraphIOProcessor {
                             if (!vertexDetails.containsKey(dataKey) && value != null) {
                                 vertexDetails.put(dataKey, value);
                             }
+                        }
+                        if (buildOrderId == null && probeOrderId == null) {
+                            vertexDetails.put(null, defaultValue);
                         }
                     });
             return vertexDetails;
@@ -1275,7 +1285,8 @@ public class GraphIOProcessor {
         private Map<DataKey, DataValue> createSubDetails(
                 Pattern subPattern,
                 Map<Integer, Integer> orderMappings,
-                @Nullable ParentPattern parentPattern) {
+                @Nullable ParentPattern parentPattern,
+                @Nullable DataValue defaultValue) {
             Map<DataKey, DataValue> newDetails = Maps.newHashMap();
             subPattern
                     .getVertexSet()
@@ -1288,6 +1299,8 @@ public class GraphIOProcessor {
                                     if (value != null) {
                                         newDetails.put(new VertexDataKey(newOrderId), value);
                                     }
+                                } else if (defaultValue != null) {
+                                    newDetails.put(new VertexDataKey(newOrderId), defaultValue);
                                 }
                             });
             subPattern
