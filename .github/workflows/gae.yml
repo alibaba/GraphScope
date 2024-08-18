@@ -51,8 +51,9 @@ jobs:
           /usr/lib
 
     - name: Install dependencies
-      if: steps.cache-restore.outputs.cache-hit != 'true' 
+      if: ${{ steps.cache-restore.outputs.cache-hit }} != 'true' 
       run: |
+        echo 'steps.cache-restore.outputs.cache-hit=' ${{ steps.cache-restore.outputs.cache-hit }}
         # When ready, change to use gsctl.py in the repo
         pip install gsctl 
         # When ready, change to use this:
@@ -69,7 +70,7 @@ jobs:
         df -h
 
     - name: Cache deps
-      if: steps.cache-restore.outputs.cache-hit != 'true' 
+      if: ${{ steps.cache-restore.outputs.cache-hit }} != 'true' 
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-deps-cache
