@@ -17,15 +17,15 @@
 
 import os
 
-from packaging import version
-
 version_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION")
 
 with open(version_file_path, "r", encoding="utf-8") as fp:
-    sv = version.parse(fp.read().strip())
-    __is_prerelease__ = sv.is_prerelease
-    __version__ = str(sv)
+    __version__ = fp.read().strip()
 
-__version_tuple__ = (v for v in __version__.split("."))
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "V6D_VERSION"
+)
+with open(version_file_path, "r", encoding="utf-8") as fp:
+    __v6d_version__ = fp.read().strip()
 
 del version_file_path

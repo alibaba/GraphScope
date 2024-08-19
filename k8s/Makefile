@@ -1,6 +1,7 @@
-MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
-WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-DOCKERFILES_DIR			:= $(WORKING_DIR)/dockerfiles
+MKFILE_PATH 			     := $(abspath $(lastword $(MAKEFILE_LIST)))
+WORKING_DIR 			     := $(dir $(MKFILE_PATH))
+DOCKERFILES_DIR			   := $(WORKING_DIR)/dockerfiles
+VINEYARD_VERSION_FILE  := ${WORKING_DIR}/../V6D_VERSION
 
 ifeq ($(REGISTRY),)
     REGISTRY := registry.cn-hongkong.aliyuncs.com
@@ -12,11 +13,7 @@ ARCH              := $(subst x86_64,amd64,$(subst aarch64,arm64,$(PLATFORM)))
 
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.23.0
-# This is the version of builder base image in most cases, except for graphscope-dev
-BUILDER_VERSION ?= $(VINEYARD_VERSION)
-# This is the version of runtime base image
-RUNTIME_VERSION ?= $(VINEYARD_VERSION)
+VINEYARD_VERSION ?= $(shell cat $(VINEYARD_VERSION_FILE))
 PROFILE ?= release
 CI ?= false
 # Flex Coordinator
@@ -85,7 +82,7 @@ vineyard-runtime:
 	docker build \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		-t graphscope/vineyard-runtime:${VINEYARD_VERSION}-${ARCH} \
 		-f $(DOCKERFILES_DIR)/vineyard-runtime.Dockerfile .
 
@@ -95,7 +92,7 @@ coordinator:
 	    --target coordinator \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/coordinator:${VERSION} \
 		-f $(DOCKERFILES_DIR)/coordinator.Dockerfile .
@@ -106,8 +103,7 @@ analytical:
 	    --target analytical \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/analytical:${VERSION} \
 		-f $(DOCKERFILES_DIR)/analytical.Dockerfile .
@@ -118,8 +114,7 @@ analytical-java:
 	    --target analytical-java \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/analytical-java:${VERSION} \
 		-f $(DOCKERFILES_DIR)/analytical.Dockerfile .
@@ -130,8 +125,7 @@ interactive-frontend:
 	    --target frontend \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg profile=$(PROFILE) \
 		--build-arg CI=${CI} \
 		-t graphscope/interactive-frontend:${VERSION} \
@@ -143,8 +137,7 @@ interactive-executor:
 	    --target executor \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg profile=$(PROFILE) \
 		--build-arg CI=${CI} \
 		-t graphscope/interactive-executor:${VERSION} \
@@ -157,7 +150,7 @@ interactive-experimental:
 	    --target experimental \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		-t graphscope/interactive-experimental:${VERSION} \
 		-f $(DOCKERFILES_DIR)/interactive-experimental.Dockerfile .
 
@@ -168,7 +161,7 @@ flex-interactive:
 		--target runtime \
 		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg PLATFORM=${PLATFORM} \
 		--build-arg ENABLE_OPENTELMETRY=${ENABLE_OPENTELMETRY} \
 		--build-arg ARCH=${ARCH} \
@@ -182,8 +175,7 @@ learning:
 	    --target learning \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/learning:${VERSION} \
 		-f $(DOCKERFILES_DIR)/learning.Dockerfile .
@@ -194,8 +186,7 @@ graphlearn-torch:
 	    --target graphlearn-torch \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
-		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/graphlearn-torch:${VERSION} \
 		-f $(DOCKERFILES_DIR)/graphlearn-torch.Dockerfile .
@@ -205,7 +196,7 @@ graphscope-store:
 	docker build \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg profile=${PROFILE} \
 		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		-t graphscope/graphscope-store:${VERSION} \

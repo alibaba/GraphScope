@@ -2,10 +2,9 @@
 
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=latest
-ARG RUNTIME_VERSION=latest
+ARG VINEYARD_VERSION=latest
 ############### BUILDER: ANALYTICAL #######################
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 
 ARG CI=false
 
@@ -27,7 +26,7 @@ RUN cd /home/graphscope/GraphScope/ && \
     fi
 
 ############### RUNTIME: ANALYTICAL #######################
-FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION-$ARCH AS analytical
+FROM $REGISTRY/graphscope/vineyard-dev:$VINEYARD_VERSION-$ARCH AS analytical
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
@@ -59,7 +58,7 @@ COPY ./k8s/dockerfiles/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 ############### BUILDER: ANALYTICAL-JAVA #######################
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder-java
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder-java
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
@@ -82,7 +81,7 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
-FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION-$ARCH AS analytical-java
+FROM $REGISTRY/graphscope/vineyard-dev:$VINEYARD_VERSION-$ARCH AS analytical-java
 COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
 ENV LLVM11_HOME=/opt/llvm11
 ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config

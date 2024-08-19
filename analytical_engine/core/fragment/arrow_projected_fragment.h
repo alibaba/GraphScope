@@ -1471,17 +1471,23 @@ class ArrowProjectedFragment
     return grape::DestList(idoffset_[offset], idoffset_[offset + 1]);
   }
 
+  inline size_t IEDestsSize() const { return idst_.size(); }
+
   inline grape::DestList OEDests(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(odoffset_[offset], odoffset_[offset + 1]);
   }
 
+  inline size_t OEDestsSize() const { return odst_.size(); }
+
   inline grape::DestList IOEDests(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
+
+  inline size_t IOEDestsSize() const { return iodst_.size(); }
 
   inline std::shared_ptr<vertex_map_t> GetVertexMap() { return vm_ptr_; }
 
