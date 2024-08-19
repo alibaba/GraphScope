@@ -115,24 +115,12 @@
     JOB_SUBMIT_BUILD_JOB_USER_ERROR = 203;
     JOB_SUBMIT_SPAWN_JOB_ERROR = 204;
 
-
     // 2. execute job error
-    JOB_EXECUTE_WOULD_BLOCK = 251;
-    JOB_EXECUTE_INTERRUPTED = 252;
-    JOB_EXECUTE_IO_ERROR = 253;
-    JOB_EXECUTE_ILLEAGAL_SCOPE_INPUT = 254;
-    JOB_EXECUTE_CANCELLED = 255;
-    JOB_EXECUTE_OTHERS = 256;
-
-
- 
-     // runtime error, with code 3xx
-     // 1. query failed in building execution plan
-     // QUERY_FAILED = 200;
-     // 2. query failed in execution
-     QUERY_EXECUTION_FAILED = 210;
-     // 3. query failed in accessing storage
-     QUERY_STORAGE_FAILED = 211;
- 
+    JOB_EXECUTE_WOULD_BLOCK = 211;
+    JOB_EXECUTE_INTERRUPTED = 212;
+    JOB_EXECUTE_IO_ERROR = 213;
+    JOB_EXECUTE_ILLEAGAL_SCOPE_INPUT = 214;
+    JOB_EXECUTE_CANCELLED = 215;
+    JOB_EXECUTE_OTHERS = 216;
  }
  

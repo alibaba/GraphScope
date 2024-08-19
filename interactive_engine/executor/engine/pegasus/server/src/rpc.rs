@@ -103,7 +103,7 @@ impl FromStreamExt<Vec<u8>> for RpcSink {
     fn on_error(&mut self, error: Box<dyn Error + Send>) {
         self.had_error.store(true, Ordering::SeqCst);
         let status = if let Some(e) = error.downcast_ref::<JobExecError>() {
-            let server_error = ServerError::from(e);
+            let server_error = ServerError::from(e).with_details("QueryId", self.job_id.to_string());
             Status::internal(format!("{:?}", server_error))
         } else {
             let server_error =
