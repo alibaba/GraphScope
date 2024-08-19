@@ -79,7 +79,7 @@ class mmap_array {
   }
 
   mmap_array(mmap_array&& rhs) : mmap_array() { swap(rhs); }
-  ~mmap_array() {}
+  ~mmap_array() { reset(); }
 
   void reset() {
     if (data_ != NULL && mmap_size_ != 0) {
