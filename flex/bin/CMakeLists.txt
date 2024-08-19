@@ -17,7 +17,7 @@ install_without_export_flex_target(rt_admin)
 
 
 add_executable(rt_runtime rt_runtime.cc)
-target_link_libraries(rt_runtime flex_utils flex_rt_mutable_graph flex_graph_db)
+target_link_libraries(rt_runtime flex_utils  flex_graph_db)
 install_without_export_flex_target(rt_runtime)
 
 
