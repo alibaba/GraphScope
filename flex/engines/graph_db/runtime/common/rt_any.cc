@@ -65,7 +65,7 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
     case ::common::DataType::DATE32:
       return RTAnyType::kDate32;
     case ::common::DataType::STRING_ARRAY:
-      return RTAnyType::kStringSetValue;
+      return RTAnyType::kList;
     case ::common::DataType::TIMESTAMP:
       return RTAnyType::kDate32;
     case ::common::DataType::DOUBLE:
