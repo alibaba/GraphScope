@@ -23,6 +23,8 @@
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
+#include "flex/engines/http_server/executor_group.actg.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/graph_db_service.h"
 
 namespace bpo = boost::program_options;
