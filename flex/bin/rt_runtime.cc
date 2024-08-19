@@ -18,14 +18,10 @@
 #include <boost/program_options.hpp>
 #include <chrono>
 #include <fstream>
-#include <hiactor/core/actor-app.hh>
 #include <iostream>
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
-#include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
-#include "flex/engines/http_server/graph_db_service.h"
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
@@ -107,7 +103,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  bool enable_dpdk = false;
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
 
   std::string graph_schema_path = "";
@@ -150,15 +145,18 @@ int main(int argc, char** argv) {
   size_t count{0};
   std::vector<char> buffer;
   gs::Encoder output(buffer);
+  int num = 0;
   for (auto& m : map) {
     auto start = std::chrono::high_resolution_clock::now();
     auto ctx = gs::runtime::runtime_eval(pb, txn, m);
     output.clear();
-    runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx, txn, output);
     auto end = std::chrono::high_resolution_clock::now();
     count += std::chrono::duration_cast<std::chrono::microseconds>(end - start)
                  .count();
+    num++;
   }
+  LOG(INFO) << "Avg time: " << count / num / 1000 << " millseconds";
 
   // std::cout << timer.get_time() / 1us << " microseconds\n";
 }

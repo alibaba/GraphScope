@@ -15,9 +15,11 @@ add_executable(rt_admin rt_admin.cc)
 target_link_libraries(rt_admin flex_utils flex_rt_mutable_graph flex_graph_db)
 install_without_export_flex_target(rt_admin)
 
+
 add_executable(rt_runtime rt_runtime.cc)
 target_link_libraries(rt_runtime flex_utils flex_rt_mutable_graph flex_graph_db)
 install_without_export_flex_target(rt_runtime)
+
 
 add_executable(flex_analytical_engine flex_analytical_engine.cc)
 target_link_libraries(flex_analytical_engine flex_immutable_graph flex_bsp ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
