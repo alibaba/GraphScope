@@ -145,6 +145,7 @@ std::shared_ptr<IContextColumn> build_optional_column(
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
     switch (data_type.data_type()) {
+    case common::DataType::TIMESTAMP:
     case common::DataType::INT64: {
       OptionalValueColumnBuilder<int64_t> builder;
       builder.reserve(row_num);
@@ -217,7 +218,8 @@ std::shared_ptr<IContextColumn> build_optional_column(
     } break;
 
     default: {
-      LOG(FATAL) << "not support";
+      LOG(FATAL) << "not support"
+                 << common::DataType_Name(data_type.data_type());
       break;
     }
     }
