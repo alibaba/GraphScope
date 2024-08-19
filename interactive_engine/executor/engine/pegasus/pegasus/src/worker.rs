@@ -15,9 +15,8 @@
 
 use std::any::TypeId;
 use std::fmt::Debug;
-use std::net::SocketAddr;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::Arc;
 use std::time::Instant;
 
 use opentelemetry::global::BoxedSpan;
@@ -48,8 +47,8 @@ pub struct Worker<D: Data, T: Debug + Send + 'static> {
     peer_guard: Arc<AtomicUsize>,
     start: Instant,
     sink: ResultSink<T>,
-    resources: Arc<Mutex<ResourceMap>>,
-    keyed_resources: Arc<Mutex<KeyedResources>>,
+    resources: ResourceMap,
+    keyed_resources: KeyedResources,
     is_finished: bool,
     span: BoxedSpan,
     _ph: std::marker::PhantomData<D>,
@@ -70,8 +69,8 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             peer_guard: peer_guard.clone(),
             start: Instant::now(),
             sink,
-            resources: Arc::new(Mutex::new(ResourceMap::default())),
-            keyed_resources: Arc::new(Mutex::new(KeyedResources::default())),
+            resources: ResourceMap::default(),
+            keyed_resources: KeyedResources::default(),
             is_finished: false,
             span: span,
             _ph: std::marker::PhantomData,
@@ -137,27 +136,14 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
 
     pub fn add_resource<R: Send + 'static>(&mut self, resource: R) {
         let type_id = TypeId::of::<R>();
-        let mut resources_guard = self
-            .resources
-            .lock()
-            .expect("Worker resources poisoned");
+        self.resources
+            .insert(type_id, Box::new(resource));
         resources_guard.insert(type_id, Box::new(resource));
     }
 
     pub fn add_resource_with_key<R: Send + 'static>(&mut self, key: String, resource: R) {
-        let mut keyed_resources_guard = self
-            .keyed_resources
-            .lock()
-            .expect("Worker keyed_resources poisoned");
-        keyed_resources_guard.insert(key, Box::new(resource));
-    }
-
-    pub fn set_resources(&mut self, resource_map: Arc<Mutex<ResourceMap>>) {
-        self.resources = resource_map;
-    }
-
-    pub fn set_resources_with_key(&mut self, keyed_resource_map: Arc<Mutex<KeyedResources>>) {
-        self.keyed_resources = keyed_resource_map;
+        self.keyed_resources
+            .insert(key, Box::new(resource));
     }
 
     fn check_cancel(&self) -> bool {
@@ -220,51 +206,43 @@ impl WorkerTask {
     }
 }
 
-struct WorkerContext {
-    resource: Option<Arc<Mutex<ResourceMap>>>,
-    keyed_resources: Option<Arc<Mutex<KeyedResources>>>,
+struct WorkerContext<'a> {
+    resource: Option<&'a mut ResourceMap>,
+    keyed_resources: Option<&'a mut KeyedResources>,
 }
 
-impl WorkerContext {
-    fn new(res: &Arc<Mutex<ResourceMap>>, keyed_res: &Arc<Mutex<KeyedResources>>) -> Self {
-        let res_arc = res.clone();
-        let mut res_guard = res.lock().expect("Resource lock poisoned");
-        let resource = if !res_guard.is_empty() {
-            let reset = std::mem::replace(&mut *res_guard, Default::default());
+impl<'a> WorkerContext<'a> {
+    fn new(res: &'a mut ResourceMap, key_res: &'a mut KeyedResources) -> Self {
+        let resource = if !res.is_empty() {
+            let reset = std::mem::replace(res, Default::default());
             let pre = crate::resource::replace_resource(reset);
             assert!(pre.is_empty());
-            Some(res_arc)
+            Some(res)
         } else {
             None
         };
-        drop(res_guard);
 
-        let keyed_res_arc = keyed_res.clone();
-        let mut keyed_res_guard = keyed_res
-            .lock()
-            .expect("KeyedResource lock poisoned");
-        let keyed_resources = {
-            let reset = std::mem::replace(&mut *keyed_res_guard, Default::default());
+        let keyed_resources = if !key_res.is_empty() {
+            let reset = std::mem::replace(key_res, Default::default());
             let pre = crate::resource::replace_keyed_resources(reset);
             assert!(pre.is_empty());
-            Some(keyed_res_arc)
+            Some(key_res)
+        } else {
+            None
         };
-
         WorkerContext { resource, keyed_resources }
     }
 }
 
-impl Drop for WorkerContext {
+impl<'a> Drop for WorkerContext<'a> {
     fn drop(&mut self) {
         if let Some(res) = self.resource.take() {
-            let mut res_guard = res.lock().expect("Resource lock poisoned");
             let my_res = crate::resource::replace_resource(Default::default());
-            let _r = std::mem::replace(&mut *res_guard, my_res);
+            let _r = std::mem::replace(res, my_res);
         }
         if let Some(res) = self.keyed_resources.take() {
-            let mut res_guard = res.lock().expect("Resource lock poisoned");
             let my_res = crate::resource::replace_keyed_resources(Default::default());
-            let _r = std::mem::replace(&mut *res_guard, my_res);
+            let _r = std::mem::replace(res, my_res);
         }
     }
 }
@@ -276,6 +254,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             self.span
                 .set_status(trace::Status::error("Job is canceled"));
             self.span.end();
+
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }

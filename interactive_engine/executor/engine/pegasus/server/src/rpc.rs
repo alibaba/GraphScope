@@ -222,9 +222,6 @@ where
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
-        if conf.trace_enable {
-            info!("submitting job({}) with id {}", conf.job_name, conf.job_id);
-        }
         let job_id = conf.job_id;
         let service = &self.inner;
         let job = JobDesc { input: source, plan, resource };
