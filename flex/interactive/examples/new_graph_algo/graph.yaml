@@ -132,30 +132,37 @@ schema:
         - id
   edge_types:
     - type_id: 0
-      type_name: Challenge_Solvedby_Solution
+      type_name: SolvedBy
       properties: []
       vertex_type_pair_relations:
         - destination_vertex: Solution
           relation: MANY_TO_MANY
           source_vertex: Challenge
     - type_id: 1
-      type_name: Paper_Cite_Paper
+      type_name: Cite
       properties: []
       vertex_type_pair_relations:
         - destination_vertex: Paper
           relation: MANY_TO_MANY
           source_vertex: Paper
     - type_id: 2
-      type_name: Paper_Has_Challenge
+      type_name: Has
       properties: []
       vertex_type_pair_relations:
         - destination_vertex: Challenge
           relation: MANY_TO_MANY
           source_vertex: Paper
     - type_id: 3
-      type_name: Paper_WorkOn_Task
+      type_name: WorkOn
       properties: []
       vertex_type_pair_relations:
         - destination_vertex: Task
+          relation: MANY_TO_MANY
+          source_vertex: Paper
+    - type_id: 4
+      type_name: Use
+      properties: []
+      vertex_type_pair_relations:
+        - destination_vertex: Solution
           relation: MANY_TO_MANY
           source_vertex: Paper

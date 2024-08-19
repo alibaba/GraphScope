@@ -5,7 +5,7 @@ directories:
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: modern_graph
+default_graph: graph_algo
 compute_engine:
   type: hiactor
   workers:

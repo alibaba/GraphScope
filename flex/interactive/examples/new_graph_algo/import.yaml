@@ -123,7 +123,7 @@ vertex_mappings:
         property: keywords
 edge_mappings:
   - type_triplet:
-      edge: Challenge_Solvedby_Solution
+      edge: SolvedBy
       source_vertex: Challenge
       destination_vertex: Solution
     inputs:
@@ -140,7 +140,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Paper_Cite_Paper
+      edge: Cite
       source_vertex: Paper
       destination_vertex: Paper
     inputs:
@@ -157,7 +157,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Paper_Has_Challenge
+      edge: Has
       source_vertex: Paper
       destination_vertex: Challenge
     inputs:
@@ -174,7 +174,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Paper_WorkOn_Task
+      edge: WorkOn
       source_vertex: Paper
       destination_vertex: Task
     inputs:
@@ -190,3 +190,21 @@ edge_mappings:
           index: 1
           name: target
         property: id
+  - type_triplet:
+      edge: Use
+      source_vertex: Paper
+      destination_vertex: Solution
+    inputs:
+      - Paper_Use_Solution.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+
