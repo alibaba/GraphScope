@@ -71,7 +71,7 @@ pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_
 
 use crate::api::Source;
 pub use crate::errors::{BuildJobError, CancelError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::{DistributedParResourceMaps, PartitionedKeydResource, PartitionedResource};
+use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
 

@@ -138,7 +138,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let type_id = TypeId::of::<R>();
         self.resources
             .insert(type_id, Box::new(resource));
-        resources_guard.insert(type_id, Box::new(resource));
     }
 
     pub fn add_resource_with_key<R: Send + 'static>(&mut self, key: String, resource: R) {
