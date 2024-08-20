@@ -493,9 +493,6 @@ std::shared_ptr<IContextColumn> apply_reduce(
 
 Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
                       Context&& ctx) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   std::vector<AggFunc> functions;
   std::vector<AggKey> mappings;
   int func_num = opr.functions_size();

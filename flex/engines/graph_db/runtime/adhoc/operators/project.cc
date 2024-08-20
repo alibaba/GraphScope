@@ -46,9 +46,6 @@ Context eval_project(const physical::Project& opr, const ReadTransaction& txn,
                      Context&& ctx,
                      const std::map<std::string, std::string>& params,
                      const std::vector<common::IrDataType>& data_types) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   bool is_append = opr.is_append();
   Context ret;
   if (is_append) {
