@@ -655,9 +655,21 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
     e->set_id(encode_unique_edge_id(edge_label, src, dst));
     auto& prop_names = txn.schema().get_edge_property_names(
         label.src_label, label.dst_label, label.edge_label);
-    auto props = e->add_properties();
-    props->mutable_key()->set_name(prop_names[0]);
-    sink_any(prop, e->mutable_properties(0)->mutable_value());
+    if (prop_names.size() == 1) {
+      auto props = e->add_properties();
+      props->mutable_key()->set_name(prop_names[0]);
+      sink_any(prop, e->mutable_properties(0)->mutable_value());
+    } else if (prop_names.size() > 1) {
+      auto rv = prop.AsRecordView();
+      if (rv.size() != prop_names.size()) {
+        LOG(ERROR) << "record view size not match with prop names";
+      }
+      for (size_t i = 0; i < prop_names.size(); ++i) {
+        auto props = e->add_properties();
+        props->mutable_key()->set_name(prop_names[i]);
+        sink_any(rv[i], props->mutable_value());
+      }
+    }
   } else if (type_ == RTAnyType::kPath) {
     LOG(FATAL) << "not support path sink";
 

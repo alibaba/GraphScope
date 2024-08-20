@@ -21,6 +21,8 @@ import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
     private HashMap<Integer, Double> vertexTypeCardinality;
     private HashMap<EdgeTypeId, Double> edgeTypeCardinality;
+    private static Logger logger = LoggerFactory.getLogger(GlogueSchema.class);
 
     public GlogueSchema(
             GraphSchema graphSchema,
@@ -69,6 +72,7 @@ public class GlogueSchema {
                 edgeTypeCardinality.put(edgeType, 1.0);
             }
         }
+        logger.debug("GlogueSchema created with default cardinality 1.0: {}", this);
     }
 
     public GlogueSchema(GraphSchema graphSchema, GraphStatistics statistics) {
@@ -108,6 +112,7 @@ public class GlogueSchema {
                 }
             }
         }
+        logger.debug("GlogueSchema created with statistics: {}", this);
     }
 
     public static GlogueSchema fromMeta(IrMetaStats irMeta) {
@@ -139,7 +144,9 @@ public class GlogueSchema {
     public Double getVertexTypeCardinality(Integer vertexType) {
         Double cardinality = this.vertexTypeCardinality.get(vertexType);
         if (cardinality == null) {
-            return 0.0;
+            logger.debug(
+                    "Vertex type {} not found in schema, assuming cardinality 1.0", vertexType);
+            return 1.0;
         } else {
             return cardinality;
         }
@@ -148,7 +155,8 @@ public class GlogueSchema {
     public Double getEdgeTypeCardinality(EdgeTypeId edgeType) {
         Double cardinality = this.edgeTypeCardinality.get(edgeType);
         if (cardinality == null) {
-            return 0.0;
+            logger.debug("Edge type {} not found in schema, assuming cardinality 1.0", edgeType);
+            return 1.0;
         } else {
             return cardinality;
         }

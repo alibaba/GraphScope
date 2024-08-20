@@ -226,6 +226,8 @@ class Schema {
 
   std::string GetVersion() const;
 
+  bool has_multi_props_edge() const;
+
  private:
   label_t vertex_label_to_index(const std::string& label);
 
@@ -257,6 +259,7 @@ class Schema {
   std::string plugin_dir_;
   std::string description_;
   std::string version_;
+  bool has_multi_props_edge_;
 };
 
 }  // namespace gs

@@ -161,7 +161,8 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                 return this.patternCardinality.get(pattern);
             }
         }
-        return 0.0;
+        // if not exist, return 1.0
+        return 1.0;
     }
 
     @Override

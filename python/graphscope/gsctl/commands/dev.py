@@ -21,6 +21,7 @@
 import io
 import os
 import subprocess
+import sys
 
 import click
 from packaging import version
@@ -62,6 +63,8 @@ def run_shell_cmd(cmd, workingdir):
     )
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         print(line.rstrip())
+    proc.wait()
+    sys.exit(proc.returncode)
 
 
 @click.group()
@@ -125,9 +128,7 @@ def interactive(app, graphscope_repo):
     """Build Interactive for high throughput scenarios"""
     if graphscope_repo is None:
         graphscope_repo = default_graphscope_repo_path
-    interactive_build_dir = os.path.join(
-        graphscope_repo, "flex", "interactive", "docker"
-    )
+    interactive_build_dir = os.path.join(graphscope_repo, "k8s")
     if not os.path.exists(interactive_build_dir) or not os.path.isdir(
         interactive_build_dir
     ):
@@ -136,7 +137,7 @@ def interactive(app, graphscope_repo):
             fg="red",
         )
         return
-    cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
+    cmd = ["make", "flex-interactive", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
 
 

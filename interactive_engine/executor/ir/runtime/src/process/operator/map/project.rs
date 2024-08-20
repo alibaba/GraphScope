@@ -317,7 +317,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     "Concat vertices are not the same in PathConcat"
                 )))?
             } else if !concat_success {
-                Err(FnExecError::unexpected_data_error(&format!("Failed to concat paths in PathConcat")))?
+                return Ok(Object::None.into());
             } else {
                 DynEntry::new(left_path)
             }
@@ -1577,6 +1577,19 @@ mod tests {
         path
     }
 
+    fn build_simple_path(vids: Vec<i64>) -> GraphPath {
+        let details = DynDetails::default();
+        let mut path = GraphPath::new(
+            Vertex::new(vids[0], None, details.clone()),
+            pb::path_expand::PathOpt::Simple,
+            pb::path_expand::ResultOpt::AllV,
+        );
+        for i in 1..vids.len() {
+            path.append(Vertex::new(vids[i], None, details.clone()));
+        }
+        path
+    }
+
     fn build_project_path_concat(
         left_endpoint: common_pb::path_concat::Endpoint, right_endpoint: common_pb::path_concat::Endpoint,
     ) -> pb::Project {
@@ -1737,6 +1750,40 @@ mod tests {
             results.push(path.clone());
         }
         assert_eq!(results, vec![concat_path]);
+    }
+
+    #[test]
+    fn project_concat_simple_path_test_01() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_simple_path(vec![1, 2]);
+        // sub_path2: [3,2]
+        let sub_path2 = build_simple_path(vec![3, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_simple_path_test_02() {
+        // sub_path1: [1,4,2]
+        let sub_path1 = build_simple_path(vec![1, 4, 2]);
+        // sub_path2: [3,4,2]
+        let sub_path2 = build_simple_path(vec![3, 4, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: None
+        let mut r1 = Record::new(sub_path1, Some(TAG_A.into()));
+        r1.append(sub_path2, Some(TAG_B.into()));
+        let mut result = project_test(vec![r1], project_opr_pb);
+        assert!(result.next().is_none());
     }
 
     // a fail test case

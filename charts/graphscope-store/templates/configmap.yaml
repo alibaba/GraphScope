@@ -66,6 +66,8 @@ data:
     graph.physical.opt={{ .Values.graphPhysicalOpt }}
     gremlin.script.language.name={{ .Values.gremlinScriptLanguageName }}
     query.execution.timeout.ms={{ .Values.queryExecutionTimeoutMs }}
+    graph.planner.join.min.pattern.size={{ .Values.graphPlannerJoinMinPatternSize }}
+    graph.planner.cbo.glogue.size={{ .Values.graphPlannerCboGlogueSize }}
 
     log4rs.config=LOG4RS_CONFIG
     ## Auth config

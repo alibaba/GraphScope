@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.*;
@@ -738,7 +739,7 @@ public abstract class Utils {
         return columns;
     }
 
-    // remove edge properties from columns by checking if the tags refers to edge type
+    // remove properties from columns by checking if the tags refers to edge type or path type
     public static void removeEdgeProperties(
             RelDataType inputDataType, Map<Integer, Set<GraphNameOrId>> tagColumns) {
         List<RelDataTypeField> fieldTypes = inputDataType.getFieldList();
@@ -750,19 +751,25 @@ public abstract class Utils {
                     && GraphOpt.Source.EDGE.equals(
                             ((GraphSchemaType) headFieldType.getType()).getScanOpt())) {
                 tags.remove(AliasInference.DEFAULT_ID);
+            } else if (headFieldType.getType() instanceof GraphPathType) {
+                tags.remove(AliasInference.DEFAULT_ID);
             }
         }
+
         if (tags.isEmpty()) {
             return;
         }
-        // then, process other tags by checking if they are of edge type
+        // then, process other tags by checking if they are of edge type or path type
         List<Integer> removeKeys = new ArrayList<>();
         for (RelDataTypeField fieldType : fieldTypes) {
-            if (tags.contains(fieldType.getIndex())
-                    && fieldType.getType() instanceof GraphSchemaType
-                    && GraphOpt.Source.EDGE.equals(
-                            ((GraphSchemaType) fieldType.getType()).getScanOpt())) {
-                removeKeys.add(fieldType.getIndex());
+            if (tags.contains(fieldType.getIndex())) {
+                if (fieldType.getType() instanceof GraphSchemaType
+                        && GraphOpt.Source.EDGE.equals(
+                                ((GraphSchemaType) fieldType.getType()).getScanOpt())) {
+                    removeKeys.add(fieldType.getIndex());
+                } else if (fieldType.getType() instanceof GraphPathType) {
+                    removeKeys.add(fieldType.getIndex());
+                }
             }
         }
         tagColumns.keySet().removeAll(removeKeys);

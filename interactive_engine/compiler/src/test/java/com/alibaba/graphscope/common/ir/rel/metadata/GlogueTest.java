@@ -77,6 +77,7 @@ public class GlogueTest {
         Assert.assertEquals(1.0d, count2, delta);
 
         // pattern3: person2 <- person1 <- software (not exist)
+        // Note the non-exist pattern will return a cardinality of 1.0
         Pattern pattern3 = new Pattern();
         pattern3.addVertex(v0);
         pattern3.addVertex(v1);
@@ -86,7 +87,7 @@ public class GlogueTest {
         pattern3.reordering();
 
         Double count3 = gl.getRowCount(pattern3);
-        Assert.assertEquals(0.0d, count3, delta);
+        Assert.assertEquals(1.0d, count3, delta);
     }
 
     @Test

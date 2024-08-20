@@ -180,7 +180,7 @@ class ODPSFragmentLoader : public AbstractArrowFragmentLoader {
 
   ~ODPSFragmentLoader() {}
 
-  void LoadFragment() override;
+  Result<bool> LoadFragment() override;
 
  private:
   void init();

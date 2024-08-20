@@ -33,11 +33,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Add envs to GITHUB_ENV
-      run: |
-        short_sha=$(git rev-parse --short HEAD)
-        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
-
     - name: Build Image
       run: |
         cd ${GITHUB_WORKSPACE}
@@ -59,7 +54,7 @@ jobs:
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
         # launch service: 8080 for coordinator http port; 7687 for cypher port;
-        docker run -p 8080:8080 -p 7688:7687 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-x86_64 --enable-coordinator &
+        docker run -p 8080:8080 -p 7688:7687 graphscope/interactive:latest --enable-coordinator &
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-xdist

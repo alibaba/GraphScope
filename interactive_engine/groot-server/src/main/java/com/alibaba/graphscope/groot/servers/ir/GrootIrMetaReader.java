@@ -50,4 +50,9 @@ public class GrootIrMetaReader implements IrMetaReader {
     public GraphStatistics readStats(GraphId graphId) throws IOException {
         return schemaFetcher.getStatistics();
     }
+
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) {
+        return schemaFetcher.statisticsEnabled();
+    }
 }

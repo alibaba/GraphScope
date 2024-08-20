@@ -252,6 +252,7 @@ jobs:
 
         #set back
         sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+        rm -rf /tmp/codegen
 
     - name: Test cypher&cpp procedure generation and loading
       env:

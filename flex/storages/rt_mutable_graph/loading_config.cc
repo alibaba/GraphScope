@@ -21,6 +21,7 @@
 #include <string>
 #include <tuple>
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/utils/exception.h"
 
 namespace gs {
 
@@ -892,8 +893,9 @@ LoadingConfig::GetEdgeLoadingMeta() const {
 
 const std::vector<std::tuple<size_t, std::string, std::string>>&
 LoadingConfig::GetVertexColumnMappings(label_t label_id) const {
-  CHECK(vertex_column_mappings_.find(label_id) !=
-        vertex_column_mappings_.end());
+  THROW_EXCEPTION_IF(
+      vertex_column_mappings_.find(label_id) == vertex_column_mappings_.end(),
+      "Vertex label id not found in vertex column mappings");
   return vertex_column_mappings_.at(label_id);
 }
 
@@ -901,7 +903,9 @@ const std::vector<std::tuple<size_t, std::string, std::string>>&
 LoadingConfig::GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
                                      label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);
-  CHECK(edge_column_mappings_.find(key) != edge_column_mappings_.end());
+  THROW_EXCEPTION_IF(
+      edge_column_mappings_.find(key) == edge_column_mappings_.end(),
+      "Edge label id not found in edge column mappings");
   return edge_column_mappings_.at(key);
 }
 
@@ -910,7 +914,8 @@ const std::pair<std::vector<std::pair<std::string, size_t>>,
 LoadingConfig::GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);
-  CHECK(edge_src_dst_col_.find(key) != edge_src_dst_col_.end());
+  THROW_EXCEPTION_IF(edge_src_dst_col_.find(key) == edge_src_dst_col_.end(),
+                     "Edge label id not found in edge column mappings");
   return edge_src_dst_col_.at(key);
 }
 

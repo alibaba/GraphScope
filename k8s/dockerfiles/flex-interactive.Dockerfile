@@ -1,10 +1,15 @@
-ARG ARCH=x86_64
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:v0.0.4 AS builder
+# Coordinator of graphscope engines
 
-ARG ARCH
+ARG PLATFORM=x86_64
+ARG ARCH=amd64
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
 ARG ENABLE_COORDINATOR="false"
 
-COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
+USER graphscope
+WORKDIR /home/graphscope
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -30,6 +35,8 @@ cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_
 -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
 -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
 
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF && make -j && make install && \
@@ -47,6 +54,9 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && \
         python3 setup.py build_proto && python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
+        cd ${HOME}/GraphScope/python && \
+        export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
@@ -55,8 +65,8 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 
 ########################### RUNTIME IMAGE ###########################
 
-from ubuntu:22.04 as final_image
-ARG ARCH
+from ubuntu:22.04 as runtime
+ARG PLATFORM=x86_64
 ARG ENABLE_COORDINATOR="false"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -83,14 +93,19 @@ ENV LC_ALL en_US.UTF-8
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN mkdir /opt/vineyard/
+
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
+COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
+COPY --from=builder /opt/graphscope/include/ /opt/flex/include/
+COPY --from=builder /opt/vineyard/include/ /opt/vineyard/include/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
-COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
 # change the default graph name.
@@ -99,42 +114,42 @@ RUN sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
 
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libsnappy*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libgflags*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_filesystem*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libhwloc*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libglog*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libyaml-cpp*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libmpi*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_program_options*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_filesystem*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libboost_thread*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libcrypto*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libopen-rte*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libhwloc*.so* /usr/lib/$PLATFORM-linux-gnu/
 
 # libunwind for arm64 seems not installed here, and seems not needed for aarch64(tested)
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libunwind*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-pal*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libltdl*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libevent*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libutf8proc*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libre2*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libunwind*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libarrow.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libopen-pal*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libevent*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libutf8proc*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libre2*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libprotobuf* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libfmt*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* /usr/lib/$PLATFORM-linux-gnu/
 
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/openmpi/include/ /opt/flex/include
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/openmpi/include/ /opt/flex/include
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 
-RUN sudo rm -rf /usr/lib/$ARCH-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcuda.so && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcudart.so && \
-    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libicudata.so*
+RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libcuda.so && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libcudart.so && \
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/lib/libicudata.so*
 
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \

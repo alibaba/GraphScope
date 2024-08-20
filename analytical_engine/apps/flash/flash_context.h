@@ -19,8 +19,10 @@ limitations under the License.
 #include <memory>
 #include <vector>
 
-#include "flash/flash_ware.h"
 #include "grape/grape.h"
+
+#include "core/context/tensor_context.h"
+#include "flash/flash_ware.h"
 
 namespace gs {
 

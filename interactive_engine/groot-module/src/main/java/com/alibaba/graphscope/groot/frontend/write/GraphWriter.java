@@ -185,7 +185,7 @@ public class GraphWriter {
         EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         if (edgeId.id == 0) {
             // This is for update edge, if edgeInnerId is 0, generate new id, incase there isn't
-            // such a edge
+            // such an edge
             edgeId.id = edgeIdGenerator.getNextId();
         }
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
