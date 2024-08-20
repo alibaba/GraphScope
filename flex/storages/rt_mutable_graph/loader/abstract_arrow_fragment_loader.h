@@ -57,6 +57,10 @@ void set_column(gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
     size_t size = col->size();
     for (auto k = 0; k < casted->length(); ++k) {
+      if (casted->IsNull(k)) {
+        LOG(FATAL) << "Null value is not supported in property column."
+                   << casted->Value(k) << ", k = " << k;
+      }
       if (offset[cur_ind] >= size) {
         cur_ind++;
       } else {
