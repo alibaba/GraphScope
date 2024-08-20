@@ -35,9 +35,7 @@ mod encode;
 pub use encode::{GeneralEncoder, MessageEncoder, SimpleEncoder, SlabEncoder};
 
 mod net_tx;
-
-pub use net_tx::NetData;
-use net_tx::NetSender;
+use net_tx::{NetData, NetSender};
 
 pub struct IPCSender<T: Encode> {
     pub target: SocketAddr,
@@ -120,11 +118,6 @@ lazy_static! {
 }
 
 #[inline]
-pub fn get_msg_sender() -> &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>> {
-    return &REMOTE_MSG_SENDER;
-}
-
-#[inline]
 fn report_network_error(ch_id: u128, addr: SocketAddr) {
     error!("IPC channel[{}]: fail to send data to {:?};", ch_id, addr);
     let mut lock = NETWORK_SEND_ERRORS
@@ -182,17 +175,10 @@ pub(crate) fn remove_remote_sender(local_id: u64, remote_id: u64, other: &Arc<Se
 
 pub fn fetch_remote_sender<T: Encode + 'static>(
     channel_id: u128, local: u64, remotes: &[u64],
-    msg_senders: Option<&'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>>,
 ) -> Result<Vec<IPCSender<T>>, NetError> {
-    let lock = if let Some(msg_senders) = msg_senders {
-        msg_senders
-            .read()
-            .expect("REMOTE_MSG_SEND read lock poisoned")
-    } else {
-        REMOTE_MSG_SENDER
-            .read()
-            .expect("REMOTE_MSG_SEND read lock poisoned")
-    };
+    let lock = REMOTE_MSG_SENDER
+        .read()
+        .expect("REMOTE_MSG_SEND read lock poisoned");
     let mut app_senders = Vec::with_capacity(remotes.len());
     for id in remotes {
         if *id != local {

@@ -23,11 +23,10 @@ extern crate enum_dispatch;
 use std::collections::HashMap;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use crossbeam_channel::Sender;
 use crossbeam_utils::sync::ShardedLock;
 use pegasus_common::codec::*;
 
@@ -142,10 +141,10 @@ pub use manager::ServerDetect;
 pub use manager::SimpleServerDetector;
 #[cfg(feature = "benchmark")]
 pub use message::{MessageHeader, MESSAGE_HEAD_SIZE};
-pub use receive::{get_recv_register, IPCReceiver, InboxRegister};
+pub use receive::IPCReceiver;
 #[cfg(feature = "benchmark")]
 pub use receive::{MessageDecoder, ReentrantDecoder, ReentrantSlabDecoder, SimpleBlockDecoder};
-pub use send::{check_has_network_error, get_msg_sender, IPCSender, NetData};
+pub use send::{check_has_network_error, IPCSender};
 #[cfg(feature = "benchmark")]
 pub use send::{MessageEncoder, SimpleEncoder, SlabEncoder};
 pub use state::check_connect;
@@ -181,8 +180,8 @@ pub fn ipc_channel<T: Codec + 'static>(
     if channel_id == 0 {
         return Err(NetError::IllegalChannelId);
     }
-    let txs = crate::send::fetch_remote_sender::<T>(channel_id, local, remotes, None)?;
-    let rx = crate::receive::register_remotes_receiver(channel_id, local, remotes, None)?;
+    let txs = crate::send::fetch_remote_sender::<T>(channel_id, local, remotes)?;
+    let rx = crate::receive::register_remotes_receiver(channel_id, local, remotes)?;
     Ok(InterProcessesComm { channel_id, senders: txs, receive: rx })
 }
 
@@ -202,12 +201,11 @@ pub fn ipc_channel<T: Codec + 'static>(
 ///
 pub fn ipc_channel_send<T: Codec + 'static>(
     channel_id: u128, local: u64, remotes: &[u64],
-    msg_senders: Option<&'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>>,
 ) -> Result<Vec<IPCSender<T>>, NetError> {
     if channel_id == 0 {
         return Err(NetError::IllegalChannelId);
     }
-    crate::send::fetch_remote_sender::<T>(channel_id, local, remotes, msg_senders)
+    crate::send::fetch_remote_sender::<T>(channel_id, local, remotes)
 }
 
 /// 创建指定channel_id 的多进程间通信channel的接收端recv； 该recv将负责接收来自多个服务进程上发送的数据；
@@ -215,12 +213,11 @@ pub fn ipc_channel_send<T: Codec + 'static>(
 ///
 pub fn ipc_channel_recv<T: Codec + 'static>(
     channel_id: u128, local: u64, targets: &[u64],
-    recv_register: Option<&'static ShardedLock<HashMap<(u64, u64), InboxRegister>>>,
 ) -> Result<IPCReceiver<T>, NetError> {
     if channel_id == 0 {
         return Err(NetError::IllegalChannelId);
     }
-    crate::receive::register_remotes_receiver(channel_id, local, targets, recv_register)
+    crate::receive::register_remotes_receiver(channel_id, local, targets)
 }
 
 pub fn check_ipc_ready(local: u64, remotes: &[u64]) -> bool {

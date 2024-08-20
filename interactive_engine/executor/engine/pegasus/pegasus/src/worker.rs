@@ -22,7 +22,6 @@ use std::time::Instant;
 use opentelemetry::global::BoxedSpan;
 use opentelemetry::{trace, trace::Span, KeyValue};
 use pegasus_executor::{Task, TaskState};
-use pegasus_network::{get_msg_sender, get_recv_register};
 
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
@@ -87,8 +86,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             ChannelId::new(self.id.job_id, 0),
             &self.conf,
             self.id,
-            None,
-            None,
         )?;
         if resource.ch_id.index != 0 {
             return Err(BuildJobError::InternalError(String::from("Event channel index must be 0")));
@@ -106,13 +103,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             abort.close().ok();
         }
         let event_emitter = EventEmitter::new(tx);
-        let dfb = DataflowBuilder::new(
-            self.id,
-            event_emitter.clone(),
-            &self.conf,
-            get_msg_sender(),
-            get_recv_register(),
-        );
+        let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
         let root_builder = OutputBuilderImpl::new(
             Port::new(0, 0),
             0,

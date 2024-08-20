@@ -14,16 +14,11 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::Write;
 use std::fs::File;
-use std::net::SocketAddr;
 use std::rc::Rc;
-use std::sync::{Arc, Weak};
-
-use crossbeam_channel::Sender;
-use crossbeam_utils::sync::ShardedLock;
-use pegasus_network::{InboxRegister, NetData};
+use std::sync::Arc;
 
 use crate::api::meta::OperatorInfo;
 use crate::channel_id::ChannelInfo;
@@ -46,16 +41,10 @@ pub struct DataflowBuilder {
     operators: Rc<RefCell<Vec<OperatorBuilder>>>,
     edges: Rc<RefCell<Vec<Edge>>>,
     sinks: Rc<RefCell<Vec<usize>>>,
-    pub msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
-    pub recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
 }
 
 impl DataflowBuilder {
-    pub(crate) fn new(
-        worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>,
-        msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
-        recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
-    ) -> Self {
+    pub(crate) fn new(worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>) -> Self {
         DataflowBuilder {
             worker_id,
             config: config.clone(),
@@ -64,8 +53,6 @@ impl DataflowBuilder {
             event_emitter,
             ch_index: Rc::new(RefCell::new(1)),
             sinks: Rc::new(RefCell::new(vec![])),
-            msg_senders,
-            recv_register,
         }
     }
 
@@ -215,8 +202,6 @@ impl Clone for DataflowBuilder {
             ch_index: self.ch_index.clone(),
             edges: self.edges.clone(),
             sinks: self.sinks.clone(),
-            msg_senders: self.msg_senders,
-            recv_register: self.recv_register,
         }
     }
 }

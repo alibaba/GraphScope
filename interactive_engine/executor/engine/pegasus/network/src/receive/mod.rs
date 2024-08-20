@@ -29,8 +29,7 @@ use crate::{NetError, Server};
 mod decode;
 mod net_rx;
 pub use decode::{MessageDecoder, ReentrantDecoder, ReentrantSlabDecoder, SimpleBlockDecoder};
-pub use net_rx::InboxRegister;
-use net_rx::NetReceiver;
+use net_rx::{InboxRegister, NetReceiver};
 
 use crate::config::{BlockMode::Blocking, ConnectionParams};
 
@@ -59,11 +58,6 @@ impl<T: Decode> IPCReceiver<T> {
 lazy_static! {
     static ref REMOTE_RECV_REGISTER: ShardedLock<HashMap<(u64, u64), InboxRegister>> =
         ShardedLock::new(HashMap::new());
-}
-
-#[inline]
-pub fn get_recv_register() -> &'static ShardedLock<HashMap<(u64, u64), InboxRegister>> {
-    return &REMOTE_RECV_REGISTER;
 }
 
 pub fn check_remotes_read_ready(local: u64, remotes: &[u64]) -> bool {
@@ -102,18 +96,11 @@ fn remove_remote_register(local: u64, remote: u64, other: InboxRegister) -> Opti
 
 pub fn register_remotes_receiver<T: Decode + 'static>(
     channel_id: u128, local: u64, remotes: &[u64],
-    recv_register: Option<&'static ShardedLock<HashMap<(u64, u64), InboxRegister>>>,
 ) -> Result<IPCReceiver<T>, NetError> {
     let (tx, rx) = pegasus_common::channel::unbound::<Payload>();
-    let lock = if let Some(recv_register) = recv_register {
-        recv_register
-            .read()
-            .expect("failure to lock REMOTE_RECV_REGISTER")
-    } else {
-        REMOTE_RECV_REGISTER
-            .read()
-            .expect("failure to lock REMOTE_RECV_REGISTER")
-    };
+    let lock = REMOTE_RECV_REGISTER
+        .read()
+        .expect("failure to lock REMOTE_RECV_REGISTER");
     for id in remotes.iter() {
         if *id != local {
             if let Some(register) = lock.get(&(local, *id)) {

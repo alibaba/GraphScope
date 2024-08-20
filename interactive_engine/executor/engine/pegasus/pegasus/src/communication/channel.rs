@@ -178,14 +178,8 @@ impl<T: Data> Channel<T> {
         (ChannelInfo, Vec<EventEmitPush<T>>, GeneralPull<MicroBatch<T>>, GeneralPush<MicroBatch<T>>),
         BuildJobError,
     > {
-        let (mut raw, pull) = crate::communication::build_channel::<MicroBatch<T>>(
-            id,
-            &dfb.config,
-            dfb.worker_id,
-            Some(dfb.msg_senders),
-            Some(dfb.recv_register),
-        )?
-        .take();
+        let (mut raw, pull) =
+            crate::communication::build_channel::<MicroBatch<T>>(id, &dfb.config, dfb.worker_id)?.take();
         let worker_index = dfb.worker_id.index as usize;
         let notify = raw.swap_remove(worker_index);
         let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), self.source, target);
