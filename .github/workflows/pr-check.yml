@@ -207,7 +207,8 @@ jobs:
     - name: Preview on Cloudflare
       id: preview
       uses: cloudflare/pages-action@v1
-      if: ${{ steps.changes.outputs.docs}}
+      # CAUTION: If you want to preview the changed docs, you may want to submit PR from the main repo.
+      if: ${{ steps.changes.outputs.docs && secrets.CLOUDFLARE_ACCOUNT_ID != '' }} 
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
