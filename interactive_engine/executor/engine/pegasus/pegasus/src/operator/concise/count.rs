@@ -24,8 +24,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                 if end.tag.len() > 0 {
                                     let mut new_end = end.clone();
                                     let mut new_peers = end.peers().clone();
-                                    let owner_index =
-                                        batch.tag.current_uncheck() % self.get_worker_id().total_peers();
+                                    let owner_index = batch.tag.current_uncheck() % total_peers;
                                     new_peers.add_source(owner_index);
                                     new_end.update_peers(new_peers, total_peers);
                                     session.give_last(cnt, new_end)?;
@@ -45,8 +44,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                 if end.tag.len() > 0 {
                                     let mut new_end = end.clone();
                                     let mut new_peers = end.peers().clone();
-                                    let owner_index = batch.tag.current_uncheck()
-                                        % crate::worker_id::get_current_worker().total_peers();
+                                    let owner_index = batch.tag.current_uncheck() % total_peers;
                                     new_peers.add_source(owner_index);
                                     new_end.update_peers(new_peers, total_peers);
                                     session.give_last(cnt, new_end)?;

@@ -47,18 +47,15 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         T: Data,
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
+        let worker_id = self.get_worker_id();
+        let total_peers = worker_id.total_peers();
         let entered = self.enter()?;
         let scope_level = entered.get_scope_level();
         let fork_guard = UnsafeRcPtr::new(RefCell::new(TidyTagMap::new(scope_level - 1)));
         let join_guard = fork_guard.clone();
-        let (main, mut sub): (Stream<D>, Stream<D>) =
-            entered.binary_branch_notify("fork_subtask", |info| {
-                ForkSubtaskOperator::<D>::new(
-                    info.scope_level,
-                    max_parallel,
-                    fork_guard,
-                    self.get_worker_id(),
-                )
+        let (main, mut sub): (Stream<D>, Stream<D>) = entered
+            .binary_branch_notify("fork_subtask", |info| {
+                ForkSubtaskOperator::<D>::new(info.scope_level, max_parallel, fork_guard, worker_id)
             })?;
         sub.set_upstream_batch_capacity(1)
             .set_upstream_batch_size(1);
@@ -67,11 +64,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
             .set_upstream_batch_capacity(1)
             .set_upstream_batch_size(1);
         main.union_transform_notify("zip_subtasks", inner, move |info| {
-            ZipSubtaskOperator::<D, T>::new(
-                info.scope_level,
-                join_guard,
-                self.get_worker_id().total_peers(),
-            )
+            ZipSubtaskOperator::<D, T>::new(info.scope_level, join_guard, total_peers)
         })?
         .leave()
     }
