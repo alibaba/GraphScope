@@ -145,7 +145,6 @@ std::shared_ptr<IContextColumn> build_optional_column(
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
     switch (data_type.data_type()) {
-    case common::DataType::TIMESTAMP:
     case common::DataType::INT64: {
       OptionalValueColumnBuilder<int64_t> builder;
       builder.reserve(row_num);
@@ -211,6 +210,20 @@ std::shared_ptr<IContextColumn> build_optional_column(
           builder.push_back_null();
         } else {
           builder.push_back_opt(std::string(v.as_string()), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
+    case common::DataType::TIMESTAMP: {
+      OptionalValueColumnBuilder<Date> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_date32(), true);
         }
       }
 

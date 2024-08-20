@@ -48,6 +48,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
   }
 
   if (pb.has_tag() || var_type == VarType::kPathVar) {
+    CHECK(ctx.get(tag) != nullptr);
     if (ctx.get(tag)->column_type() == ContextColumnType::kVertex) {
       if (pb.has_property()) {
         auto& pt = pb.property();
