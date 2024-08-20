@@ -62,7 +62,7 @@ void set_column_from_string_array(gs::ColumnBase* col,
       auto casted =
           std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        auto str = casted->GetView(k);
+        auto str = casted->IsNull(k) ? "" : casted->GetView(k);
         std::string_view sw(str.data(), str.size());
         if (offset[cur_ind] >= size) {
           cur_ind++;
@@ -123,8 +123,11 @@ void set_column_from_timestamp_array(gs::ColumnBase* col,
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++],
-                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+          col->set_any(
+              offset[cur_ind++],
+              std::move(AnyConverter<Date>::to_any(
+                  casted->IsNull(k) ? Date(std::numeric_limits<int64_t>::max())
+                                    : Date(casted->Value(k)))));
         }
       }
     }
@@ -149,8 +152,11 @@ void set_column_from_timestamp_array_to_day(
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++],
-                       std::move(AnyConverter<Day>::to_any(casted->Value(k))));
+          col->set_any(
+              offset[cur_ind++],
+              std::move(AnyConverter<Day>::to_any(
+                  casted->IsNull(k) ? Day(std::numeric_limits<int64_t>::max())
+                                    : Day(casted->Value(k)))));
         }
       }
     }

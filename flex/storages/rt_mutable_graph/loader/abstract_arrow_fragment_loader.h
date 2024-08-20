@@ -57,15 +57,15 @@ void set_column(gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
     size_t size = col->size();
     for (auto k = 0; k < casted->length(); ++k) {
-      if (casted->IsNull(k)) {
-        LOG(FATAL) << "Null value is not supported in property column."
-                   << casted->Value(k) << ", k = " << k;
-      }
       if (offset[cur_ind] >= size) {
         cur_ind++;
       } else {
-        col->set_any(offset[cur_ind++],
-                     std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+        col->set_any(
+            offset[cur_ind++],
+            std::move(casted->IsNull(k)
+                          ? AnyConverter<COL_T>::to_any(
+                                std::numeric_limits<COL_T>::max())
+                          : AnyConverter<COL_T>::to_any(casted->Value(k))));
       }
     }
   }
@@ -114,6 +114,9 @@ struct _add_vertex {
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       for (size_t i = 0; i < row_num; ++i) {
+        if (casted_array->IsNull(i)) {
+          LOG(FATAL) << "Null value in primary key column: ";
+        }
         if (!indexer.add(casted_array->Value(i), vid)) {
           VLOG(2) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
           offset.emplace_back(std::numeric_limits<size_t>::max());
@@ -125,7 +128,7 @@ struct _add_vertex {
       if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
         for (size_t i = 0; i < row_num; ++i) {
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->IsNull(i) ? "" : casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
             VLOG(2) << "Duplicate vertex id: " << str_view << "..";
@@ -138,7 +141,7 @@ struct _add_vertex {
         auto casted_array =
             std::static_pointer_cast<arrow::LargeStringArray>(col);
         for (size_t i = 0; i < row_num; ++i) {
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->IsNull(i) ? "" : casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
             VLOG(2) << "Duplicate vertex id: " << str_view << "..";
@@ -168,13 +171,16 @@ struct _add_vertex {
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       for (size_t i = 0; i < row_num; ++i) {
+        if (casted_array->IsNull(i)) {
+          LOG(FATAL) << "Null value in primary key column: ";
+        }
         indexer.add_vertex(casted_array->Value(i));
       }
     } else {
       if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
         for (size_t i = 0; i < row_num; ++i) {
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->IsNull(i) ? "" : casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           indexer.add_vertex(str_view);
         }
@@ -182,7 +188,7 @@ struct _add_vertex {
         auto casted_array =
             std::static_pointer_cast<arrow::LargeStringArray>(col);
         for (size_t i = 0; i < row_num; ++i) {
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->IsNull(i) ? "" : casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           indexer.add_vertex(str_view);
         }
@@ -203,7 +209,7 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
     if (col->type()->Equals(arrow::utf8())) {
       auto casted = std::static_pointer_cast<arrow::StringArray>(col);
       for (auto j = 0; j < casted->length(); ++j) {
-        auto str = casted->GetView(j);
+        auto str = casted->IsNull(j) ? "" : casted->GetView(j);
         std::string_view str_view(str.data(), str.size());
         auto vid = indexer.get_index(Any::From(str_view));
         if (is_dst) {
@@ -219,7 +225,7 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
       // must be large utf8
       auto casted = std::static_pointer_cast<arrow::LargeStringArray>(col);
       for (auto j = 0; j < casted->length(); ++j) {
-        auto str = casted->GetView(j);
+        auto str = casted->IsNull(j) ? "" : casted->GetView(j);
         std::string_view str_view(str.data(), str.size());
         auto vid = indexer.get_index(Any::From(str_view));
         if (is_dst) {
@@ -236,6 +242,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
     using arrow_array_type = typename gs::TypeConverter<PK_T>::ArrowArrayType;
     auto casted = std::static_pointer_cast<arrow_array_type>(col);
     for (auto j = 0; j < casted->length(); ++j) {
+      if (casted->IsNull(j)) {
+        LOG(FATAL) << "Null value in primary key column: ";
+      }
       auto vid = indexer.get_index(Any::From(casted->Value(j)));
       if (is_dst) {
         std::get<1>(parsed_edges[cur_ind++]) = vid;
@@ -311,11 +320,17 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
                                    arrow::StringArray>::value ||
                       std::is_same<arrow_array_type,
                                    arrow::LargeStringArray>::value) {
-          auto str = data->GetView(j);
-          std::string_view str_view(str.data(), str.size());
-          std::get<2>(parsed_edges[cur_ind++]) = str_view;
+          if (data->IsNull(j)) {
+            std::get<2>(parsed_edges[cur_ind++]) = "";
+          } else {
+            auto str = data->IsNull(j) ? "" : data->GetString(j);
+            std::string_view str_view(str.data(), str.size());
+            std::get<2>(parsed_edges[cur_ind++]) = str_view;
+          }
         } else {
-          std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);
+          std::get<2>(parsed_edges[cur_ind++]) =
+              data->IsNull(j) ? std::numeric_limits<EDATA_T>::max()
+                              : data->Value(j);
         }
       }
       VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
@@ -606,6 +621,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 auto casted_array =
                     std::static_pointer_cast<arrow_array_t>(primary_key_column);
                 for (size_t i = 0; i < row_num; ++i) {
+                  if (casted_array->IsNull(i)) {
+                    LOG(FATAL) << "Null value in primary key column: ";
+                  }
                   vids.emplace_back(indexer.get_index(casted_array->Value(i)));
                 }
               } else {
@@ -614,7 +632,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                       std::static_pointer_cast<arrow::StringArray>(
                           primary_key_column);
                   for (size_t i = 0; i < row_num; ++i) {
-                    auto str = casted_array->GetView(i);
+                    auto str =
+                        casted_array->IsNull(i) ? "" : casted_array->GetView(i);
                     std::string_view str_view(str.data(), str.size());
                     vids.emplace_back(indexer.get_index(str_view));
                   }
@@ -624,7 +643,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                       std::static_pointer_cast<arrow::LargeStringArray>(
                           primary_key_column);
                   for (size_t i = 0; i < row_num; ++i) {
-                    auto str = casted_array->GetView(i);
+                    auto str =
+                        casted_array->IsNull(i) ? "" : casted_array->GetView(i);
                     std::string_view str_view(str.data(), str.size());
                     vids.emplace_back(indexer.get_index(str_view));
                   }
