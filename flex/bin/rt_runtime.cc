@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
                  .count();
     num++;
   }
-  LOG(INFO) << "Avg time: " << count / num / 1000 << " millseconds";
+  LOG(INFO) << "Avg time: " << count / num << " microseconds";
 
   // std::cout << timer.get_time() / 1us << " microseconds\n";
 }
