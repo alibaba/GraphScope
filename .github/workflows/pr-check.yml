@@ -1,7 +1,7 @@
 name: PR Check
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -84,6 +84,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
+        ref: ${{ github.event.pull_request.head.sha }}
         submodules: true
         fetch-depth: 1
 
@@ -207,7 +208,7 @@ jobs:
     - name: Preview on Cloudflare
       id: preview
       uses: cloudflare/pages-action@v1
-      if: ${{ steps.changes.outputs.docs}}
+      if: ${{ steps.changes.outputs.docs }} 
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
