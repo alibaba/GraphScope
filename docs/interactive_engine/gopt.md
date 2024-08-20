@@ -1,7 +1,8 @@
-# Introducing GOpt
+# GOpt: A Graph-Native Query Optimization Framework
+## Introducing GOpt
 GOpt is a graph-native query optimizer designed to accelerate query execution. It excels in handling hybrid scenarios that combine complex graph pattern matching with relational operations on large graphs. GOpt is not aware of the underlying storage data and focuses solely on computation on top of the data, which makes it easy and fast to be integrated into other graph or relational databases.
 
-## Core Features
+### Core Features
 
 1. **Property Graph Modeling**: Automatically infers and completes user-provided ambiguous queries for more accurate optimization.
 2. **Language Support**: Supports standard [Gremlin](https://tinkerpop.apache.org/gremlin.html) and [Cypher](https://neo4j.com/docs/cypher-manual/current/introduction/) languages, with upcoming [GQL](https://www.gqlstandards.org/) support.
@@ -18,7 +19,7 @@ GOpt is a graph-native query optimizer designed to accelerate query execution. I
    <br/>
 </div>
 
-## Why GOpt
+### Why GOpt
 
 1. **High Performance**
 
@@ -32,14 +33,14 @@ GOpt is a graph-native query optimizer designed to accelerate query execution. I
 
    GOpt is lightweight and serverless, facilitating seamless integration into other databases through a small-sized JAR file deployment. Built on the Calcite framework, GOpt leverages Calcite's extensive range of adapters, simplifying the integration with various data formats. This advantage allows GOpt to seamlessly integrate with mainstream relational databases that has been powered by Calcite. Additionally, GOpt is equipped with graph-native algorithms, enhancing its compatibility with graph-native database APIs. In our [Getting Started](#getting-started) section, we provide a demonstration of GOpt's easy integration into Neo4j with minimal codes.
 
-# Getting Started
+## Getting Started
 
-## Quick Start
+### Quick Start
 GOpt is embeddable and serverless, available as a standalone package occupying just a few tens of MB in a JAR file. It can be quickly integrated into other systems as project dependency via Apache Maven. We have already integrated GOpt into the Neo4j system. Here, you can quickly experience the optimization effects that GOpt brings to Neo4j.
 
-### Deployment
+#### Deployment
 
-#### Local Setup
+##### Local Setup
 We have prepared a `gopt-on-neo4j.tar.gz` package. You can quickly obtain it through the following link:
 [Download GOpt for Neo4j](https://graphscope.oss-cn-beijing.aliyuncs.com/gopt_data/gopt-on-neo4j.tar.gz)
 
@@ -66,13 +67,13 @@ Based on the original Neo4j artifacts, we made the following modifications:
 
 You can now try running Neo4j with GOpt on your local machine. Note that the Neo4j version we use is 4.4.9. Ensure your local machine has all the necessary environments for [Neo4j-4.4.9](https://github.com/neo4j/neo4j/tree/4.4). If you do not have a complete development environment, you may prefer to use the [Docker setup](#docker-setup).
 
-#### Docker Setup
+##### Docker Setup
 If you do not have a complete development environment, we have also prepared a corresponding Docker environment. The Docker image contains all the contents of `gopt-on-neo4j.tar.gz` as well as all the necessary environment dependencies. You can start it with a single command:
 ```bash
 docker run -it registry.cn-hongkong.aliyuncs.com/graphscope/gopt-on-neo4j:latest bash
 ```
 
-### Importing Data
+#### Importing Data
 Use the Neo4j importing tools to load your data into the Neo4j database. Here we use `movie` dataset as an example, which has the following property graph model:
 
 <div align="center">
@@ -110,7 +111,7 @@ bin/neo4j-admin import \
     --relationships=ACTED_IN=import/movie/Person_ACTED_IN_Movie.csv \
     --delimiter '|'
 ```
-### Configuration
+#### Configuration
 We integrate GOpt configuration into the Neo4j standard config file `conf/neo4j.conf` as follows:
 
 - **graph.planner.rules**: Registers graph relational rules into the GOpt optimizer framework.
@@ -128,7 +129,7 @@ graph.planner.intersect.cost.factor:1
 dbms.default_database=movie
 ```
 
-### Starting Neo4j Service
+#### Starting Neo4j Service
 ```bash
 ./bin/neo4j start
 
@@ -145,7 +146,7 @@ Match (a) Return count(a);
 Match (a)-[b]->(c) Return count(b);
 ```
 
-### Analyzing Queries
+#### Analyzing Queries
 To experience the optimization effects of GOpt, you can run various types of queries and observe the detailed profiling results. GOpt integrates Neo4j's Profile tool to display estimated counts for each operation. By comparing these estimates with the actual row counts, you can verify the accuracy of GOpt's cardinality estimation.
 
 1. **Ambiguous Pattern**: Execute queries where type constraints are not explicitly defined.
@@ -219,7 +220,7 @@ To experience the optimization effects of GOpt, you can run various types of que
       <br/>
    </div>
 
-## Installation
+### Installation
 We offer two versions of the GOpt JAR package, each approximately 35MB in size:
 
 - **gopt-core**: Includes the core functionality of GOpt and uses the GraphBuilderSDK to build GOpt inputs. 
@@ -245,13 +246,13 @@ To try GOpt in your own project, download the latest version of the [gopt-core](
 </dependency>
 ```
 
-# Tutorial
+## Tutorial
 
 In the [Getting Started](#getting-started) section, we explored some basic features of GOpt. In this section, we will guide you through advanced features of GOpt and demonstrate how to leverage these capabilities to optimize your system, including:
 - **GOpt Benchmark Tools**: This guide provides detailed instructions on utilizing the benchmark tool to evaluate GOpt's performance on more complex queries with larger datasets.
 - **Integration of GOpt into Other Systems**: Using Neo4j as a case study, we provide comprehensive details on integrating GOpt into other systems at different levels.
 
-## Benchmark Tools
+### Benchmark Tools
 We provide a benchmark tool for running complex pattern queries on larger datasets. Our benchmark tool includes three components:
 
 - **Dataset**: We have pre-prepared the LDBC data with sf=1 in the `data` directory.
@@ -262,7 +263,7 @@ We provide a benchmark tool for running complex pattern queries on larger datase
 - **Scripts**: The `bin/bench.sh` script is used to run the benchmark.
 
 You can now experience our one-click benchmarking feature.
-### Steps
+#### Steps
 
 1. First, stop the running service
    ```bash
@@ -317,10 +318,10 @@ You can now experience our one-click benchmarking feature.
       ./bin/bench.sh ./queries --profile --neo4j --all
       ```
 
-## Integration of GOpt
+### Integration of GOpt
 
-# Design of GOpt
-## Motivation
+## Design of GOpt
+### Motivation
 In large-scale graph querying scenarios, one core technique that can significantly influence performance is the optimizer. As graph data and its applications continue to grow rapidly, numerous graph processing systems equipped with native optimizers have been developed. However, these optimization methods tend to excessively focus on either graph-specific or relational-specific approaches. This narrow focus fails to holistically address queries involving both graph and relational data, leading to suboptimal performance. 
 To address this issue, GOpt is designed as follows:
 
@@ -338,4 +339,4 @@ To address this issue, GOpt is designed as follows:
    <br/>
 </div>
 
-## Detailed Introduction
+### Detailed Introduction
