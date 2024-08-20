@@ -84,6 +84,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
+        ref: ${{ github.event.pull_request.head.sha }}
         submodules: true
         fetch-depth: 1
 
@@ -207,8 +208,7 @@ jobs:
     - name: Preview on Cloudflare
       id: preview
       uses: cloudflare/pages-action@v1
-      # CAUTION: If you want to preview the changed docs, you may want to submit PR from the main repo.
-      if: ${{ steps.changes.outputs.docs && github.event.pull_request.head.repo.name == github.repository }} 
+      if: ${{ steps.changes.outputs.docs }} 
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
