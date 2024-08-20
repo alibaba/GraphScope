@@ -16,7 +16,6 @@
 #include "grape/util.h"
 
 #include <boost/program_options.hpp>
-#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -24,7 +23,6 @@
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
 
 namespace bpo = boost::program_options;
-using namespace std::chrono_literals;
 
 std::string read_pb(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
@@ -85,7 +83,9 @@ int main(int argc, char** argv) {
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "query-file,q", bpo::value<std::string>(), "query file")(
-      "params_file,p", bpo::value<std::string>(), "params file");
+      "params_file,p", bpo::value<std::string>(), "params file")(
+      "query-num,n", bpo::value<int>()->default_value(0))(
+      "output-file,o", bpo::value<std::string>(), "output file");
 
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
@@ -107,6 +107,8 @@ int main(int argc, char** argv) {
 
   std::string graph_schema_path = "";
   std::string data_path = "";
+  std::string output_path = "";
+  int query_num = vm["query-num"].as<int>();
 
   if (!vm.count("graph-config")) {
     LOG(ERROR) << "graph-config is required";
@@ -118,6 +120,9 @@ int main(int argc, char** argv) {
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
+  if (vm.count("output-file")) {
+    output_path = vm["output-file"].as<std::string>();
+  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -140,23 +145,63 @@ int main(int argc, char** argv) {
   auto txn = db.GetReadTransaction();
   std::vector<std::map<std::string, std::string>> map;
   load_params(vm["params_file"].as<std::string>(), map);
+  size_t params_num = map.size();
+
   physical::PhysicalPlan pb;
   pb.ParseFromString(query);
-  size_t count{0};
-  std::vector<char> buffer;
-  gs::Encoder output(buffer);
-  int num = 0;
-  for (auto& m : map) {
-    auto start = std::chrono::high_resolution_clock::now();
-    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
-    output.clear();
-    gs::runtime::eval_sink(ctx, txn, output);
-    auto end = std::chrono::high_resolution_clock::now();
-    count += std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-                 .count();
-    num++;
-  }
-  LOG(INFO) << "Avg time: " << count / num << " microseconds";
 
-  // std::cout << timer.get_time() / 1us << " microseconds\n";
+  if (query_num == 0) {
+    query_num = params_num;
+  }
+  std::vector<std::vector<char>> outputs(query_num);
+
+  double t1 = -grape::GetCurrentTime();
+  for (int i = 0; i < query_num; ++i) {
+    auto& m = map[i % params_num];
+    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    gs::Encoder output(outputs[i]);
+    gs::runtime::eval_sink(ctx, txn, output);
+  }
+  t1 += grape::GetCurrentTime();
+
+  double t2 = -grape::GetCurrentTime();
+  for (int i = 0; i < query_num; ++i) {
+    auto& m = map[i % params_num];
+    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    outputs[i].clear();
+    gs::Encoder output(outputs[i]);
+    gs::runtime::eval_sink(ctx, txn, output);
+  }
+  t2 += grape::GetCurrentTime();
+
+  double t3 = -grape::GetCurrentTime();
+  for (int i = 0; i < query_num; ++i) {
+    auto& m = map[i % params_num];
+    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    outputs[i].clear();
+    gs::Encoder output(outputs[i]);
+    gs::runtime::eval_sink(ctx, txn, output);
+  }
+  t3 += grape::GetCurrentTime();
+
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t1
+            << " s, avg " << t1 / static_cast<double>(query_num) * 1000000
+            << " us";
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t2
+            << " s, avg " << t2 / static_cast<double>(query_num) * 1000000
+            << " us";
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t3
+            << " s, avg " << t3 / static_cast<double>(query_num) * 1000000
+            << " us";
+
+  if (!output_path.empty()) {
+    FILE* fout = fopen(output_path.c_str(), "a");
+    for (auto& output : outputs) {
+      fwrite(output.data(), sizeof(char), output.size(), fout);
+    }
+    fflush(fout);
+    fclose(fout);
+  }
+
+  return 0;
 }

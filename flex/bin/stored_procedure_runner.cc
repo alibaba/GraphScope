@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
       "stored-procedure-lib,l", bpo::value<std::string>(),
       "stored procedure library path")(
       "query-file,q", bpo::value<std::string>(), "query parameters file")(
-      "query-num,n", bpo::value<int>()->default_value(1))(
+      "query-num,n", bpo::value<int>()->default_value(0))(
       "output-file,o", bpo::value<std::string>(), "output file");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
   std::string data_path = "";
   std::string plugin_path = "";
   std::string query_file_path = "";
+  std::string output_path = "";
   int query_num = vm["query-num"].as<int>();
 
   if (!vm.count("graph-config")) {
@@ -122,6 +123,9 @@ int main(int argc, char** argv) {
     return -1;
   }
   query_file_path = vm["query-file"].as<std::string>();
+  if (vm.count("output-file")) {
+    output_path = vm["output-file"].as<std::string>();
+  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -151,6 +155,9 @@ int main(int argc, char** argv) {
   auto parameters = parse_query_file(query_file_path);
 
   auto& session = db.GetSession(0);
+  if (query_num == 0) {
+    query_num = parameters.size();
+  }
   std::vector<std::vector<char>> outputs(query_num);
 
   double t1 = -grape::GetCurrentTime();
@@ -162,7 +169,44 @@ int main(int argc, char** argv) {
   }
   t1 += grape::GetCurrentTime();
 
-  LOG(INFO) << "Finished run queries, elapsed " << t1 << " s";
+  double t2 = -grape::GetCurrentTime();
+  for (int i = 0; i < query_num; ++i) {
+    auto& parameter = parameters[i % parameters.size()];
+    gs::Decoder input(parameter.data(), parameter.size());
+    outputs[i].clear();
+    gs::Encoder output(outputs[i]);
+    app->run(session, input, output);
+  }
+  t2 += grape::GetCurrentTime();
+
+  double t3 = -grape::GetCurrentTime();
+  for (int i = 0; i < query_num; ++i) {
+    auto& parameter = parameters[i % parameters.size()];
+    gs::Decoder input(parameter.data(), parameter.size());
+    outputs[i].clear();
+    gs::Encoder output(outputs[i]);
+    app->run(session, input, output);
+  }
+  t3 += grape::GetCurrentTime();
+
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t1
+            << " s, avg " << t1 / static_cast<double>(query_num) * 1000000
+            << " us";
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t2
+            << " s, avg " << t2 / static_cast<double>(query_num) * 1000000
+            << " us";
+  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t3
+            << " s, avg " << t3 / static_cast<double>(query_num) * 1000000
+            << " us";
+
+  if (!output_path.empty()) {
+    FILE* fout = fopen(output_path.c_str(), "a");
+    for (auto& output : outputs) {
+      fwrite(output.data(), sizeof(char), output.size(), fout);
+    }
+    fflush(fout);
+    fclose(fout);
+  }
 
   return 0;
 }
