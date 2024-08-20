@@ -175,7 +175,7 @@ Triangle Pattern Profiling Results
 Pattern with Type Error Profiling Results
 :::
 
-1. **Graph Pattern Matching**: Find all square patterns.
+2. **Graph Pattern Matching**: Find all square patterns.
    ```bash
    Profile Match (a)-[]->(b), (a)-[]->(c), (d)-[]->(b), (d)-[]->(c)
    Where a<>d AND b<>c
