@@ -613,7 +613,7 @@ seastar::future<admin_query_result> admin_actor::run_graph_loading(
             gs::StatusCode::InvalidImportFile, "Fail to parse json: ")));
   }
 
-  int32_t loading_thread_num = 32;
+  int32_t loading_thread_num = 16;
   if (yaml["loading_thread_num"]) {
     loading_thread_num = yaml["loading_thread_num"].as<int32_t>();
   }

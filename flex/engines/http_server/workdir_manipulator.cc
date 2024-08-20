@@ -772,7 +772,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
   ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(graph_loader_bin, GetGraphLoaderBin());
   ss << graph_loader_bin << " -g " << schema_file << " -l " << config_file_path
      << " -d " << dst_indices_dir << " -p "
-     << std::to_string(loading_thread_num) << " --build-csr-in-mem=true";
+     << std::to_string(loading_thread_num);
   auto cmd_string = ss.str();
   VLOG(10) << "Call graph_loader: " << cmd_string;
 
