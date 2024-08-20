@@ -222,7 +222,7 @@ Square Pattern with Filtering Profiling Results
    alt="st_path_profile"
    width="80%">
 
-ST Path Pattern Profiling Results
+ST-Path Pattern Profiling Results
 :::
 
 ### Installation
@@ -342,7 +342,7 @@ To address this issue, GOpt is designed as follows:
    alt="design_of_gopt"
    width="80%">
 
-Register Configuration Into GOpt
+Design of GOpt
 :::
 
 ### Detailed Introduction
