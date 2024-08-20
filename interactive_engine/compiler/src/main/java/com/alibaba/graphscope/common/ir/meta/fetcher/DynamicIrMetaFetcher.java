@@ -120,7 +120,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
         try {
             if (this.currentState != null && statsEnabled) {
                 GraphStatistics stats = this.reader.readStats(this.currentState.getGraphId());
-                logger.debug("statistics from remote: {}", stats);
+                logger.info("statistics from remote: {}", stats);
                 if (stats != null && stats.getVertexCount() != 0) {
                     this.currentState =
                             new IrMetaStats(
@@ -129,7 +129,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                                     this.currentState.getStoredProcedures(),
                                     stats);
                     if (tracker != null) {
-                        logger.debug("start to update the glogue");
+                        logger.info("start to update the glogue");
                         tracker.onChanged(this.currentState);
                     }
                     this.statsState = StatsState.SYNCED;
@@ -142,7 +142,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 if (this.currentState != null
                         && tracker != null
                         && this.statsState == StatsState.INITIALIZED) {
-                    logger.debug("start to mock the glogue");
+                    logger.info("start to mock the glogue");
                     tracker.onChanged(this.currentState);
                     this.statsState = StatsState.MOCKED;
                 }
