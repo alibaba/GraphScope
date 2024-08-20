@@ -6,7 +6,7 @@ ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
 ARG ENABLE_COORDINATOR="false"
-ARG OPTIMIZED_FOR_HOST=OFF
+ARG OPTIMIZE_FOR_HOST=OFF
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
@@ -40,7 +40,7 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZED_FOR_HOST} && make -j && make install && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \

@@ -22,7 +22,7 @@ CI ?= false
 # Flex Coordinator
 ENABLE_COORDINATOR ?= false
 # Flex Interactive: controls whether optimize for host, should be enabled when building images
-OPTIMIZED_FOR_HOST:= OFF
+OPTIMIZE_FOR_HOST:= OFF
 
 BUILD_PROGRESS  	?= auto
 
@@ -169,7 +169,7 @@ flex-interactive:
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg PLATFORM=${PLATFORM} \
 		--build-arg ARCH=${ARCH} \
-		--build-arg OPTIMIZED_FOR_HOST=${OPTIMIZED_FOR_HOST} \
+		--build-arg OPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} \
 		-t graphscope/interactive:${VERSION}  \
 		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile .
 
