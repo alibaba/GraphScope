@@ -65,7 +65,11 @@ std::string GraphMeta::ToJson() const {
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
   if (!data_import_config.empty()) {
-    json["data_import_config"] = nlohmann::json::parse(data_import_config);
+    try {
+      json["data_import_config"] = nlohmann::json::parse(data_import_config);
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Invalid data_import_config: " << data_import_config;
+    }
   }
   json["schema"] = nlohmann::json::parse(schema);
   json["stored_procedures"] = nlohmann::json::array();

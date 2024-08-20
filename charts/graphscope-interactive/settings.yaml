@@ -1,5 +1,5 @@
 Kata: &kata
-  #hostNetwork: true
+  hostNetwork: true
   schedulerName: unified-batch-scheduler
   podAnnotations:
       alibabacloud.com/assign-in-virtual-node: odps-kata
@@ -78,4 +78,4 @@ frontend:
   <<: *nokata
 
 cronjob:
-  <<: *nokata
+  <<: *kata

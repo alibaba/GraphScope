@@ -38,6 +38,12 @@ from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
 
+import time
+import hmac
+import hashlib
+import base64
+import urllib.parse
+
 query = """
 SELECT  ds
             FROM    onecomp_risk.ads_fin_rsk_fe_ent_rel_data_version
@@ -67,6 +73,47 @@ o = ODPS(
 )
 script_directory = os.path.dirname(os.path.abspath(__file__))
 print("script directory", script_directory)
+
+uri = "https://oapi.dingtalk.com/robot/send?access_token="
+# read token from ${HOME}/.dingtalk_token
+token = ""
+with open(os.path.expanduser("~/.dingtalk_token"), "r") as f:
+    token = f.read().strip()
+if token == "":
+    raise Exception("token is empty")
+
+secret = ""
+with open(os.path.expanduser("~/.dingtalk_secret"), "r") as f:
+    secret = f.read().strip()
+if secret == "":
+    raise Exception("secret is empty")
+
+
+def get_full_uri():
+    timestamp = str(round(time.time() * 1000))
+    secret_enc = secret.encode("utf-8")
+    string_to_sign = "{}\n{}".format(timestamp, secret)
+    string_to_sign_enc = string_to_sign.encode("utf-8")
+    hmac_code = hmac.new(
+        secret_enc, string_to_sign_enc, digestmod=hashlib.sha256
+    ).digest()
+    sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+    print(timestamp)
+    print(sign)
+    return uri + token + "&timestamp=" + timestamp + "&sign=" + sign
+
+
+def report_message(message: str):
+    uri = get_full_uri()
+    print(uri)
+    real_msg = {"msgtype": "text", "text": {"content": message}}
+    print(real_msg)
+    import requests
+
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(uri, json=real_msg, headers=headers)
+    print(response.text)
+
 
 huoyan_graph = {
     "version": "v0.1",
@@ -270,7 +317,7 @@ huoyan_graph = {
 # }
 
 
-def create_graph(sess: Session, ds: str):
+def create_graph(sess: Session, ds: str, report_error: bool):
     # copied_huoyan_graph = huoyan_graph.copy()
     graph_name = f"onecompany_{ds}"
     create_graph_req = CreateGraphRequest(
@@ -426,7 +473,11 @@ def create_graph(sess: Session, ds: str):
     create_graph_res = sess.create_graph(create_graph_req)
     # CreateGraphRequest.from_dict(copied_huoyan_graph)
 
-    assert create_graph_res.is_ok()
+    if not create_graph_res.is_ok():
+        print("create graph failed: ", create_graph_res.get_status_message())
+        if report_error:
+            report_message(f"fail to create graph with ds {ds}")
+        raise Exception("fail to create graph")
     create_graph_resp = create_graph_res.get_value()
     print(
         f"create graph {create_graph_resp.graph_id} successfully with name graph_name"
@@ -434,7 +485,7 @@ def create_graph(sess: Session, ds: str):
     return create_graph_resp.graph_id
 
 
-def loading_graph(sess: Session, graph_id: str, ds: str):
+def loading_graph(sess: Session, graph_id: str, ds: str, report_error: bool):
     schema_mapping = SchemaMapping(
         loading_config=SchemaMappingLoadingConfig(
             data_source=SchemaMappingLoadingConfigDataSource(scheme="odps"),
@@ -594,7 +645,9 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
     resp = sess.bulk_loading(graph_id, schema_mapping)
     if not resp.is_ok():
         print("resp: ", resp.get_status_message())
-    assert resp.is_ok()
+        if report_error:
+            report_message(f"fail to create loading job with ds {ds}")
+        raise Exception("fail to create loading job")
     print(f"create loading job successfully: {resp.get_value().job_id}")
     return resp.get_value().job_id
 
@@ -602,7 +655,10 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
 def wait_job_finish(sess: Session, job_id: str):
     while True:
         resp = sess.get_job(job_id)
-        assert resp.is_ok()
+        if not resp.is_ok():
+            report_message(
+                f"when waiting job {job_id} status: {resp.get_value().status}"
+            )
         status = resp.get_value().status
         print("job status: ", status)
         if status == "SUCCESS":
@@ -615,7 +671,9 @@ def wait_job_finish(sess: Session, job_id: str):
     print("Finish loading graph: ", job_id)
 
 
-def create_procedure(sess: Session, graph_id: str, file_path: str, proc_name):
+def create_procedure(
+    sess: Session, graph_id: str, file_path: str, proc_name, report_error: bool
+):
     # read file into string
     with open(file_path, "r") as f:
         content = f.read()
@@ -626,35 +684,52 @@ def create_procedure(sess: Session, graph_id: str, file_path: str, proc_name):
         ),
     )
     print("create procedure result: ", resp)
-    assert resp.is_ok()
+    if not resp.is_ok():
+        if report_error:
+            report_message(f"fail to create procedure with name {proc_name}")
+        raise Exception("fail to create procedure")
 
 
 def restart_service(sess: Session, graph_id: str):
     resp = sess.start_service(
         start_service_request=StartServiceRequest(graph_id=graph_id)
     )
-    assert resp.is_ok()
+    if not resp.is_ok():
+        print("restart service failed: ", resp.get_status_message())
+        report_message(f"fail to restart service with graph_id {graph_id}")
     print("restart service successfully")
 
 
-def get_service_status(sess: Session):
+def get_service_status(sess: Session, report_error: bool):
     resp = sess.get_service_status()
-    assert resp.is_ok()
+    if not resp.is_ok():
+        print("get service status failed: ", resp.get_status_message())
+        if report_error:
+            report_message(f"fail to get service status")
+        raise Exception("fail to get service status")
     print("service status: ", resp.get_value())
     status = resp.get_value()
     print("service running is now running on graph", status.graph.id)
 
 
-def get_current_running_graph(sess: Session):
+def get_current_running_graph(sess: Session, report_error: bool):
     resp = sess.get_service_status()
-    assert resp.is_ok()
+    if not resp.is_ok():
+        print("get service status failed: ", resp.get_status_message())
+        if report_error:
+            report_message(f"fail to get service status")
+        raise Exception("fail to get service status")
     status = resp.get_value()
     return status.graph.id
 
 
-def list_graph(sess: Session):
+def list_graph(sess: Session, report_error: bool):
     resp = sess.list_graphs()
-    assert resp.is_ok()
+    if not resp.is_ok():
+        print("list graph failed: ", resp.get_status_message())
+        if report_error:
+            report_message(f"fail to list graph")
+        raise Exception("fail to list graph")
     res = resp.get_value()
     graph_id_arr = [graph.id for graph in res]
     print("list graph: ", graph_id_arr)
@@ -669,10 +744,16 @@ if __name__ == "__main__":
     parser.add_argument("--proc-name", type=str, default="huoyan")
     # parser.add_argument("--remove-old-graph", type=bool, default=True)
     parser.add_argument("--ds", type=str)
+    parser.add_argument("--validate-reporting", type=bool, default=False)
+    parser.add_argument("--report-error", type=bool, default=False)
 
     # finish
     args = parser.parse_args()
     print(args)
+    if args.validate_reporting:
+        report_message("Testing message")
+        sys.exit(0)
+
     print("connecting to ", args.endpoint)
     if args.ds is None:
         # get the date string of yesterday, yyyymmdd
@@ -686,22 +767,27 @@ if __name__ == "__main__":
     else:
         ds = args.ds
     print("ds: ", ds)
+
+    report_error = args.report_error
+
     driver = Driver(args.endpoint)
     sess = driver.session()
     # get current running graph
-    old_graph = get_current_running_graph(sess)
+    old_graph = get_current_running_graph(sess, report_error)
     print("-----------------Finish getting current running graph-----------------")
     print("old graph: ", old_graph)
 
-    graph_id = create_graph(sess, ds)
+    graph_id = create_graph(sess, ds, report_error)
     print("-----------------Finish creating graph-----------------")
     print("graph_id: ", graph_id)
 
-    job_id = loading_graph(sess, graph_id, ds)
+    job_id = loading_graph(sess, graph_id, ds, report_error)
     wait_job_finish(sess, job_id)
     print("-----------------Finish loading graph-----------------")
 
-    create_procedure(sess, graph_id, script_directory + "/procedure.cc", args.proc_name)
+    create_procedure(
+        sess, graph_id, script_directory + "/procedure.cc", args.proc_name, report_error
+    )
     print("-----------------Finish creating procedure-----------------")
 
     #    start_time = time.time()
@@ -711,7 +797,7 @@ if __name__ == "__main__":
     #    print("-----------------Finish restarting service-----------------")
     #    print(f"restart service cost {execution_time:.6f}seconds")
 
-    get_service_status(sess)
+    get_service_status(sess, report_error)
     print("-----------------Finish getting service status-----------------")
 
     # if args.remove_old_graph:
@@ -721,4 +807,6 @@ if __name__ == "__main__":
     # else:
     #     print("keep old graph", old_graph)
 
-    list_graph(sess)
+    list_graph(sess, report_error)
+
+    report_message(f"Bulk loading graph with date {ds} finished successfully")
