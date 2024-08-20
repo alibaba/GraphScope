@@ -9,15 +9,15 @@ GOpt is a graph-native query optimizer designed to accelerate query execution. I
 3. **Graph-Native Algorithms**: Implements novel and efficient algorithms for complex graph pattern matching queries.
 4. **Lightweight, Serverless Integration**: Seamlessly integrates with databases of various storage formats.
 
-<div align="center">
+<!-- <div align="center"> -->
    <img src="../images/gopt/system_overview.png"
      alt="gopt-system-overview"
      width="80%">
    <br/>
-   <font>GOpt System Overview</font>
+   <!-- <font>GOpt System Overview</font>
    <br/>
    <br/>
-</div>
+</div> -->
 
 ### Why GOpt
 
