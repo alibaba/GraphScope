@@ -217,7 +217,8 @@ struct ResultsCreator {
       double weight, int64_t rel_type, const std::string_view& rel_info) const {
     nlohmann::json properties;
     properties["label"] = rel_type_to_string(rel_type);
-    properties["weight"] = weight;
+    properties["weight"] =
+        weight == std::numeric_limits<double>::max() ? "" : weight;
     properties["rel_info"] = rel_info;
     return properties;
   }
