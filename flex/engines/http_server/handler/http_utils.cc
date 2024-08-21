@@ -21,7 +21,20 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> new_bad_request_reply(
     std::unique_ptr<seastar::httpd::reply> rep, const std::string& msg) {
   rep->set_status(seastar::httpd::reply::status_type::bad_request);
   rep->set_content_type("application/json");
+  gs::Status status = gs::Status(gs::StatusCode::BAD_REQUEST, msg);
   rep->write_body("json", seastar::sstring(msg));
+  rep->done();
+  return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+      std::move(rep));
+}
+
+seastar::future<std::unique_ptr<seastar::httpd::reply>>
+new_internal_error_reply(std::unique_ptr<seastar::httpd::reply> rep,
+                         const std::string& msg) {
+  rep->set_status(seastar::httpd::reply::status_type::bad_request);
+  rep->set_content_type("application/json");
+  gs::Status status = gs::Status(gs::StatusCode::INTERNAL_ERROR, msg);
+  rep->write_body("json", seastar::sstring(status.ToString()));
   rep->done();
   return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
       std::move(rep));
