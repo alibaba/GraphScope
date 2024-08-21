@@ -65,7 +65,7 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
     case ::common::DataType::DATE32:
       return RTAnyType::kDate32;
     case ::common::DataType::STRING_ARRAY:
-      return RTAnyType::kStringSetValue;
+      return RTAnyType::kList;
     case ::common::DataType::TIMESTAMP:
       return RTAnyType::kDate32;
     case ::common::DataType::DOUBLE:
@@ -175,6 +175,8 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
     value_.f64_val = rhs.value_.f64_val;
   } else if (type_ == RTAnyType::kMap) {
     value_.map = rhs.value_.map;
+  } else if (type_ == RTAnyType::kEdge) {
+    value_.edge = rhs.value_.edge;
   } else {
     LOG(FATAL) << "unexpected type: " << static_cast<int>(type_.type_enum_);
   }
@@ -488,37 +490,39 @@ bool RTAny::operator==(const RTAny& other) const {
 }
 
 RTAny RTAny::operator+(const RTAny& other) const {
-  // CHECK(type_ == other.type_);
-  if (type_ == RTAnyType::kI64Value) {
-    return RTAny::from_int64(value_.i64_val + other.value_.i64_val);
-  }
-
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val + other.value_.i32_val);
   } else if (type_ == RTAnyType::kI32Value &&
              other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l + other.value_.i64_val);
-  } else if (type_ == RTAnyType::kF64Value) {
+  }
+  if (type_ == RTAnyType::kF64Value) {
     return RTAny::from_double(value_.f64_val + other.value_.f64_val);
+  } else if (type_ == RTAnyType::kI64Value) {
+    return RTAny::from_int64(value_.i64_val + other.value_.i64_val);
+  } else if (type_ == RTAnyType::kI32Value) {
+    return RTAny::from_int32(value_.i32_val + other.value_.i32_val);
   }
 
-  LOG(FATAL) << "not support";
+  LOG(FATAL) << "not support" << static_cast<int>(type_.type_enum_);
   return RTAny();
 }
 
 RTAny RTAny::operator-(const RTAny& other) const {
   // CHECK(type_ == other.type_);
-  if (type_ == RTAnyType::kI64Value) {
-    return RTAny::from_int64(value_.i64_val - other.value_.i64_val);
-  }
 
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val - other.value_.i32_val);
   } else if (type_ == RTAnyType::kI32Value &&
              other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l - other.value_.i64_val);
-  } else if (type_ == RTAnyType::kF64Value) {
+  }
+  if (type_ == RTAnyType::kF64Value) {
     return RTAny::from_double(value_.f64_val - other.value_.f64_val);
+  } else if (type_ == RTAnyType::kI64Value) {
+    return RTAny::from_int64(value_.i64_val - other.value_.i64_val);
+  } else if (type_ == RTAnyType::kI32Value) {
+    return RTAny::from_int32(value_.i32_val - other.value_.i32_val);
   }
   LOG(FATAL) << "not support";
   return RTAny();
@@ -526,15 +530,20 @@ RTAny RTAny::operator-(const RTAny& other) const {
 
 RTAny RTAny::operator/(const RTAny& other) const {
   // CHECK(type_ == other.type_);
-  if (type_ == RTAnyType::kI64Value) {
-    return RTAny::from_int64(value_.i64_val / other.value_.i64_val);
-  }
 
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val / other.value_.i32_val);
   } else if (type_ == RTAnyType::kI32Value &&
              other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l / other.value_.i64_val);
+  }
+
+  if (type_ == RTAnyType::kI64Value) {
+    return RTAny::from_int64(value_.i64_val / other.value_.i64_val);
+  } else if (type_ == RTAnyType::kF64Value) {
+    return RTAny::from_double(value_.f64_val / other.value_.f64_val);
+  } else if (type_ == RTAnyType::kI32Value) {
+    return RTAny::from_int32(value_.i32_val / other.value_.i32_val);
   }
   LOG(FATAL) << "not support";
   return RTAny();
@@ -557,6 +566,12 @@ void RTAny::sink_impl(common::Value* value) const {
     value->set_f64(value_.f64_val);
   } else if (type_ == RTAnyType::kList) {
     LOG(FATAL) << "not support list sink";
+  } else if (type_ == RTAnyType::kTuple) {
+    auto tup = value_.t;
+    for (size_t i = 0; i < value_.t.size(); ++i) {
+      std::string s = tup.get(i).to_string();
+      value->mutable_str_array()->add_item(s.data(), s.size());
+    }
   } else {
     LOG(FATAL) << "not implemented for " << static_cast<int>(type_.type_enum_);
   }

@@ -59,9 +59,6 @@ class GeneralComparer {
 
 Context eval_order_by(const algebra::OrderBy& opr, const ReadTransaction& txn,
                       Context&& ctx) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   int lower = 0;
   int upper = std::numeric_limits<int>::max();
   if (opr.has_limit()) {
