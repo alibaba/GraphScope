@@ -142,6 +142,8 @@ class GetV {
       auto labels =
           extract_labels(input_edge_list.get_labels(), params.tables, opt);
       if (labels.size() == 0) {
+        MLVertexColumnBuilder builder;
+        ctx.set_with_reshuffle(params.alias, builder.finish(), {});
         return ctx;
       }
       if (labels.size() > 1) {

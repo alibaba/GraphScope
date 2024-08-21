@@ -42,9 +42,6 @@ VOpt parse_opt(const physical::GetV_VOpt& opt) {
 Context eval_get_v(const physical::GetV& opr, const ReadTransaction& txn,
                    Context&& ctx,
                    const std::map<std::string, std::string>& params) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   int tag = -1;
   if (opr.has_tag()) {
     tag = opr.tag().value();
