@@ -192,6 +192,10 @@ Result<std::string> GraphDBOperations::GetEdge(
   result["edge_label"] = edge_label;
   result["src_primary_key_value"] = src_pk_value;
   result["dst_primary_key_value"] = dst_pk_value;
+  if (property_name.empty()) {
+    result["properties"] = nlohmann::json::array();
+    return Result<std::string>(result.dump());
+  }
   auto get_result = getEdge(std::move(edge_data), property_name, session);
   if (get_result.ok()) {
     result["properties"] = get_result.value();
@@ -249,12 +253,15 @@ EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
   edge.src_pk_value = Any(jsonToString(edge_json["src_primary_key_value"]));
   edge.dst_pk_value = Any(jsonToString(edge_json["dst_primary_key_value"]));
   // Check that all parameters in the parameter
-  if (edge_json["properties"].size() != 1) {
+  if (edge_json["properties"].size() > 1) {
     throw std::runtime_error(
         "size should be 1(only support single property edge)");
   }
-  edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
-  std::string property_name = edge_json["properties"][0]["name"];
+  std::string property_name = "";
+  if (edge_json["properties"].size() == 1) {
+    edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
+    property_name = edge_json["properties"][0]["name"];
+  }
   auto check_result = checkEdgeSchema(schema, edge, src_label, dst_label,
                                       edge_label, property_name);
   if (check_result.ok() == false) {
@@ -305,14 +312,17 @@ Status GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
     edge.src_label_id = schema.get_vertex_label_id(src_label);
     edge.dst_label_id = schema.get_vertex_label_id(dst_label);
     edge.edge_label_id = schema.get_edge_label_id(edge_label);
+    auto &result = schema.get_edge_property_names(edge.src_label_id, edge.dst_label_id,
+                                            edge.edge_label_id);
     if (is_get) {
-      property_name = schema.get_edge_property_names(
-          edge.src_label_id, edge.dst_label_id, edge.edge_label_id)[0];
+      if (result.size() >= 1) {
+        property_name = result[0];
+      } else {
+        property_name = "";
+      }                             
     } else {
       // update or add
-      if (property_name !=
-          schema.get_edge_property_names(edge.src_label_id, edge.dst_label_id,
-                                         edge.edge_label_id)[0]) {
+      if (property_name != (result.size() >= 1 ? result[0] : "")) {
         throw std::runtime_error("property name not match");
       }
       PropertyType colType = schema.get_edge_property(
