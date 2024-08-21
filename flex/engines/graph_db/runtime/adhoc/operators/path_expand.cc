@@ -26,9 +26,6 @@ Context eval_path_expand_v(const physical::PathExpand& opr,
                            const std::map<std::string, std::string>& params,
                            const physical::PhysicalOpr_MetaData& meta,
                            int alias) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   CHECK(opr.has_start_tag());
   int start_tag = opr.start_tag().value();
   CHECK(opr.path_opt() ==
