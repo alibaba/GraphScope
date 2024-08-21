@@ -141,9 +141,7 @@ _install_apache_arrow_ubuntu() {
       -P /tmp/
     ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
     ${SUDO} apt-get update -y
-    ${SUDO} apt-get install -y libarrow-dev=15.0.2-1 libarrow-dataset-dev=15.0.2-1 libarrow-acero-dev=15.0.2-1 libparquet-dev=15.0.2-1
-    #TODO(zhanglei): Remove the arrow version constrait after new version of vineyard is release. see https://github.com/v6d-io/v6d/pull/1911 and https://github.com/apache/incubator-graphar/issues/515
-    #${SUDO} apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev
+    ${SUDO} apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev
     rm /tmp/apache-arrow-apt-source-latest-*.deb
   else
     log "apache-arrow (libarrow-dev) already installed, skip."
