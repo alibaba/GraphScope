@@ -487,6 +487,8 @@ std::shared_ptr<IContextColumn> apply_reduce(
       return tuple_to_list(var, to_aggregate);
     } else if (var.type() == RTAnyType::kStringValue) {
       return string_to_list(var, to_aggregate);
+    } else {
+      LOG(FATAL) << "not support" << static_cast<int>(var.type().type_enum_);
     }
   } else if (func.aggregate == AggrKind::kAvg) {
     if (func.vars.size() != 1) {
@@ -517,9 +519,6 @@ std::shared_ptr<IContextColumn> apply_reduce(
 
 Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
                       Context&& ctx) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   std::vector<AggFunc> functions;
   std::vector<AggKey> mappings;
   int func_num = opr.functions_size();

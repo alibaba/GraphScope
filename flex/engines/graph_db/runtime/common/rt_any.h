@@ -456,7 +456,6 @@ class ListImpl : ListImplBase {
   std::vector<T> list_;
   std::vector<bool> is_valid_;
 };
-
 template <>
 class ListImpl<std::string_view> : public ListImplBase {
  public:
@@ -504,7 +503,6 @@ class ListImpl<std::string_view> : public ListImplBase {
   std::vector<std::string> list_;
   std::vector<bool> is_valid_;
 };
-
 }  // namespace runtime
 
 }  // namespace gs

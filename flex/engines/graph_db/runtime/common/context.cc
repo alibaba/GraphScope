@@ -149,7 +149,6 @@ void Context::reshuffle(const std::vector<size_t>& offsets) {
 
 std::shared_ptr<IContextColumn> Context::get(int alias) {
   if (alias == -1) {
-    assert(head != nullptr);
     return head;
   }
   assert(static_cast<size_t>(alias) < columns.size());
