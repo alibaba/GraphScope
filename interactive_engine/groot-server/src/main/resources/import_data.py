@@ -86,6 +86,45 @@ def create_crew_graph_schema(graph):
     ).add_property("skill", "int")
     schema.update()
 
+def create_ldbc_graph_schema(graph):
+    schema = graph.schema()
+    schema.add_vertex_label('PLACE').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str').add_property('type', 'str')
+    schema.add_vertex_label('PERSON').add_primary_key('id', 'long').add_property('firstName', 'str').add_property('lastName', 'str').add_property('gender', 'str').add_property('birthday', 'long').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('language', 'str').add_property('email', 'str')
+    schema.add_vertex_label('COMMENT').add_primary_key('id', 'long').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('content', 'str').add_property('length','int')
+    schema.add_vertex_label('POST').add_primary_key('id', 'long').add_property('imageFile', 'str').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('language', 'str').add_property('content', 'str').add_property('length', 'int')
+    schema.add_vertex_label('FORUM').add_primary_key('id', 'long').add_property('title', 'str').add_property('creationDate', 'str')
+    schema.add_vertex_label('ORGANISATION').add_primary_key('id', 'long').add_property('type', 'str').add_property('name', 'str').add_property('url', 'str')
+    schema.add_vertex_label('TAGCLASS').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str')
+    schema.add_vertex_label('TAG').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str')
+    schema.add_edge_label('HASCREATOR').source('COMMENT').destination('PERSON').source('POST').destination('PERSON')
+    schema.add_edge_label('HASTAG').source('COMMENT').destination('TAG').source('POST').destination('TAG').source('FORUM').destination('TAG')
+    schema.add_edge_label('ISLOCATEDIN').source('COMMENT').destination('PLACE').source('POST').destination('PLACE').source('PERSON').destination('PLACE').source('ORGANISATION').destination('PLACE')
+    schema.add_edge_label('REPLYOF').source('COMMENT').destination('COMMENT').source('COMMENT').destination('POST')
+    schema.add_edge_label('CONTAINEROF').source('FORUM').destination('POST')
+    schema.add_edge_label('HASMEMBER').source('FORUM').destination('PERSON').add_property('joinDate','long')
+    schema.add_edge_label('HASMODERATOR').source('FORUM').destination('PERSON')
+    schema.add_edge_label('HASINTEREST').source('PERSON').destination('TAG')
+    schema.add_edge_label('KNOWS').source('PERSON').destination('PERSON').add_property('creationDate','long')
+    schema.add_edge_label('LIKES').source('PERSON').destination('COMMENT').source('PERSON').destination('POST').add_property('creationDate','long')
+    schema.add_edge_label('STUDYAT').source('PERSON').destination('ORGANISATION').add_property('classYear','long')
+    schema.add_edge_label('WORKAT').source('PERSON').destination('ORGANISATION').add_property('workFrom','long')
+    schema.add_edge_label('ISPARTOF').source('PLACE').destination('PLACE')
+    schema.add_edge_label('ISSUBCLASSOF').source('TAGCLASS').destination('TAGCLASS')
+    schema.add_edge_label('HASTYPE').source('TAG').destination('TAGCLASS')
+    schema.update()
+
+def create_movie_graph_schema(graph):
+    schema = graph.schema()
+    schema.add_vertex_label('Movie').add_primary_key('id', 'long').add_property('released', 'int').add_property('tagline', 'str').add_property('title', 'str')
+    schema.add_vertex_label('Person').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
+    schema.add_vertex_label('User').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
+    schema.add_edge_label('ACTED_IN').source('Person').destination('Movie')
+    schema.add_edge_label('DIRECTED').source('Person').destination('Movie')
+    schema.add_edge_label('REVIEW').source('Person').destination('Movie').add_property('rating', 'int')
+    schema.add_edge_label('FOLLOWS').source('User').destination('Person')
+    schema.add_edge_label('WROTE').source('Person').destination('Movie')
+    schema.add_edge_label('PRODUCED').source('Person').destination('Movie')
+    schema.update()
 
 def load_data_of_modern_graph(conn, graph, prefix):
     person = pd.read_csv(os.path.join(prefix, "person.csv"), sep="|")
@@ -204,32 +243,17 @@ def load_data_of_crew_graph(conn, graph, prefix):
     assert conn.remote_flush(snapshot_id, timeout_ms=5000)
     print("load crew graph done")
 
-def create_ldbc_graph_schema(graph):
-    schema = graph.schema()
-    schema.add_vertex_label('PLACE').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str').add_property('type', 'str')
-    schema.add_vertex_label('PERSON').add_primary_key('id', 'long').add_property('firstName', 'str').add_property('lastName', 'str').add_property('gender', 'str').add_property('birthday', 'long').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('language', 'str').add_property('email', 'str')
-    schema.add_vertex_label('COMMENT').add_primary_key('id', 'long').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('content', 'str').add_property('length','int')
-    schema.add_vertex_label('POST').add_primary_key('id', 'long').add_property('imageFile', 'str').add_property('creationDate', 'long').add_property('locationIP', 'str').add_property('browserUsed', 'str').add_property('language', 'str').add_property('content', 'str').add_property('length', 'int')
-    schema.add_vertex_label('FORUM').add_primary_key('id', 'long').add_property('title', 'str').add_property('creationDate', 'str')
-    schema.add_vertex_label('ORGANISATION').add_primary_key('id', 'long').add_property('type', 'str').add_property('name', 'str').add_property('url', 'str')
-    schema.add_vertex_label('TAGCLASS').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str')
-    schema.add_vertex_label('TAG').add_primary_key('id', 'long').add_property('name', 'str').add_property('url', 'str')
-    schema.add_edge_label('HASCREATOR').source('COMMENT').destination('PERSON').source('POST').destination('PERSON')
-    schema.add_edge_label('HASTAG').source('COMMENT').destination('TAG').source('POST').destination('TAG').source('FORUM').destination('TAG')
-    schema.add_edge_label('ISLOCATEDIN').source('COMMENT').destination('PLACE').source('POST').destination('PLACE').source('PERSON').destination('PLACE').source('ORGANISATION').destination('PLACE')
-    schema.add_edge_label('REPLYOF').source('COMMENT').destination('COMMENT').source('COMMENT').destination('POST')
-    schema.add_edge_label('CONTAINEROF').source('FORUM').destination('POST')
-    schema.add_edge_label('HASMEMBER').source('FORUM').destination('PERSON').add_property('joinDate','long')
-    schema.add_edge_label('HASMODERATOR').source('FORUM').destination('PERSON')
-    schema.add_edge_label('HASINTEREST').source('PERSON').destination('TAG')
-    schema.add_edge_label('KNOWS').source('PERSON').destination('PERSON').add_property('creationDate','long')
-    schema.add_edge_label('LIKES').source('PERSON').destination('COMMENT').source('PERSON').destination('POST').add_property('creationDate','long')
-    schema.add_edge_label('STUDYAT').source('PERSON').destination('ORGANISATION').add_property('classYear','long')
-    schema.add_edge_label('WORKAT').source('PERSON').destination('ORGANISATION').add_property('workFrom','long')
-    schema.add_edge_label('ISPARTOF').source('PLACE').destination('PLACE')
-    schema.add_edge_label('ISSUBCLASSOF').source('TAGCLASS').destination('TAGCLASS')
-    schema.add_edge_label('HASTYPE').source('TAG').destination('TAGCLASS')
-    schema.update()
+def batch_insert_vertices(conn, graph, vertices, batch_size=10000):
+    for i in range(0, len(vertices), batch_size):
+        batch = vertices[i:i + batch_size]
+        snapshot_id = graph.insert_vertices(batch)
+        assert conn.remote_flush(snapshot_id, timeout_ms=5000)
+
+def batch_insert_edges(conn, graph, edges, batch_size=10000):
+    for i in range(0, len(edges), batch_size):
+        batch = edges[i:i + batch_size]
+        snapshot_id = graph.insert_edges(batch)
+        assert conn.remote_flush(snapshot_id, timeout_ms=5000)
 
 def load_data_of_ldbc_graph(conn, graph, prefix):
     place = pd.read_csv(os.path.join(prefix, "place_0_0.csv"), sep="|")
@@ -622,23 +646,10 @@ def load_data_of_ldbc_graph(conn, graph, prefix):
             for e in tag_hastype_tagclass.itertuples(index=False)
         ]
     )
-    snapshot_id = graph.insert_vertices(vertices)
-    snapshot_id = graph.insert_edges(edges)
-    assert conn.remote_flush(snapshot_id, timeout_ms=5000)
-    print("load ldbc graph done")
 
-def create_movie_graph_schema(graph):
-    schema = graph.schema()
-    schema.add_vertex_label('Movie').add_primary_key('id', 'long').add_property('released', 'str').add_property('tagline', 'str').add_property('title', 'str')
-    schema.add_vertex_label('Person').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
-    schema.add_vertex_label('User').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
-    schema.add_edge_label('ACTED_IN').source('Person').destination('Movie')
-    schema.add_edge_label('DIRECTED').source('Person').destination('Movie')
-    schema.add_edge_label('REVIEW').source('Person').destination('Movie').add_property('rating', 'int')
-    schema.add_edge_label('FOLLOWS').source('User').destination('Person')
-    schema.add_edge_label('WROTE').source('Person').destination('Movie')
-    schema.add_edge_label('PRODUCED').source('Person').destination('Movie')
-    schema.update()
+    batch_insert_vertices(conn, graph, vertices)
+    batch_insert_edges(conn, graph, edges)
+    print("load ldbc graph done")
 
 def load_data_of_movie_graph(conn, graph, prefix):
     movie = pd.read_csv(os.path.join(prefix, "Movie.csv"), sep="|")
@@ -646,7 +657,7 @@ def load_data_of_movie_graph(conn, graph, prefix):
     user = pd.read_csv(os.path.join(prefix, "User.csv"), sep="|")
     acted_in = pd.read_csv(os.path.join(prefix, "ACTED_IN.csv"), sep="|")
     directed = pd.read_csv(os.path.join(prefix, "DIRECTED.csv"), sep="|")
-    review = pd.read_csv(os.path.join(prefix, "REVIEW.csv"), sep="|")
+    review = pd.read_csv(os.path.join(prefix, "REVIEWED.csv"), sep="|")
     follows = pd.read_csv(os.path.join(prefix, "FOLLOWS.csv"), sep="|")
     wrote = pd.read_csv(os.path.join(prefix, "WROTE.csv"), sep="|")
     produced = pd.read_csv(os.path.join(prefix, "PRODUCED.csv"), sep="|")
