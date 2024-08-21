@@ -356,69 +356,69 @@ public class LdbcQueries {
         List<String> expected =
                 Arrays.asList(
                         "Record<{id: 13194139533482, firstName: \"Ana Paula\", lastName: \"Silva\","
-                            + " commentDate: 20120913024615078, commentId: 1099511667820, content:"
-                            + " \"About Heinz Guderian, aised and organized under his direction"
-                            + " About Malacca Sul\"}>",
+                                + " commentDate: 1347504375078, commentId: 1099511667820, content:"
+                                + " \"About Heinz Guderian, aised and organized under his direction"
+                                + " About Malacca Sul\"}>",
                         "Record<{id: 8796093022928, firstName: \"Hao\", lastName: \"Zhu\","
-                            + " commentDate: 20120909134103021, commentId: 1099511964827, content:"
+                            + " commentDate: 1347198063021, commentId: 1099511964827, content:"
                             + " \"About Nothing but the Beat, icki Minaj, Usher, Jennifer Hudson,"
                             + " Jessie J and Sia Furler\"}>",
                         "Record<{id: 10995116278796, firstName: \"Kenji\", lastName: \"Sakai\","
-                            + " commentDate: 20120909115826789, commentId: 1099511964825, content:"
+                            + " commentDate: 1347191906789, commentId: 1099511964825, content:"
                             + " \"About Humayun, to expand the Empire further, leaving a suAbout"
                             + " Philip K. Dick, r o\"}>",
                         "Record<{id: 30786325577752, firstName: \"Jie\", lastName: \"Yang\","
-                            + " commentDate: 20120909065507083, commentId: 1099511964826, content:"
-                            + " \"no\"}>",
+                                + " commentDate: 1347173707083, commentId: 1099511964826, content:"
+                                + " \"no\"}>",
                         "Record<{id: 24189255812755, firstName: \"Paulo\", lastName: \"Santos\","
-                            + " commentDate: 20120909051506094, commentId: 1099511964828, content:"
-                            + " \"good\"}>",
+                                + " commentDate: 1347167706094, commentId: 1099511964828, content:"
+                                + " \"good\"}>",
                         "Record<{id: 687, firstName: \"Deepak\", lastName: \"Singh\", commentDate:"
-                                + " 20120908105918087, commentId: 1030792351589, content: \"no"
+                                + " 1347101958087, commentId: 1030792351589, content: \"no"
                                 + " way!\"}>",
                         "Record<{id: 2199023256586, firstName: \"Alfonso\", lastName: \"Elizalde\","
-                            + " commentDate: 20120907145833508, commentId: 1030792488768, content:"
+                            + " commentDate: 1347029913508, commentId: 1030792488768, content:"
                             + " \"About Humayun, ial legacy for his son, Akbar. His peaceful About"
                             + " Busta Rhymes, sta Rhy\"}>",
                         "Record<{id: 30786325578896, firstName: \"Yang\", lastName: \"Li\","
-                            + " commentDate: 20120907141705148, commentId: 1030792488774, content:"
-                            + " \"roflol\"}>",
+                                + " commentDate: 1347027425148, commentId: 1030792488774, content:"
+                                + " \"roflol\"}>",
                         "Record<{id: 21990232555834, firstName: \"John\", lastName: \"Garcia\","
-                            + " commentDate: 20120907134041067, commentId: 1030792488763, content:"
-                            + " \"no way!\"}>",
+                                + " commentDate: 1347025241067, commentId: 1030792488763, content:"
+                                + " \"no way!\"}>",
                         "Record<{id: 13194139534578, firstName: \"Kunal\", lastName: \"Sharma\","
-                            + " commentDate: 20120907122417245, commentId: 1030792488765, content:"
-                            + " \"maybe\"}>",
+                                + " commentDate: 1347020657245, commentId: 1030792488765, content:"
+                                + " \"maybe\"}>",
                         "Record<{id: 15393162789932, firstName: \"Fali Sam\", lastName: \"Price\","
-                            + " commentDate: 20120907101759051, commentId: 1030792488767, content:"
-                            + " \"roflol\"}>",
+                                + " commentDate: 1347013079051, commentId: 1030792488767, content:"
+                                + " \"roflol\"}>",
                         "Record<{id: 30786325579189, firstName: \"Cheh\", lastName: \"Yang\","
-                            + " commentDate: 20120907052608122, commentId: 1030792488759, content:"
-                            + " \"yes\"}>",
+                                + " commentDate: 1346995568122, commentId: 1030792488759, content:"
+                                + " \"yes\"}>",
                         "Record<{id: 555, firstName: \"Chen\", lastName: \"Yang\", commentDate:"
-                            + " 20120907024704535, commentId: 1030792488769, content: \"About Skin"
-                            + " and Bones, Another Round, reprising the contribution he made to the"
+                            + " 1346986024535, commentId: 1030792488769, content: \"About Skin and"
+                            + " Bones, Another Round, reprising the contribution he made to the"
                             + " original a\"}>",
                         "Record<{id: 13194139534382, firstName: \"A.\", lastName: \"Budjana\","
-                            + " commentDate: 20120907024514312, commentId: 1030792488758, content:"
-                            + " \"duh\"}>",
+                                + " commentDate: 1346985914312, commentId: 1030792488758, content:"
+                                + " \"duh\"}>",
                         "Record<{id: 8796093022290, firstName: \"Alexei\", lastName: \"Codreanu\","
-                            + " commentDate: 20120906212321712, commentId: 1030792488760, content:"
-                            + " \"ok\"}>",
+                                + " commentDate: 1346966601712, commentId: 1030792488760, content:"
+                                + " \"ok\"}>",
                         "Record<{id: 21990232555958, firstName: \"Ernest B\", lastName:"
-                                + " \"Law-Yone\", commentDate: 20120906201808132, commentId:"
+                                + " \"Law-Yone\", commentDate: 1346962688132, commentId:"
                                 + " 1030792488766, content: \"great\"}>",
                         "Record<{id: 26388279067760, firstName: \"Max\", lastName: \"Bauer\","
-                            + " commentDate: 20120906175431955, commentId: 1030792488761, content:"
-                            + " \"thx\"}>",
+                                + " commentDate: 1346954071955, commentId: 1030792488761, content:"
+                                + " \"thx\"}>",
                         "Record<{id: 10995116278300, firstName: \"Jie\", lastName: \"Li\","
-                            + " commentDate: 20120906174021751, commentId: 1030792488762, content:"
-                            + " \"maybe\"}>",
+                                + " commentDate: 1346953221751, commentId: 1030792488762, content:"
+                                + " \"maybe\"}>",
                         "Record<{id: 10995116279093, firstName: \"Diem\", lastName: \"Nguyen\","
-                            + " commentDate: 20120906173946333, commentId: 1030792488764, content:"
-                            + " \"thanks\"}>",
+                                + " commentDate: 1346953186333, commentId: 1030792488764, content:"
+                                + " \"thanks\"}>",
                         "Record<{id: 26388279066662, firstName: \"Alfonso\", lastName:"
-                                + " \"Rodriguez\", commentDate: 20120906124058972, commentId:"
+                                + " \"Rodriguez\", commentDate: 1346935258972, commentId:"
                                 + " 1030792487632, content: \"good\"}>");
         return new QueryContext(query, expected);
     }
