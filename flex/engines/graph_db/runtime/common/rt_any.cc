@@ -175,6 +175,8 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
     value_.f64_val = rhs.value_.f64_val;
   } else if (type_ == RTAnyType::kMap) {
     value_.map = rhs.value_.map;
+  } else if (type_ == RTAnyType::kEdge) {
+    value_.edge = rhs.value_.edge;
   } else {
     LOG(FATAL) << "unexpected type: " << static_cast<int>(type_.type_enum_);
   }
