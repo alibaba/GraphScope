@@ -83,6 +83,14 @@ cd interactive_engine
 mvn clean package -DskipTests -Pexperimental
 ```
 
+### CMake options
+
+- `BUILD_TEST`: Indicates whether to build tests.  
+- `BUILD_DOC`: Indicates whether to build Flex documentation.  
+- `BUILD_ODPS_FRAGMENT_LOADER`: Enables support for loading graphs from ODPS tables.  
+- `USE_PTHASH`: Indicates whether to use a perfect hash when building the vertex map.  
+- `OPTIMIZE_FOR_HOST`: Determines if Flex should be optimized for performance on the current machine. Note that enabling this option may result in a binary that does not run on different platforms or CPU architectures.
+
 ## Testing
 
 Numerous test cases have been created for Interactive, which can be referenced in the GitHub workflow[interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml).
