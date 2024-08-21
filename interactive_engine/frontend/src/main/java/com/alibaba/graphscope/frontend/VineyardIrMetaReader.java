@@ -56,4 +56,9 @@ public class VineyardIrMetaReader implements IrMetaReader {
         throw new UnimplementedException(
                 "reading graph statistics in vineyard is unimplemented yet");
     }
+
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) throws IOException {
+        return false;
+    }
 }

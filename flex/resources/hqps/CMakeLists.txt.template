@@ -38,6 +38,10 @@ if(EXISTS "/opt/graphscope/include")
     include_directories("/opt/graphscope/include")
 endif()
 
+if (EXISTS "/opt/flex/include")
+    include_directories("/opt/flex/include")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O2 -flto -Werror=unused-result -fPIC -no-pie")
 

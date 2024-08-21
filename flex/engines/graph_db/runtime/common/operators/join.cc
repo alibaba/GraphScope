@@ -111,7 +111,7 @@ Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
   } else if (params.join_type == JoinKind::kLeftOuterJoin) {
     size_t right_size = ctx2.row_num();
     auto right_col = ctx2.get(params.right_columns[0]);
-    CHECK(right_col->column_type() == ContextColumnType::kVertex);
+    //    CHECK(right_col->column_type() == ContextColumnType::kVertex);
 
     std::map<std::string, std::vector<vid_t>> right_map;
     for (size_t r_i = 0; r_i < right_size; r_i++) {

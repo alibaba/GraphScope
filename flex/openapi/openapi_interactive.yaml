@@ -2014,6 +2014,8 @@ components:
       x-body-name: service_status
       type: object
       properties:
+        statistics_enabled: # indicate whether the graph statistics interface is enabled
+          type: boolean
         status:
           type: string
         graph:
