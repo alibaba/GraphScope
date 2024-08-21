@@ -22,23 +22,30 @@ namespace gs {
 namespace runtime {
 class BuildingContext {
  public:
-  BuildingContext() : ctx_id_(0), expr_id_(0) {}
+  BuildingContext(const std::string& prefix = "")
+      : ctx_id_(0), expr_id_(0), prefix_(prefix) {}
 
   std::pair<std::string, std::string> GetCurAndNextCtxName() {
     size_t cur_ctx_id = ctx_id_++;
-    return std::make_pair("ctx_" + std::to_string(cur_ctx_id),
-                          "ctx_" + std::to_string(ctx_id_));
+    return std::make_pair(prefix_ + "ctx_" + std::to_string(cur_ctx_id),
+                          prefix_ + "ctx_" + std::to_string(ctx_id_));
   }
 
   ContextColumnType get_column_type(int32_t idx) {
     return column_types_[idx + 1];
   }
 
-  std::string GetCurCtxName() { return "ctx_" + std::to_string(ctx_id_); }
+  std::string GetCurCtxName() {
+    return prefix_ + "ctx_" + std::to_string(ctx_id_);
+  }
 
-  std::string GetNextCtxName() { return "ctx_" + std::to_string(ctx_id_ + 1); }
+  std::string GetNextCtxName() {
+    return prefix_ + "ctx_" + std::to_string(ctx_id_ + 1);
+  }
 
-  std::string GetNextExprName() { return "expr_" + std::to_string(expr_id_++); }
+  std::string GetNextExprName() {
+    return prefix_ + "expr_" + std::to_string(expr_id_++);
+  }
 
   void set_alias(int32_t alias, ContextColumnType type, RTAnyType elem_type) {
     if (column_types_.size() <= static_cast<size_t>(alias + 1)) {
@@ -59,6 +66,7 @@ class BuildingContext {
  private:
   int32_t ctx_id_;
   int32_t expr_id_;
+  std::string prefix_;
   std::vector<ContextColumnType> column_types_;
   std::vector<RTAnyType> elem_types_;
 };

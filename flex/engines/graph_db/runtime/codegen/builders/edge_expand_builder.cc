@@ -51,7 +51,7 @@ class EdgeExpandBuilder {
       context_.set_alias(alias, ContextColumnType::kEdge, RTAnyType::kEdge);
       if (params.has_predicate()) {
         std::string ss;
-        auto [expr_name, expr_str] =
+        auto [expr_name, expr_str, type] =
             build_expr(context_, params.predicate(), VarType::kEdgeVar);
         auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();
         ss += expr_str;

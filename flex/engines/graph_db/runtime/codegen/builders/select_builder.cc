@@ -5,7 +5,7 @@ class SelectBuilder {
  public:
   SelectBuilder(BuildingContext& context) : context_(context) {};
   std::string Build(const algebra::Select& opr) {
-    auto [expr_name, expr_str] =
+    auto [expr_name, expr_str, type] =
         build_expr(context_, opr.predicate(), VarType::kPathVar);
     std::string ss;
     auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();

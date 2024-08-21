@@ -26,7 +26,8 @@ class GetVBuilder {
       get_v_params.tables = parse_tables(params);
       if (params.has_predicate()) {
         std::string ss{};
-        auto [expr_name, expr_str] = build_expr(context_, params.predicate());
+        auto [expr_name, expr_str, type] =
+            build_expr(context_, params.predicate());
         ss += expr_str;
         if (opt == VOpt::kItself) {
           auto [cur_ctx, nxt_ctx] = context_.GetCurAndNextCtxName();

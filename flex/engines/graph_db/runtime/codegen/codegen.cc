@@ -9,7 +9,7 @@ class Codegen {
  public:
   Codegen(const physical::PhysicalPlan& plan) : plan_(plan) {}
 
-  std::string Generate() {
+  std::pair<BuildingContext, std::string> Generate() {
     int opr_num = plan_.plan_size();
     std::string ss;
     BuildingContext context;
@@ -78,7 +78,7 @@ class Codegen {
       }
     }
 
-    return ss;
+    return std::make_pair(context, ss);
   }
   const physical::PhysicalPlan& plan_;
 };

@@ -56,6 +56,25 @@ void aggregate_value_impl(
 
 class GroupBy {
  public:
+  template <typename... Keys, typename... Aggs>
+  static Context group_by(Context&& ctx, const std::tuple<Keys...>& keys,
+                          const std::tuple<Aggs...>& func) {
+    size_t row_num = ctx.row_num();
+    std::vector<size_t> offsets;
+    std::set<std::tuple<std::decltype(std::declval<Keys>()(0))...>> values;
+    for (size_t i = 0; i < row_num; ++i) {
+      auto tuple = std::apply(
+          [i](auto... keys) { return std::make_tuple(keys(i)...); }, keys);
+      if (value.find(tuple) == values.end()) {
+        values.insert(tuple);
+        offsets.push_back(i);
+
+      } else {
+      }
+    }
+    ctx.reshuffle(offsets);
+    return ctx;
+  }
   template <typename... Args>
   static Context group_by(Context&& ctx, const std::vector<size_t>& keys,
                           const std::tuple<Args...>& funcs) {

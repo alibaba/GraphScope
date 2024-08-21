@@ -57,6 +57,13 @@ std::string build_order_by(BuildingContext& context,
                            const algebra::OrderBy& opr);
 
 std::string build_dedup(BuildingContext& context, const algebra::Dedup& opr);
+
+std::string build_join(BuildingContext& left_context,
+                       BuildingContext& right_context, BuildingContext& context,
+                       const physical::Join& opr);
+
+std::string build_group_by(BuildingContext& context,
+                           const physical::GroupBy& opr);
 }  // namespace runtime
 }  // namespace gs
 #endif  // RUNTIME_CODEGEN_BUILDERS_BUILDERS_H_

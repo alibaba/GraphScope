@@ -403,6 +403,52 @@ class ListImpl : ListImplBase {
   std::vector<bool> is_valid_;
 };
 
+template <>
+class ListImpl<std::string_view> : ListImplBase {
+ public:
+  ListImpl() = default;
+  static std::shared_ptr<ListImplBase> make_list_impl(
+      std::vector<std::string>&& vals) {
+    auto new_list = new ListImpl<std::string_view>();
+    new_list->list_ = std::move(vals);
+    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
+  }
+
+  static std::shared_ptr<ListImplBase> make_list_impl(
+      const std::vector<RTAny>& vals) {
+    auto new_list = new ListImpl<std::string_view>();
+    for (auto& val : vals) {
+      if (val.is_null()) {
+        new_list->is_valid_.push_back(false);
+        new_list->list_.push_back("");
+      } else {
+        new_list->list_.push_back(
+            std::string(TypedConverter<std::string_view>::to_typed(val)));
+        new_list->is_valid_.push_back(true);
+      }
+    }
+    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
+  }
+
+  bool operator<(const ListImplBase& p) const {
+    return list_ < (dynamic_cast<const ListImpl<std::string_view>&>(p)).list_;
+  }
+  bool operator==(const ListImplBase& p) const {
+    return list_ == (dynamic_cast<const ListImpl<std::string_view>&>(p)).list_;
+  }
+  size_t size() const { return list_.size(); }
+  RTAny get(size_t idx) const {
+    if (is_valid_[idx]) {
+      return TypedConverter<std::string_view>::from_typed(list_[idx]);
+    } else {
+      return RTAny(RTAnyType::kNull);
+    }
+  }
+
+  std::vector<std::string> list_;
+  std::vector<bool> is_valid_;
+};
+
 }  // namespace runtime
 
 }  // namespace gs

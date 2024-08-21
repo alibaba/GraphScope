@@ -157,8 +157,8 @@ class ScanBuilder {
     auto ctx_name = context_.GetCurCtxName();
 
     if (scan_opr_params.has_predicate()) {
-      auto [name, str] = build_expr(context_, scan_opr_params.predicate(),
-                                    VarType::kVertexVar);
+      auto [name, str, type] = build_expr(context_, scan_opr_params.predicate(),
+                                          VarType::kVertexVar);
       if (scan_opr.has_idx_predicate()) {
         const auto& idx_predicate = scan_opr.idx_predicate();
         std::vector<int64_t> oids;

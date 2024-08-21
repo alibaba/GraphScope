@@ -191,7 +191,7 @@ class ExprBuilder {
     return 16;
   }
   // expr name, expr string
-  std::pair<std::string, std::string> parse_expression_impl(
+  std::tuple<std::string, std::string, RTAnyType> parse_expression_impl(
       const common::Expression& expr) {
     std::stack<common::ExprOpr> opr_stack;
     std::stack<common::ExprOpr> opr_stack2;
@@ -249,7 +249,7 @@ class ExprBuilder {
     }
     std::string ss;
     auto [name, type] = buildExpression(opr_stack2, ss);
-    return {name, ss};
+    return {name, ss, type};
   }
 
   ExprBuilder& varType(VarType var_type) {
@@ -257,14 +257,14 @@ class ExprBuilder {
     return *this;
   }
 
-  std::pair<std::string, std::string> Build(const common::Expression& expr) {
+  std::tuple<std::string, std::string, RTAnyType> Build(const common::Expression& expr) {
     return parse_expression_impl(expr);
   }
   BuildingContext& context_;
   VarType var_type_;
 };
 // expr name, expr string
-std::pair<std::string, std::string> build_expr(
+std::tuple<std::string, std::string, RTAnyType> build_expr(
     BuildingContext& context, const common::Expression& expr,
     VarType var_type = VarType::kPathVar);
 
