@@ -158,7 +158,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
 
   bool scan_oid;
   if (is_find_vertex(scan_opr, params, label, vertex_id, alias, scan_oid)) {
-    return Scan::find_vertex(txn, label, vertex_id, alias, scan_oid);
+    return Scan::find_vertex_with_id(txn, label, vertex_id, alias, scan_oid);
   }
 
   const auto& opt = scan_opr.scan_opt();
@@ -183,15 +183,14 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
       CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
                                 scan_oid));
       if (scan_oid) {
-        return Scan::scan_vertex(
-            txn, scan_params, [&expr, &txn, oids](label_t label, vid_t vid) {
-              return std::find(oids.begin(), oids.end(),
-                               txn.GetVertexId(label, vid).AsInt64()) !=
-                         oids.end() &&
-                     expr->eval_vertex(label, vid, 0).as_bool();
-            });
+        return Scan::filter_oids(
+            txn, scan_params,
+            [&expr, &txn, oids](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0).as_bool();
+            },
+            oids);
       } else {
-        return Scan::scan_gid_vertex(
+        return Scan::filter_gids(
             txn, scan_params,
             [&expr, oids](label_t label, vid_t vid) {
               return expr->eval_vertex(label, vid, 0).as_bool();
@@ -206,14 +205,11 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                 scan_oid));
 
       if (scan_oid) {
-        return Scan::scan_vertex(
-            txn, scan_params, [&txn, oids](label_t label, vid_t vid) {
-              return std::find(oids.begin(), oids.end(),
-                               txn.GetVertexId(label, vid).AsInt64()) !=
-                     oids.end();
-            });
+        return Scan::filter_oids(
+            txn, scan_params,
+            [&txn, oids](label_t label, vid_t vid) { return true; }, oids);
       } else {
-        return Scan::scan_gid_vertex(
+        return Scan::filter_gids(
             txn, scan_params, [](label_t, vid_t) { return true; }, oids);
       }
     }
@@ -240,7 +236,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                [](label_t, vid_t) { return true; });
     }
   }
-  LOG(FATAL) << "AAAAA";
+  LOG(FATAL) << "not support";
   return Context();
 }
 
