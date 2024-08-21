@@ -64,6 +64,9 @@ std::string build_join(BuildingContext& left_context,
 
 std::string build_group_by(BuildingContext& context,
                            const physical::GroupBy& opr);
+
+std::string build_project(BuildingContext& context,
+                          const physical::Project& opr);
 }  // namespace runtime
 }  // namespace gs
 #endif  // RUNTIME_CODEGEN_BUILDERS_BUILDERS_H_

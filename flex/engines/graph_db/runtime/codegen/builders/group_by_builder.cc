@@ -77,6 +77,7 @@ class GroupByBuilder {
     ss += "auto " + nxt_ctx + " = GroupBy::group_by(std::move(" + cur_ctx +
           "), std::make_tuple(" + keys + "), std::make_tuple(" + func_str +
           "));\n";
+    return ss;
   }
 
  private:

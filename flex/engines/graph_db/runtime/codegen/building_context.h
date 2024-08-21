@@ -25,6 +25,23 @@ class BuildingContext {
   BuildingContext(const std::string& prefix = "")
       : ctx_id_(0), expr_id_(0), prefix_(prefix) {}
 
+  BuildingContext(const BuildingContext& other)
+      : ctx_id_(other.ctx_id_),
+        expr_id_(other.expr_id_),
+        prefix_(other.prefix_),
+        column_types_(other.column_types_),
+        elem_types_(other.elem_types_) {}
+  BuildingContext& operator=(const BuildingContext& other) {
+    if (this != &other) {
+      ctx_id_ = other.ctx_id_;
+      expr_id_ = other.expr_id_;
+      prefix_ = other.prefix_;
+      column_types_ = other.column_types_;
+      elem_types_ = other.elem_types_;
+    }
+    return *this;
+  }
+
   std::pair<std::string, std::string> GetCurAndNextCtxName() {
     size_t cur_ctx_id = ctx_id_++;
     return std::make_pair(prefix_ + "ctx_" + std::to_string(cur_ctx_id),
