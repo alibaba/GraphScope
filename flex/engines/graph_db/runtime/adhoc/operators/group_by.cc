@@ -390,6 +390,28 @@ std::shared_ptr<IContextColumn> tuple_to_list(
   return builder.finish();
 }
 
+std::shared_ptr<IContextColumn> string_to_list(
+    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+  ListValueColumnBuilder<std::string> builder;
+  size_t col_size = to_aggregate.size();
+  builder.reserve(col_size);
+  std::vector<std::shared_ptr<ListImplBase>> impls;
+  for (size_t k = 0; k < col_size; ++k) {
+    auto& vec = to_aggregate[k];
+
+    std::vector<std::string> elem;
+    for (auto idx : vec) {
+      elem.push_back(std::string(var.get(idx).as_string()));
+    }
+    auto impl = ListImpl<std::string_view>::make_list_impl(std::move(elem));
+    auto list = List::make_list(impl);
+    impls.emplace_back(impl);
+    builder.push_back_opt(list);
+  }
+  builder.set_list_impls(impls);
+  return builder.finish();
+}
+
 std::shared_ptr<IContextColumn> apply_reduce(
     const AggFunc& func, const std::vector<std::vector<size_t>>& to_aggregate) {
   if (func.aggregate == AggrKind::kSum) {
@@ -463,6 +485,10 @@ std::shared_ptr<IContextColumn> apply_reduce(
     }
     if (var.type() == RTAnyType::kTuple) {
       return tuple_to_list(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kStringValue) {
+      return string_to_list(var, to_aggregate);
+    } else {
+      LOG(FATAL) << "not support" << static_cast<int>(var.type().type_enum_);
     }
   } else if (func.aggregate == AggrKind::kAvg) {
     if (func.vars.size() != 1) {
