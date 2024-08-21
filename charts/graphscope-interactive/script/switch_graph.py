@@ -185,9 +185,11 @@ if __name__ == "__main__":
     if args.graph_id not in [None, ""]:
         graph_id = args.graph_id
     else:
-        # assume old_graph is a int in string, plus 1
-        print("using old graph id to generate new graph id")
-        graph_id = str(int(old_graph) + 1)
+        # try to update service to the latest graph
+        graph_ids = list_graph(sess)
+        # pick the largest graph_id
+        graph_id = max(graph_ids)
+        print("pick the largest graph_id: ", graph_id, "from", graph_ids)
     print("new graph: ", graph_id)
 
     # check if graph_id exists
