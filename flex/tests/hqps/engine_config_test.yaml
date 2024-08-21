@@ -1,5 +1,5 @@
 directories:
-  workspace: /tmp/interactive_workspace
+  workspace: /home/graphscope/zhanglei/interactive-workspace/
   subdirs:
     data: data
     logs: logs
@@ -37,7 +37,7 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: false
+      disabled: true
       port: 8182
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite

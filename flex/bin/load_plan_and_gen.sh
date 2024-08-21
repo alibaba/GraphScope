@@ -353,19 +353,19 @@ compile_hqps_so() {
 
   ################### now copy ##########################
   # if dst_so_path eq output_so_path, skip copying.
-  if [ ${dst_so_path} == ${output_so_path} ]; then
+  if [[ ${dst_so_path} == ${output_so_path} ]]; then
     info "Output dir is same as work dir, skip copying."
     exit 0
   fi
   # copy output to output_dir
-  if [ ! -z ${output_dir} ]; then
+  if [[ ! -z ${output_dir} ]]; then
     mkdir -p ${output_dir}
   else
     info "Output dir not set, skip copying."
     exit 0
   fi
   # check output_dir doesn't contains output_so_name
-  if [ -f ${dst_so_path} ]; then
+  if [[ -f ${dst_so_path} ]]; then
     emph "Output dir ${output_dir} already contains ${procedure_name}.so,overriding it."
   fi
   cp ${output_so_path} ${output_dir}
