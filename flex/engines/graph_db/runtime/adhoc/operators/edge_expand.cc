@@ -27,9 +27,6 @@ Context eval_edge_expand(const physical::EdgeExpand& opr,
                          const ReadTransaction& txn, Context&& ctx,
                          const std::map<std::string, std::string>& params,
                          const physical::PhysicalOpr_MetaData& meta) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
   int v_tag;
   if (!opr.has_v_tag()) {
     v_tag = -1;
