@@ -61,6 +61,7 @@ class ODPSReadClient {
  public:
   static constexpr const int CONNECTION_TIMEOUT = 5;
   static constexpr const int READ_WRITE_TIMEOUT = 10;
+  static constexpr const size_t MAX_RETRY = 10;
   ODPSReadClient();
 
   ~ODPSReadClient();
@@ -112,7 +113,6 @@ class ODPSReadClient {
   std::string output_directory_;
   std::shared_ptr<ArrowClient> arrow_client_ptr_;
   size_t MAX_PRODUCER_NUM = 8;
-  size_t MAX_RETRY = 5;
 };
 
 class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
