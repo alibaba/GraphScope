@@ -115,9 +115,9 @@ def create_ldbc_graph_schema(graph):
 
 def create_movie_graph_schema(graph):
     schema = graph.schema()
-    schema.add_vertex_label('Movie').add_primary_key('id', 'long').add_property('released', 'int').add_property('tagline', 'str').add_property('title', 'str')
-    schema.add_vertex_label('Person').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
-    schema.add_vertex_label('User').add_primary_key('id', 'long').add_property('born', 'int').add_property('name', 'str')
+    schema.add_vertex_label('Movie').add_primary_key('id', 'int').add_property('released', 'int').add_property('tagline', 'str').add_property('title', 'str')
+    schema.add_vertex_label('Person').add_primary_key('id', 'int').add_property('born', 'int').add_property('name', 'str')
+    schema.add_vertex_label('User').add_primary_key('id', 'int').add_property('born', 'int').add_property('name', 'str')
     schema.add_edge_label('ACTED_IN').source('Person').destination('Movie')
     schema.add_edge_label('DIRECTED').source('Person').destination('Movie')
     schema.add_edge_label('REVIEW').source('Person').destination('Movie').add_property('rating', 'int')
@@ -255,6 +255,29 @@ def batch_insert_edges(conn, graph, edges, batch_size=10000):
         snapshot_id = graph.insert_edges(batch)
         assert conn.remote_flush(snapshot_id, timeout_ms=5000)
 
+
+def prepare_vertices(vertices, data, vertex_type, properties):
+    vertices.extend(
+        [
+            [VertexRecordKey(vertex_type, {"id": v[0]}), {prop: v[i + 1] for i, prop in enumerate(properties)}]
+            for v in data.itertuples(index=False)
+        ]
+    )
+
+def prepare_edges(edges, data, edge_type, source_type, destination_type, properties):
+    edges.extend(
+        [
+            EdgeRecordKey(edge_type,
+                          VertexRecordKey(source_type, {"id": e[0]}),
+                          VertexRecordKey(destination_type, {"id": e[1]})),
+            {
+                prop: e[i+2] for i, prop in enumerate(properties)
+            }
+        ]
+        for e in data.itertuples(index=False)
+    )
+
+
 def load_data_of_ldbc_graph(conn, graph, prefix):
     place = pd.read_csv(os.path.join(prefix, "place_0_0.csv"), sep="|")
     person = pd.read_csv(os.path.join(prefix, "person_0_0.csv"), sep="|")
@@ -288,364 +311,38 @@ def load_data_of_ldbc_graph(conn, graph, prefix):
     tagclass_isSubclassOf_tagclass = pd.read_csv(os.path.join(prefix, "tagclass_isSubclassOf_tagclass_0_0.csv"), sep="|")
     tag_hastype_tagclass = pd.read_csv(os.path.join(prefix, "tag_hasType_tagclass_0_0.csv"), sep="|")
     vertices = []
-    vertices.extend(
-        [
-            [VertexRecordKey("PLACE", {"id": v[0]}), {"name": v[1], "url": v[2], "type": v[3]}]
-            for v in place.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("PERSON", {"id": v[0]}), {"firstName": v[1], "lastName": v[2], "gender": v[3], "birthday": v[4], "creationDate": v[5], "locationIP": v[6], "browserUsed": v[7], "language": v[8], "email": v[9]}]
-            for v in person.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("COMMENT", {"id": v[0]}), {"creationDate": v[1], "locationIP": v[2], "browserUsed": v[3], "content": v[4], "length": v[5]}]
-            for v in comment.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("POST", {"id": v[0]}), {"imageFile": v[1], "creationDate": v[2], "locationIP": v[3], "browserUsed": v[4], "language": v[5], "content": v[6], "length": v[7]}]
-            for v in post.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("FORUM", {"id": v[0]}), {"title": v[1], "creationDate": v[2]}]
-            for v in forum.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("ORGANISATION", {"id": v[0]}), {"type": v[1], "name": v[2], "url": v[3]}]
-            for v in organisation.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("TAGCLASS", {"id": v[0]}), {"name": v[1], "url": v[2]}]
-            for v in tagclass.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("TAG", {"id": v[0]}), {"name": v[1], "url": v[2]}]
-            for v in tag.itertuples(index=False)
-        ]
-    )
+    prepare_vertices(vertices, place, "PLACE", ["name", "url", "type"])
+    prepare_vertices(vertices, person, "PERSON", ["firstName", "lastName", "gender", "birthday", "creationDate", "locationIP", "browserUsed", "language", "email"])
+    prepare_vertices(vertices, comment, "COMMENT", ["creationDate", "locationIP", "browserUsed", "content", "length"])
+    prepare_vertices(vertices, post, "POST", ["imageFile", "creationDate", "locationIP", "browserUsed", "language", "content", "length"])
+    prepare_vertices(vertices, forum, "FORUM", ["title", "creationDate"])
+    prepare_vertices(vertices, organisation, "ORGANISATION", ["type", "name", "url"])
+    prepare_vertices(vertices, tagclass, "TAGCLASS", ["name", "url"])
+    prepare_vertices(vertices, tag, "TAG", ["name", "url"])
     edges = []
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASCREATOR",
-                    VertexRecordKey("COMMENT", {"id": e[0]}),
-                    VertexRecordKey("PERSON", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in comment_hascreator.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASCREATOR",
-                    VertexRecordKey("POST", {"id": e[0]}),
-                    VertexRecordKey("PERSON", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in post_hascreator.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASTAG",
-                    VertexRecordKey("COMMENT", {"id": e[0]}),
-                    VertexRecordKey("TAG", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in comment_hastag.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASTAG",
-                    VertexRecordKey("POST", {"id": e[0]}),
-                    VertexRecordKey("TAG", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in post_hastag.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASTAG",
-                    VertexRecordKey("FORUM", {"id": e[0]}),
-                    VertexRecordKey("TAG", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in forum_hastag.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISLOCATEDIN",
-                    VertexRecordKey("COMMENT", {"id": e[0]}),
-                    VertexRecordKey("PLACE", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in comment_islocatedin.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISLOCATEDIN",
-                    VertexRecordKey("POST", {"id": e[0]}),
-                    VertexRecordKey("PLACE", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in post_islocatedin.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISLOCATEDIN",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("PLACE", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in person_islocatedin.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISLOCATEDIN",
-                    VertexRecordKey("ORGANISATION", {"id": e[0]}),
-                    VertexRecordKey("PLACE", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in organisation_islocatedin.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "REPLYOF",
-                    VertexRecordKey("COMMENT", {"id": e[0]}),
-                    VertexRecordKey("COMMENT", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in comment_replyof_comment.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "REPLYOF",
-                    VertexRecordKey("COMMENT", {"id": e[0]}),
-                    VertexRecordKey("POST", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in comment_replyof_post.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "CONTAINEROF",
-                    VertexRecordKey("FORUM", {"id": e[0]}),
-                    VertexRecordKey("POST", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in forum_containerof_post.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASMEMBER",
-                    VertexRecordKey("FORUM", {"id": e[0]}),
-                    VertexRecordKey("PERSON", {"id": e[1]}),
-                ),
-                { "joinDate": e[2] }
-            ]
-            for e in forum_hasmember_person.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASMODERATOR",
-                    VertexRecordKey("FORUM", {"id": e[0]}),
-                    VertexRecordKey("PERSON", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in forum_hasmoderator_person.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASINTEREST",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("TAG", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in person_hasinterest_tag.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "KNOWS",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("PERSON", {"id": e[1]}),
-                ),
-                {
-                    "creationDate": e[2]
-                }
-            ]
-            for e in person_knows_person.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "LIKES",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("COMMENT", {"id": e[1]}),
-                ),
-                {
-                    "creationDate": e[2]
-                }
-            ]
-            for e in person_likes_comment.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "LIKES",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("POST", {"id": e[1]}),
-                ),
-                {
-                    "creationDate": e[2]
-                }
-            ]
-            for e in person_likes_post.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "STUDYAT",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("ORGANISATION", {"id": e[1]}),
-                ),
-                {
-                    "classYear": e[2]
-                }
-            ]
-            for e in person_studyat_organisation.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "WORKAT",
-                    VertexRecordKey("PERSON", {"id": e[0]}),
-                    VertexRecordKey("ORGANISATION", {"id": e[1]}),
-                ),
-                {
-                    "workFrom": e[2]
-                }
-            ]
-            for e in person_workat_organisation.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISPARTOF",
-                    VertexRecordKey("PLACE", {"id": e[0]}),
-                    VertexRecordKey("PLACE", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in place_ispartof_place.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ISSUBCLASSOF",
-                    VertexRecordKey("TAGCLASS", {"id": e[0]}),
-                    VertexRecordKey("TAGCLASS", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in tagclass_isSubclassOf_tagclass.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "HASTYPE",
-                    VertexRecordKey("TAG", {"id": e[0]}),
-                    VertexRecordKey("TAGCLASS", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in tag_hastype_tagclass.itertuples(index=False)
-        ]
-    )
+    prepare_edges(edges, comment_hascreator, "HASCREATOR", "COMMENT", "PERSON", [])
+    prepare_edges(edges, post_hascreator, "HASCREATOR", "POST", "PERSON", [])
+    prepare_edges(edges, comment_hastag, "HASTAG", "COMMENT", "TAG", [])
+    prepare_edges(edges, post_hastag, "HASTAG", "POST", "TAG", [])
+    prepare_edges(edges, forum_hastag, "HASTAG", "FORUM", "TAG", [])
+    prepare_edges(edges, comment_islocatedin, "ISLOCATEDIN", "COMMENT", "PLACE", [])
+    prepare_edges(edges, post_islocatedin, "ISLOCATEDIN", "POST", "PLACE", [])
+    prepare_edges(edges, person_islocatedin, "ISLOCATEDIN", "PERSON", "PLACE", [])
+    prepare_edges(edges, organisation_islocatedin, "ISLOCATEDIN", "ORGANISATION", "PLACE", [])
+    prepare_edges(edges, comment_replyof_comment, "REPLYOF", "COMMENT", "COMMENT", [])
+    prepare_edges(edges, comment_replyof_post, "REPLYOF", "COMMENT", "POST", [])
+    prepare_edges(edges, forum_containerof_post, "CONTAINEROF", "FORUM", "POST", [])
+    prepare_edges(edges, forum_hasmember_person, "HASMEMBER", "FORUM", "PERSON", ["joinDate"])
+    prepare_edges(edges, forum_hasmoderator_person, "HASMODERATOR", "FORUM", "PERSON", [])
+    prepare_edges(edges, person_hasinterest_tag, "HASINTEREST", "PERSON", "TAG", [])
+    prepare_edges(edges, person_knows_person, "KNOWS", "PERSON", "PERSON", ["creationDate"])
+    prepare_edges(edges, person_likes_comment, "LIKES", "PERSON", "COMMENT", ["creationDate"])
+    prepare_edges(edges, person_likes_post, "LIKES", "PERSON", "POST", ["creationDate"])
+    prepare_edges(edges, person_studyat_organisation, "STUDYAT", "PERSON", "ORGANISATION", ["classYear"])
+    prepare_edges(edges, person_workat_organisation, "WORKAT", "PERSON", "ORGANISATION", ["workFrom"])
+    prepare_edges(edges, place_ispartof_place, "ISPARTOF", "PLACE", "PLACE", [])
+    prepare_edges(edges, tagclass_isSubclassOf_tagclass, "ISSUBCLASSOF", "TAGCLASS", "TAGCLASS", [])
+    prepare_edges(edges, tag_hastype_tagclass, "HASTYPE", "TAG", "TAGCLASS", [])
 
     batch_insert_vertices(conn, graph, vertices)
     batch_insert_edges(conn, graph, edges)
@@ -662,105 +359,16 @@ def load_data_of_movie_graph(conn, graph, prefix):
     wrote = pd.read_csv(os.path.join(prefix, "WROTE.csv"), sep="|")
     produced = pd.read_csv(os.path.join(prefix, "PRODUCED.csv"), sep="|")
     vertices = []
-    vertices.extend(
-        [
-            [VertexRecordKey("Movie", {"id": v[0]}), {"released": v[1], "tagline": v[2], "title": v[3]}]
-            for v in movie.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("Person", {"id": v[0]}), {"born": v[1], "name": v[2]}]
-            for v in person.itertuples(index=False)
-        ]
-    )
-    vertices.extend(
-        [
-            [VertexRecordKey("User", {"id": v[0]}), {"born": v[1], "name": v[2]}]
-            for v in user.itertuples(index=False)
-        ]
-    )
+    prepare_vertices(vertices, movie, "Movie", ["released", "tagline", "title"])
+    prepare_vertices(vertices, person, "Person", ["born", "name"])
+    prepare_vertices(vertices, user, "User", ["born", "name"])
     edges = []
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "ACTED_IN",
-                    VertexRecordKey("Person", {"id": e[0]}),
-                    VertexRecordKey("Movie", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in acted_in.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "DIRECTED",
-                    VertexRecordKey("Person", {"id": e[0]}),
-                    VertexRecordKey("Movie", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in directed.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "REVIEW",
-                    VertexRecordKey ("Person", {"id": e[0]}),
-                    VertexRecordKey("Movie", {"id": e[1]}),
-                ),
-                {
-                    "rating": e[2]
-                }
-            ]
-            for e in review.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "FOLLOWS",
-                    VertexRecordKey("User", {"id": e[0]}),
-                    VertexRecordKey("Person", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in follows.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "WROTE",
-                    VertexRecordKey("Person", {"id": e[0]}),
-                    VertexRecordKey("Movie", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in wrote.itertuples(index=False)
-        ]
-    )
-    edges.extend(
-        [
-            [
-                EdgeRecordKey(
-                    "PRODUCED",
-                    VertexRecordKey("Person", {"id": e[0]}),
-                    VertexRecordKey("Movie", {"id": e[1]}),
-                ),
-                {}
-            ]
-            for e in produced.itertuples(index=False)
-        ]
-    )
+    prepare_edges(edges, acted_in, "ACTED_IN", "Person", "Movie", [])
+    prepare_edges(edges, directed, "DIRECTED", "Person", "Movie", [])
+    prepare_edges(edges, review, "REVIEW", "Person", "Movie", ["rating"])
+    prepare_edges(edges, follows, "FOLLOWS", "User", "Person", [])
+    prepare_edges(edges, wrote, "WROTE", "Person", "Movie", [])
+    prepare_edges(edges, produced, "PRODUCED", "Person", "Movie", [])
     snapshot_id = graph.insert_vertices(vertices)
     snapshot_id = graph.insert_edges(edges)
     assert conn.remote_flush(snapshot_id, timeout_ms=5000)
