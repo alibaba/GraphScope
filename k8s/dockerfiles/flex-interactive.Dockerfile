@@ -97,7 +97,19 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN mkdir /opt/vineyard/
 
 # copy builder's /opt/flex to final image
-COPY --from=builder /opt/flex /opt/flex
+COPY --from=builder /opt/flex/bin/interactive_server /opt/flex/bin/
+COPY --from=builder /opt/flex/bin/bulk_loader /opt/flex/bin/
+COPY --from=builder /opt/flex/bin/gen_code_from_plan /opt/flex/bin/
+COPY --from=builder /opt/flex/bin/load_plan_and_gen.sh /opt/flex/bin/
+
+# lib 
+COPY --from=builder /opt/flex/lib/ /opt/flex/lib/
+# remove .a files
+RUN find /opt/flex/lib/ -name "*.a" -type f -delete
+
+# include 
+COPY --from=builder /opt/flex/include/ /opt/flex/include/
+
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
 COPY --from=builder /opt/graphscope/include/ /opt/flex/include/
 COPY --from=builder /opt/vineyard/include/ /opt/vineyard/include/
