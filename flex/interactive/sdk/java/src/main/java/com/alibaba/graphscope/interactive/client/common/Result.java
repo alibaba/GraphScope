@@ -17,6 +17,7 @@ package com.alibaba.graphscope.interactive.client.common;
 
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
+import com.alibaba.graphscope.proto.Code;
 
 /***
  * A class which wrap the result of the API
@@ -48,7 +49,7 @@ public class Result<T> {
         return status.getMessage();
     }
 
-    public Status.StatusCode getStatusCode() {
+    public Code getStatusCode() {
         return status.getCode();
     }
 
@@ -61,7 +62,7 @@ public class Result<T> {
     }
 
     public static <T> Result<T> error(String message) {
-        return new Result<T>(new Status(Status.StatusCode.kUnknown, message), null);
+        return new Result<T>(new Status(Code.UNKNOWN, message), null);
     }
 
     public static <T> Result<T> fromException(ApiException exception) {
