@@ -1,11 +1,10 @@
 # Customize and Deploy
 
-This document outlines how to pack Interactive from the source, deploy it in your local environment. This maybe useful if you want deploy a customized version of Interactive.
+This document explains how to package Interactive from the source and deploy it locally. This is useful for deploying a customized version of Interactive.
 
 ## Packing Interactive from Source
 
-Interactive is packed and delivered via Docker image. To build the Image of Interactive, you need a machine with [docker](https://www.docker.com/) installed. 
-Then clone the code and build with the Interactive Runtime Image.
+Interactive is packaged and delivered via a Docker image. To build the image, ensure you have [Docker](https://www.docker.com/) installed on your machine. Next, clone the repository and build the Interactive Runtime Image.
 
 ```bash
 git clone https://github.com/alibaba/GraphScope.git # Or clone your forked repo
@@ -13,20 +12,28 @@ cd GraphScope/k8s
 python3 ./gsctl.py flexbuild interactive --app docker
 ```
 
-This will take some time. Then you should be able to find the built image like `graphscope/interactive:latest`. You could tag the image with your desired registry and image, tag names.
+The build process may take some time. Once completed, you will find the image tagged as `graphscope/interactive:latest`.
 
 ```{note}
-Note that docker image are bound to platforms, which means you image you build on x86_64(amd64) may not be able to run on a arm64 machine. 
-Even if the image could be run on other platforms with the support of QEMU, it will be extremely slow. 
-If you want to build a multiple-platform image, you may make use of [Buildx](https://docs.docker.com/reference/cli/docker/buildx/) or [Docker-Manifest](https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/).
+Docker images are platform-specific, meaning an image built on x86_64 (amd64) may not run on arm64 machines. While it can execute on other platforms with QEMU support, performance will be significantly slower. To create a multi-platform image, use [Buildx](https://docs.docker.com/reference/cli/docker/buildx/) or [Docker-Manifest](https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/).
 ```
 
 ## Deploying Interactive
 
-`gsctl` natively support deploying interactive instance with customized image. You just need to specify the registry, image name and tag.
+`gsctl` natively supports deploying an Interactive instance with a customized image.
 
 ```bash
-python3 gsctl.py instance deploy --type interactive --image-registry {YOUR_IMAGE_REGISTRY} --image-tag {IMAGE_TAG}
+python3 gsctl.py instance deploy --type interactive --image-registry graphscope --image-tag latest
+```
+
+## Pushing to Your Own Registry
+
+You can push the image to your own registry for access from other machines.
+
+```bash
+docker tag graphscope/interactive:latest {YOUR_IMAGE_REGISTRY}/interactive:{TAG}
+docker push {YOUR_IMAGE_REGISTRY}/interactive:latest
+python3 gsctl.py instance deploy --type interactive --image-registry {YOUR_IMAGE_REGISTRY} --image-tag {TAG}
 ```
 
 ## Connecting and Using
