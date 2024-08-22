@@ -212,16 +212,17 @@ static Status parse_vertex_files(
         vertex_mapping) {
   std::string label_name;
   if (!get_scalar(node, "type_name", label_name)) {
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "Vertex label name is not set");
   }
   // Check label exists in schema
   if (!schema.has_vertex_label(label_name)) {
     LOG(ERROR) << "Vertex label [" << label_name << "] does not exist in "
                << "the schema";
-    return Status(StatusCode::InvalidImportFile, "Vertex label [" + label_name +
-                                                     "] does not exist in "
-                                                     "the schema");
+    return Status(StatusCode::INVALID_IMPORT_FILE, "Vertex label [" +
+                                                       label_name +
+                                                       "] does not exist in "
+                                                       "the schema");
   }
   auto label_id = schema.get_vertex_label_id(label_name);
 
@@ -229,7 +230,7 @@ static Status parse_vertex_files(
   if (files.find(label_id) != files.end()) {
     LOG(ERROR) << "Loading configuration for Vertex label [" << label_name
                << "] has been set";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "Loading configuration for Vertex label [" + label_name +
                       "] has been set");
   }
@@ -248,7 +249,7 @@ static Status parse_vertex_files(
                                      vertex_label_name, property_name);
                                })) {
       LOG(ERROR) << "Failed to parse vertex mapping";
-      return Status(StatusCode::InvalidImportFile,
+      return Status(StatusCode::INVALID_IMPORT_FILE,
                     "Failed to parse vertex mapping");
     }
     LOG(INFO) << "Successfully parsed vertex mapping size: "
@@ -264,7 +265,7 @@ static Status parse_vertex_files(
       LOG(ERROR) << "Expect field [inputs] for vertex [" << label_name
                  << "] to be a list";
       return Status(
-          StatusCode::InvalidImportFile,
+          StatusCode::INVALID_IMPORT_FILE,
           "Expect field [inputs] for vertex [" + label_name + "] to be a list");
     }
     int num = files_node.size();
@@ -272,13 +273,13 @@ static Status parse_vertex_files(
       std::string file_path = files_node[i].as<std::string>();
       if (file_path.empty()) {
         LOG(ERROR) << "file path is empty";
-        return Status(StatusCode::InvalidImportFile,
+        return Status(StatusCode::INVALID_IMPORT_FILE,
                       "The input for vertex [" + label_name + "] is empty");
       }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
           LOG(ERROR) << "vertex file - [" << file_path << "] file not found...";
-          return Status(StatusCode::InvalidImportFile,
+          return Status(StatusCode::INVALID_IMPORT_FILE,
                         "vertex file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
@@ -294,7 +295,7 @@ static Status parse_vertex_files(
     return Status::OK();
   } else {
     LOG(ERROR) << "vertex [" << label_name << "] does not have input files";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "vertex [" + label_name + "] does not have input files");
   }
 }
@@ -308,7 +309,8 @@ static Status parse_vertices_files_schema(
         column_mappings) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "vertex is not set properly";
-    return Status(StatusCode::InvalidImportFile, "vertex is not set properly");
+    return Status(StatusCode::INVALID_IMPORT_FILE,
+                  "vertex is not set properly");
   }
   int num = node.size();
   for (int i = 0; i < num; ++i) {
@@ -335,7 +337,7 @@ static Status parse_edge_files(
         edge_src_dst_col) {
   if (!node["type_triplet"]) {
     LOG(ERROR) << "edge [type_triplet] is not set properly";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "edge [type_triplet] is not set properly");
   }
   auto triplet_node = node["type_triplet"];
@@ -345,20 +347,20 @@ static Status parse_edge_files(
     ss << "Field [edge] is not set for edge [" << triplet_node << "]";
     auto err_str = ss.str();
     LOG(ERROR) << err_str;
-    return Status(StatusCode::InvalidImportFile, err_str);
+    return Status(StatusCode::INVALID_IMPORT_FILE, err_str);
   }
   if (!get_scalar(triplet_node, "source_vertex", src_label)) {
     LOG(ERROR) << "Field [source_vertex] is not set for edge [" << edge_label
                << "]";
     return Status(
-        StatusCode::InvalidImportFile,
+        StatusCode::INVALID_IMPORT_FILE,
         "Field [source_vertex] is not set for edge [" + edge_label + "]");
   }
   if (!get_scalar(triplet_node, "destination_vertex", dst_label)) {
     LOG(ERROR) << "Field [destination_vertex] is not set for edge ["
                << edge_label << "]";
     return Status(
-        StatusCode::InvalidImportFile,
+        StatusCode::INVALID_IMPORT_FILE,
         "Field [destination_vertex] is not set for edge [" + edge_label + "]");
   }
 
@@ -367,25 +369,26 @@ static Status parse_edge_files(
     if (!schema.has_vertex_label(src_label)) {
       LOG(ERROR) << "Vertex label [" << src_label << "] does not exist in "
                  << "the schema";
-      return Status(StatusCode::InvalidImportFile, "Vertex label [" +
-                                                       src_label +
-                                                       "] does not exist in "
-                                                       "the schema");
+      return Status(StatusCode::INVALID_IMPORT_FILE, "Vertex label [" +
+                                                         src_label +
+                                                         "] does not exist in "
+                                                         "the schema");
     }
     if (!schema.has_vertex_label(dst_label)) {
       LOG(ERROR) << "Vertex label [" << dst_label << "] does not exist in "
                  << "the schema";
-      return Status(StatusCode::InvalidImportFile, "Vertex label [" +
-                                                       dst_label +
-                                                       "] does not exist in "
-                                                       "the schema");
+      return Status(StatusCode::INVALID_IMPORT_FILE, "Vertex label [" +
+                                                         dst_label +
+                                                         "] does not exist in "
+                                                         "the schema");
     }
     if (!schema.has_edge_label(src_label, dst_label, edge_label)) {
       LOG(ERROR) << "Edge label [" << edge_label << "] does not exist in "
                  << "the schema";
-      return Status(StatusCode::InvalidImportFile, "Edge label [" + edge_label +
-                                                       "] does not exist in "
-                                                       "the schema");
+      return Status(StatusCode::INVALID_IMPORT_FILE, "Edge label [" +
+                                                         edge_label +
+                                                         "] does not exist in "
+                                                         "the schema");
     }
   }
   auto src_label_id = schema.get_vertex_label_id(src_label);
@@ -397,7 +400,7 @@ static Status parse_edge_files(
     LOG(ERROR) << "Edge [" << edge_label << "] between [" << src_label
                << "] and "
                << "[" << dst_label << "] loading config already exists";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "Edge [" + edge_label + "] between [" + src_label + "] and " +
                       "[" + dst_label + "] loading config already exists");
   }
@@ -441,7 +444,7 @@ static Status parse_edge_files(
                                               edge_label_name, property_name);
             })) {
       LOG(ERROR) << "Failed to parse edge mapping";
-      return Status(StatusCode::InvalidImportFile,
+      return Status(StatusCode::INVALID_IMPORT_FILE,
                     "Failed to parse edge mapping");
     }
     VLOG(10) << "Successfully parsed edge mapping size: "
@@ -458,20 +461,20 @@ static Status parse_edge_files(
   if (files_node) {
     if (!files_node.IsSequence()) {
       LOG(ERROR) << "files is not sequence";
-      return Status(StatusCode::InvalidImportFile, "files is not sequence");
+      return Status(StatusCode::INVALID_IMPORT_FILE, "files is not sequence");
     }
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
       if (file_path.empty()) {
         LOG(ERROR) << "file path is empty";
-        return Status(StatusCode::InvalidImportFile,
+        return Status(StatusCode::INVALID_IMPORT_FILE,
                       "The input for edge [" + edge_label + "] is empty");
       }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
           LOG(ERROR) << "edge file - [" << file_path << "] file not found...";
-          return Status(StatusCode::InvalidImportFile,
+          return Status(StatusCode::INVALID_IMPORT_FILE,
                         "edge file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
@@ -490,7 +493,7 @@ static Status parse_edge_files(
     }
   } else {
     LOG(ERROR) << "No edge files found for edge " << edge_label << "...";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "No edge files found for edge " + edge_label + "...");
   }
   return Status::OK();
@@ -513,7 +516,7 @@ static Status parse_edges_files_schema(
         edge_src_dst_col) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "Field [edge_mappings] should be a list";
-    return Status(StatusCode::InvalidImportFile,
+    return Status(StatusCode::INVALID_IMPORT_FILE,
                   "Field [edge_mappings] should be a list");
   }
   int num = node.size();
@@ -541,7 +544,7 @@ Status parse_bulk_load_method(const YAML::Node& node, BulkLoadMethod& method) {
       method = BulkLoadMethod::kOverwrite;
     } else {
       LOG(ERROR) << "Unknown import_option: " << method_str;
-      return Status(StatusCode::InValidArgument,
+      return Status(StatusCode::INVALID_ARGUMENT,
                     "Unknown import_option" + method_str);
     }
   } else {
@@ -601,7 +604,7 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
           auto meta_data_node = format_node["metadata"];
           if (!meta_data_node.IsMap()) {
             LOG(ERROR) << "metadata should be a map";
-            return Status(StatusCode::InValidArgument,
+            return Status(StatusCode::INVALID_ARGUMENT,
                           "metadata should be a map");
           }
           for (auto it = meta_data_node.begin(); it != meta_data_node.end();
@@ -638,7 +641,7 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
           auto meta_data_node = format_node["metadata"];
           if (!meta_data_node.IsMap()) {
             LOG(ERROR) << "metadata should be a map";
-            return Status(StatusCode::InValidArgument,
+            return Status(StatusCode::INVALID_ARGUMENT,
                           "metadata should be a map");
           }
           for (auto it = meta_data_node.begin(); it != meta_data_node.end();
@@ -657,12 +660,12 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
     }
   } else {
     LOG(ERROR) << "loading_config is not set";
-    return Status(StatusCode::InValidArgument, "loading_config is not set");
+    return Status(StatusCode::INVALID_ARGUMENT, "loading_config is not set");
   }
   if (load_config.method_ != BulkLoadMethod::kInit &&
       load_config.method_ != BulkLoadMethod::kOverwrite) {
     LOG(ERROR) << "Only support init/overwrite method now";
-    return Status(StatusCode::InValidArgument,
+    return Status(StatusCode::INVALID_ARGUMENT,
                   "Only support init/overwrite method now");
   }
   if (data_location.empty()) {
@@ -719,7 +722,7 @@ Result<LoadingConfig> LoadingConfig::ParseFromYamlFile(
              .ok()) {
       LOG(ERROR) << "Failed to parse bulk load config file: " << yaml_file;
       return gs::Result<LoadingConfig>(
-          gs::Status(gs::StatusCode::InvalidImportFile,
+          gs::Status(gs::StatusCode::INVALID_IMPORT_FILE,
                      "Failed to parse bulk load config file: " + yaml_file),
           load_config);
     }
@@ -741,7 +744,7 @@ Result<LoadingConfig> LoadingConfig::ParseFromYamlNode(
     }
   } catch (const YAML::Exception& e) {
     return gs::Result<LoadingConfig>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Failed to parse yaml node: " + std::string(e.what())),
         load_config);
   }

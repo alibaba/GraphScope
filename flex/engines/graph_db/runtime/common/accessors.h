@@ -93,9 +93,10 @@ class VertexPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
+template <typename KEY_T>
 class VertexIdPathAccessor : public IAccessor {
  public:
-  using elem_t = int64_t;
+  using elem_t = KEY_T;
   VertexIdPathAccessor(const ReadTransaction& txn, const Context& ctx, int tag)
       : txn_(txn),
         vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {}
@@ -104,11 +105,11 @@ class VertexIdPathAccessor : public IAccessor {
 
   elem_t typed_eval_path(size_t idx) const {
     const auto& v = vertex_col_.get_vertex(idx);
-    return txn_.GetVertexId(v.first, v.second).AsInt64();
+    return AnyConverter<KEY_T>::from_any(txn_.GetVertexId(v.first, v.second));
   }
 
   RTAny eval_path(size_t idx) const override {
-    return RTAny::from_int64(typed_eval_path(idx));
+    return RTAny(typed_eval_path(idx));
   }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
@@ -271,13 +272,14 @@ class ContextValueAccessor : public IAccessor {
   const IValueColumn<elem_t>& col_;
 };
 
+template <typename KEY_T>
 class VertexIdVertexAccessor : public IAccessor {
  public:
-  using elem_t = int64_t;
+  using elem_t = KEY_T;
   VertexIdVertexAccessor(const ReadTransaction& txn) : txn_(txn) {}
 
   elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
-    return txn_.GetVertexId(label, v).AsInt64();
+    return AnyConverter<KEY_T>::from_any(txn_.GetVertexId(label, v));
   }
 
   RTAny eval_path(size_t idx) const override {
@@ -286,7 +288,7 @@ class VertexIdVertexAccessor : public IAccessor {
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    return RTAny::from_int64(typed_eval_vertex(label, v, idx));
+    return RTAny(Any(typed_eval_vertex(label, v, idx)));
   }
 
  private:

@@ -81,7 +81,7 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
     } else if (triplet.const_().item_case() == common::Value::kI64) {
       vertex_id = triplet.const_().i64();
     } else {
-      LOG(FATAL) << "unexpected value case" << triplet.const_().item_case();
+      return false;
     }
   } break;
   case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
@@ -91,7 +91,7 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
     vertex_id = std::stoll(value);
   } break;
   default: {
-    LOG(FATAL) << "unexpected value case";
+    return false;
   } break;
   }
 
@@ -101,9 +101,11 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
 bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
                          const std::map<std::string, std::string>& params,
                          std::vector<int64_t>& oids, bool& scan_oid) {
+  // todo unsupported cases.
   if (predicate.or_predicates_size() != 1) {
     return false;
   }
+  // todo unsupported cases.
   if (predicate.or_predicates(0).predicates_size() != 1) {
     return false;
   }
@@ -120,7 +122,6 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
   } else {
     LOG(FATAL) << "unexpected key case";
   }
-  // const common::Property& key = triplet.key();
   if (triplet.cmp() != common::Logical::EQ && triplet.cmp() != common::WITHIN) {
     return false;
   }
@@ -138,7 +139,7 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
       }
 
     } else {
-      LOG(FATAL) << "unexpected value case" << triplet.const_().item_case();
+      return false;
     }
   } else if (triplet.value_case() ==
              algebra::IndexPredicate_Triplet::ValueCase::kParam) {
@@ -146,6 +147,85 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
     std::string name = p.name();
     std::string value = params.at(name);
     oids.emplace_back(std::stoll(value));
+  }
+  return true;
+}
+
+bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
+                         const std::map<std::string, std::string>& params,
+                         std::vector<Any>& oids, bool& scan_oid) {
+  // todo unsupported cases.
+  if (predicate.or_predicates_size() != 1) {
+    return false;
+  }
+  // todo unsupported cases.
+  if (predicate.or_predicates(0).predicates_size() != 1) {
+    return false;
+  }
+  const algebra::IndexPredicate_Triplet& triplet =
+      predicate.or_predicates(0).predicates(0);
+  if (!triplet.has_key()) {
+    return false;
+  }
+  auto key = triplet.key();
+  if (key.has_key()) {
+    scan_oid = true;
+  } else if (key.has_id()) {
+    scan_oid = false;
+  } else {
+    LOG(FATAL) << "unexpected key case";
+  }
+  if (triplet.cmp() != common::Logical::EQ && triplet.cmp() != common::WITHIN) {
+    return false;
+  }
+
+  if (triplet.value_case() ==
+      algebra::IndexPredicate_Triplet::ValueCase::kConst) {
+    if (triplet.const_().item_case() == common::Value::kI32) {
+      oids.emplace_back(triplet.const_().i32());
+    } else if (triplet.const_().item_case() == common::Value::kI64) {
+      oids.emplace_back(triplet.const_().i64());
+    } else if (triplet.const_().item_case() == common::Value::kI64Array) {
+      const auto& arr = triplet.const_().i64_array();
+      for (int i = 0; i < arr.item_size(); ++i) {
+        oids.emplace_back(arr.item(i));
+      }
+
+    } else if (triplet.const_().item_case() == common::Value::kStr) {
+      std::string value = triplet.const_().str();
+      oids.emplace_back(Any::From(value));
+    } else if (triplet.const_().item_case() == common::Value::kStrArray) {
+      const auto& arr = triplet.const_().str_array();
+      for (int i = 0; i < arr.item_size(); ++i) {
+        oids.emplace_back(Any::From(arr.item(i)));
+      }
+    } else {
+      return false;
+    }
+  } else if (triplet.value_case() ==
+             algebra::IndexPredicate_Triplet::ValueCase::kParam) {
+    const common::DynamicParam& p = triplet.param();
+    if (p.data_type().type_case() == common::IrDataType::TypeCase::kDataType) {
+      auto dt = p.data_type().data_type();
+      if (dt == common::DataType::INT64) {
+        std::string name = p.name();
+        std::string value = params.at(name);
+        int64_t v = std::stoll(value);
+        oids.emplace_back(v);
+      } else if (dt == common::DataType::STRING) {
+        std::string name = p.name();
+        std::string value = params.at(name);
+        oids.emplace_back(Any::From(value));
+      } else if (dt == common::DataType::INT32) {
+        std::string name = p.name();
+        std::string value = params.at(name);
+        int32_t v = std::stoi(value);
+        oids.emplace_back(v);
+      } else {
+        LOG(FATAL) << "unsupported primary key type" << dt;
+        return false;
+      }
+    }
   }
   return true;
 }
@@ -158,7 +238,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
 
   bool scan_oid;
   if (is_find_vertex(scan_opr, params, label, vertex_id, alias, scan_oid)) {
-    return Scan::find_vertex(txn, label, vertex_id, alias, scan_oid);
+    return Scan::find_vertex_with_id(txn, label, vertex_id, alias, scan_oid);
   }
 
   const auto& opt = scan_opr.scan_opt();
@@ -170,51 +250,110 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
       scan_params.alias = -1;
     }
     CHECK(scan_opr.has_params());
+    bool has_other_type_oid = false;
     const auto& scan_opr_params = scan_opr.params();
     for (const auto& table : scan_opr_params.tables()) {
+      // exclude invalid vertex label id
+      if (txn.schema().vertex_label_num() <= table.id()) {
+        continue;
+      }
       scan_params.tables.push_back(table.id());
-    }
-
-    if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
-      Context ctx;
-      auto expr = parse_expression(
-          txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
-      std::vector<int64_t> oids{};
-      CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                scan_oid));
-      if (scan_oid) {
-        return Scan::scan_vertex(
-            txn, scan_params, [&expr, &txn, oids](label_t label, vid_t vid) {
-              return std::find(oids.begin(), oids.end(),
-                               txn.GetVertexId(label, vid).AsInt64()) !=
-                         oids.end() &&
-                     expr->eval_vertex(label, vid, 0).as_bool();
-            });
-      } else {
-        return Scan::scan_gid_vertex(
-            txn, scan_params,
-            [&expr, oids](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0).as_bool();
-            },
-            oids);
+      const auto& pks = txn.schema().get_vertex_primary_key(table.id());
+      if (pks.size() > 1) {
+        LOG(FATAL) << "only support one primary key";
+      }
+      auto [type, _, __] = pks[0];
+      if (type != PropertyType::kInt64) {
+        has_other_type_oid = true;
       }
     }
 
-    if (scan_opr.has_idx_predicate()) {
-      std::vector<int64_t> oids{};
-      CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                scan_oid));
+    // implicit type conversion will happen when oid is int64_t
+    if (!has_other_type_oid && scan_opr.has_idx_predicate()) {
+      if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
+        Context ctx;
+        auto expr = parse_expression(
+            txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
+        std::vector<int64_t> oids{};
+        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                  scan_oid));
+        if (scan_oid) {
+          return Scan::filter_oids(
+              txn, scan_params,
+              [&expr, oids](label_t label, vid_t vid) {
+                return expr->eval_vertex(label, vid, 0).as_bool();
+              },
+              oids);
+        } else {
+          return Scan::filter_gids(
+              txn, scan_params,
+              [&expr, oids](label_t label, vid_t vid) {
+                return expr->eval_vertex(label, vid, 0).as_bool();
+              },
+              oids);
+        }
+      }
 
-      if (scan_oid) {
-        return Scan::scan_vertex(
-            txn, scan_params, [&txn, oids](label_t label, vid_t vid) {
-              return std::find(oids.begin(), oids.end(),
-                               txn.GetVertexId(label, vid).AsInt64()) !=
-                     oids.end();
-            });
-      } else {
-        return Scan::scan_gid_vertex(
-            txn, scan_params, [](label_t, vid_t) { return true; }, oids);
+      if (scan_opr.has_idx_predicate()) {
+        std::vector<int64_t> oids{};
+        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                  scan_oid));
+
+        if (scan_oid) {
+          return Scan::filter_oids(
+              txn, scan_params, [](label_t label, vid_t vid) { return true; },
+              oids);
+        } else {
+          return Scan::filter_gids(
+              txn, scan_params, [](label_t, vid_t) { return true; }, oids);
+        }
+      }
+    } else if (scan_opr.has_idx_predicate()) {
+      if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
+        Context ctx;
+        auto expr = parse_expression(
+            txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
+        std::vector<Any> oids{};
+        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                  scan_oid));
+        if (scan_oid) {
+          return Scan::filter_oids(
+              txn, scan_params,
+              [&expr, oids](label_t label, vid_t vid) {
+                return expr->eval_vertex(label, vid, 0).as_bool();
+              },
+              oids);
+        } else {
+          std::vector<int64_t> gids;
+          for (size_t i = 0; i < oids.size(); i++) {
+            gids.push_back(oids[i].AsInt64());
+          }
+          return Scan::filter_gids(
+              txn, scan_params,
+              [&expr, gids](label_t label, vid_t vid) {
+                return expr->eval_vertex(label, vid, 0).as_bool();
+              },
+              gids);
+        }
+      }
+
+      if (scan_opr.has_idx_predicate()) {
+        std::vector<Any> oids{};
+        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                  scan_oid));
+
+        if (scan_oid) {
+          return Scan::filter_oids(
+              txn, scan_params, [](label_t label, vid_t vid) { return true; },
+              oids);
+        } else {
+          std::vector<int64_t> gids;
+          for (size_t i = 0; i < oids.size(); i++) {
+            gids.push_back(oids[i].AsInt64());
+          }
+          return Scan::filter_gids(
+              txn, scan_params, [](label_t, vid_t) { return true; }, gids);
+        }
       }
     }
 
@@ -240,7 +379,8 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                [](label_t, vid_t) { return true; });
     }
   }
-  LOG(FATAL) << "AAAAA";
+  LOG(FATAL) << "unsupport scan option " << scan_opr.DebugString()
+             << " we only support scan vertex currently";
   return Context();
 }
 
