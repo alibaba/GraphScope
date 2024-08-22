@@ -152,15 +152,11 @@ struct is_gs_status_type<Status> : std::true_type {};
 
 namespace std {
 inline std::string to_string(const gs::flex::interactive::Code& status) {
-  int32_t code = static_cast<int32_t>(status);
   // format the code into 0x-xxxx, where multiple zeros are prepend to the code
-  std::string code_str = std::to_string(code);
-  std::string prefix = "0x";
-  int32_t len = 6 - code_str.size();
-  for (int32_t i = 0; i < len; ++i) {
-    prefix += "0";
-  }
-  return prefix + code_str;
+  std::stringstream ss;
+  ss << "05-" << std::setw(4) << std::setfill('0')
+     << static_cast<int32_t>(status);
+  return ss.str();
 }
 }  // namespace std
 
