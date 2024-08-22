@@ -71,6 +71,9 @@ impl RocksDB {
     }
 
     fn replace_db(&self, db: DB) {
+        // To force any deferred work to run, we need the epoch to move forward two times.
+        epoch::pin().flush();
+        epoch::pin().flush();
         let guard = epoch::pin();
         let new_db = Arc::new(db);
         let new_db_shared = Owned::new(new_db).into_shared(&guard);
@@ -92,9 +95,6 @@ impl RocksDB {
                 drop(old_db_shared.into_owned())
             })
         }
-        // To force any deferred work to run, we need the epoch to move forward two times.
-        epoch::pin().flush();
-        epoch::pin().flush();
         info!("RocksDB {:} replaced", path);
     }
 
