@@ -169,7 +169,7 @@ class GraphDBSession {
 
     } else {
       return Result<std::pair<uint8_t, std::string_view>>(
-          gs::Status(StatusCode::InValidArgument,
+          gs::Status(StatusCode::INVALID_ARGUMENT,
                      "Invalid input tag: " + std::to_string(input_tag)));
     }
   }
