@@ -60,13 +60,16 @@ seastar::future<query_result> executor::run_graph_db_query(
 seastar::future<admin_query_result> executor::create_vertex(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
-                       "The queried graph is not running: " + graph_id)));
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+  }
+
   nlohmann::json input_json;
   // Parse the input json
   try {
@@ -74,7 +77,7 @@ seastar::future<admin_query_result> executor::create_vertex(
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InvalidSchema,
+            gs::Status(gs::StatusCode::INVALID_SCHEMA,
                        "Bad input json : " + std::string(e.what()))));
   }
   auto result = gs::GraphDBOperations::CreateVertex(
@@ -93,11 +96,13 @@ seastar::future<admin_query_result> executor::create_edge(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
   auto running_graph_res = metadata_store_->GetRunningGraph();
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+  if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
+            gs::Status(gs::StatusCode::NOT_FOUND,
                        "The queried graph is not running: " + graph_id)));
+  }
+
   nlohmann::json input_json;
   // Parse the input json
   try {
@@ -105,7 +110,7 @@ seastar::future<admin_query_result> executor::create_edge(
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InvalidSchema,
+            gs::Status(gs::StatusCode::INVALID_SCHEMA,
                        "Bad input json : " + std::string(e.what()))));
   }
   auto result = gs::GraphDBOperations::CreateEdge(
@@ -122,13 +127,16 @@ seastar::future<admin_query_result> executor::create_edge(
 seastar::future<admin_query_result> executor::update_vertex(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
-                       "The queried graph is not running: " + graph_id)));
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+    }
+  }
   nlohmann::json input_json;
   // Parse the input json
   try {
@@ -136,7 +144,7 @@ seastar::future<admin_query_result> executor::update_vertex(
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InvalidSchema,
+            gs::Status(gs::StatusCode::INVALID_SCHEMA,
                        "Bad input json : " + std::string(e.what()))));
   }
   auto result = gs::GraphDBOperations::UpdateVertex(
@@ -153,13 +161,16 @@ seastar::future<admin_query_result> executor::update_vertex(
 seastar::future<admin_query_result> executor::update_edge(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
-                       "The queried graph is not running: " + graph_id)));
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+    }
+  }
   nlohmann::json input_json;
   // Parse the input json
   try {
@@ -167,7 +178,7 @@ seastar::future<admin_query_result> executor::update_edge(
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InvalidSchema,
+            gs::Status(gs::StatusCode::INVALID_SCHEMA,
                        "Bad input json : " + std::string(e.what()))));
   }
   auto result = gs::GraphDBOperations::UpdateEdge(
@@ -185,13 +196,15 @@ seastar::future<admin_query_result> executor::update_edge(
 seastar::future<admin_query_result> executor::get_vertex(
     graph_management_query_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
-                       "The queried graph is not running: " + graph_id)));
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+  }
 
   std::unordered_map<std::string, std::string> params;
   for (auto& [key, value] : param.content.second) {
@@ -212,13 +225,15 @@ seastar::future<admin_query_result> executor::get_vertex(
 seastar::future<admin_query_result> executor::get_edge(
     graph_management_query_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NotFound,
-                       "The queried graph is not running: " + graph_id)));
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+  }
   std::unordered_map<std::string, std::string> params;
   for (auto& [key, value] : param.content.second) {
     params[std::string(key)] = std::string(value);
@@ -239,14 +254,14 @@ seastar::future<admin_query_result> executor::delete_vertex(
     graph_management_param&& param) {
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::Unimplemented, "delete_vertex is not implemented")));
+          gs::StatusCode::UNIMPLEMENTED, "delete_vertex is not implemented")));
 }
 
 seastar::future<admin_query_result> executor::delete_edge(
     graph_management_param&& param) {
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::Unimplemented, "delete_edge is not implemented")));
+          gs::StatusCode::UNIMPLEMENTED, "delete_edge is not implemented")));
 }
 
 }  // namespace server

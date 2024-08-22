@@ -16,7 +16,7 @@
 #include "flex/utils/result.h"
 
 namespace gs {
-Status::Status() noexcept : error_code_(StatusCode::UninitializedStatus) {}
+Status::Status() noexcept : error_code_(StatusCode::OK) {}
 
 Status::Status(StatusCode error_code) noexcept : error_code_(error_code) {}
 
@@ -33,5 +33,10 @@ StatusCode Status::error_code() const { return error_code_; }
 bool Status::ok() const { return error_code_ == StatusCode::OK; }
 
 Status Status::OK() { return Status(StatusCode::OK); }
+
+std::string Status::ToString() const {
+  return "{\"code\": " + std::to_string(error_code_) + ", \"message\": \"" +
+         error_msg_ + "\"}";
+}
 
 }  // namespace gs

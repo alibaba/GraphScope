@@ -161,10 +161,8 @@ const std::shared_ptr<IContextColumn> Context::get(int alias) const {
     return head;
   }
   assert(static_cast<size_t>(alias) < columns.size());
-  {
-    assert(columns[alias] != nullptr);
-    return columns[alias];
-  }
+  // return nullptr if the column is not set
+  return columns[alias];
 }
 
 size_t Context::row_num() const {
