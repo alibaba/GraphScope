@@ -126,8 +126,8 @@
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-shaded</artifactId>
-            <version>4.4.0</version>
+            <artifactId>neo4j</artifactId>
+            <version>${neo4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>

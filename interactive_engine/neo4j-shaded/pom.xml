@@ -5,26 +5,33 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>neo4j-shaded</artifactId>
+    <properties>
+        <neo4j.version>4.4.0</neo4j.version>
+        <neo4j.scala.library.version>2.12.10</neo4j.scala.library.version>
+        <neo4j.scala.reflect.version>2.12.13</neo4j.scala.reflect.version>
+        <maven.shade.plugin.version>3.4.1</maven.shade.plugin.version>
+    </properties>
+
     <groupId>org.neo4j</groupId>
-    <version>4.4.0</version>
+    <artifactId>neo4j</artifactId>
+    <version>${neo4j.version}-SHADED</version>
 
     <dependencies>
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j</artifactId>
-            <version>4.4.0</version>
+            <version>${neo4j.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.12.10</version>
+            <version>${neo4j.scala.library.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
-            <version>2.12.13</version>
+            <version>${neo4j.scala.reflect.version}</version>
         </dependency>
     </dependencies>
 
@@ -33,7 +40,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>${maven.shade.plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
