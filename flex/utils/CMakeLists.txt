@@ -8,7 +8,7 @@ set(INTERACTIVE_ERROR_PROTO_FILES
         ${GRAPHSCOPE_ERROR_PROTO_DIR}/interactive.proto
 )
 #create directory first
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/error_pb)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/error_pb)
 
 # proto gen for gie proto
 protobuf_generate(APPEND_PATH
@@ -17,7 +17,7 @@ protobuf_generate(APPEND_PATH
         OUT_VAR ERROR_PROTO_SRCS
         PROTOS ${INTERACTIVE_ERROR_PROTO_FILES}
         IMPORT_DIRS ${GRAPHSCOPE_ERROR_PROTO_DIR}
-        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/flex/error_pb
+        PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/error_pb
 )
 file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 
@@ -39,11 +39,6 @@ install_flex_target(flex_utils)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DESTINATION include/flex/
-        FILES_MATCHING
-        PATTERN "*.h"
-)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/error_pb/
-        DESTINATION include/flex/error_pb/
         FILES_MATCHING
         PATTERN "*.h"
 )

@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "flex/error_pb/interactive.pb.h"
+#include "flex/utils/error_pb/interactive.pb.h"
 
 #include "glog/logging.h"
 
@@ -149,5 +149,19 @@ struct is_gs_status_type<Status> : std::true_type {};
 #define FLEX_AUTO(var, expr) ASSIGN_AND_RETURN_IF_NOT_OK(auto var, expr)
 
 }  // namespace gs
+
+namespace std {
+inline std::string to_string(const gs::flex::interactive::Code& status) {
+  int32_t code = static_cast<int32_t>(status);
+  // format the code into 0x-xxxx, where multiple zeros are prepend to the code
+  std::string code_str = std::to_string(code);
+  std::string prefix = "0x";
+  int32_t len = 6 - code_str.size();
+  for (int32_t i = 0; i < len; ++i) {
+    prefix += "0";
+  }
+  return prefix + code_str;
+}
+}  // namespace std
 
 #endif  // UTILS_RESULT_H_

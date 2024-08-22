@@ -35,8 +35,8 @@ bool Status::ok() const { return error_code_ == StatusCode::OK; }
 Status Status::OK() { return Status(StatusCode::OK); }
 
 std::string Status::ToString() const {
-  return "{\"code\": " + std::to_string(static_cast<int>(error_code_)) +
-         ", \"message\": \"" + error_msg_ + "\"}";
+  return "{\"code\": " + std::to_string(error_code_) + ", \"message\": \"" +
+         error_msg_ + "\"}";
 }
 
 }  // namespace gs
