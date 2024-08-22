@@ -52,18 +52,18 @@ def get_conn():
 
 def create_modern_graph_schema(graph):
     schema = graph.schema()
-    schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
+    schema.add_vertex_label("person").add_primary_key("id", "int").add_property(
         "name", "str"
     ).add_property("age", "int")
-    schema.add_vertex_label("software").add_primary_key("id", "long").add_property(
+    schema.add_vertex_label("software").add_primary_key("id", "int").add_property(
         "name", "str"
     ).add_property("lang", "str")
     schema.add_edge_label("knows").source("person").destination("person").add_property(
-        "edge_id", "long"
+        "edge_id", "int"
     ).add_property("weight", "double")
     schema.add_edge_label("created").source("person").destination(
         "software"
-    ).add_property("edge_id", "long").add_property("weight", "double")
+    ).add_property("edge_id", "int").add_property("weight", "double")
     schema.update()
 
 
