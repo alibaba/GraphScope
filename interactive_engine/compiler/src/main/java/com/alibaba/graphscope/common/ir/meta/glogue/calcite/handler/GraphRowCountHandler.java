@@ -109,8 +109,19 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     }
                 }
             }
-            throw new UnsupportedOperationException(
-                    "estimate count for pattern " + pattern + " is unsupported yet");
+            double totalRowCount = 1.0d;
+            for (PatternEdge edge : pattern.getEdgeSet()) {
+                totalRowCount *= countEstimator.estimate(edge);
+            }
+            for (PatternVertex vertex : pattern.getVertexSet()) {
+                int degree = pattern.getEdgesOf(vertex).size();
+                if (degree > 0) {
+                    double vertexCount = countEstimator.estimate(vertex);
+                    vertexCount = Double.compare(vertexCount, 0.0d) == 0 ? 1.0d : vertexCount;
+                    totalRowCount /= Math.pow(vertexCount, degree - 1);
+                }
+            }
+            return totalRowCount;
         } else if (node instanceof TableScan) {
             return getRowCount((TableScan) node, mq);
         } else if (node instanceof Filter) {
@@ -131,6 +142,12 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     return mq.getRowCount(subset);
                 }
             }
+            Pattern original =
+                    (node instanceof GraphExtendIntersect)
+                            ? ((GraphExtendIntersect) node).getGlogueEdge().getDstPattern()
+                            : ((GraphJoinDecomposition) node).getParentPatten();
+            return mq.getRowCount(
+                    new GraphPattern(node.getCluster(), node.getTraitSet(), original));
         } else if (node instanceof Join) {
             return mdRowCount.getRowCount((Join) node, mq);
         } else if (node instanceof Union) {
