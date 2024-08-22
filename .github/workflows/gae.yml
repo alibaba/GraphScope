@@ -74,7 +74,7 @@ jobs:
 
         # java maven test
         cd ${GITHUB_WORKSPACE}/analytical_engine/java
-        mvn test -Dmaven.antrun.skip=true --quiet
+        mvn test -Dmaven.antrun.skip=true --no-transfer-progress
 
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar

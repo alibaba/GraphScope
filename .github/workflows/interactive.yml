@@ -82,7 +82,7 @@ jobs:
 
         # build compiler
         cd ${GIE_HOME}/
-        mvn clean install -Pexperimental -DskipTests -q
+        mvn clean install -Pexperimental -DskipTests --no-transfer-progress
 
     - name: Prepare dataset and workspace
       env:
@@ -144,7 +144,7 @@ jobs:
         bash generate_sdk.sh -g java
         bash generate_sdk.sh -g python
         cd java
-        mvn clean install -DskipTests -q
+        mvn clean install -DskipTests --no-transfer-progress
         cd ../python
         pip3 install -r requirements.txt
         pip3 install -r test-requirements.txt
@@ -313,7 +313,7 @@ jobs:
         sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
         sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
         cd ${GITHUB_WORKSPACE}/interactive_engine/
-        mvn clean install -Pexperimental -DskipTests -q
+        mvn clean install -Pexperimental -DskipTests --no-transfer-progress
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
