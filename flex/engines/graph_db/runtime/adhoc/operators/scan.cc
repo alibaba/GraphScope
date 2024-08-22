@@ -101,9 +101,11 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
 bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
                          const std::map<std::string, std::string>& params,
                          std::vector<int64_t>& oids, bool& scan_oid) {
+  // todo unsupported cases.
   if (predicate.or_predicates_size() != 1) {
     return false;
   }
+  // todo unsupported cases.
   if (predicate.or_predicates(0).predicates_size() != 1) {
     return false;
   }
@@ -120,7 +122,6 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
   } else {
     LOG(FATAL) << "unexpected key case";
   }
-  // const common::Property& key = triplet.key();
   if (triplet.cmp() != common::Logical::EQ && triplet.cmp() != common::WITHIN) {
     return false;
   }
@@ -153,9 +154,11 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
 bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
                          const std::map<std::string, std::string>& params,
                          std::vector<Any>& oids, bool& scan_oid) {
+  // todo unsupported cases.
   if (predicate.or_predicates_size() != 1) {
     return false;
   }
+  // todo unsupported cases.
   if (predicate.or_predicates(0).predicates_size() != 1) {
     return false;
   }
@@ -172,7 +175,6 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
   } else {
     LOG(FATAL) << "unexpected key case";
   }
-  // const common::Property& key = triplet.key();
   if (triplet.cmp() != common::Logical::EQ && triplet.cmp() != common::WITHIN) {
     return false;
   }
@@ -219,6 +221,9 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
         std::string value = params.at(name);
         int32_t v = std::stoi(value);
         oids.emplace_back(v);
+      } else {
+        LOG(FATAL) << "unsupported primary key type" << dt;
+        return false;
       }
     }
   }
@@ -374,7 +379,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                [](label_t, vid_t) { return true; });
     }
   }
-  LOG(FATAL) << "not support";
+  LOG(FATAL) << "unsupport scan option " << scan_opr.DebugString();
   return Context();
 }
 
