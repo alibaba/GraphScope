@@ -248,6 +248,10 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
     bool has_other_type_oid = false;
     const auto& scan_opr_params = scan_opr.params();
     for (const auto& table : scan_opr_params.tables()) {
+      // exclude invalid vertex label id
+      if (txn.schema().vertex_label_num() <= table.id()) {
+        continue;
+      }
       scan_params.tables.push_back(table.id());
       const auto& pks = txn.schema().get_vertex_primary_key(table.id());
       if (pks.size() > 1) {
