@@ -299,7 +299,7 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
               txn, scan_params, [](label_t, vid_t) { return true; }, oids);
         }
       }
-    } else {
+    } else if (scan_opr.has_idx_predicate()) {
       if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
         Context ctx;
         auto expr = parse_expression(
