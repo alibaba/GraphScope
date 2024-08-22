@@ -111,7 +111,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
   if (input.size() < 2) {
     return Result<std::vector<char>>(
-        StatusCode::InValidArgument,
+        StatusCode::INVALID_ARGUMENT,
         "Invalid input, input size: " + std::to_string(input.size()),
         std::vector<char>());
   }
@@ -134,7 +134,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   AppBase* app = GetApp(type);
   if (!app) {
     return Result<std::vector<char>>(
-        StatusCode::NotFound,
+        StatusCode::NOT_FOUND,
         "Procedure not found, id:" + std::to_string((int) type), result_buffer);
   }
 
@@ -167,7 +167,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
           .count());
   ++query_num_;
   return Result<std::vector<char>>(
-      StatusCode::QueryFailed,
+      StatusCode::QUERY_FAILED,
       "Query failed for procedure id:" + std::to_string((int) type),
       result_buffer);
 }
@@ -237,7 +237,7 @@ GraphDBSession::parse_query_type_from_cypher_json(
   } catch (const nlohmann::json::parse_error& e) {
     LOG(ERROR) << "Fail to parse json from input content: " << e.what();
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::InternalError,
+        StatusCode::INTERNAL_ERROR,
         "Fail to parse json from input content:" + std::string(e.what())));
   }
   auto query_name = j["query_name"].get<std::string>();
@@ -245,7 +245,7 @@ GraphDBSession::parse_query_type_from_cypher_json(
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::NotFound, "Query name is not registered: " + query_name));
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
   if (j.contains("arguments")) {
     for (auto& arg : j["arguments"]) {
@@ -263,19 +263,19 @@ GraphDBSession::parse_query_type_from_cypher_internal(
   if (!cur_query.ParseFromArray(str_view.data(), str_view.size())) {
     LOG(ERROR) << "Fail to parse query from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::InternalError, "Fail to parse query from input content"));
+        StatusCode::INTERNAL_ERROR, "Fail to parse query from input content"));
   }
   auto query_name = cur_query.query_name().name();
   if (query_name.empty()) {
     LOG(ERROR) << "Query name is empty";
     return Result<std::pair<uint8_t, std::string_view>>(
-        gs::Status(StatusCode::NotFound, "Query name is empty"));
+        gs::Status(StatusCode::NOT_FOUND, "Query name is empty"));
   }
   const auto& app_name_to_path_index = schema().GetPlugins();
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::NotFound, "Query name is not registered: " + query_name));
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
   return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
 }
