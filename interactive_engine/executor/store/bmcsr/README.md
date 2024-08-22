@@ -15,7 +15,7 @@ The graph schema contains the following information for the graph storage:
 - Mapping from vertex label to label id.
 - Mapping from edge label to a 3-tuple, which contains edge label id, source vertex label id, and target vertex label id.
 - The properties (name and datatype) of each type of vertex/edge.
-  The schema file is formatted using Json. We have provided a sampled schema file for modern graph in `data/modern_schema.json`.
+The schema file is formatted using Json. We have provided a sampled schema file for modern graph in `data/modern_schema.json`.
 
 ## Build Binary Data
 ```bash
@@ -27,8 +27,8 @@ PARTITION_NUM=$5
 PARTITION_ID=$6
 
 #USAGE:
-#    build_csr_partition <raw_data_dir> <output_dir> <input_schema_file> <graph_schema_file> -i <index> -p <partition> [--skip_header]
-cmd="./target/release/build_csr_partition $INPUT_PATH $OUTPUT_PATH $INPUT_SCHEMA_PATH $GRAPH_SCHEMA_PATH -p $PARTITION_NUM -i $PARTITION_ID"
+#    build_bmcsr_partition <raw_data_dir> <output_dir> <input_schema_file> <graph_schema_file> -i <index> -p <partition> [--skip_header]
+cmd="./target/release/build_bmcsr_partition $INPUT_PATH $OUTPUT_PATH $INPUT_SCHEMA_PATH $GRAPH_SCHEMA_PATH -p $PARTITION_NUM -i $PARTITION_ID"
 echo $cmd
 eval $cmd
 ```
