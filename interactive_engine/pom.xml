@@ -105,6 +105,7 @@
                 </configuration>
               </execution>
             </executions>
+            <inherited>false</inherited>
           </plugin>
         </plugins>
       </build>
@@ -251,6 +252,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <neo4j.version>4.4.0</neo4j.version>
+    <neo4j.driver.version>4.4.0</neo4j.driver.version>
     <interactive.sdk.version>0.4</interactive.sdk.version>
   </properties>
 
@@ -673,7 +675,7 @@
       <dependency>
         <groupId>org.neo4j.driver</groupId>
         <artifactId>neo4j-java-driver</artifactId>
-        <version>${neo4j.version}</version>
+        <version>${neo4j.driver.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
