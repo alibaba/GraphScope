@@ -379,7 +379,8 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                [](label_t, vid_t) { return true; });
     }
   }
-  LOG(FATAL) << "unsupport scan option " << scan_opr.DebugString();
+  LOG(FATAL) << "unsupport scan option " << scan_opr.DebugString()
+             << " we only support scan vertex currently";
   return Context();
 }
 
