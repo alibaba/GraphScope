@@ -214,27 +214,25 @@ The Compiler service could be started as a subprocess of the AdminService. This 
 ```
 
 
-### Mapping of Internal Code to Http Error Code
+### Error Code
 
+Runtime errors are categorized, assigned an error code, and included in the HTTP response body (only for non-200 HTTP responses). 
+The mapping between status codes and HTTP codes is shown in the table below.
 
-Internally we use [`StatusCode`](https://github.com/alibaba/GraphScope/blob/main/flex/utils/result.h) to record the runtime errors.
-The mapping between statusCode and http code is shown in the following table.
 
 | Code                                | HTTP Code   |
 | ----------------------------------- | ----------- |
-| gs::StatusCode::OK                  | 200         |
-| gs::StatusCode::InValidArgument     | 400         |
-| gs::StatusCode::UnsupportedOperator | 400         |
-| gs::StatusCode::AlreadyExists       | 409         |
-| gs::StatusCode::NotExists           | 404         |
-| gs::StatusCode::CodegenError        | 500         |
-| gs::StatusCode::UninitializedStatus | 500         |
-| gs::StatusCode::InvalidSchema       | 400         |
-| gs::StatusCode::PermissionError     | 403         |
-| gs::StatusCode::IllegalOperation    | 400         |
-| gs::StatusCode::InternalError       | 500         |
-| gs::StatusCode::InvalidImportFile   | 400         |
-| gs::StatusCode::IOError             | 500         |
-| gs::StatusCode::NotFound            | 404         |
-| gs::StatusCode::QueryFailed         | 500         |
+| OK(0)                  | 200         |
+| INVALID_ARGUMENT(2)     | 400         |
+| UNSUPPORTED_OPERATION(11) | 400         |
+| NOT_FOUND(4)           | 404         |
+| ALREADY_EXISTS(5)       | 409         |
+| PERMISSION_DENIED(8)     | 403         |
+| CODEGEN_ERROR(100)        | 500         |
+| INVALID_SCHEMA(101)       | 400         |
+| ILLEGAL_OPERATION(102)    | 400         |
+| INTERNAL_ERROR(103)       | 500         |
+| INVALID_IMPORT_FILE(104)   | 400         |
+| IO_ERROR(105)             | 500         |
+| QUERY_FAILED(106)         | 500         |
 | default                             | 500         |

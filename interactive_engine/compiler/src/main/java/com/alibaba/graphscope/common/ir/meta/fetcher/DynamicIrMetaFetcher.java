@@ -74,10 +74,13 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                     "schema from remote: {}",
                     (meta == null) ? null : meta.getSchema().schemaJson());
             GraphStatistics curStats;
-            // if the graph id is changed, we need to update the statistics
+            // if the graph id or schema version is changed, we need to update the statistics
             if (this.currentState == null
                     || !this.currentState.getGraphId().equals(meta.getGraphId())
-                    || this.currentState.getSnapshotId().getId() != meta.getSnapshotId().getId()) {
+                    || !this.currentState
+                            .getSchema()
+                            .getVersion()
+                            .equals(meta.getSchema().getVersion())) {
                 this.statsState = StatsState.INITIALIZED;
                 curStats = null;
             } else {
