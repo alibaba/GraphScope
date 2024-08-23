@@ -104,7 +104,11 @@ impl FromStreamExt<Vec<u8>> for RpcSink {
         self.had_error.store(true, Ordering::SeqCst);
         let status = if let Some(e) = error.downcast_ref::<JobExecError>() {
             let server_error = ServerError::from(e).with_details("QueryId", self.job_id.to_string());
-            Status::internal(format!("{:?}", server_error))
+            if server_error.is_cancelled() {
+                Status::deadline_exceeded(format!("{:?}", server_error))
+            } else {
+                Status::internal(format!("{:?}", server_error))
+            }
         } else {
             let server_error =
                 ServerError::new(crate::insight_error::Code::UnknownError, error.to_string());
