@@ -46,8 +46,14 @@ public class PythonInterpreter {
     public PythonInterpreter() {}
 
     public void init() throws IOException {
-        ProcessBuilder builder = new ProcessBuilder("/usr/bin/env", "python3", "-i");
-        process = builder.start();
+        try {
+            ProcessBuilder builder = new ProcessBuilder("/usr/bin/env", "python3", "-i");
+            process = builder.start();
+            logger.info("Process started: {}", process.toString());
+        } catch (IOException e) {
+            logger.error("Failed to start process", e);
+            throw e;
+        }
         outputQueue = new LinkedBlockingQueue<>();
         inputQueue = new LinkedBlockingQueue<>();
         errorQueue = new LinkedBlockingQueue<>();
@@ -80,10 +86,11 @@ public class PythonInterpreter {
         while (true) {
             str = outputQueue.take();
             if (str.contains(pattern)) {
+                logger.info("Matched pattern: {}", pattern);
                 return str;
             } else {
                 //                logger.info("got cmd output " + str + " but not matched");
-                logger.info(str);
+                logger.info("Got cmd output: {}", str);
             }
         }
     }
@@ -92,8 +99,13 @@ public class PythonInterpreter {
         is.end();
         logger.info("closing input stream thread");
         is.interrupt();
-        os.join();
-        errorStream.join();
+        try {
+            os.join();
+            errorStream.join();
+        } catch (InterruptedException e) {
+            logger.error("Interrupted exception when closing python interpreter", e);
+            throw e;
+        }
         logger.info("");
     }
 
