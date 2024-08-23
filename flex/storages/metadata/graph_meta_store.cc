@@ -806,7 +806,7 @@ Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
   } catch (const std::exception& e) {
     LOG(ERROR) << "Invalid json string: " << json_str << " " << e.what();
     return Result<GraphStatistics>(Status(
-        StatusCode::InternalError,
+        StatusCode::INTERNAL_ERROR,
         "Invalid json string when parsing graph statistics : " + json_str +
             " " + e.what()));
   }

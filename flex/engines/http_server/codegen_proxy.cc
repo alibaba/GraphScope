@@ -127,7 +127,7 @@ seastar::future<gs::Result<bool>> CodegenProxy::call_codegen_cmd(
   if (plan_path.empty()) {
     insert_or_update(next_job_id, CodegenStatus::FAILED, "");
     return seastar::make_ready_future<gs::Result<bool>>(gs::Result<bool>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to prepare next job dir for " + query_name +
                        ", job id: " + std::to_string(next_job_id) +
                        ", plan path: " + plan_path),
@@ -234,7 +234,7 @@ seastar::future<gs::Result<bool>> CodegenProxy::CallCodegenCmd(
     int res = codegen_process.exit_code();
     if (res != 0) {
       return gs::Result<bool>(
-          gs::Status(gs::StatusCode::CodegenError, ss.str()), false);
+          gs::Status(gs::StatusCode::CODEGEN_ERROR, ss.str()), false);
     }
 
     LOG(INFO) << "Codegen cmd: [" << cmd << "] success! ";

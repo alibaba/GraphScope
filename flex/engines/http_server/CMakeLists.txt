@@ -11,6 +11,7 @@ if (Hiactor_FOUND)
   list(FILTER SERVER_FILES EXCLUDE REGEX ".*generated.*")
 
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
+  add_dependencies(flex_server flex_utils) # Make sure flex_utils is built before flex_server
   add_dependencies(flex_server server_actor_autogen)
   target_compile_options (flex_server
         PUBLIC
