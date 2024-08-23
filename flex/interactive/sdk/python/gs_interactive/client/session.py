@@ -439,6 +439,12 @@ class DefaultSession(Session):
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
+        """Get the schema of a specified graph.
+        Parameters:
+            graph_id (str): The ID of the graph whose schema is to be retrieved.
+        Returns:
+            Result[GetGraphSchemaResponse]: The result containing the schema of the specified graph.
+        """
         graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.get_schema_with_http_info(graph_id)
