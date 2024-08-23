@@ -23,6 +23,8 @@ CI ?= false
 ENABLE_COORDINATOR ?= false
 # Flex Interactive: controls whether optimize for host, should be enabled when building images
 OPTIMIZE_FOR_HOST:= OFF
+# Enable open telemetry for flex interactive
+ENABLE_OPENTELMETRY ?= false
 
 BUILD_PROGRESS  	?= auto
 
@@ -168,6 +170,7 @@ flex-interactive:
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg PLATFORM=${PLATFORM} \
+		--build-arg ENABLE_OPENTELMETRY=${ENABLE_OPENTELMETRY} \
 		--build-arg ARCH=${ARCH} \
 		--build-arg OPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} \
 		-t graphscope/interactive:${VERSION}  \

@@ -1,7 +1,4 @@
 # The error code of FLEX Interactive is defined in $GRAPHSCOPE_HOME/proto/error/interactive.proto
-find_package(Protobuf REQUIRED)
-include_directories(${Protobuf_INCLUDE_DIRS})
-
 set(GRAPHSCOPE_ERROR_PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../proto/error/)
 # proto files of gie compiler
 set(INTERACTIVE_ERROR_PROTO_FILES
@@ -22,15 +19,12 @@ protobuf_generate(APPEND_PATH
 file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 
 
-add_library(flex_utils SHARED ${UTILS_SRC_FILES} ${ERROR_PROTO_SRCS})
+add_library(flex_utils SHARED ${UTILS_SRC_FILES} ${ERROR_PROTO_SRCS} ${Protobuf_LIBRARIES})
 target_include_directories(flex_utils PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-if (ARROW_SHARED_LIB)
-        target_link_libraries(flex_utils ${ARROW_SHARED_LIB})
-else()
-        target_link_libraries(flex_utils ${ARROW_STATIC_LIB})
-endif()
+# Link the static library of arrow, to save the trouble of linking the shared library of arrow
+target_link_libraries(flex_utils ${ARROW_LIB})
 
 
 target_link_libraries(flex_utils ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${Protobuf_LIBRARIES})
