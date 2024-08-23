@@ -23,8 +23,6 @@ compiler:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
-      - ExtendIntersectRule
-      - ExpandGetVFusionRule
   meta:
     reader:
       schema:
