@@ -253,7 +253,7 @@
 
     <neo4j.version>4.4.0</neo4j.version>
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
-    <interactive.sdk.version>0.4</interactive.sdk.version>
+    <interactive.sdk.version>0.4-SNAPSHOT</interactive.sdk.version>
   </properties>
 
   <dependencyManagement>
@@ -909,17 +909,22 @@
                         <goal>shade</goal>
                     </goals>
                     <configuration>
-                        <artifactSet>
-                            <includes>
-                                <include>com.alibaba.graphscope.interactive</include>
-                            </includes>
-                        </artifactSet>
-                        <relocations>
-                            <relocation>
-                                <pattern>com.alibaba.graphscope.gaia.proto</pattern>
-                                <shadedPattern>shaded.com.alibaba.graphscope.gaia.proto</shadedPattern>
-                            </relocation>
-                        </relocations>
+                        <filters>
+                            <filter>
+                                <artifact>com.alibaba.graphscope:interactive</artifact>
+                                <excludes>
+                                    <exclude>com.alibaba.graphscope.gaia.proto.*</exclude>
+                                </excludes>
+                            </filter>
+                            <filter>
+                              <artifact>*:*</artifact>
+                              <excludes>
+                                  <exclude>META-INF/*.SF</exclude>
+                                  <exclude>META-INF/*.DSA</exclude>
+                                  <exclude>META-INF/*.RSA</exclude>
+                              </excludes>
+                          </filter>
+                        </filters>
                     </configuration>
                 </execution>
             </executions>
