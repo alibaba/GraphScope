@@ -2,7 +2,7 @@
 #
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-M2_REPO					:= $(shell mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
+M2_REPO					:= $(shell mvn help:evaluate -Dexpression=settings.localRepository --no-transfer-progress -DforceStdout)
 
 
 # You can set these variables from the command line, and also
@@ -44,7 +44,7 @@ clean:
 		-DskipTests \
 		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
 		-Djavadoc.output.destDir=gae_java \
-		--quiet
+		--no-transfer-progress
 
 	# sphinx will append the `flex/` part to the output directory
 	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"

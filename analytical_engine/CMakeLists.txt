@@ -511,7 +511,7 @@ if(ENABLE_JAVA_SDK)
 
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
-        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
+        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --no-transfer-progress
         DEPENDS gs_proto
         WORKING_DIRECTORY ${GAE_JAVA_DIR}
         COMMENT "Building GAE-java..."
