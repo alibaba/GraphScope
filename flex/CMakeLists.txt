@@ -192,6 +192,16 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nloh
 endif()
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
 
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/rapidjson
+        DESTINATION include/rapidjson)
+
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
+
 if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
 endif()

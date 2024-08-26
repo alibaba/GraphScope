@@ -21,6 +21,9 @@
 #include "flex/engines/http_server/graph_db_service.h"
 #include "graph_db_service.h"
 #include "nlohmann/json.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 #include <seastar/core/print.hh>
 
@@ -69,11 +72,10 @@ seastar::future<admin_query_result> executor::create_vertex(
               gs::Status(gs::StatusCode::NOT_FOUND,
                          "The queried graph is not running: " + graph_id)));
   }
-
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
   try {
-    input_json = nlohmann::json::parse(param.content.second);
+    input_json.Parse(param.content.second.c_str());
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
@@ -102,11 +104,10 @@ seastar::future<admin_query_result> executor::create_edge(
             gs::Status(gs::StatusCode::NOT_FOUND,
                        "The queried graph is not running: " + graph_id)));
   }
-
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
   try {
-    input_json = nlohmann::json::parse(param.content.second);
+    input_json.Parse(param.content.second.c_str());
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
@@ -137,10 +138,10 @@ seastar::future<admin_query_result> executor::update_vertex(
                          "The queried graph is not running: " + graph_id)));
     }
   }
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
   try {
-    input_json = nlohmann::json::parse(param.content.second);
+    input_json.Parse(param.content.second.c_str());
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
@@ -171,10 +172,10 @@ seastar::future<admin_query_result> executor::update_edge(
                          "The queried graph is not running: " + graph_id)));
     }
   }
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
   try {
-    input_json = nlohmann::json::parse(param.content.second);
+    input_json.Parse(param.content.second.c_str());
   } catch (const std::exception& e) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(

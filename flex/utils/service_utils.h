@@ -32,6 +32,9 @@
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 #include "nlohmann/json.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 #include <glog/logging.h>
 #include <boost/filesystem.hpp>
@@ -107,11 +110,18 @@ inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
-inline std::string jsonToString(const nlohmann::json& json) {
-  if (json.is_string()) {
-    return json.get<std::string>();
+inline std::string rapidjson_stringify(const rapidjson::Value& value) {
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  value.Accept(writer);
+  return buffer.GetString();
+}
+
+inline std::string jsonToString(const rapidjson::Value& json) {
+  if (json.IsString()) {
+    return json.GetString();
   } else {
-    return json.dump();
+    return rapidjson_stringify(json);
   }
 }
 

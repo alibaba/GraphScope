@@ -19,7 +19,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -46,13 +48,13 @@ struct EdgeData {
 class GraphDBOperations {
  public:
   static Result<std::string> CreateVertex(GraphDBSession& session,
-                                          nlohmann::json&& input_json);
+                                          rapidjson::Document && input_json);
   static Result<std::string> CreateEdge(GraphDBSession& session,
-                                        nlohmann::json&& input_json);
+                                        rapidjson::Document && input_json);
   static Result<std::string> UpdateVertex(GraphDBSession& session,
-                                          nlohmann::json&& input_json);
+                                          rapidjson::Document && input_json);
   static Result<std::string> UpdateEdge(GraphDBSession& session,
-                                        nlohmann::json&& input_json);
+                                        rapidjson::Document && input_json);
   static Result<std::string> GetVertex(
       GraphDBSession& session,
       std::unordered_map<std::string, std::string>&& params);
@@ -60,15 +62,15 @@ class GraphDBOperations {
       GraphDBSession& session,
       std::unordered_map<std::string, std::string>&& params);
   static Result<std::string> DeleteVertex(GraphDBSession& session,
-                                          nlohmann::json&& input_json);
+                                          rapidjson::Document && input_json);
   static Result<std::string> DeleteEdge(GraphDBSession& session,
-                                        nlohmann::json&& input_json);
+                                        rapidjson::Document && input_json);
 
  private:
   // The following interfaces are called before the Transaction is constructed
-  static VertexData inputVertex(const nlohmann::json& vertex_json,
+  static VertexData inputVertex(const rapidjson::Value& vertex_json,
                                 const Schema& schema, GraphDBSession& session);
-  static EdgeData inputEdge(const nlohmann::json& edge_json,
+  static EdgeData inputEdge(const rapidjson::Value& edge_json,
                             const Schema& schema, GraphDBSession& session);
   // check schema
   static Status checkVertexSchema(
@@ -108,10 +110,10 @@ class GraphDBOperations {
                              GraphDBSession& session);
   static Status updateEdge(std::vector<EdgeData>&& edge_data,
                            GraphDBSession& session);
-  static Result<nlohmann::json> getEdge(std::vector<EdgeData>&& edge_data,
+  static Result<rapidjson::Value> getEdge(std::vector<EdgeData>&& edge_data,
                                         const std::string& property_name,
                                         GraphDBSession& session);
-  static Result<nlohmann::json> getVertex(
+  static Result<rapidjson::Value> getVertex(
       std::vector<VertexData>&& vertex_data,
       const std::vector<std::string>& property_names, GraphDBSession& session);
 };
