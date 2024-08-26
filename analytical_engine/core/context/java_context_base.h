@@ -86,8 +86,27 @@ class JavaContextBase : public grape::ContextBase {
     }
     JNIEnvMark m;
     if (m.env()) {
-      m.env()->DeleteGlobalRef(url_class_loader_object_);
-      VLOG(1) << "Delete URL class loader";
+      // Delete the java objects
+      if (app_object_) {
+        m.env()->DeleteGlobalRef(app_object_);
+        VLOG(1) << "Delete app object";
+      }
+      if (context_object_) {
+        m.env()->DeleteGlobalRef(context_object_);
+        VLOG(1) << "Delete context object";
+      }
+      if (fragment_object_) {
+        m.env()->DeleteGlobalRef(fragment_object_);
+        VLOG(1) << "Delete fragment object";
+      }
+      if (mm_object_) {
+        m.env()->DeleteGlobalRef(mm_object_);
+        VLOG(1) << "Delete message manager object";
+      }
+      if (url_class_loader_object_) {
+        m.env()->DeleteGlobalRef(url_class_loader_object_);
+        VLOG(1) << "Delete url class loader object";
+      }
     } else {
       LOG(ERROR) << "JNI env not available.";
     }
