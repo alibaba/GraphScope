@@ -120,6 +120,7 @@ RUN rm -rf /opt/flex/bin/run_app
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 COPY --from=builder /usr/include/boost /usr/include/boost
+COPY --from=builder /usr/include/google /usr/include/google
 
 
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* \
