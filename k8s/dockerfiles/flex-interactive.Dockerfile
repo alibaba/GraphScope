@@ -139,12 +139,12 @@ COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM
     /usr/lib/$PLATFORM-linux-gnu/libyaml-cpp*.so* \
     /usr/lib/$PLATFORM-linux-gnu/libglog*.so* \
     /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/
+    /usr/lib/$PLATFORM-linux-gnu/libicudata.so* \
+    /usr/lib/$PLATFORM-linux-gnu/; \
 
 RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcuda.so && \
-    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcudart.so && \
-    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libicudata.so*
+    sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcudart.so; \
 
 # strip all .so in /opt/flex/lib
 RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
