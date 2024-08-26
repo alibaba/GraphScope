@@ -254,6 +254,8 @@
     <neo4j.version>4.4.0</neo4j.version>
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
     <interactive.sdk.version>0.4</interactive.sdk.version>
+
+    <org.javatuples.version>1.2</org.javatuples.version>
   </properties>
 
   <dependencyManagement>
@@ -695,6 +697,11 @@
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>interactive</artifactId>
         <version>${interactive.sdk.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.javatuples</groupId>
+          <artifactId>javatuples</artifactId>
+          <version>${org.javatuples.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
