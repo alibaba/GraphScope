@@ -201,13 +201,16 @@ codegen::ParamConst variable_to_param_const(const common::Variable& var,
     auto& var_property = var.property();
     if (var_property.has_label()) {
       param_const.var_name = "label";
+      param_const.expr_var_name = "label";
       param_const.type = codegen::DataType::kLabelId;
     } else if (var_property.has_key()) {
       param_const.var_name = var.property().key().name();
+      param_const.expr_var_name = var.property().key().name();
       param_const.type =
           common_data_type_pb_2_data_type(var.node_type().data_type());
     } else if (var_property.has_id()) {
       param_const.var_name = ctx.GetNextVarName();
+      param_const.expr_var_name = ctx.GetNextVarName();
       param_const.type = codegen::DataType::kGlobalVertexId;
     } else {
       LOG(FATAL) << "Unexpected property type: " << var_property.DebugString();
@@ -217,6 +220,7 @@ codegen::ParamConst variable_to_param_const(const common::Variable& var,
     if (var.has_node_type()) {
       auto node_type = var.node_type();
       param_const.var_name = ctx.GetNextVarName();
+      param_const.expr_var_name = param_const.var_name;
       if (node_type.type_case() == common::IrDataType::kDataType) {
         param_const.type =
             common_data_type_pb_2_data_type(node_type.data_type());

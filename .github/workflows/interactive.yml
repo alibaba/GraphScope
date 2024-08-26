@@ -200,59 +200,10 @@ jobs:
     - name: Run codegen test.
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
-        HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
-        cd ${GITHUB_WORKSPACE}/flex/bin
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
-
-        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        for i in 1 2 3 4 5 6 7 8 9 11 12; # 10 is not supported now
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        # test movie graph, 8,9,10 are not supported now
-        # change the default_graph config in ../tests/hqps/engine_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test.yaml
-        for i in 1 2 3 4 5 6 7 11 12 13 14 15;
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        # test graph_algo plugin building
-        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ../tests/hqps/engine_config_test.yaml
-        cypher_files=$(ls ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/*.cypher)
-        for cypher_file in ${cypher_files};
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=${cypher_file} -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
-          cmd=${cmd}" --procedure_name=$(basename ${cypher_file} .cypher)"
-          cmd=${cmd}" --procedure_desc=\"This is test procedure, change the description if needed.\""
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        #set back
-        sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
-        rm -rf /tmp/codegen
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_codegen_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ./engine_config_test_cbo.yaml
 
     - name: Test cypher&cpp procedure generation and loading
       env:
