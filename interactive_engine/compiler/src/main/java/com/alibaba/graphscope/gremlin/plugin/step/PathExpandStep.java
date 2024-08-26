@@ -87,13 +87,13 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
         String key = toCamelCaseInsensitive(originalKey);
         String value = toCamelCaseInsensitive(originalVal);
         if (key.equals("PathOpt")) {
-            if (value.equals("Arbitrary") || value.equals("Simple") || value.equals("Trail")) {
+            if (value.equals("Arbitrary") || value.equals("Simple")) {
                 this.pathOpt = PathOpt.valueOf(value);
             } else {
                 throw new ExtendGremlinStepException(
                         "value "
                                 + originalVal
-                                + " is invalid, use ARBITRARY, SIMPLE or TRAIL instead (case"
+                                + " is invalid, use ARBITRARY or SIMPLE instead (case"
                                 + " insensitive)");
             }
         } else if (key.equals("ResultOpt")) {
