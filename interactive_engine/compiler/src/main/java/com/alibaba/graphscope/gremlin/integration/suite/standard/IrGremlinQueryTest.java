@@ -199,36 +199,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age();
 
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","END_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_endv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","END_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_endv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","TRAIL").with("RESULT_OPT","END_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_trail_endv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","ALL_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","ALL_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","TRAIL").with("RESULT_OPT","ALL_V").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_trail_allv_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","ALL_V_E").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allve_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","ALL_V_E").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allve_count();
-
-    // g.V().has("id",2).both("1..5").with("PATH_OPT","TRAIL").with("RESULT_OPT","ALL_V_E").count()
-    public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_trail_allve_count();
-
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_path_expand_until_age_gt_30_values_age() {
+        // the until condition follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
         assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
         final Traversal<Vertex, Object> traversal =
                 get_g_V_path_expand_until_age_gt_30_values_age();
@@ -274,96 +249,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                 get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
         printTraversalForm(traversal);
         Assert.assertEquals("marko", traversal.next());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_arbitrary_endv_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_endv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(28, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_simple_endv_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_endv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(9, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_trail_endv_count() {
-        // Skip this test in distributed settings because edge ids might differ
-        // across partitions in experimental store.
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_endv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(11, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_arbitrary_allv_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_allv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(28, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_simple_allv_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_allv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(9, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_trail_allv_count() {
-        // Skip this test in distributed settings because edge ids might differ
-        // across partitions in experimental store.
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_allv_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(11, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_arbitrary_allve_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_arbitrary_allve_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(28, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_simple_allve_count() {
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_simple_allve_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(9, traversal.next().intValue());
-    }
-
-    @Test
-    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_trail_allve_count() {
-        // Skip this test in distributed settings because edge ids might differ
-        // across partitions in experimental store.
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
-        final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_allve_count();
-        printTraversalForm(traversal);
-        Assert.assertEquals(11, traversal.next().intValue());
     }
 
     @Test
@@ -1538,96 +1423,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                                     "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
                                     ExprStep.Type.FILTER))
                     .values("name");
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_endv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "ARBITRARY")
-                            .with("RESULT_OPT", "END_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_endv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "SIMPLE")
-                            .with("RESULT_OPT", "END_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_trail_endv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "TRAIL")
-                            .with("RESULT_OPT", "END_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "ARBITRARY")
-                            .with("RESULT_OPT", "ALL_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "SIMPLE")
-                            .with("RESULT_OPT", "ALL_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_trail_allv_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "TRAIL")
-                            .with("RESULT_OPT", "ALL_V")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allve_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "ARBITRARY")
-                            .with("RESULT_OPT", "ALL_V_E")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allve_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "SIMPLE")
-                            .with("RESULT_OPT", "ALL_V_E")
-                            .count());
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_VX2X_both_with_trail_allve_count() {
-            return ((IrCustomizedTraversal)
-                    g.V().has("id", 2)
-                            .both("1..5")
-                            .with("PATH_OPT", "TRAIL")
-                            .with("RESULT_OPT", "ALL_V_E")
-                            .count());
         }
 
         @Override
