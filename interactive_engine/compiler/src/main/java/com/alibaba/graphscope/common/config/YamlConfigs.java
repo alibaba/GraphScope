@@ -82,6 +82,15 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
+                        "graph.physical.opt",
+                        (Configs configs) -> {
+                            if (configs.get("compiler.physical.opt.config") != null) {
+                                return configs.get("compiler.physical.opt.config");
+                            } else {
+                                return "ffi"; // default proto
+                            }
+                        })
+                .put(
                         "pegasus.worker.num",
                         (Configs configs) -> {
                             String type = configs.get("compute_engine.type");
