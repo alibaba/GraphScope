@@ -122,6 +122,7 @@ COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/glog /usr/include/glog
+COPY --from=builder /usr/include/gflags /usr/include/gflags
 
 
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* \
