@@ -259,16 +259,28 @@
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
                     </pluginArtifact>
-                    <protoSourceRoot>${project.basedir}/../..</protoSourceRoot>
-                    <includes>
-                        <include>proto/error/frontend.proto</include>
-                        <include>interactive_engine/executor/ir/proto</include>
-                    </includes>
                     <outputDirectory>src/main/generated/</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>error-code</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/../..</protoSourceRoot>
+                            <includes>
+                                <include>proto/error/frontend.proto</include>
+                            </includes>
+                        </configuration>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>ir-proto</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/../../interactive_engine/executor/ir/proto/</protoSourceRoot>
+                        </configuration>
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>
