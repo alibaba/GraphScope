@@ -40,9 +40,9 @@ public class ThreadSafeBitSet {
 
     public static final int DEFAULT_LOG2_SEGMENT_SIZE_IN_BITS = 14;
 
-    private final int numLongsPerSegment;
-    private final int log2SegmentSize;
-    private final int segmentMask;
+    private int numLongsPerSegment;
+    private int log2SegmentSize;
+    private int segmentMask;
     private final AtomicReference<ThreadSafeBitSetSegments> segments;
 
     public ThreadSafeBitSet() {
@@ -97,6 +97,16 @@ public class ThreadSafeBitSet {
             // are done.
             if (segment.compareAndSet(longPosition, currentLongValue, newLongValue)) break;
         }
+    }
+
+    public void assign(ThreadSafeBitSet other) {
+        //copy the other bitset to this bitset
+        ThreadSafeBitSetSegments otherSegments = other.segments.get();
+        ThreadSafeBitSetSegments newSegments = new ThreadSafeBitSetSegments(otherSegments, otherSegments.numSegments(), otherSegments.segmentLength());
+        segments.set(newSegments);
+        this.log2SegmentSize = other.log2SegmentSize;
+        this.numLongsPerSegment = other.numLongsPerSegment;
+        this.segmentMask = other.segmentMask;
     }
 
     public void setUntil(int position) {
@@ -431,6 +441,10 @@ public class ThreadSafeBitSet {
 
         public int numSegments() {
             return segments.length;
+        }
+
+        public int segmentLength() {
+            return segments[0].length();
         }
 
         public AtomicLongArray getSegment(int index) {
