@@ -45,6 +45,7 @@ export GS_TEST_DIR=${testdata}
 
 GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
 
+
 function get_test_data {
 	if [[ ! -d ${GS_TEST_DIR} ]]; then
 		log "Downloading test data to ${testdata}"
@@ -141,17 +142,20 @@ function test_learning {
 
 function test_e2e {
 	get_test_data
+	# Import python projects in the source directory
 	cd "${GS_SOURCE_DIR}"/python || exit
 	if [ "${on_local}" == "True" ]; then
 		# unittest
 		python3 -m pytest -s -vvv --exitfirst graphscope/tests/minitest/test_min.py
 	fi
 	if [ "${on_k8s}" == "True" ]; then
+		# Run tests in Kubernetes environment using pytest
 		python3 -m pytest -s -vvv --exitfirst ./graphscope/tests/kubernetes/test_demo_script.py
 	fi
 }
 
 function test_groot {
+	# Used to test groot
 	get_test_data
 	if [ "${on_local}" == "True" ]; then
 		info "Testing groot on local"

@@ -32,12 +32,14 @@ done
 GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
 
 function format_cpp {
+	# Check if clang-format is installed
 	if ! [ -x "$(command -v clang-format)" ]; then
 		echo 'Downloading clang-format.' >&2
 		curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output ${GRAPHSCOPE_HOME}/bin/clang-format
 		chmod +x ${GRAPHSCOPE_HOME}/clang-format
 		export PATH="${GRAPHSCOPE_HOME}/bin:${PATH}"
 	fi
+	# find all relevant files
 	pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
 	files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
 
@@ -47,6 +49,7 @@ function format_cpp {
 }
 
 function lint_cpp {
+	# use cpplint.py for static analysis
 	pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
 	files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
 
@@ -65,6 +68,7 @@ function format_java {
 }
 
 function format_python {
+	# Install dependency
 	if ! [ -x "$(command -v black)" ]; then
 		pip3 install -r ${GS_SOURCE_DIR}/coordinator/requirements-dev.txt --user
 	fi
@@ -81,6 +85,7 @@ function format_python {
 }
 
 function format_rust {
+	# Use cargo fmt for formatting checks
 	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/groot
 	cargo +nightly fmt -- --check
 	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/v6d
