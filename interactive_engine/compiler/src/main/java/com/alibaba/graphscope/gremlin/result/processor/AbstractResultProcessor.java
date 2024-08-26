@@ -159,7 +159,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             }
             resultCollectors.addAll(
                     ClassUtils.callWithException(
-                            () -> resultParser.parseFrom(response), Code.CYPHER_INVALID_RESULT));
+                            () -> resultParser.parseFrom(response), Code.GREMLIN_INVALID_RESULT));
         }
 
         public void finish() {
