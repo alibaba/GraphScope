@@ -2312,6 +2312,7 @@ mod graph {
     pub enum PathOpt {
         Arbitrary = 0,
         Simple = 1,
+        Trail = 2,
     }
 
     #[allow(dead_code)]
