@@ -20,7 +20,8 @@ import com.alibaba.graphscope.common.jna.IntEnum;
 
 public enum PathOpt implements IntEnum<PathOpt> {
     Arbitrary,
-    Simple;
+    Simple,
+    Trail;
 
     @Override
     public int getInt() {
