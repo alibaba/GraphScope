@@ -16,8 +16,58 @@
 
 package com.alibaba.graphscope.common.utils;
 
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.ExecutionException;
+import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.proto.Code;
+
+import io.grpc.Status;
+
+import java.util.concurrent.Callable;
+
 public class ClassUtils {
     public static <T> boolean equalClass(T t1, Class<? extends T> target) {
         return t1.getClass().equals(target);
+    }
+
+    public static final <T> T callWithException(Callable<T> callable, Code errorCode) {
+        try {
+            return callable.call();
+        } catch (FrontendException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FrontendException(errorCode, e.getMessage());
+        }
+    }
+
+    public static final void runWithException(Runnable runnable, Code errorCode) {
+        try {
+            runnable.run();
+        } catch (FrontendException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FrontendException(errorCode, e.getMessage());
+        }
+    }
+
+    public static final Exception handleExecutionException(
+            Status status, QueryTimeoutConfig timeoutConfig, String defaultMsg) {
+        switch (status.getCode()) {
+            case DEADLINE_EXCEEDED:
+                String msg =
+                        String.format(
+                                "error from executor: [%s], hint: [%s]",
+                                status.getDescription(),
+                                "query exceeds the timeout limit "
+                                        + timeoutConfig.getExecutionTimeoutMS()
+                                        + " ms, please increase the config by setting"
+                                        + " 'query.execution.timeout.ms'");
+                return new FrontendException(Code.TIMEOUT, msg);
+            case INTERNAL:
+            default:
+                String errorMsg =
+                        status.getDescription() == null ? defaultMsg : status.getDescription();
+                return new ExecutionException(errorMsg);
+        }
     }
 }

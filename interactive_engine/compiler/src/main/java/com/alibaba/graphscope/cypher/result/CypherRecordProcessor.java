@@ -17,9 +17,14 @@
 package com.alibaba.graphscope.cypher.result;
 
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.proto.Code;
 import com.alibaba.pegasus.common.StreamIterator;
+
+import io.grpc.Status;
 
 import org.neo4j.fabric.stream.summary.EmptySummary;
 import org.neo4j.fabric.stream.summary.Summary;
@@ -41,12 +46,17 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     private final QuerySubscriber subscriber;
     private final StreamIterator<IrResult.Record> recordIterator;
     private final Summary summary;
+    private final QueryTimeoutConfig timeoutConfig;
 
-    public CypherRecordProcessor(RecordParser<AnyValue> recordParser, QuerySubscriber subscriber) {
+    public CypherRecordProcessor(
+            RecordParser<AnyValue> recordParser,
+            QuerySubscriber subscriber,
+            QueryTimeoutConfig timeoutConfig) {
         this.recordParser = recordParser;
         this.subscriber = subscriber;
         this.recordIterator = new StreamIterator<>();
         this.summary = new EmptySummary();
+        this.timeoutConfig = timeoutConfig;
         initializeSubscriber();
     }
 
@@ -83,7 +93,9 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     public void request(long l) throws Exception {
         while (l > 0 && recordIterator.hasNext()) {
             IrResult.Record record = recordIterator.next();
-            List<AnyValue> columns = recordParser.parseFrom(record);
+            List<AnyValue> columns =
+                    ClassUtils.callWithException(
+                            () -> recordParser.parseFrom(record), Code.CYPHER_INVALID_RESULT);
             for (int i = 0; i < columns.size(); i++) {
                 subscriber.onField(i, columns.get(i));
             }
@@ -125,7 +137,11 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
 
     @Override
     public void onError(Throwable t) {
-        t = (t == null) ? new RuntimeException("Unknown error") : t;
-        this.recordIterator.fail(t);
+        Status status =
+                (t == null)
+                        ? Status.UNKNOWN.withDescription("Unknown error in execution")
+                        : Status.fromThrowable(t);
+        this.recordIterator.fail(
+                ClassUtils.handleExecutionException(status, timeoutConfig, t.getMessage()));
     }
 }

@@ -92,4 +92,8 @@ enum Code {
     // query execution time exceeds the limit
     // QueryExecutionTimeoutError = 111;
     QUERY_EXECUTION_TIMEOUT = 111;
+    // schema is not ready for querying
+    META_SCHEMA_NOT_READY = 112;
+    // statistics is not ready for querying
+    META_STATISTICS_NOT_READY = 113;
 }

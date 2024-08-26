@@ -136,10 +136,11 @@ public class GraphQueryExecutor extends FabricExecutor {
                     statement,
                     jobName,
                     planSummary.getPhysicalPlan().explain());
+            QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
             StatementResults.SubscribableExecution execution;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
                 execution =
-                        new AbstractPlanExecution(planSummary) {
+                        new AbstractPlanExecution(planSummary, timeoutConfig) {
                             @Override
                             protected void execute(ExecutionResponseListener listener) {
                                 List<IrResult.Results> records = cacheValue.result.records;
@@ -149,7 +150,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                         };
             } else {
                 execution =
-                        new AbstractPlanExecution(planSummary) {
+                        new AbstractPlanExecution(planSummary, timeoutConfig) {
                             @Override
                             protected void execute(ExecutionResponseListener listener)
                                     throws Exception {
@@ -159,7 +160,6 @@ public class GraphQueryExecutor extends FabricExecutor {
                                                 jobName,
                                                 planSummary.getLogicalPlan(),
                                                 planSummary.getPhysicalPlan());
-                                QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
                                 client.submit(request, listener, timeoutConfig);
                             }
                         };

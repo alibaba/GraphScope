@@ -37,6 +37,7 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
@@ -51,11 +52,11 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
+import com.alibaba.graphscope.proto.Code;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.LongHistogram;
@@ -85,7 +86,6 @@ import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
@@ -372,23 +372,19 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         })
                 .withResult(
                         o -> {
-                            try {
-                                if (o != null && o instanceof Traversal) {
-                                    Traversal traversal = (Traversal) o;
-                                    processTraversal(
-                                            traversal,
-                                            new GremlinResultProcessor(
-                                                    configs,
-                                                    ctx,
-                                                    traversal,
-                                                    statusCallback,
-                                                    timeoutConfig),
-                                            irMeta,
-                                            timeoutConfig,
-                                            statusCallback.getQueryLogger());
-                                }
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
+                            if (o != null && o instanceof Traversal) {
+                                Traversal traversal = (Traversal) o;
+                                processTraversal(
+                                        traversal,
+                                        new GremlinResultProcessor(
+                                                configs,
+                                                ctx,
+                                                traversal,
+                                                statusCallback,
+                                                timeoutConfig),
+                                        irMeta,
+                                        timeoutConfig,
+                                        statusCallback.getQueryLogger());
                             }
                         })
                 .create();
@@ -400,46 +396,69 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             AbstractResultProcessor resultProcessor,
             IrMeta irMeta,
             QueryTimeoutConfig timeoutConfig,
-            QueryLogger queryLogger)
-            throws InvalidProtocolBufferException, IOException, RuntimeException {
+            QueryLogger queryLogger) {
         // get configs per query from traversal
         Configs queryConfigs = getQueryConfigs(traversal);
 
-        InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
-        // fuse order with limit to topK
-        InterOpCollection.applyStrategies(opCollection);
-        // add sink operator
-        InterOpCollection.process(opCollection);
+        InterOpCollection logicalPlan =
+                ClassUtils.callWithException(
+                        () -> {
+                            InterOpCollection opCollection =
+                                    (new InterOpCollectionBuilder(traversal)).build();
+                            // fuse order with limit to topK
+                            InterOpCollection.applyStrategies(opCollection);
+                            // add sink operator
+                            InterOpCollection.process(opCollection);
+                            return opCollection;
+                        },
+                        Code.LOGICAL_PLAN_BUILD_FAILED);
 
-        BigInteger jobId = queryLogger.getQueryId();
-        IrPlan irPlan = new IrPlan(irMeta, opCollection);
-        // print script and jobName with ir plan
-        queryLogger.info("Submitted query");
-        // Too verbose, since all identical queries produce identical plans, it's no need to print
-        // every plan in production.de
-        String irPlanStr = irPlan.getPlanAsJson();
-        queryLogger.debug("ir plan {}", irPlanStr);
-        queryLogger.setIrPlan(irPlanStr);
-        byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
-        irPlan.close();
+        StringBuilder irPlanStr = new StringBuilder();
 
-        PegasusClient.JobRequest request =
-                PegasusClient.JobRequest.newBuilder()
-                        .setPlan(ByteString.copyFrom(physicalPlanBytes))
-                        .build();
-        String jobName = "ir_plan_" + jobId;
-        PegasusClient.JobConfig jobConfig =
-                PegasusClient.JobConfig.newBuilder()
-                        .setJobId(jobId.longValue())
-                        .setJobName(jobName)
-                        .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(queryConfigs))
-                        .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(queryConfigs))
-                        .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(queryConfigs))
-                        .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(queryConfigs))
-                        .setTimeLimit(timeoutConfig.getEngineTimeoutMS())
-                        .setAll(PegasusClient.Empty.newBuilder().build())
-                        .build();
-        request = request.toBuilder().setConf(jobConfig).build();
+        PegasusClient.JobRequest physicalRequest =
+                ClassUtils.callWithException(
+                        () -> {
+                            IrPlan irPlan = new IrPlan(irMeta, logicalPlan);
+                            // print script and jobName with ir plan
+                            queryLogger.info("Submitted query");
+                            // Too verbose, since all identical queries produce identical plans,
+                            // it's no need to print
+                            // every plan in production.de
+                            irPlanStr.append(irPlan.getPlanAsJson());
+                            queryLogger.debug("ir plan {}", irPlanStr.toString());
+                            queryLogger.setIrPlan(irPlanStr.toString());
+                            byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
+                            irPlan.close();
+                            BigInteger jobId = queryLogger.getQueryId();
+                            PegasusClient.JobRequest request =
+                                    PegasusClient.JobRequest.newBuilder()
+                                            .setPlan(ByteString.copyFrom(physicalPlanBytes))
+                                            .build();
+                            String jobName = "ir_plan_" + jobId;
+                            PegasusClient.JobConfig jobConfig =
+                                    PegasusClient.JobConfig.newBuilder()
+                                            .setJobId(jobId.longValue())
+                                            .setJobName(jobName)
+                                            .setWorkers(
+                                                    PegasusConfig.PEGASUS_WORKER_NUM.get(
+                                                            queryConfigs))
+                                            .setBatchSize(
+                                                    PegasusConfig.PEGASUS_BATCH_SIZE.get(
+                                                            queryConfigs))
+                                            .setMemoryLimit(
+                                                    PegasusConfig.PEGASUS_MEMORY_LIMIT.get(
+                                                            queryConfigs))
+                                            .setBatchCapacity(
+                                                    PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(
+                                                            queryConfigs))
+                                            .setTimeLimit(timeoutConfig.getEngineTimeoutMS())
+                                            .setAll(PegasusClient.Empty.newBuilder().build())
+                                            .build();
+                            request = request.toBuilder().setConf(jobConfig).build();
+                            return request;
+                        },
+                        Code.PHYSICAL_PLAN_BUILD_FAILED);
+
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
         if (TraceId.isValid(queryLogger.getUpstreamId())) {
@@ -463,8 +482,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         try (Scope ignored = outgoing.makeCurrent()) {
             outgoing.setAttribute("query.id", queryLogger.getQueryId().toString());
             outgoing.setAttribute("query.statement", queryLogger.getQuery());
-            outgoing.setAttribute("query.plan", irPlanStr);
-            this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+            outgoing.setAttribute("query.plan", irPlanStr.toString());
+            this.rpcClient.submit(
+                    physicalRequest, resultProcessor, timeoutConfig.getChannelTimeoutMS());
             // request results from remote engine service in blocking way
             resultProcessor.request();
         } catch (Throwable t) {

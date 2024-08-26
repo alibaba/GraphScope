@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
@@ -27,9 +28,12 @@ import org.neo4j.kernel.impl.query.QuerySubscriber;
 
 public abstract class AbstractPlanExecution implements StatementResults.SubscribableExecution {
     private final GraphPlanner.Summary planSummary;
+    private final QueryTimeoutConfig timeoutConfig;
 
-    public AbstractPlanExecution(GraphPlanner.Summary planSummary) {
+    public AbstractPlanExecution(
+            GraphPlanner.Summary planSummary, QueryTimeoutConfig timeoutConfig) {
         this.planSummary = planSummary;
+        this.timeoutConfig = timeoutConfig;
     }
 
     @Override
@@ -38,7 +42,8 @@ public abstract class AbstractPlanExecution implements StatementResults.Subscrib
             CypherRecordProcessor recordProcessor =
                     new CypherRecordProcessor(
                             new CypherRecordParser(planSummary.getLogicalPlan().getOutputType()),
-                            querySubscriber);
+                            querySubscriber,
+                            timeoutConfig);
             execute(recordProcessor);
             return recordProcessor;
         } catch (Exception e) {

@@ -20,8 +20,10 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.ResultParser;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
+import com.alibaba.graphscope.proto.Code;
 import com.alibaba.pegasus.common.StreamIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -117,25 +119,14 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             } else {
                 status = Status.fromThrowable(t);
             }
-            ResponseStatusCode errorCode;
-            String errorMsg = status.getDescription();
-            switch (status.getCode()) {
-                case DEADLINE_EXCEEDED:
-                    errorMsg +=
-                            ", exceeds the timeout limit "
-                                    + timeoutConfig.getExecutionTimeoutMS()
-                                    + " ms, please increase the config by setting"
-                                    + " 'query.execution.timeout.ms'";
-                    errorCode = ResponseStatusCode.SERVER_ERROR_TIMEOUT;
-                    break;
-                default:
-                    errorCode = ResponseStatusCode.SERVER_ERROR;
-            }
-            if (errorMsg == null) {
-                statusCallback.onErrorEnd(t);
-            } else {
-                statusCallback.onErrorEnd(errorMsg);
-            }
+            Exception executionException =
+                    ClassUtils.handleExecutionException(status, timeoutConfig, t.getMessage());
+            ResponseStatusCode errorCode =
+                    (status.getCode() == Status.Code.DEADLINE_EXCEEDED)
+                            ? ResponseStatusCode.SERVER_ERROR_TIMEOUT
+                            : ResponseStatusCode.SERVER_ERROR;
+            String errorMsg = executionException.getMessage();
+            statusCallback.onErrorEnd(errorMsg);
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())
                             .code(errorCode)
@@ -166,7 +157,9 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                                 .create());
                 resultCollectors.clear();
             }
-            resultCollectors.addAll(resultParser.parseFrom(response));
+            resultCollectors.addAll(
+                    ClassUtils.callWithException(
+                            () -> resultParser.parseFrom(response), Code.CYPHER_INVALID_RESULT));
         }
 
         public void finish() {

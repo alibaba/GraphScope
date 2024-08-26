@@ -21,8 +21,10 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.proto.Code;
 import com.alibaba.pegasus.common.StreamIterator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -103,25 +105,14 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
             } else {
                 status = Status.fromThrowable(t);
             }
-            ResponseStatusCode errorCode;
-            String errorMsg = status.getDescription();
-            switch (status.getCode()) {
-                case DEADLINE_EXCEEDED:
-                    errorMsg +=
-                            ", exceeds the timeout limit "
-                                    + timeoutConfig.getExecutionTimeoutMS()
-                                    + " ms, please increase the config by setting"
-                                    + " 'query.execution.timeout.ms'";
-                    errorCode = ResponseStatusCode.SERVER_ERROR_TIMEOUT;
-                    break;
-                default:
-                    errorCode = ResponseStatusCode.SERVER_ERROR;
-            }
-            if (errorMsg == null) {
-                statusCallback.onErrorEnd(t);
-            } else {
-                statusCallback.onErrorEnd(errorMsg);
-            }
+            Exception executionException =
+                    ClassUtils.handleExecutionException(status, timeoutConfig, t.getMessage());
+            ResponseStatusCode errorCode =
+                    (status.getCode() == Status.Code.DEADLINE_EXCEEDED)
+                            ? ResponseStatusCode.SERVER_ERROR_TIMEOUT
+                            : ResponseStatusCode.SERVER_ERROR;
+            String errorMsg = executionException.getMessage();
+            statusCallback.onErrorEnd(errorMsg);
             ctx.writeAndFlush(
                     ResponseMessage.build(ctx.getRequestMessage())
                             .code(errorCode)
@@ -137,7 +128,9 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
     }
 
     protected void processRecord(IrResult.Record record) {
-        List<Object> results = recordParser.parseFrom(record);
+        List<Object> results =
+                ClassUtils.callWithException(
+                        () -> recordParser.parseFrom(record), Code.GREMLIN_INVALID_RESULT);
         if (resultSchema.isGroupBy && !results.isEmpty()) {
             if (results.stream().anyMatch(k -> !(k instanceof Map))) {
                 throw new IllegalArgumentException(
