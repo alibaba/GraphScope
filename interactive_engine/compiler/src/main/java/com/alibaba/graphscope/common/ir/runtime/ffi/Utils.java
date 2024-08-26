@@ -117,8 +117,6 @@ public abstract class Utils {
         switch (opt) {
             case ARBITRARY:
                 return PathOpt.Arbitrary;
-            case TRAIL:
-                return PathOpt.Trail;
             case SIMPLE:
             default:
                 return PathOpt.Simple;
