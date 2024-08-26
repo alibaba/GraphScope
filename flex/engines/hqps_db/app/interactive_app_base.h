@@ -140,11 +140,21 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   }
 }
 
+class AppDescriptor {
+ public:
+  virtual std::vector<PropertyType> InputTypes() const = 0;
+  virtual std::vector<PropertyType> OutputTypes() const = 0;
+};
+
 // for cypher procedure
 template <typename... ARGS>
-class CypherReadAppBase : public ReadAppBase {
+class CypherReadAppBase : public ReadAppBase, public AppDescriptor {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
+
+  std::vector<PropertyType> InputTypes() const override {
+    return {AnyConverter<ARGS>::type()...};
+  }
 
   virtual results::CollectiveResults Query(const GraphDBSession& db,
                                            ARGS... args) = 0;
@@ -177,7 +187,7 @@ class CypherReadAppBase : public ReadAppBase {
 };
 
 template <typename... ARGS>
-class CypherWriteAppBase : public WriteAppBase {
+class CypherWriteAppBase : public WriteAppBase, public AppDescriptor {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
 

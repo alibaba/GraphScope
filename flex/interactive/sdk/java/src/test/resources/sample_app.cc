@@ -22,6 +22,12 @@ class ExampleQuery : public CypherReadAppBase<int32_t> {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+
+  // only need to implement this function
+  std::vector<PropertyType> OutputTypes() const override {
+    return {PropertyType::Int64};
+  }
+
   ExampleQuery() {}
   // Query function for query class
   results::CollectiveResults Query(const gs::GraphDBSession& sess,

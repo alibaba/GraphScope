@@ -1,6 +1,6 @@
 # Create c++ Stored Procedures on GraphScope Interactive
 
-Apart from adapting Cypher query as stored procedure, Interactive supports implementing stored procedure via c++ code, by calling storage interface.
+Apart from adapting Cypher query as stored procedure, Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.
 
 ## Getting Started.
 
@@ -106,7 +106,7 @@ assert resp.is_ok()
 
 For more tails about Python SDK Interface, please refer to [Java SDK Procedure API](../python/ProcedureManagementApi.md).
 
-#### Java SDk
+#### Java SDK
 
 With [Interactive Java SDK](../python/java_sdk.md) Installed, you could easily create the stored procedure via the following code.
 
@@ -168,9 +168,12 @@ For more tails about Java SDK Interface, please refer to [Java SDK Procedure API
 TODO
 
 
-## Storage Interface
+## Graph Database Engine
 
 Interactive follow the design of Transaction, user should either make use of [`ReadTransaction`](https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/read_transaction.h), [`InsertTraction`](https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/insert_transaction.h) or [`UpdateTransaction`](https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/update_transaction.h).
+
+We recommend you to read though the code of [GraphDB](https://github.com/alibaba/GraphScope/tree/main/flex/engines/graph_db) for more detail, if you want to 
+write a stored procedure with best performance. If you encounter any problems, feel free to contact us by submit issue or create discussions. 
 
 
 ## Query Input and Output
@@ -180,73 +183,20 @@ Interactive natively support two kind of protocols for param encoding and result
 
 ### Encoder/Decoder
 
-`Encoder/Decoder` based method provides the best performance. The serialization/deserialization could be customized by the user.
+`Encoder/Decoder` based method provides the best performance. The serialization/deserialization could be customized by the user. 
+In this serialization protocol, User need to take care of the param encoding and decoding himself. 
+For example, the example procedure above `count_vertices.cc` use Encoder/Decoder to encode the input and decode the output.
 
-For the detail implementation, please ref to [app_utils.cc](https://github.com/alibaba/GraphScope/blob/main/flex/utils/app_utils.cc).
+Here we give an example about how to query the `count_vertices` procedure with Interactive Java SDK and Python SDK.
 
-### CypherApp
+```java
 
-If you want to call c++ procedures from neo4j client, then `CypherApp` is your way.
-By inherit from `CypherReadAppBase` and returning the query result in `CollectiveResults`, it is possible for you to call the procedure from neo4j native client, like cypher-shell or neo4j java/python SDKs.
-
-For example, the following stored procedure scan vertices with the specified label name, and return the property `id` for first 5 vertices of the specified vertex label.
-
-```c++
-#include "flex/engines/hqps_db/app/interactive_app_base.h"
-#include "flex/engines/hqps_db/core/sync_engine.h"
-#include "flex/utils/app_utils.h"
-
-namespace gs {
-class ExampleQuery : public CypherReadAppBase<std::string> {
- public:
-  using Engine = SyncEngine<gs::MutableCSRInterface>;
-  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
-  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  ExampleQuery() {}
-  // Query function for query class
-  results::CollectiveResults Query(const gs::GraphDBSession& sess,
-                    std::string label_name) override {
-    LOG(INFO) <<"Scan vertices with label name: " << label_name;
-    const auto& schema = sess.schema();
-    if (!schema.has_vertex_label(label_name)){
-        return results::CollectiveResults();
-    }
-    label_t label_id = schema.get_vertex_label_id(label_name);
-    gs::MutableCSRInterface graph(sess);
-    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, label_id, Filter<TruePredicate>());
-
-    auto ctx1 = Engine::Project<PROJ_TO_NEW>(
-        graph, std::move(ctx0),
-        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
-            gs::PropertySelector<int64_t>("id"))});
-    auto ctx2 = Engine::Limit(std::move(ctx1), 0, 5);
-    auto res = Engine::Sink(graph, ctx2, std::array<int32_t, 1>{0});
-    LOG(INFO) << "res: " << res.DebugString();
-    return res;
-  }
-};
-}  // namespace gs
-
-extern "C" {
-void* CreateApp(gs::GraphDBSession& db) {
-  gs::ExampleQuery* app = new gs::ExampleQuery();
-  return static_cast<void*>(app);
-}
-
-void DeleteApp(void* app) {
-  gs::ExampleQuery* casted = static_cast<gs::ExampleQuery*>(app);
-  delete casted;
-}
-}
 ```
 
 
-Then after creating the stored procedure via Interactive Java/Python SDK, you could call the stored procedure from neo4j-native tools. For example, create the procedure with name `scan_vertices`, then in cypher shell
-
-```cypher
-CALL scan_vertices("person") YIELD *;
+```python
 ```
+
 
 
 
