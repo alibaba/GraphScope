@@ -118,6 +118,7 @@ RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex
 RUN rm -rf /opt/flex/bin/run_app
 
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/include/arrow /usr/include/arrow
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
