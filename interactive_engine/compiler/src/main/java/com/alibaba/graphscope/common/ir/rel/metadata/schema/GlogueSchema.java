@@ -161,4 +161,18 @@ public class GlogueSchema {
             return cardinality;
         }
     }
+
+    @Override
+    public String toString() {
+        String s = "GlogueSchema:\n";
+        s += "VertexTypes:\n";
+        for (Integer v : this.schemaGraph.vertexSet()) {
+            s += v + " " + this.vertexTypeCardinality.get(v) + "\n";
+        }
+        s += "\nEdgeTypes:\n";
+        for (EdgeTypeId e : this.schemaGraph.edgeSet()) {
+            s += e.toString() + " " + this.edgeTypeCardinality.get(e) + "\n";
+        }
+        return s;
+    }
 }

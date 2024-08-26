@@ -133,7 +133,7 @@ public class SimpleMatchQueries {
 
     public static QueryContext get_simple_match_query_10_test() {
         String query =
-                "MATCH( a {id:933})-[b]-(c {id: 2199023256077}) return labels(a) AS"
+                "MATCH( a {id:933l})-[b]-(c {id: 2199023256077l}) return labels(a) AS"
                         + " vertexLabelName, type(b) AS edgeLabelName;";
         List<String> expected =
                 Arrays.asList("Record<{vertexLabelName: \"PERSON\", edgeLabelName: \"KNOWS\"}>");
