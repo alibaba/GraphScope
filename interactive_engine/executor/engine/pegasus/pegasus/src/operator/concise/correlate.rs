@@ -31,7 +31,7 @@ use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::{DynPeers, EndOfScope};
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
-use crate::{BuildJobError, Data, Tag};
+use crate::{BuildJobError, Data, Tag, WorkerId};
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
@@ -47,13 +47,15 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         T: Data,
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
+        let worker_id = self.get_worker_id();
+        let total_peers = worker_id.total_peers();
         let entered = self.enter()?;
         let scope_level = entered.get_scope_level();
         let fork_guard = UnsafeRcPtr::new(RefCell::new(TidyTagMap::new(scope_level - 1)));
         let join_guard = fork_guard.clone();
         let (main, mut sub): (Stream<D>, Stream<D>) = entered
             .binary_branch_notify("fork_subtask", |info| {
-                ForkSubtaskOperator::<D>::new(info.scope_level, max_parallel, fork_guard)
+                ForkSubtaskOperator::<D>::new(info.scope_level, max_parallel, fork_guard, worker_id)
             })?;
         sub.set_upstream_batch_capacity(1)
             .set_upstream_batch_size(1);
@@ -62,7 +64,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
             .set_upstream_batch_capacity(1)
             .set_upstream_batch_size(1);
         main.union_transform_notify("zip_subtasks", inner, move |info| {
-            ZipSubtaskOperator::<D, T>::new(info.scope_level, join_guard)
+            ZipSubtaskOperator::<D, T>::new(info.scope_level, join_guard, total_peers)
         })?
         .leave()
     }
@@ -114,8 +116,10 @@ struct ForkSubtaskOperator<D> {
 }
 
 impl<D> ForkSubtaskOperator<D> {
-    fn new(scope_level: u32, max_parallel: u32, fork_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>) -> Self {
-        let id = crate::worker_id::get_current_worker();
+    fn new(
+        scope_level: u32, max_parallel: u32, fork_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>,
+        id: WorkerId,
+    ) -> Self {
         ForkSubtaskOperator {
             worker_index: id.index,
             peers: id.total_peers(),
@@ -248,8 +252,7 @@ struct ZipSubtaskOperator<P, S> {
 }
 
 impl<P: Data, S: Send> ZipSubtaskOperator<P, S> {
-    fn new(scope_level: u32, zip_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>) -> Self {
-        let peers = crate::worker_id::get_current_worker().total_peers();
+    fn new(scope_level: u32, zip_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>, peers: u32) -> Self {
         let mut parent_parent_ends = Vec::with_capacity(scope_level as usize - 1);
         for _ in 0..scope_level - 1 {
             parent_parent_ends.push(vec![]);
