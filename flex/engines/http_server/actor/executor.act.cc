@@ -73,13 +73,12 @@ seastar::future<admin_query_result> executor::create_vertex(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json.Parse(param.content.second.c_str());
-  } catch (const std::exception& e) {
+  input_json.Parse(param.content.second.c_str());
+  if (input_json.HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+                        "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::CreateVertex(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -106,14 +105,12 @@ seastar::future<admin_query_result> executor::create_edge(
                          "The queried graph is not running: " + graph_id)));
   }
   rapidjson::Document input_json;
-  // Parse the input json
-  try {
-    input_json.Parse(param.content.second.c_str());
-  } catch (const std::exception& e) {
+  input_json.Parse(param.content.second.c_str());
+  if (input_json.HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+                        "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::CreateEdge(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -141,13 +138,12 @@ seastar::future<admin_query_result> executor::update_vertex(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json.Parse(param.content.second.c_str());
-  } catch (const std::exception& e) {
+  input_json.Parse(param.content.second.c_str());
+  if (input_json.HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+                        "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::UpdateVertex(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -175,13 +171,12 @@ seastar::future<admin_query_result> executor::update_edge(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json.Parse(param.content.second.c_str());
-  } catch (const std::exception& e) {
+  input_json.Parse(param.content.second.c_str());
+  if (input_json.HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+                        "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::UpdateEdge(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
