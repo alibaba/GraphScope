@@ -20,7 +20,6 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/graph_db_service.h"
 #include "graph_db_service.h"
-#include "nlohmann/json.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -97,12 +96,14 @@ seastar::future<admin_query_result> executor::create_vertex(
 seastar::future<admin_query_result> executor::create_edge(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NOT_FOUND,
-                       "The queried graph is not running: " + graph_id)));
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
+
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
   }
   rapidjson::Document input_json;
   // Parse the input json
