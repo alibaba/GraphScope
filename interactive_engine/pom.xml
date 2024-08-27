@@ -885,27 +885,16 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <!-- use flatten plugin to replace revision property value in mvn install,otherwise the version
+        of the locallly installed submodle(like compiler) is ${revision} -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>flatten-maven-plugin</artifactId>
-        <version>${flatten.maven.plugin}</version>
-        <configuration>
-          <updatePomFile>true</updatePomFile>
-          <flattenMode>resolveCiFriendliesOnly</flattenMode>
-        </configuration>
+        <groupId>com.outbrain.swinfra</groupId>
+        <artifactId>ci-friendly-flatten-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>flatten</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>flatten.clean</id>
-            <phase>clean</phase>
             <goals>
               <goal>clean</goal>
+              <goal>flatten</goal>
             </goals>
           </execution>
         </executions>
