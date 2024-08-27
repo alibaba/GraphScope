@@ -297,9 +297,9 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install --no-cache-dir pytest pytest-xdist "tensorflow" "pandas" --user
+          # python3 -m pip install --no-cache-dir pytest pytest-xdist "tensorflow" "pandas" --user
           # install pytorch
-          python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
+          # python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
