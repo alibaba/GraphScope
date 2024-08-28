@@ -30,6 +30,7 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.opentelemetry.api.metrics.LongHistogram;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.math.BigInteger;
@@ -85,21 +86,17 @@ public class ClassUtils {
     public static final Exception handleExecutionException(
             @Nullable Throwable error, QueryTimeoutConfig timeoutConfig) {
         Exception exception = asException(error);
-        if (!(exception instanceof StatusException)) {
+        Throwable rootCause = ExceptionUtils.getRootCause(exception);
+        if (!(rootCause instanceof StatusException)) {
             return exception;
         }
-        Status status = ((StatusException) exception).getStatus();
+        Status status = ((StatusException) rootCause).getStatus();
         switch (status.getCode()) {
             case DEADLINE_EXCEEDED:
-                String msg =
-                        String.format(
-                                "error: [%s], hint: [%s]",
-                                status.getDescription(),
-                                "query exceeds the timeout limit "
-                                        + timeoutConfig.getExecutionTimeoutMS()
-                                        + " ms, please increase the config by setting"
-                                        + " 'query.execution.timeout.ms'");
-                return new FrontendException(Code.TIMEOUT, msg, error);
+                return new FrontendException(
+                        Code.TIMEOUT,
+                        getTimeoutError(status.getDescription(), timeoutConfig),
+                        error);
             case INTERNAL:
                 return new ExecutionException(status.getDescription(), error);
             case UNKNOWN:
@@ -107,6 +104,16 @@ public class ClassUtils {
                 return new FrontendException(
                         Code.ENGINE_UNAVAILABLE, status.getDescription(), error);
         }
+    }
+
+    public static final String getTimeoutError(String error, QueryTimeoutConfig timeoutConfig) {
+        return String.format(
+                "error: [%s], hint: [%s]",
+                error,
+                "query exceeds the timeout limit "
+                        + timeoutConfig.getExecutionTimeoutMS()
+                        + " ms, please increase the config by setting"
+                        + " 'query.execution.timeout.ms'");
     }
 
     private static Exception asException(@Nullable Throwable t) {

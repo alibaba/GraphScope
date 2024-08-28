@@ -101,7 +101,9 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
                     (t != null && t.getCause() instanceof InterruptedException)
                             ? new FrontendException(
                                     Code.TIMEOUT,
-                                    "Timeout has been detected by gremlin executor",
+                                    ClassUtils.getTimeoutError(
+                                            "Timeout has been detected by gremlin executor",
+                                            timeoutConfig),
                                     t)
                             : ClassUtils.handleExecutionException(t, timeoutConfig);
             if (executionException instanceof FrontendException) {
