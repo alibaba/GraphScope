@@ -21,17 +21,14 @@
 
 namespace bl = boost::leaf;
 
-// Define a macro which returns a unsupported error
 #define RETURN_UNSUPPORTED_ERROR(msg) \
   return ::boost::leaf::new_error(    \
       ::gs::Status(::gs::StatusCode::UNSUPPORTED_OPERATION, msg))
 
-// Define a macro which returns a bad request error
 #define RETURN_BAD_REQUEST_ERROR(msg) \
   return ::boost::leaf::new_error(    \
       ::gs::Status(::gs::StatusCode::BAD_REQUEST, msg))
 
-// Define a macro which returns a not implemented error
 #define RETURN_NOT_IMPLEMENTED_ERROR(msg) \
   return ::boost::leaf::new_error(        \
       ::gs::Status(::gs::StatusCode::UNIMPLEMENTED, msg))
