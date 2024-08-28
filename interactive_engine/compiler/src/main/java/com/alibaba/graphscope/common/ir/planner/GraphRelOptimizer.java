@@ -53,8 +53,6 @@ import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,7 +61,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Optimize graph relational tree which consists of match and other relational operators
  */
 public class GraphRelOptimizer {
-    private static final Logger logger = LoggerFactory.getLogger(GraphRelOptimizer.class);
     private final PlannerConfig config;
     private final RelOptPlanner relPlanner;
     private final RelOptPlanner matchPlanner;
@@ -260,12 +257,10 @@ public class GraphRelOptimizer {
                                             ExtendIntersectRule.Config.DEFAULT
                                                     .withMaxPatternSizeInGlogue(
                                                             config.getGlogueSize());
-                                    logger.info("ExtendIntersectRule has been added");
                                 } else if (k.equals(JoinDecompositionRule.class.getSimpleName())) {
                                     ruleConfig =
                                             JoinDecompositionRule.Config.DEFAULT.withMinPatternSize(
                                                     config.getJoinMinPatternSize());
-                                    logger.info("JoinDecompositionRule has been added");
                                 }
                                 if (ruleConfig != null) {
                                     planner.addRule(
