@@ -108,14 +108,21 @@ public class GraphQueryExecutor extends FabricExecutor {
     public StatementResult run(
             FabricTransaction fabricTransaction, String statement, MapValue parameters) {
         IrMeta irMeta = null;
-        QueryStatusCallback statusCallback = null;
         final BigInteger jobId = idGenerator.generateId();
+        final QueryStatusCallback statusCallback =
+                ClassUtils.createQueryStatusCallback(
+                        jobId,
+                        null,
+                        statement,
+                        new MetricsCollector.Cypher(System.currentTimeMillis()),
+                        null,
+                        graphConfig);
+        ;
         try {
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
                 return super.run(fabricTransaction, statement, parameters);
             }
-            long queryStartMills = System.currentTimeMillis();
             irMeta = metaQueryCallback.beforeExec();
             QueryCache.Key cacheKey = queryCache.createKey(statement, irMeta);
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
@@ -143,14 +150,6 @@ public class GraphQueryExecutor extends FabricExecutor {
                     jobName,
                     planSummary.getPhysicalPlan().explain());
             QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
-            statusCallback =
-                    ClassUtils.createQueryStatusCallback(
-                            jobId,
-                            null,
-                            statement,
-                            new MetricsCollector.Cypher(queryStartMills),
-                            null,
-                            graphConfig);
             StatementResults.SubscribableExecution execution;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
                 execution =
@@ -181,14 +180,10 @@ public class GraphQueryExecutor extends FabricExecutor {
             return StatementResults.connectVia(execution, new QuerySubject.BasicQuerySubject());
         } catch (FrontendException e) {
             e.getDetails().put("QueryId", jobId);
-            if (statusCallback != null) {
-                statusCallback.onErrorEnd(e.getMessage());
-            }
+            statusCallback.onErrorEnd(e.getMessage());
             throw e;
         } catch (Throwable t) {
-            if (statusCallback != null) {
-                statusCallback.onErrorEnd(t.getMessage());
-            }
+            statusCallback.onErrorEnd(t.getMessage());
             throw new RuntimeException(t);
         } finally {
             if (irMeta != null) {

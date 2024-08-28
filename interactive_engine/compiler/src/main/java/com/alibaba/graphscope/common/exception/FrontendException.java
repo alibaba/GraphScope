@@ -43,7 +43,10 @@ public class FrontendException extends RuntimeException {
             String errorMsg,
             Map<String, Object> details,
             @Nullable Throwable cause) {
-        super(errorMsg, cause);
+        super(errorMsg);
+        if (cause != null) {
+            setStackTrace(cause.getStackTrace());
+        }
         this.componentCode = ComponentCode.FRONTEND;
         this.errorCode = errorCode;
         this.details = Maps.newHashMap(details);

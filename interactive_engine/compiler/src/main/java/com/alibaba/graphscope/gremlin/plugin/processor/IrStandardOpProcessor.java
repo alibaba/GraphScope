@@ -412,7 +412,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             // it's no need to print
                             // every plan in production.de
                             irPlanStr.append(irPlan.getPlanAsJson());
-                            queryLogger.info("ir plan {}", irPlanStr.toString());
+                            queryLogger.debug("ir plan {}", irPlanStr.toString());
                             queryLogger.setIrPlan(irPlanStr.toString());
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
                             irPlan.close();
