@@ -499,8 +499,7 @@ public class GraphBuilder extends RelBuilder {
                             + " from alias="
                             + alias
                             + ", expected one column, but found "
-                            + columnFields.size(),
-                    null);
+                            + columnFields.size());
         }
         ColumnField columnField = columnFields.get(0);
         RelDataTypeField aliasField = columnField.right;

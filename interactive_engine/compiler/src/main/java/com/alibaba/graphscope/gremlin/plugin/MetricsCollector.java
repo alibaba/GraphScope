@@ -38,14 +38,17 @@ public interface MetricsCollector {
             this.startMillis = System.currentTimeMillis();
         }
 
+        @Override
         public long getStartMillis() {
             return this.startMillis;
         }
 
+        @Override
         public long getElapsedMillis() {
             return this.elapsedMillis;
         }
 
+        @Override
         public void stop() {
             this.elapsedMillis = TimeUnit.NANOSECONDS.toMillis(timeContext.stop());
         }

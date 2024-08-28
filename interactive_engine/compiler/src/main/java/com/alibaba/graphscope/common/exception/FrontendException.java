@@ -19,7 +19,6 @@
 package com.alibaba.graphscope.common.exception;
 
 import com.alibaba.graphscope.proto.frontend.Code;
-import com.google.common.collect.Maps;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -35,7 +34,7 @@ public class FrontendException extends RuntimeException {
     }
 
     public FrontendException(Code errorCode, String errorMsg, @Nullable Throwable cause) {
-        this(errorCode, errorMsg, Maps.newHashMap(), cause);
+        this(errorCode, errorMsg, Map.of(), cause);
     }
 
     public FrontendException(
