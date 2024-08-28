@@ -51,7 +51,8 @@ bl::result<Context> eval_join(const physical::Join& opr, Context&& ctx,
     p.join_type = JoinKind::kLeftOuterJoin;
     break;
   default:
-    RETURN_UNSUPPORTED_ERROR("Unsupported join kind: " + opr.join_kind());
+    RETURN_UNSUPPORTED_ERROR("Unsupported join kind: " +
+                             std::to_string(static_cast<int>(opr.join_kind())));
   }
   return Join::join(std::move(ctx), std::move(ctx2), p);
 }

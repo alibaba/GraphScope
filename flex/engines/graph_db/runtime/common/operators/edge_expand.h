@@ -126,8 +126,9 @@ class EdgeExpand {
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(ERROR) << "Unsupported direction: " << static_cast<int>(params.dir);
-        RETURN_UNSUPPORTED_ERROR("Unsupported direction");
+        LOG(ERROR) << "Unsupported direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported direction: " +
+                                 std::to_string(params.dir));
       }
     } else {
       if (params.dir == Direction::kBoth) {
@@ -223,8 +224,9 @@ class EdgeExpand {
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(ERROR) << "Unsupported direction: " << static_cast<int>(params.dir);
-        RETURN_UNSUPPORTED_ERROR("Unsupported direction");
+        LOG(ERROR) << "Unsupported direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported direction" +
+                                 std::to_string(params.dir));
       }
     }
   }

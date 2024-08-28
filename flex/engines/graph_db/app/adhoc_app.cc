@@ -42,7 +42,7 @@ bool AdhocReadApp::Query(const GraphDBSession& graph, Decoder& input,
   {
     ctx = bl::try_handle_all(
         [&plan, &txn]() { return runtime::runtime_eval(plan, txn, {}); },
-        [&output, &ctx, &status](const gs::Status& err) {
+        [&ctx, &status](const gs::Status& err) {
           status = err;
           return ctx;
         },
