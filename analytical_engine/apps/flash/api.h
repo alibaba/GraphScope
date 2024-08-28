@@ -24,8 +24,9 @@ limitations under the License.
 
 #include <memory>
 
-#include "flash/flash_utils.h"
-#include "flash/flash_ware.h"
+#include "apps/flash/flash_utils.h"
+#include "apps/flash/flash_ware.h"
+#include "apps/flash/vertex_subset.h"
 
 namespace gs {
 
@@ -107,7 +108,7 @@ template <typename fragment_t, typename fw_t, typename value_t, class F,
 VSet vertexMapFunction(const fragment_t& graph, const std::shared_ptr<fw_t> fw,
                        VSet& U, F& f, M& m, bool b = true) {
   fw->ForEach(U.s.begin(), U.s.end(),
-              [&fw, &U, &f, &m, &b](int tid, typename fragment_t::vid_t key) {
+              [&fw, &f, &m, &b](int tid, typename fragment_t::vid_t key) {
                 value_t v = *(fw->Get(key));
                 if (!f(key, v))
                   return;

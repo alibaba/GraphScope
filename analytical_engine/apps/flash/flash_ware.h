@@ -27,8 +27,8 @@ limitations under the License.
 #include "grape/worker/comm_spec.h"
 
 #include "core/config.h"
-#include "flash/flash_bitset.h"
-#include "flash/vertex_subset.h"
+#include "apps/flash/flash_bitset.h"
+#include "apps/flash/vertex_subset.h"
 
 namespace gs {
 

@@ -51,7 +51,7 @@ class MSFBlockFlash : public FlashAppBase<FRAG_T, EMPTY_TYPE> {
     TraverseLocal(for_out(edges.push_back(
         std::make_pair(weight, std::make_pair(id, nb_id)));););
 
-    Block(kruskal(edges, mst0.data(), n_vertex); Reduce(
+    FLASH_Block(kruskal(edges, mst0.data(), n_vertex); Reduce(
               mst0, mst, std::vector<E> edges; edges.assign(mst0, mst0 + len);
               edges.insert(edges.end(), mst, mst + len);
               kruskal(edges, mst, len + 1)));
