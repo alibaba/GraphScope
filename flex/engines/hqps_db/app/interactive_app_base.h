@@ -177,7 +177,7 @@ class CypherReadAppBase : public ReadAppBase {
 };
 
 template <typename... ARGS>
-class CypherWriteAppBase : public WriteAppBase, public AppDescriptor {
+class CypherWriteAppBase : public WriteAppBase {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
 
