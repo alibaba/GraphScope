@@ -140,21 +140,11 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   }
 }
 
-class AppDescriptor {
- public:
-  virtual std::vector<PropertyType> InputTypes() const = 0;
-  virtual std::vector<PropertyType> OutputTypes() const = 0;
-};
-
 // for cypher procedure
 template <typename... ARGS>
-class CypherReadAppBase : public ReadAppBase, public AppDescriptor {
+class CypherReadAppBase : public ReadAppBase {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
-
-  std::vector<PropertyType> InputTypes() const override {
-    return {AnyConverter<ARGS>::type()...};
-  }
 
   virtual results::CollectiveResults Query(const GraphDBSession& db,
                                            ARGS... args) = 0;
