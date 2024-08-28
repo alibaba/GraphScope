@@ -20,9 +20,9 @@
 
 #include "boost/leaf.hpp"
 
-namespace gs {
-
 namespace bl = boost::leaf;
+
+namespace gs {
 
 namespace runtime {
 

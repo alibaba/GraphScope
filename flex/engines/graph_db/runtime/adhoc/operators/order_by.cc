@@ -57,8 +57,8 @@ class GeneralComparer {
   size_t keys_num_;
 };
 
-Context eval_order_by(const algebra::OrderBy& opr, const ReadTransaction& txn,
-                      Context&& ctx) {
+bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
+                                  const ReadTransaction& txn, Context&& ctx) {
   int lower = 0;
   int upper = std::numeric_limits<int>::max();
   if (opr.has_limit()) {

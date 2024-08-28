@@ -15,6 +15,8 @@
 
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 
 namespace runtime {
@@ -80,9 +82,10 @@ static std::string get_opr_name(const physical::PhysicalOpr& opr) {
   }
 }
 
-Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
-                          const ReadTransaction& txn,
-                          const std::map<std::string, std::string>& params) {
+bl::result<Context> runtime_eval_impl(
+    const physical::PhysicalPlan& plan, Context&& ctx,
+    const ReadTransaction& txn,
+    const std::map<std::string, std::string>& params) {
   Context ret = ctx;
 
   auto& op_cost = OpCost::get().table;
@@ -96,19 +99,21 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
     switch (opr.opr().op_kind_case()) {
       LOG(INFO) << "eval: " << get_opr_name(opr);
     case physical::PhysicalOpr_Operator::OpKindCase::kScan: {
-      ret = eval_scan(opr.opr().scan(), txn, params);
+      BOOST_LEAF_ASSIGN(ret, eval_scan(opr.opr().scan(), txn, params));
       t += grape::GetCurrentTime();
       op_cost["scan"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kEdge: {
       CHECK_EQ(opr.meta_data_size(), 1);
-      ret = eval_edge_expand(opr.opr().edge(), txn, std::move(ret), params,
-                             opr.meta_data(0));
+      BOOST_LEAF_ASSIGN(
+          ret, eval_edge_expand(opr.opr().edge(), txn, std::move(ret), params,
+                                opr.meta_data(0)));
       t += grape::GetCurrentTime();
       op_cost["edge_expand"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kVertex: {
-      ret = eval_get_v(opr.opr().vertex(), txn, std::move(ret), params);
+      BOOST_LEAF_ASSIGN(
+          ret, eval_get_v(opr.opr().vertex(), txn, std::move(ret), params));
       t += grape::GetCurrentTime();
       op_cost["get_v"] += t;
     } break;
@@ -123,28 +128,30 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
           data_types.push_back(opr.meta_data(i).type());
         }
       }
-      ret = eval_project(opr.opr().project(), txn, std::move(ret), params,
-                         data_types);
       t += grape::GetCurrentTime();
       op_cost["project"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kOrderBy: {
-      ret = eval_order_by(opr.opr().order_by(), txn, std::move(ret));
+      BOOST_LEAF_ASSIGN(
+          ret, eval_order_by(opr.opr().order_by(), txn, std::move(ret)));
       t += grape::GetCurrentTime();
       op_cost["order_by"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kGroupBy: {
-      ret = eval_group_by(opr.opr().group_by(), txn, std::move(ret));
+      BOOST_LEAF_ASSIGN(
+          ret, eval_group_by(opr.opr().group_by(), txn, std::move(ret)));
       t += grape::GetCurrentTime();
       op_cost["group_by"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kDedup: {
-      ret = eval_dedup(opr.opr().dedup(), txn, std::move(ret));
+      BOOST_LEAF_ASSIGN(ret,
+                        eval_dedup(opr.opr().dedup(), txn, std::move(ret)));
       t += grape::GetCurrentTime();
       op_cost["dedup"] += t;
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kSelect: {
-      ret = eval_select(opr.opr().select(), txn, std::move(ret), params);
+      BOOST_LEAF_ASSIGN(
+          ret, eval_select(opr.opr().select(), txn, std::move(ret), params));
       t += grape::GetCurrentTime();
       op_cost["select"] += t;
     } break;
@@ -160,19 +167,23 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
           if (next_opr.opr().vertex().has_alias()) {
             alias = next_opr.opr().vertex().alias().value();
           }
-          ret = eval_path_expand_v(opr.opr().path(), txn, std::move(ret),
-                                   params, opr.meta_data(0), alias);
+          BOOST_LEAF_ASSIGN(
+              ret, eval_path_expand_v(opr.opr().path(), txn, std::move(ret),
+                                      params, opr.meta_data(0), alias));
           ++i;
         } else {
           int alias = -1;
           if (opr.opr().path().has_alias()) {
             alias = opr.opr().path().alias().value();
           }
-          ret = eval_path_expand_p(opr.opr().path(), txn, std::move(ret),
-                                   params, opr.meta_data(0), alias);
+          BOOST_LEAF_ASSIGN(
+              ret, eval_path_expand_p(opr.opr().path(), txn, std::move(ret),
+                                      params, opr.meta_data(0), alias));
         }
       } else {
-        LOG(FATAL) << "not support";
+        LOG(ERROR) << "Path Expand to Path is currently not supported";
+        RETURN_UNSUPPORTED_ERROR(
+            "Path Expand to Path is currently not supported");
       }
       t += grape::GetCurrentTime();
       op_cost["path_expand"] += t;
@@ -186,10 +197,11 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
     case physical::PhysicalOpr_Operator::OpKindCase::kJoin: {
       auto op = opr.opr().join();
       auto ret_dup = ret.dup();
-      auto ctx = runtime_eval_impl(op.left_plan(), std::move(ret), txn, params);
-      auto ctx2 =
-          runtime_eval_impl(op.right_plan(), std::move(ret_dup), txn, params);
-      ret = eval_join(op, std::move(ctx), std::move(ctx2));
+      BOOST_LEAF_AUTO(
+          ctx, runtime_eval_impl(op.left_plan(), std::move(ret), txn, params));
+      BOOST_LEAF_AUTO(ctx2, runtime_eval_impl(op.right_plan(),
+                                              std::move(ret_dup), txn, params));
+      BOOST_LEAF_ASSIGN(ret, eval_join(op, std::move(ctx), std::move(ctx2)));
 
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kIntersect: {
@@ -200,22 +212,28 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
       for (size_t i = 0; i < num; ++i) {
         if (i + 1 < num) {
           auto ret_dup = ret.dup();
-          ctxs.push_back(runtime_eval_impl(op.sub_plans(i), std::move(ret_dup),
-                                           txn, params));
+          BOOST_LEAF_AUTO(
+              ctx, runtime_eval_impl(op.sub_plans(i), std::move(ret_dup), txn,
+                                     params));
+          ctxs.push_back(std::move(ctx));
         } else {
-          ctxs.push_back(
-              runtime_eval_impl(op.sub_plans(i), std::move(ret), txn, params));
+          BOOST_LEAF_AUTO(ctx, runtime_eval_impl(op.sub_plans(i),
+                                                 std::move(ret), txn, params));
+          ctxs.push_back(std::move(ctx));
         }
       }
-      ret = eval_intersect(txn, op, std::move(ctxs));
+      BOOST_LEAF_ASSIGN(ret, eval_intersect(txn, op, std::move(ctxs)));
     } break;
     case physical::PhysicalOpr_Operator::OpKindCase::kLimit: {
-      ret = eval_limit(opr.opr().limit(), std::move(ret));
+      BOOST_LEAF_ASSIGN(ret, eval_limit(opr.opr().limit(), std::move(ret)));
     } break;
 
     default:
-      LOG(FATAL) << "opr not support..." << get_opr_name(opr)
-                 << opr.DebugString();
+      LOG(ERROR) << "Unknown operator type: "
+                 << static_cast<int>(opr.opr().op_kind_case());
+      RETURN_UNSUPPORTED_ERROR(
+          "Unknown operator type: " +
+          std::to_string(static_cast<int>(opr.opr().op_kind_case())));
       break;
     }
     if (terminate) {

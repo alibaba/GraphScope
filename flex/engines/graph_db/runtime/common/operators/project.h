@@ -22,6 +22,8 @@
 #include "flex/engines/graph_db/runtime/common/columns/i_context_column.h"
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 
 namespace runtime {
@@ -133,7 +135,7 @@ class Project {
   }
 
   template <typename EXPR_T>
-  static Context map_value_general(
+  static bl::result<Context> map_value_general(
       const ReadTransaction& txn, Context&& ctx,
       const std::vector<ProjectExpr<EXPR_T>>& expressions, bool is_append) {
     if (!is_append) {
@@ -146,9 +148,8 @@ class Project {
         }
       }
     }
-
-    LOG(FATAL) << "not support";
-    return ctx;
+    RETURN_UNSUPPORTED_ERROR(
+        "Currently we don't support project with is_append=true");
   }
 };
 
