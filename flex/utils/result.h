@@ -148,6 +148,12 @@ struct is_gs_status_type<Status> : std::true_type {};
 // calling code of a function, the function name, and the variable name.
 #define FLEX_AUTO(var, expr) ASSIGN_AND_RETURN_IF_NOT_OK(auto var, expr)
 
+// Return boost::leaf::error object with error code and error message,
+
+#define RETURN_FLEX_LEAF_ERROR(code, msg) \
+  return ::boost::leaf::new_error(        \
+      gs::Status(::gs::flex::interactive::Code::code, msg))
+
 }  // namespace gs
 
 namespace std {

@@ -225,9 +225,9 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
   return ret;
 }
 
-Context runtime_eval(const physical::PhysicalPlan& plan,
-                     const ReadTransaction& txn,
-                     const std::map<std::string, std::string>& params) {
+bl::result<Context> runtime_eval(
+    const physical::PhysicalPlan& plan, const ReadTransaction& txn,
+    const std::map<std::string, std::string>& params) {
   return runtime_eval_impl(plan, Context(), txn, params);
 }
 

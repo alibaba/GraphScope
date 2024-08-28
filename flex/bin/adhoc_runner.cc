@@ -159,8 +159,12 @@ int main(int argc, char** argv) {
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
     auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    if (!ctx) {
+      LOG(ERROR) << "Eval plan failed: " << ctx.error();
+      return -1;
+    }
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx.value(), txn, output);
   }
   t1 += grape::GetCurrentTime();
 
@@ -168,9 +172,13 @@ int main(int argc, char** argv) {
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
     auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    if (!ctx) {
+      LOG(ERROR) << "Eval plan failed: " << ctx.error();
+      return -1;
+    }
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx.value(), txn, output);
   }
   t2 += grape::GetCurrentTime();
 
@@ -178,9 +186,13 @@ int main(int argc, char** argv) {
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
     auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    if (!ctx) {
+      LOG(ERROR) << "Eval plan failed: " << ctx.error();
+      return -1;
+    }
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx.value(), txn, output);
   }
   t3 += grape::GetCurrentTime();
 
