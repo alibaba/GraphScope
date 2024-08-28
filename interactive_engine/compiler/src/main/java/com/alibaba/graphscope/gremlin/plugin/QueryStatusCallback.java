@@ -32,13 +32,13 @@ public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
 
-    private LongHistogram queryHistogram;
+    private @Nullable LongHistogram queryHistogram;
     // if query cost large than threshold, will print detail log
     private long printThreshold;
 
     public QueryStatusCallback(
             MetricsCollector metricsCollector,
-            LongHistogram histogram,
+            @Nullable LongHistogram histogram,
             QueryLogger queryLogger,
             long printThreshold) {
         this.metricsCollector = metricsCollector;
@@ -59,7 +59,7 @@ public class QueryStatusCallback {
         onErrorEnd(t, null);
     }
 
-    private void onErrorEnd(Throwable t, String msg) {
+    public void onErrorEnd(Throwable t, String msg) {
         String errorMsg = msg;
         if (t != null) {
             errorMsg = t.getMessage();
@@ -75,16 +75,16 @@ public class QueryStatusCallback {
                         .put("success", false)
                         .put("message", msg != null ? msg : "")
                         .build();
-        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        if (this.queryHistogram != null) {
+            this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        }
         queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
     }
 
     public void onSuccessEnd(List<Object> results) {
         this.metricsCollector.stop();
         JsonObject logJson = buildSimpleLog(true, metricsCollector.getElapsedMillis());
-        if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
-            fillLogDetail(logJson, null, metricsCollector.getStartMillis(), results);
-        }
+        fillLogDetail(logJson, null, results);
         queryLogger.print(logJson.toString(), true, null);
 
         Attributes attrs =
@@ -94,7 +94,9 @@ public class QueryStatusCallback {
                         .put("success", true)
                         .put("message", "")
                         .build();
-        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        if (this.queryHistogram != null) {
+            this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        }
         queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
     }
 
@@ -109,6 +111,18 @@ public class QueryStatusCallback {
         }
         simpleJson.addProperty(LogConstant.COST, elaspedMillis);
         return simpleJson;
+    }
+
+    private void fillLogDetail(JsonObject logJson, String errorMsg, List<Object> results) {
+        try {
+            if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
+                // todo(siyuan): the invocation of the function can cause Exception when serializing
+                // a gremlin vertex to json format
+                fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis(), results);
+            }
+        } catch (Throwable t) {
+            queryLogger.warn("fill log detail error", t);
+        }
     }
 
     private void fillLogDetail(

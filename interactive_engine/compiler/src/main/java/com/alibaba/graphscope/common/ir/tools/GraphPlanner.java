@@ -37,7 +37,7 @@ import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.utils.ClassUtils;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -87,7 +87,7 @@ public class GraphPlanner {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
         RelMetadataQuery mq =
-                ClassUtils.callWithException(
+                ClassUtils.callException(
                         () -> optimizer.createMetaDataQuery(irMeta),
                         Code.META_STATISTICS_NOT_READY);
         if (mq != null) {
@@ -109,11 +109,10 @@ public class GraphPlanner {
 
         public Summary plan() {
             LogicalPlan logicalPlan =
-                    ClassUtils.callWithException(
-                            () -> planLogical(), Code.LOGICAL_PLAN_BUILD_FAILED);
+                    ClassUtils.callException(() -> planLogical(), Code.LOGICAL_PLAN_BUILD_FAILED);
             return new Summary(
                     logicalPlan,
-                    ClassUtils.callWithException(
+                    ClassUtils.callException(
                             () -> planPhysical(logicalPlan), Code.PHYSICAL_PLAN_BUILD_FAILED));
         }
 

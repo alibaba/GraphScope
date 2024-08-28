@@ -18,8 +18,10 @@
 
 package com.alibaba.graphscope.common.exception;
 
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.Maps;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Map;
 
@@ -29,11 +31,19 @@ public class FrontendException extends RuntimeException {
     private final Map<String, Object> details;
 
     public FrontendException(Code errorCode, String errorMsg) {
-        this(errorCode, errorMsg, Maps.newHashMap());
+        this(errorCode, errorMsg, null);
     }
 
-    public FrontendException(Code errorCode, String errorMsg, Map<String, Object> details) {
-        super(errorMsg);
+    public FrontendException(Code errorCode, String errorMsg, @Nullable Throwable cause) {
+        this(errorCode, errorMsg, Maps.newHashMap(), cause);
+    }
+
+    public FrontendException(
+            Code errorCode,
+            String errorMsg,
+            Map<String, Object> details,
+            @Nullable Throwable cause) {
+        super(errorMsg, cause);
         this.componentCode = ComponentCode.FRONTEND;
         this.errorCode = errorCode;
         this.details = details;
@@ -43,18 +53,25 @@ public class FrontendException extends RuntimeException {
         return this.details;
     }
 
+    public Code getErrorCode() {
+        return errorCode;
+    }
+
     @Override
-    public String toString() {
+    public String getMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("ErrorCode: ").append(errorCode.name()).append("\n");
-        sb.append("Message: ").append(getMessage()).append("\n");
-        sb.append("EC:")
+        String msg = super.getMessage();
+        if (!msg.endsWith("\n")) {
+            msg += "\n";
+        }
+        sb.append("Message: ").append(msg);
+        sb.append("EC: ")
                 .append(String.format("%02d-%04d", componentCode.getValue(), errorCode.getNumber()))
                 .append("\n");
-        StringBuilder detailsBuilder = new StringBuilder();
         details.forEach(
                 (k, v) -> {
-                    detailsBuilder.append(k).append(": ").append(v).append("\n");
+                    sb.append(k).append(": ").append(v).append("\n");
                 });
         return sb.toString();
     }

@@ -77,6 +77,7 @@ interactive_engine/executor/store/groot/src/db/proto/*
 interactive_engine/data-load-tool/dependency-reduced-pom.xml
 interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
 interactive_engine/neo4j-shaded/dependency-reduced-pom.xml
+interactive_engine/compiler/.ci-friendly-pom.xml
 interactive_engine/executor/Cargo.lock
 interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
 interactive_engine/executor/ir/Cargo.lock

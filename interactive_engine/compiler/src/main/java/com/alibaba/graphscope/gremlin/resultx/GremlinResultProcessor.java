@@ -20,16 +20,16 @@ import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import io.grpc.Status;
 
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -95,27 +95,25 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
             }
             finishRecord();
         } catch (Throwable t) {
-            Status status;
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor
-            if (t != null && t.getCause() instanceof InterruptedException) {
-                status =
-                        Status.DEADLINE_EXCEEDED.withDescription(
-                                "Timeout has been detected by gremlin executor");
-            } else {
-                status = Status.fromThrowable(t);
-            }
             Exception executionException =
-                    ClassUtils.handleExecutionException(status, timeoutConfig, t.getMessage());
-            ResponseStatusCode errorCode =
-                    (status.getCode() == Status.Code.DEADLINE_EXCEEDED)
-                            ? ResponseStatusCode.SERVER_ERROR_TIMEOUT
-                            : ResponseStatusCode.SERVER_ERROR;
+                    (t != null && t.getCause() instanceof InterruptedException)
+                            ? new FrontendException(
+                                    Code.TIMEOUT,
+                                    "Timeout has been detected by gremlin executor",
+                                    t)
+                            : ClassUtils.handleExecutionException(t, timeoutConfig);
+            if (executionException instanceof FrontendException) {
+                ((FrontendException) executionException)
+                        .getDetails()
+                        .put("QueryId", statusCallback.getQueryLogger().getQueryId());
+            }
             String errorMsg = executionException.getMessage();
-            statusCallback.onErrorEnd(errorMsg);
+            statusCallback.onErrorEnd(executionException, errorMsg);
             ctx.writeAndFlush(
                     ResponseMessage.build(ctx.getRequestMessage())
-                            .code(errorCode)
+                            .code(ResponseStatusCode.SERVER_ERROR)
                             .statusMessage(errorMsg)
                             .create());
         } finally {
@@ -129,7 +127,7 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
 
     protected void processRecord(IrResult.Record record) {
         List<Object> results =
-                ClassUtils.callWithException(
+                ClassUtils.callException(
                         () -> recordParser.parseFrom(record), Code.GREMLIN_INVALID_RESULT);
         if (resultSchema.isGroupBy && !results.isEmpty()) {
             if (results.stream().anyMatch(k -> !(k instanceof Map))) {
@@ -149,6 +147,7 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
     }
 
     protected void finishRecord() {
+        statusCallback.onSuccessEnd(ImmutableList.of());
         List<Object> results = Lists.newArrayList();
         if (resultSchema.isGroupBy) {
             results.add(reducer);

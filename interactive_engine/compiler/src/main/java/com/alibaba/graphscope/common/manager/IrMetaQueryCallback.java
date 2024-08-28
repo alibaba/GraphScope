@@ -19,7 +19,7 @@ package com.alibaba.graphscope.common.manager;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 
 import java.util.Optional;
 

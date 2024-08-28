@@ -32,6 +32,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -52,7 +53,7 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
@@ -83,8 +84,6 @@ import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -99,8 +98,6 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    private static final Logger defaultLogger =
-            LoggerFactory.getLogger(IrStandardOpProcessor.class);
     protected final Graph graph;
     protected final GraphTraversalSource g;
     protected final Configs configs;
@@ -113,15 +110,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryIdGenerator idGenerator;
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
-    Tracer tracer;
-    LongHistogram queryHistogram;
+    protected Tracer tracer;
+    protected LongHistogram queryHistogram;
     /**
      * for success query
      * Print if the threshold is exceeded
      */
-    private long printThreshold;
+    protected long printThreshold;
 
-    private IdGenerator opentelemetryIdGenerator;
+    protected IdGenerator opentelemetryIdGenerator;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -147,7 +144,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
-        this.printThreshold = Long.parseLong(configs.get("query.print.threshold.ms", "200"));
+        this.printThreshold = FrontendConfig.QUERY_PRINT_THRESHOLD_MS.get(configs);
         this.opentelemetryIdGenerator = IdGenerator.random();
         initTracer();
         initMetrics();
@@ -178,7 +175,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         BigInteger jobId = idGenerator.generateId();
         String jobName = idGenerator.generateName(jobId);
         String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
-        IrMeta irMeta = metaQueryCallback.beforeExec();
+        IrMeta irMeta =
+                ClassUtils.callExceptionWithDetails(
+                        () -> metaQueryCallback.beforeExec(),
+                        Code.META_SCHEMA_NOT_READY,
+                        Map.of("QueryId", jobId));
         // If the current graph schema is empty (as service startup can occur before data loading in
         // Groot), we temporarily switch to the original IR core.
         // In the future, once schema-free support is implemented, we will replace this temporary
@@ -187,7 +188,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 && irMeta.getSchema().getEdgeList().isEmpty()) {
             language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
         }
-        QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId, upTraceId);
+        QueryStatusCallback statusCallback =
+                ClassUtils.createQueryStatusCallback(
+                        jobId,
+                        upTraceId,
+                        script,
+                        new MetricsCollector.Gremlin(evalOpTimer),
+                        queryHistogram,
+                        configs);
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
@@ -224,6 +232,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             evalFuture.handle(
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
+                        if (t instanceof FrontendException) {
+                            ((FrontendException) t).getDetails().put("QueryId", jobId);
+                        }
                         // TimeoutException has been handled in ResultProcessor, skip it here
                         if (t != null && !(t instanceof TimeoutException)) {
                             statusCallback.onErrorEnd(t.getMessage());
@@ -320,30 +331,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
-    protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
-        return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer),
-                queryHistogram,
-                new QueryLogger(query, queryId),
-                this.printThreshold);
-    }
-
-    /**
-     *
-     * @param query
-     * @param queryId
-     * @param upTraceId 上游传下来的traceId, 用于做全链路追踪
-     * @return
-     */
-    protected QueryStatusCallback createQueryStatusCallback(
-            String query, BigInteger queryId, String upTraceId) {
-        return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer),
-                queryHistogram,
-                new QueryLogger(query, queryId, upTraceId),
-                printThreshold);
-    }
-
     protected GremlinExecutor.LifeCycle createLifeCycle(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
@@ -401,7 +388,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Configs queryConfigs = getQueryConfigs(traversal);
 
         InterOpCollection logicalPlan =
-                ClassUtils.callWithException(
+                ClassUtils.callException(
                         () -> {
                             InterOpCollection opCollection =
                                     (new InterOpCollectionBuilder(traversal)).build();
@@ -416,7 +403,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         StringBuilder irPlanStr = new StringBuilder();
 
         PegasusClient.JobRequest physicalRequest =
-                ClassUtils.callWithException(
+                ClassUtils.callException(
                         () -> {
                             IrPlan irPlan = new IrPlan(irMeta, logicalPlan);
                             // print script and jobName with ir plan
@@ -425,7 +412,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             // it's no need to print
                             // every plan in production.de
                             irPlanStr.append(irPlan.getPlanAsJson());
-                            queryLogger.debug("ir plan {}", irPlanStr.toString());
+                            queryLogger.info("ir plan {}", irPlanStr.toString());
                             queryLogger.setIrPlan(irPlanStr.toString());
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
                             irPlan.close();

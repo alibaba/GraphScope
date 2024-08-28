@@ -266,9 +266,9 @@
                     <execution>
                         <id>error-code</id>
                         <configuration>
-                            <protoSourceRoot>${project.basedir}/../..</protoSourceRoot>
+                            <protoSourceRoot>${project.basedir}/../../proto/error</protoSourceRoot>
                             <includes>
-                                <include>proto/error/frontend.proto</include>
+                                <include>frontend.proto</include>
                             </includes>
                         </configuration>
                         <goals>
@@ -279,7 +279,7 @@
                     <execution>
                         <id>ir-proto</id>
                         <configuration>
-                            <protoSourceRoot>${project.basedir}/../../interactive_engine/executor/ir/proto/</protoSourceRoot>
+                            <protoSourceRoot>${project.basedir}/../executor/ir/proto</protoSourceRoot>
                         </configuration>
                         <goals>
                             <goal>compile</goal>

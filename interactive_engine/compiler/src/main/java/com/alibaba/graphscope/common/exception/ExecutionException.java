@@ -18,8 +18,10 @@
 
 package com.alibaba.graphscope.common.exception;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public class ExecutionException extends RuntimeException {
-    public ExecutionException(String msg) {
-        super(msg);
+    public ExecutionException(String msg, @Nullable Throwable t) {
+        super(msg, t);
     }
 }

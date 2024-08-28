@@ -22,7 +22,7 @@ import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
 import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -33,10 +33,10 @@ public interface LogicalPlanFactory {
         @Override
         public LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query) {
             ParseTree cypherAST =
-                    ClassUtils.callWithException(
+                    ClassUtils.callException(
                             () -> new CypherAntlr4Parser().parse(query),
                             Code.CYPHER_INVALID_SYNTAX);
-            return ClassUtils.callWithException(
+            return ClassUtils.callException(
                     () -> new LogicalPlanVisitor(builder, irMeta).visit(cypherAST),
                     Code.LOGICAL_PLAN_BUILD_FAILED);
         }
@@ -46,10 +46,10 @@ public interface LogicalPlanFactory {
         @Override
         public LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query) {
             ParseTree gremlinAST =
-                    ClassUtils.callWithException(
+                    ClassUtils.callException(
                             () -> new GremlinAntlr4Parser().parse(query),
                             Code.GREMLIN_INVALID_SYNTAX);
-            return ClassUtils.callWithException(
+            return ClassUtils.callException(
                     () ->
                             new LogicalPlan(
                                     new GraphBuilderVisitor(builder).visit(gremlinAST).build()),

@@ -19,11 +19,12 @@ package com.alibaba.graphscope.gremlin.result.processor;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -109,27 +110,25 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             }
             responseProcessor.finish();
         } catch (Throwable t) {
-            Status status;
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor
-            if (t != null && t.getCause() instanceof InterruptedException) {
-                status =
-                        Status.DEADLINE_EXCEEDED.withDescription(
-                                "Timeout has been detected by gremlin executor");
-            } else {
-                status = Status.fromThrowable(t);
-            }
             Exception executionException =
-                    ClassUtils.handleExecutionException(status, timeoutConfig, t.getMessage());
-            ResponseStatusCode errorCode =
-                    (status.getCode() == Status.Code.DEADLINE_EXCEEDED)
-                            ? ResponseStatusCode.SERVER_ERROR_TIMEOUT
-                            : ResponseStatusCode.SERVER_ERROR;
+                    (t != null && t.getCause() instanceof InterruptedException)
+                            ? new FrontendException(
+                                    Code.TIMEOUT,
+                                    "Timeout has been detected by gremlin executor",
+                                    t)
+                            : ClassUtils.handleExecutionException(t, timeoutConfig);
+            if (executionException instanceof FrontendException) {
+                ((FrontendException) executionException)
+                        .getDetails()
+                        .put("QueryId", statusCallback.getQueryLogger().getQueryId());
+            }
             String errorMsg = executionException.getMessage();
-            statusCallback.onErrorEnd(errorMsg);
+            statusCallback.onErrorEnd(executionException, errorMsg);
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())
-                            .code(errorCode)
+                            .code(ResponseStatusCode.SERVER_ERROR)
                             .statusMessage(errorMsg)
                             .create());
         } finally {
@@ -158,7 +157,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 resultCollectors.clear();
             }
             resultCollectors.addAll(
-                    ClassUtils.callWithException(
+                    ClassUtils.callException(
                             () -> resultParser.parseFrom(response), Code.GREMLIN_INVALID_RESULT));
         }
 

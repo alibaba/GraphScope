@@ -26,7 +26,6 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
@@ -178,7 +177,7 @@ public class GraphServer {
             throws IOException {
         URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
         if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+            return new DynamicIrMetaFetcher(configs, new LocalIrMetaReader(configs), tracker);
         } else if (schemaUri.getScheme().equals("http")) {
             return new DynamicIrMetaFetcher(configs, new HttpIrMetaReader(configs), tracker);
         }

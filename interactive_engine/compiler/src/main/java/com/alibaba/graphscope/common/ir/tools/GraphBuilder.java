@@ -39,7 +39,7 @@ import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -499,7 +499,8 @@ public class GraphBuilder extends RelBuilder {
                             + " from alias="
                             + alias
                             + ", expected one column, but found "
-                            + columnFields.size());
+                            + columnFields.size(),
+                    null);
         }
         ColumnField columnField = columnFields.get(0);
         RelDataTypeField aliasField = columnField.right;

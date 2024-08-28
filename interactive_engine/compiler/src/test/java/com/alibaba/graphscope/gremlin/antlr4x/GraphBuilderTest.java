@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -361,11 +362,12 @@ public class GraphBuilderTest {
     public void g_V_has_name_marko_age_17_has_label_error_test() {
         try {
             RelNode node = eval("g.V().has('name', 'marko').has('age', 17).hasLabel('software')");
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=age} not found; expected properties are: [id, name, lang,"
-                            + " creationDate]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=age} not found; expected properties are: [id, name,"
+                                            + " lang, creationDate]"));
             return;
         }
         Assert.fail();
