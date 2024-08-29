@@ -66,6 +66,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency> -->
+    <dependency>
+        <groupId>com.carrotsearch</groupId>
+        <artifactId>hppc</artifactId>
+        <version>0.8.1</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -123,6 +128,7 @@
                   <include>com.alibaba.fastffi:*</include>
                   <include>it.unimi.dsi:fastutil*</include>
                   <include>org.apache.spark:*</include>
+                  <include>com.carrotsearch:hppc*</include>
                 </includes>
               </artifactSet>
               <filters>

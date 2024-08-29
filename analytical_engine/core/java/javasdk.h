@@ -20,6 +20,7 @@
 
 #include <jni.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -38,7 +39,9 @@ namespace gs {
 std::string JString2String(JNIEnv* env, jstring jStr);
 bool InitWellKnownClasses(JNIEnv* env);
 
-inline uint64_t getTotalSystemMemory();
+uint64_t getTotalSystemMemory();
+uint64_t getCurrentAvailableMemory();
+uint64_t getProcessMemory();
 
 void SetupEnv(const int local_num);
 

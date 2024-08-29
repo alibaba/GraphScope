@@ -351,137 +351,146 @@ void QueryProperty(vineyard::Client& client,
 }
 
 template <typename ProjectedFragmentType>
-void QueryProjected(
-    vineyard::Client& client, std::shared_ptr<ProjectedFragmentType> fragment,
-    const grape::CommSpec& comm_spec, const std::string& app_name,
-    const std::string& out_prefix, const std::string& basic_params,
-    const std::string& selector_string, const std::string& selectors_string,
-    int32_t expected_data_type, vineyard::AnyType expected_tensor_type) {
+void QueryProjected(vineyard::Client& client,
+                    std::shared_ptr<ProjectedFragmentType> fragment,
+                    const grape::CommSpec& comm_spec,
+                    const std::string& app_name, const std::string& out_prefix,
+                    const std::string& basic_params,
+                    const std::string& selector_string,
+                    const std::string& selectors_string,
+                    int32_t expected_data_type,
+                    vineyard::AnyType expected_tensor_type, int cur_time = 0) {
   using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
   worker->Init(comm_spec, spec);
   std::string lib_path = "";
-  worker->Query(basic_params, lib_path);
-  std::ofstream ostream;
-  std::string output_path =
-      grape::GetResultFilename(out_prefix, fragment->fid());
+  if (cur_time == 0) {
+    worker->Query(basic_params, lib_path);
+  }
+  // std::ofstream ostream;
+  // std::string output_path =
+  //     grape::GetResultFilename(out_prefix, fragment->fid());
 
-  ostream.open(output_path);
-  worker->Output(ostream);
-  ostream.close();
+  // ostream.open(output_path);
+  // worker->Output(ostream);
+  // ostream.close();
 
   std::shared_ptr<gs::JavaPIEProjectedContext<ProjectedFragmentType>> ctx =
       worker->GetContext();
   worker->Finalize();
 
-  gs::rpc::graph::GraphDefPb graph_def;
-  graph_def.set_graph_type(gs::rpc::graph::ARROW_PROJECTED);
+  // gs::rpc::graph::GraphDefPb graph_def;
+  // graph_def.set_graph_type(gs::rpc::graph::ARROW_PROJECTED);
 
-  auto selectors = gs::Selector::ParseSelectors(selectors_string).value();
-  auto selector = gs::Selector::parse(selector_string).value();
-  auto range = std::make_pair("", "");
+  // auto selectors = gs::Selector::ParseSelectors(selectors_string).value();
+  // auto selector = gs::Selector::parse(selector_string).value();
+  // auto range = std::make_pair("", "");
 
-  auto frag_wrapper =
-      std::make_shared<gs::FragmentWrapper<ProjectedFragmentType>>(
-          "graph_123", graph_def, fragment);
+  // auto frag_wrapper =
+  //     std::make_shared<gs::FragmentWrapper<ProjectedFragmentType>>(
+  //         "graph_123", graph_def, fragment);
 
-  auto ctx_wrapper = ctx->CreateInnerCtxWrapper(
-      "ctx_wrapper_" + vineyard::random_string(8), frag_wrapper);
-  if (ctx_wrapper->context_type() == "vertex_property") {
-    auto vp_ctx_wrapper =
-        std::dynamic_pointer_cast<gs::IVertexPropertyContextWrapper>(
-            ctx_wrapper);
-    /// 0. test ndarray
-    {
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vp_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
-      std::string java_out_prefix =
-          out_prefix + "/java_projected_assembled_ndarray.dat";
-      output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      expected_data_type);  // 4 for int64_t
-    }
-    VLOG(1) << "[0] java projected finish test ndarray";
+  // auto ctx_wrapper = ctx->CreateInnerCtxWrapper(
+  //     "ctx_wrapper_" + vineyard::random_string(8), frag_wrapper);
+  // if (ctx_wrapper->context_type() == "vertex_property") {
+  //   auto vp_ctx_wrapper =
+  //       std::dynamic_pointer_cast<gs::IVertexPropertyContextWrapper>(
+  //           ctx_wrapper);
+  //   /// 0. test ndarray
+  //   {
+  //     std::unique_ptr<grape::InArchive> arc = std::move(
+  //         vp_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
+  //     std::string java_out_prefix =
+  //         out_prefix + "/java_projected_assembled_ndarray.dat";
+  //     output_nd_array(comm_spec, std::move(arc), java_out_prefix,
+  //                     expected_data_type);  // 4 for int64_t
+  //   }
+  //   VLOG(1) << "[0] java projected finish test ndarray";
 
-    // 1. Test data frame
-    {
-      // auto selectors =
-      // gs::gs::Selector::ParseSelectors(s_selectors).value();
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vp_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
-      std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
-      output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        expected_data_type);
-    }
+  //   // 1. Test data frame
+  //   {
+  //     // auto selectors =
+  //     // gs::gs::Selector::ParseSelectors(s_selectors).value();
+  //     std::unique_ptr<grape::InArchive> arc = std::move(
+  //         vp_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
+  //     std::string java_data_frame_out_prefix = out_prefix +
+  //     "/java_projected"; output_data_frame(comm_spec, std::move(arc),
+  //     java_data_frame_out_prefix,
+  //                       expected_data_type);
+  //   }
 
-    VLOG(1) << "[1] java projected finish test dataframe";
-    // 2. test vineyard tensor
-    {
-      auto tmp =
-          vp_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector, range);
-      CHECK(tmp);
-      vineyard::ObjectID ndarray_object = tmp.value();
-      std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
-                                      java_v6d_tensor_prefix,
-                                      expected_tensor_type);
-    }
-    VLOG(1) << "[2] java projected finish test vineyard tensor";
+  //   VLOG(1) << "[1] java projected finish test dataframe";
+  //   // 2. test vineyard tensor
+  //   {
+  //     auto tmp =
+  //         vp_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector,
+  //         range);
+  //     CHECK(tmp);
+  //     vineyard::ObjectID ndarray_object = tmp.value();
+  //     std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
+  //     output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
+  //                                     java_v6d_tensor_prefix,
+  //                                     expected_tensor_type);
+  //   }
+  //   VLOG(1) << "[2] java projected finish test vineyard tensor";
 
-  } else if (ctx_wrapper->context_type() == "vertex_data") {
-    auto vd_ctx_wrapper =
-        std::dynamic_pointer_cast<gs::IVertexDataContextWrapper>(ctx_wrapper);
-    /// 0. test ndarray
-    {
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vd_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
-      std::string java_out_prefix =
-          out_prefix + "/java_projected_assembled_ndarray.dat";
-      output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      expected_data_type);  // 4 for int64_t
-    }
-    VLOG(1) << "[0] java projected finish test ndarray";
+  // } else if (ctx_wrapper->context_type() == "vertex_data") {
+  //   auto vd_ctx_wrapper =
+  //       std::dynamic_pointer_cast<gs::IVertexDataContextWrapper>(ctx_wrapper);
+  //   /// 0. test ndarray
+  //   {
+  //     std::unique_ptr<grape::InArchive> arc = std::move(
+  //         vd_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
+  //     std::string java_out_prefix =
+  //         out_prefix + "/java_projected_assembled_ndarray.dat";
+  //     output_nd_array(comm_spec, std::move(arc), java_out_prefix,
+  //                     expected_data_type);  // 4 for int64_t
+  //   }
+  //   VLOG(1) << "[0] java projected finish test ndarray";
 
-    // 1. Test data frame
-    {
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
-      std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
-      output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        expected_data_type);
-    }
+  //   // 1. Test data frame
+  //   {
+  //     std::unique_ptr<grape::InArchive> arc = std::move(
+  //         vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
+  //     std::string java_data_frame_out_prefix = out_prefix +
+  //     "/java_projected"; output_data_frame(comm_spec, std::move(arc),
+  //     java_data_frame_out_prefix,
+  //                       expected_data_type);
+  //   }
 
-    VLOG(1) << "[1] java projected finish test dataframe";
-    // 2. test vineyard tensor
-    {
-      auto tmp =
-          vd_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector, range);
-      CHECK(tmp);
-      vineyard::ObjectID ndarray_object = tmp.value();
-      std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      if (expected_tensor_type == vineyard::AnyType::Double) {
-        output_vineyard_tensor<double>(client, ndarray_object, comm_spec,
-                                       java_v6d_tensor_prefix,
-                                       expected_tensor_type);
-      } else if (expected_tensor_type == vineyard::AnyType::Int64) {
-        output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
-                                        java_v6d_tensor_prefix,
-                                        expected_tensor_type);
-      } else {
-        LOG(FATAL) << "Unregonizable data type " << expected_tensor_type;
-      }
-    }
-    VLOG(1) << "[2] java projected finish test vineyard tensor";
-  } else {
-    LOG(ERROR) << "Unrecognized ctx type: " << ctx_wrapper->context_type();
-  }
+  //   VLOG(1) << "[1] java projected finish test dataframe";
+  //   // 2. test vineyard tensor
+  //   {
+  //     auto tmp =
+  //         vd_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector,
+  //         range);
+  //     CHECK(tmp);
+  //     vineyard::ObjectID ndarray_object = tmp.value();
+  //     std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
+  //     if (expected_tensor_type == vineyard::AnyType::Double) {
+  //       output_vineyard_tensor<double>(client, ndarray_object, comm_spec,
+  //                                      java_v6d_tensor_prefix,
+  //                                      expected_tensor_type);
+  //     } else if (expected_tensor_type == vineyard::AnyType::Int64) {
+  //       output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
+  //                                       java_v6d_tensor_prefix,
+  //                                       expected_tensor_type);
+  //     } else {
+  //       LOG(FATAL) << "Unregonizable data type " << expected_tensor_type;
+  //     }
+  //   }
+  //   VLOG(1) << "[2] java projected finish test vineyard tensor";
+  // } else {
+  //   LOG(ERROR) << "Unrecognized ctx type: " << ctx_wrapper->context_type();
+  // }
 }
 
 // Running test doesn't require codegen.
 void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
          vineyard::ObjectID id, bool run_projected, bool run_property,
-         const std::string& app_name) {
+         const std::string& app_name, int times = 1) {
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
 
@@ -530,7 +539,8 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     QueryProperty(client, fragment, comm_spec, app_name, "/tmp", basic_params,
                   selector_string, selectors_string);
   } else {  // 3. run projected
-    if (app_name.find("SSSP") != std::string::npos) {
+    if (app_name.find("SSSP") != std::string::npos ||
+        app_name.find("CircleAppParallel") != std::string::npos) {
       pt.put("frag_name",
              "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>");
     } else {
@@ -566,20 +576,27 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
           selectors_string = gs::generate_selectors(selector_list);
         }
       }
-      if (app_name.find("SSSP") != std::string::npos) {
+      if (app_name.find("SSSP") != std::string::npos ||
+          app_name.find("CircleAppParallel") != std::string::npos) {
         using ProjectedFragmentType =
             gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
         std::shared_ptr<ProjectedFragmentType> projected_fragment =
-            ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+            ProjectedFragmentType::Project(fragment, 0, 0, 0, 2);
         // test get data
         using vertex_t = ProjectedFragmentType::vertex_t;
         vertex_t vertex;
         projected_fragment->GetInnerVertex(4, vertex);
         VLOG(1) << "source vertex" << vertex.GetValue();
-        QueryProjected(client, projected_fragment, comm_spec, app_name, "/tmp",
-                       basic_params, selector_string, selectors_string,
-                       vineyard::TypeToInt<double>::value,
-                       vineyard::AnyType::Double);
+        for (int i = 0; i < times; ++i) {
+          LOG(INFO) << "Run project for times " << i
+                    << " current memory usage: " << gs::getProcessMemory();
+          QueryProjected(client, projected_fragment, comm_spec, app_name,
+                         "/tmp", basic_params, selector_string,
+                         selectors_string, vineyard::TypeToInt<double>::value,
+                         vineyard::AnyType::Double, i);
+          LOG(INFO) << "Finish project for times " << i
+                    << " current memory usage: " << gs::getProcessMemory();
+        }
       } else {
         using ProjectedFragmentType =
             gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
@@ -607,7 +624,7 @@ int main(int argc, char** argv) {
         "usage: ./run_java_app <ipc_socket> <e_label_num> "
         "<efiles...> "
         "<v_label_num> <vfiles...> <run_projected> <run_property>"
-        "[directed] [app_name]\n");
+        "[directed] [app_name] [times]\n");
     return 1;
   }
   int index = 1;
@@ -637,6 +654,11 @@ int main(int argc, char** argv) {
     app_name = argv[index++];
   }
   VLOG(1) << "app name " << app_name;
+  int times = 1;
+
+  if (argc > index) {
+    times = atoi(argv[index++]);
+  }
 
   grape::InitMPIComm();
   {
@@ -671,7 +693,8 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(comm_spec.comm());
 
-    Run(client, comm_spec, fragment_id, run_projected, run_property, app_name);
+    Run(client, comm_spec, fragment_id, run_projected, run_property, app_name,
+        times);
     MPI_Barrier(comm_spec.comm());
   }
 

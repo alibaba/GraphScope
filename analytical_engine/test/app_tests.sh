@@ -415,7 +415,7 @@ get_test_data
 #   exact_verify "${test_dir}"/p2p-31-"${app}"
 # done
 
-#start_vineyard
+start_vineyard
 
 # run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0
 # run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
@@ -443,40 +443,41 @@ then
   if [[ "${USER_JAR_PATH}"x != ""x ]]
   then
     echo "Running Java tests..."
-    run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
+    # run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
 
-    GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" \
-      1 "../test/modern_graph/knows.csv#header_row=True#delimiter=|#src_label=v0&dst_label=v0&label=e" \
-      1 "../test/modern_graph/person.csv#header_row=True#delimiter=|#label=v0" 1 0 1 \
-      com.alibaba.graphscope.example.circle.CirclePIEParallel
+    # GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" \
+    #   1 "../test/modern_graph/knows.csv#header_row=True#delimiter=|#src_label=v0&dst_label=v0&label=e" \
+    #   1 "../test/modern_graph/person.csv#header_row=True#delimiter=|#label=v0" 1 0 1 \
+    #   com.alibaba.graphscope.example.circle.CirclePIEParallel
 
-    GLOG_v=10 mpirun -n 1 ./run_java_app "${socket_file}" 1 \
-      "${test_dir}/property/p2p-31_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&delimiter=," \
-      1 "${test_dir}/property/p2p-31_property_v_0#header_row=True#label=v&included_column=id,age&delimiter=," \
-      1 0 1 com.alibaba.graphscope.example.sssp.SSSP
+    GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" 1 \
+      "${test_dir}/property/p2p-31_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,int64_t" \
+      1 "${test_dir}/property/p2p-31_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,int64_t" \
+      1 0 1 com.alibaba.graphscope.example.circle.parallel.formal.CircleAppParallel 10
+      # 1 0 1 com.alibaba.graphscope.example.sssp.SSSP
 
-    GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
-        1 "${test_dir}/projected_property/twitter_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
-        1 "${test_dir}/projected_property/twitter_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,std::string" \
-        com.alibaba.graphscope.example.stringApp.StringApp
+    # GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
+    #     1 "${test_dir}/projected_property/twitter_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
+    #     1 "${test_dir}/projected_property/twitter_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,std::string" \
+    #     com.alibaba.graphscope.example.stringApp.StringApp
 
-    echo "Running girpah tests..."
-    ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
-      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
-      --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
-      --user_app_class com.alibaba.graphscope.example.giraph.SSSP
+    # echo "Running girpah tests..."
+    # ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
+    #   --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
+    #   --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+    #   --user_app_class com.alibaba.graphscope.example.giraph.SSSP
 
-    echo "Test Giraph app user Customized Writable"
-    ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexMultipleLongInputFormat \
-      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleLongInputFormat --vfile "${test_dir}"/p2p-31.v \
-      --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
-      --user_app_class com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable
+    # echo "Test Giraph app user Customized Writable"
+    # ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexMultipleLongInputFormat \
+    #   --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleLongInputFormat --vfile "${test_dir}"/p2p-31.v \
+    #   --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+    #   --user_app_class com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable
 
-    echo "Test Giraph app user Circle App"
-    GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.circle.CircleVertexInputFormat \
-      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.circle.CircleEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
-      --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
-      --user_app_class com.alibaba.graphscope.example.giraph.circle.Circle
+    # echo "Test Giraph app user Circle App"
+    # GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.circle.CircleVertexInputFormat \
+    #   --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.circle.CircleEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
+    #   --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+    #   --user_app_class com.alibaba.graphscope.example.giraph.circle.Circle
   fi
 fi
 

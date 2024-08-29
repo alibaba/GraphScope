@@ -377,7 +377,7 @@ if (BUILD_TESTS)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES} ${JAVA_JVM_LIBRARY})
 
         # # java app benchmark
         # add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
@@ -509,17 +509,17 @@ if(ENABLE_JAVA_SDK)
         set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.so")
     endif()
 
-    add_custom_command(
-        OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
-        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
-        DEPENDS gs_proto
-        WORKING_DIRECTORY ${GAE_JAVA_DIR}
-        COMMENT "Building GAE-java..."
-        VERBATIM
-    )
-    add_custom_target(grape_jni ALL
-         DEPENDS "${GAE_JAVA_RUNTIME_JAR}"
-    )
+    # add_custom_command(
+    #     OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
+    #     COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
+    #     DEPENDS gs_proto
+    #     WORKING_DIRECTORY ${GAE_JAVA_DIR}
+    #     COMMENT "Building GAE-java..."
+    #     VERBATIM
+    # )
+    # add_custom_target(grape_jni ALL
+    #      DEPENDS "${GAE_JAVA_RUNTIME_JAR}"
+    # )
     install(FILES DESTINATION lib)
     install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)

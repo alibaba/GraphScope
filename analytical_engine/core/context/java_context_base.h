@@ -107,6 +107,8 @@ class JavaContextBase : public grape::ContextBase {
         m.env()->DeleteGlobalRef(url_class_loader_object_);
         VLOG(1) << "Delete url class loader object";
       }
+      // Invoke a gc, since we have created a lot of objects.
+      InvokeGC(m.env());
     } else {
       LOG(ERROR) << "JNI env not available.";
     }

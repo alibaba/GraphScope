@@ -110,7 +110,7 @@ bool InitWellKnownClasses(JNIEnv* env) {
   return true;
 }
 
-inline uint64_t getTotalSystemMemory() {
+uint64_t getTotalSystemMemory() {
   uint64_t pages = sysconf(_SC_PHYS_PAGES);
   uint64_t page_size = sysconf(_SC_PAGE_SIZE);
   uint64_t ret = pages * page_size;
@@ -121,7 +121,7 @@ inline uint64_t getTotalSystemMemory() {
   return ret;
 }
 
-inline uint64_t getCurrentAvailableMemory() {
+uint64_t getCurrentAvailableMemory() {
   uint64_t pages = sysconf(_SC_AVPHYS_PAGES);
   uint64_t page_size = sysconf(_SC_PAGE_SIZE);
   uint64_t ret = pages * page_size;
@@ -130,6 +130,20 @@ inline uint64_t getCurrentAvailableMemory() {
   ret = ret / 1024;
   ret = ret / 1024;
   return ret;
+}
+
+uint64_t getProcessMemory() {
+  std::string pid = std::to_string(getpid());
+  std::string cmd = "cat /proc/" + pid + "/status | grep VmRSS";
+  std::string res = exec(cmd.c_str());
+  std::string::size_type pos = res.find(":");
+  if (pos == std::string::npos) {
+    return 0;
+  }
+  std::string mem_str = res.substr(pos + 1);
+  mem_str.erase(std::remove_if(mem_str.begin(), mem_str.end(), ::isspace),
+                mem_str.end());
+  return std::stoull(mem_str);
 }
 
 void SetupEnv(const int local_num) {
@@ -358,8 +372,10 @@ jobject LoadAndCreate(JNIEnv* env, const jobject& url_class_loader_obj,
 }
 
 void InvokeGC(JNIEnv* env) {
+  VLOG(1) << "Before invoking GC:" << getCurrentAvailableMemory();
   VLOG(1) << "GC ...";
   env->CallStaticVoidMethod(system_class, gc_methodID);
+  VLOG(1) << "After invoking GC:" << getCurrentAvailableMemory();
 }
 
 std::string GetJobjectClassName(JNIEnv* env, jobject object) {
