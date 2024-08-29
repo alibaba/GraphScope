@@ -212,11 +212,11 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+    def call_procedure_raw(self, graph_id: StrictStr, params: bytes) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_current_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: bytes) -> Result[str]:
         raise NotImplementedError
 
 
@@ -609,7 +609,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+    def call_procedure_raw(self, graph_id: StrictStr, params: bytes) -> Result[str]:
         graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
@@ -622,7 +622,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_current_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: bytes) -> Result[str]:
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
