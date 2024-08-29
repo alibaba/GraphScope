@@ -38,6 +38,6 @@ class TestUtils(unittest.TestCase):
     
     def test_append_format_byte(self):
         input = "hello"
-        new_bytes = append_format_byte(input, input_format=InputFormat.CPP_ENCODER)
+        new_bytes = append_format_byte(input.encode(), input_format=InputFormat.CPP_ENCODER)
         self.assertEqual(new_bytes, b'hello\x00')
         self.assertEqual(len(new_bytes), len(input) + 1)
