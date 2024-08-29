@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
@@ -349,11 +350,12 @@ public class FilterTest {
                                             builder.variable(null, GraphProperty.LABEL_KEY),
                                             builder.literal("software")))
                             .build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=age} not found; expected properties are: [id, name, lang,"
-                            + " creationDate]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=age} not found; expected properties are: [id, name,"
+                                            + " lang, creationDate]"));
             return;
         }
         Assert.fail();
