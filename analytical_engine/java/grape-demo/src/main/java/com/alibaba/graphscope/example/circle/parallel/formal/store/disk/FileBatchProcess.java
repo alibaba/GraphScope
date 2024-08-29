@@ -60,6 +60,7 @@ public class FileBatchProcess implements IBatchProcess {
                 pathStorage.putToStorage(toLid, path);
             }
         }
+        vertex.delete();
 
         logger.info("Inner batchUpdatePathStorage end.superStep is {},pathStoreFile is {},msg size is {},time is {}s", ctx.superStep, pathStorage.getPath(), pathStorage.getFragmentPaths().values().stream().mapToInt(Set::size).sum(), (System.currentTimeMillis() - start) / 1000);
 

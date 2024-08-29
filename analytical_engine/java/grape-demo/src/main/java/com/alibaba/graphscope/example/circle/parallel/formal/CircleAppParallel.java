@@ -52,6 +52,7 @@ public class CircleAppParallel implements ParallelAppBase<Long, Long, Long, Long
                 logger.error("PEval error", e);
             }
         }
+        vertex.delete();
 
         ctx.storeProcessor.initial(fragment, messageManager);
 

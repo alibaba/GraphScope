@@ -295,6 +295,7 @@ public abstract class ComputeStep {
         }
 
         tmpVector.delete();
+        tmpVertex.delete();
     }
 
     /**
@@ -352,6 +353,7 @@ public abstract class ComputeStep {
                 sendToNbr(frag, messageManager, vertex, threadId, batchId);
             }
         }
+        vertex.delete();
     }
 
     /**

@@ -232,6 +232,7 @@ public class CircleAppParallelContext extends VertexDataContext<IFragment<Long, 
                 initSeedVertex((int) i, oid);
             }
         }
+        vertex.delete();
 
         currModified = new ThreadSafeBitSet(ThreadSafeBitSet.DEFAULT_LOG2_SEGMENT_SIZE_IN_BITS, (int) frag.getInnerVerticesNum());
         nextModified = new ThreadSafeBitSet(ThreadSafeBitSet.DEFAULT_LOG2_SEGMENT_SIZE_IN_BITS, (int) frag.getInnerVerticesNum());
@@ -324,6 +325,7 @@ public class CircleAppParallelContext extends VertexDataContext<IFragment<Long, 
                 value.fromJavaString(outPutCircleResult((int) vid));
             }
         }
+        cur.delete();
 
         clean();
     }

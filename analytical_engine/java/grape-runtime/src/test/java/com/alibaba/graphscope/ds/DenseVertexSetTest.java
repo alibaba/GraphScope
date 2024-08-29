@@ -50,5 +50,7 @@ public class DenseVertexSetTest {
         Assert.assertFalse(denseVertexSet.Empty());
         Assert.assertFalse(denseVertexSet.PartialEmpty(0L, 100L));
         Assert.assertTrue(denseVertexSet.PartialEmpty(51L, 100L));
+
+        vertex.delete();
     }
 }
