@@ -108,8 +108,8 @@ class ProcedureCaller():
 
         # plus_one, should be with id 2
         encoder2 = Encoder()
-        encoder2.put_int(1)
-        encoder2.put_byte(2)
+        encoder2.put_int(1) # The input value 1
+        encoder2.put_byte(2) # The procedure id
         resp = self._sess.call_procedure_raw(graph_id, encoder2.get_bytes())
         if not resp.is_ok():
             print("call plus_one failed: ", resp.get_status_message())

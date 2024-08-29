@@ -69,7 +69,7 @@ class InputFormat(Enum):
     CYPHER_PROTO_ADHOC = 2 # protobuf adhoc bytes
     CYPHER_PROTO_PROCEDURE = 3 # protobuf procedure bytes
 
-def append_format_byte(input: bytearray, input_format: InputFormat):
+def append_format_byte(input: bytes, input_format: InputFormat):
     """
     Append a byte to the end of the input string to denote the input format
     """
