@@ -4,7 +4,7 @@ if (Hiactor_FOUND)
 
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann-json/single_include/)
+        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
 
   # get all .cc files in current directory, except for generated/
   file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")

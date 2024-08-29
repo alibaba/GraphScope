@@ -185,13 +185,6 @@ if (BUILD_DOC)
 endif()
 
 
-# Check whether ${CMAKE_SOURCE_DIR}/third_party/single_include/nlohmann/json.hpp exists
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp)
-    message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp not found, "
-                         "please run `git submodule update --init` to download third_party")
-endif()
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
-
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/rapidjson
@@ -286,8 +279,6 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
-#install header-only nlohmann-json.hpp to include/
-install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash
