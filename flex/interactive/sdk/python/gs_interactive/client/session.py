@@ -582,7 +582,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.call_proc_with_http_info(
                 graph_id = graph_id, 
-                body=append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
+                body=append_format_byte(params.to_json().encode(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -598,7 +598,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.call_proc_current_with_http_info(
-                body = append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
+                body = append_format_byte(params.to_json().encode(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -616,7 +616,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.call_proc_with_http_info(
                 graph_id = graph_id, 
-                body = append_format_byte(params, InputFormat.CPP_ENCODER)
+                body = append_format_byte(params.encode(), InputFormat.CPP_ENCODER)
             )
             return Result.from_response(response)
         except Exception as e:
@@ -627,7 +627,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.call_proc_current_with_http_info(
-                body = append_format_byte(params, InputFormat.CPP_ENCODER)
+                body = append_format_byte(params.encode(), InputFormat.CPP_ENCODER)
             )
             return Result.from_response(response)
         except Exception as e:

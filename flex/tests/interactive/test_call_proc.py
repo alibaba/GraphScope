@@ -117,8 +117,11 @@ class ProcedureCaller():
         res = resp.get_value()
         assert len(res) == 4
         # the four byte represent a integer
-        res = int.from_bytes(res, byteorder=sys.byteorder)
-        assert(res == 2)
+        decoder = Decoder(res)
+        value = decoder.get_int()
+        print("call plus_one result: ", value)
+        assert(value == 2)
+        assert(decoder.is_empty())
 
 if __name__ == "__main__":
     #parse command line args
