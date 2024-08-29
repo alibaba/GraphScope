@@ -27,7 +27,7 @@
 #include "flex/utils/service_utils.h"
 
 #include <yaml-cpp/yaml.h>
-#include "nlohmann/json.hpp"
+#include "rapidjson/document.h"
 
 namespace gs {
 
@@ -69,7 +69,7 @@ struct GraphMeta {
 
   std::string ToJson() const;
   static GraphMeta FromJson(const std::string& json_str);
-  static GraphMeta FromJson(const nlohmann::json& json);
+  static GraphMeta FromJson(const rapidjson::Value& json);
 };
 
 struct PluginMeta {
@@ -99,7 +99,7 @@ struct PluginMeta {
   std::string ToJson() const;
 
   static PluginMeta FromJson(const std::string& json_str);
-  static PluginMeta FromJson(const nlohmann::json& json);
+  static PluginMeta FromJson(const rapidjson::Value& json);
 };
 
 struct JobMeta {
@@ -119,7 +119,7 @@ struct JobMeta {
    */
   std::string ToJson(bool print_log = true) const;
   static JobMeta FromJson(const std::string& json_str);
-  static JobMeta FromJson(const nlohmann::json& json_str);
+  static JobMeta FromJson(const rapidjson::Value& json_str);
 };
 
 ////////////////// CreateMetaRequest ///////////////////////
@@ -163,7 +163,7 @@ struct CreatePluginMetaRequest {
 
   static CreatePluginMetaRequest FromJson(const std::string& json_str);
 
-  static CreatePluginMetaRequest FromJson(const nlohmann::json& json_obj);
+  static CreatePluginMetaRequest FromJson(const rapidjson::Value& json_obj);
 };
 
 ////////////////// UpdateMetaRequest ///////////////////////
@@ -244,7 +244,7 @@ struct GraphStatistics {
 
   std::string ToJson() const;
   static Result<GraphStatistics> FromJson(const std::string& json_str);
-  static Result<GraphStatistics> FromJson(const nlohmann::json& json);
+  static Result<GraphStatistics> FromJson(const rapidjson::Value& json);
 };
 
 /*

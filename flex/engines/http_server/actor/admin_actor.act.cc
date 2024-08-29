@@ -16,6 +16,8 @@
 #include <filesystem>
 
 #include "flex/engines/http_server/actor/admin_actor.act.h"
+#include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -23,7 +25,7 @@
 #include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
-#include "nlohmann/json.hpp"
+#include "rapidjson/document.h"
 
 #include <seastar/core/print.hh>
 
@@ -93,17 +95,16 @@ std::string merge_graph_and_plugin_meta(
                                    all_plugin_meta.value().begin(),
                                    all_plugin_meta.value().end());
   }
-
-  nlohmann::json res;
+  rapidjson::Document res(rapidjson::kArrayType);
   for (auto& graph_meta : res_graph_metas) {
-    try {
-      res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
-    } catch (const std::exception& e) {
-      LOG(ERROR) << "Fail to parse graph meta: " << e.what()
-                 << graph_meta.ToJson();
+    rapidjson::Document graph_json;
+    if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
+      LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
+      continue;
     }
+    res.PushBack(graph_json, res.GetAllocator());
   }
-  return res.empty() ? "{}" : res.dump();
+  return res.Empty() ? "{}" : gs::rapidjson_stringify(res, 2);
 }
 
 gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
@@ -219,23 +220,22 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
   auto& graph_db_service = GraphDBService::get();
   // First create a plugin meta to get the plugin id, then do the real
   // creation.
-  nlohmann::json json;
-  try {
-    LOG(INFO) << "parsing: " << plugin_creation_parameter;
-    json = nlohmann::json::parse(plugin_creation_parameter);
-  } catch (const std::exception& e) {
+  rapidjson::Document json;
+  if (json.Parse(plugin_creation_parameter.c_str()).HasParseError()) {
     return seastar::make_exception_future<seastar::sstring>(
         "Fail to parse parameter as json: " + plugin_creation_parameter);
   }
-  if (json.contains("name")) {
+  if (json.HasMember("name")) {
     // Currently we need id== name
-    json["id"] = json["name"];
+    rapidjson::Value &name = json["name"];
+    rapidjson::Value name_copy(name, json.GetAllocator());
+    json.AddMember("id", name_copy, json.GetAllocator());
   }
-  json["bound_graph"] = graph_id;
-  json["creation_time"] = gs::GetCurrentTimeStamp();
-  json["update_time"] = json["creation_time"];
-  if (!json.contains("enable")) {
-    json["enable"] = true;
+  json.AddMember("bound_graph", graph_id, json.GetAllocator());
+  json.AddMember("creation_time", gs::GetCurrentTimeStamp(), json.GetAllocator());
+  json.AddMember("update_time", json["creation_time"], json.GetAllocator());
+  if (!json.HasMember("enable")) {
+    json.AddMember("enable", true, json.GetAllocator());
   }
   auto procedure_meta_request = gs::CreatePluginMetaRequest::FromJson(json);
 
@@ -251,7 +251,7 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
              graph_id, plugin_id, json,
              graph_db_service.get_service_config().engine_config_path)
       .then_wrapped([graph_id = graph_id, old_plugin_id = plugin_id,
-                     json = json, metadata_store = metadata_store](auto&& f) {
+                     json = std::move(json), metadata_store = metadata_store](auto&& f) {
         std::string proc_id;
         try {
           proc_id = f.get0();
@@ -296,8 +296,8 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
           auto internal_plugin_update =
               gs::UpdatePluginMetaRequest::FromJson(procedure_meta_str);
           // the field enable should be parsed from json
-          if (json.contains("enable")) {
-            internal_plugin_update.enable = json["enable"].get<bool>();
+          if (json.HasMember("enable")) {
+            internal_plugin_update.enable = json["enable"].GetBool();
           } else {
             internal_plugin_update.enable = true;
           }
@@ -355,36 +355,33 @@ gs::Status invoke_delete_plugin_meta(
 
 gs::Result<seastar::sstring> to_json_str(
     const std::vector<gs::PluginMeta>& plugin_metas) {
-  try {
-    nlohmann::json res;
-    for (auto& plugin_meta : plugin_metas) {
-      res.push_back(nlohmann::json::parse(plugin_meta.ToJson()));
+  rapidjson::Document res(rapidjson::kArrayType);
+  for (auto& plugin_meta : plugin_metas) {
+    rapidjson::Document plugin_json;
+    if (plugin_json.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
+      LOG(ERROR) << "Fail to parse plugin meta: " << plugin_meta.ToJson();
+      continue;
     }
-    return res.empty() ? gs::Result<seastar::sstring>("{}")
-                       : gs::Result<seastar::sstring>(res.dump());
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Fail to parse plugin meta from json string: " << e.what();
-    return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                   "Fail to parse plugin meta: " + std::string(e.what())));
+    res.PushBack(plugin_json, res.GetAllocator());
   }
+  
+  return res.Empty() ? gs::Result<seastar::sstring>("{}")
+                     : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
 }
 
 gs::Result<seastar::sstring> to_json_str(
     const std::vector<gs::JobMeta>& job_metas) {
-  try {
-    nlohmann::json res;
-    for (auto& job_meta : job_metas) {
-      res.push_back(nlohmann::json::parse(job_meta.ToJson()));
+  rapidjson::Document res(rapidjson::kArrayType);
+  for (auto& job_meta : job_metas) {
+    rapidjson::Document job_json;
+    if (job_json.Parse(job_meta.ToJson().c_str()).HasParseError()) {
+      LOG(ERROR) << "Fail to parse job meta: " << job_meta.ToJson();
+      continue;
     }
-    return res.empty() ? gs::Result<seastar::sstring>("{}")
-                       : gs::Result<seastar::sstring>(res.dump());
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Fail to parse job meta from json string: " << e.what();
-    return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                   "Fail to parse job meta: " + std::string(e.what())));
+    res.PushBack(job_json, res.GetAllocator());
   }
+  return res.Empty() ? gs::Result<seastar::sstring>("{}")
+                     : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
 }
 
 admin_actor::~admin_actor() {
@@ -411,7 +408,11 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
   YAML::Node yaml;
 
   try {
-    nlohmann::json json = nlohmann::json::parse(query_param.content);
+    rapidjson::Document doc;
+    if (doc.Parse(query_param.content.c_str()).HasParseError()) {
+      throw std::runtime_error("Fail to parse json: " +
+                               std::to_string(doc.GetParseError()));
+    }
     std::stringstream json_ss;
     json_ss << query_param.content;
     yaml = YAML::Load(json_ss);
@@ -619,7 +620,11 @@ seastar::future<admin_query_result> admin_actor::run_graph_loading(
   YAML::Node yaml;
   try {
     // parse json from query_param.content
-    nlohmann::json json = nlohmann::json::parse(loading_config);
+    rapidjson::Document doc;
+    if (doc.Parse(loading_config.c_str()).HasParseError()) {
+      throw std::runtime_error("Fail to parse json: " +
+                               std::to_string(doc.GetParseError()));
+    }
     std::stringstream json_ss;
     json_ss << loading_config;
     yaml = YAML::Load(json_ss);
@@ -920,9 +925,13 @@ seastar::future<admin_query_result> admin_actor::start_service(
   LOG(INFO) << "Current running graph: " << cur_running_graph;
   try {
     if (!content.empty()) {
-      nlohmann::json json = nlohmann::json::parse(content);
-      if (json.contains("graph_id")) {
-        graph_name = json["graph_id"].get<std::string>();
+      rapidjson::Document json;
+      if (json.Parse(content.c_str()).HasParseError()) {
+        throw std::runtime_error("Fail to parse json: " +
+                                 std::to_string(json.GetParseError()));
+      }
+      if (json.HasMember("graph_id")) {
+        graph_name = json["graph_id"].GetString();
       }
     } else {
       graph_name = cur_running_graph;
@@ -1139,14 +1148,16 @@ seastar::future<admin_query_result> admin_actor::service_status(
   auto& graph_db_service = GraphDBService::get();
   auto query_port = graph_db_service.get_query_port();
   auto running_graph_res = metadata_store_->GetRunningGraph();
-  nlohmann::json res;
+  rapidjson::Document res;
   if (query_port != 0) {
-    res["statistics_enabled"] = true;  // default is true
-    res["status"] =
-        graph_db_service.is_actors_running() ? "Running" : "Stopped";
-    res["hqps_port"] = query_port;
-    res["bolt_port"] = graph_db_service.get_service_config().bolt_port;
-    res["gremlin_port"] = graph_db_service.get_service_config().gremlin_port;
+    rapidjson::Pointer("/statistics_enabled").Set(res, true);
+    rapidjson::Pointer("/status").Set(
+        res, graph_db_service.is_actors_running() ? "Running" : "Stopped");
+    rapidjson::Pointer("/hqps_port").Set(res, query_port);
+    rapidjson::Pointer("/bolt_port").Set(res,
+                                         graph_db_service.get_service_config().bolt_port);
+    rapidjson::Pointer("/gremlin_port").Set(
+        res, graph_db_service.get_service_config().gremlin_port);
     if (running_graph_res.ok()) {
       auto graph_meta_res =
           metadata_store_->GetGraphMeta(running_graph_res.value());
@@ -1169,14 +1180,16 @@ seastar::future<admin_query_result> admin_actor::service_status(
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          try {
-            res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
-          } catch (std::exception& e) {
-            LOG(ERROR) << "Fail to parse graph meta: " << e.what();
-            return seastar::make_exception_future<admin_query_result>(
-                gs::Status(
-                    gs::StatusCode::INTERNAL_ERROR,
-                    "Fail to parse graph meta: " + std::string(e.what())));
+          {
+            rapidjson::Document graph_json;
+            if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
+              LOG(ERROR) << "Fail to parse graph meta: "
+                         << graph_meta.ToJson();
+              return seastar::make_exception_future<admin_query_result>(
+                  gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                             "Fail to parse graph meta: " + graph_meta.ToJson()));
+            }
+            res.AddMember("graph", graph_json, res.GetAllocator());
           }
         } else {
           LOG(ERROR) << "Fail to get all procedures: "
@@ -1187,21 +1200,22 @@ seastar::future<admin_query_result> admin_actor::service_status(
       } else {
         LOG(ERROR) << "Fail to get graph meta: "
                    << graph_meta_res.status().error_message();
-        res["graph"] = {};
+        res.AddMember("graph", {}, res.GetAllocator());
         return seastar::make_exception_future<admin_query_result>(
             graph_meta_res.status());
       }
     } else {
-      res["graph"] = {};
+      res.AddMember("graph", {}, res.GetAllocator());
       LOG(INFO) << "No graph is running";
     }
-    res["start_time"] = graph_db_service.get_start_time();
+    res.AddMember("start_time", graph_db_service.get_start_time(), res.GetAllocator());
   } else {
     LOG(INFO) << "Query service has not been inited!";
-    res["status"] = "Query service has not been inited!";
+    res.AddMember("status", "Query service has not been inited!",
+                  res.GetAllocator());
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(res.dump()));
+      gs::Result<seastar::sstring>(gs::rapidjson_stringify(res)));
 }
 
 // get node status.
@@ -1211,7 +1225,7 @@ seastar::future<admin_query_result> admin_actor::node_status(
   auto cpu_usage = gs::get_current_cpu_usage();
   auto mem_usage = gs::get_total_physical_memory_usage();
   // construct the result json string
-  nlohmann::json json;
+  rapidjson::Document json;
   {
     std::stringstream ss;
     if (cpu_usage.first < 0 || cpu_usage.second <= 0) {
@@ -1219,16 +1233,16 @@ seastar::future<admin_query_result> admin_actor::node_status(
     } else {
       ss << "cpu_usage is " << cpu_usage.first << " / " << cpu_usage.second;
     }
-    json["cpu_usage"] = ss.str();
+    json.AddMember("cpu_usage", ss.str(), json.GetAllocator());
   }
   {
     std::stringstream ss;
     ss << "memory_usage is " << gs::memory_to_mb_str(mem_usage.first) << " / "
        << gs::memory_to_mb_str(mem_usage.second);
-    json["memory_usage"] = ss.str();
+    json.AddMember("memory_usage", ss.str(), json.GetAllocator());
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(json.dump()));
+      gs::Result<seastar::sstring>(gs::rapidjson_stringify(json)));
 }
 
 ///////////////////////// Job related /////////////////////////

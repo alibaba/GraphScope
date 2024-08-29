@@ -21,8 +21,7 @@
 #include "flex/engines/http_server/graph_db_service.h"
 #include "graph_db_service.h"
 #include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+
 
 #include <seastar/core/print.hh>
 

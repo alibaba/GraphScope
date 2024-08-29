@@ -36,7 +36,6 @@
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/third_party/httplib.h"
 #include "grape/util.h"
-#include "nlohmann/json.hpp"
 #include "storage_api.hpp"
 #include "storage_api_arrow.hpp"
 
