@@ -1,6 +1,6 @@
 name: GraphScope GAE CI
 
-on:
+mn:
   workflow_dispatch:
   push:
     branches:
@@ -85,7 +85,7 @@ jobs:
           --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
 
     - name: Setup tmate session
-      if: always()
+      if: false
       uses: mxschmitt/action-tmate@v3
 
     - name: Upload Coverage

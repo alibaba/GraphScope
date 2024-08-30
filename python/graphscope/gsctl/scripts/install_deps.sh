@@ -100,6 +100,7 @@ while (( "$#" )); do
   case "$1" in
     dev)
       for_analytical=true
+      for_analytical_java=true
       for_interactive=true
       for_learning=true
       shift
@@ -176,9 +177,9 @@ fi
 
 # install functions
 init_workspace_and_env() {
-  info "creating directory: ${install_prefix} ${MPI_PREFIX} ${tempdir} ${V6D_PREFIX}"
-  ${SUDO} mkdir -p ${install_prefix} ${MPI_PREFIX} ${tempdir} ${V6D_PREFIX}
-  ${SUDO} chown -R $(id -u):$(id -g) ${install_prefix} ${MPI_PREFIX} ${tempdir} ${V6D_PREFIX}
+  info "creating directory: ${install_prefix} ${tempdir} ${V6D_PREFIX}"
+  ${SUDO} mkdir -p ${install_prefix} ${tempdir} ${V6D_PREFIX}
+  ${SUDO} chown -R $(id -u):$(id -g) ${install_prefix} ${tempdir} ${V6D_PREFIX}
   export PATH=${install_prefix}/bin:${PATH}
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${install_prefix}/lib:${install_prefix}/lib64
 }
@@ -406,6 +407,9 @@ install_openmpi() {
   if [[ -f "${install_prefix}/include/mpi.h" ]]; then
     return 0
   fi
+  info "creating directory: ${MPI_PREFIX}"
+  ${SUDO} mkdir -p ${MPI_PREFIX}
+  ${SUDO} chown -R $(id -u):$(id -g) ${MPI_PREFIX}
   pushd "${tempdir}" || exit
   directory="openmpi-4.0.5"
   file="openmpi-4.0.5.tar.gz"
