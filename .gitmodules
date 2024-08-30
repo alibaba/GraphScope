@@ -13,3 +13,6 @@
 [submodule "flex/third_party/nlohmann-json"]
 	path = flex/third_party/nlohmann-json
 	url = https://github.com/nlohmann/json.git
+[submodule "flex/third_party/rapidjson"]
+	path = flex/third_party/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
