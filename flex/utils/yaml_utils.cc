@@ -64,6 +64,7 @@ void convert_yaml_node_to_json(const YAML::Node& node,
       break;
     }
     case YAML::NodeType::Sequence: {
+      json.SetArray();
       for (const auto& item : node) {
         rapidjson::Value element;
         convert_yaml_node_to_json(item, allocator, element);
