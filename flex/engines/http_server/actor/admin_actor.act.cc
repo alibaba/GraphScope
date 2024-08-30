@@ -1206,12 +1206,12 @@ seastar::future<admin_query_result> admin_actor::service_status(
       } else {
         LOG(ERROR) << "Fail to get graph meta: "
                    << graph_meta_res.status().error_message();
-        res.AddMember("graph", {}, res.GetAllocator());
+        res.AddMember("graph", rapidjson::Value(rapidjson::kNullType), res.GetAllocator());
         return seastar::make_exception_future<admin_query_result>(
             graph_meta_res.status());
       }
     } else {
-      res.AddMember("graph", {}, res.GetAllocator());
+      res.AddMember("graph", rapidjson::Value(rapidjson::kNullType), res.GetAllocator());
       LOG(INFO) << "No graph is running";
     }
     res.AddMember("start_time", graph_db_service.get_start_time(),

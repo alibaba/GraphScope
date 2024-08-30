@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 #include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -65,12 +66,12 @@ inline void to_json(rapidjson::Document& j, const PropertyType& p) {
     rapidjson::Pointer("/primitive_type")
         .Set(j, config_parsing::PrimitivePropertyTypeToString(p));
   } else if (p == PropertyType::Date()) {
-    rapidjson::Pointer("/temporal/timestamp").Set(j, {});
+    rapidjson::Pointer("/temporal/timestamp").Set(j, rapidjson::Value(rapidjson::kNullType));
   } else if (p == PropertyType::Day()) {
-    rapidjson::Pointer("/temporal/date32").Set(j, {});
+    rapidjson::Pointer("/temporal/date32").Set(j, rapidjson::Value(rapidjson::kNullType));
   } else if (p == PropertyType::StringView() ||
              p == PropertyType::StringMap()) {
-    rapidjson::Pointer("/string/long_text").Set(j, {});
+    rapidjson::Pointer("/string/long_text").Set(j, rapidjson::Value(rapidjson::kNullType));
   } else if (p.IsVarchar()) {
     rapidjson::Pointer("/string/var_char/max_length")
         .Set(j, p.additional_type_info.max_length);
