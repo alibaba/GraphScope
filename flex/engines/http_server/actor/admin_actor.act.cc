@@ -24,10 +24,10 @@
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
 
-#include <seastar/core/print.hh>
+#include <rapidjson/document.h>
 #include <rapidjson/pointer.h>
 #include <rapidjson/rapidjson.h>
-#include "rapidjson/document.h"
+#include <seastar/core/print.hh>
 
 namespace server {
 
@@ -227,12 +227,13 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
   }
   if (json.HasMember("name")) {
     // Currently we need id== name
-    rapidjson::Value &name = json["name"];
+    rapidjson::Value& name = json["name"];
     rapidjson::Value name_copy(name, json.GetAllocator());
     json.AddMember("id", name_copy, json.GetAllocator());
   }
   json.AddMember("bound_graph", graph_id, json.GetAllocator());
-  json.AddMember("creation_time", gs::GetCurrentTimeStamp(), json.GetAllocator());
+  json.AddMember("creation_time", gs::GetCurrentTimeStamp(),
+                 json.GetAllocator());
   json.AddMember("update_time", json["creation_time"], json.GetAllocator());
   if (!json.HasMember("enable")) {
     json.AddMember("enable", true, json.GetAllocator());
@@ -251,7 +252,8 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
              graph_id, plugin_id, json,
              graph_db_service.get_service_config().engine_config_path)
       .then_wrapped([graph_id = graph_id, old_plugin_id = plugin_id,
-                     json = std::move(json), metadata_store = metadata_store](auto&& f) {
+                     json = std::move(json),
+                     metadata_store = metadata_store](auto&& f) {
         std::string proc_id;
         try {
           proc_id = f.get0();
@@ -365,9 +367,10 @@ gs::Result<seastar::sstring> to_json_str(
     }
     res.PushBack(plugin_json, res.GetAllocator());
   }
-  
-  return res.Empty() ? gs::Result<seastar::sstring>("{}")
-                     : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
+
+  return res.Empty()
+             ? gs::Result<seastar::sstring>("{}")
+             : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
 }
 
 gs::Result<seastar::sstring> to_json_str(
@@ -382,8 +385,9 @@ gs::Result<seastar::sstring> to_json_str(
     }
     res.PushBack(job_json, res.GetAllocator());
   }
-  return res.Empty() ? gs::Result<seastar::sstring>("{}")
-                     : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
+  return res.Empty()
+             ? gs::Result<seastar::sstring>("{}")
+             : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
 }
 
 admin_actor::~admin_actor() {
@@ -1156,10 +1160,10 @@ seastar::future<admin_query_result> admin_actor::service_status(
     rapidjson::Pointer("/status").Set(
         res, graph_db_service.is_actors_running() ? "Running" : "Stopped");
     rapidjson::Pointer("/hqps_port").Set(res, query_port);
-    rapidjson::Pointer("/bolt_port").Set(res,
-                                         graph_db_service.get_service_config().bolt_port);
-    rapidjson::Pointer("/gremlin_port").Set(
-        res, graph_db_service.get_service_config().gremlin_port);
+    rapidjson::Pointer("/bolt_port")
+        .Set(res, graph_db_service.get_service_config().bolt_port);
+    rapidjson::Pointer("/gremlin_port")
+        .Set(res, graph_db_service.get_service_config().gremlin_port);
     if (running_graph_res.ok()) {
       auto graph_meta_res =
           metadata_store_->GetGraphMeta(running_graph_res.value());
@@ -1185,11 +1189,11 @@ seastar::future<admin_query_result> admin_actor::service_status(
           {
             rapidjson::Document graph_json;
             if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
-              LOG(ERROR) << "Fail to parse graph meta: "
-                         << graph_meta.ToJson();
+              LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
               return seastar::make_exception_future<admin_query_result>(
-                  gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                             "Fail to parse graph meta: " + graph_meta.ToJson()));
+                  gs::Status(
+                      gs::StatusCode::INTERNAL_ERROR,
+                      "Fail to parse graph meta: " + graph_meta.ToJson()));
             }
             res.AddMember("graph", graph_json, res.GetAllocator());
           }
@@ -1210,7 +1214,8 @@ seastar::future<admin_query_result> admin_actor::service_status(
       res.AddMember("graph", {}, res.GetAllocator());
       LOG(INFO) << "No graph is running";
     }
-    res.AddMember("start_time", graph_db_service.get_start_time(), res.GetAllocator());
+    res.AddMember("start_time", graph_db_service.get_start_time(),
+                  res.GetAllocator());
   } else {
     LOG(INFO) << "Query service has not been inited!";
     res.AddMember("status", "Query service has not been inited!",

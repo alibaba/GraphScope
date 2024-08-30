@@ -80,7 +80,7 @@ bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
                << ", reach end of json: " << rapidjson_stringify(json);
     return false;
   }
-  auto &type_json = json[I]["type"];
+  auto& type_json = json[I]["type"];
   PropertyType type;
   from_json(type_json, type);
   if (type == PropertyType::Empty()) {
@@ -121,7 +121,7 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
     LOG(INFO) << "No arguments found in input";
     return sizeof...(ARGS) == 0;
   }
-  auto &arguments_list = j["arguments"];
+  auto& arguments_list = j["arguments"];
   if (arguments_list.IsArray()) {
     if (arguments_list.Size() != sizeof...(ARGS)) {
       LOG(ERROR) << "Arguments size mismatch: " << arguments_list.Size()

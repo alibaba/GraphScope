@@ -32,13 +32,13 @@
 #include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include <rapidjson/prettywriter.h>
 
 #include <glog/logging.h>
 #include <boost/filesystem.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace gs {
 
@@ -62,8 +62,8 @@ inline void to_json(rapidjson::Document& j, const PropertyType& p) {
              p == PropertyType::UInt32() || p == PropertyType::Float() ||
              p == PropertyType::Int64() || p == PropertyType::UInt64() ||
              p == PropertyType::Double()) {
-    rapidjson::Pointer("/primitive_type").Set(
-        j, config_parsing::PrimitivePropertyTypeToString(p));
+    rapidjson::Pointer("/primitive_type")
+        .Set(j, config_parsing::PrimitivePropertyTypeToString(p));
   } else if (p == PropertyType::Date()) {
     rapidjson::Pointer("/temporal/timestamp").Set(j, {});
   } else if (p == PropertyType::Day()) {
@@ -72,8 +72,8 @@ inline void to_json(rapidjson::Document& j, const PropertyType& p) {
              p == PropertyType::StringMap()) {
     rapidjson::Pointer("/string/long_text").Set(j, {});
   } else if (p.IsVarchar()) {
-    rapidjson::Pointer("/string/var_char/max_length").Set(j,
-                                                         p.additional_type_info.max_length);
+    rapidjson::Pointer("/string/var_char/max_length")
+        .Set(j, p.additional_type_info.max_length);
   } else {
     LOG(ERROR) << "Unknown property type";
   }
@@ -113,7 +113,8 @@ inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
-inline std::string rapidjson_stringify(const rapidjson::Value& value, int indent = -1) {
+inline std::string rapidjson_stringify(const rapidjson::Value& value,
+                                       int indent = -1) {
   rapidjson::StringBuffer buffer;
   if (indent == -1) {
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

@@ -16,10 +16,10 @@
 
 #include "flex/utils/yaml_utils.h"
 #include <rapidjson/pointer.h>
+#include <rapidjson/prettywriter.h>
 #include <fstream>
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
-#include <rapidjson/prettywriter.h>
 #include "rapidjson/writer.h"
 #include "service_utils.h"
 
@@ -40,7 +40,9 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   return res_yaml_files;
 }
 
-void convert_yaml_node_to_json(const YAML::Node& node, rapidjson::Document::AllocatorType& allocator, rapidjson::Value& json) {
+void convert_yaml_node_to_json(const YAML::Node& node,
+                               rapidjson::Document::AllocatorType& allocator,
+                               rapidjson::Value& json) {
   try {
     switch (node.Type()) {
     case YAML::NodeType::Null: {
@@ -74,10 +76,10 @@ void convert_yaml_node_to_json(const YAML::Node& node, rapidjson::Document::Allo
     case YAML::NodeType::Map:
       json.SetObject();
       for (const auto& pair : node) {
-          rapidjson::Value key(pair.first.as<std::string>().c_str(), allocator);
-          rapidjson::Value value;
-          convert_yaml_node_to_json(pair.second, allocator, value);
-          json.AddMember(key, value, allocator);
+        rapidjson::Value key(pair.first.as<std::string>().c_str(), allocator);
+        rapidjson::Value value;
+        convert_yaml_node_to_json(pair.second, allocator, value);
+        json.AddMember(key, value, allocator);
       }
       break;
     default:

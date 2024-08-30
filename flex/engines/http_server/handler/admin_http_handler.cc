@@ -49,7 +49,8 @@ admin_query_result generate_final_result(
       return admin_query_result{std::move(res)};
     }
   }
-  return admin_query_result{gs::Result<seastar::sstring>(gs::rapidjson_stringify(json_res))};
+  return admin_query_result{
+      gs::Result<seastar::sstring>(gs::rapidjson_stringify(json_res))};
 }
 
 inline bool parse_multipart_boundary(const seastar::sstring& content_type,

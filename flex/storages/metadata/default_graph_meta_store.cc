@@ -194,7 +194,8 @@ Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
       [graph_id, plugin_id, &update_request](const std::string& old_meta) {
         rapidjson::Document json;
         if (json.Parse(old_meta.c_str()).HasParseError()) {
-          LOG(ERROR) << "Fail to parse old plugin meta:" << json.GetParseError();
+          LOG(ERROR) << "Fail to parse old plugin meta:"
+                     << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,
                      std::string("Fail to parse old plugin meta: ") +

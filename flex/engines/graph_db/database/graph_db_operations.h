@@ -46,13 +46,13 @@ struct EdgeData {
 class GraphDBOperations {
  public:
   static Result<std::string> CreateVertex(GraphDBSession& session,
-                                          rapidjson::Document && input_json);
+                                          rapidjson::Document&& input_json);
   static Result<std::string> CreateEdge(GraphDBSession& session,
-                                        rapidjson::Document && input_json);
+                                        rapidjson::Document&& input_json);
   static Result<std::string> UpdateVertex(GraphDBSession& session,
-                                          rapidjson::Document && input_json);
+                                          rapidjson::Document&& input_json);
   static Result<std::string> UpdateEdge(GraphDBSession& session,
-                                        rapidjson::Document && input_json);
+                                        rapidjson::Document&& input_json);
   static Result<std::string> GetVertex(
       GraphDBSession& session,
       std::unordered_map<std::string, std::string>&& params);
@@ -60,9 +60,9 @@ class GraphDBOperations {
       GraphDBSession& session,
       std::unordered_map<std::string, std::string>&& params);
   static Result<std::string> DeleteVertex(GraphDBSession& session,
-                                          rapidjson::Document && input_json);
+                                          rapidjson::Document&& input_json);
   static Result<std::string> DeleteEdge(GraphDBSession& session,
-                                        rapidjson::Document && input_json);
+                                        rapidjson::Document&& input_json);
 
  private:
   // The following interfaces are called before the Transaction is constructed
@@ -109,8 +109,8 @@ class GraphDBOperations {
   static Status updateEdge(std::vector<EdgeData>&& edge_data,
                            GraphDBSession& session);
   static Result<rapidjson::Value> getEdge(std::vector<EdgeData>&& edge_data,
-                                        const std::string& property_name,
-                                        GraphDBSession& session);
+                                          const std::string& property_name,
+                                          GraphDBSession& session);
   static Result<rapidjson::Value> getVertex(
       std::vector<VertexData>&& vertex_data,
       const std::vector<std::string>& property_names, GraphDBSession& session);

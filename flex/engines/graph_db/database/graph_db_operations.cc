@@ -67,8 +67,8 @@ Result<std::string> GraphDBOperations::CreateVertex(
   }
   return Result<std::string>(insert_result);
 }
-Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
-                                                  rapidjson::Document&& input_json) {
+Result<std::string> GraphDBOperations::CreateEdge(
+    GraphDBSession& session, rapidjson::Document&& input_json) {
   std::vector<VertexData> vertex_data;
   std::vector<EdgeData> edge_data;
   // Check if the input json contains edge_request
@@ -119,8 +119,8 @@ Result<std::string> GraphDBOperations::UpdateVertex(
   }
   return Result<std::string>(update_result);
 }
-Result<std::string> GraphDBOperations::UpdateEdge(GraphDBSession& session,
-                                                  rapidjson::Document&& input_json) {
+Result<std::string> GraphDBOperations::UpdateEdge(
+    GraphDBSession& session, rapidjson::Document&& input_json) {
   std::vector<VertexData> vertex_data;
   std::vector<EdgeData> edge_data;
   const Schema& schema = session.schema();
@@ -196,7 +196,7 @@ Result<std::string> GraphDBOperations::GetEdge(
   result.AddMember("src_primary_key_value", src_pk_value,
                    result.GetAllocator());
   result.AddMember("dst_primary_key_value", dst_pk_value,
-                    result.GetAllocator());
+                   result.GetAllocator());
   if (property_name.empty()) {
     result.AddMember("properties", rapidjson::Value(rapidjson::kArrayType),
                      result.GetAllocator());
@@ -215,8 +215,8 @@ Result<std::string> GraphDBOperations::DeleteVertex(
   return Result<std::string>(StatusCode::UNIMPLEMENTED,
                              "delete_vertex is not implemented");
 }
-Result<std::string> GraphDBOperations::DeleteEdge(GraphDBSession& session,
-                                                  rapidjson::Document&& input_json) {
+Result<std::string> GraphDBOperations::DeleteEdge(
+    GraphDBSession& session, rapidjson::Document&& input_json) {
   // not implemented
   return Result<std::string>(StatusCode::UNIMPLEMENTED,
                              "delete_edge is not implemented");
@@ -231,7 +231,6 @@ VertexData GraphDBOperations::inputVertex(const rapidjson::Value& vertex_json,
   std::unordered_set<std::string> property_names;
   std::vector<std::string> property_names_arr;
   for (auto& property : vertex_json["properties"].GetArray()) {
-  
     auto name_string = jsonToString(property["name"]);
     auto value_string = jsonToString(property["value"]);
     if (property_names.find(name_string) != property_names.end()) {
@@ -326,7 +325,7 @@ Status GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
         property_name = result[0];
       } else {
         property_name = "";
-      }                             
+      }
     } else {
       // update or add
       if (property_name != (result.size() >= 1 ? result[0] : "")) {
@@ -624,7 +623,8 @@ Result<rapidjson::Value> GraphDBOperations::getVertex(
     txn.Commit();
     return Result<rapidjson::Value>(std::move(result));
   } catch (std::exception& e) {
-    return Result<rapidjson::Value>(Status(StatusCode::INVALID_SCHEMA, e.what()));
+    return Result<rapidjson::Value>(
+        Status(StatusCode::INVALID_SCHEMA, e.what()));
   }
 }
 
@@ -662,7 +662,8 @@ Result<rapidjson::Value> GraphDBOperations::getEdge(
     txn.Commit();
     return Result<rapidjson::Value>(std::move(result));
   } catch (std::exception& e) {
-    return Result<rapidjson::Value>(Status(StatusCode::INVALID_SCHEMA, e.what()));
+    return Result<rapidjson::Value>(
+        Status(StatusCode::INVALID_SCHEMA, e.what()));
   }
 }
 

@@ -25,7 +25,7 @@
 // Write a macro to define the function, to check whether a filed presents in a
 // json object.
 #define CHECK_JSON_FIELD(json, field)                                         \
-  if (!json.HasMember(field)) {                                                \
+  if (!json.HasMember(field)) {                                               \
     return gs::Result<seastar::sstring>(                                      \
         gs::Status(gs::StatusCode::INVALID_ARGUMENT,                          \
                    "Procedure " + std::string(field) + " is not specified")); \
@@ -437,8 +437,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
         res.status().error_message());
   }
 
-  LOG(INFO) << "Pass sanity check for procedure: "
-            << json["name"].GetString();
+  LOG(INFO) << "Pass sanity check for procedure: " << json["name"].GetString();
   // get procedure name
   // check whether procedure already exists.
   auto plugin_file = plugin_dir + "/" + plugin_id + ".yaml";
@@ -515,7 +514,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json parameters: " << gs::rapidjson_stringify(json);
+  VLOG(1) << "Successfully parse json parameters: "
+          << gs::rapidjson_stringify(json);
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {
@@ -527,7 +527,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
   }
   // update description and enable status.
   if (json.HasMember("description")) {
-    auto &new_description = json["description"];
+    auto& new_description = json["description"];
     VLOG(10) << "Update description: "
              << gs::jsonToString(new_description);  // update description
     // quote the description, since it may contain space.
@@ -537,7 +537,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
 
   bool enabled;
   if (json.HasMember("enable")) {
-    VLOG(1) << "Enable is specified in the parameter:" << gs::jsonToString(json["enable"]);
+    VLOG(1) << "Enable is specified in the parameter:"
+            << gs::jsonToString(json["enable"]);
     if (json["enable"].IsBool()) {
       enabled = json["enable"].GetBool();
     } else if (json["enable"].IsString()) {
@@ -549,9 +550,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         enabled = false;
       }
     } else {
-      return gs::Result<seastar::sstring>(
-          gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                     "Fail to parse enable field: " + gs::jsonToString(json["enable"])));
+      return gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::INTERNAL_ERROR,
+          "Fail to parse enable field: " + gs::jsonToString(json["enable"])));
     }
     plugin_node["enable"] = enabled;
   }
