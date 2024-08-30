@@ -21,8 +21,9 @@
 #include "flex/utils/app_utils.h"
 
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
-#include "rapidjson/document.h"
 #include "service_utils.h"
+
+#include <rapidjson/document.h>
 
 namespace gs {
 

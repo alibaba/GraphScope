@@ -15,13 +15,11 @@
  */
 
 #include "flex/utils/yaml_utils.h"
+#include <fstream>
+#include "service_utils.h"
+#include <rapidjson/document.h>
 #include <rapidjson/pointer.h>
 #include <rapidjson/prettywriter.h>
-#include <fstream>
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include "service_utils.h"
 
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {

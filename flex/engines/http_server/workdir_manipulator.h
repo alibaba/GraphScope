@@ -34,7 +34,7 @@
 #include <yaml-cpp/yaml.h>
 #include <boost/process.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
 
 namespace server {
 

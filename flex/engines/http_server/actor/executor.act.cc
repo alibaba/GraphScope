@@ -20,8 +20,8 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/graph_db_service.h"
 #include "graph_db_service.h"
-#include "rapidjson/document.h"
 
+#include <rapidjson/document.h>
 #include <seastar/core/print.hh>
 
 namespace server {

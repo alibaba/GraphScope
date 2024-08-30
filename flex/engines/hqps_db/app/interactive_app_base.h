@@ -21,9 +21,8 @@
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
 #include "flex/utils/service_utils.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+#include <rapidjson/document.h>
+
 namespace gs {
 
 void put_argument(gs::Encoder& encoder, const procedure::Argument& argument) {

@@ -26,8 +26,8 @@
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 
+#include <rapidjson/document.h>
 #include <yaml-cpp/yaml.h>
-#include "rapidjson/document.h"
 
 namespace gs {
 

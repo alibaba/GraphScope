@@ -19,15 +19,16 @@
 #include <string>
 
 #include "flex/storages/metadata/graph_meta_store.h"
-#include <rapidjson/document.h>
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/pointer.h>
 #include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/utils/yaml_utils.h"
 #include "property/types.h"
 #include "service_utils.h"
+
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace gs {
 
@@ -60,7 +61,8 @@ UpdateGraphMetaRequest::UpdateGraphMetaRequest(
 std::string Parameter::ToJson() const {
   rapidjson::Document json(rapidjson::kObjectType);
   json.AddMember("name", name, json.GetAllocator());
-  json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(type), json.GetAllocator());
+  json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(type),
+                 json.GetAllocator());
   return rapidjson_stringify(json);
 }
 
@@ -71,21 +73,21 @@ std::string GraphMeta::ToJson() const {
   json.AddMember("description", description, json.GetAllocator());
   json.AddMember("creation_time", creation_time, json.GetAllocator());
   json.AddMember("data_update_time", data_update_time, json.GetAllocator());
-  
+
   if (!data_import_config.empty()) {
     rapidjson::Document tempDoc;
     if (tempDoc.Parse(data_import_config.c_str()).HasParseError()) {
-        LOG(ERROR) << "Invalid data_import_config: " << data_import_config;
+      LOG(ERROR) << "Invalid data_import_config: " << data_import_config;
     } else {
-        json.AddMember("data_import_config", tempDoc, json.GetAllocator());
+      json.AddMember("data_import_config", tempDoc, json.GetAllocator());
     }
   }
   {
     rapidjson::Document tempDoc;
     if (tempDoc.Parse(schema.c_str()).HasParseError()) {
-        LOG(ERROR) << "Invalid schema: " << schema;
+      LOG(ERROR) << "Invalid schema: " << schema;
     } else {
-        json.AddMember("schema", tempDoc, json.GetAllocator());
+      json.AddMember("schema", tempDoc, json.GetAllocator());
     }
   }
   {
@@ -93,9 +95,9 @@ std::string GraphMeta::ToJson() const {
     for (auto& plugin_meta : plugin_metas) {
       rapidjson::Document tempDoc;
       if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-          LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
+        LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
       } else {
-          plugin_array.PushBack(tempDoc, json.GetAllocator());
+        plugin_array.PushBack(tempDoc, json.GetAllocator());
       }
     }
     json.AddMember("stored_procedures", plugin_array, json.GetAllocator());
@@ -231,7 +233,9 @@ std::string PluginMeta::ToJson() const {
     for (auto& param : params) {
       rapidjson::Document tempDoc;
       tempDoc.AddMember("name", param.name, tempDoc.GetAllocator());
-      tempDoc.AddMember("type", config_parsing::PrimitivePropertyTypeToString(param.type), tempDoc.GetAllocator());
+      tempDoc.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+          tempDoc.GetAllocator());
       params_array.PushBack(tempDoc, json.GetAllocator());
     }
     json.AddMember("params", params_array, json.GetAllocator());
@@ -241,7 +245,9 @@ std::string PluginMeta::ToJson() const {
     for (auto& ret : returns) {
       rapidjson::Document tempDoc;
       tempDoc.AddMember("name", ret.name, tempDoc.GetAllocator());
-      tempDoc.AddMember("type", config_parsing::PrimitivePropertyTypeToString(ret.type), tempDoc.GetAllocator());
+      tempDoc.AddMember("type",
+                        config_parsing::PrimitivePropertyTypeToString(ret.type),
+                        tempDoc.GetAllocator());
       returns_array.PushBack(tempDoc, json.GetAllocator());
     }
     json.AddMember("returns", returns_array, json.GetAllocator());
@@ -365,7 +371,7 @@ JobMeta JobMeta::FromJson(const rapidjson::Value& json) {
     }
   }
   if (json.HasMember("detail")) {
-    const auto &detail = json["detail"];
+    const auto& detail = json["detail"];
     if (detail.HasMember("graph_id")) {
       if (detail["graph_id"].IsInt()) {
         meta.graph_id = detail["graph_id"].GetInt();
@@ -477,7 +483,9 @@ std::string CreatePluginMetaRequest::paramsString() const {
   for (auto& param : params) {
     rapidjson::Document param_json(rapidjson::kObjectType);
     param_json.AddMember("name", param.name, json.GetAllocator());
-    param_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(param.type), json.GetAllocator());
+    param_json.AddMember(
+        "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+        json.GetAllocator());
     json.PushBack(param_json, json.GetAllocator());
   }
   return rapidjson_stringify(json);
@@ -488,7 +496,9 @@ std::string CreatePluginMetaRequest::returnsString() const {
   for (auto& ret : returns) {
     rapidjson::Document ret_json(rapidjson::kObjectType);
     ret_json.AddMember("name", ret.name, json.GetAllocator());
-    ret_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(ret.type), json.GetAllocator());
+    ret_json.AddMember("type",
+                       config_parsing::PrimitivePropertyTypeToString(ret.type),
+                       json.GetAllocator());
     json.PushBack(ret_json, json.GetAllocator());
   }
   return rapidjson_stringify(json);
@@ -518,7 +528,9 @@ std::string CreatePluginMetaRequest::ToString() const {
     for (auto& param : params) {
       rapidjson::Document param_json(rapidjson::kObjectType);
       param_json.AddMember("name", param.name, params_doc.GetAllocator());
-      param_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(param.type), params_doc.GetAllocator());
+      param_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+          params_doc.GetAllocator());
       params_doc.PushBack(param_json, params_doc.GetAllocator());
     }
     json.AddMember("params", params_doc, json.GetAllocator());
@@ -528,7 +540,9 @@ std::string CreatePluginMetaRequest::ToString() const {
     for (auto& ret : returns) {
       rapidjson::Document ret_json(rapidjson::kObjectType);
       ret_json.AddMember("name", ret.name, returns_doc.GetAllocator());
-      ret_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(ret.type), returns_doc.GetAllocator());
+      ret_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(ret.type),
+          returns_doc.GetAllocator());
       returns_doc.PushBack(ret_json, returns_doc.GetAllocator());
     }
     json.AddMember("returns", returns_doc, json.GetAllocator());
@@ -537,9 +551,10 @@ std::string CreatePluginMetaRequest::ToString() const {
   {
     rapidjson::Document option_doc;
     for (auto& opt : option) {
-      option_doc.AddMember(rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
-                           rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
-                           json.GetAllocator());
+      option_doc.AddMember(
+          rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
+          rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
+          json.GetAllocator());
     }
     json.AddMember("option", option_doc, json.GetAllocator());
   }
@@ -691,7 +706,8 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     request.enable = j["enable"].GetBool();
   }
   // } catch (const std::exception& e) {
-  //   LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what() << " "
+  //   LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what() <<
+  //   " "
   //              << json;
   // }
   return request;
@@ -703,7 +719,9 @@ std::string UpdatePluginMetaRequest::paramsString() const {
     for (auto& param : params.value()) {
       rapidjson::Document param_json(rapidjson::kObjectType);
       param_json.AddMember("name", param.name, json.GetAllocator());
-      param_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(param.type), json.GetAllocator());
+      param_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+          json.GetAllocator());
       json.PushBack(param_json, json.GetAllocator());
     }
   }
@@ -716,7 +734,9 @@ std::string UpdatePluginMetaRequest::returnsString() const {
     for (auto& ret : returns.value()) {
       rapidjson::Document ret_json(rapidjson::kObjectType);
       ret_json.AddMember("name", ret.name, json.GetAllocator());
-      ret_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(ret.type), json.GetAllocator());
+      ret_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(ret.type),
+          json.GetAllocator());
       json.PushBack(ret_json, json.GetAllocator());
     }
   }
@@ -755,7 +775,9 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& param : params.value()) {
       rapidjson::Document param_json(rapidjson::kObjectType);
       param_json.AddMember("name", param.name, json.GetAllocator());
-      param_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(param.type), json.GetAllocator());
+      param_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+          json.GetAllocator());
       json["params"].PushBack(param_json, json.GetAllocator());
     }
   }
@@ -764,7 +786,9 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& ret : returns.value()) {
       rapidjson::Document ret_json(rapidjson::kObjectType);
       ret_json.AddMember("name", ret.name, json.GetAllocator());
-      ret_json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(ret.type), json.GetAllocator());
+      ret_json.AddMember(
+          "type", config_parsing::PrimitivePropertyTypeToString(ret.type),
+          json.GetAllocator());
       json["returns"].PushBack(ret_json, json.GetAllocator());
     }
   }
@@ -774,9 +798,10 @@ std::string UpdatePluginMetaRequest::ToString() const {
   json.AddMember("option", rapidjson::kObjectType, json.GetAllocator());
   if (option.has_value()) {
     for (auto& opt : option.value()) {
-      json["option"].AddMember(rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
-                               rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
-                               json.GetAllocator());
+      json["option"].AddMember(
+          rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
+          rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
+          json.GetAllocator());
     }
   }
   if (enable.has_value()) {
@@ -848,11 +873,13 @@ std::string GraphStatistics::ToJson() const {
   rapidjson::Document json(rapidjson::kObjectType);
   rapidjson::Pointer("/total_vertex_count").Set(json, total_vertex_count);
   rapidjson::Pointer("/total_edge_count").Set(json, total_edge_count);
-  rapidjson::Pointer("/vertex_type_statistics").Set(json, rapidjson::kArrayType);
+  rapidjson::Pointer("/vertex_type_statistics")
+      .Set(json, rapidjson::kArrayType);
   for (auto& type_stat : vertex_type_statistics) {
     rapidjson::Document type_stat_json(rapidjson::kObjectType);
     rapidjson::Pointer("/type_id").Set(type_stat_json, std::get<0>(type_stat));
-    rapidjson::Pointer("/type_name").Set(type_stat_json, std::get<1>(type_stat));
+    rapidjson::Pointer("/type_name")
+        .Set(type_stat_json, std::get<1>(type_stat));
     rapidjson::Pointer("/count").Set(type_stat_json, std::get<2>(type_stat));
     rapidjson::Pointer("/vertex_type_statistics/-").Set(json, type_stat_json);
   }
@@ -860,14 +887,19 @@ std::string GraphStatistics::ToJson() const {
   for (auto& type_stat : edge_type_statistics) {
     rapidjson::Document type_stat_json(rapidjson::kObjectType);
     rapidjson::Pointer("/type_id").Set(type_stat_json, std::get<0>(type_stat));
-    rapidjson::Pointer("/type_name").Set(type_stat_json, std::get<1>(type_stat));
-    rapidjson::Pointer("/vertex_type_pair_statistics").Set(type_stat_json, rapidjson::kArrayType);
+    rapidjson::Pointer("/type_name")
+        .Set(type_stat_json, std::get<1>(type_stat));
+    rapidjson::Pointer("/vertex_type_pair_statistics")
+        .Set(type_stat_json, rapidjson::kArrayType);
     for (auto& pair_stat : std::get<2>(type_stat)) {
       rapidjson::Document pair_stat_json(rapidjson::kObjectType);
-      rapidjson::Pointer("/source_vertex").Set(pair_stat_json, std::get<0>(pair_stat));
-      rapidjson::Pointer("/destination_vertex").Set(pair_stat_json, std::get<1>(pair_stat));
+      rapidjson::Pointer("/source_vertex")
+          .Set(pair_stat_json, std::get<0>(pair_stat));
+      rapidjson::Pointer("/destination_vertex")
+          .Set(pair_stat_json, std::get<1>(pair_stat));
       rapidjson::Pointer("/count").Set(pair_stat_json, std::get<2>(pair_stat));
-      rapidjson::Pointer("/vertex_type_pair_statistics/-").Set(type_stat_json, pair_stat_json);
+      rapidjson::Pointer("/vertex_type_pair_statistics/-")
+          .Set(type_stat_json, pair_stat_json);
     }
     rapidjson::Pointer("/edge_type_statistics/-").Set(json, type_stat_json);
   }
@@ -885,15 +917,15 @@ Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
   return GraphStatistics::FromJson(json);
 }
 
-Result<GraphStatistics> GraphStatistics::FromJson(const rapidjson::Value& json) {
+Result<GraphStatistics> GraphStatistics::FromJson(
+    const rapidjson::Value& json) {
   GraphStatistics stat;
   stat.total_vertex_count = json["total_vertex_count"].GetInt64();
   stat.total_edge_count = json["total_edge_count"].GetInt64();
   for (auto& type_stat : json["vertex_type_statistics"].GetArray()) {
-    stat.vertex_type_statistics.push_back(
-        {type_stat["type_id"].GetInt(),
-         type_stat["type_name"].GetString(),
-         type_stat["count"].GetInt64()});
+    stat.vertex_type_statistics.push_back({type_stat["type_id"].GetInt(),
+                                           type_stat["type_name"].GetString(),
+                                           type_stat["count"].GetInt64()});
   }
   for (auto& type_stat : json["edge_type_statistics"].GetArray()) {
     std::vector<typename GraphStatistics::vertex_type_pair_statistic>
@@ -901,13 +933,11 @@ Result<GraphStatistics> GraphStatistics::FromJson(const rapidjson::Value& json) 
     for (auto& pair : type_stat["vertex_type_pair_statistics"].GetArray()) {
       vertex_type_pair_statistics.push_back(
           {pair["source_vertex"].GetString(),
-           pair["destination_vertex"].GetString(),
-           pair["count"].GetInt64()});
+           pair["destination_vertex"].GetString(), pair["count"].GetInt64()});
     }
-    stat.edge_type_statistics.push_back(
-        {type_stat["type_id"].GetInt(),
-         type_stat["type_name"].GetString(),
-         vertex_type_pair_statistics});
+    stat.edge_type_statistics.push_back({type_stat["type_id"].GetInt(),
+                                         type_stat["type_name"].GetString(),
+                                         vertex_type_pair_statistics});
   }
   return stat;
 }
