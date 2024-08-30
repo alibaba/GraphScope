@@ -18,7 +18,7 @@ rpc.target:=start_rpc_server
 
 target.revision:=0.0.1-SNAPSHOT
 
-QUIET_OPT := --quiet
+LOG_OUTPUT_OPT := --no-transfer-progress
 
 query:=
 physical:=
@@ -28,7 +28,7 @@ config.path:=conf/ir.compiler.properties
 
 build:
 	cd $(CUR_DIR)/.. && \
-		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental ${QUIET_OPT} && \
+		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental ${LOG_OUTPUT_OPT} && \
 		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:

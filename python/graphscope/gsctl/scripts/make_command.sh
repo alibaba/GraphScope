@@ -61,7 +61,7 @@ make_interactive() {
     if [[ ${storage_type} = "experimental" ]]; then
         cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
     elif [[ ${storage_type} = "vineyard" ]]; then
-        cd "${GS_SOURCE_DIR}"/interactive_engine && mvn install -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly
+        cd "${GS_SOURCE_DIR}"/interactive_engine && mvn install -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly --no-transfer-progress
         cd "${GS_SOURCE_DIR}"/interactive_engine/assembly/target && tar xvzf graphscope.tar.gz
     else
         make interactive

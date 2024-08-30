@@ -18,7 +18,7 @@ USER graphscope
 RUN cd /home/graphscope/graphscope \
     && . ~/.graphscope_env \
     && cd /home/graphscope/graphscope/interactive_engine \
-    && mvn clean package -P groot -DskipTests --quiet -Drust.compile.mode="$profile" \
+    && mvn clean package -P groot -DskipTests --no-transfer-progress -Drust.compile.mode="$profile" \
     && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
 # build coordinator
