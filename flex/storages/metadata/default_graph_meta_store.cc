@@ -77,8 +77,7 @@ Result<bool> DefaultGraphMetaStore::UpdateGraphMeta(
   return base_store_->UpdateMeta(
       GRAPH_META, graph_id, [graph_id, &request](const std::string& old_meta) {
         rapidjson::Document json;
-        json.Parse(old_meta.c_str());
-        if (json.HasParseError()) {
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
           LOG(ERROR) << "Fail to parse old graph meta:" << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,
@@ -194,8 +193,7 @@ Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
       PLUGIN_META, real_meta_key,
       [graph_id, plugin_id, &update_request](const std::string& old_meta) {
         rapidjson::Document json;
-        json.Parse(old_meta.c_str());
-        if (json.HasParseError()) {
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
           LOG(ERROR) << "Fail to parse old plugin meta:" << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,
@@ -285,8 +283,7 @@ Result<bool> DefaultGraphMetaStore::UpdateJobMeta(
   return base_store_->UpdateMeta(
       JOB_META, job_id, [&update_request](const std::string& old_meta) {
         rapidjson::Document json;
-        json.Parse(old_meta.c_str());
-        if (json.HasParseError()) {
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
           LOG(ERROR) << "Fail to parse old job meta:" << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,

@@ -16,8 +16,6 @@
 #include <filesystem>
 
 #include "flex/engines/http_server/actor/admin_actor.act.h"
-#include <rapidjson/pointer.h>
-#include <rapidjson/rapidjson.h>
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -25,9 +23,11 @@
 #include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
-#include "rapidjson/document.h"
 
 #include <seastar/core/print.hh>
+#include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
+#include "rapidjson/document.h"
 
 namespace server {
 
@@ -359,8 +359,9 @@ gs::Result<seastar::sstring> to_json_str(
   for (auto& plugin_meta : plugin_metas) {
     rapidjson::Document plugin_json;
     if (plugin_json.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-      LOG(ERROR) << "Fail to parse plugin meta: " << plugin_meta.ToJson();
-      continue;
+      LOG(ERROR) << "Fail to parse plugin meta from json string";
+      return gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::INTERNAL_ERROR, "Fail to parse plugin meta"));
     }
     res.PushBack(plugin_json, res.GetAllocator());
   }
@@ -375,8 +376,9 @@ gs::Result<seastar::sstring> to_json_str(
   for (auto& job_meta : job_metas) {
     rapidjson::Document job_json;
     if (job_json.Parse(job_meta.ToJson().c_str()).HasParseError()) {
-      LOG(ERROR) << "Fail to parse job meta: " << job_meta.ToJson();
-      continue;
+      LOG(ERROR) << "Fail to parse job meta";
+      return gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::INTERNAL_ERROR, "Fail to parse job meta: "));
     }
     res.PushBack(job_json, res.GetAllocator());
   }

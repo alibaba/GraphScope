@@ -61,7 +61,7 @@ std::string Parameter::ToJson() const {
   rapidjson::Document json(rapidjson::kObjectType);
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("type", config_parsing::PrimitivePropertyTypeToString(type), json.GetAllocator());
-  return jsonToString(json);
+  return rapidjson_stringify(json);
 }
 
 std::string GraphMeta::ToJson() const {
@@ -101,7 +101,7 @@ std::string GraphMeta::ToJson() const {
     json.AddMember("stored_procedures", plugin_array, json.GetAllocator());
   }
   json.AddMember("store_type", store_type, json.GetAllocator());
-  return jsonToString(json);
+  return rapidjson_stringify(json);
 }
 
 GraphMeta GraphMeta::FromJson(const std::string& json_str) {
@@ -340,7 +340,7 @@ std::string JobMeta::ToJson(bool print_log) const {
     json.AddMember("detail", detail, json.GetAllocator());
   }
   json.AddMember("type", type, json.GetAllocator());
-  return jsonToString(json);
+  return rapidjson_stringify(json);
 }
 
 JobMeta JobMeta::FromJson(const std::string& json_str) {

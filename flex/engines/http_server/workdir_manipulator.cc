@@ -512,7 +512,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
   rapidjson::Document json;
   if (json.Parse(parameters.c_str()).HasParseError()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::INVALID_ARGUMENT,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to parse parameter as json: " + parameters));
   }
   VLOG(1) << "Successfully parse json parameters: " << gs::rapidjson_stringify(json);

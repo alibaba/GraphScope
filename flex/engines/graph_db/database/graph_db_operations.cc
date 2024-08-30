@@ -31,10 +31,10 @@ Result<std::string> GraphDBOperations::CreateVertex(
   std::vector<VertexData> vertex_data;
   std::vector<EdgeData> edge_data;
   // Check if the input json contains vertex_request and edge_request
-  if (input_json.FindMember("vertex_request") == input_json.MemberEnd() ||
+  if (input_json.HasMember("vertex_request") == false ||
       input_json["vertex_request"].IsArray() == false ||
       input_json["vertex_request"].Size() == 0 ||
-      (input_json.FindMember("edge_request") != input_json.MemberEnd() &&
+      (input_json.HasMember("edge_request") &&
        input_json["edge_request"].IsArray() == false)) {
     return Result<std::string>(
         StatusCode::INVALID_SCHEMA,

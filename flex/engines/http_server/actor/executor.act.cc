@@ -72,8 +72,7 @@ seastar::future<admin_query_result> executor::create_vertex(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  input_json.Parse(param.content.second.c_str());
-  if (input_json.HasParseError()) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
@@ -104,8 +103,7 @@ seastar::future<admin_query_result> executor::create_edge(
                          "The queried graph is not running: " + graph_id)));
   }
   rapidjson::Document input_json;
-  input_json.Parse(param.content.second.c_str());
-  if (input_json.HasParseError()) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
@@ -137,8 +135,7 @@ seastar::future<admin_query_result> executor::update_vertex(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  input_json.Parse(param.content.second.c_str());
-  if (input_json.HasParseError()) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,
@@ -170,8 +167,7 @@ seastar::future<admin_query_result> executor::update_edge(
   }
   rapidjson::Document input_json;
   // Parse the input json
-  input_json.Parse(param.content.second.c_str());
-  if (input_json.HasParseError()) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::INVALID_SCHEMA,

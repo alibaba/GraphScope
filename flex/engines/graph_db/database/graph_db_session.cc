@@ -233,8 +233,7 @@ GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
   VLOG(10) << "string view: " << str_view;
   rapidjson::Document j;
-  j.Parse(str_view.data());
-  if (j.HasParseError()) {
+  if (j.Parse(str_view.data()).HasParseError()) {
     LOG(ERROR) << "Fail to parse json from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
         StatusCode::INTERNAL_ERROR, "Fail to parse json from input content"));
@@ -247,15 +246,8 @@ GraphDBSession::parse_query_type_from_cypher_json(
         StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
   if (j.HasMember("arguments")) {
-    if (j["arguments"].IsArray()) {
-      for (auto& arg : j["arguments"].GetArray()) {
-        VLOG(10) << "arg: " << jsonToString(arg);
-      }
-    } else {
-      for (auto& arg : j["arguments"].GetObject()) {
-        VLOG(10) << "arg: " << jsonToString(arg.name) << " "
-                 << jsonToString(arg.value);
-      }
+    for (auto& arg : j["arguments"].GetArray()) {
+      VLOG(10) << "arg: " << jsonToString(arg);
     }
   }
   VLOG(10) << "Query name: " << query_name;
