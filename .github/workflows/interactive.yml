@@ -32,14 +32,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
             ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
             ~/.cargo/bin/
@@ -340,7 +340,7 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build
       run: |
