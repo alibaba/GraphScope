@@ -1,6 +1,6 @@
 name: GraphScope GAE CI
 
-mn:
+on:
   workflow_dispatch:
   push:
     branches:
