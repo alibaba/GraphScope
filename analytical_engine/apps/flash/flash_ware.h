@@ -26,9 +26,9 @@ limitations under the License.
 #include "grape/parallel/parallel_message_manager.h"
 #include "grape/worker/comm_spec.h"
 
-#include "core/config.h"
 #include "apps/flash/flash_bitset.h"
 #include "apps/flash/vertex_subset.h"
+#include "core/config.h"
 
 namespace gs {
 

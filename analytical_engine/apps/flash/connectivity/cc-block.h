@@ -23,10 +23,10 @@ limitations under the License.
 #include "apps/flash/api.h"
 #include "apps/flash/flash_app_base.h"
 #include "apps/flash/flash_context.h"
-#include "apps/flash/flash_worker.h"
 #include "apps/flash/flash_utils.h"
-#include "apps/flash/value_type.h"
 #include "apps/flash/flash_ware.h"
+#include "apps/flash/flash_worker.h"
+#include "apps/flash/value_type.h"
 #include "apps/flash/vertex_subset.h"
 
 namespace gs {

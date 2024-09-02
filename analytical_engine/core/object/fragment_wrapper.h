@@ -16,7 +16,6 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_FRAGMENT_WRAPPER_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_FRAGMENT_WRAPPER_H_
 
-#include <grape/fragment/immutable_edgecut_fragment.h>
 #include <mpi.h>
 
 #include <algorithm>
@@ -35,6 +34,7 @@
 
 #include "boost/leaf/error.hpp"
 #include "boost/leaf/result.hpp"
+#include "grape/fragment/immutable_edgecut_fragment.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/client/client.h"
@@ -1029,9 +1029,11 @@ class FragmentWrapper<
  * @tparam VID_T VID type
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+class FragmentWrapper<
+    grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
     : public IFragmentWrapper {
-  using fragment_t = grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t =
+      grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,

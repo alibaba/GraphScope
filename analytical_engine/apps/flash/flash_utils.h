@@ -23,6 +23,7 @@ limitations under the License.
 #define ANALYTICAL_ENGINE_APPS_FLASH_FLASH_UTILS_H_
 
 #include <mpi.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -139,7 +140,7 @@ namespace gs {
       __VA_ARGS__                 \
     }                             \
   }
-#define FLASH_Print(...)       \
+#define FLASH_Print(...) \
   if (fw->GetPid() == 0) \
   printf(__VA_ARGS__)
 
