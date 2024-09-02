@@ -1024,7 +1024,7 @@ class FragmentWrapper<
 };
 
 /**
- * @brief A specialized FragmentWrapper for ArrowProjectedFragment.
+ * @brief A specialized FragmentWrapper for ImmutableEdgecutFragment.
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
