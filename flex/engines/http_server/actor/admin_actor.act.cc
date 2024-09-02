@@ -248,7 +248,7 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
         std::runtime_error(insert_res.status().error_message()));
   }
   auto plugin_id = insert_res.value();
-  LOG(INFO) << "Successfully created plugin meta: " << plugin_id;
+
   return server::WorkDirManipulator::CreateProcedure(
              graph_id, plugin_id, json,
              graph_db_service.get_service_config().engine_config_path)
