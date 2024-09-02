@@ -883,9 +883,6 @@ public class GraphIOProcessor {
                 Map<Integer, Integer> orderMap,
                 Pattern pattern) {
             Integer orderId = orderMap.get(joinVertex.getVertex());
-//            if (orderId == null) {
-//                orderId = -1;
-//            }
             VertexDataKey vertexKey = (orderId == null) ? null : new VertexDataKey(orderId);
             DataValue value =
                     getVertexValue(
