@@ -232,9 +232,10 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
     json.AddMember("id", name_copy, json.GetAllocator());
   }
   json.AddMember("bound_graph", graph_id, json.GetAllocator());
-  json.AddMember("creation_time", gs::GetCurrentTimeStamp(),
+  auto nowTime = gs::GetCurrentTimeStamp();
+  json.AddMember("creation_time", nowTime,
                  json.GetAllocator());
-  json.AddMember("update_time", json["creation_time"], json.GetAllocator());
+  json.AddMember("update_time", nowTime, json.GetAllocator());
   if (!json.HasMember("enable")) {
     json.AddMember("enable", true, json.GetAllocator());
   }
@@ -247,7 +248,7 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
         std::runtime_error(insert_res.status().error_message()));
   }
   auto plugin_id = insert_res.value();
-
+  LOG(INFO) << "Successfully created plugin meta: " << plugin_id;
   return server::WorkDirManipulator::CreateProcedure(
              graph_id, plugin_id, json,
              graph_db_service.get_service_config().engine_config_path)
