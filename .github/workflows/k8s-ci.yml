@@ -455,7 +455,6 @@ jobs:
 
       - name: Test demo script of helm installation
         run: |
-          sleep 10000000
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
           export NODE_PORT=$(kubectl get services coordinator-service-graphscope -ojsonpath="{.spec.ports[0].nodePort}")
           echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
