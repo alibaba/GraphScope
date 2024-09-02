@@ -377,23 +377,23 @@ def load_data_of_movie_graph(conn, graph, prefix):
 
 def create_modern_graph(conn, graph, client):
     create_modern_graph_schema(graph)
-    load_data_of_modern_graph(conn, graph, "/home/graphscope/modern_graph")
+    load_data_of_modern_graph(conn, graph, "/tmp/gstest/modern_graph")
     statistics(client)
 
 
 def create_crew_graph(conn, graph, client):
     create_crew_graph_schema(graph)
-    load_data_of_crew_graph(conn, graph, "/home/graphscope/crew")
+    load_data_of_crew_graph(conn, graph, "/tmp/gstest/crew")
     statistics(client)
 
 def create_ldbc_graph(conn, graph, client):
     create_ldbc_graph_schema(graph)
-    load_data_of_ldbc_graph(conn, graph, "/home/graphscope/ldbc")
+    load_data_of_ldbc_graph(conn, graph, "/tmp/gstest/ldbc")
     statistics(client)
 
 def create_movie_graph(conn, graph, client):
     create_movie_graph_schema(graph)
-    load_data_of_movie_graph(conn, graph, "/home/graphscope/movies")
+    load_data_of_movie_graph(conn, graph, "/tmp/gstest/movies")
     statistics(client)
 
 def main():

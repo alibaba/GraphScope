@@ -90,8 +90,14 @@ jobs:
         cd interactive_engine/groot-server
         # the ir-core based test
         mvn test -P gremlin-test
-        # the gopt based test
-        mvn test -Dgremlin.script.language.name=antlr_gremlin_calcite -Dgraph.physical.opt=proto -Dgraph.planner.opt=CBO -Dcollect.statistics=true -P gremlin-test
+
+    - name: Groot with GOpt Integration Test
+      run: |
+        . ${HOME}/.graphscope_env
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
+        mv /tmp/gstest/flex/ldbc-sf01-long-date /tmp/gstest/ldbc
+        mv /tmp/gstest/flex/movies /tmp/gstest/movies
+        cd interactive_engine/groot-client && ./gopt_groot_test.sh
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v4
