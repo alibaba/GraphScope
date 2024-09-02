@@ -23,6 +23,11 @@ else()
         message(FATAL_ERROR "FLEX_INCLUDE_PREFIX not set")
 endif()
 
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
+
 # try to find mpi, if not found warning
 find_package(MPI)
 if (MPI_FOUND)

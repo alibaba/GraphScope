@@ -188,7 +188,7 @@ endif()
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/rapidjson
-        DESTINATION include/rapidjson)
+        DESTINATION include/)
 
 add_definitions(-DRAPIDJSON_HAS_CXX11=1)
 add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
