@@ -41,6 +41,7 @@ import com.alibaba.fastffi.FFITypeAlias;
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_NBR)
 public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
+    Factory factory = FFITypeFactory.getFactory(Factory.class, LongMsg.class);
 
     /**
      * Get the neighbor vertex.
@@ -85,4 +86,9 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
     @CXXOperator("--")
     @CXXReference
     ProjectedNbr<VID_T, EDATA_T> dec();
+
+    @FFIFactory
+    interface Factory {
+        ProjectedNbr<VID_T,EDATA_T> create();
+    }
 }

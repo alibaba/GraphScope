@@ -26,6 +26,7 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.fastffi.CXXPointer;
 
 import java.util.Iterator;
 
@@ -37,18 +38,13 @@ import java.util.Iterator;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-@FFIGen
-@CXXHead(ARROW_PROJECTED_FRAGMENT_H)
-@CXXHead(CORE_JAVA_TYPE_ALIAS_H)
-@FFITypeAlias(PROJECTED_ADJ_LIST)
-public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
+public interface ProjectedAdjList<VID_T, EDATA_T> {
 
     /**
      * Get the first Nbr.
      *
      * @return first Nbr.
      */
-    @CXXValue
     ProjectedNbr<VID_T, EDATA_T> begin();
 
     /**
@@ -56,7 +52,6 @@ public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
      *
      * @return last Nbr.
      */
-    @CXXValue
     ProjectedNbr<VID_T, EDATA_T> end();
 
     /**
@@ -64,7 +59,6 @@ public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
      *
      * @return size.
      */
-    @FFINameAlias("Size")
     long size();
 
     /**
@@ -72,7 +66,6 @@ public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
      *
      * @return true if no nbr.
      */
-    @FFINameAlias("Empty")
     boolean empty();
 
     /**
@@ -80,36 +73,69 @@ public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
      *
      * @return false if empty.
      */
-    @FFINameAlias("NotEmpty")
     boolean notEmpty();
+    
 
-    /**
-     * The iterator for ProjectedAdjList. You can use enhanced for loop instead of directly using
-     * this.
-     *
-     * @return the iterator.
-     */
-    default Iterable<ProjectedNbr<VID_T, EDATA_T>> iterable() {
-        return () ->
-                new Iterator<ProjectedNbr<VID_T, EDATA_T>>() {
-                    ProjectedNbr<VID_T, EDATA_T> cur = begin().dec();
-                    ProjectedNbr<VID_T, EDATA_T> end = end();
-                    boolean flag = false;
+    public class ProjectedAdjListImpl<VID_T, EDATA_T> implements ProjectedAdjList<VID_T, EDATA_T> {
+        private ProjectedNbr<VID_T, EDATA_T> begin;
+        private ProjectedNbr<VID_T, EDATA_T> end;
+        private int elementSize;
 
-                    @Override
-                    public boolean hasNext() {
-                        if (!flag) {
-                            cur = cur.inc();
-                            flag = !cur.eq(end);
+        public ProjectedAdjListImpl(ProjectedNbr<VID_T, EDATA_T> begin, ProjectedNbr<VID_T, EDATA_T> end) {
+            this.begin = begin;
+            this.end = end;
+            //If VID_T is long, elementSize is 16, otherwise 8
+            elementSize = 16;
+        }
+
+        ProjectedNbr<VID_T, EDATA_T> begin() {
+            return begin;
+        }
+
+        ProjectedNbr<VID_T, EDATA_T> end() {
+            return end;
+        }
+
+        long size() {
+            return (end.getAddress() - begin.getAddress()) / elementSize;
+        }
+
+        boolean empty() {
+            return begin.eq(end);
+        }
+
+        boolean notEmpty() {
+            return !empty();
+        }
+
+        /**
+         * The iterator for ProjectedAdjList. You can use enhanced for loop instead of directly using
+         * this.
+         *
+         * @return the iterator.
+         */
+        default Iterable<ProjectedNbr<VID_T, EDATA_T>> iterable() {
+            return () ->
+                    new Iterator<ProjectedNbr<VID_T, EDATA_T>>() {
+                        ProjectedNbr<VID_T, EDATA_T> cur = begin().dec();
+                        ProjectedNbr<VID_T, EDATA_T> end = end();
+                        boolean flag = false;
+
+                        @Override
+                        public boolean hasNext() {
+                            if (!flag) {
+                                cur = cur.inc();
+                                flag = !cur.eq(end);
+                            }
+                            return flag;
                         }
-                        return flag;
-                    }
 
-                    @Override
-                    public ProjectedNbr<VID_T, EDATA_T> next() {
-                        flag = false;
-                        return cur;
-                    }
-                };
+                        @Override
+                        public ProjectedNbr<VID_T, EDATA_T> next() {
+                            flag = false;
+                            return cur;
+                        }
+                    };
+        }
     }
 }

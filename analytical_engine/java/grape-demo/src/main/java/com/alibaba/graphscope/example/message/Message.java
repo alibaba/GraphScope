@@ -16,6 +16,7 @@ import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
 import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.fastffi.CXXValueScope;
 import com.carrotsearch.hppc.LongArrayList;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,11 +27,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.alibaba.graphscope.parallel.message.DoubleMsg;
 
 public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageContext> {
 
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
     private List<LongArrayList> msgs = createMessages();
+    // private DoubleMsg doubleMsg = FFITypeFactoryhelper.newDoubleMsg(1.0);
 
     @Override
     public void PEval(IFragment<Long, Long, Long, Long> iFragment,
@@ -44,7 +47,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
             vertex.setValue(i);
             try {
                 // 内存处理
-                sendToAdjList(iFragment,ctx, parallelMessageManager, vertex, 0);
+                sendToAdjList(iFragment,ctx, parallelMessageManager, vertex, 0, false);
             } catch (IOException e) {
                 logger.error("PEval error", e);
             }
@@ -66,10 +69,11 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         }
 
         // receive messages
-        receiveMessages(iFragment, ctx, parallelMessageManager, true);
+        receiveMessages(iFragment, ctx, parallelMessageManager, false);
 
         // sendToNbr(iFragment, parallelMessageManager, vertex, 0, 0);
         parallelSendToNbr(iFragment, parallelMessageManager, ctx);
+        ctx.currentStep += 1;
     }
 
     void receiveMessages(IFragment<Long, Long, Long, Long> frag, MessageContext ctx,
@@ -88,12 +92,14 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                     while (true) {
                         result = messageManager.getMessageInBuffer(messageInBuffer);
                         if (result) {
-                            try {
-                                receiveMessageImpl(frag, messageInBuffer, simple);
-                            } catch (Exception e) {
-                                logger.error(
-                                    "Error when receiving message in fragment {} thread {}",
-                                    frag.fid(), finalTid, e);
+                            if (!simple){
+                                try {
+                                    receiveMessageImpl(frag, messageInBuffer, simple);
+                                } catch (Exception e) {
+                                    logger.error(
+                                        "Error when receiving message in fragment {} thread {}",
+                                        frag.fid(), finalTid, e);
+                                }
                             }
                         } else {
                             break;
@@ -172,7 +178,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                                 cnt += 1;
                                 vertex.setValue(i);
                                 try {
-                                    sendToAdjList(frag, ctx, messageManager, vertex, finalTid);
+                                    sendToAdjList(frag, ctx, messageManager, vertex, finalTid, false);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -192,27 +198,57 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         }
     }
 
-    void sendToAdjList(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex,  int threadId) throws IOException {
-        
-        FFIByteVectorOutputStream msgVector = ctx.getMsgVectorStream(threadId);
-        AdjList<Long, Long> nbrs =  frag.getOutgoingAdjList(vertex);
-        for (Nbr<Long,Long> nbr : nbrs.iterable()) {
-            Vertex<Long> nbrVertex = nbr.neighbor();
-            if (frag.isOuterVertex(nbrVertex)) {
-                for (int j = 0; j < 100; ++j){
-                    msgVector.reset();
-                    msgVector.writeLong(frag.getOuterVertexGid(nbrVertex));
-                    msgVector.writeInt(msgs.size());
-                    for (LongArrayList msg : msgs) {
-                        PathSerAndDeser.serialize(msgVector, msg);
+    void sendToAdjList(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex,  int threadId, boolean simple) throws IOException {
+        if (simple){
+            for (int j = 0; j < 100; ++j){
+                messageManager.sendMsgThroughOEdges(frag, vertex,  1.0, threadId);
+            }
+        }
+        else {
+            FFIByteVectorOutputStream msgVector = ctx.getMsgVectorStream(threadId);
+            AdjList<Long, Long> nbrs =  frag.getOutgoingAdjList(vertex);
+            
+            Nbr<Long,Long> begin = nbrs.begin();
+            Nbr<Long,Long> end = nbrs.end();
+            while (!begin.eq(end)){
+                Vertex<Long> nbrVertex = begin.neighbor();
+                if (frag.isOuterVertex(nbrVertex)) {
+                    for (int j = 0; j < 100; ++j){
+                        msgVector.reset();
+                        msgVector.writeLong(frag.getOuterVertexGid(nbrVertex));
+                        msgVector.writeInt(msgs.size());
+                        for (LongArrayList msg : msgs) {
+                            PathSerAndDeser.serialize(msgVector, msg);
+                        }
+                        msgVector.finishSetting();
+                        messageManager.sendToFragment(frag.getFragId(nbrVertex),msgVector.getVector(), threadId);
                     }
-                    msgVector.finishSetting();
-                    messageManager.sendToFragment(frag.getFragId(nbrVertex),msgVector.getVector(), threadId);
                 }
+                else {
+                    // skip for send to inner vertex
+                }
+                begin.inc();
             }
-            else {
-                // skip for send to inner vertex
-            }
+
+
+            // if (vertex.getValue() % 1000 != 0) {
+            //     return ;
+            // }
+            // Vertex<Long> nbrVertex = FFITypeFactoryhelper.newVertexLong();
+            // for (long vid = frag.getInnerVerticesNum(); vid < frag.getVerticesNum(); ++vid) {
+            //     nbrVertex.setValue(vid);
+            //     for (int j = 0; j < 10; ++j){
+            //         msgVector.reset();
+            //         msgVector.writeLong(frag.getOuterVertexGid(nbrVertex));
+            //         msgVector.writeInt(msgs.size());
+            //         for (LongArrayList msg : msgs) {
+            //             PathSerAndDeser.serialize(msgVector, msg);
+            //         }
+            //         msgVector.finishSetting();
+            //         messageManager.sendToFragment(frag.getFragId(nbrVertex),msgVector.getVector(), threadId);
+            //     }
+            // }
+            // nbrVertex.delete();
         }
     }
 

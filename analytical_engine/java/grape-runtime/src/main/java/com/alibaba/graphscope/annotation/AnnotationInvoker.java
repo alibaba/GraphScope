@@ -1371,7 +1371,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                                 "int64_t",
                                                 CPP_ARROW_PROJECTED_FRAGMENT
                                                         + "<int64_t,uint64_t,int64_t,int64_t>",
-                                                DOUBLE_MSG,
+                                                "double",
                                                 "any"
                                             },
                                             java = {
@@ -1381,7 +1381,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                                 "Long",
                                                 JAVA_ARROW_PROJECTED_FRAGMENT
                                                         + "<Long,Long,Long,Long>",
-                                                "com.alibaba.graphscope.parallel.message.DoubleMsg",
+                                                "Double",
                                                 "com.alibaba.graphscope.runtime.UnusedImpl.LongLongDouble"
                                             }),
                                     @CXXTemplate(

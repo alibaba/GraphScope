@@ -360,7 +360,7 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& selectors_string,
                     int32_t expected_data_type,
                     vineyard::AnyType expected_tensor_type, int cur_time = 0) {
-  using AppType = gs::JavaPIEProjectedParallelAppE<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();

@@ -17,7 +17,8 @@
 package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFIPointer;
+import com.alibaba.fastffi.CXXPointer;
 
-public interface NbrBase<VID_T, EDATA_T> extends FFIPointer {
+public interface NbrBase<VID_T, EDATA_T> extends CXXPointer {
     Vertex<VID_T> neighbor();
 }
