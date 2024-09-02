@@ -626,7 +626,8 @@ public class GraphIOProcessor {
                     createSubDetails(
                             glogueEdge.getSrcPattern(),
                             glogueEdge.getSrcToTargetOrderMapping(),
-                            null, null);
+                            null,
+                            null);
             ExtendStep extendStep = glogueEdge.getExtendStep();
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
@@ -702,17 +703,20 @@ public class GraphIOProcessor {
                     decomposition.getJoinVertexPairs();
             DataValue defaultValue = new DataValue(generatePxdSplitAlias(), null, null);
             Map<@Nullable DataKey, DataValue> parentVertexDetails =
-                    getJointVertexDetails(jointVertices, probeOrderMap, buildOrderMap, defaultValue);
+                    getJointVertexDetails(
+                            jointVertices, probeOrderMap, buildOrderMap, defaultValue);
             Map<DataKey, DataValue> probeDetails =
                     createSubDetails(
                             decomposition.getProbePattern(),
                             probeOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 0), defaultValue);
+                            new ParentPattern(decomposition.getParentPatten(), 0),
+                            defaultValue);
             Map<DataKey, DataValue> buildDetails =
                     createSubDetails(
                             decomposition.getBuildPattern(),
                             buildOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 1), defaultValue);
+                            new ParentPattern(decomposition.getParentPatten(), 1),
+                            defaultValue);
             RelNode joinLeft = decomposition.getLeft();
             RelNode joinRight = decomposition.getRight();
             this.details = probeDetails;

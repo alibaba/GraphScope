@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel;
 
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;

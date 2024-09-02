@@ -33,6 +33,7 @@ import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
@@ -200,19 +201,19 @@ public class GraphSelectivityHandler extends RelMdSelectivity
             PatternEdge edge =
                     (edgeTypeIds.size() == 1)
                             ? new SinglePatternEdge(
-                            srcVertex,
-                            dstVertex,
-                            edgeTypeIds.get(0),
-                            0,
-                            isBoth,
-                            new ElementDetails())
+                                    srcVertex,
+                                    dstVertex,
+                                    edgeTypeIds.get(0),
+                                    0,
+                                    isBoth,
+                                    new ElementDetails())
                             : new FuzzyPatternEdge(
-                            srcVertex,
-                            dstVertex,
-                            edgeTypeIds,
-                            0,
-                            isBoth,
-                            new ElementDetails());
+                                    srcVertex,
+                                    dstVertex,
+                                    edgeTypeIds,
+                                    0,
+                                    isBoth,
+                                    new ElementDetails());
             Pattern pattern = new Pattern();
             pattern.addVertex(srcVertex);
             pattern.addVertex(dstVertex);

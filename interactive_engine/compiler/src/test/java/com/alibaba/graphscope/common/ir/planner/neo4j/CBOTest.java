@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.junit.Assert;
@@ -76,13 +77,35 @@ public class CBOTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        Assert.assertEquals("GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[person], aggFunction=COUNT, alias='$f0', distinct=false}]]): rowcount = 1.0, cumulative cost = {2670207.542222045 rows, 2669181.0 cpu, 0.0 io}\n" +
-                "  LogicalJoin(condition=[AND(=(person, person), =(tag, tag))], joinType=[inner]): rowcount = 1027.5422220449734, cumulative cost = {2670206.542222045 rows, 2669181.0 cpu, 0.0 io}\n" +
-                "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}], alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 229166.0, cumulative cost = {239058.0 rows, 239059.0 cpu, 0.0 io}\n" +
-                "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0 rows, 9893.0 cpu, 0.0 io}\n" +
-                "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST, PERSON)]], alias=[person], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 713258.0, cumulative cost = {2430121.0 rows, 2430122.0 cpu, 0.0 io}\n" +
-                "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST, TAG)]], alias=[tag], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 713258.0, cumulative cost = {1716863.0 rows, 1716864.0 cpu, 0.0 io}\n" +
-                "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[POST]}], alias=[message], opt=[VERTEX]): rowcount = 1003605.0, cumulative cost = {1003605.0 rows, 1003606.0 cpu, 0.0 io}", com.alibaba.graphscope.common.ir.tools.Utils.explain(after, SqlExplainLevel.ALL_ATTRIBUTES).trim());
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]]): rowcount = 1.0, cumulative cost = {2670207.542222045"
+                    + " rows, 2669181.0 cpu, 0.0 io}\n"
+                    + "  LogicalJoin(condition=[AND(=(person, person), =(tag, tag))],"
+                    + " joinType=[inner]): rowcount = 1027.5422220449734, cumulative cost ="
+                    + " {2670206.542222045 rows, 2669181.0 cpu, 0.0 io}\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 229166.0, cumulative cost = {239058.0 rows, 239059.0 cpu, 0.0"
+                    + " io}\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0"
+                    + " rows, 9893.0 cpu, 0.0 io}\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST, PERSON)]],"
+                    + " alias=[person], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 713258.0, cumulative cost = {2430121.0 rows, 2430122.0 cpu, 0.0"
+                    + " io}\n"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST, TAG)]],"
+                    + " alias=[tag], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 713258.0, cumulative cost = {1716863.0 rows, 1716864.0 cpu, 0.0"
+                    + " io}\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[message], opt=[VERTEX]): rowcount = 1003605.0, cumulative cost ="
+                    + " {1003605.0 rows, 1003606.0 cpu, 0.0 io}",
+                com.alibaba.graphscope.common.ir.tools.Utils.explain(
+                                after, SqlExplainLevel.ALL_ATTRIBUTES)
+                        .trim());
     }
 
     @Test
@@ -98,14 +121,34 @@ public class CBOTest {
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[person], aggFunction=COUNT, alias='$f0', distinct=false}]]): rowcount = 1.0, cumulative cost = {1977699.124583344 rows, 1975603.2326665604 cpu, 0.0 io}\n" +
-                        "  LogicalJoin(condition=[AND(=(person, person), =(tag, tag))], joinType=[inner]): rowcount = 2096.8919167835015, cumulative cost = {1977698.124583344 rows, 1975603.2326665604 cpu, 0.0 io}\n" +
-                        "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}], alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 229166.0, cumulative cost = {239058.0 rows, 239059.0 cpu, 0.0 io}\n" +
-                        "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0 rows, 9893.0 cpu, 0.0 io}\n" +
-                        "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASINTEREST, PERSON, TAG), EdgeLabel(HASTAG, FORUM, TAG)]], alias=[tag], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 1455536.2326665604, cumulative cost = {1736543.2326665604 rows, 1736544.2326665604 cpu, 0.0 io}\n" +
-                        "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS, HASMODERATOR]}], alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX]): rowcount = 271115.0, cumulative cost = {281007.0 rows, 281008.0 cpu, 0.0 io}\n" +
-                        "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0 rows, 9893.0 cpu, 0.0 io}",
-                com.alibaba.graphscope.common.ir.tools.Utils.explain(after, SqlExplainLevel.ALL_ATTRIBUTES).trim());
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]]): rowcount = 1.0, cumulative cost = {1977699.124583344"
+                    + " rows, 1975603.2326665604 cpu, 0.0 io}\n"
+                    + "  LogicalJoin(condition=[AND(=(person, person), =(tag, tag))],"
+                    + " joinType=[inner]): rowcount = 2096.8919167835015, cumulative cost ="
+                    + " {1977698.124583344 rows, 1975603.2326665604 cpu, 0.0 io}\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 229166.0, cumulative cost = {239058.0 rows, 239059.0 cpu, 0.0"
+                    + " io}\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0"
+                    + " rows, 9893.0 cpu, 0.0 io}\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASINTEREST, PERSON, TAG),"
+                    + " EdgeLabel(HASTAG, FORUM, TAG)]], alias=[tag], startAlias=[message],"
+                    + " opt=[OUT], physicalOpt=[VERTEX]): rowcount = 1455536.2326665604, cumulative"
+                    + " cost = {1736543.2326665604 rows, 1736544.2326665604 cpu, 0.0 io}\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS,"
+                    + " HASMODERATOR]}], alias=[message], startAlias=[person], opt=[IN],"
+                    + " physicalOpt=[VERTEX]): rowcount = 271115.0, cumulative cost = {281007.0"
+                    + " rows, 281008.0 cpu, 0.0 io}\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX]): rowcount = 9892.0, cumulative cost = {9892.0"
+                    + " rows, 9893.0 cpu, 0.0 io}",
+                com.alibaba.graphscope.common.ir.tools.Utils.explain(
+                                after, SqlExplainLevel.ALL_ATTRIBUTES)
+                        .trim());
     }
 
     @Test
@@ -197,14 +240,24 @@ public class CBOTest {
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[person1], aggFunction=COUNT, alias='$f0', distinct=false}]])\n" +
-                        "  LogicalJoin(condition=[=(forum, forum)], joinType=[inner])\n" +
-                        "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, COMMENT, PERSON)]], alias=[person1], startAlias=[comment], opt=[OUT], physicalOpt=[VERTEX])\n" +
-                        "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT, POST)]], alias=[comment], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n" +
-                        "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX])\n" +
-                        "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}], alias=[forum], opt=[VERTEX])\n" +
-                        "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}], alias=[forum], startAlias=[person2], opt=[IN], physicalOpt=[VERTEX])\n" +
-                        "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[person2], opt=[VERTEX])",
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  LogicalJoin(condition=[=(forum, forum)], joinType=[inner])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, COMMENT,"
+                    + " PERSON)]], alias=[person1], startAlias=[comment], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT, POST)]],"
+                    + " alias=[comment], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
+                    + " alias=[forum], opt=[VERTEX])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[forum], startAlias=[person2], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person2], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -306,26 +359,55 @@ public class CBOTest {
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
-                "root:\n" +
-                        "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[person1], aggFunction=COUNT, alias='$f0', distinct=false}]]): rowcount = 1.0\n" +
-                        "  MultiJoin(joinFilter=[=(person2, person2)], isFullOuterJoin=[false], joinTypes=[[INNER, INNER, INNER]], outerJoinConditions=[[NULL, NULL, NULL]], projFields=[[ALL, ALL, ALL]]): rowcount = 1.0\n" +
-                        "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASMODERATOR, FORUM, PERSON), EdgeLabel(CONTAINEROF, FORUM, POST)]], alias=[person2], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 5395.508895399443\n" +
-                        "      CommonTableScan(table=[[common#1803177513]]): rowcount = 446.2587786663215\n" +
-                        "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST]}], alias=[person2], opt=[START], physicalOpt=[ITSELF]): rowcount = 1.0\n" +
-                        "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASINTEREST, PERSON, TAG), EdgeLabel(HASTAG, POST, TAG)]], alias=[_], startAlias=[post], opt=[IN], physicalOpt=[VERTEX]): rowcount = 1.5439762993307926\n" +
-                        "        CommonTableScan(table=[[common#1803177513]]): rowcount = 446.2587786663215\n" +
-                        "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST]}], alias=[person2], opt=[END], physicalOpt=[ITSELF]): rowcount = 1.0\n" +
-                        "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(KNOWS, PERSON, PERSON), EdgeLabel(LIKES, PERSON, POST)]], alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 1.0\n" +
-                        "        CommonTableScan(table=[[common#1803177513]]): rowcount = 446.2587786663215\n" +
-                        "common#1803177513:\n" +
-                        "MultiJoin(joinFilter=[=(post, post)], isFullOuterJoin=[false], joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]], projFields=[[ALL, ALL]]): rowcount = 446.2587786663215\n" +
-                        "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, FORUM, TAG)]], alias=[post], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 309765.99999999994\n" +
-                        "    CommonTableScan(table=[[common#114550231]]): rowcount = 90491.99999999999\n" +
-                        "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}], alias=[post], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX]): rowcount = 1.0\n" +
-                        "    CommonTableScan(table=[[common#114550231]]): rowcount = 90491.99999999999\n" +
-                        "common#114550231:\n" +
-                        "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMODERATOR]}], alias=[forum], startAlias=[person1], opt=[IN], physicalOpt=[VERTEX]): rowcount = 90491.99999999999\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[person1], opt=[VERTEX]): rowcount = 9892.0",
-                com.alibaba.graphscope.common.ir.tools.Utils.toString(after, SqlExplainLevel.NON_COST_ATTRIBUTES).trim());
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]]): rowcount = 1.0\n"
+                    + "  MultiJoin(joinFilter=[=(person2, person2)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER, INNER]], outerJoinConditions=[[NULL, NULL,"
+                    + " NULL]], projFields=[[ALL, ALL, ALL]]): rowcount = 1.0\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASMODERATOR, FORUM,"
+                    + " PERSON), EdgeLabel(CONTAINEROF, FORUM, POST)]], alias=[person2],"
+                    + " startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX]): rowcount ="
+                    + " 5395.508895399443\n"
+                    + "      CommonTableScan(table=[[common#1803177513]]): rowcount ="
+                    + " 446.2587786663215\n"
+                    + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST]}],"
+                    + " alias=[person2], opt=[START], physicalOpt=[ITSELF]): rowcount = 1.0\n"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASINTEREST, PERSON, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[_], startAlias=[post], opt=[IN],"
+                    + " physicalOpt=[VERTEX]): rowcount = 1.5439762993307926\n"
+                    + "        CommonTableScan(table=[[common#1803177513]]): rowcount ="
+                    + " 446.2587786663215\n"
+                    + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST]}],"
+                    + " alias=[person2], opt=[END], physicalOpt=[ITSELF]): rowcount = 1.0\n"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(KNOWS, PERSON, PERSON),"
+                    + " EdgeLabel(LIKES, PERSON, POST)]], alias=[_], startAlias=[person1],"
+                    + " opt=[OUT], physicalOpt=[VERTEX]): rowcount = 1.0\n"
+                    + "        CommonTableScan(table=[[common#1803177513]]): rowcount ="
+                    + " 446.2587786663215\n"
+                    + "common#1803177513:\n"
+                    + "MultiJoin(joinFilter=[=(post, post)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]]): rowcount = 446.2587786663215\n"
+                    + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, FORUM, TAG)]],"
+                    + " alias=[post], startAlias=[forum], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 309765.99999999994\n"
+                    + "    CommonTableScan(table=[[common#114550231]]): rowcount ="
+                    + " 90491.99999999999\n"
+                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[post], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX]):"
+                    + " rowcount = 1.0\n"
+                    + "    CommonTableScan(table=[[common#114550231]]): rowcount ="
+                    + " 90491.99999999999\n"
+                    + "common#114550231:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMODERATOR]}],"
+                    + " alias=[forum], startAlias=[person1], opt=[IN], physicalOpt=[VERTEX]):"
+                    + " rowcount = 90491.99999999999\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person1], opt=[VERTEX]): rowcount = 9892.0",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(
+                                after, SqlExplainLevel.NON_COST_ATTRIBUTES)
+                        .trim());
     }
 }

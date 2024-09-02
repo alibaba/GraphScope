@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -177,8 +178,10 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     (vertexTypeIds.size() == 1)
                             ? new SinglePatternVertex(vertexTypeIds.get(0))
                             : new FuzzyPatternVertex(vertexTypeIds);
-            double fullCount = mq.getRowCount(
-                    new GraphPattern(rel.getCluster(), rel.getTraitSet(), new Pattern(vertex)));
+            double fullCount =
+                    mq.getRowCount(
+                            new GraphPattern(
+                                    rel.getCluster(), rel.getTraitSet(), new Pattern(vertex)));
             List<RexNode> sourceFilters = Lists.newArrayList();
             if (source.getUniqueKeyFilters() != null) {
                 sourceFilters.add(source.getUniqueKeyFilters());
@@ -186,7 +189,11 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
             if (ObjectUtils.isNotEmpty(source.getFilters())) {
                 sourceFilters.addAll(source.getFilters());
             }
-            double selectivity = mq.getSelectivity(rel, RexUtil.composeConjunction(rel.getCluster().getRexBuilder(), sourceFilters));
+            double selectivity =
+                    mq.getSelectivity(
+                            rel,
+                            RexUtil.composeConjunction(
+                                    rel.getCluster().getRexBuilder(), sourceFilters));
             source.setCachedCost(new DetailedSourceCost(fullCount, fullCount * selectivity));
         }
         if (rel.getCachedCost() != null) {
