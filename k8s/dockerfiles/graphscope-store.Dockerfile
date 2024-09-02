@@ -1,6 +1,7 @@
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION as builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH as builder
 
 ARG CI=false
 ARG ENABLE_COORDINATOR=false

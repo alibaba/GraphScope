@@ -1,8 +1,3 @@
-
-find_package(Protobuf REQUIRED)
-include_directories(${Protobuf_INCLUDE_DIRS})
-
-
 set(GIE_COMPILER_PROTO_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/../../../interactive_engine/executor/ir/proto/)
 set(GIE_COMPILER_PROTO_JOB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../interactive_engine/executor/engine/pegasus/server/proto/)
 # proto files of gie compiler

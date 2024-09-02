@@ -51,12 +51,13 @@ class BuildProto(Command):
     def finalize_options(self):
         pass
 
-    def run(self):
-        proto_path = "../../../../interactive_engine/executor/ir/proto/"
-        proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
-        output_dir = "./gs_interactive/client/generated/"
+    def generate_proto(self, proto_path, output_dir, proto_files = None):
+        if proto_files is None:
+            proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
         os.makedirs(output_dir, exist_ok=True)
         for proto_file in proto_files:
+            if not os.path.exists(proto_file):
+                proto_file = os.path.join(proto_path, proto_file)
             cmd = [
                 sys.executable,
                 "-m",
@@ -72,6 +73,9 @@ class BuildProto(Command):
                 stderr=subprocess.STDOUT,
             )
 
+    def run(self):
+        self.generate_proto("../../../../interactive_engine/executor/ir/proto/", "./gs_interactive/client/generated/")
+        self.generate_proto("../../../../proto/error", "./gs_interactive/client/generated/", ["interactive.proto"])
 
 setup(
     name=NAME,

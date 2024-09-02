@@ -97,13 +97,13 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     graph_.Open(data_dir, config.memory_level);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
-    return Result<bool>(StatusCode::InternalError,
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
                         "Exception: " + std::string(e.what()), false);
   }
 
   if ((!create_empty_graph) && (!graph_.schema().Equals(schema))) {
     LOG(ERROR) << "Schema inconsistent..\n";
-    return Result<bool>(StatusCode::InternalError,
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
                         "Schema of work directory is not compatible with the "
                         "graph schema",
                         false);

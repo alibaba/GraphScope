@@ -31,6 +31,7 @@ use crate::message::MessageHeader;
 use crate::{NetError, Server};
 
 mod encode;
+
 pub use encode::{GeneralEncoder, MessageEncoder, SimpleEncoder, SlabEncoder};
 
 mod net_tx;

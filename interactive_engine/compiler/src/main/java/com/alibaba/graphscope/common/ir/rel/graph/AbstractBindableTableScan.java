@@ -22,10 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
@@ -229,6 +226,14 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     @Override
     public double estimateRowCount(RelMetadataQuery mq) {
-        return cachedCost != null ? cachedCost.getRows() : super.estimateRowCount(mq);
+        return cachedCost != null ? cachedCost.getRows() : mq.getRowCount(this);
+    }
+
+    @Override
+    public @Nullable RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        double dRows = estimateRowCount(mq);
+        double dCpu = dRows + 1.0;
+        double dIo = 0.0;
+        return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
     }
 }

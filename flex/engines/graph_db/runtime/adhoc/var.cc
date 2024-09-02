@@ -48,6 +48,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
   }
 
   if (pb.has_tag() || var_type == VarType::kPathVar) {
+    CHECK(ctx.get(tag) != nullptr) << "tag not found - " << tag;
     if (ctx.get(tag)->column_type() == ContextColumnType::kVertex) {
       if (pb.has_property()) {
         auto& pt = pb.property();
@@ -55,7 +56,20 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            getter_ = std::make_shared<VertexIdPathAccessor>(txn, ctx, tag);
+            if (type_ == RTAnyType::kStringValue) {
+              getter_ =
+                  std::make_shared<VertexIdPathAccessor<std::string_view>>(
+                      txn, ctx, tag);
+            } else if (type_ == RTAnyType::kI32Value) {
+              getter_ = std::make_shared<VertexIdPathAccessor<int32_t>>(
+                  txn, ctx, tag);
+            } else if (type_ == RTAnyType::kI64Value) {
+              getter_ = std::make_shared<VertexIdPathAccessor<int64_t>>(
+                  txn, ctx, tag);
+            } else {
+              LOG(FATAL) << "not support for "
+                         << static_cast<int>(type_.type_enum_);
+            }
           } else {
             getter_ = create_vertex_property_path_accessor(txn, ctx, tag, type_,
                                                            pt.key().name());
@@ -110,7 +124,18 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            getter_ = std::make_shared<VertexIdVertexAccessor>(txn);
+            if (type_ == RTAnyType::kStringValue) {
+              getter_ =
+                  std::make_shared<VertexIdVertexAccessor<std::string_view>>(
+                      txn);
+            } else if (type_ == RTAnyType::kI32Value) {
+              getter_ = std::make_shared<VertexIdVertexAccessor<int32_t>>(txn);
+            } else if (type_ == RTAnyType::kI64Value) {
+              getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(txn);
+            } else {
+              LOG(FATAL) << "not support for "
+                         << static_cast<int>(type_.type_enum_);
+            }
           } else {
             getter_ = create_vertex_property_vertex_accessor(txn, type_,
                                                              pt.key().name());

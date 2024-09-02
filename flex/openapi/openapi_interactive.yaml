@@ -141,15 +141,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example: 
+                code: 4
+                message: "Graph not found"
         '500':
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal Error: "
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example: 
+                code: 103
+                message: "Internal error"
   /v1/graph/{graph_id}/schema:
     get:
       tags:
@@ -195,22 +199,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not running or graph not exists"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Service unavailable, try again later"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 15
+                message: "Service Unavailable"
 
   /v1/graph/{graph_id}/dataloading:
     post:
@@ -319,22 +329,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 14
+                message: "Bad request"
         '404':
           description: not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '500':
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     get:
       tags:
         - AdminService/ProcedureManagement
@@ -426,22 +442,28 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 14
+                message: "Bad request"
         "404":
           description: Not Found
           content:
             application/json:
               schema:
-                type: string
-                example: "Graph Not found/Procedure Not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found/Procedure not found"
         "500":
           description: Internal error
           content:
             application/json:
               schema:
-                type: string
-                example: "bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - AdminService/ProcedureManagement
@@ -470,8 +492,10 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "Graph Not found/Procedure Not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found/Procedure not found"
   /v1/service/start:
     post:
       tags:
@@ -496,8 +520,10 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "Internal Error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/service/stop:
     post:
       tags:
@@ -640,12 +666,40 @@ paths:
                 message: "Successfully created vertex"
         '400':
           description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '409':
           description: Vertex already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Vertex already exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     put:
       tags:
         - GraphService/VertexManagement
@@ -680,11 +734,32 @@ paths:
               example:
                 message: "Successfully updated vertex"
         '400':
-          description: Invalid input paramters
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Vertex not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - GraphService/VertexManagement
@@ -721,10 +796,31 @@ paths:
                 message: "Successfully delete vertex"
         '400':
           description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Vertex not exists or Graph not exits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
 
   /v1/graph/{graph_id}/edge:
     get:
@@ -793,10 +889,31 @@ paths:
                     value: 0.2
         '400':
           description: Bad input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not found or Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not found"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     post:
       tags:
         - GraphService/EdgeManagement
@@ -821,10 +938,31 @@ paths:
                 message: "Successfuly create edge"
         '400':
           description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '409':
           description: edge already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Edge already exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
       requestBody:
         required: true
         content:
@@ -883,11 +1021,32 @@ paths:
               example:
                 message: "Successfully update edge"
         '400':
-          description: Invalid input paramters
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - GraphService/EdgeManagement
@@ -941,10 +1100,31 @@ paths:
                 message: "Successfully delete edge"
         '400':
           description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not exists or Graph not exits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/{graph_id}/query:
     post:
       tags:
@@ -975,6 +1155,13 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/current/query:
     post:
       tags:
@@ -999,6 +1186,13 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/current/adhoc_query:
     post:
       tags:
@@ -1024,6 +1218,13 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/{graph_id}/adhoc_query:
     post:
       tags:
@@ -1055,6 +1256,13 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/file/upload:
     post:
       tags: [Utils]
@@ -1086,7 +1294,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
 components:
   schemas:
     AnyValue: {}
@@ -1419,6 +1630,18 @@ components:
       x-body-name: api_response
       type: string
       example: "Response string"
+    APIResponseWithCode:
+      x-body-name: api_response_with_code
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 500
+        message: "Internal Error"
     VertexStatistics:
       x-body-name: vertex_statistics
       type: object
@@ -1791,6 +2014,8 @@ components:
       x-body-name: service_status
       type: object
       properties:
+        statistics_enabled: # indicate whether the graph statistics interface is enabled
+          type: boolean
         status:
           type: string
         graph:

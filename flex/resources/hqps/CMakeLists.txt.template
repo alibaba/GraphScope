@@ -38,9 +38,13 @@ if(EXISTS "/opt/graphscope/include")
     include_directories("/opt/graphscope/include")
 endif()
 
+if (EXISTS "/opt/flex/include")
+    include_directories("/opt/flex/include")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O2 -flto -Werror=unused-result -fPIC -no-pie")
 
 add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc)
-target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/)
+target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/ ${FLEX_INCLUDE_PREFIX}/flex/build/utils/)
 target_link_libraries(${QUERY_NAME} PUBLIC)

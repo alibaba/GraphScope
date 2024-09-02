@@ -24,16 +24,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.externalize.RelWriterImpl;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.NlsString;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Sarg;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -98,22 +105,26 @@ public class Utils {
         }
     }
 
+    public static String toString(RelNode node, SqlExplainLevel detailLevel) {
+        return toString("root:", node, Sets.newHashSet(), detailLevel);
+    }
+
     /**
      * print root {@code RelNode} and nested {@code RelNode}s in each {@code CommonTableScan}
      * @param node
      * @return
      */
     public static String toString(RelNode node) {
-        return toString("root:", node, Sets.newHashSet());
+        return toString("root:", node, Sets.newHashSet(), SqlExplainLevel.EXPPLAN_ATTRIBUTES);
     }
 
-    private static String toString(String header, RelNode node, Set<String> dedup) {
+    private static String toString(String header, RelNode node, Set<String> dedup, SqlExplainLevel detailLevel) {
         StringBuilder builder = new StringBuilder();
         if (!header.isEmpty()) {
             dedup.add(header);
             builder.append(header).append("\n");
         }
-        builder.append(RelOptUtil.toString(node));
+        builder.append(explain(node, detailLevel));
         List<RelNode> inputs = Lists.newArrayList(node.getInputs());
         while (!inputs.isEmpty()) {
             RelNode input = inputs.remove(0);
@@ -121,11 +132,94 @@ public class Utils {
                 CommonOptTable optTable = (CommonOptTable) ((CommonTableScan) input).getTable();
                 String name = optTable.getQualifiedName().get(0) + ":";
                 if (!dedup.contains(name)) {
-                    builder.append(toString(name, optTable.getCommon(), dedup));
+                    builder.append(toString(name, optTable.getCommon(), dedup, detailLevel));
                 }
             }
             inputs.addAll(input.getInputs());
         }
         return builder.toString();
+    }
+
+    public static @Nullable String explain(@Nullable RelNode rel, SqlExplainLevel detailLevel) {
+        if (rel == null) {
+            return null;
+        } else {
+            StringWriter sw = new StringWriter();
+            RelWriter planWriter = new RelWriterImpl(new PrintWriter(sw), detailLevel, false) {
+                @Override
+                protected void explain_(RelNode rel, List<Pair<String, Object>> values) {
+                    List<RelNode> inputs = rel.getInputs();
+                    final RelMetadataQuery mq = rel.getCluster().getMetadataQuery();
+                    if (!mq.isVisibleInExplain(rel, detailLevel)) {
+                        // render children in place of this, at same level
+                        explainInputs(inputs);
+                        return;
+                    }
+
+                    StringBuilder s = new StringBuilder();
+                    spacer.spaces(s);
+                    if (withIdPrefix) {
+                        s.append(rel.getId()).append(":");
+                    }
+                    s.append(rel.getRelTypeName());
+                    if (detailLevel != SqlExplainLevel.NO_ATTRIBUTES) {
+                        int j = 0;
+                        for (Pair<String, @Nullable Object> value : values) {
+                            if (value.right instanceof RelNode) {
+                                continue;
+                            }
+                            if (j++ == 0) {
+                                s.append("(");
+                            } else {
+                                s.append(", ");
+                            }
+                            s.append(value.left)
+                                    .append("=[")
+                                    .append(value.right)
+                                    .append("]");
+                        }
+                        if (j > 0) {
+                            s.append(")");
+                        }
+                    }
+                    switch (detailLevel) {
+                        case ALL_ATTRIBUTES:
+                            s.append(": rowcount = ")
+                                    .append(mq.getRowCount(rel))
+                                    .append(", cumulative cost = ")
+                                    .append(mq.getCumulativeCost(rel));
+                            break;
+                        case NON_COST_ATTRIBUTES:
+                            s.append(": rowcount = ")
+                                    .append(mq.getRowCount(rel));
+                        default:
+                            break;
+                    }
+                    switch (detailLevel) {
+                        case NON_COST_ATTRIBUTES:
+                        case ALL_ATTRIBUTES:
+                            break;
+                        default:
+                            break;
+                    }
+                    pw.println(s);
+                    spacer.add(2);
+                    explainInputs(inputs);
+                    spacer.subtract(2);
+                }
+
+                private void explainInputs(List<RelNode> inputs) {
+                    Iterator var2 = inputs.iterator();
+
+                    while(var2.hasNext()) {
+                        RelNode input = (RelNode)var2.next();
+                        input.explain(this);
+                    }
+
+                }
+            };
+            rel.explain(planWriter);
+            return sw.toString();
+        }
     }
 }

@@ -81,8 +81,9 @@ Result<bool> DefaultGraphMetaStore::UpdateGraphMeta(
           json = nlohmann::json::parse(old_meta);
         } catch (const std::exception& e) {
           LOG(ERROR) << "Fail to parse old graph meta:" << e.what();
-          return Result<std::string>(Status(StatusCode::InternalError,
-                                            "Fail to parse old graph meta"));
+          return Result<std::string>(
+              Status(StatusCode::INTERNAL_ERROR,
+                     std::string("Fail to parse old graph meta: ") + e.what()));
         }
         auto graph_meta = GraphMeta::FromJson(json);
         if (request.graph_name.has_value()) {
@@ -111,7 +112,7 @@ Result<PluginId> DefaultGraphMetaStore::CreatePluginMeta(
     return Result<PluginId>(request.id.value());
   } else {
     LOG(ERROR) << "Can not create plugin meta without id";
-    return Result<PluginId>(Status(StatusCode::InValidArgument,
+    return Result<PluginId>(Status(StatusCode::INVALID_ARGUMENT,
                                    "Can not create plugin meta without id"));
   }
 }
@@ -126,12 +127,12 @@ Result<PluginMeta> DefaultGraphMetaStore::GetPluginMeta(
   std::string meta_str = res.move_value();
   auto meta = PluginMeta::FromJson(meta_str);
   if (meta.bound_graph != graph_id) {
-    return Result<PluginMeta>(
-        Status(StatusCode::InValidArgument, "Plugin not belongs to the graph"));
+    return Result<PluginMeta>(Status(StatusCode::INVALID_ARGUMENT,
+                                     "Plugin not belongs to the graph"));
   }
   if (meta.id != plugin_id) {
     return Result<PluginMeta>(
-        Status(StatusCode::InValidArgument,
+        Status(StatusCode::INVALID_ARGUMENT,
                "Plugin id not match: " + plugin_id + " vs " + meta.id));
   }
   return Result<PluginMeta>(meta);
@@ -197,18 +198,19 @@ Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
           json = nlohmann::json::parse(old_meta);
         } catch (const std::exception& e) {
           LOG(ERROR) << "Fail to parse old plugin meta:" << e.what();
-          return Result<std::string>(Status(StatusCode::InternalError,
-                                            "Fail to parse old plugin meta"));
+          return Result<std::string>(Status(
+              StatusCode::INTERNAL_ERROR,
+              std::string("Fail to parse old plugin meta: ") + e.what()));
         }
         auto plugin_meta = PluginMeta::FromJson(json);
         if (plugin_meta.bound_graph != graph_id) {
-          return Result<std::string>(Status(gs::StatusCode::InternalError,
+          return Result<std::string>(Status(gs::StatusCode::INTERNAL_ERROR,
                                             "Plugin not belongs to the graph"));
         }
         if (update_request.bound_graph.has_value()) {
           if (update_request.bound_graph.value() != graph_id) {
             return Result<std::string>(
-                Status(gs::StatusCode::IllegalOperation,
+                Status(gs::StatusCode::ILLEGAL_OPERATION,
                        "The plugin_id in update payload is not "
                        "the same with original"));
           }
@@ -288,7 +290,8 @@ Result<bool> DefaultGraphMetaStore::UpdateJobMeta(
         } catch (const std::exception& e) {
           LOG(ERROR) << "Fail to parse old job meta:" << e.what();
           return Result<std::string>(
-              Status(StatusCode::InternalError, "Fail to parse old job meta"));
+              Status(StatusCode::INTERNAL_ERROR,
+                     std::string("Fail to parse old job meta: ") + e.what()));
         }
         auto job_meta = JobMeta::FromJson(json);
         if (update_request.status.has_value()) {

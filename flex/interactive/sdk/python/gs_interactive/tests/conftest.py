@@ -382,7 +382,6 @@ def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     assert wait_job_finish(sess, job_id)
 
 def submit_query_via_neo4j_endpoint(neo4j_sess : Neo4jSession, graph_id: str, query: str):
-    query = "MATCH(n) return n"
     result = neo4j_sess.run(query)
     #check have 1 records, result 0
     result_cnt = 0

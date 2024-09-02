@@ -162,14 +162,13 @@ impl<T: Data> Channel<T> {
 }
 
 impl<T: Data> Channel<T> {
-    fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
+    fn build_pipeline(self, target: Port, id: ChannelId, worker_id: u32) -> MaterializedChannel<T> {
         let (tx, rx) = crate::data_plane::pipeline::<MicroBatch<T>>(id);
         let scope_level = self.get_scope_level();
         let ch_info = ChannelInfo::new(id, scope_level, 1, 1, self.source, target);
-        let push = MicroBatchPush::Pipeline(LocalMicroBatchPush::new(ch_info, tx));
-        let worker = crate::worker_id::get_current_worker().index;
-        let ch = CancelHandle::SC(SingleConsCancel::new(worker));
-        let push = PerChannelPush::new(ch_info, self.scope_delta, push, ch);
+        let push = MicroBatchPush::Pipeline(LocalMicroBatchPush::new(ch_info, tx, worker_id));
+        let ch = CancelHandle::SC(SingleConsCancel::new(worker_id));
+        let push = PerChannelPush::new(ch_info, self.scope_delta, push, ch, worker_id);
         MaterializedChannel { push, pull: rx.into(), notify: None }
     }
 
@@ -179,14 +178,14 @@ impl<T: Data> Channel<T> {
         (ChannelInfo, Vec<EventEmitPush<T>>, GeneralPull<MicroBatch<T>>, GeneralPush<MicroBatch<T>>),
         BuildJobError,
     > {
-        let (mut raw, pull) = crate::communication::build_channel::<MicroBatch<T>>(id, &dfb.config)?.take();
-        let worker_index = crate::worker_id::get_current_worker().index as usize;
+        let (mut raw, pull) =
+            crate::communication::build_channel::<MicroBatch<T>>(id, &dfb.config, dfb.worker_id)?.take();
+        let worker_index = dfb.worker_id.index as usize;
         let notify = raw.swap_remove(worker_index);
         let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), self.source, target);
         let mut pushes = Vec::with_capacity(raw.len());
-        let source = dfb.worker_id.index;
         for (idx, p) in raw.into_iter().enumerate() {
-            let push = EventEmitPush::new(ch_info, source, idx as u32, p, dfb.event_emitter.clone());
+            let push = EventEmitPush::new(ch_info, dfb.worker_id, idx as u32, p, dfb.event_emitter.clone());
             pushes.push(push);
         }
         Ok((ch_info, pushes, pull, notify))
@@ -212,12 +211,12 @@ impl<T: Data> Channel<T> {
         }
 
         if dfb.worker_id.total_peers() == 1 {
-            return Ok(self.build_pipeline(target, id));
+            return Ok(self.build_pipeline(target, id, dfb.worker_id.index));
         }
 
         let kind = std::mem::replace(&mut self.kind, ChannelKind::Pipeline);
         match kind {
-            ChannelKind::Pipeline => Ok(self.build_pipeline(target, id)),
+            ChannelKind::Pipeline => Ok(self.build_pipeline(target, id, dfb.worker_id.index)),
             ChannelKind::Shuffle(r) => {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                 let mut buffers = Vec::with_capacity(pushes.len());
@@ -225,38 +224,56 @@ impl<T: Data> Channel<T> {
                     let b = ScopeBufferPool::new(batch_size, batch_capacity, scope_level);
                     buffers.push(b);
                 }
-                let push = ExchangeByDataPush::new(info, r, buffers, pushes);
+                let push = ExchangeByDataPush::new(info, r, buffers, pushes, dfb.worker_id);
                 let ch = push.get_cancel_handle();
-                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push), ch);
+                let push = PerChannelPush::new(
+                    info,
+                    self.scope_delta,
+                    MicroBatchPush::Exchange(push),
+                    ch,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::BatchShuffle(route) => {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                let push = ExchangeByBatchPush::new(info, route, pushes);
+                let push = ExchangeByBatchPush::new(info, route, pushes, dfb.worker_id);
                 let cancel = push.get_cancel_handle();
                 let push = PerChannelPush::new(
                     info,
                     self.scope_delta,
                     MicroBatchPush::ExchangeByBatch(push),
                     cancel,
+                    dfb.worker_id.index,
                 );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Broadcast => {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                let push = BroadcastBatchPush::new(info, pushes);
+                let push = BroadcastBatchPush::new(info, pushes, dfb.worker_id.total_peers());
                 let ch = push.get_cancel_handle();
-                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
+                let push = PerChannelPush::new(
+                    info,
+                    self.scope_delta,
+                    MicroBatchPush::Broadcast(push),
+                    ch,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Aggregate => {
                 let (mut ch_info, pushes, pull, notify) =
                     self.build_remote(scope_level, target, id, dfb)?;
                 ch_info.target_peers = 1;
-                let push = AggregateBatchPush::new(ch_info, pushes);
+                let push = AggregateBatchPush::new(ch_info, pushes, dfb.worker_id);
                 let cancel = push.get_cancel_handle();
-                let push =
-                    PerChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Aggregate(push), cancel);
+                let push = PerChannelPush::new(
+                    ch_info,
+                    self.scope_delta,
+                    MicroBatchPush::Aggregate(push),
+                    cancel,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
         }

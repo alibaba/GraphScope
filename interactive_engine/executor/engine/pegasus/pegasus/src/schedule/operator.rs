@@ -5,10 +5,11 @@ use crate::event::{Event, EventKind};
 use crate::graph::Port;
 use crate::schedule::state::inbound::{InboundStreamState, InputEndNotify};
 use crate::schedule::state::outbound::OutputCancelState;
-use crate::Tag;
+use crate::{Tag, WorkerId};
 
 pub struct OperatorScheduler {
     pub index: usize,
+    worker_id: WorkerId,
     inputs_notify: Vec<Option<InboundStreamState>>,
     outputs_cancel: Vec<Option<OutputCancelState>>,
     discards: VecDeque<(Port, Tag)>,
@@ -16,21 +17,28 @@ pub struct OperatorScheduler {
 
 impl OperatorScheduler {
     pub fn new(
-        index: usize, scope_level: u32, inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
+        worker_id: WorkerId, index: usize, scope_level: u32,
+        inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
         outputs_cancel: Vec<Option<OutputCancelState>>,
     ) -> Self {
         let mut input_events = Vec::with_capacity(inputs_notify.len());
         for (i, notify) in inputs_notify.into_iter().enumerate() {
             if let Some(notify) = notify {
                 let port = Port::new(index, i);
-                let state = InboundStreamState::new(port, scope_level, notify);
+                let state = InboundStreamState::new(port, worker_id, scope_level, notify);
                 input_events.push(Some(state));
             } else {
                 input_events.push(None);
             }
         }
 
-        OperatorScheduler { index, inputs_notify: input_events, outputs_cancel, discards: VecDeque::new() }
+        OperatorScheduler {
+            index,
+            worker_id,
+            inputs_notify: input_events,
+            outputs_cancel,
+            discards: VecDeque::new(),
+        }
     }
 
     pub fn accept(&mut self, event: Event) -> IOResult<()> {

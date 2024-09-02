@@ -32,11 +32,15 @@ from gs_interactive.tests.conftest import create_procedure, delete_running_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph, import_data_to_partial_modern_graph, import_data_to_full_modern_graph
 
 
-cypher_queries = [
+vertex_only_cypher_queries = [
     "MATCH(n) return count(n)",
     "MATCH(n) return n",
     "MATCH(n) return n limit 10",
-    "MATCH()-[r]->() return count(r)",
+]
+
+# extend the query list to include queries that are not supported by vertex-only graph
+cypher_queries = vertex_only_cypher_queries + [
+    #"MATCH()-[e]->() return count(e)", # currently not supported by compiler+ffi, see https://github.com/alibaba/GraphScope/issues/4192
     "MATCH(a)-[b]->(c) return count(b)",
     "MATCH(a)-[b]->(c) return b",
     "MATCH(a)-[b]->(c) return c.id",
@@ -48,11 +52,11 @@ def test_query_on_vertex_only_graph(interactive_session, neo4j_session, create_v
     """
     print("[Query on vertex only graph]")
     start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
-    run_cypher_test_suite(neo4j_session, create_vertex_only_modern_graph, cypher_queries)
+    run_cypher_test_suite(neo4j_session, create_vertex_only_modern_graph, vertex_only_cypher_queries)
 
     start_service_on_graph(interactive_session,"1")
     import_data_to_vertex_only_modern_graph(interactive_session, create_vertex_only_modern_graph)
-    run_cypher_test_suite(neo4j_session, create_vertex_only_modern_graph, cypher_queries)
+    run_cypher_test_suite(neo4j_session, create_vertex_only_modern_graph, vertex_only_cypher_queries)
 
 def test_query_on_partial_graph(interactive_session,neo4j_session, create_partial_modern_graph):
     """

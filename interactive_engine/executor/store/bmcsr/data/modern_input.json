@@ -1,0 +1,90 @@
+{
+  "vertex": [
+    {
+      "label": "person",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "ID"
+        },
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "age",
+          "data_type": "Int32"
+        }
+      ],
+      "files":[
+        "person.csv"
+      ]
+    },
+    {
+      "label": "software",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "ID"
+        },
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "lang",
+          "data_type": "String"
+        }
+      ],
+      "files":[
+        "software.csv"
+      ]
+    }
+  ],
+  "edge": [
+    {
+      "src_label": "person",
+      "dst_label": "person",
+      "label": "knows",
+      "columns": [
+        {
+          "name": "start_id",
+          "data_type": "ID"
+        },
+        {
+          "name": "end_id",
+          "data_type": "ID"
+        },
+        {
+          "name": "weight",
+          "data_type": "Double"
+        }
+      ],
+      "files": [
+        "knows.csv"
+      ]
+    },
+    {
+      "src_label": "person",
+      "dst_label": "software",
+      "label": "created",
+      "columns": [
+        {
+          "name": "start_id",
+          "data_type": "ID"
+        },
+        {
+          "name": "end_id",
+          "data_type": "ID"
+        },
+        {
+          "name": "weight",
+          "data_type": "Double"
+        }
+      ],
+      "files": [
+        "created.csv"
+      ]
+    }
+  ]
+}

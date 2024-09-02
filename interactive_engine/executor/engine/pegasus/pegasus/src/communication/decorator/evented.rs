@@ -21,12 +21,13 @@ use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
 use crate::progress::{DynPeers, EndOfScope, EndSyncSignal};
 use crate::tag::tools::map::TidyTagMap;
-use crate::PROFILE_COMM_FLAG;
 use crate::{Data, Tag};
+use crate::{WorkerId, PROFILE_COMM_FLAG};
 
 #[allow(dead_code)]
 pub struct EventEmitPush<T: Data> {
     pub ch_info: ChannelInfo,
+    pub total_peers: u32,
     pub source_worker: u32,
     pub target_worker: u32,
     inner: GeneralPush<MicroBatch<T>>,
@@ -38,13 +39,14 @@ pub struct EventEmitPush<T: Data> {
 #[allow(dead_code)]
 impl<T: Data> EventEmitPush<T> {
     pub fn new(
-        info: ChannelInfo, source_worker: u32, target_worker: u32, push: GeneralPush<MicroBatch<T>>,
+        info: ChannelInfo, worker_id: WorkerId, target_worker: u32, push: GeneralPush<MicroBatch<T>>,
         emitter: EventEmitter,
     ) -> Self {
         let push_counts = TidyTagMap::new(info.scope_level);
         EventEmitPush {
             ch_info: info,
-            source_worker,
+            total_peers: worker_id.total_peers(),
+            source_worker: worker_id.index,
             target_worker,
             inner: push,
             event_emitter: emitter,
@@ -75,14 +77,14 @@ impl<T: Data> EventEmitPush<T> {
                     end.peers(),
                     children
                 );
-                end.update_peers(children);
+                end.update_peers(children, self.total_peers);
                 let end_batch = MicroBatch::last(self.source_worker, end);
                 self.push(end_batch)
             } else {
                 Ok(())
             }
         } else {
-            end.update_peers(children);
+            end.update_peers(children, self.total_peers);
             let end_batch = MicroBatch::last(self.source_worker, end);
             self.push(end_batch)
         }
