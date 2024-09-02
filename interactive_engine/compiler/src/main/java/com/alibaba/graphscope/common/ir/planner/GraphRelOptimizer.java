@@ -269,12 +269,13 @@ public class GraphRelOptimizer {
                                                             config.getJoinQueueCapacity())
                                                     .withJoinByEdgeEnabled(
                                                             config.isJoinByEdgeEnabled());
-                                    if (!config.getJoinByForeignKeyUri().isEmpty()) {
-                                        ((JoinDecompositionRule.Config) ruleConfig)
-                                                .withForeignKeyMeta(
-                                                        new ForeignKeyMeta(
-                                                                config.getJoinByForeignKeyUri()));
-                                    }
+                                    ForeignKeyMeta foreignKeyMeta =
+                                            config.getJoinByForeignKeyUri().isEmpty()
+                                                    ? null
+                                                    : new ForeignKeyMeta(
+                                                            config.getJoinByForeignKeyUri());
+                                    ((JoinDecompositionRule.Config) ruleConfig)
+                                            .withForeignKeyMeta(foreignKeyMeta);
                                 }
                                 if (ruleConfig != null) {
                                     planner.addRule(
