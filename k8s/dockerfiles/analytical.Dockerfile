@@ -2,9 +2,10 @@
 
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+ARG BUILDER_VERSION=latest
 ARG VINEYARD_VERSION=latest
 ############### BUILDER: ANALYTICAL #######################
-FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
 
 ARG CI=false
 
@@ -58,7 +59,7 @@ COPY ./k8s/dockerfiles/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 ############### BUILDER: ANALYTICAL-JAVA #######################
-FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder-java
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder-java
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 

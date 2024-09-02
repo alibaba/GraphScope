@@ -14,6 +14,8 @@ ARCH              := $(subst x86_64,amd64,$(subst aarch64,arm64,$(PLATFORM)))
 
 VERSION ?= latest
 VINEYARD_VERSION ?= $(shell cat $(VINEYARD_VERSION_FILE))
+# Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space in CI workflow
+BUILDER_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
 # Flex Coordinator
@@ -92,6 +94,7 @@ coordinator:
 	    --target coordinator \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/coordinator:${VERSION} \
@@ -103,6 +106,7 @@ analytical:
 	    --target analytical \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/analytical:${VERSION} \
@@ -114,6 +118,7 @@ analytical-java:
 	    --target analytical-java \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg CI=${CI} \
 		-t graphscope/analytical-java:${VERSION} \
@@ -125,6 +130,7 @@ interactive-frontend:
 	    --target frontend \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg profile=$(PROFILE) \
 		--build-arg CI=${CI} \
@@ -137,6 +143,7 @@ interactive-executor:
 	    --target executor \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
 		--build-arg profile=$(PROFILE) \
 		--build-arg CI=${CI} \
