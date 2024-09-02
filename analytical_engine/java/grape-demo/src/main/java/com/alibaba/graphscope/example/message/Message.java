@@ -44,7 +44,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
             vertex.setValue(i);
             try {
                 // 内存处理
-                sendToNbr(iFragment,ctx, parallelMessageManager, vertex, 0);
+                sendToAdjList(iFragment,ctx, parallelMessageManager, vertex, 0);
             } catch (IOException e) {
                 logger.error("PEval error", e);
             }
@@ -66,14 +66,14 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         }
 
         // receive messages
-        receiveMessages(iFragment, ctx, parallelMessageManager);
+        receiveMessages(iFragment, ctx, parallelMessageManager, true);
 
         // sendToNbr(iFragment, parallelMessageManager, vertex, 0, 0);
         parallelSendToNbr(iFragment, parallelMessageManager, ctx);
     }
 
     void receiveMessages(IFragment<Long, Long, Long, Long> frag, MessageContext ctx,
-        ParallelMessageManager messageManager) {
+        ParallelMessageManager messageManager, boolean simple) {
         long start = System.currentTimeMillis();
         CountDownLatch countDownLatch = new CountDownLatch(ctx.threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
@@ -89,7 +89,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                         result = messageManager.getMessageInBuffer(messageInBuffer);
                         if (result) {
                             try {
-                                receiveMessageImpl(frag, messageInBuffer);
+                                receiveMessageImpl(frag, messageInBuffer, simple);
                             } catch (Exception e) {
                                 logger.error(
                                     "Error when receiving message in fragment {} thread {}",
@@ -113,24 +113,29 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
     }
 
     void receiveMessageImpl(IFragment<Long, Long, Long, Long> frag,
-        MessageInBuffer buffer) throws IOException {
+        MessageInBuffer buffer, boolean simple) throws IOException {
         FFIByteVector tmpVector = (FFIByteVector) FFIByteVectorFactory.INSTANCE.create();
         Vertex<Long> tmpVertex = FFITypeFactoryhelper.newVertexLong();
 
         List<LongArrayList> receivedMsg = new ArrayList<>();
-        while (buffer.getPureMessage(tmpVector)) {
-            tmpVector.touch();
-            FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(tmpVector);
-            long gid = inputStream.readLong();
-            if (!frag.innerVertexGid2Vertex(gid, tmpVertex)) {
-                logger.error("Fail to get lid from gid {}", gid);
-            }
-            int size = inputStream.readInt();
+        if (simple){
+            return ; // do nothing
+        }
+        else {
+            while (buffer.getPureMessage(tmpVector)) {
+                tmpVector.touch();
+                FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(tmpVector);
+                long gid = inputStream.readLong();
+                if (!frag.innerVertexGid2Vertex(gid, tmpVertex)) {
+                    logger.error("Fail to get lid from gid {}", gid);
+                }
+                int size = inputStream.readInt();
 
-            if (size != 0) {
-                for (int i = 0; i < size; i++) {
-                    LongArrayList path = PathSerAndDeser.deserialize(inputStream);
-                    receivedMsg.add(path);
+                if (size != 0) {
+                    for (int i = 0; i < size; i++) {
+                        LongArrayList path = PathSerAndDeser.deserialize(inputStream);
+                        receivedMsg.add(path);
+                    }
                 }
             }
         }
@@ -185,10 +190,6 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
             e.printStackTrace();
             ctx.executor.shutdown();
         }
-    }
-
-    void sendToNbr(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex, int threadId) throws IOException {
-        sendToAdjList(frag, ctx, messageManager, vertex, threadId);
     }
 
     void sendToAdjList(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex,  int threadId) throws IOException {
