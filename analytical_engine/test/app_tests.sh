@@ -453,8 +453,7 @@ then
     GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" 1 \
       "${test_dir}/property/p2p-31_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,int64_t" \
       1 "${test_dir}/property/p2p-31_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,int64_t" \
-      1 0 1 com.alibaba.graphscope.example.circle.parallel.formal.CircleAppParallel 10
-      # 1 0 1 com.alibaba.graphscope.example.sssp.SSSP
+      1 0 1 com.alibaba.graphscope.example.message.Message 5
 
     # GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
     #     1 "${test_dir}/projected_property/twitter_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \

@@ -360,40 +360,41 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& selectors_string,
                     int32_t expected_data_type,
                     vineyard::AnyType expected_tensor_type, int cur_time = 0) {
-  using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedParallelAppE<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
   worker->Init(comm_spec, spec);
   std::string lib_path = "";
-  if (cur_time == 0) {
-    worker->Query(basic_params, lib_path);
-  }
-  // std::ofstream ostream;
-  // std::string output_path =
-  //     grape::GetResultFilename(out_prefix, fragment->fid());
+  // if (cur_time == 0) {
+  worker->Query(basic_params, lib_path);
+  // }
+  std::ofstream ostream;
+  std::string output_path =
+      grape::GetResultFilename(out_prefix, fragment->fid());
 
-  // ostream.open(output_path);
-  // worker->Output(ostream);
+  ostream.open(output_path);
+  worker->Output(ostream);
   // ostream.close();
 
   std::shared_ptr<gs::JavaPIEProjectedContext<ProjectedFragmentType>> ctx =
       worker->GetContext();
   worker->Finalize();
 
-  // gs::rpc::graph::GraphDefPb graph_def;
-  // graph_def.set_graph_type(gs::rpc::graph::ARROW_PROJECTED);
+  gs::rpc::graph::GraphDefPb graph_def;
+  graph_def.set_graph_type(gs::rpc::graph::ARROW_PROJECTED);
 
   // auto selectors = gs::Selector::ParseSelectors(selectors_string).value();
   // auto selector = gs::Selector::parse(selector_string).value();
   // auto range = std::make_pair("", "");
 
-  // auto frag_wrapper =
-  //     std::make_shared<gs::FragmentWrapper<ProjectedFragmentType>>(
-  //         "graph_123", graph_def, fragment);
+  auto frag_wrapper =
+      std::make_shared<gs::FragmentWrapper<ProjectedFragmentType>>(
+          "graph_123", graph_def, fragment);
 
-  // auto ctx_wrapper = ctx->CreateInnerCtxWrapper(
-  //     "ctx_wrapper_" + vineyard::random_string(8), frag_wrapper);
+  // TO make sure context.output() is called.
+  auto ctx_wrapper = ctx->CreateInnerCtxWrapper(
+      "ctx_wrapper_" + vineyard::random_string(8), frag_wrapper);
   // if (ctx_wrapper->context_type() == "vertex_property") {
   //   auto vp_ctx_wrapper =
   //       std::dynamic_pointer_cast<gs::IVertexPropertyContextWrapper>(
@@ -540,7 +541,8 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
                   selector_string, selectors_string);
   } else {  // 3. run projected
     if (app_name.find("SSSP") != std::string::npos ||
-        app_name.find("CircleAppParallel") != std::string::npos) {
+        app_name.find("CircleAppParallel") != std::string::npos ||
+        app_name.find("Message") != std::string::npos) {
       pt.put("frag_name",
              "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>");
     } else {
@@ -577,7 +579,8 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
         }
       }
       if (app_name.find("SSSP") != std::string::npos ||
-          app_name.find("CircleAppParallel") != std::string::npos) {
+          app_name.find("CircleAppParallel") != std::string::npos ||
+          app_name.find("Message") != std::string::npos) {
         using ProjectedFragmentType =
             gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
         std::shared_ptr<ProjectedFragmentType> projected_fragment =
@@ -596,6 +599,9 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
                          vineyard::AnyType::Double, i);
           LOG(INFO) << "Finish project for times " << i
                     << " current memory usage: " << gs::getProcessMemory();
+          int dummy;
+          std::cin >> dummy;
+          LOG(INFO) << "Continue with dummy: " << dummy;
         }
       } else {
         using ProjectedFragmentType =

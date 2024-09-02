@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageContext> {
 
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
+    private List<LongArrayList> msgs = createMessages();
 
     @Override
     public void PEval(IFragment<Long, Long, Long, Long> iFragment,
@@ -61,7 +62,6 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         MessageContext ctx = (MessageContext) parallelContextBase;
 
         if (ctx.currentStep >= ctx.maxSteps) {
-            parallelMessageManager.forceContinue();
             return;
         }
 
@@ -136,7 +136,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         }
         tmpVector.delete();
         tmpVertex.delete();
-        logger.info("Received {} messages", receivedMsg.size());
+        // logger.info("Received {} messages", receivedMsg.size());
         receivedMsg.clear();
     }
 
@@ -154,15 +154,17 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                 new Runnable() {
                     @Override
                     public void run() {
+                        int cnt = 0;
+                        Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                         while (true) {
                             int curBegin =
                                 Math.min(atomicInteger.getAndAdd(chunkSize), originEnd);
                             int curEnd = Math.min(curBegin + chunkSize, originEnd);
-                            Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             if (curBegin >= originEnd) {
                                 break;
                             }
                             for (long i = curBegin; i < curEnd; ++i) {
+                                cnt += 1;
                                 vertex.setValue(i);
                                 try {
                                     sendToAdjList(frag, ctx, messageManager, vertex, finalTid);
@@ -171,6 +173,8 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                                 }
                             }
                         }
+                        vertex.delete();
+                        logger.info("Thread {} send {} vertices", finalTid, cnt);
                         countDownLatch.countDown();
                     }
                 });
@@ -181,7 +185,6 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
             e.printStackTrace();
             ctx.executor.shutdown();
         }
-        ctx.currentStep += 1;
     }
 
     void sendToNbr(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex, int threadId) throws IOException {
@@ -189,20 +192,22 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
     }
 
     void sendToAdjList(IFragment<Long, Long, Long, Long> frag, MessageContext ctx, ParallelMessageManager messageManager, Vertex<Long> vertex,  int threadId) throws IOException {
-        List<LongArrayList> msgs = createMessages();
+        
         FFIByteVectorOutputStream msgVector = ctx.getMsgVectorStream(threadId);
         AdjList<Long, Long> nbrs =  frag.getOutgoingAdjList(vertex);
         for (Nbr<Long,Long> nbr : nbrs.iterable()) {
             Vertex<Long> nbrVertex = nbr.neighbor();
             if (frag.isOuterVertex(nbrVertex)) {
-               msgVector.reset();
-               msgVector.writeLong(frag.getOuterVertexGid(nbrVertex));
-               msgVector.writeInt(msgs.size());
-                for (LongArrayList msg : msgs) {
-                    PathSerAndDeser.serialize(msgVector, msg);
+                for (int j = 0; j < 100; ++j){
+                    msgVector.reset();
+                    msgVector.writeLong(frag.getOuterVertexGid(nbrVertex));
+                    msgVector.writeInt(msgs.size());
+                    for (LongArrayList msg : msgs) {
+                        PathSerAndDeser.serialize(msgVector, msg);
+                    }
+                    msgVector.finishSetting();
+                    messageManager.sendToFragment(frag.getFragId(nbrVertex),msgVector.getVector(), threadId);
                 }
-                msgVector.finishSetting();
-                messageManager.sendToFragment(frag.getFragId(nbrVertex),msgVector.getVector(), threadId);
             }
             else {
                 // skip for send to inner vertex
@@ -217,6 +222,7 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
             for (int j = 0; j < 10; ++j) {
                 curList.add(j);
             }
+            list.add(curList);
         }
         return list;
     }

@@ -32,6 +32,7 @@ public class MessageContext extends
     public void Init(IFragment<Long, Long, Long, Long> iFragment,
         ParallelMessageManager parallelMessageManager, JSONObject jsonObject) {
         createFFIContext(iFragment, StdString.class, false);
+        parallelMessageManager.initChannels(threadNum);
         currentStep = 0;
         if (!jsonObject.containsKey("maxSteps")) {
             maxSteps = 10;
