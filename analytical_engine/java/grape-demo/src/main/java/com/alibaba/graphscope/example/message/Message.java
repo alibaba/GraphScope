@@ -2,6 +2,7 @@ package com.alibaba.graphscope.example.message;
 
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.context.ParallelContextBase;
+import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.Nbr;
@@ -207,9 +208,11 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
         else {
             FFIByteVectorOutputStream msgVector = ctx.getMsgVectorStream(threadId);
             AdjList<Long, Long> nbrs =  frag.getOutgoingAdjList(vertex);
+            logger.info("nbr size : {}" , nbrs.size());
             
             Nbr<Long,Long> begin = nbrs.begin();
             Nbr<Long,Long> end = nbrs.end();
+            logger.info("begin addr {}, end addr {}", begin.getAddress(), end.getAddress());
             while (!begin.eq(end)){
                 Vertex<Long> nbrVertex = begin.neighbor();
                 if (frag.isOuterVertex(nbrVertex)) {
@@ -229,6 +232,8 @@ public class Message implements ParallelAppBase<Long, Long, Long, Long, MessageC
                 }
                 begin.inc();
             }
+            begin.delete();
+            end.delete();
 
 
             // if (vertex.getValue() % 1000 != 0) {

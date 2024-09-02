@@ -21,6 +21,7 @@ import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGM
 import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY;
 import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
+import static com.alibaba.graphscope.utils.CppClassName.PROJECTED_NBR;
 
 import com.alibaba.fastffi.FFIForeignType;
 import com.alibaba.fastffi.FFIPointer;
@@ -32,6 +33,7 @@ import com.alibaba.graphscope.ds.DenseVertexSet;
 import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.PrimitiveTypedArray;
+import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.StringTypedArray;
 import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.ds.Vertex;
@@ -440,6 +442,11 @@ public class FFITypeFactoryhelper {
 
     public static DoubleMsg newDoubleMsg(double value) {
         return DoubleMsg.factory.create(value);
+    }
+
+    public static <VID_T,EDATA_T> ProjectedNbr<VID_T,EDATA_T> newProjectedNbr(Class<? extends VID_T> vidClz, Class<? extends EDATA_T> edataClz) {
+        ProjectedNbr.Factory<VID_T,EDATA_T> factory =  FFITypeFactory.getFactory(ProjectedNbr.class, PROJECTED_NBR + "<" + javaType2CppType(vidClz) + "," + javaType2CppType(edataClz) + ">");
+        return factory.create();
     }
 
     /**

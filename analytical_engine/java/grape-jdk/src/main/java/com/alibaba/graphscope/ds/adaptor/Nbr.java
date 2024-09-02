@@ -40,4 +40,8 @@ public interface Nbr<VID_T, EDATA_T> {
     boolean eq(Nbr<VID_T, EDATA_T> rhs);
 
     Nbr<VID_T, EDATA_T> dec();
+
+    void delete();
+
+    long getAddress();
 }

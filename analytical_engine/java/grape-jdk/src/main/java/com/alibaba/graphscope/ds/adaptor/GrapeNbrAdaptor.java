@@ -40,6 +40,7 @@ public class GrapeNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
         nbr.setAddress(address);
     }
 
+    @Override
     public long getAddress() {
         return nbr.getAddress();
     }
@@ -79,5 +80,10 @@ public class GrapeNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
     public Nbr<VID_T, EDATA_T> dec() {
         logger.error("No implementation for dec in grapeNbr");
         return null;
+    }
+
+    @Override
+    public void delete() {
+        nbr.delete();
     }
 }

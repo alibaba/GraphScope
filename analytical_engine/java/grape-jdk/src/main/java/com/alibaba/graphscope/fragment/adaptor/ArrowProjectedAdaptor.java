@@ -86,20 +86,20 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     public AdjList<VID_T, EDATA_T> getIncomingAdjList(Vertex<VID_T> vertex) {
         if (edataPrimitive)
             return new ProjectedAdjListAdaptor<>(
-                    fragment.getIncomingAdjList(vertex), primitiveEDataArray);
+                    fragment.getIncomingAdjList(vertex, getVidClass(), getEdataClass()), primitiveEDataArray);
         else
             return new ProjectedAdjListAdaptor<>(
-                    fragment.getIncomingAdjList(vertex), complexEDataArray);
+                    fragment.getIncomingAdjList(vertex, getVidClass(), getEdataClass()), complexEDataArray);
     }
 
     @Override
     public AdjList<VID_T, EDATA_T> getOutgoingAdjList(Vertex<VID_T> vertex) {
         if (edataPrimitive)
             return new ProjectedAdjListAdaptor<>(
-                    fragment.getOutgoingAdjList(vertex), primitiveEDataArray);
+                    fragment.getOutgoingAdjList(vertex, getVidClass(), getEdataClass()), primitiveEDataArray);
         else
             return new ProjectedAdjListAdaptor<>(
-                    fragment.getOutgoingAdjList(vertex), complexEDataArray);
+                    fragment.getOutgoingAdjList(vertex, getVidClass(), getEdataClass()), complexEDataArray);
     }
 
     /**

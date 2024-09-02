@@ -74,68 +74,6 @@ public interface ProjectedAdjList<VID_T, EDATA_T> {
      * @return false if empty.
      */
     boolean notEmpty();
-    
 
-    public class ProjectedAdjListImpl<VID_T, EDATA_T> implements ProjectedAdjList<VID_T, EDATA_T> {
-        private ProjectedNbr<VID_T, EDATA_T> begin;
-        private ProjectedNbr<VID_T, EDATA_T> end;
-        private int elementSize;
-
-        public ProjectedAdjListImpl(ProjectedNbr<VID_T, EDATA_T> begin, ProjectedNbr<VID_T, EDATA_T> end) {
-            this.begin = begin;
-            this.end = end;
-            //If VID_T is long, elementSize is 16, otherwise 8
-            elementSize = 16;
-        }
-
-        ProjectedNbr<VID_T, EDATA_T> begin() {
-            return begin;
-        }
-
-        ProjectedNbr<VID_T, EDATA_T> end() {
-            return end;
-        }
-
-        long size() {
-            return (end.getAddress() - begin.getAddress()) / elementSize;
-        }
-
-        boolean empty() {
-            return begin.eq(end);
-        }
-
-        boolean notEmpty() {
-            return !empty();
-        }
-
-        /**
-         * The iterator for ProjectedAdjList. You can use enhanced for loop instead of directly using
-         * this.
-         *
-         * @return the iterator.
-         */
-        default Iterable<ProjectedNbr<VID_T, EDATA_T>> iterable() {
-            return () ->
-                    new Iterator<ProjectedNbr<VID_T, EDATA_T>>() {
-                        ProjectedNbr<VID_T, EDATA_T> cur = begin().dec();
-                        ProjectedNbr<VID_T, EDATA_T> end = end();
-                        boolean flag = false;
-
-                        @Override
-                        public boolean hasNext() {
-                            if (!flag) {
-                                cur = cur.inc();
-                                flag = !cur.eq(end);
-                            }
-                            return flag;
-                        }
-
-                        @Override
-                        public ProjectedNbr<VID_T, EDATA_T> next() {
-                            flag = false;
-                            return cur;
-                        }
-                    };
-        }
-    }
+    Iterable<ProjectedNbr<VID_T,EDATA_T>> iterable();
 }

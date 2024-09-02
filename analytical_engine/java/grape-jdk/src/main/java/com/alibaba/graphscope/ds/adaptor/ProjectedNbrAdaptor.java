@@ -72,4 +72,14 @@ public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> 
         nbr.dec();
         return this;
     }
+
+    @Override
+    public void delete() {
+        nbr.delete();
+    }
+
+    @Override
+    public long getAddress() {
+        return nbr.getAddress();
+    }
 }

@@ -319,22 +319,22 @@ import com.alibaba.fastffi.FFIGenBatch;
                                 cxx = {"uint64_t", "std::string"},
                                 java = {"Long", STRING_VIEW}),
                     }),
-            @FFIGen(
-                    type = "com.alibaba.graphscope.ds.ProjectedAdjList",
-                    templates = {
-                        @CXXTemplate(
-                                cxx = {"uint64_t", "double"},
-                                java = {"Long", "Double"}),
-                        @CXXTemplate(
-                                cxx = {"uint64_t", "int64_t"},
-                                java = {"Long", "Long"}),
-                        @CXXTemplate(
-                                cxx = {"uint64_t", "int32_t"},
-                                java = {"Long", "Integer"}),
-                        @CXXTemplate(
-                                cxx = {"uint64_t", "std::string"},
-                                java = {"Long", STRING_VIEW}),
-                    }),
+//            @FFIGen(
+//                    type = "com.alibaba.graphscope.ds.ProjectedAdjList",
+//                    templates = {
+//                        @CXXTemplate(
+//                                cxx = {"uint64_t", "double"},
+//                                java = {"Long", "Double"}),
+//                        @CXXTemplate(
+//                                cxx = {"uint64_t", "int64_t"},
+//                                java = {"Long", "Long"}),
+//                        @CXXTemplate(
+//                                cxx = {"uint64_t", "int32_t"},
+//                                java = {"Long", "Integer"}),
+//                        @CXXTemplate(
+//                                cxx = {"uint64_t", "std::string"},
+//                                java = {"Long", STRING_VIEW}),
+//                    }),
             @FFIGen(
                     type = JAVA_ARROW_PROJECTED_FRAGMENT,
                     templates = {

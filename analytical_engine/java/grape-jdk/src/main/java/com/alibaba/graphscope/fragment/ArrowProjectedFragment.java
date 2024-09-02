@@ -26,9 +26,14 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
 import com.alibaba.graphscope.ds.BaseTypedArray;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
+import com.alibaba.graphscope.ds.ProjectedNbr;
+import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.ds.impl.ProjectedAdjListImpl;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 // import com.alibaba.graphscope.utils.LongIdParser;
 
 /**
@@ -50,25 +55,38 @@ public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>
 
     // private LongIdParser idParser = new LongIdParser(fragment.fnum(), 1);;
 
-    ProjectedAdjList<VID_T, EDATA_T> getIncomingAdjList(@CXXReference Vertex<VID_T> vertex) {
-
-    }
-
-    ProjectedAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex) {
-        PropertyNbrUnit<VID_T> nbrUnit = getOutEdgesPtr();
+    default ProjectedAdjList<VID_T, EDATA_T> getIncomingAdjList(Vertex<VID_T> vertex, Class<? extends VID_T> vidType, Class<? extends EDATA_T> edataType) {
+        PropertyNbrUnit<VID_T> nbrUnit = getInEdgesPtr();
         long nbrUnitInitAddress = nbrUnit.getAddress();
-        long offsetEndPtrFirstAddr = this.projectedFragment.getOEOffsetsEndPtr();
-        
-        long offsetBeginPtrFirstAddr = this.projectedFragment.getOEOffsetsBeginPtr();
+        long offsetEndPtrFirstAddr = getIEOffsetsEndPtr();
+        long offsetBeginPtrFirstAddr = getIEOffsetsBeginPtr();
         // long offset = idParser.getOffset(lid);
-        long offset = vertex.getValue();
+        long offset = (long) vertex.getValue();
         long oeBeginOffset = JavaRuntime.getLong(offsetBeginPtrFirstAddr + offset * 8);
         long oeEndOffset = JavaRuntime.getLong(offsetEndPtrFirstAddr + offset * 8);
-        long curAddress = nbrUnitInitAddress + nbrUnitEleSize * oeBeginOffset;
-        long endAddress = nbrUnitInitAddress + nbrUnitEleSize * oeEndOffset;
-        ProjectedNbr<VID_T, EDATA_T> begin = FFITypeFactoryhelper.newProjectedNbr();
+        long curAddress = nbrUnitInitAddress + 16 * oeBeginOffset;
+        long endAddress = nbrUnitInitAddress + 16 * oeEndOffset;
+        ProjectedNbr<VID_T, EDATA_T> begin = FFITypeFactoryhelper.newProjectedNbr(vidType, edataType);
         begin.setAddress(curAddress);
-        ProjectedNbr<VID_T, EDATA_T> end = FFITypeFactoryhelper.newProjectedNbr();
+        ProjectedNbr<VID_T, EDATA_T> end = FFITypeFactoryhelper.newProjectedNbr(vidType, edataType);
+        end.setAddress(endAddress);
+        return new ProjectedAdjListImpl<VID_T, EDATA_T>(begin, end);
+    }
+
+    default ProjectedAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex, Class<? extends VID_T> vidType, Class<? extends EDATA_T> edataType) {
+        PropertyNbrUnit<VID_T> nbrUnit = getOutEdgesPtr();
+        long nbrUnitInitAddress = nbrUnit.getAddress();
+        long offsetBeginPtrFirstAddr = getOEOffsetsBeginPtr();
+        long offsetEndPtrFirstAddr = getOEOffsetsEndPtr();
+        // long offset = idParser.getOffset(lid);
+        long offset = (long) vertex.getValue();
+        long oeBeginOffset = JavaRuntime.getLong(offsetBeginPtrFirstAddr + offset * 8);
+        long oeEndOffset = JavaRuntime.getLong(offsetEndPtrFirstAddr + offset * 8);
+        long curAddress = nbrUnitInitAddress + 16 * oeBeginOffset;
+        long endAddress = nbrUnitInitAddress + 16 * oeEndOffset;
+        ProjectedNbr<VID_T, EDATA_T> begin = FFITypeFactoryhelper.newProjectedNbr(vidType, edataType);
+        begin.setAddress(curAddress);
+        ProjectedNbr<VID_T, EDATA_T> end = FFITypeFactoryhelper.newProjectedNbr(vidType, edataType);
         end.setAddress(endAddress);
         return new ProjectedAdjListImpl<VID_T, EDATA_T>(begin, end);
     }
