@@ -99,7 +99,7 @@ bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
     } else if constexpr (std::is_same<T, gs::Day>::value) {
       std::get<I>(tuple).day = json[I]["value"].GetUint();
     } else {
-      std::get<I>(tuple) = json[I]["value"].GetObj();
+      std::get<I>(tuple) = json[I]["value"].GetObject();
     }
   } else {
     LOG(ERROR) << "No value found in input";
