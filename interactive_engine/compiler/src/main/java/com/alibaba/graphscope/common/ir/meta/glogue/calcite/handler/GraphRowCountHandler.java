@@ -134,6 +134,12 @@ public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     return mq.getRowCount(subset);
                 }
             }
+            Pattern original =
+                    (node instanceof GraphExtendIntersect)
+                            ? ((GraphExtendIntersect) node).getGlogueEdge().getDstPattern()
+                            : ((GraphJoinDecomposition) node).getParentPatten();
+            return mq.getRowCount(
+                    new GraphPattern(node.getCluster(), node.getTraitSet(), original));
         } else if (node instanceof AbstractBindableTableScan) {
             return getRowCount((AbstractBindableTableScan) node, mq);
         } else if (node instanceof GraphLogicalPathExpand) {
