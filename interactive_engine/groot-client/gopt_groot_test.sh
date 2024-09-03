@@ -7,6 +7,7 @@ ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep |
 cd ${BASE_DIR}/../assembly/target && tar xvzf groot.tar.gz && cd groot
 
 declare -r CONFIG_FILE="/tmp/groot.config"
+export LOG_DIR="/tmp/log/graphscope"
 
 # necessary python packages for data import, including pandas, graphscope and gremlin_python
 if ! python3 -c "import pandas" &> /dev/null; then
