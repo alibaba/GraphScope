@@ -21,9 +21,8 @@ on:
       - 'coordinator/**'
       - 'flex/**'
       - 'python/**'
-  # Commented out to save time; reopen after install-deps refactored.
-  # pull_request:
-  #   branches: [ "main" ]
+   pull_request:
+     branches: [ "main" ]
   schedule:
     - cron: '38 20 * * 5'
 
@@ -103,8 +102,7 @@ jobs:
         cd analytical_engine
         mkdir build
         cd build
-        cmake -DBUILD_TESTS=OFF \
-              -DENABLE_JAVA_SDK=OFF ..
+        cmake ..
         make
         echo 'Clean extra artifacts to free device space.'
         du -hcd1 ~ /opt/graphscope || true
