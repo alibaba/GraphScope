@@ -138,6 +138,34 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
             << default_graph;
 }
 
+void config_log_level(int log_level, int verbose_level) {
+  if (getenv("GLOG_minloglevel") != nullptr) {
+    FLAGS_stderrthreshold = atoi(getenv("GLOG_minloglevel"));
+  } else {
+    if (log_level == 0) {
+      FLAGS_minloglevel = 0;
+    } else if (log_level == 1) {
+      FLAGS_minloglevel = 1;
+    } else if (log_level == 2) {
+      FLAGS_minloglevel = 2;
+    } else if (log_level == 3) {
+      FLAGS_minloglevel = 3;
+    } else {
+      LOG(ERROR) << "Unsupported log level: " << log_level;
+    }
+  }
+
+  // If environment variable is set, we will use it
+  if (getenv("GLOG_v") != nullptr) {
+    FLAGS_v = atoi(getenv("GLOG_v"));
+  } else {
+    if (verbose_level >= 0) {
+      FLAGS_v = verbose_level;
+    } else {
+      LOG(ERROR) << "Unsupported verbose level: " << verbose_level;
+    }
+  }
+}
 }  // namespace gs
 
 /**
@@ -206,6 +234,9 @@ int main(int argc, char** argv) {
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
   service_config.enable_adhoc_handler = vm["enable-adhoc-handler"].as<bool>();
+
+  // Config log level
+  gs::config_log_level(service_config.log_level, service_config.verbose_level);
 
   auto& db = gs::GraphDB::get();
 

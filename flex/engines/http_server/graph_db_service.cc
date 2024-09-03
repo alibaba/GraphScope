@@ -45,7 +45,9 @@ ServiceConfig::ServiceConfig()
       start_compiler(false),
       enable_gremlin(false),
       enable_bolt(false),
-      metadata_store_type_(gs::MetadataStoreType::kLocalFile) {}
+      metadata_store_type_(gs::MetadataStoreType::kLocalFile),
+      log_level(DEFAULT_LOG_LEVEL),
+      verbose_level(DEFAULT_VERBOSE_LEVEL) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";

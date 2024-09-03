@@ -19,6 +19,7 @@
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -45,6 +46,13 @@ inline int64_t GetCurrentTimeStamp() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::system_clock::now().time_since_epoch())
       .count();
+}
+
+inline std::string toUpper(const std::string str) {
+  std::string upper_str = str;
+  std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(),
+                 ::toupper);
+  return upper_str;
 }
 
 // With the help of the following functions, we can serialize and deserialize

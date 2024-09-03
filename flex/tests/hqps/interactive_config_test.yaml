@@ -1,4 +1,5 @@
 log_level: INFO
+verbose_level: 10
 default_graph: modern_graph
 compute_engine:
   type: hiactor
