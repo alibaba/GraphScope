@@ -98,7 +98,9 @@ data:
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
     log.recycle.enable={{ .Values.logRecycleEnable }}
-    collect.statistics={{ .Values.collectStatistics }}
+    collect.statistics={{ .Values.collect.statistics }}
+    collect.statistics.interval.min={{ .Values.collect.statistics.interval }}
+    collect.statistics.initial.delay.min={{ .Values.collect.statistics.initial.delay }}
     log.recycle.offset.reserve={{ .Values.logRecycleOffsetReserve }}
 
     ## Extra Config
