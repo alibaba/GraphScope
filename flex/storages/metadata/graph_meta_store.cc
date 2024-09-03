@@ -90,17 +90,14 @@ std::string GraphMeta::ToJson() const {
       json.AddMember("schema", tempDoc, json.GetAllocator());
     }
   }
-  {
-    rapidjson::Value plugin_array(rapidjson::kArrayType);
-    for (auto& plugin_meta : plugin_metas) {
-      rapidjson::Document tempDoc;
-      if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-        LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
-      } else {
-        plugin_array.PushBack(tempDoc, json.GetAllocator());
-      }
+  json.AddMember("stored_procedures", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& plugin_meta : plugin_metas) {
+    rapidjson::Document tempDoc;
+    if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
+      LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
+    } else {
+      json["stored_procedures"].PushBack(tempDoc, json.GetAllocator());
     }
-    json.AddMember("stored_procedures", plugin_array, json.GetAllocator());
   }
   json.AddMember("store_type", store_type, json.GetAllocator());
   return rapidjson_stringify(json);
@@ -228,38 +225,29 @@ std::string PluginMeta::ToJson() const {
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("bound_graph", bound_graph, json.GetAllocator());
   json.AddMember("description", description, json.GetAllocator());
-  {
-    rapidjson::Value params_array(rapidjson::kArrayType);
-    for (auto& param : params) {
-      rapidjson::Document tempDoc;
-      tempDoc.AddMember("name", param.name, tempDoc.GetAllocator());
-      tempDoc.AddMember(
-          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
-          tempDoc.GetAllocator());
-      params_array.PushBack(tempDoc, json.GetAllocator());
-    }
-    json.AddMember("params", params_array, json.GetAllocator());
+  json.AddMember("params", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& param : params) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    tempDoc.AddMember("name", param.name, json.GetAllocator());
+    tempDoc.AddMember(
+        "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+        json.GetAllocator());
+    json["params"].PushBack(tempDoc, json.GetAllocator());
   }
-  {
-    rapidjson::Value returns_array(rapidjson::kArrayType);
-    for (auto& ret : returns) {
-      rapidjson::Document tempDoc;
-      tempDoc.AddMember("name", ret.name, tempDoc.GetAllocator());
-      tempDoc.AddMember("type",
-                        config_parsing::PrimitivePropertyTypeToString(ret.type),
-                        tempDoc.GetAllocator());
-      returns_array.PushBack(tempDoc, json.GetAllocator());
-    }
-    json.AddMember("returns", returns_array, json.GetAllocator());
+  json.AddMember("returns", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& ret : returns) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    tempDoc.AddMember("name", ret.name, json.GetAllocator());
+    tempDoc.AddMember("type",
+                      config_parsing::PrimitivePropertyTypeToString(ret.type),
+                      json.GetAllocator());
+    json["returns"].PushBack(tempDoc, json.GetAllocator());
   }
-  {
-    rapidjson::Value option_object(rapidjson::kObjectType);
-    for (auto& opt : option) {
-      rapidjson::Value key(opt.first.c_str(), json.GetAllocator());
-      rapidjson::Value value(opt.second.c_str(), json.GetAllocator());
-      option_object.AddMember(key, value, json.GetAllocator());
-    }
-    json.AddMember("option", option_object, json.GetAllocator());
+  json.AddMember("option", rapidjson::kObjectType, json.GetAllocator());
+  for (auto& opt : option) {
+    rapidjson::Value key(opt.first.c_str(), json.GetAllocator());
+    rapidjson::Value value(opt.second.c_str(), json.GetAllocator());
+    json["option"].AddMember(key, value, json.GetAllocator());
   }
   json.AddMember("creation_time", creation_time, json.GetAllocator());
   json.AddMember("update_time", update_time, json.GetAllocator());
@@ -339,12 +327,9 @@ std::string JobMeta::ToJson(bool print_log) const {
   } else {
     json.AddMember("log_path", log_path, json.GetAllocator());
   }
-  {
-    rapidjson::Value detail(rapidjson::kObjectType);
-    detail.AddMember("graph_id", graph_id, json.GetAllocator());
-    detail.AddMember("process_id", process_id, json.GetAllocator());
-    json.AddMember("detail", detail, json.GetAllocator());
-  }
+  json.AddMember("detail", rapidjson::kObjectType, json.GetAllocator());
+  json["detail"].AddMember("graph_id", graph_id, json.GetAllocator());
+  json["detail"].AddMember("process_id", process_id, json.GetAllocator());
   json.AddMember("type", type, json.GetAllocator());
   return rapidjson_stringify(json);
 }
@@ -461,17 +446,15 @@ std::string CreateGraphMetaRequest::ToString() const {
     json.AddMember("data_update_time", 0, json.GetAllocator());
   }
   json.AddMember("creation_time", creation_time, json.GetAllocator());
-  {
-    rapidjson::Value plugin_array(rapidjson::kArrayType);
-    for (auto& plugin_meta : plugin_metas) {
-      rapidjson::Document tempDoc;
-      if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-        LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
-      } else {
-        plugin_array.PushBack(tempDoc, json.GetAllocator());
-      }
+
+  json.AddMember("stored_procedures", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& plugin_meta : plugin_metas) {
+    rapidjson::Document tempDoc;
+    if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
+      LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
+    } else {
+      json["stored_procedures"].PushBack(tempDoc, json.GetAllocator());
     }
-    json.AddMember("stored_procedures", plugin_array, json.GetAllocator());
   }
   return rapidjson_stringify(json);
 }
@@ -523,40 +506,31 @@ std::string CreatePluginMetaRequest::ToString() const {
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("creation_time", creation_time, json.GetAllocator());
   json.AddMember("description", description, json.GetAllocator());
-  {
-    rapidjson::Document params_doc;
-    for (auto& param : params) {
-      rapidjson::Document param_json(rapidjson::kObjectType);
-      param_json.AddMember("name", param.name, params_doc.GetAllocator());
-      param_json.AddMember(
-          "type", config_parsing::PrimitivePropertyTypeToString(param.type),
-          params_doc.GetAllocator());
-      params_doc.PushBack(param_json, params_doc.GetAllocator());
-    }
-    json.AddMember("params", params_doc, json.GetAllocator());
+  json.AddMember("params", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& param : params) {
+    rapidjson::Document param_json(rapidjson::kObjectType);
+    param_json.AddMember("name", param.name, json.GetAllocator());
+    param_json.AddMember(
+        "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+        json.GetAllocator());
+    json["params"].PushBack(param_json, json.GetAllocator());
   }
-  {
-    rapidjson::Document returns_doc;
-    for (auto& ret : returns) {
-      rapidjson::Document ret_json(rapidjson::kObjectType);
-      ret_json.AddMember("name", ret.name, returns_doc.GetAllocator());
-      ret_json.AddMember(
-          "type", config_parsing::PrimitivePropertyTypeToString(ret.type),
-          returns_doc.GetAllocator());
-      returns_doc.PushBack(ret_json, returns_doc.GetAllocator());
-    }
-    json.AddMember("returns", returns_doc, json.GetAllocator());
+  json.AddMember("returns", rapidjson::kArrayType, json.GetAllocator());
+  for (auto& ret : returns) {
+    rapidjson::Document ret_json(rapidjson::kObjectType);
+    ret_json.AddMember("name", ret.name, json.GetAllocator());
+    ret_json.AddMember(
+        "type", config_parsing::PrimitivePropertyTypeToString(ret.type),
+        json.GetAllocator());
+    json["returns"].PushBack(ret_json, json.GetAllocator());
   }
   json.AddMember("library", library, json.GetAllocator());
-  {
-    rapidjson::Document option_doc;
-    for (auto& opt : option) {
-      option_doc.AddMember(
-          rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
-          rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
-          json.GetAllocator());
-    }
-    json.AddMember("option", option_doc, json.GetAllocator());
+  json.AddMember("option", rapidjson::kObjectType, json.GetAllocator());
+  for (auto& opt : option) {
+    json["option"].AddMember(
+        rapidjson::Value(opt.first.c_str(), json.GetAllocator()),
+        rapidjson::Value(opt.second.c_str(), json.GetAllocator()),
+        json.GetAllocator());
   }
   json.AddMember("query", query, json.GetAllocator());
   json.AddMember("type", type, json.GetAllocator());

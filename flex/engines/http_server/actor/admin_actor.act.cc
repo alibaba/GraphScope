@@ -1187,17 +1187,15 @@ seastar::future<admin_query_result> admin_actor::service_status(
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          {
-            rapidjson::Document graph_json;
-            if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
-              LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
-              return seastar::make_exception_future<admin_query_result>(
-                  gs::Status(
-                      gs::StatusCode::INTERNAL_ERROR,
-                      "Fail to parse graph meta: " + graph_meta.ToJson()));
-            }
-            res.AddMember("graph", graph_json, res.GetAllocator());
+          rapidjson::Document graph_json;
+          if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
+            LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
+            return seastar::make_exception_future<admin_query_result>(
+                gs::Status(
+                    gs::StatusCode::INTERNAL_ERROR,
+                    "Fail to parse graph meta: " + graph_meta.ToJson()));
           }
+          res.AddMember("graph", graph_json, res.GetAllocator());
         } else {
           LOG(ERROR) << "Fail to get all procedures: "
                      << get_all_procedure_res.status().error_message();
@@ -1241,13 +1239,13 @@ seastar::future<admin_query_result> admin_actor::node_status(
     } else {
       ss << "cpu_usage is " << cpu_usage.first << " / " << cpu_usage.second;
     }
-    json.AddMember("cpu_usage", ss.str(), json.GetAllocator());
+    rapidjson::Pointer("/cpu_usage").Set(json, ss.str());
   }
   {
     std::stringstream ss;
     ss << "memory_usage is " << gs::memory_to_mb_str(mem_usage.first) << " / "
        << gs::memory_to_mb_str(mem_usage.second);
-    json.AddMember("memory_usage", ss.str(), json.GetAllocator());
+    rapidjson::Pointer("/memory_usage").Set(json, ss.str());
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(gs::rapidjson_stringify(json)));
