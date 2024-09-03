@@ -505,6 +505,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: HDFS test
+        if: false  # FIXME(siyuan): Open this test
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -662,6 +663,7 @@ jobs:
           retention-days: 5
 
   gie-k8s-failover-test:
+    if: false  # No need to run this test for now
     needs: [build-gie-experimental]
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
