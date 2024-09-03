@@ -39,7 +39,7 @@ ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep |
 rm -r ${GROOT_DIR}/data 
 rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
-    echo "gaia_on_groot gremlin test fail"
+    echo "gopt_on_groot gremlin test fail"
     exit 1
 fi
 
@@ -57,7 +57,7 @@ ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep |
 rm -r ${GROOT_DIR}/data 
 rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
-    echo "gaia_on_groot cypher test fail"
+    echo "gopt_on_groot cypher test fail"
     exit 1
 fi
 
@@ -66,7 +66,7 @@ GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 sleep 30
 # load data
 cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph ldbc
-sleep 60
+sleep 360
 # run ldbc graph test
 cd ${COMPILER_DIR} && make ldbc_test && make simple_test && make pattern_test
 exit_code=$?
@@ -75,6 +75,6 @@ ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep |
 rm -r ${GROOT_DIR}/data 
 rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
-    echo "gaia_on_groot ldbc test fail"
+    echo "gopt_on_groot ldbc test fail"
     exit 1
 fi

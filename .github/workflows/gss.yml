@@ -84,12 +84,12 @@ jobs:
         mvn clean install -Pgroot-data-load --quiet
         sccache --show-stats
 
-    - name: Gremlin Test
-      run: |
-        . ${HOME}/.graphscope_env
-        cd interactive_engine/groot-server
-        # the ir-core based test
-        mvn test -P gremlin-test
+    # - name: Gremlin Test
+    #   run: |
+    #     . ${HOME}/.graphscope_env
+    #     cd interactive_engine/groot-server
+    #     # the ir-core based test
+    #     mvn test -P gremlin-test
 
     - name: Groot with GOpt Integration Test
       run: |
