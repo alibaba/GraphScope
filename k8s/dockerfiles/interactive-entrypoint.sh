@@ -49,7 +49,7 @@ function prepare_workspace() {
         echo "Workspace ${workspace} already exists"
         return 0
     fi
-    # prepare engine_config.yaml
+    # prepare interactive_config.yaml
     engine_config_path="${workspace}/conf/interactive_config.yaml"
     cp /opt/flex/share/interactive_config.yaml $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
@@ -78,7 +78,7 @@ function launch_service() {
         exit 1
     fi
     local workspace=$1
-    engine_config_path="${workspace}/conf/engine_config.yaml"
+    engine_config_path="${workspace}/conf/interactive_config.yaml"
     # start the service
     start_cmd="${INTERACTIVE_SERVER_BIN} -c ${engine_config_path}"
     start_cmd="${start_cmd} -w ${workspace}"
