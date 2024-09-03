@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2023 Alibaba Group Holding Limited. All Rights Reserved.
+# Copyright 2024 Alibaba Group Holding Limited. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,15 @@ import sys
 
 import click
 
+if "site-packages" not in os.path.dirname(os.path.realpath(__file__)):
+    sys.path.insert(
+        0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..")
+    )
+
 try:
     import graphscope
+    from graphscope.gsctl.commands import get_command_collection
+    from graphscope.gsctl.config import get_current_context
 except ModuleNotFoundError:
     # if graphscope is not installed, only basic functions or utilities
     # can be used, e.g. install dependencies
@@ -37,8 +44,6 @@ def cli():
         from dev import cli as dev_cli
 
         dev_cli()
-    from graphscope.gsctl.commands import get_command_collection
-    from graphscope.gsctl.config import get_current_context
 
     context = get_current_context()
     # get the specified commands under the FLEX architecture

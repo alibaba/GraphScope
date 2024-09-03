@@ -205,12 +205,12 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
             int propertyId);
 
     @FFINameAlias("GetData<uint32_t>")
-    long getIntData(
+    int getIntData(
             @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
             int propertyId);
 
     @FFINameAlias("GetData<double>")
-    long getDoubleData(
+    double getDoubleData(
             @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
             int propertyId);
 

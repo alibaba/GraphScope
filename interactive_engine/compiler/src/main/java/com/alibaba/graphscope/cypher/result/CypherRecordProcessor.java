@@ -17,9 +17,15 @@
 package com.alibaba.graphscope.cypher.result;
 
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
+import com.google.common.collect.ImmutableList;
 
 import org.neo4j.fabric.stream.summary.EmptySummary;
 import org.neo4j.fabric.stream.summary.Summary;
@@ -32,6 +38,7 @@ import org.neo4j.kernel.impl.query.QuerySubscriber;
 import org.neo4j.values.AnyValue;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * return streaming records in a reactive way
@@ -41,12 +48,20 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     private final QuerySubscriber subscriber;
     private final StreamIterator<IrResult.Record> recordIterator;
     private final Summary summary;
+    private final QueryTimeoutConfig timeoutConfig;
+    private final QueryStatusCallback statusCallback;
 
-    public CypherRecordProcessor(RecordParser<AnyValue> recordParser, QuerySubscriber subscriber) {
+    public CypherRecordProcessor(
+            RecordParser<AnyValue> recordParser,
+            QuerySubscriber subscriber,
+            QueryTimeoutConfig timeoutConfig,
+            QueryStatusCallback statusCallback) {
         this.recordParser = recordParser;
         this.subscriber = subscriber;
         this.recordIterator = new StreamIterator<>();
         this.summary = new EmptySummary();
+        this.timeoutConfig = timeoutConfig;
+        this.statusCallback = statusCallback;
         initializeSubscriber();
     }
 
@@ -83,7 +98,11 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     public void request(long l) throws Exception {
         while (l > 0 && recordIterator.hasNext()) {
             IrResult.Record record = recordIterator.next();
-            List<AnyValue> columns = recordParser.parseFrom(record);
+            List<AnyValue> columns =
+                    ClassUtils.callExceptionWithDetails(
+                            () -> recordParser.parseFrom(record),
+                            Code.CYPHER_INVALID_RESULT,
+                            Map.of("QueryId", statusCallback.getQueryLogger().getQueryId()));
             for (int i = 0; i < columns.size(); i++) {
                 subscriber.onField(i, columns.get(i));
             }
@@ -118,6 +137,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     public void onCompleted() {
         try {
             this.recordIterator.finish();
+            this.statusCallback.onSuccessEnd(ImmutableList.of());
         } catch (InterruptedException e) {
             onError(e);
         }
@@ -125,7 +145,13 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
 
     @Override
     public void onError(Throwable t) {
-        t = (t == null) ? new RuntimeException("Unknown error") : t;
-        this.recordIterator.fail(t);
+        Exception executionException = ClassUtils.handleExecutionException(t, timeoutConfig);
+        if (executionException instanceof FrontendException) {
+            ((FrontendException) executionException)
+                    .getDetails()
+                    .put("QueryId", statusCallback.getQueryLogger().getQueryId());
+        }
+        this.recordIterator.fail(executionException);
+        this.statusCallback.onErrorEnd(executionException, executionException.getMessage());
     }
 }

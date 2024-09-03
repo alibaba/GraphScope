@@ -31,6 +31,7 @@ use crate::message::MessageHeader;
 use crate::{NetError, Server};
 
 mod encode;
+
 pub use encode::{GeneralEncoder, MessageEncoder, SimpleEncoder, SlabEncoder};
 
 mod net_tx;
@@ -159,10 +160,16 @@ pub(crate) fn add_remote_sender(local_id: u64, server: &Server, tx: &Arc<Sender<
     lock.insert((local_id, server.id), (server.addr, tx));
 }
 
-pub(crate) fn remove_remote_sender(local_id: u64, remote_id: u64) {
+pub(crate) fn remove_remote_sender(local_id: u64, remote_id: u64, other: &Arc<Sender<NetData>>) {
     let mut lock = REMOTE_MSG_SENDER
         .write()
         .expect("REMOTE_MSG_SENDER write lock poisoned");
+    if let Some((_, tx)) = lock.get(&(local_id, remote_id)) {
+        let weak = Arc::downgrade(other);
+        if !Weak::ptr_eq(tx, &weak) {
+            return;
+        }
+    }
     lock.remove(&(local_id, remote_id));
 }
 
@@ -199,8 +206,12 @@ pub(crate) fn start_net_sender(
     let params = params.get_write_params();
     match params.mode {
         BlockMode::Blocking(timeout) => {
-            conn.set_write_timeout(timeout).ok();
-            is_block = false;
+            if timeout.is_none() {
+                is_block = false;
+            } else {
+                conn.set_write_timeout(timeout).ok();
+                is_block = true;
+            }
         }
         _ => (),
     }
@@ -271,5 +282,5 @@ fn busy_send<W: Write>(
         }
     }
     info!("IPC sender to {:?} exit;", remote);
-    remove_remote_sender(local, remote);
+    remove_remote_sender(local, remote, net_tx.get_outbox_tx().as_ref().expect(""));
 }

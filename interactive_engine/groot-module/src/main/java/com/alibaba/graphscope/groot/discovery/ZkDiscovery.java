@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.discovery;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -115,7 +115,7 @@ public class ZkDiscovery implements NodeDiscovery {
                 this.serviceCaches.add(serviceCache);
             }
         } catch (Exception e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         logger.info("ZkDiscovery started");
     }
@@ -154,7 +154,7 @@ public class ZkDiscovery implements NodeDiscovery {
 
         @Override
         public void cacheChanged() {
-            logger.debug("cacheChanged. roleType [" + roleType.getName() + "]");
+            logger.info("cacheChanged. roleType [" + roleType.getName() + "]");
             synchronized (lock) {
                 Map<Integer, GrootNode> newRoleNodes = new HashMap<>();
                 for (ServiceInstance<GrootNode> instance : this.serviceCache.getInstances()) {
@@ -207,7 +207,7 @@ public class ZkDiscovery implements NodeDiscovery {
         if (removed.isEmpty()) {
             return;
         }
-        logger.debug("role [{}] remove nodes [{}]", role.getName(), removed.values());
+        logger.info("role [{}] remove nodes [{}]", role.getName(), removed.values());
         for (Listener listener : this.listeners) {
             this.singleThreadExecutor.execute(
                     () -> {
@@ -225,7 +225,7 @@ public class ZkDiscovery implements NodeDiscovery {
         if (added.isEmpty()) {
             return;
         }
-        logger.debug("role [{}] add nodes [{}]", role.getName(), added.values());
+        logger.info("role [{}] add nodes [{}]", role.getName(), added.values());
         for (Listener listener : this.listeners) {
             this.singleThreadExecutor.execute(
                     () -> {

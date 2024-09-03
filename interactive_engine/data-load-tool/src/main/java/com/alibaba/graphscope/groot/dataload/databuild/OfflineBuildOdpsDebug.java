@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
@@ -32,9 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 public class OfflineBuildOdpsDebug {
@@ -43,22 +42,23 @@ public class OfflineBuildOdpsDebug {
     private static Odps odps;
 
     public static void main(String[] args) throws IOException, OdpsException {
-        String propertiesFile = args[0];
+        String configFile = args[0];
+        UniConfig properties = UniConfig.fromFile(configFile);
 
-        Properties properties = new Properties();
-        try (InputStream is = new FileInputStream(propertiesFile)) {
-            properties.load(is);
-        }
         odps = SessionState.get().getOdps();
 
         String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
-        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args, 1, args.length));
+        Map<String, FileColumnMapping> mappingConfig;
+        if (configStr == null) {
+            mappingConfig = Utils.parseColumnMappingFromUniConfig(properties);
+        } else {
+            configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args, 1, args.length));
+            mappingConfig = Utils.parseColumnMapping(configStr);
+        }
 
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
-
-        Map<String, FileColumnMapping> mappingConfig = Utils.parseColumnMapping(configStr);
 
         List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(mappingConfig);
 

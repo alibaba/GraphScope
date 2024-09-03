@@ -17,15 +17,18 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -37,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +59,16 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
     // `g.V().out().union(out(), out())`,
     // `g.V().out()` is a common sub-plan, the pair of <union, g.V().out()> is recorded in this map
     private final IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons;
+    private final boolean skipSinkColumns;
 
     public GraphRelProtoPhysicalBuilder(
             Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
+        this(graphConfig, irMeta, logicalPlan, false);
+    }
+
+    @VisibleForTesting
+    public GraphRelProtoPhysicalBuilder(
+            Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan, boolean skipSinkColumns) {
         super(logicalPlan);
         this.physicalBuilder = GraphAlgebraPhysical.PhysicalPlan.newBuilder();
         this.relToCommons = createRelToCommons(logicalPlan);
@@ -66,7 +77,9 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
                         irMeta.getSchema().isColumnId(),
                         graphConfig,
                         this.physicalBuilder,
-                        this.relToCommons);
+                        this.relToCommons,
+                        createExtraParams(irMeta));
+        this.skipSinkColumns = skipSinkColumns;
     }
 
     @Override
@@ -75,7 +88,11 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
         try {
             RelNode regularQuery = this.logicalPlan.getRegularQuery();
             regularQuery.accept(this.relShuttle);
-            appendDefaultSink();
+            physicalBuilder.addPlan(
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                            .setOpr(
+                                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                            .setSink(getSinkByColumns(regularQuery))));
             plan = getPlanAsJson(physicalBuilder.build());
             int planId = Objects.hash(logicalPlan);
             physicalBuilder.setPlanId(planId);
@@ -88,17 +105,23 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
         }
     }
 
-    private void appendDefaultSink() {
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+    private GraphAlgebraPhysical.Sink getSinkByColumns(RelNode regularQuery) {
         GraphAlgebraPhysical.Sink.Builder sinkBuilder = GraphAlgebraPhysical.Sink.newBuilder();
-        GraphAlgebra.Sink.SinkTarget.Builder sinkTargetBuilder =
-                GraphAlgebra.Sink.SinkTarget.newBuilder();
-        sinkTargetBuilder.setSinkDefault(GraphAlgebra.SinkDefault.newBuilder().build());
-        sinkBuilder.setSinkTarget(sinkTargetBuilder);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSink(sinkBuilder));
-        physicalBuilder.addPlan(oprBuilder);
+        sinkBuilder.setSinkTarget(
+                GraphAlgebra.Sink.SinkTarget.newBuilder()
+                        .setSinkDefault(GraphAlgebra.SinkDefault.newBuilder().build()));
+        regularQuery
+                .getRowType()
+                .getFieldList()
+                .forEach(
+                        k -> {
+                            if (!skipSinkColumns && k.getIndex() != AliasInference.DEFAULT_ID) {
+                                sinkBuilder.addTags(
+                                        GraphAlgebraPhysical.Sink.OptTag.newBuilder()
+                                                .setTag(Utils.asAliasId(k.getIndex())));
+                            }
+                        });
+        return sinkBuilder.build();
     }
 
     private String getPlanAsJson(GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
@@ -148,6 +171,16 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
                     }
                 });
         return relToCommons;
+    }
+
+    private HashMap<String, String> createExtraParams(IrMeta irMeta) {
+        HashMap<String, String> extraParams = new HashMap<>();
+        // prepare extra params for physical plan, e.g. snapshot id
+        SnapshotId snapshotId = irMeta.getSnapshotId();
+        if (snapshotId.isAcquired()) {
+            extraParams.put("SID", String.valueOf(snapshotId.getId()));
+        }
+        return extraParams;
     }
 
     /**

@@ -35,12 +35,14 @@ public class LogRecycler {
     private ScheduledExecutorService scheduler;
     private final boolean recycleEnable;
     private final long recycleIntervalSeconds;
+    private final long recycleOffsetReserve;
 
     public LogRecycler(Configs configs, LogService logService, SnapshotManager snapshotManager) {
         this.logService = logService;
         this.snapshotManager = snapshotManager;
         this.recycleEnable = CoordinatorConfig.LOG_RECYCLE_ENABLE.get(configs);
         this.recycleIntervalSeconds = CoordinatorConfig.LOG_RECYCLE_INTERVAL_SECOND.get(configs);
+        this.recycleOffsetReserve = CoordinatorConfig.LOG_RECYCLE_OFFSET_RESERVE.get(configs);
     }
 
     public void start() {
@@ -84,6 +86,7 @@ public class LogRecycler {
         List<Long> queueOffsets = this.snapshotManager.getQueueOffsets();
         for (int i = 0; i < queueOffsets.size(); i++) {
             long offset = queueOffsets.get(i);
+            offset = Math.max(offset - recycleOffsetReserve, 0); // Leave some spaces
             try {
                 logService.deleteBeforeOffset(i, offset);
                 logger.info("recycled queue [{}] offset [{}]", i, offset);

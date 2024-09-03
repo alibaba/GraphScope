@@ -16,12 +16,16 @@
 # limitations under the License.
 #
 
+import logging
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
+from graphscope.framework.errors import InvalidArgumentError
 
 __all__ = ["triangles"]
+
+logger = logging.getLogger("graphscope")
 
 
 @project_to_simple
@@ -50,4 +54,8 @@ def triangles(graph):
         >>> sess.close()
 
     """
+    if graph.is_directed():
+        logger.warning(
+            "Triangles may not be consistent when be queried upon directed graph."
+        )
     return AppAssets(algo="triangles", context="vertex_data")(graph)

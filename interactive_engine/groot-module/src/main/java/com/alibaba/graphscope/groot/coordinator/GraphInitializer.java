@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
 import com.alibaba.graphscope.groot.meta.MetaStore;
@@ -52,7 +52,7 @@ public class GraphInitializer {
             initializeZkIfNeeded();
             initializeMetaIfNeeded();
         } catch (Exception e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -113,10 +113,12 @@ public class GraphInitializer {
         if (this.logService.initialized()) {
             this.logService.destroy();
         }
-        String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
-        Stat stat = this.curator.checkExists().forPath(zkRoot);
-        if (stat != null) {
-            this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
+        if (this.curator != null) {
+            String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
+            Stat stat = this.curator.checkExists().forPath(zkRoot);
+            if (stat != null) {
+                this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
+            }
         }
     }
 }

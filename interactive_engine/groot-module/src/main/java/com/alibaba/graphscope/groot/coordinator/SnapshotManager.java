@@ -17,12 +17,10 @@ import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
-import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
+import com.alibaba.graphscope.groot.common.exception.*;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -112,7 +110,6 @@ public class SnapshotManager {
     public static final String QUEUE_OFFSETS_PATH = "queue_offsets";
 
     private final MetaStore metaStore;
-    private final LogService logService;
     private final IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier;
 
     private final int storeCount;
@@ -142,10 +139,8 @@ public class SnapshotManager {
     public SnapshotManager(
             Configs configs,
             MetaStore metaStore,
-            LogService logService,
             IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier) {
         this.metaStore = metaStore;
-        this.logService = logService;
         this.writeSnapshotIdNotifier = writeSnapshotIdNotifier;
 
         this.objectMapper = new ObjectMapper();
@@ -165,7 +160,7 @@ public class SnapshotManager {
         try {
             recover();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
 
         this.increaseWriteSnapshotIdScheduler =
@@ -224,7 +219,7 @@ public class SnapshotManager {
 
     private void checkMetaPath(String path) throws FileNotFoundException {
         if (!this.metaStore.exists(path)) {
-            throw new FileNotFoundException(path);
+            throw new NotFoundException("File not found: " + path);
         }
     }
 
@@ -235,44 +230,22 @@ public class SnapshotManager {
 
         byte[] queryBytes = this.metaStore.read(QUERY_SNAPSHOT_INFO_PATH);
         SnapshotInfo querySI = objectMapper.readValue(queryBytes, SnapshotInfo.class);
-        logger.info("recovered query snapshot info {}", querySI);
+        logger.info("Recovered query snapshot info {}", querySI);
 
         byte[] writeBytes = this.metaStore.read(WRITE_SNAPSHOT_ID_PATH);
         long writeSI = objectMapper.readValue(writeBytes, Long.class);
-        logger.info("recovered write snapshot id {}", writeSI);
+        logger.info("Recovered write snapshot id {}", writeSI);
         if (querySI.getSnapshotId() > writeSI) {
-            throw new IllegalStateException(
-                    "recovered querySnapshotInfo ["
-                            + querySI
-                            + "] > writeSnapshotId ["
-                            + writeSI
-                            + "]");
+            String msg = String.format("Recovered querySI %s > writeSI %s", querySI, writeSI);
+            throw new IllegalStateException(msg);
         }
 
         byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
         List<Long> offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
-        logger.info("recovered queue offsets {}", offsets);
+        logger.info("Recovered queue offsets {}", offsets);
         if (offsets.size() != this.storeCount) {
-            throw new IllegalStateException(
-                    "recovered queueCount ["
-                            + offsets.size()
-                            + "], but expect queueCount ["
-                            + this.storeCount
-                            + "]");
-        }
-
-        for (int i = 0; i < this.storeCount; i++) {
-            long recoveredOffset = offsets.get(i);
-            try (LogReader reader = logService.createReader(i, recoveredOffset + 1)) {
-            } catch (Exception e) {
-                throw new IOException(
-                        "recovered queue ["
-                                + i
-                                + "] offset ["
-                                + recoveredOffset
-                                + "] is not available",
-                        e);
-            }
+            String msg = String.format("Recovered queueCount %s invalid", offsets.size());
+            throw new IllegalStateException(msg);
         }
 
         this.querySnapshotInfo = querySI;
@@ -286,10 +259,10 @@ public class SnapshotManager {
      * @param storeId
      * @param snapshotId
      * @param ddlSnapshotId
-     * @param queueOffsets
+     * @param offsets
      */
     public synchronized void commitSnapshotId(
-            int storeId, long snapshotId, long ddlSnapshotId, List<Long> queueOffsets) {
+            int storeId, long snapshotId, long ddlSnapshotId, List<Long> offsets) {
         this.storeToSnapshotInfo.compute(
                 storeId,
                 (k, v) ->
@@ -300,15 +273,16 @@ public class SnapshotManager {
                 storeId,
                 (k, v) -> {
                     if (v != null) {
-                        if (1 != queueOffsets.size()) {
-                            throw new IllegalArgumentException(
-                                    "committed offset is [" + queueOffsets + "]");
+                        // Queue count of each store is fixed: 1
+                        if (1 != offsets.size()) {
+                            String msg = String.format("committed offset is %s", offsets);
+                            throw new InvalidArgumentException(msg);
                         }
-                        if (v > queueOffsets.get(0)) {
+                        if (v > offsets.get(0)) {
                             return v;
                         }
                     }
-                    return queueOffsets.get(0);
+                    return offsets.get(0);
                 });
         maybeUpdateQuerySnapshotId();
     }
@@ -327,10 +301,9 @@ public class SnapshotManager {
 
     public void addListener(QuerySnapshotListener listener) {
         this.listeners.add(listener);
-        SnapshotInfo querySnapshotInfo = this.querySnapshotInfo;
+        SnapshotInfo querySI = this.querySnapshotInfo;
         try {
-            listener.snapshotAdvanced(
-                    querySnapshotInfo.getSnapshotId(), querySnapshotInfo.getDdlSnapshotId());
+            listener.snapshotAdvanced(querySI.getSnapshotId(), querySI.getDdlSnapshotId());
         } catch (Exception e) {
             logger.error("error occurred when notify listeners", e);
         }
@@ -342,65 +315,58 @@ public class SnapshotManager {
 
     private void maybeUpdateQuerySnapshotId() {
         if (this.storeToSnapshotInfo.size() < this.storeCount) {
-            logger.warn(
-                    "Not all store nodes reported snapshot progress. current: [{}]",
-                    storeToSnapshotInfo);
+            logger.warn("Not all store nodes reported snapshot. now: {}", storeToSnapshotInfo);
             return;
         }
-        SnapshotInfo minSnapshotInfo = Collections.min(this.storeToSnapshotInfo.values());
-        if (minSnapshotInfo.getSnapshotId() > this.querySnapshotInfo.getSnapshotId()) {
-            synchronized (this.querySnapshotLock) {
-                long snapshotId = minSnapshotInfo.getSnapshotId();
-                long ddlSnapshotId = minSnapshotInfo.getDdlSnapshotId();
-                long currentSnapshotId = this.querySnapshotInfo.getSnapshotId();
-                long currentDdlSnapshotId = this.querySnapshotInfo.getDdlSnapshotId();
-                if (snapshotId > currentSnapshotId) {
+        SnapshotInfo receivedSIInfo = Collections.min(this.storeToSnapshotInfo.values());
+        if (receivedSIInfo.getSnapshotId() <= this.querySnapshotInfo.getSnapshotId()) {
+            logger.debug("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
+            return;
+        }
+        synchronized (this.querySnapshotLock) {
+            long receivedSI = receivedSIInfo.getSnapshotId();
+            long receivedDdlSI = receivedSIInfo.getDdlSnapshotId();
+            long currentSI = this.querySnapshotInfo.getSnapshotId();
+            long currentDdlSI = this.querySnapshotInfo.getDdlSnapshotId();
+            if (receivedSI <= currentSI) {
+                logger.warn("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
+                return;
+            }
+            try {
+                if (receivedDdlSI < currentDdlSI) { // Use larger one.
+                    receivedSIInfo = new SnapshotInfo(receivedSI, currentDdlSI);
+                }
+                persistObject(receivedSIInfo, QUERY_SNAPSHOT_INFO_PATH);
+                this.querySnapshotInfo = receivedSIInfo;
+                logger.debug("querySnapshotInfo updated to [{}]", querySnapshotInfo);
+            } catch (IOException e) {
+                logger.error("update querySnapshotInfo failed", e);
+                return;
+            }
+            long newSnapshotId = receivedSIInfo.getSnapshotId();
+            long newDdlSnapshotId = receivedSIInfo.getDdlSnapshotId();
+            NavigableMap<Long, List<SnapshotListener>> listenersToTrigger =
+                    this.snapshotToListeners.headMap(newSnapshotId, true);
+            for (Map.Entry<Long, List<SnapshotListener>> listenerEntry :
+                    listenersToTrigger.entrySet()) {
+                List<SnapshotListener> listeners = listenerEntry.getValue();
+                for (SnapshotListener listener : listeners) {
                     try {
-                        if (ddlSnapshotId < currentDdlSnapshotId) {
-                            // During fail over, store might send smaller ddlSnapshotId
-                            minSnapshotInfo = new SnapshotInfo(snapshotId, currentDdlSnapshotId);
-                            //                            throw new
-                            // IllegalStateException("minSnapshotInfo [" + minSnapshotInfo +
-                            //                                    "], currentSnapshotInfo [" +
-                            // this.querySnapshotInfo + "]");
-                        }
-                        persistObject(minSnapshotInfo, QUERY_SNAPSHOT_INFO_PATH);
-                        this.querySnapshotInfo = minSnapshotInfo;
-                        logger.debug("querySnapshotInfo updated to [{}]", querySnapshotInfo);
-                    } catch (IOException e) {
-                        logger.error("update querySnapshotInfo failed", e);
-                        return;
+                        listener.onSnapshotAvailable();
+                    } catch (Exception e) {
+                        logger.warn("trigger snapshotListener failed. SI [{}]", receivedSI);
                     }
-                    long newSnapshotId = minSnapshotInfo.getSnapshotId();
-                    long newDdlSnapshotId = minSnapshotInfo.getDdlSnapshotId();
-                    NavigableMap<Long, List<SnapshotListener>> listenersToTrigger =
-                            this.snapshotToListeners.headMap(newSnapshotId, true);
-                    for (Map.Entry<Long, List<SnapshotListener>> listenerEntry :
-                            listenersToTrigger.entrySet()) {
-                        List<SnapshotListener> listeners = listenerEntry.getValue();
-                        for (SnapshotListener listener : listeners) {
-                            try {
-                                listener.onSnapshotAvailable();
-                            } catch (Exception e) {
-                                logger.warn(
-                                        "trigger snapshotListener failed. snapshotId [{}]",
-                                        snapshotId);
-                            }
-                        }
-                    }
-                    listenersToTrigger.clear();
+                }
+            }
+            listenersToTrigger.clear();
 
-                    for (QuerySnapshotListener listener : this.listeners) {
-                        try {
-                            listener.snapshotAdvanced(newSnapshotId, newDdlSnapshotId);
-                        } catch (ServiceNotReadyException e) {
-                            logger.error(
-                                    "Error occurred when notify listeners, Schema manager is"
-                                            + " recovering.");
-                        } catch (Exception e) {
-                            logger.error("Error occurred when notify listeners", e);
-                        }
-                    }
+            for (QuerySnapshotListener listener : this.listeners) {
+                try {
+                    listener.snapshotAdvanced(newSnapshotId, newDdlSnapshotId);
+                } catch (ServiceNotReadyException e) {
+                    logger.error("Error when notify listeners, SchemaManager recovering.");
+                } catch (Exception e) {
+                    logger.error("Error when notify listeners", e);
                 }
             }
         }
@@ -433,8 +399,7 @@ public class SnapshotManager {
 
     private void updateQueueOffsets() throws IOException {
         if (this.storeToOffsets.size() < this.storeCount) {
-            logger.warn(
-                    "Not all store nodes reported queue offsets. current: [{}]", storeToOffsets);
+            logger.warn("Not all store nodes reported offsets. now: [{}]", storeToOffsets);
             return;
         }
         List<Long> queueOffsets = this.queueOffsetsRef.get();

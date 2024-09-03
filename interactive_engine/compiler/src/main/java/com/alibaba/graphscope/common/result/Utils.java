@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.result;
 
+import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -25,12 +26,17 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Utils {
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
@@ -118,9 +124,12 @@ public class Utils {
     }
 
     public static RelDataType getEdgeType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType)
-                ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
-                : graphPathType;
+        if (graphPathType instanceof GraphPathType) {
+            return Objects.requireNonNull(
+                    ((GraphPathType) graphPathType).getComponentType().getExpandType(),
+                    "cannot get expand type from graph path " + graphPathType);
+        }
+        return graphPathType;
     }
 
     public static String parseLabelValue(Common.Value value, GraphLabelType type) {
@@ -157,5 +166,18 @@ public class Utils {
     public static RelDataTypeField findFieldByPredicate(
             Predicate<RelDataTypeField> p, List<RelDataTypeField> typeFields) {
         return typeFields.stream().filter(k -> p.test(k)).findFirst().orElse(null);
+    }
+
+    public static ArbitraryMapType.KeyValueType getKeyValueType(
+            Common.Value target, Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap) {
+        Map<Common.Value, ArbitraryMapType.KeyValueType> conversionType =
+                keyValueTypeMap.entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        entry ->
+                                                com.alibaba.graphscope.common.ir.runtime.proto.Utils
+                                                        .protoValue((RexLiteral) entry.getKey()),
+                                        Map.Entry::getValue));
+        return conversionType.get(target);
     }
 }

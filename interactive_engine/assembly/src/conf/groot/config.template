@@ -34,3 +34,4 @@ pegasus.worker.num=2
 pegasus.hosts=localhost:8080
 
 kafka.test.cluster.enable=true
+collect.statistics=false

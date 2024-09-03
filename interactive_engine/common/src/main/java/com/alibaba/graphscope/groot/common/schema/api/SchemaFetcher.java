@@ -20,7 +20,11 @@ import java.util.Map;
 public interface SchemaFetcher {
     Map<Long, GraphSchema> getSchemaSnapshotPair();
 
+    GraphStatistics getStatistics();
+
     int getPartitionNum();
 
     int getVersion();
+
+    boolean statisticsEnabled();
 }

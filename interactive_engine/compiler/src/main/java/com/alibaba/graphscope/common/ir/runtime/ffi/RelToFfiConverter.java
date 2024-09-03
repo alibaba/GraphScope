@@ -627,6 +627,20 @@ public class RelToFfiConverter implements GraphRelShuttle {
             checkFfiResult(LIB.setSelectPredicate(ptrFilter, predicateBuilder.toString()));
             checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
         }
+        // add index predicates as select operator
+        if (tableScan instanceof GraphLogicalSource) {
+            GraphLogicalSource source = (GraphLogicalSource) tableScan;
+            if (source.getUniqueKeyFilters() != null) {
+                OuterExpression.Expression exprProto =
+                        source.getUniqueKeyFilters()
+                                .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+                Pointer ptrFilter = LIB.initSelectOperator();
+                checkFfiResult(
+                        LIB.setSelectPredicatePb(
+                                ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
+                checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
+            }
+        }
         // add predicates as select operator
         List<RexNode> filters = tableScan.getFilters();
         if (ObjectUtils.isNotEmpty(filters)) {

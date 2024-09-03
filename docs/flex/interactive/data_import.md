@@ -6,15 +6,45 @@ In our guide on [using custom graph data](./custom_graph_data.md), we introduced
 
 Currently we only support import data to graph from local `csv` files or `odps` table. See configuration `loading_config.data_source.scheme`.
 
+## Column mapping
+
+When importing vertex and edge data into a graph, users must define how the raw data maps to the graph's schema. 
+This can be done using a YAML configuration, as shown:
+
+```yaml
+- column:
+    index: 0  # Column index in the data source
+    name: col_name # If a column name is present
+  property: property_name  # The mapped property name
+```
+
+The column mapping requirements differ based on the data source:
+
+#### Import from CSV 
+
+You can provide either `index`, `name`, or both. If both `index` and `name` are specified, we will check whether they matches.
+
+#### Import from ODPS Table
+
+You just need to specify the name of the `column`, since the name is guaranteed to be unique in a odps table. The `index` is disregarded.
+
 ## Sample Configuration for loading "Modern" Graph from csv files
 
-To illustrate, let's examine the `examples/modern_import_full.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
+To illustrate, let's examine the `modern_graph_import.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
+
+```{note}
+Note that a `@` is prepend to the location, which means all files will be uploaded from local.
+```
 
 ``` yaml
 loading_config: 
+  x_csr_params:
+    parallelism: 1
+    build_csr_in_mem: true
+    use_mmap_vector: true
   data_source:
     scheme: file
-    location: /home/modern_graph/ 
+    location: "@/home/modern_graph/"
   format: 
     metadata: 
       delimiter: "|"  
@@ -67,11 +97,13 @@ edge_mappings:
     source_vertex_mappings:
       - column:  
           index: 0  
-          name: id
+          name: src_id
+        property: id
     destination_vertex_mappings:
       - column:  
           index: 1  
-          name: id
+          name: dst_id
+        property: id
     column_mappings:
       - column:
           index: 2
@@ -202,7 +234,11 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | loading_config.format.metadata.double_quote | true |  Whether a quote inside a value is double-quoted | No |
 | loading_config.format.metadata.escaping | false | Whether escaping is used | No |
 | loading_config.format.metadata.escape_char | '\\' | Escaping character (if `escaping` is true) | No |
+| loading_config.format.metadata.null_values | [] | Recognized spellings for null values | No |
 | loading_config.format.metadata.batch_size | 4MB | The size of batch for reading from files | No |
+| loading_config.x_csr_params.parallelism | 1 | Number of threads used for bulk loading | No |
+| loading_config.x_csr_params.build_csr_in_mem | false | Whether to build csr fully in memory | No |
+| loading_config.x_csr_params.use_mmap_vector | false | Whether to use mmap_vector rather than mmap_array for building | No |
 | |  |  |  |
 | **vertex_mappings** | N/A | Define how to map the raw data into a graph vertex in the schema | Yes |
 | vertex_mappings.type_name |	N/A |	Name of the vertex type |	Yes |
@@ -239,9 +275,10 @@ The **loading_config** section defines the primary settings for data loading. Th
 	- loading_config.format.metadata.quoting: Whether quoting is used
 	- loading_config.format.metadata.quote_char: Quoting character (if `quoting` is true)
 	- loading_config.format.metadata.double_quote:  Whether a quote inside a value is double-quoted
-  - loading_config.format.metadata.escape_char: Whether escaping is used
+	- loading_config.format.metadata.escaping: Whether escaping is used
 	- loading_config.format.metadata.escape_char: Escaping character (if `escaping` is true)
 	- loading_config.format.metadata.block_size: The size of batch for reading from files
+	- loading_config.format.metadata.null_values: Recognized spellings for null values
 
 ### Vertex Mappings
 The **vertex_mappings** section outlines how raw data maps to graph vertices based on the defined schema. 

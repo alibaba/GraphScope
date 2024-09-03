@@ -33,7 +33,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::process::operator::map::IntersectionEntry;
+use crate::process::operator::map::{GeneralIntersectionEntry, IntersectionEntry};
 
 #[derive(Debug, PartialEq)]
 pub enum EntryType {
@@ -152,12 +152,21 @@ impl Encode for DynEntry {
                 self.as_object().unwrap().write_to(writer)?;
             }
             EntryType::Intersection => {
-                writer.write_u8(5)?;
-                self.inner
+                if let Some(intersect) = self
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .unwrap()
-                    .write_to(writer)?;
+                {
+                    writer.write_u8(5)?;
+                    intersect.write_to(writer)?;
+                } else if let Some(intersect) = self
+                    .as_any_ref()
+                    .downcast_ref::<GeneralIntersectionEntry>()
+                {
+                    writer.write_u8(8)?;
+                    intersect.write_to(writer)?;
+                } else {
+                    unreachable!()
+                }
             }
             EntryType::Collection => {
                 writer.write_u8(6)?;
@@ -211,6 +220,10 @@ impl Decode for DynEntry {
             7 => {
                 let pair = PairEntry::read_from(reader)?;
                 Ok(DynEntry::new(pair))
+            }
+            8 => {
+                let general_intersect = GeneralIntersectionEntry::read_from(reader)?;
+                Ok(DynEntry::new(general_intersect))
             }
             _ => unreachable!(),
         }
@@ -421,6 +434,12 @@ impl Entry for IntersectionEntry {
     }
 }
 
+impl Entry for GeneralIntersectionEntry {
+    fn get_type(&self) -> EntryType {
+        EntryType::Intersection
+    }
+}
+
 impl Entry for GraphPath {
     fn get_type(&self) -> EntryType {
         EntryType::Path
@@ -557,6 +576,7 @@ impl TryFrom<result_pb::Element> for DynEntry {
     }
 }
 
+// this is for ci tests
 impl TryFrom<result_pb::Entry> for DynEntry {
     type Error = ParsePbError;
 
@@ -578,17 +598,22 @@ impl TryFrom<result_pb::Entry> for DynEntry {
                     let mut map = BTreeMap::new();
                     for key_val in kv.key_values {
                         let key = key_val.key.unwrap();
-                        let val_inner = key_val.value.unwrap().inner.unwrap();
-                        // currently, convert kv into Object::KV
-                        let key_obj: Object = Object::try_from(key)?;
-                        let val_obj: Object = match val_inner {
-                            result_pb::element::Inner::Object(obj) => Object::try_from(obj)?,
-                            _ => Err(ParsePbError::Unsupported(format!(
-                                "unsupported kvs value inner {:?}",
-                                val_inner,
-                            )))?,
-                        };
-                        map.insert(key_obj, val_obj);
+                        let value_inner = key_val.value.unwrap().inner.unwrap();
+                        match value_inner {
+                            result_pb::entry::Inner::Element(val) => {
+                                let val_inner = val.inner.unwrap();
+                                let val_obj: Object = match val_inner {
+                                    result_pb::element::Inner::Object(obj) => Object::try_from(obj)?,
+                                    _ => Err(ParsePbError::Unsupported(format!(
+                                        "unsupported kvs value inner {:?}",
+                                        val_inner,
+                                    )))?,
+                                };
+                                map.insert(Object::try_from(key)?, val_obj);
+                            }
+                            result_pb::entry::Inner::Collection(_) => todo!(),
+                            result_pb::entry::Inner::Map(_) => todo!(),
+                        }
                     }
                     Ok(DynEntry::new(Object::KV(map)))
                 }
@@ -633,6 +658,18 @@ impl From<Vec<DynEntry>> for DynEntry {
     fn from(vec: Vec<DynEntry>) -> Self {
         let c = CollectionEntry { inner: vec };
         DynEntry::new(c)
+    }
+}
+
+impl From<IntersectionEntry> for DynEntry {
+    fn from(i: IntersectionEntry) -> Self {
+        DynEntry::new(i)
+    }
+}
+
+impl From<GeneralIntersectionEntry> for DynEntry {
+    fn from(i: GeneralIntersectionEntry) -> Self {
+        DynEntry::new(i)
     }
 }
 

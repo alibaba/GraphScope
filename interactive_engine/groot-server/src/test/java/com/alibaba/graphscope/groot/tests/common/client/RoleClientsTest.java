@@ -18,13 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
+import com.alibaba.graphscope.groot.common.exception.NetworkFailureException;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.tests.common.rpc.MockFactory;
-
-import io.grpc.ManagedChannel;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,13 +41,13 @@ public class RoleClientsTest {
                 new RoleClients<>(channelManager, RoleType.STORE, MockRoleClient::new);
         channelManager.start();
         assertNotNull(clients.getClient(0));
-        assertThrows(NodeConnectException.class, () -> clients.getClient(1));
+        assertThrows(NetworkFailureException.class, () -> clients.getClient(1));
         channelManager.stop();
     }
 
     class MockRoleClient extends RpcClient {
 
-        public MockRoleClient(ManagedChannel channel) {
+        public MockRoleClient(RpcChannel channel) {
             super(channel);
         }
     }

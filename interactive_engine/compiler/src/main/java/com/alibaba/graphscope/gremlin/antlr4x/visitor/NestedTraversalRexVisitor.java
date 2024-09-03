@@ -21,34 +21,36 @@ import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexSubQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
     private final GraphBuilder parentBuilder;
     private final GraphBuilder nestedBuilder;
-    private final @Nullable String tag;
+    private final @Nullable String headAlias;
     private final ParserRuleContext parentCtx;
 
     public NestedTraversalRexVisitor(
-            GraphBuilder parentBuilder, @Nullable String tag, ParserRuleContext parentCtx) {
+            GraphBuilder parentBuilder, @Nullable String headAlias, ParserRuleContext parentCtx) {
         this.parentBuilder = parentBuilder;
         this.nestedBuilder =
                 GraphBuilder.create(
                         this.parentBuilder.getContext(),
                         (GraphOptCluster) this.parentBuilder.getCluster(),
                         this.parentBuilder.getRelOptSchema());
-        this.tag = tag;
+        this.headAlias = headAlias;
         this.parentCtx = parentCtx;
     }
 
@@ -63,32 +65,58 @@ public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
                         commonRel.getTraitSet(),
                         new CommonOptTable(commonRel));
         nestedBuilder.push(commonRel);
-        if (tag != null) {
+        if (headAlias != null) {
             nestedBuilder.project(
-                    ImmutableList.of(nestedBuilder.variable(tag)), ImmutableList.of(), true);
+                    ImmutableList.of(nestedBuilder.variable(headAlias)), ImmutableList.of(), true);
         }
-        GraphBuilderVisitor visitor = new GraphBuilderVisitor(nestedBuilder);
-        RelNode subRel = visitor.visitNestedTraversal(ctx).build();
-        String alias = null;
         // set query given alias
+        String tailAlias = null;
+        int methodCounter = 0;
         TraversalMethodIterator iterator = new TraversalMethodIterator(ctx);
         while (iterator.hasNext()) {
             GremlinGSParser.TraversalMethodContext cur = iterator.next();
-            if (cur.traversalMethod_as() != null) {
-                alias =
+            if (methodCounter != 0 && !iterator.hasNext() && cur.traversalMethod_as() != null) {
+                tailAlias =
                         (String)
                                 LiteralVisitor.INSTANCE.visit(
                                         cur.traversalMethod_as().StringLiteral());
             }
+            ++methodCounter;
         }
-        if (alias != null) {
-            subRel = nestedBuilder.push(subRel).as(null).build();
-        }
+        TrimAlias trimAlias = new TrimAlias(methodCounter);
+        GraphBuilderVisitor visitor = new GraphBuilderVisitor(nestedBuilder, trimAlias);
+        // skip head and tail aliases in nested traversal, we have handled them specifically in
+        // current context.
+        RelNode subRel = visitor.visitNestedTraversal(ctx).build();
         RexNode expr;
         if (new SubQueryChecker(commonRel).test(subRel)) {
-            // todo: return sub query in RexSubQuery
-            throw new UnsupportedEvalException(
-                    GremlinGSParser.NestedTraversalContext.class, "sub query is unsupported yet");
+            if (parentCtx instanceof GremlinGSParser.TraversalMethod_whereContext) {
+                if (tailAlias != null) {
+                    // specific implementation for `where(('a').out().as('b')`, convert tail alias
+                    // `as('b')` to `where(eq('b'))`
+                    subRel =
+                            nestedBuilder
+                                    .push(subRel)
+                                    .filter(
+                                            nestedBuilder.equals(
+                                                    nestedBuilder.variable((String) null),
+                                                    nestedBuilder.variable(tailAlias)))
+                                    .build();
+                    tailAlias = null;
+                }
+                expr = RexSubQuery.exists(subRel);
+            } else if (parentCtx instanceof GremlinGSParser.TraversalMethod_notContext) {
+                expr = nestedBuilder.not(RexSubQuery.exists(subRel)); // convert to not exist
+            } else if (parentCtx instanceof GremlinGSParser.TraversalMethod_wherebyContext
+                    || parentCtx instanceof GremlinGSParser.TraversalMethod_selectbyContext
+                    || parentCtx instanceof GremlinGSParser.TraversalMethod_dedupbyContext
+                    || parentCtx instanceof GremlinGSParser.TraversalMethod_orderbyContext
+                    || parentCtx instanceof GremlinGSParser.TraversalMethod_group_keybyContext) {
+                expr = RexSubQuery.scalar(subRel);
+            } else {
+                throw new UnsupportedOperationException(
+                        "unsupported nested traversal in parent: " + parentCtx.getText());
+            }
         } else {
             // convert subRel to expression
             Project project = (Project) subRel;
@@ -104,6 +132,29 @@ public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
                 expr = nestedBuilder.isNull(expr);
             }
         }
-        return nestedBuilder.alias(expr, alias);
+        return nestedBuilder.alias(expr, tailAlias);
+    }
+
+    private class TrimAlias implements Predicate<ParseTree> {
+        private int methodIdx;
+        private final int methodCount;
+
+        public TrimAlias(int methodCount) {
+            this.methodCount = methodCount;
+            this.methodIdx = 0;
+        }
+
+        @Override
+        public boolean test(ParseTree parseTree) {
+            if (parseTree.getParent() instanceof GremlinGSParser.TraversalMethodContext) {
+                boolean toSkip =
+                        parseTree instanceof GremlinGSParser.TraversalMethod_asContext
+                                && (methodIdx == 0 || methodIdx == methodCount - 1);
+                ++methodIdx;
+                return toSkip;
+            } else {
+                return false;
+            }
+        }
     }
 }

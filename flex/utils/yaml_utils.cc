@@ -17,10 +17,14 @@
 #include "flex/utils/yaml_utils.h"
 #include <fstream>
 #include "nlohmann/json.hpp"
+
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   std::filesystem::path dir_path = plugin_dir;
   std::vector<std::string> res_yaml_files;
+  if (!std::filesystem::exists(dir_path)) {
+    return res_yaml_files;
+  }
 
   for (auto& entry : std::filesystem::directory_iterator(dir_path)) {
     if (entry.is_regular_file() && ((entry.path().extension() == ".yaml") ||
@@ -36,7 +40,7 @@ nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
   try {
     switch (node.Type()) {
     case YAML::NodeType::Null: {
-      json = nullptr;
+      json = {};
       break;
     }
     case YAML::NodeType::Scalar: {
@@ -73,7 +77,7 @@ nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
       break;
     }
   } catch (const YAML::BadConversion& e) {
-    throw Status{StatusCode::IOError, e.what()};
+    throw Status{StatusCode::IO_ERROR, e.what()};
   }
   return json;
 }
@@ -84,7 +88,7 @@ Result<std::string> get_json_string_from_yaml(const std::string& file_path) {
     // output config to json string
     return get_json_string_from_yaml(config);
   } catch (const YAML::BadFile& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   }
 }
 
@@ -96,11 +100,21 @@ Result<std::string> get_json_string_from_yaml(const YAML::Node& node) {
     nlohmann::json json = convert_yaml_node_to_json(node);
     return json.dump(2);  // 2 indents
   } catch (const YAML::BadConversion& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   } catch (const std::runtime_error& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   } catch (...) {
-    return Result<std::string>(Status{StatusCode::IOError, "Unknown error"});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, "Unknown error"});
+  }
+}
+
+Result<std::string> get_yaml_string_from_yaml_node(const YAML::Node& node) {
+  try {
+    YAML::Emitter emitter;
+    write_yaml_node_to_yaml_string(node, emitter);
+    return std::string(emitter.c_str());
+  } catch (const YAML::BadConversion& e) {
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   }
 }
 
@@ -140,7 +154,7 @@ Status write_yaml_node_to_yaml_string(const YAML::Node& node,
       break;
     }
   } catch (const YAML::BadConversion& e) {
-    return Status{StatusCode::IOError, e.what()};
+    return Status{StatusCode::IO_ERROR, e.what()};
   }
   return Status::OK();
 }

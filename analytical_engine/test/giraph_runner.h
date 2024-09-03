@@ -39,6 +39,10 @@ limitations under the License.
 #include "core/io/property_parser.h"
 #include "core/java/utils.h"
 #include "core/loader/arrow_fragment_loader.h"
+#include "vineyard/common/util/json.h"
+
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace bl = boost::leaf;
 
@@ -46,12 +50,9 @@ namespace gs {
 
 using FragmentType =
     vineyard::ArrowFragment<int64_t, vineyard::property_graph_types::VID_TYPE>;
-using ProjectedFragmentType =
-    ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
 
 using FragmentLoaderType =
     ArrowFragmentLoader<int64_t, vineyard::property_graph_types::VID_TYPE>;
-using APP_TYPE = JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
 // using LOADER_TYPE = grape::GiraphFragmentLoader<FragmentType>;
 
 void Init(const std::string& params) {
@@ -61,6 +62,46 @@ void Init(const std::string& params) {
   if (comm_spec.worker_id() == grape::kCoordinatorRank) {
     VLOG(1) << "Workers of libgrape-lite initialized.";
   }
+}
+
+std::pair<std::string, std::string> parse_property_type(
+    const vineyard::ObjectMeta& metadata) {
+  vineyard::json json;
+  metadata.GetKeyValue("schema_json_", json);
+  LOG(INFO) << "schema_json_: " << json;
+  std::string vertex_type_name, edge_type_name;
+
+  if (json.contains("types")) {
+    auto types = json["types"];
+    if (types.size() == 2) {
+      for (auto type : types) {
+        if (type["label"] == "vertex_label") {
+          if (type.contains("propertyDefList")) {
+            auto properties = type["propertyDefList"];
+            CHECK_EQ(properties.size(), 1);
+            auto data_type = properties[0]["data_type"];
+            vertex_type_name = data_type.get<std::string>();
+          } else {
+            LOG(FATAL) << "No propertyDefList found in schema";
+          }
+        } else if (type["label"] == "edge_label") {
+          if (type.contains("propertyDefList")) {
+            auto properties = type["propertyDefList"];
+            CHECK_EQ(properties.size(), 1);
+            auto data_type = properties[0]["data_type"];
+            edge_type_name = data_type.get<std::string>();
+          } else {
+            LOG(FATAL) << "No propertyDefList found in schema";
+          }
+        } else {
+          LOG(FATAL) << "Unknown type label";
+        }
+      }
+    }
+  } else {
+    LOG(FATAL) << "No types found in schema";
+  }
+  return std::make_pair(vertex_type_name, edge_type_name);
 }
 
 vineyard::ObjectID LoadGiraphFragment(
@@ -75,7 +116,7 @@ vineyard::ObjectID LoadGiraphFragment(
   graph->retain_oid = false;
 
   auto vertex = std::make_shared<detail::Vertex>();
-  vertex->label = "label1";
+  vertex->label = "vertex_label";
   vertex->vid = "0";
   vertex->protocol = "file";
   vertex->values = vfile;
@@ -84,11 +125,11 @@ vineyard::ObjectID LoadGiraphFragment(
   graph->vertices.push_back(vertex);
 
   auto edge = std::make_shared<detail::Edge>();
-  edge->label = "label2";
+  edge->label = "edge_label";
   auto subLabel = std::make_shared<detail::Edge::SubLabel>();
-  subLabel->src_label = "label1";
+  subLabel->src_label = "vertex_label";
   subLabel->src_vid = "0";
-  subLabel->dst_label = "label1";
+  subLabel->dst_label = "vertex_label";
   subLabel->dst_vid = "0";
   subLabel->protocol = "file";
   subLabel->values = efile;
@@ -129,6 +170,7 @@ void Query(grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
            int query_times) {
   std::vector<double> query_time(query_times, 0.0);
   double total_time = 0.0;
+  using APP_TYPE = JavaPIEProjectedDefaultApp<FRAG_T>;
 
   for (auto i = 0; i < query_times; ++i) {
     auto app = std::make_shared<APP_TYPE>();
@@ -167,6 +209,20 @@ void Query(grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
     oss << query_time.back();
   }
   VLOG(1) << "Separate time: " << oss.str();
+}
+
+template <typename ProjectedFragmentType>
+void ProjectAndQuery(grape::CommSpec& comm_spec,
+                     std::shared_ptr<FragmentType> fragment,
+                     const std::string& frag_name,
+                     const std::string& new_params,
+                     const std::string& user_lib_path, int query_times) {
+  // Project
+  std::shared_ptr<ProjectedFragmentType> projected_fragment =
+      ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+
+  Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
+                               user_lib_path, query_times);
 }
 
 void CreateAndQuery(std::string params) {
@@ -221,18 +277,22 @@ void CreateAndQuery(std::string params) {
   }
   int query_times = getFromPtree<int>(pt, OPTION_QUERY_TIMES);
 
+  vineyard::ObjectMeta metadata;
+  VINEYARD_CHECK_OK(client.GetMetaData(fragment_id, metadata));
+
+  // chose different type according to the schema
+  std::string vertex_data_type, edge_data_type;
+  std::tie(vertex_data_type, edge_data_type) = parse_property_type(metadata);
+
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(fragment_id));
-
   VLOG(10) << "fid: " << fragment->fid() << "fnum: " << fragment->fnum()
            << "v label num: " << fragment->vertex_label_num()
            << "e label num: " << fragment->edge_label_num()
            << "total v num: " << fragment->GetTotalVerticesNum();
   VLOG(1) << "inner vertices: " << fragment->GetInnerVerticesNum(0);
-
-  std::string frag_name =
-      "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>";
-  pt.put("frag_name", frag_name);
+  VLOG(1) << "vertex_data_type: " << vertex_data_type
+          << " edge_data_type: " << edge_data_type;
 
   std::string jar_name;
   if (getenv("USER_JAR_PATH")) {
@@ -249,19 +309,43 @@ void CreateAndQuery(std::string params) {
     return;
   }
   pt.put("jar_name", jar_name);
-
-  std::stringstream ss;
-  boost::property_tree::json_parser::write_json(ss, pt);
-  std::string new_params = ss.str();
-
   std::string user_lib_path = getFromPtree<std::string>(pt, OPTION_LIB_PATH);
 
-  // Project
-  std::shared_ptr<ProjectedFragmentType> projected_fragment =
-      ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+  if (vertex_data_type == "STRING" && edge_data_type == "STRING") {
+    std::string frag_name =
+        "gs::ArrowProjectedFragment<int64_t,uint64_t,std::string,std::string>";
+    pt.put("frag_name", frag_name);
+    std::stringstream ss;
+    boost::property_tree::json_parser::write_json(ss, pt);
+    std::string new_params = ss.str();
+    using ProjectedFragmentType =
+        ArrowProjectedFragment<int64_t, uint64_t, std::string, std::string>;
+    ProjectAndQuery<ProjectedFragmentType>(
+        comm_spec, fragment, frag_name, new_params, user_lib_path, query_times);
+  } else if (vertex_data_type == "STRING" && edge_data_type == "LONG") {
+    std::string frag_name =
+        "gs::ArrowProjectedFragment<int64_t,uint64_t,std::string,int64_t>";
+    pt.put("frag_name", frag_name);
+    std::stringstream ss;
+    boost::property_tree::json_parser::write_json(ss, pt);
+    std::string new_params = ss.str();
+    using ProjectedFragmentType =
+        ArrowProjectedFragment<int64_t, uint64_t, std::string, int64_t>;
+    ProjectAndQuery<ProjectedFragmentType>(
+        comm_spec, fragment, frag_name, new_params, user_lib_path, query_times);
 
-  Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
-                               user_lib_path, query_times);
+  } else {
+    std::string frag_name =
+        "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>";
+    pt.put("frag_name", frag_name);
+    std::stringstream ss;
+    boost::property_tree::json_parser::write_json(ss, pt);
+    std::string new_params = ss.str();
+    using ProjectedFragmentType =
+        ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
+    ProjectAndQuery<ProjectedFragmentType>(
+        comm_spec, fragment, frag_name, new_params, user_lib_path, query_times);
+  }
 }
 void Finalize() {
   grape::FinalizeMPIComm();

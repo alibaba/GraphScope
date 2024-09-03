@@ -272,7 +272,7 @@ void RunGraphX(vineyard::Client& client, grape::CommSpec& comm_spec,
       Query<ProjectedFragmentType, APP_TYPE>(comm_spec, fragment, new_params,
                                              FLAGS_user_lib_path);
     } else {
-      LOG(ERROR) << "Not recegonized context clz" << FLAGS_context_class;
+      LOG(ERROR) << "Not recognized context clz" << FLAGS_context_class;
     }
   }
   double t1 = grape::GetCurrentTime();

@@ -75,6 +75,7 @@ helm status demo
 | frontend.replicaCount | Number of Frontend | 1 |
 | frontend.service.type | Kubernetes Service type of frontend | NodePort |
 | frontend.query.per.second.limit | the maximum qps can be handled by frontend service | 2147483647 (without limitation) |
+| query.execution.timeout.ms | the total execution time for a query | 3000000 |
 
 
 If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
@@ -692,3 +693,7 @@ And use a different `zk.base.path` for each secondary instance to avoid conflict
 ### Traces
 
 use `--set otel.enabled=true` to enable trace export.
+
+### Write High-availability
+
+use `--set write.ha.enabled=True` in multi-pod deployment mode to open a backup store pod.

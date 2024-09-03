@@ -1,23 +1,22 @@
 # Command-line Utility `gsctl`
 
-`gsctl` is a command-line utility for GraphScope. It is shipped with `graphscope-client` and provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
+`gsctl` is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
 
 ## Install/Update `gsctl`
 
-Since it is shipped with python package `graphscope-client`, the `gsctl` command will be available in your terminal after installing GraphScope:
 ```bash
-$ pip3 install graphscope-client
+$ pip3 install gsctl
 ```
 
 In some cases, such as development on `gsctl`, you may want to build it from source.
 To do this, navigate to the directory where the source code is located and run the following command:
 
 ```bash
-$ cd REPO_HOME/python
+$ cd REPO_HOME
 # If you want to develop gsctl,
 # please note the entry point is located on:
 # /python/graphscope/gsctl/gsctl.py
-$ pip3 install --editable .
+$ make gsctl
 ```
 This will install `gsctl` in an editable mode, which means that any changes you make to the source code will be reflected in the installed version of `gsctl`.
 
@@ -42,7 +41,7 @@ Default, the `gsctl` provide helper functions and utilities that can be run usin
 
 ### Client/Server Mode
 
-To switch to the client/server mode, use the `gsctl connect` command. By default, this command connects gsctl to a launched coordinator using the configuration file located at `${HOME}/.gsctl`;  If `--coordinator-endpoint` param is specified, it will treat it as the current context and override the configuration file.
+To switch to the client/server mode, use the `gsctl connect` command. By default, this command connects gsctl to a launched coordinator using the configuration file located at `${HOME}/.gsctl`;  If `--coordinator-endpoint` parameter is specified, it will treat it as current context and override the configuration file.
 
 Once connected, you can use `gsctl` to communicate with the coordinator which serves the specific Flex product behind it.
 

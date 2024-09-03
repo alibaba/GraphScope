@@ -30,7 +30,7 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnExecResult, FnGenResult};
 use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType, PairEntry};
-use crate::process::operator::map::IntersectionEntry;
+use crate::process::operator::map::{GeneralIntersectionEntry, IntersectionEntry};
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
@@ -77,24 +77,46 @@ impl RecordSinkEncoder {
                 }
             }
             EntryType::Intersection => {
-                let intersection = e
+                if let Some(intersection) = e
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .unwrap();
-                let mut collection_pb = Vec::with_capacity(intersection.len());
-                for v in intersection.iter() {
-                    let vertex_pb = self.vid_to_pb(v);
-                    let element_pb =
-                        result_pb::Element { inner: Some(result_pb::element::Inner::Vertex(vertex_pb)) };
-                    collection_pb.push(element_pb);
+                {
+                    let mut collection_pb = Vec::with_capacity(intersection.len());
+                    for v in intersection.iter() {
+                        let vertex_pb = self.vid_to_pb(v);
+                        let element_pb = result_pb::Element {
+                            inner: Some(result_pb::element::Inner::Vertex(vertex_pb)),
+                        };
+                        collection_pb.push(element_pb);
+                    }
+                    Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                        collection: collection_pb,
+                    }))
+                } else if let Some(general_intersection) = e
+                    .as_any_ref()
+                    .downcast_ref::<GeneralIntersectionEntry>()
+                {
+                    let mut collection_pb = Vec::with_capacity(general_intersection.len());
+                    for v in general_intersection.iter() {
+                        let vertex_pb = self.vid_to_pb(v);
+                        let element_pb = result_pb::Element {
+                            inner: Some(result_pb::element::Inner::Vertex(vertex_pb)),
+                        };
+                        collection_pb.push(element_pb);
+                    }
+
+                    Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                        collection: collection_pb,
+                    }))
+                } else {
+                    Err(FnExecError::unsupported_error("unsupported intersection entry type"))?
                 }
-                Some(result_pb::entry::Inner::Collection(result_pb::Collection {
-                    collection: collection_pb,
-                }))
             }
             _ => {
                 if let Some(map_pb) = self.try_map_to_pb(e) {
                     Some(result_pb::entry::Inner::Map(map_pb))
+                } else if let Some(collection_pb) = self.try_collection_to_pb(e) {
+                    Some(result_pb::entry::Inner::Collection(collection_pb))
                 } else {
                     let element_pb = self.element_to_pb(e);
                     Some(result_pb::entry::Inner::Element(element_pb))
@@ -102,6 +124,24 @@ impl RecordSinkEncoder {
             }
         };
         Ok(result_pb::Entry { inner })
+    }
+
+    // return if the given entry is a collection entry result from PathValueProjector eval, etc.
+    fn try_collection_to_pb(&self, e: &DynEntry) -> Option<result_pb::Collection> {
+        if let EntryType::Object = e.get_type() {
+            if let Object::Vector(vec) = e.as_object().unwrap() {
+                let mut collection_pb = Vec::with_capacity(vec.len());
+                for obj in vec {
+                    let obj_pb = self.object_to_pb(obj.clone());
+                    let element_pb =
+                        result_pb::Element { inner: Some(result_pb::element::Inner::Object(obj_pb)) };
+                    collection_pb.push(element_pb);
+                }
+                return Some(result_pb::Collection { collection: collection_pb });
+            }
+        }
+
+        None
     }
 
     // return if the given entry is a map entry result from Map eval.
@@ -120,8 +160,10 @@ impl RecordSinkEncoder {
                     let val_pb: common_pb::Value = val.clone().into();
                     key_values.push(result_pb::key_values::KeyValue {
                         key: Some(key_pb),
-                        value: Some(result_pb::Element {
-                            inner: Some(result_pb::element::Inner::Object(val_pb)),
+                        value: Some(result_pb::Entry {
+                            inner: Some(result_pb::entry::Inner::Element(result_pb::Element {
+                                inner: Some(result_pb::element::Inner::Object(val_pb)),
+                            })),
                         }),
                     })
                 }
@@ -141,8 +183,38 @@ impl RecordSinkEncoder {
                 .unwrap();
             if let Some(key_obj) = pair.get_left().as_object() {
                 let key_pb: common_pb::Value = key_obj.clone().into();
-                let val_pb = self.element_to_pb(pair.get_right());
-                key_values.push(result_pb::key_values::KeyValue { key: Some(key_pb), value: Some(val_pb) })
+                let val = pair.get_right();
+                if val.get_type() == EntryType::Collection {
+                    let inner_collection = val
+                        .as_any_ref()
+                        .downcast_ref::<CollectionEntry>()
+                        .unwrap();
+                    let inner_map_pb = self.collection_map_to_pb(inner_collection.clone())?;
+                    key_values.push(result_pb::key_values::KeyValue {
+                        key: Some(key_pb),
+                        value: Some(result_pb::Entry {
+                            inner: Some(result_pb::entry::Inner::Map(inner_map_pb)),
+                        }),
+                    })
+                } else {
+                    let right = pair.get_right();
+                    if let Some(collection) = self.try_collection_to_pb(right) {
+                        key_values.push(result_pb::key_values::KeyValue {
+                            key: Some(key_pb),
+                            value: Some(result_pb::Entry {
+                                inner: Some(result_pb::entry::Inner::Collection(collection)),
+                            }),
+                        });
+                    } else {
+                        let val_pb = self.element_to_pb(right);
+                        key_values.push(result_pb::key_values::KeyValue {
+                            key: Some(key_pb),
+                            value: Some(result_pb::Entry {
+                                inner: Some(result_pb::entry::Inner::Element(val_pb)),
+                            }),
+                        })
+                    }
+                }
             } else {
                 Err(FnExecError::unsupported_error(&format!(
                     "only support map result with object key, while it is {:?}",
@@ -283,7 +355,7 @@ impl RecordSinkEncoder {
     fn path_to_pb(&self, p: &GraphPath) -> result_pb::GraphPath {
         let mut graph_path_pb = vec![];
         match p {
-            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) => {
+            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) | GraphPath::TrailAllPath(path) => {
                 for vertex_or_edge in path {
                     let vertex_or_edge_pb = self.vertex_or_edge_to_pb(vertex_or_edge);
                     graph_path_pb.push(vertex_or_edge_pb);

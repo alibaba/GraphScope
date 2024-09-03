@@ -26,13 +26,13 @@ public class ZkConfig {
             Config.intConfig("zk.connection.timeout.ms", 1000);
 
     public static final Config<Integer> ZK_SESSION_TIMEOUT_MS =
-            Config.intConfig("zk.session.timeout.ms", 10000);
+            Config.intConfig("zk.session.timeout.ms", 30000);
 
     public static final Config<Integer> ZK_BASE_SLEEP_MS =
-            Config.intConfig("zk.base.sleep.ms", 1000);
+            Config.intConfig("zk.base.sleep.ms", 10000);
 
     public static final Config<Integer> ZK_MAX_SLEEP_MS =
-            Config.intConfig("zk.max.sleep.ms", 45000);
+            Config.intConfig("zk.max.sleep.ms", 60000);
 
     public static final Config<Integer> ZK_MAX_RETRY = Config.intConfig("zk.max.retry", 29);
 

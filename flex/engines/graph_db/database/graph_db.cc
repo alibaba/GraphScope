@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/app/adhoc_app.h"
 #include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -48,11 +49,14 @@ GraphDB::~GraphDB() {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
-  showAppMetrics();
-  for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].~SessionLocalContext();
+  if (contexts_ != nullptr) {
+    showAppMetrics();
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+
+    free(contexts_);
   }
-  free(contexts_);
 }
 
 GraphDB& GraphDB::get() {
@@ -93,13 +97,13 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     graph_.Open(data_dir, config.memory_level);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
-    return Result<bool>(StatusCode::InternalError,
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
                         "Exception: " + std::string(e.what()), false);
   }
 
   if ((!create_empty_graph) && (!graph_.schema().Equals(schema))) {
     LOG(ERROR) << "Schema inconsistent..\n";
-    return Result<bool>(StatusCode::InternalError,
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
                         "Schema of work directory is not compatible with the "
                         "graph schema",
                         false);
@@ -108,17 +112,19 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   // is not serialized and deserialized.
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
-  std::vector<std::string> plugin_paths;
+  std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
   for (auto plugin_pair : plugins) {
-    plugin_paths.emplace_back(plugin_pair.first);
+    plugin_name_paths.emplace_back(
+        std::make_pair(plugin_pair.first, plugin_pair.second.first));
   }
 
-  std::sort(plugin_paths.begin(), plugin_paths.end(),
-            [&](const std::string& a, const std::string& b) {
-              return plugins.at(a).second < plugins.at(b).second;
+  std::sort(plugin_name_paths.begin(), plugin_name_paths.end(),
+            [&](const std::pair<std::string, std::string>& a,
+                const std::pair<std::string, std::string>& b) {
+              return plugins.at(a.first).second < plugins.at(b.first).second;
             });
-  mutable_schema.EmplacePlugins(plugin_paths);
+  mutable_schema.EmplacePlugins(plugin_name_paths);
 
   last_compaction_ts_ = 0;
   MemoryStrategy allocator_strategy = MemoryStrategy::kMemoryOnly;
@@ -243,6 +249,7 @@ void GraphDB::Close() {
       contexts_[i].~SessionLocalContext();
     }
     free(contexts_);
+    contexts_ = nullptr;
   }
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
@@ -304,7 +311,7 @@ AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
                << " is not registered.";
     return AppWrapper(NULL, NULL);
   } else {
-    return app_factories_[app_type]->CreateApp(contexts_[thread_id].session);
+    return app_factories_[app_type]->CreateApp(*this);
   }
 }
 
@@ -398,12 +405,12 @@ void GraphDB::initApps(
   }
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
-#ifdef BUILD_HQPS
-  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
-      std::make_shared<HQPSAdhocAppFactory>();
-  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
-      std::make_shared<HQPSProcedureAppFactory>();
-#endif  // BUILD_HQPS
+  app_factories_[Schema::HQPS_ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocReadAppFactory>();
+  app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocWriteAppFactory>();
+  app_factories_[Schema::ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<AdhocReadAppFactory>();
 
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {

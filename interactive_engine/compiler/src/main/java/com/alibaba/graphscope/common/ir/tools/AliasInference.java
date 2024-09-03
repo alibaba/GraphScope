@@ -47,6 +47,9 @@ public abstract class AliasInference {
     public static final String DEFAULT_NAME = "_";
     public static final int DEFAULT_ID = -1;
 
+    // denote all columns, to support count star
+    public static final String STAR = "*";
+
     public static final int DEFAULT_COLUMN_ID = 100;
 
     public static final String DELIMITER = ".";
@@ -203,5 +206,15 @@ public abstract class AliasInference {
 
     public static final boolean isDefaultAlias(@Nullable String alias) {
         return alias == null || alias.equals(DEFAULT_NAME);
+    }
+
+    public static final String inferAliasWithPrefix(String prefix, Set<String> uniqueNameList) {
+        int j = 0;
+        String name;
+        do {
+            name = prefix + j;
+            ++j;
+        } while (uniqueNameList.contains(name));
+        return name;
     }
 }

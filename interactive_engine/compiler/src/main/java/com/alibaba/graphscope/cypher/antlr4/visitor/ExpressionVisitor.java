@@ -35,16 +35,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexDynamicParam;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSubQuery;
-import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.NlsString;
@@ -74,11 +68,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         if (ObjectUtils.isEmpty(ctx.oC_AndExpression())) {
             throw new IllegalArgumentException("and expression should not be empty");
         }
-        return binaryCall(
+        return Utils.binaryCall(
                 GraphStdOperatorTable.OR,
                 ctx.oC_AndExpression().stream()
                         .map(k -> visitOC_AndExpression(k))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                builder);
     }
 
     @Override
@@ -86,11 +81,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         if (ObjectUtils.isEmpty(ctx.oC_NotExpression())) {
             throw new IllegalArgumentException("operands should not be empty in 'AND' operator");
         }
-        return binaryCall(
+        return Utils.binaryCall(
                 GraphStdOperatorTable.AND,
                 ctx.oC_NotExpression().stream()
                         .map(k -> visitOC_NotExpression(k))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                builder);
     }
 
     @Override
@@ -98,11 +94,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         ExprVisitorResult operand =
                 visitOC_NullPredicateExpression(ctx.oC_NullPredicateExpression());
         List<TerminalNode> notNodes = ctx.NOT();
-        return unaryCall(
+        return Utils.unaryCall(
                 ObjectUtils.isNotEmpty(notNodes) && (notNodes.size() & 1) != 0
                         ? ImmutableList.of(GraphStdOperatorTable.NOT)
                         : ImmutableList.of(),
-                operand);
+                operand,
+                builder);
     }
 
     @Override
@@ -110,23 +107,25 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             CypherGSParser.OC_ComparisonExpressionContext ctx) {
         List<SqlOperator> operators = new ArrayList<>();
         List<ExprVisitorResult> operands = new ArrayList<>();
-        operands.add(visitOC_StringPredicateExpression(ctx.oC_StringPredicateExpression()));
+        operands.add(
+                visitOC_StringOrListPredicateExpression(ctx.oC_StringOrListPredicateExpression()));
         for (CypherGSParser.OC_PartialComparisonExpressionContext partialCtx :
                 ctx.oC_PartialComparisonExpression()) {
             operands.add(
-                    visitOC_StringPredicateExpression(partialCtx.oC_StringPredicateExpression()));
+                    visitOC_StringOrListPredicateExpression(
+                            partialCtx.oC_StringOrListPredicateExpression()));
             operators.addAll(
                     Utils.getOperators(
                             partialCtx.children,
                             ImmutableList.of("=", "<>", "<", ">", "<=", ">="),
                             false));
         }
-        return binaryCall(operators, operands);
+        return Utils.binaryCall(operators, operands, builder);
     }
 
     @Override
-    public ExprVisitorResult visitOC_StringPredicateExpression(
-            CypherGSParser.OC_StringPredicateExpressionContext ctx) {
+    public ExprVisitorResult visitOC_StringOrListPredicateExpression(
+            CypherGSParser.OC_StringOrListPredicateExpressionContext ctx) {
         List<ExprVisitorResult> operands =
                 Lists.newArrayList(
                         visitOC_AddOrSubtractOrBitManipulationExpression(
@@ -161,8 +160,13 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             }
             operands.add(new ExprVisitorResult(builder.literal(regexPattern.toString())));
             operators.add(GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE);
+        } else if (ctx.IN() != null) {
+            operands.add(
+                    visitOC_AddOrSubtractOrBitManipulationExpression(
+                            ctx.oC_AddOrSubtractOrBitManipulationExpression(1)));
+            operators.add(GraphStdOperatorTable.IN);
         }
-        return binaryCall(operators, operands);
+        return Utils.binaryCall(operators, operands, builder);
     }
 
     @Override
@@ -175,7 +179,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         } else if (ctx.IS() != null && ctx.NULL() != null) {
             operators.add(GraphStdOperatorTable.IS_NULL);
         }
-        return unaryCall(operators, operand);
+        return Utils.unaryCall(operators, operand, builder);
     }
 
     @Override
@@ -187,11 +191,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         List<SqlOperator> operators =
                 com.alibaba.graphscope.common.antlr4.Utils.getOperators(
                         ctx.children, ImmutableList.of("+", "-", "&", "|", "^", "<<", ">>"), false);
-        return binaryCall(
+        return Utils.binaryCall(
                 operators,
                 ctx.oC_MultiplyDivideModuloExpression().stream()
                         .map(k -> visitOC_MultiplyDivideModuloExpression(k))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                builder);
     }
 
     @Override
@@ -202,11 +207,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         }
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
-        return binaryCall(
+        return Utils.binaryCall(
                 operators,
                 ctx.oC_UnaryAddOrSubtractExpression().stream()
                         .map(k -> visitOC_UnaryAddOrSubtractExpression(k))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                builder);
     }
 
     @Override
@@ -215,7 +221,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
-        return unaryCall(operators, operand);
+        return Utils.unaryCall(operators, operand, builder);
     }
 
     @Override
@@ -235,7 +241,10 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                                 ? builder.variable(aliasName, propertyName)
                                 : builder.call(
                                         GraphStdOperatorTable.EXTRACT,
-                                        createIntervalLiteral(propertyName),
+                                        Utils.createIntervalExpr(
+                                                null,
+                                                Utils.createExtractUnit(propertyName),
+                                                builder),
                                         variable);
                 return new ExprVisitorResult(expr);
             }
@@ -418,6 +427,13 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                         "'type' can only be applied on edge type");
                 return new ExprVisitorResult(
                         builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
+            case "ELEMENTID":
+                RexNode idVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        idVar.getType() instanceof GraphSchemaType,
+                        "'elementId' can only be applied on vertex or edge type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.ID_KEY));
             case "LENGTH":
                 Preconditions.checkArgument(
                         !exprCtx.isEmpty(), "LENGTH function should have one argument");
@@ -462,6 +478,29 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 return new ExprVisitorResult(
                         allAggCalls,
                         builder.call(GraphStdOperatorTable.POWER, left.getExpr(), right.getExpr()));
+            case "DURATION":
+                ExprVisitorResult operand = visitOC_Expression(exprCtx.get(0));
+                Preconditions.checkArgument(
+                        operand.getExpr().getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR,
+                        "parameter of scalar function 'duration' should be a map literal");
+                RexCall mapValues = (RexCall) operand.getExpr();
+                RexNode intervals = null;
+                for (int i = 0; i < mapValues.getOperands().size(); i += 2) {
+                    RexNode key = mapValues.getOperands().get(i);
+                    RexNode value = mapValues.getOperands().get(i + 1);
+                    String timeField = ((RexLiteral) key).getValueAs(NlsString.class).getValue();
+                    RexNode interval =
+                            Utils.createIntervalExpr(
+                                    value, Utils.createDurationUnit(timeField), builder);
+                    intervals =
+                            (intervals == null)
+                                    ? interval
+                                    : builder.call(GraphStdOperatorTable.PLUS, intervals, interval);
+                }
+                Preconditions.checkArgument(
+                        intervals != null,
+                        "parameter of scalar function 'duration' should not be empty");
+                return new ExprVisitorResult(operand.getAggCalls(), intervals);
             default:
                 throw new IllegalArgumentException(
                         "scalar function " + functionName + " is unsupported yet");
@@ -506,48 +545,6 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return new ExprVisitorResult(builder.call(GraphStdOperatorTable.CASE, operands));
     }
 
-    private ExprVisitorResult binaryCall(
-            List<SqlOperator> operators, List<ExprVisitorResult> operands) {
-        ObjectUtils.requireNonEmpty(operands, "operands count should not be 0");
-        if (operators.size() != operands.size() - 1) {
-            throw new IllegalArgumentException(
-                    "invalid operators count, should be equal with the count of operands minus 1");
-        }
-        RexNode expr = operands.get(0).getExpr();
-        List<RelBuilder.AggCall> aggCalls = new ArrayList<>();
-        aggCalls.addAll(operands.get(0).getAggCalls());
-        for (int i = 1; i < operands.size(); ++i) {
-            expr = builder.call(operators.get(i - 1), expr, operands.get(i).getExpr());
-            aggCalls.addAll(operands.get(i).getAggCalls());
-        }
-        return new ExprVisitorResult(aggCalls, expr);
-    }
-
-    private ExprVisitorResult binaryCall(SqlOperator operator, List<ExprVisitorResult> operands) {
-        ObjectUtils.requireNonEmpty(operands, "operands count should not be 0");
-        RexNode expr = operands.get(0).getExpr();
-        List<RelBuilder.AggCall> aggCalls = new ArrayList<>();
-        aggCalls.addAll(operands.get(0).getAggCalls());
-        for (int i = 1; i < operands.size(); ++i) {
-            expr = builder.call(operator, expr, operands.get(i).getExpr());
-            aggCalls.addAll(operands.get(i).getAggCalls());
-        }
-        return new ExprVisitorResult(aggCalls, expr);
-    }
-
-    /**
-     *
-     * @param operators at most one operator, can be empty
-     * @param operand
-     * @return
-     */
-    private ExprVisitorResult unaryCall(List<SqlOperator> operators, ExprVisitorResult operand) {
-        return (operators.isEmpty())
-                ? operand
-                : new ExprVisitorResult(
-                        operand.getAggCalls(), builder.call(operators.get(0), operand.getExpr()));
-    }
-
     private class ParamManager {
         private final AtomicInteger idGenerator;
         private Map<String, Integer> paramNameToIdMap;
@@ -575,12 +572,5 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     public Map<Integer, String> getDynamicParams() {
         return Collections.unmodifiableMap(paramManager.paramIdToNameMap);
-    }
-
-    private RexLiteral createIntervalLiteral(String fieldName) {
-        TimeUnit timeUnit = TimeUnit.valueOf(fieldName.toUpperCase());
-        SqlIntervalQualifier intervalQualifier =
-                new SqlIntervalQualifier(timeUnit, null, SqlParserPos.ZERO);
-        return builder.getRexBuilder().makeIntervalLiteral(null, intervalQualifier);
     }
 }

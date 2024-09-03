@@ -68,6 +68,8 @@ std::string result_opt_pb_2_str(
     return "gs::ResultOpt::EndV";
   case physical::PathExpand::ResultOpt::PathExpand_ResultOpt_ALL_V:
     return "gs::ResultOpt::AllV";
+  case physical::PathExpand::ResultOpt::PathExpand_ResultOpt_ALL_V_E:
+    return "gs::ResultOpt::AllVE";
   default:
     throw std::runtime_error("unknown result_opt_pb");
   }
@@ -199,12 +201,11 @@ class PathExpandOpBuilder {
       if (params.tables().size() < 1) {
         throw std::runtime_error("no edge labels found");
       } else if (params.tables().size() == 1) {
-        physical::PhysicalOpr::MetaData meta_data;
         // pass an empty meta_data, since we need no meta_data for
         std::tie(edge_expand_opt_name_, edge_expand_opt_) =
             BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
                                        dst_vertex_labels_, expand_opt,
-                                       meta_data);
+                                       meta_data_pb[0]);
       } else {
         // get the first meta_data
         if (meta_data_pb.size() < 1) {

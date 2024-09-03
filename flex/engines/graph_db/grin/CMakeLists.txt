@@ -34,11 +34,11 @@ if (GLOG_FOUND)
 endif ()
 
 #find arrow----------------------------------------------------------------------
-include("../../../../flex/cmake/FindArrow.cmake")
-if (NOT ARROW_FOUND)
+find_package(Arrow REQUIRED)
+if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
     if (TARGET arrow_shared)
         set(ARROW_SHARED_LIB arrow_shared)
     endif()
@@ -69,9 +69,11 @@ add_custom_target(grin_clformat
         COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
         COMMENT "Running clang-format."
         VERBATIM)
+file(GLOB_RECURSE SRC_SOURCES "src/*.cc")
+file(GLOB_RECURSE UTILS_SOURCES "../../../utils/*.cc")
+file(GLOB_RECURSE STORAGE_SOURCES "../../../storages/rt_mutable_graph/*.cc")
+set(SOURCES ${SRC_SOURCES} ${UTILS_SOURCES} ${STORAGE_SOURCES})
 
-file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../utils/*.cc"
-                  "../../../storages/rt_mutable_graph/*.cc" "../../../storages/rt_mutable_graph/loader/*.cc")
 add_library(flex_grin SHARED ${SOURCES})
 target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS}  ${YAML_CPP_LIBRARIES})
 if (ARROW_SHARED_LIB)

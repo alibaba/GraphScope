@@ -185,6 +185,13 @@ class Connection:
         )
         return response.success
 
+    def get_store_state(self):
+        request = model_pb2.GetStoreStateRequest()
+        response = self._client_service_stub.getStoreState(
+            request, metadata=self._metadata
+        )
+        return response.partitionStates
+
     def replay_records(self, offset: int, timestamp: int):
         request = write_service_pb2.ReplayRecordsRequest()
         request.offset = offset

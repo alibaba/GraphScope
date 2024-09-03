@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.serialization;
 
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
 import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
 
@@ -274,6 +275,15 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         offset += len;
     }
 
+    public void writeBytes(StringView s) throws IOException {
+        int len = (int) s.size();
+        vector.ensure(offset, len);
+        for (int i = 0; i < len; i++) {
+            vector.setRawByte(offset + i, (byte) s.byteAt(i));
+        }
+        offset += len;
+    }
+
     /**
      * Writes every character in the string <code>s</code>, to the output stream, in order, two
      * bytes per character. If <code>s</code> is <code>null</code>, a <code>NullPointerException</code>
@@ -401,5 +411,10 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         vector.ensure(offset, 1);
         vector.setRawByte(offset, (byte) b);
         offset += 1;
+    }
+
+    @Override
+    public void close() throws IOException {
+        vector.delete();
     }
 }

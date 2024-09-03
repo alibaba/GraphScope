@@ -354,7 +354,12 @@ enum JoinKind {
   LeftOuterJoin = 3,
 };
 
-enum Direction { Out = 0, In = 1, Both = 2 };
+enum Direction {
+  Out = 0,
+  In = 1,
+  Both = 2,
+  Unknown = 3,
+};
 enum VOpt {
   Start = 0,   // The start vertex of current expanded edge.
   End = 1,     // the ending vertex of this expanding.
@@ -369,8 +374,9 @@ enum PathOpt {
 };
 
 enum ResultOpt {
-  EndV = 0,  // Get the end vertex of path. i.e. [3],[4]
-  AllV = 1,  // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  EndV = 0,   // Get the end vertex of path. i.e. [3],[4]
+  AllV = 1,   // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  AllVE = 2,  // Get all the vertex and edge on path. i.e. [1,2,3,4]
 };
 
 enum Interval {

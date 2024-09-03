@@ -20,9 +20,12 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/app_utils.h"
 
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
+#include "nlohmann/json.hpp"
+
 namespace gs {
 
-ReadTransaction GraphDBSession::GetReadTransaction() {
+ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
   return ReadTransaction(db_.graph_, db_.version_manager_, ts);
 }
@@ -61,6 +64,8 @@ const MutablePropertyFragment& GraphDBSession::graph() const {
   return db_.graph();
 }
 
+const GraphDB& GraphDBSession::db() const { return db_; }
+
 MutablePropertyFragment& GraphDBSession::graph() { return db_.graph(); }
 
 const Schema& GraphDBSession::schema() const { return db_.schema(); }
@@ -92,7 +97,7 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
         dynamic_cast<const TypedColumn<uint32_t>&>(
             db_.graph().lf_indexers_[label].get_keys()));
   } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kString) {
+             PropertyType::kStringView) {
     return std::make_shared<TypedRefColumn<std::string_view>>(
         dynamic_cast<const TypedColumn<std::string_view>&>(
             db_.graph().lf_indexers_[label].get_keys()));
@@ -103,24 +108,38 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   const auto start = std::chrono::high_resolution_clock::now();
-  uint8_t type = input.back();
-  const char* str_data = input.data();
-  size_t str_len = input.size() - 1;
+
+  if (input.size() < 2) {
+    return Result<std::vector<char>>(
+        StatusCode::INVALID_ARGUMENT,
+        "Invalid input, input size: " + std::to_string(input.size()),
+        std::vector<char>());
+  }
+
+  auto type_res = parse_query_type(input);
+  if (!type_res.ok()) {
+    LOG(ERROR) << "Fail to parse query type";
+    return Result<std::vector<char>>(type_res.status(), std::vector<char>());
+  }
+
+  uint8_t type;
+  std::string_view sv;
+  std::tie(type, sv) = type_res.value();
 
   std::vector<char> result_buffer;
 
-  Decoder decoder(str_data, str_len);
   Encoder encoder(result_buffer);
+  Decoder decoder(sv.data(), sv.size());
 
   AppBase* app = GetApp(type);
   if (!app) {
     return Result<std::vector<char>>(
-        StatusCode::NotFound,
+        StatusCode::NOT_FOUND,
         "Procedure not found, id:" + std::to_string((int) type), result_buffer);
   }
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
-    if (app->Query(decoder, encoder)) {
+    if (app->run(*this, decoder, encoder)) {
       const auto end = std::chrono::high_resolution_clock::now();
       app_metrics_[type].add_record(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
@@ -138,7 +157,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    decoder.reset(str_data, str_len);
+    decoder.reset(sv.data(), sv.size());
     result_buffer.clear();
   }
 
@@ -148,7 +167,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
           .count());
   ++query_num_;
   return Result<std::vector<char>>(
-      StatusCode::QueryFailed,
+      StatusCode::QUERY_FAILED,
       "Query failed for procedure id:" + std::to_string((int) type),
       result_buffer);
 }
@@ -207,6 +226,59 @@ AppBase* GraphDBSession::GetApp(int type) {
 }
 
 #undef likely  // likely
+
+Result<std::pair<uint8_t, std::string_view>>
+GraphDBSession::parse_query_type_from_cypher_json(
+    const std::string_view& str_view) {
+  VLOG(10) << "string view: " << str_view;
+  nlohmann::json j;
+  try {
+    j = nlohmann::json::parse(str_view);
+  } catch (const nlohmann::json::parse_error& e) {
+    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::INTERNAL_ERROR,
+        "Fail to parse json from input content:" + std::string(e.what())));
+  }
+  auto query_name = j["query_name"].get<std::string>();
+  const auto& app_name_to_path_index = schema().GetPlugins();
+  if (app_name_to_path_index.count(query_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << query_name;
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
+  }
+  if (j.contains("arguments")) {
+    for (auto& arg : j["arguments"]) {
+      VLOG(10) << "arg: " << arg;
+    }
+  }
+  VLOG(10) << "Query name: " << query_name;
+  return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
+}
+
+Result<std::pair<uint8_t, std::string_view>>
+GraphDBSession::parse_query_type_from_cypher_internal(
+    const std::string_view& str_view) {
+  procedure::Query cur_query;
+  if (!cur_query.ParseFromArray(str_view.data(), str_view.size())) {
+    LOG(ERROR) << "Fail to parse query from input content";
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::INTERNAL_ERROR, "Fail to parse query from input content"));
+  }
+  auto query_name = cur_query.query_name().name();
+  if (query_name.empty()) {
+    LOG(ERROR) << "Query name is empty";
+    return Result<std::pair<uint8_t, std::string_view>>(
+        gs::Status(StatusCode::NOT_FOUND, "Query name is empty"));
+  }
+  const auto& app_name_to_path_index = schema().GetPlugins();
+  if (app_name_to_path_index.count(query_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << query_name;
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
+  }
+  return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
+}
 
 const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
   return app_metrics_[idx];

@@ -184,4 +184,4 @@ $ helm install graphscope ./graphscope --namespace=default
 
 - https://graphscope.io/
 - https://github.com/alibaba/GraphScope
-- https://try.graphscope.app/
+- https://try.graphscope.io/

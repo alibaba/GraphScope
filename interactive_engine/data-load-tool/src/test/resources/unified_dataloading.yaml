@@ -1,0 +1,44 @@
+graph: demo
+loading_config:
+  format:
+    type: csv   # optional value: csv
+    metadata: # map<string, string>
+      split_size: 32
+      graph_endpoint: "1.2.3.4:90"
+      project: graphscope_dev
+      output_table: person_tmp
+      auth_username: test_user
+      auth_password: test_pass
+      load_after_build: 1
+      primary_vipserver_domain: demo-grpc-vipserver
+      delimiter: ","
+      header_row: 1
+
+vertex_mappings:
+  - type_name: person
+    inputs:
+      - hdfs:///modern_graph/person.csv
+    column_mappings:
+      - column: # choose one of the index and name
+          index: 0
+        property: id
+
+edge_mappings:
+  - type_triplet:
+      edge: knows
+      source_vertex: person
+      destination_vertex: person
+    inputs:
+      - odps:///graphscope_dev/modern_knows
+    source_vertex_mappings:
+      - column:
+          index: 0
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 0
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+        property: weight

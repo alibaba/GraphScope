@@ -29,7 +29,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-from graphscope.proto.error_codes_pb2 import OK
+from graphscope.proto.error.coordinator_pb2 import OK
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.monitor import Monitor
@@ -972,9 +972,7 @@ class OperationExecutor:
             except:  # noqa: E722, pylint: disable=bare-except
                 storage_options = {}
                 read_options = {}
-            filetype = storage_options.get("filetype", None)
-            if filetype is None:
-                filetype = read_options.get("filetype", None)
+            filetype = read_options.get("filetype", None)
             filetype = str(filetype).upper()
             if (
                 protocol in ("hdfs", "hive", "oss", "s3")

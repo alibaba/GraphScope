@@ -22,6 +22,7 @@
 #include "flex/storages/rt_mutable_graph/csr/immutable_csr.h"
 #include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/allocators.h"
+#include "flex/utils/property/table.h"
 
 namespace gs {
 
@@ -34,6 +35,12 @@ class DualCsrBase {
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
                          const std::vector<int>& ie_degree) = 0;
+
+  virtual void BatchInitInMemory(const std::string& edata_name,
+                                 const std::string& work_dir,
+                                 const std::vector<int>& oe_degree,
+                                 const std::vector<int>& ie_degree) = 0;
+
   virtual void Open(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
@@ -71,10 +78,23 @@ class DualCsrBase {
     GetOutCsr()->warmup(thread_num);
   }
 
+  size_t EdgeNum() const {
+    const CsrBase* oe_csr = GetOutCsr();
+    const CsrBase* ie_csr = GetInCsr();
+    if (oe_csr) {
+      return oe_csr->edge_num();
+    } else if (ie_csr) {
+      return ie_csr->edge_num();
+    } else {
+      return 0;
+    }
+  }
+
   virtual CsrBase* GetInCsr() = 0;
   virtual CsrBase* GetOutCsr() = 0;
   virtual const CsrBase* GetInCsr() const = 0;
   virtual const CsrBase* GetOutCsr() const = 0;
+  virtual void Close() = 0;
 };
 
 template <typename EDATA_T>
@@ -122,6 +142,14 @@ class DualCsr : public DualCsrBase {
     out_csr_->batch_init(oe_name, work_dir, oe_degree);
   }
 
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    in_csr_->batch_init_in_memory(ie_degree);
+    out_csr_->batch_init_in_memory(oe_degree);
+  }
+
   void Open(const std::string& oe_name, const std::string& ie_name,
             const std::string& edata_name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
@@ -150,6 +178,7 @@ class DualCsr : public DualCsrBase {
             const std::string& new_snapshot_dir) override {
     in_csr_->dump(ie_name, new_snapshot_dir);
     out_csr_->dump(oe_name, new_snapshot_dir);
+    Close();
   }
 
   CsrBase* GetInCsr() override { return in_csr_; }
@@ -204,6 +233,11 @@ class DualCsr : public DualCsrBase {
     out_csr_->batch_put_edge(src, dst, data);
   }
 
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+  }
+
  private:
   TypedCsrBase<EDATA_T>* in_csr_;
   TypedCsrBase<EDATA_T>* out_csr_;
@@ -250,6 +284,17 @@ class DualCsr<std::string_view> : public DualCsrBase {
     column_idx_.store(0);
   }
 
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
+    size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
+    column_.open(edata_name, "", work_dir);
+    column_.resize(std::max(ie_num, oe_num));
+    column_idx_.store(0);
+  }
+
   void Open(const std::string& oe_name, const std::string& ie_name,
             const std::string& edata_name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
@@ -285,6 +330,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->dump(oe_name, new_snapshot_dir);
     column_.resize(column_idx_.load());
     column_.dump(new_snapshot_dir + "/" + edata_name);
+    Close();
   }
 
   CsrBase* GetInCsr() override { return in_csr_; }
@@ -355,11 +401,207 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->batch_put_edge_with_index(src, dst, row_id);
   }
 
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+    column_.close();
+  }
+
  private:
   TypedCsrBase<std::string_view>* in_csr_;
   TypedCsrBase<std::string_view>* out_csr_;
   std::atomic<size_t> column_idx_;
   StringColumn column_;
+};
+
+template <>
+class DualCsr<RecordView> : public DualCsrBase {
+ public:
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
+          const std::vector<std::string>& col_name,
+          const std::vector<PropertyType>& property_types,
+          const std::vector<StorageStrategy>& storage_strategies)
+      : col_name_(col_name),
+        property_types_(property_types),
+        storage_strategies_(storage_strategies),
+        in_csr_(nullptr),
+        out_csr_(nullptr) {
+    if (ie_strategy == EdgeStrategy::kNone) {
+      in_csr_ = new EmptyCsr<RecordView>(table_);
+    } else if (ie_strategy == EdgeStrategy::kMultiple) {
+      in_csr_ = new MutableCsr<RecordView>(table_);
+    } else {
+      in_csr_ = new SingleMutableCsr<RecordView>(table_);
+    }
+    if (oe_strategy == EdgeStrategy::kNone) {
+      out_csr_ = new EmptyCsr<RecordView>(table_);
+    } else if (oe_strategy == EdgeStrategy::kMultiple) {
+      out_csr_ = new MutableCsr<RecordView>(table_);
+    } else {
+      out_csr_ = new SingleMutableCsr<RecordView>(table_);
+    }
+  }
+
+  ~DualCsr() {
+    if (in_csr_ != nullptr) {
+      delete in_csr_;
+    }
+    if (out_csr_ != nullptr) {
+      delete out_csr_;
+    }
+  }
+
+  void InitTable(const std::string& edata_name, const std::string& work_dir) {
+    table_.init(edata_name, work_dir, col_name_, property_types_,
+                storage_strategies_);
+  }
+
+  void BatchInit(const std::string& oe_name, const std::string& ie_name,
+                 const std::string& edata_name, const std::string& work_dir,
+                 const std::vector<int>& oe_degree,
+                 const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree);
+    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    table_.resize(std::max(ie_num, oe_num));
+
+    table_idx_.store(std::max(ie_num, oe_num));
+  }
+
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
+    size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
+    table_.resize(std::max(ie_num, oe_num));
+    table_idx_.store(std::max(ie_num, oe_num));
+  }
+
+  void Open(const std::string& oe_name, const std::string& ie_name,
+            const std::string& edata_name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {
+    in_csr_->open(ie_name, snapshot_dir, work_dir);
+    out_csr_->open(oe_name, snapshot_dir, work_dir);
+
+    // fix me: storage_strategies_ is not used
+    table_.open(edata_name, snapshot_dir, work_dir, col_name_, property_types_,
+                {});
+    table_idx_.store(table_.row_num());
+    table_.resize(
+        std::max(table_.row_num() + (table_.row_num() + 4) / 5, 4096ul));
+  }
+
+  void OpenInMemory(const std::string& oe_name, const std::string& ie_name,
+                    const std::string& edata_name,
+                    const std::string& snapshot_dir, size_t src_vertex_cap,
+                    size_t dst_vertex_cap) override {
+    in_csr_->open_in_memory(snapshot_dir + "/" + ie_name, dst_vertex_cap);
+    out_csr_->open_in_memory(snapshot_dir + "/" + oe_name, src_vertex_cap);
+    // fix me: storage_strategies_ is not used
+    table_.open_in_memory(edata_name, snapshot_dir, col_name_, property_types_,
+                          {});
+    table_idx_.store(table_.row_num());
+    table_.resize(
+        std::max(table_.row_num() + (table_.row_num() + 4) / 5, 4096ul));
+  }
+
+  void OpenWithHugepages(const std::string& oe_name, const std::string& ie_name,
+                         const std::string& edata_name,
+                         const std::string& snapshot_dir, size_t src_vertex_cap,
+                         size_t dst_vertex_cap) override {
+    LOG(FATAL) << "not supported...";
+  }
+
+  void Dump(const std::string& oe_name, const std::string& ie_name,
+            const std::string& edata_name,
+            const std::string& new_snapshot_dir) override {
+    in_csr_->dump(ie_name, new_snapshot_dir);
+    out_csr_->dump(oe_name, new_snapshot_dir);
+    table_.resize(table_idx_.load());
+    table_.dump(edata_name, new_snapshot_dir);
+  }
+
+  CsrBase* GetInCsr() override { return in_csr_; }
+  CsrBase* GetOutCsr() override { return out_csr_; }
+  const CsrBase* GetInCsr() const override { return in_csr_; }
+  const CsrBase* GetOutCsr() const override { return out_csr_; }
+
+  void BatchPutEdge(vid_t src, vid_t dst, size_t row_id) {
+    in_csr_->batch_put_edge_with_index(dst, src, row_id);
+    out_csr_->batch_put_edge_with_index(src, dst, row_id);
+  }
+
+  Table& GetTable() { return table_; }
+
+  const Table& GetTable() const { return table_; }
+  void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
+                  Allocator& alloc) override {
+    size_t row_id = table_idx_.fetch_add(1);
+    size_t len;
+    oarc >> len;
+    table_.ingest(row_id, oarc);
+    in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
+    out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
+  }
+
+  void SortByEdgeData(timestamp_t ts) override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+  void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
+                  Allocator& alloc) override {
+    auto oe_ptr = out_csr_->edge_iter_mut(src);
+    grape::InArchive arc;
+    Record r = data.AsRecord();
+    for (size_t i = 0; i < r.len; ++i) {
+      arc << r.props[i];
+    }
+    grape::OutArchive oarc;
+    oarc.SetSlice(arc.GetBuffer(), arc.GetSize());
+    auto oe = dynamic_cast<MutableCsrEdgeIter<RecordView>*>(oe_ptr.get());
+    size_t index = std::numeric_limits<size_t>::max();
+    while (oe != nullptr && oe->is_valid()) {
+      if (oe->get_neighbor() == dst) {
+        oe->set_timestamp(ts);
+        index = oe->get_index();
+        break;
+      }
+      oe->next();
+    }
+    auto ie_ptr = in_csr_->edge_iter_mut(dst);
+    auto ie = dynamic_cast<MutableCsrEdgeIter<RecordView>*>(ie_ptr.get());
+    while (ie != nullptr && ie->is_valid()) {
+      if (ie->get_neighbor() == src) {
+        ie->set_timestamp(ts);
+        index = ie->get_index();
+        break;
+      }
+      ie->next();
+    }
+    if (index != std::numeric_limits<size_t>::max()) {
+      table_.ingest(index, oarc);
+    } else {
+      size_t row_id = table_idx_.fetch_add(1);
+      table_.ingest(row_id, oarc);
+      in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
+      out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
+    }
+  }
+
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+    table_.close();
+  }
+
+ private:
+  const std::vector<std::string>& col_name_;
+  const std::vector<PropertyType>& property_types_;
+  const std::vector<StorageStrategy>& storage_strategies_;
+  TypedMutableCsrBase<RecordView>* in_csr_;
+  TypedMutableCsrBase<RecordView>* out_csr_;
+  std::atomic<size_t> table_idx_;
+  Table table_;
 };
 
 }  // namespace gs

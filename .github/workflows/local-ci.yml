@@ -52,7 +52,7 @@ jobs:
       gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Detect the tmate session
       run: |
@@ -85,6 +85,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
+            - 'python/requirements.txt'
           gie-function-test:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
@@ -206,7 +207,7 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -256,7 +257,7 @@ jobs:
         tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-${{ github.sha }}
         path: |
@@ -269,9 +270,9 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -296,9 +297,10 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install --no-cache-dir pytest pytest-xdist "tensorflow" "pandas" --user
+          python3 -m pip install --no-cache-dir pytest pytest-xdist "pandas" --user
+          # python3 -m pip install --no-cache-dir "tensorflow" --user
           # install pytorch
-          python3 -m pip install --no-cache-dir "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
+          # python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -319,7 +321,7 @@ jobs:
 
       - name: Upload GIE log
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: gie-log
@@ -337,10 +339,10 @@ jobs:
         deployment: ["standalone", "distributed"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
       with:
         path: artifacts
@@ -379,6 +381,7 @@ jobs:
       run: |
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        export TMPDIR="${TMPDIR:-$(dirname $(mktemp))}"
 
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
@@ -405,7 +408,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -421,12 +424,13 @@ jobs:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
+            - 'python/requirements.txt'
           convert:
             - 'python/graphscope/nx/convert.py'
             - 'python/graphscope/nx/convert_matrix.py'
             - 'python/graphscope/nx/tests/convert/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
@@ -493,7 +497,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -513,7 +517,7 @@ jobs:
           io:
             - 'python/graphscope/nx/readwrite/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts

@@ -30,6 +30,7 @@ import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FR
 import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FRAGMENT_GETTER;
 import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FRAGMENT_MAPPER;
 import static com.alibaba.graphscope.utils.JavaClassName.LONG;
+import static com.alibaba.graphscope.utils.JavaClassName.STD_STRING;
 import static com.alibaba.graphscope.utils.JavaClassName.STRING;
 import static com.alibaba.graphscope.utils.JavaClassName.STRING_VIEW;
 
@@ -46,6 +47,7 @@ import com.alibaba.fastffi.FFIGenBatch;
  */
 @FFIGenBatch(
         value = {
+            @FFIGen(type = "com.alibaba.graphscope.stdcxx.StdString"),
             @FFIGen(type = "com.alibaba.graphscope.ds.FidPointer"),
             @FFIGen(type = "com.alibaba.graphscope.ds.DestList"),
             @FFIGen(type = "com.alibaba.graphscope.stdcxx.CCharPointer"),
@@ -142,6 +144,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(cxx = "int64_t", java = "Long"),
                         @CXXTemplate(cxx = "double", java = "Double"),
                         @CXXTemplate(cxx = "int32_t", java = "Integer"),
+                        @CXXTemplate(cxx = "std::string", java = STD_STRING)
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.ds.VertexRange",
@@ -1162,6 +1165,44 @@ import com.alibaba.fastffi.FFIGenBatch;
                                             + STRING
                                             + ">",
                                     "Integer"
+                                }),
+                        @CXXTemplate(
+                                cxx = {
+                                    CPP_ARROW_PROJECTED_FRAGMENT
+                                            + "<int64_t,uint64_t,std::string,int64_t>",
+                                    "std::string"
+                                },
+                                java = {
+                                    JAVA_ARROW_PROJECTED_FRAGMENT
+                                            + "<"
+                                            + LONG
+                                            + ","
+                                            + LONG
+                                            + ","
+                                            + STRING
+                                            + ","
+                                            + LONG
+                                            + ">",
+                                    STD_STRING
+                                }),
+                        @CXXTemplate(
+                                cxx = {
+                                    CPP_ARROW_PROJECTED_FRAGMENT
+                                            + "<int64_t,uint64_t,std::string,std::string>",
+                                    "std::string"
+                                },
+                                java = {
+                                    JAVA_ARROW_PROJECTED_FRAGMENT
+                                            + "<"
+                                            + LONG
+                                            + ","
+                                            + LONG
+                                            + ","
+                                            + STRING_VIEW
+                                            + ","
+                                            + STRING_VIEW
+                                            + ">",
+                                    STD_STRING
                                 }),
                     }),
             @FFIGen(

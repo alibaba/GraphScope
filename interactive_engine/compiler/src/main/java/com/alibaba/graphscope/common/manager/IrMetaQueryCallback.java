@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.common.manager;
 
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.proto.frontend.Code;
 
 import java.util.Optional;
 
@@ -32,9 +34,13 @@ public class IrMetaQueryCallback {
     public IrMeta beforeExec() {
         Optional<IrMeta> metaOpt = fetcher.fetch();
         if (!metaOpt.isPresent()) {
-            throw new RuntimeException("ir meta is not ready");
+            throw new FrontendException(Code.META_SCHEMA_NOT_READY, "ir meta is not ready");
         }
         return metaOpt.get();
+    }
+
+    public IrMetaFetcher getMetaFetcher() {
+        return fetcher;
     }
 
     // do sth after the query is done

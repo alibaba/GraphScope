@@ -9,3 +9,15 @@ vineyard-io>=0.16.3;sys_platform!="win32"
 prometheus-client>=0.14.1
 packaging
 tqdm
+connexion == 2.14.2
+werkzeug == 3.0.3; python_version=="3.5" or python_version=="3.4"
+swagger-ui-bundle >= 0.0.2
+python_dateutil >= 2.6.0
+Flask == 2.2.5
+urllib3 >= 1.25.3, < 2.1.0
+pydantic >= 2
+typing-extensions >= 4.7.1
+click >= 8.1.7
+psutil
+schedule == 1.2.1
+gs_interactive >= 0.3

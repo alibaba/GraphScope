@@ -36,7 +36,7 @@ class TwoLabelVertexSetImplKeyedBuilder {
  public:
   using key_t = GlobalId;
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using data_tuple_t = std::tuple<T...>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
@@ -102,7 +102,7 @@ class TwoLabelVertexSetImplKeyedBuilder<VID_T, LabelT, grape::EmptyType> {
  public:
   using key_t = GlobalId;
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   static constexpr bool is_row_vertex_set_builder = false;
@@ -159,7 +159,7 @@ template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImplBuilder {
  public:
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using data_tuple_t = std::tuple<T...>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
@@ -220,7 +220,7 @@ template <typename VID_T, typename LabelT>
 class TwoLabelVertexSetImplBuilder<VID_T, LabelT, grape::EmptyType> {
  public:
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   static constexpr bool is_row_vertex_set_builder = false;
@@ -618,26 +618,28 @@ auto twoLabelSetFlatImpl(
                          std::move(res_bitset));
 }
 
-template <typename VID_T, typename... T>
+template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetIter {
  public:
   using lid_t = VID_T;
   using self_type_t = TwoLabelVertexSetIter<VID_T, T...>;
-  using ele_tuple_t = std::pair<int32_t, VID_T>;
+  using ele_tuple_t =
+      typename TwoLabelVertexSetImpl<VID_T, LabelT, T...>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   using data_tuple_t = std::tuple<T...>;
 
   TwoLabelVertexSetIter(const std::vector<VID_T>& vec,
                         const std::vector<data_tuple_t>& data,
-                        const grape::Bitset& bitset, size_t ind)
-      : vec_(vec), data_(data), bitset_(bitset), ind_(ind) {}
+                        const grape::Bitset& bitset,
+                        const std::array<LabelT, 2>& labels, size_t ind)
+      : vec_(vec), data_(data), bitset_(bitset), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     if (bitset_.get_bit(ind_)) {
-      return std::make_pair(0, vec_[ind_]);
+      return GlobalId(labels_[0], vec_[ind_]);
     } else {
-      return std::make_pair(1, vec_[ind_]);
+      return GlobalId(labels_[1], vec_[ind_]);
     }
   }
 
@@ -685,28 +687,32 @@ class TwoLabelVertexSetIter {
   const std::vector<VID_T>& vec_;
   const std::vector<data_tuple_t>& data_;
   const grape::Bitset& bitset_;
+  std::array<LabelT, 2> labels_;
   size_t ind_;
 };
 
-template <typename VID_T>
-class TwoLabelVertexSetIter<VID_T, grape::EmptyType> {
+template <typename VID_T, typename LabelT>
+class TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType> {
  public:
   using lid_t = VID_T;
-  using self_type_t = TwoLabelVertexSetIter<VID_T, grape::EmptyType>;
-  using ele_tuple_t = std::pair<int32_t, lid_t>;
+  using self_type_t = TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType>;
+  using ele_tuple_t =
+      typename TwoLabelVertexSetImpl<VID_T, LabelT,
+                                     grape::EmptyType>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   using data_tuple_t = std::tuple<grape::EmptyType>;
 
   TwoLabelVertexSetIter(const std::vector<VID_T>& vec,
-                        const grape::Bitset& bitset, size_t ind)
-      : vec_(vec), bitset_(bitset), ind_(ind) {}
+                        const grape::Bitset& bitset,
+                        const std::array<LabelT, 2>& labels, size_t ind)
+      : vec_(vec), bitset_(bitset), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     if (bitset_.get_bit(ind_)) {
-      return std::make_pair(0, vec_[ind_]);
+      return GlobalId(labels_[0], vec_[ind_]);
     } else {
-      return std::make_pair(1, vec_[ind_]);
+      return GlobalId(labels_[1], vec_[ind_]);
     }
   }
 
@@ -753,6 +759,7 @@ class TwoLabelVertexSetIter<VID_T, grape::EmptyType> {
  private:
   const std::vector<VID_T>& vec_;
   const grape::Bitset& bitset_;
+  std::array<LabelT, 2> labels_;
   size_t ind_;
 };
 
@@ -763,7 +770,7 @@ class TwoLabelVertexSetImpl {
  public:
   using lid_t = VID_T;
   using self_type_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
-  using iterator = TwoLabelVertexSetIter<VID_T, T...>;
+  using iterator = TwoLabelVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
   using data_tuple_t = std::tuple<T...>;
   using flat_t = self_type_t;
@@ -811,10 +818,12 @@ class TwoLabelVertexSetImpl {
     return builder_t(vec_.size(), label_names_, named_property_);
   }
 
-  iterator begin() const { return iterator(vec_, data_tuple_, bitset_, 0); }
+  iterator begin() const {
+    return iterator(vec_, data_tuple_, label_names_, bitset_, 0);
+  }
 
   iterator end() const {
-    return iterator(vec_, data_tuple_, bitset_, vec_.size());
+    return iterator(vec_, data_tuple_, label_names_, bitset_, vec_.size());
   }
 
   template <typename EXPRESSION, size_t num_labels, typename PROP_GETTER,
@@ -1070,8 +1079,9 @@ template <typename VID_T, typename LabelT>
 class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
  public:
   using lid_t = VID_T;
+  using ele_tuple_t = GlobalId;
   using self_type_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
-  using iterator = TwoLabelVertexSetIter<VID_T, grape::EmptyType>;
+  using iterator = TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   using flat_t = self_type_t;
@@ -1122,9 +1132,11 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
         std::move(named_prop), std::move(copied_bitset));
   }
 
-  iterator begin() const { return iterator(vec_, bitset_, 0); }
+  iterator begin() const { return iterator(vec_, bitset_, label_names_, 0); }
 
-  iterator end() const { return iterator(vec_, bitset_, vec_.size()); }
+  iterator end() const {
+    return iterator(vec_, bitset_, label_names_, vec_.size());
+  }
 
   template <typename EXPRESSION, size_t num_labels, typename PROP_GETTER_T,
             typename RES_SET_T = self_type_t,

@@ -141,7 +141,9 @@ _install_apache_arrow_ubuntu() {
       -P /tmp/
     ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
     ${SUDO} apt-get update -y
-    ${SUDO} apt-get install -y libarrow-dev
+    ${SUDO} apt-get install -y libarrow-dev=15.0.2-1 libarrow-dataset-dev=15.0.2-1 libarrow-acero-dev=15.0.2-1 libparquet-dev=15.0.2-1
+    #TODO(zhanglei): Remove the arrow version constrait after new version of vineyard is release. see https://github.com/v6d-io/v6d/pull/1911 and https://github.com/apache/incubator-graphar/issues/515
+    #${SUDO} apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev
     rm /tmp/apache-arrow-apt-source-latest-*.deb
   else
     log "apache-arrow (libarrow-dev) already installed, skip."
@@ -232,14 +234,18 @@ install_basic_packages_universal() {
   elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
     if [[ "${OS_VERSION}" -eq "7" ]]; then
       ${SUDO} yum install -y ${BASIC_PACKAGES_CENTOS_7[*]}
+      # change the source for centos-release-scl-rh
+      ${SUDO} sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*scl*
+      ${SUDO} sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*scl*
+      ${SUDO} sed -i 's|# baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*scl*
       ${SUDO} yum install -y ${ADDITIONAL_PACKAGES_CENTOS_7[*]}
     else
       if [[ "${OS_PLATFORM}" == *"Aliyun"* ]]; then 
         ${SUDO} yum install -y 'dnf-command(config-manager)'
         ${SUDO} dnf install -y epel-release --allowerasing
       else
-        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        ${SUDO} sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        ${SUDO} sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         ${SUDO} yum install -y 'dnf-command(config-manager)'
         ${SUDO} dnf install -y epel-release
         ${SUDO} dnf config-manager --set-enabled powertools
@@ -321,6 +327,15 @@ install_dependencies_analytical_universal() {
   fi
 }
 
+install_interactive_deps() {
+  # seastar can not be built on macos and centos7
+  if [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+      install_hiactor "${install_prefix}"
+  else
+      warning "Skip installing dependencies for flex interactive on ${OS_PLATFORM}."
+  fi
+}
+
 write_env_config() {
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   if [ -f "${OUTPUT_ENV_FILE}" ]; then
@@ -330,7 +345,7 @@ write_env_config() {
 
   {
     echo "export GRAPHSCOPE_HOME=${install_prefix}"
-    echo "export CMAKE_PREFIX_PATH=/opt/vineyard"
+    echo "export CMAKE_PREFIX_PATH=/opt/vineyard:/opt/graphscope/"
     echo "export PATH=${install_prefix}/bin:\$HOME/.local/bin:\$HOME/.cargo/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
     echo "export LIBRARY_PATH=${install_prefix}/lib:${install_prefix}/lib64"
@@ -407,6 +422,8 @@ install_deps_for_dev() {
     install_llvm_universal
     install_rust_universal
     install_cppkafka "${deps_prefix}" "${install_prefix}"
+    # install dependencies for flex interactive
+    install_interactive_deps
   fi
 
   write_env_config

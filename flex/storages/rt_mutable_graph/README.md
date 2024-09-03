@@ -44,7 +44,8 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 2
           property_name: age
           property_type:
@@ -62,11 +63,13 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 2
           property_name: lang
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:

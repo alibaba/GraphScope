@@ -20,9 +20,9 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.MoreObjects;
 
 public class DefaultEdgeRelation implements EdgeRelation {
-    private GraphVertex source;
-    private GraphVertex target;
-    private long tableId;
+    private final GraphVertex source;
+    private final GraphVertex target;
+    private final long tableId;
 
     public DefaultEdgeRelation(GraphVertex source, GraphVertex target) {
         this(source, target, -1L);

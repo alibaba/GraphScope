@@ -16,13 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
-import com.alibaba.graphscope.common.ir.meta.reader.SchemaInputStream;
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +34,8 @@ public class IrGraphSchema implements GraphSchema {
     private final String schemeJson;
     private final boolean isColumnId;
 
-    public IrGraphSchema(MetaDataReader dataReader) throws Exception {
+    public IrGraphSchema(SchemaInputStream schemaInputStream) throws IOException {
         this.isColumnId = false;
-        SchemaInputStream schemaInputStream = dataReader.getGraphSchema();
         String content =
                 new String(
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
@@ -70,12 +68,12 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(String s) throws GraphElementNotFoundException {
+    public GraphElement getElement(String s) throws TypeNotFoundException {
         return this.graphSchema.getElement(s);
     }
 
     @Override
-    public GraphElement getElement(int i) throws GraphElementNotFoundException {
+    public GraphElement getElement(int i) throws TypeNotFoundException {
         return this.graphSchema.getElement(i);
     }
 
@@ -90,12 +88,12 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public Integer getPropertyId(String s) throws GraphPropertyNotFoundException {
+    public Integer getPropertyId(String s) throws PropertyNotFoundException {
         return this.graphSchema.getPropertyId(s);
     }
 
     @Override
-    public String getPropertyName(int i) throws GraphPropertyNotFoundException {
+    public String getPropertyName(int i) throws PropertyNotFoundException {
         return this.graphSchema.getPropertyName(i);
     }
 
@@ -110,7 +108,7 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return this.getVersion();
+    public String getVersion() {
+        return this.graphSchema.getVersion();
     }
 }

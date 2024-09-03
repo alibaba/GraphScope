@@ -14,12 +14,11 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.CuratorUtils;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.IngestorWriteClient;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
@@ -27,6 +26,7 @@ import com.alibaba.graphscope.groot.coordinator.backup.BackupService;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupClient;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupTaskSender;
 import com.alibaba.graphscope.groot.discovery.*;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -73,7 +73,6 @@ public class Coordinator extends NodeBase {
         } else {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
-            //            metaStore = new ZkMetaStore(configs, this.curator);
         }
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
@@ -87,24 +86,26 @@ public class Coordinator extends NodeBase {
         IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
 
-        LogService logService = LogServiceFactory.makeLogService(configs);
-        this.snapshotManager =
-                new SnapshotManager(configs, metaStore, logService, writeSnapshotIdNotifier);
+        this.snapshotManager = new SnapshotManager(configs, metaStore, writeSnapshotIdNotifier);
         DdlExecutors ddlExecutors = new DdlExecutors();
         RoleClients<IngestorWriteClient> ingestorWriteClients =
                 new RoleClients<>(this.channelManager, RoleType.FRONTEND, IngestorWriteClient::new);
         DdlWriter ddlWriter = new DdlWriter(ingestorWriteClients);
         this.metaService = new DefaultMetaService(configs);
+        int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         RoleClients<StoreSchemaClient> storeSchemaClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreSchemaClient::new);
-        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients);
+        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients, storeCount);
         this.schemaManager =
                 new SchemaManager(
+                        configs,
                         this.snapshotManager,
                         ddlExecutors,
                         ddlWriter,
                         this.metaService,
-                        graphDefFetcher);
+                        graphDefFetcher,
+                        frontendSnapshotClients);
         this.snapshotNotifier =
                 new SnapshotNotifier(
                         this.discovery,
@@ -145,6 +146,7 @@ public class Coordinator extends NodeBase {
                         idAllocateService,
                         backupService,
                         coordinatorSnapshotService);
+        LogService logService = LogServiceFactory.makeLogService(configs);
         this.logRecycler = new LogRecycler(configs, logService, this.snapshotManager);
         this.graphInitializer = new GraphInitializer(configs, this.curator, metaStore, logService);
     }
@@ -160,7 +162,7 @@ public class Coordinator extends NodeBase {
         try {
             this.rpcServer.start();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         this.discovery.start();
         this.channelManager.start();

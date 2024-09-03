@@ -28,6 +28,8 @@ public interface GraphLibrary extends Library {
 
     JnaResponse getGraphDefBlob(Pointer storePointer);
 
+    JnaResponse getGraphStatistics(Pointer storePointer, long snapshotId);
+
     Pointer openGraphBackupEngine(Pointer storePointer, String backupPath);
 
     void closeGraphBackupEngine(Pointer bePointer);

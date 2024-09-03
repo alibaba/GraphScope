@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.exception.DdlException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
 import com.alibaba.graphscope.groot.operation.Operation;
-import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -60,6 +60,7 @@ public abstract class AbstractCreateTypeExecutor extends AbstractDdlExecutor {
         } else if (this instanceof CreateVertexTypeExecutor) {
             throw new DdlException("Expect vertex type but got edge type");
         }
+        version++;
 
         GraphDef.Builder graphDefBuilder = GraphDef.newBuilder(graphDef);
         TypeDef.Builder typeDefBuilder = TypeDef.newBuilder(typeDef);
@@ -67,6 +68,7 @@ public abstract class AbstractCreateTypeExecutor extends AbstractDdlExecutor {
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
         List<PropertyDef> inputPropertiesInfo = typeDef.getProperties();
+        checkDuplicatedPropertiesExists(inputPropertiesInfo);
         List<PropertyDef> propertyDefs = new ArrayList<>(inputPropertiesInfo.size());
         for (PropertyDef property : inputPropertiesInfo) {
             String propertyName = property.getName();
@@ -90,9 +92,9 @@ public abstract class AbstractCreateTypeExecutor extends AbstractDdlExecutor {
         int labelIdx = graphDef.getLabelIdx() + 1;
         LabelId labelId = new LabelId(labelIdx);
         typeDefBuilder.setLabelId(labelId);
+        typeDefBuilder.setVersionId((int) version);
         TypeDef newTypeDef = typeDefBuilder.build();
 
-        version++;
         graphDefBuilder.setVersion(version);
         graphDefBuilder.addTypeDef(newTypeDef);
         graphDefBuilder.setLabelIdx(labelIdx);

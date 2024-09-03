@@ -19,7 +19,7 @@ use std::collections::{HashMap, LinkedList};
 
 use crate::data_plane::ChannelResource;
 use crate::errors::{BuildJobError, IOError};
-use crate::{Data, JobConf};
+use crate::{Data, JobConf, WorkerId};
 
 mod buffer;
 pub(crate) mod cancel;
@@ -27,6 +27,7 @@ pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
+
 pub use channel::Channel;
 
 use crate::channel_id::ChannelId;
@@ -67,9 +68,8 @@ impl Magic {
 }
 
 pub(crate) fn build_channel<T: Data>(
-    ch_id: ChannelId, conf: &JobConf,
+    ch_id: ChannelId, conf: &JobConf, worker_id: WorkerId,
 ) -> Result<ChannelResource<T>, BuildJobError> {
-    let worker_id = crate::worker_id::get_current_worker();
     let ch = CHANNEL_RESOURCES.with(|res| {
         let mut map = res.borrow_mut();
         map.get_mut(&ch_id)

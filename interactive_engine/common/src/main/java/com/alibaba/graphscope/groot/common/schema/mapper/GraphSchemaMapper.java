@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.mapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
@@ -22,8 +23,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,13 +37,13 @@ import java.util.Map;
  */
 public class GraphSchemaMapper {
     private List<SchemaElementMapper> types;
-    private int version;
+    private String version;
 
     public List<SchemaElementMapper> getTypes() {
         return types;
     }
 
-    public int getVersion() {
+    public String getVersion() {
         return version;
     }
 
@@ -69,7 +71,7 @@ public class GraphSchemaMapper {
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("convert graph schema to json failed", e);
+            throw new InvalidArgumentException("convert graph schema to json failed", e);
         }
     }
 
@@ -93,9 +95,9 @@ public class GraphSchemaMapper {
             GraphSchemaMapper graphSchema = new GraphSchemaMapper();
             JsonNode jsonNode = mapper.readTree(schemaJson);
             if (jsonNode.has("version")) {
-                graphSchema.version = jsonNode.get("version").asInt();
+                graphSchema.version = jsonNode.get("version").asText();
             } else {
-                graphSchema.version = 0;
+                graphSchema.version = "0";
             }
             graphSchema.types = new ArrayList<>();
             JsonNode typeArray = jsonNode.get("types");
@@ -112,13 +114,13 @@ public class GraphSchemaMapper {
             }
             return graphSchema;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 
     public static void main(String[] args) throws IOException {
         String path = "groot-server/src/test/resources/schema.json";
-        String schemaJson = Files.readString(Path.of(path));
+        String schemaJson = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
         GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         GraphSchemaMapper mapper = GraphSchemaMapper.parseFromSchema(graphSchema);
         System.out.println(mapper.toJsonString());

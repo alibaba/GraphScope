@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -151,8 +152,9 @@ public class GroupTest {
                                                     builder.literal(1))),
                                     builder.count(false, "c", ImmutableList.of()))
                             .build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals("{alias=_} not found; expected aliases are: []", e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage().contains("{alias=_} not found; expected aliases are: []"));
             return;
         }
         Assert.fail("alias=_ does not exist");

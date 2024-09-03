@@ -19,11 +19,11 @@ use crate::api::ElemFilter;
 use crate::api::PropId;
 use crate::db::api::multi_version_graph::{GraphBackup, MultiVersionGraph};
 use crate::db::api::types::RocksEdge;
-use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
+use crate::db::api::ErrorCode::{INVALID_DATA, TYPE_NOT_FOUND};
 use crate::db::api::*;
 use crate::db::common::bytes::transform;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
-use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
+use crate::db::graph::iter::{EdgeKindScan, EdgeTypeScan, VertexTypeScan};
 use crate::db::graph::table_manager::Table;
 use crate::db::storage::rocksdb::{RocksDB, RocksDBBackupEngine};
 use crate::db::storage::RawBytes;
@@ -146,7 +146,7 @@ impl MultiVersionGraph for GraphStore {
                         scan.into_iter()
                     }
                     Err(e) => {
-                        if let TypeNotFound = e.get_error_code() {
+                        if let TYPE_NOT_FOUND = e.get_error_code() {
                             Box::new(::std::iter::empty())
                         } else {
                             return Err(e);
@@ -257,7 +257,7 @@ impl MultiVersionGraph for GraphStore {
         }
         if self.vertex_manager.contains_type(si, label_id) {
             let msg = format!("vertex#{} already exists", label_id);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_vertex_type);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, create_vertex_type);
             return Err(err);
         }
         self.meta
@@ -266,6 +266,31 @@ impl MultiVersionGraph for GraphStore {
                 let codec = Codec::from(type_def);
                 self.vertex_manager
                     .create_type(si, label_id, codec, table)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
+    fn add_vertex_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<bool> {
+        debug!("add_vertex_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), add_vertex_type_properties)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.vertex_manager.contains_type(si, label_id) {
+            let msg = format!("vertex#{} does not exist", label_id);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, add_vertex_type_properties);
+            return Err(err);
+        }
+        self.meta
+            .add_vertex_type_properties(si, schema_version, label_id, type_def, table_id)
+            .and_then(|(table, cloned_typedef)| {
+                let codec = Codec::from(&cloned_typedef);
+                self.vertex_manager
+                    .update_type(si, label_id, codec, table)
             })
             .map(|_| self.update_si_guard(si))?;
         Ok(true)
@@ -282,7 +307,7 @@ impl MultiVersionGraph for GraphStore {
         }
         if self.edge_manager.contains_edge(label_id) {
             let msg = format!("edge#{} already exists", label_id);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_edge);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, create_edge);
             return Err(err);
         }
         self.meta
@@ -290,6 +315,30 @@ impl MultiVersionGraph for GraphStore {
             .and_then(|_| {
                 self.edge_manager
                     .create_edge_type(si, label_id, type_def)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
+    fn add_edge_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<bool> {
+        debug!("add_edge_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), add_edge_type_properties)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.edge_manager.contains_edge(label_id) {
+            let msg = format!("edge#{} does not exist", label_id);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, add_edge_type_properties);
+            return Err(err);
+        }
+        self.meta
+            .add_edge_type_properties(si, schema_version, label_id, type_def)
+            .and_then(|cloned| {
+                self.edge_manager
+                    .update_edge_type(si, label_id, &cloned)
             })
             .map(|_| self.update_si_guard(si))?;
         Ok(true)
@@ -309,7 +358,7 @@ impl MultiVersionGraph for GraphStore {
             .contains_edge_kind(si, edge_kind)
         {
             let msg = format!("{:?} already exists", edge_kind);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_edge_kind, si, edge_kind);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, add_edge_kind, si, edge_kind);
             return Err(err);
         }
         self.meta
@@ -562,14 +611,18 @@ impl MultiVersionGraph for GraphStore {
 
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
+        if !vertex_tables.is_empty() {
+            info!("garbage collect vertex table {:?}", vertex_tables);
+        }
         for vt in vertex_tables {
-            info!("garbage collect vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
+        if !edge_tables.is_empty() {
+            info!("garbage collect edge table {:?}", edge_tables);
+        }
         for et in edge_tables {
-            info!("garbage collect edge table {}", et);
             let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(out_table_prefix, false)?;
         }
@@ -580,7 +633,7 @@ impl MultiVersionGraph for GraphStore {
         let graph_def = self.meta.get_graph_def().lock()?;
         let pb = graph_def.to_proto()?;
         pb.write_to_bytes()
-            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))
     }
 
     fn prepare_data_load(
@@ -648,7 +701,10 @@ impl GraphStore {
         let path = config
             .get_storage_option("store.data.path")
             .expect("invalid config, missing store.data.path");
-        info!("open graph store at {} with config {:?}", path, config);
+        let parts: Vec<&str> = path.split("/").collect();
+        if parts.get(parts.len() - 1) == Some(&"0") {
+            info!("open graph store at {} with config {:?}", path, config);
+        }
         match config.get_storage_engine() {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options()).and_then(|db| {
@@ -666,7 +722,7 @@ impl GraphStore {
             }
             unknown => {
                 let msg = format!("unknown storage {}", unknown);
-                let err = gen_graph_err!(GraphErrorCode::NotSupported, msg, open, config, path);
+                let err = gen_graph_err!(ErrorCode::UNSUPPORTED_OPERATION, msg, open, config, path);
                 Err(err)
             }
         }
@@ -763,7 +819,7 @@ impl GraphStore {
                 });
         }
         let msg = format!("table not found at {} of vertex#{}", si, info.get_label());
-        let err = gen_graph_err!(GraphErrorCode::DataNotExists, msg, do_insert_vertex_data);
+        let err = gen_graph_err!(ErrorCode::DATA_NOT_EXISTS, msg, do_insert_vertex_data);
         Err(err)
     }
 
@@ -784,7 +840,7 @@ impl GraphStore {
                 });
         }
         let msg = format!("table not found at {} of {:?}", si, info.get_type());
-        let err = gen_graph_err!(GraphErrorCode::DataNotExists, msg, do_insert_edge_data);
+        let err = gen_graph_err!(ErrorCode::DATA_NOT_EXISTS, msg, do_insert_edge_data);
         Err(err)
     }
 
@@ -792,7 +848,7 @@ impl GraphStore {
         let guard = self.si_guard.load(Ordering::Relaxed) as SnapshotId;
         if si < guard {
             let msg = format!("si#{} is less than current si_guard#{}", si, guard);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg);
             return Err(err);
         }
         Ok(())
@@ -899,7 +955,7 @@ impl GraphStore {
                         scan.into_iter()
                     }
                     Err(e) => {
-                        if let TypeNotFound = e.get_error_code() {
+                        if let TYPE_NOT_FOUND = e.get_error_code() {
                             Box::new(::std::iter::empty())
                         } else {
                             return Err(e);
@@ -1015,10 +1071,75 @@ impl GraphStore {
                     label_id, src_id, dst_id, direction
                 );
                 error!("{}", msg);
-                Err(gen_graph_err!(GraphErrorCode::DataNotExists, msg, get_edge_by_vertex))
+                Err(gen_graph_err!(ErrorCode::DATA_NOT_EXISTS, msg, get_edge_by_vertex))
             }
             Err(err) => Err(err),
         }
+    }
+
+    pub fn get_graph_statistics_blob(&self, si: SnapshotId) -> GraphResult<Vec<u8>> {
+        let statistics = self.get_statistics(si)?;
+        let pb = statistics.to_proto()?;
+        pb.write_to_bytes()
+            .map_err(|e| GraphError::new(INVALID_DATA, format!("{:?}", e)))
+    }
+
+    pub fn get_statistics(&self, si: SnapshotId) -> GraphResult<GraphPartitionStatistics> {
+        let vertex_labels_statistics = self.get_vertex_statistics(si)?;
+        let edge_labels_statistics = self.get_edge_statistics(si)?;
+        let vertex_count = vertex_labels_statistics.values().sum();
+        let edge_count = edge_labels_statistics.values().sum();
+        Ok(GraphPartitionStatistics::new(
+            si,
+            vertex_count,
+            edge_count,
+            vertex_labels_statistics,
+            edge_labels_statistics,
+        ))
+    }
+
+    fn get_vertex_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<LabelId, u64>> {
+        let guard = epoch::pin();
+        let map = self.vertex_manager.get_map(&guard);
+        let map_ref = unsafe { map.deref() };
+        let vertex_label_ids = map_ref
+            .keys()
+            .cloned()
+            .collect::<Vec<LabelId>>();
+        let mut vertex_label_counts = HashMap::new();
+        for label_id in vertex_label_ids {
+            let label_count = self
+                .scan_vertex(si, Some(label_id), None, None)?
+                .count();
+            vertex_label_counts.insert(label_id, label_count as u64);
+        }
+
+        Ok(vertex_label_counts)
+    }
+
+    fn get_edge_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<EdgeKind, u64>> {
+        let guard = epoch::pin();
+        let inner = self.edge_manager.get_inner(&guard);
+        let edge_mgr = unsafe { inner.deref() };
+        let edge_kinds = edge_mgr.get_edge_kinds();
+        let mut edge_kind_counts = HashMap::new();
+        for edge_kind in edge_kinds {
+            let edge_kind_info = self
+                .edge_manager
+                .get_edge_kind(si, &edge_kind)?;
+            let kind_iter = EdgeKindScan::new(
+                self.storage.clone(),
+                si,
+                edge_kind_info,
+                None,
+                EdgeDirection::Both,
+                false,
+            )
+            .into_iter();
+            let edge_count = kind_iter.count();
+            edge_kind_counts.insert(edge_kind.clone(), edge_count as u64);
+        }
+        Ok(edge_kind_counts)
     }
 }
 

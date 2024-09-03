@@ -27,6 +27,7 @@
 
 #include "flex/proto_generated_gie/job_service.pb.h"
 #include "flex/proto_generated_gie/physical.pb.h"
+#include "flex/utils/result.h"
 
 #include <boost/program_options.hpp>
 #include <hiactor/core/thread_resource_pool.hh>
@@ -82,15 +83,15 @@ class CodegenProxy {
   seastar::future<std::pair<int32_t, std::string>> DoGen(
       const physical::PhysicalPlan& plan);
 
-  static seastar::future<int> CallCodegenCmd(
+  static seastar::future<gs::Result<bool>> CallCodegenCmd(
       const std::string& codegen_bin, const std::string& plan_path,
       const std::string& query_name, const std::string& work_dir,
       const std::string& output_dir, const std::string& graph_schema_path,
       const std::string& engine_config, const std::string& description = "");
 
  private:
-  seastar::future<int> call_codegen_cmd(const physical::PhysicalPlan& plan,
-                                        const std::string& graph_schema_path);
+  seastar::future<gs::Result<bool>> call_codegen_cmd(
+      const physical::PhysicalPlan& plan, const std::string& graph_schema_path);
 
   seastar::future<std::pair<int32_t, std::string>> get_res_lib_path_from_cache(
       int32_t job_id);

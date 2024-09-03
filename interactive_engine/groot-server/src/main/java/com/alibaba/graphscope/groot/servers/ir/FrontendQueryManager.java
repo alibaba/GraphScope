@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateClient;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.slf4j.Logger;
@@ -33,13 +35,13 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
 
     // manage queries <snapshotId, is_done>
     private final BlockingQueue<QueryStatus> queryQueue;
-    private final SnapshotUpdateCommitter committer;
+    private final RoleClients<SnapshotUpdateClient> committer;
     private ScheduledExecutorService updateExecutor;
     private long oldSnapshotId = Long.MIN_VALUE;
     private final int frontendId;
 
     public FrontendQueryManager(
-            IrMetaFetcher fetcher, int frontendId, SnapshotUpdateCommitter committer) {
+            IrMetaFetcher fetcher, int frontendId, RoleClients<SnapshotUpdateClient> committer) {
         super(fetcher);
         this.queryQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
         this.committer = committer;
@@ -86,7 +88,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
             queryQueue.put(status);
             return irMeta;
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -116,7 +118,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
                     minSnapshotId = queryQueue.peek().snapshotId;
                 }
                 if (minSnapshotId > oldSnapshotId) {
-                    committer.updateSnapshot(frontendId, minSnapshotId);
+                    committer.getClient(0).updateSnapshot(frontendId, minSnapshotId);
                     oldSnapshotId = minSnapshotId;
                 }
             } catch (Exception e) {

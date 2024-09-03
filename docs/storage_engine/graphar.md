@@ -39,42 +39,175 @@ As previously mentioned, each logical vertex/edge table is divided into multiple
 - [Apache Parquet](https://parquet.apache.org/)
 - CSV
 
-See [Gar Information Files](https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-information-files) and [Gar Data Files](https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-data-files) for an example.
+See [Information Files](https://graphar.apache.org/docs/specification/format#information-files) and [Data Files](https://graphar.apache.org/docs/specification/format#data-files) for an example.
 
 
-More details about the GraphAr file format can be found in the [GraphAr File Format](https://alibaba.github.io/GraphAr/user-guide/file-format.html).
+More details about the GraphAr file format can be found in the [GraphAr File Format](https://graphar.apache.org/docs/specification/format).
+
+#### Data Types
+
+Property Data Types
+-------------------
+GraphAr support a set of built-in property data types that are common in real use cases and supported by most file types (CSV, ORC, Parquet), includes:
+
+```
+- Boolean 
+- Int32: Integer with 32 bits
+- Int64: Integer with 64 bits
+- Float: 32-bit floating point values
+- Double: 64-bit floating point values
+- String: Textual data
+- Date: days since the Unix epoch
+- Timestamp: milliseconds since the Unix epoch
+- List: A list of values of the same type
+```
 
 ## GraphAr in GraphScope
 
-GraphScope can read, store GraphAr formatted graph data.
+GraphScope provides a set of APIs to load and archive graph data in GraphAr format. The GraphScope client (Python) can be used to load and archive graph data in GraphAr format through the `save_to` and `load_from` functions. 
+
+### Saving Graph Data in GraphAr
+
+You can save a graph in GraphAr format using the `save_to` function.
+
+`save_to` supports the following GraphAr related parameters:
+
+- **graphar_graph_name**: The name of the graph, default is "graph".
+- **graphar_file_type**: The file type of the graph data, including "csv", "orc", "parquet". default is "parquet".
+- **graphar_vertex_chunk_size**: The chunk size of the vertex data in graphar format, default is 2^18.
+- **graphar_edge_chunk_size**: The chunk size of the edge data in graphar format, default is 2^22.
+- **graphar_store_in_local**: Whether to make each worker store the part of the graph data in local file system, default is False.
+- **selector**: The selector to select the subgraph to save, if not specified, the whole graph will be saved.
+
+Here's an example:
+
+```python
+import graphscope
+from graphscoped.dataset import load_ldbc
+
+# initialize a session
+sess = graphscope.session(cluster_type="hosts")
+# load ldbc graph
+graph = load_ldbc(sess)
+
+# save the ldbc graph to GraphAr format
+r = g.save_to(
+    "/tmp/ldbc_graphar/",
+    format="graphar",
+    graphar_graph_name="ldbc",  # the name of the graph
+    graphar_file_type="parquet",  # the file type of the graph data
+    graphar_vertex_chunk_size=1024,  # the chunk size of the vertex data
+    graphar_edge_chunk_size=4096,  # the chunk size of the edge data
+)
+# the result is a dictionary that contains the format and the URI path of the saved graph
+print(r)
+{ "format": "graphar", "uri": "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"}
+```
+
+You can also save a subgraph in GraphAr format using the `save_to` function with the `selector` parameter. Here's an example:
+
+```python
+import graphscope
+from graphscoped.dataset import load_ldbc
+
+# initialize a session
+sess = graphscope.session(cluster_type="hosts")
+# load ldbc graph
+graph = load_ldbc(sess)
+
+# define the selector
+# we only want to save the "person" and "comment" vertices and the "knows" and "replyOf" edges
+# with the specified properties
+selector = {
+    "vertices": {
+        "person": ["id", "firstName", "lastName"],
+        "comment": None,  # None means all properties
+    },
+    "edges": {
+        "knows": ["creationDate"],
+        "likes": ["creationDate"],
+    },
+}
+
+# save the subgraph to GraphAr format
+r = g.save_to(
+    "/tmp/ldbc_subgraph_graphar/",
+    format="graphar",
+    selector=selector,
+    graphar_graph_name="ldbc_subgraph",  # the name of the graph
+    graphar_file_type="parquet",  # the file type of the graph data
+    graphar_vertex_chunk_size=1024,  # the chunk size of the vertex data
+    graphar_edge_chunk_size=4096,  # the chunk size of the edge data
+)
+# the result is a dictionary that contains the format and the URI path of the saved graph
+print(r)
+{ "format": "graphar", "uri": "graphar+file:///tmp/ldbc_graphar/ldbc_subgraph.graph.yaml"}
+```
 
 ### Loading GraphAr Data into GraphScope
 
-To load GraphAr formatted data into GraphScope:
+You can load a graph from GraphAr format data using the `load_from` function.
 
-1. Define the graph meta files with YAML. The meta files describe the properties of vertices and edges, and where the data files are stored.
+`load_from` supports the following GraphAr related parameters:
+- **graphar_store_in_local**: Whether the graph data is stored in the local file system of each worker, default is False.
+- **selector**: The selector to select the subgraph to load, if not specified, the whole graph will be loaded.
 
-2. Load the graph data using the GraphScope client (Python) with graphscope.load_from_gar(graph_yaml_path) function. Here's an example:
+Here's an example:
 
-```python
-import graphscope
-
-graph_yaml_path = "file:///path-yaml/demo.graph.yml"
-g = graphscope.load_from_gar(graph_yaml_path)
-g.schema()
-```
-
-### Archiving the Graph Data in GraphAr
-
-To archive the graph data in GraphAr format:
-
-1. Define the graph meta files with YAML.
-
-2. Call the g.archive(graph_yaml_path) function, where g is the GraphScope graph object, and graph_yaml_path is the graph info file path. Here's an example:
 
 ```python
 import graphscope
+from graphscope import pagerank
+from graphscope.framework.graph import Graph 
 
-graph_yaml_path = "file:///path-yaml/demo.graph.yml"
-g.archive(graph_yaml_path)
+# initialize a session
+sess = graphscope.session(cluster_type="hosts")
+
+# assume the graph data is saved in the "/tmp/ldbc_graphar/" directory and it's graph information file is "ldbc.graph.yaml", that the URI is "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"
+uri = "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"
+
+# load the graph from GraphAr format
+g = Graph.load_from(uri, sess)
+print(g.schema)
+
+# do some graph processing
+pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+ctx = pagerank(pg, max_round=10)
+df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+print(df)
 ```
+
+You can also load a subgraph from the whole ldbc dataset with GraphAr format data using the `load_from` function with the `selector` parameter. Here's an example:
+
+```python
+import graphscope
+from graphscope.framework.graph import Graph
+
+# initialize a session
+sess = graphscope.session(cluster_type="hosts")
+
+# assume the ldbc data is saved in the "/tmp/ldbc__graphar/" directory and it's graph information file is "ldbc.graph.yaml", that the URI is "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"
+uri = "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"
+
+# define the selector, you want to only load the "person" and "comment" vertices and the "knows" and "replyOf" edges
+selector = {
+    "vertices": {
+        "person": None,
+        "comment": None,  # None means all properties
+    },
+    "edges": {
+        "knows": None,
+        "likes": None,
+    },
+}
+g = Graph.load_from(uri, sess, selector=selector)
+print(g.schema)
+
+# do some graph processing
+pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+ctx = pagerank(pg, max_round=10)
+df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+print(df)
+```
+
+More examples about how to use GraphAr in GraphScope can be found in the [test_graphar](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/unittest/test_graphar.py).

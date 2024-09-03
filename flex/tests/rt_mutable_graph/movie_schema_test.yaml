@@ -1,0 +1,110 @@
+name: movies
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: Movie
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: released
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_id: 2
+          property_name: tagline
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: title
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - id
+    - type_id: 1
+      type_name: Person
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: born
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_id: 2
+          property_name: name
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - id
+    - type_id: 2
+      type_name: User
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: born
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_id: 2
+          property_name: name
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - id
+  edge_types:
+    - type_id: 0
+      type_name: ACTED_IN
+      vertex_type_pair_relations:
+        - source_vertex: Person
+          destination_vertex: Movie
+          relation: MANY_TO_MANY
+    - type_id: 1
+      type_name: DIRECTED
+      vertex_type_pair_relations:
+        - source_vertex: Person
+          destination_vertex: Movie
+          relation: MANY_TO_MANY
+    - type_id: 2
+      type_name: REVIEW
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: Movie
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: rating
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+    - type_id: 3
+      type_name: FOLLOWS
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: Person
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: timestamp
+          property_type:
+            temporal: 
+              timestamp: 
+    - type_id: 4
+      type_name: WROTE
+      vertex_type_pair_relations:
+        - source_vertex: Person
+          destination_vertex: Movie
+          relation: MANY_TO_MANY
+    - type_id: 5
+      type_name: PRODUCED
+      vertex_type_pair_relations:
+        - source_vertex: Person
+          destination_vertex: Movie
+          relation: MANY_TO_MANY

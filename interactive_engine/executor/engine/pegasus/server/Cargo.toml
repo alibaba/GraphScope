@@ -21,10 +21,9 @@ serde = { version = "1.0", features = ["derive"] }
 hyper = "0.14"
 futures = { version = "0.3", default-features = false }
 libloading = "0.7"
-opentelemetry = { version = "0.22.0", features = ["trace"] }
-opentelemetry_sdk = { version = "0.22.0", features = ["async-std", "rt-tokio"] }
-opentelemetry-otlp = { version = "0.15.0", features = ["default", "metrics"] }
-
+opentelemetry = { version = "0.22.0", features = ["trace", "metrics"] }
+opentelemetry_sdk = { version = "0.22.0", features = ["trace", "metrics", "async-std", "rt-tokio"] }
+opentelemetry-otlp = { version = "0.15.0", features = ["trace", "metrics", "grpc-tonic", "gzip-tonic"] }
 
 [dev-dependencies]
 #libloading = "0.7"

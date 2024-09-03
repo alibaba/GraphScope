@@ -14,18 +14,17 @@
 package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.common.config.BackupConfig;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.exception.BackupException;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.*;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.QuerySnapshotListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
@@ -36,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -116,7 +114,7 @@ public class BackupManager {
         try {
             recover();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
 
         this.localListener = new LocalSnapshotListener(this.schemaManager, this.localSnapshotCache);
@@ -226,7 +224,7 @@ public class BackupManager {
     public void purgeOldBackups(int keepAliveNum) throws BackupException, IOException {
         checkEnable();
         if (keepAliveNum <= 0) {
-            throw new IllegalArgumentException(
+            throw new InvalidArgumentException(
                     "the input keepAliveNum should > 0, got " + keepAliveNum);
         } else if (keepAliveNum >= this.globalBackupIdToInfo.size()) {
             return;
@@ -302,9 +300,9 @@ public class BackupManager {
         }
     }
 
-    private void checkMetaPath(String path) throws FileNotFoundException {
+    private void checkMetaPath(String path) {
         if (!this.metaStore.exists(path)) {
-            throw new FileNotFoundException(path);
+            throw new NotFoundException("File not found: " + path);
         }
     }
 

@@ -85,8 +85,8 @@ public class WithTest {
         RelNode project =
                 Utils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)], isAppend=[false])\n"
-                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
+                "GraphLogicalProject(name=[name], d=[+(EXPR$0, 1)], isAppend=[false])\n"
+                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
                         + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0',"
                         + " distinct=false}]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -198,7 +198,7 @@ public class WithTest {
                     + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[_], opt=[END])\n"
-                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
                     + " alias=[k])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"

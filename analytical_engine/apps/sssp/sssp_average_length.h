@@ -109,7 +109,6 @@ class SSSPAverageLength
     bool update_sum = false;
 
     pair_msg_t msg;
-    int msg_cnt = 0;
     while (messages.GetMessage<pair_msg_t>(msg)) {
       bool is_vertex_msg = msg.first;
       if (is_vertex_msg) {
@@ -129,7 +128,6 @@ class SSSPAverageLength
         fid_t fid = (fid_t)(std::get<0>(msg.second));
         ctx.all_sums[fid] = std::get<2>(msg.second);
       }
-      msg_cnt++;
     }
 
     for (auto& it : updated_map) {

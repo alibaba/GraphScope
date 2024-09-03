@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.kafka.test.KafkaTestCluster;
 
@@ -113,7 +113,7 @@ public class MaxNode extends NodeBase {
             try {
                 startThread.join();
             } catch (InterruptedException e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         }
         logger.info("MaxNode started");

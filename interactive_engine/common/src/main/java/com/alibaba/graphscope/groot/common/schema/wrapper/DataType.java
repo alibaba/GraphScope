@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.groot.common.schema.wrapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidDataTypeException;
+import com.alibaba.graphscope.groot.common.exception.UnsupportedOperationException;
 import com.alibaba.graphscope.groot.common.meta.InternalDataType;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
 
@@ -49,7 +51,7 @@ public enum DataType {
 
     public static DataType fromId(byte id) {
         if (id < 0 || id >= TYPES.length) {
-            throw new IllegalArgumentException("Unknown DataType: [" + id + "]");
+            throw new InvalidDataTypeException("Unknown DataType: [" + id + "]");
         }
         return TYPES[id];
     }
@@ -182,14 +184,14 @@ public enum DataType {
                             }
                         default:
                             {
-                                throw new IllegalArgumentException(
+                                throw new InvalidDataTypeException(
                                         "Unsupported property data type " + dataType);
                             }
                     }
                 }
             default:
                 {
-                    throw new IllegalArgumentException(
+                    throw new InvalidDataTypeException(
                             "Unsupported property data type " + dataType);
                 }
         }

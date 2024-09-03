@@ -18,18 +18,25 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
+import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +95,9 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         // path_expand
         if (literalCtx != null && literalCtx.oC_IntegerLiteral().size() > 1) {
             builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitOC_PatternElementChain(ctx).build());
+                    new PathExpandBuilderVisitor(this)
+                            .visitOC_PatternElementChain(ctx)
+                            .buildConfig());
             // extract the end vertex from path_expand results
             if (ctx.oC_NodePattern() != null) {
                 builder.getV(Utils.getVConfig(ctx.oC_NodePattern()));
@@ -134,7 +143,40 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             throw new IllegalArgumentException(
                     "aggregate functions should not exist in filter expression");
         }
-        return builder.filter(res.getExpr());
+        // try to convert not exists sub query to anti join
+        List<RexNode> conditions = RelOptUtil.conjunctions(res.getExpr());
+        List<RexNode> conditionsToRemove = Lists.newArrayList();
+        for (RexNode condition : conditions) {
+            RelNode antiSentence = getSubQueryRel(condition);
+            if (antiSentence != null) {
+                builder.match(antiSentence, GraphOpt.Match.ANTI);
+                conditionsToRemove.add(condition);
+            }
+        }
+        conditions.removeAll(conditionsToRemove);
+        if (!conditions.isEmpty()) {
+            builder.filter(conditions);
+        }
+        return builder;
+    }
+
+    /**
+     * Return {@code RelNode} nested in the {@code RelSubQuery} if the condition denotes a {@code NOT} {@code RelSubQuery(kind=EXISTS)}
+     * @param condition
+     * @return
+     */
+    private @Nullable RelNode getSubQueryRel(RexNode condition) {
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator().getKind() == SqlKind.NOT) {
+                RexNode operand = ((RexCall) condition).operands.get(0);
+                if (operand instanceof RexSubQuery
+                        && ((RexSubQuery) operand).getOperator().getKind() == SqlKind.EXISTS) {
+                    return ((RexSubQuery) operand).rel;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -153,18 +195,10 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         List<String> extraAliases = new ArrayList<>();
         if (isGroupPattern(ctx, keyExprs, keyAliases, aggCalls, extraExprs, extraAliases)) {
             RelBuilder.GroupKey groupKey;
-            List<String> newAliases = new ArrayList<>();
             if (keyExprs.isEmpty()) {
                 groupKey = builder.groupKey();
             } else {
-                if (!extraExprs.isEmpty()) {
-                    for (int i = 0; i < keyExprs.size(); ++i) {
-                        newAliases.add(aliasInfer.infer());
-                    }
-                    groupKey = builder.groupKey(keyExprs, newAliases);
-                } else {
-                    groupKey = builder.groupKey(keyExprs, keyAliases);
-                }
+                groupKey = builder.groupKey(keyExprs, keyAliases);
             }
             builder.aggregate(groupKey, aggCalls);
             if (!extraExprs.isEmpty()) {
@@ -173,11 +207,33 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                         extraExprs.stream()
                                 .map(k -> k.accept(converter))
                                 .collect(Collectors.toList());
-                for (int i = 0; i < newAliases.size(); ++i) {
-                    extraExprs.add(i, builder.variable(newAliases.get(i)));
-                    extraAliases.add(i, (i < keyAliases.size()) ? keyAliases.get(i) : null);
+                List<RexNode> projectExprs = Lists.newArrayList();
+                List<String> projectAliases = Lists.newArrayList();
+                List<String> extraVarNames = Lists.newArrayList();
+                RexVariableAliasCollector<String> varNameCollector =
+                        new RexVariableAliasCollector<>(
+                                true,
+                                v -> {
+                                    String[] splits = v.getName().split("\\.");
+                                    return splits[0];
+                                });
+                extraExprs.forEach(k -> extraVarNames.addAll(k.accept(varNameCollector)));
+                GraphLogicalAggregate aggregate = (GraphLogicalAggregate) builder.peek();
+                aggregate
+                        .getRowType()
+                        .getFieldList()
+                        .forEach(
+                                field -> {
+                                    if (!extraVarNames.contains(field.getName())) {
+                                        projectExprs.add(builder.variable(field.getName()));
+                                        projectAliases.add(field.getName());
+                                    }
+                                });
+                for (int i = 0; i < extraExprs.size(); ++i) {
+                    projectExprs.add(extraExprs.get(i));
+                    projectAliases.add(extraAliases.get(i));
                 }
-                builder.project(extraExprs, extraAliases, false);
+                builder.project(projectExprs, projectAliases, false);
             }
         } else if (isDistinct) {
             builder.aggregate(builder.groupKey(keyExprs, keyAliases));

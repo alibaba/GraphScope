@@ -14,9 +14,9 @@
 //! limitations under the License.
 
 use graph_proxy::apis::GraphPath;
-use ir_common::generated::algebra::path_expand::PathOpt;
-use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::generated::physical as pb;
+use ir_common::generated::physical::path_expand::PathOpt;
+use ir_common::generated::physical::path_expand::ResultOpt;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 

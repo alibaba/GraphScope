@@ -19,6 +19,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use chrono::offset::{TimeZone, Utc};
+use dyn_type::Object;
 
 use self::chrono::Datelike;
 use crate::common::{DefaultId, Label, LabelId};
@@ -98,7 +99,7 @@ pub struct EdgeMeta<G> {
 }
 
 /// To record the metadata of a column
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ColumnMeta {
     /// the name of the column
     pub name: String,
@@ -170,23 +171,26 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
     while let Some(val) = record_iter.next() {
         // unwrap the property and type
         if let Some(ColumnMeta { name, data_type, is_primary_key: _ }) = header_iter.next() {
-            match data_type {
-                &DataType::String => properties.push(object!(val.to_string())),
-                &DataType::Integer => properties.push(object!(val.parse::<i32>()?)),
-                &DataType::Long => properties.push(object!(val.parse::<i64>()?)),
-                &DataType::Double => properties.push(object!(val.parse::<f64>()?)),
-                &DataType::Date => properties.push(object!(parse_datetime(val)?)),
-                &DataType::ID => {
-                    if name != START_ID_FIELD && name != END_ID_FIELD {
-                        properties.push(object!(val.parse::<DefaultId>()?));
+            if val.is_empty() && data_type != &DataType::String {
+                properties.push(Object::None);
+            } else {
+                match data_type {
+                    &DataType::String => properties.push(object!(val.to_string())),
+                    &DataType::Integer => properties.push(object!(val.parse::<i32>()?)),
+                    &DataType::Long => properties.push(object!(val.parse::<i64>()?)),
+                    &DataType::Double => properties.push(object!(val.parse::<f64>()?)),
+                    &DataType::Date => properties.push(object!(parse_datetime(val)?)),
+                    &DataType::ID => {
+                        if name != START_ID_FIELD && name != END_ID_FIELD {
+                            properties.push(object!(val.parse::<DefaultId>()?));
+                        }
                     }
+                    &DataType::LABEL => {}
+                    _ => return GDBResult::Err(GDBError::ParseError),
                 }
-                &DataType::LABEL => {}
-                _ => return GDBResult::Err(GDBError::ParseError),
             }
         }
     }
-    debug!("Parse properties successfully: {:?}", properties);
 
     Ok(properties)
 }

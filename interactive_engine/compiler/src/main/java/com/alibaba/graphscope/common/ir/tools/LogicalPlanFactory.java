@@ -16,8 +16,44 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
+import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
+import com.alibaba.graphscope.proto.frontend.Code;
+
+import org.antlr.v4.runtime.tree.ParseTree;
 
 public interface LogicalPlanFactory {
     LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query);
+
+    class Cypher implements LogicalPlanFactory {
+        @Override
+        public LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query) {
+            ParseTree cypherAST =
+                    ClassUtils.callException(
+                            () -> new CypherAntlr4Parser().parse(query),
+                            Code.CYPHER_INVALID_SYNTAX);
+            return ClassUtils.callException(
+                    () -> new LogicalPlanVisitor(builder, irMeta).visit(cypherAST),
+                    Code.LOGICAL_PLAN_BUILD_FAILED);
+        }
+    }
+
+    class Gremlin implements LogicalPlanFactory {
+        @Override
+        public LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query) {
+            ParseTree gremlinAST =
+                    ClassUtils.callException(
+                            () -> new GremlinAntlr4Parser().parse(query),
+                            Code.GREMLIN_INVALID_SYNTAX);
+            return ClassUtils.callException(
+                    () ->
+                            new LogicalPlan(
+                                    new GraphBuilderVisitor(builder).visit(gremlinAST).build()),
+                    Code.LOGICAL_PLAN_BUILD_FAILED);
+        }
+    }
 }

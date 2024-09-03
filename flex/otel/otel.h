@@ -52,6 +52,29 @@ namespace trace_api = opentelemetry::trace;
 namespace metrics_api = opentelemetry::metrics;
 namespace logs_api = opentelemetry::logs;
 
+template <typename T>
+class HttpTextMapCarrier
+    : public opentelemetry::context::propagation::TextMapCarrier {
+ public:
+  HttpTextMapCarrier(T& headers) : headers_(headers) {}
+  HttpTextMapCarrier() = default;
+  opentelemetry::nostd::string_view Get(
+      opentelemetry::nostd::string_view key) const noexcept override {
+    auto it = headers_.find(key.data());
+    if (it != headers_.end()) {
+      return opentelemetry::nostd::string_view(it->second);
+    }
+    return "";
+  }
+
+  void Set(opentelemetry::nostd::string_view key,
+           opentelemetry::nostd::string_view value) noexcept override {
+    headers_.insert(std::pair{std::string(key), std::string(value)});
+  }
+
+  T headers_;
+};
+
 // ===== GENERAL SETUP =====
 void initTracer();
 
@@ -61,13 +84,24 @@ void initMeter();
 // ===== LOG SETUP =====
 void initLogger();
 
+// ===== CLEANUP =====
+void cleanUpTracer();
+
 nostd::shared_ptr<logs_api::Logger> get_logger(std::string scope);
 
 opentelemetry::nostd::shared_ptr<trace_api::Tracer> get_tracer(
     std::string tracer_name);
 
-nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
-    std::string name, std::string version);
+nostd::unique_ptr<metrics_api::Counter<uint64_t>> create_int_counter(
+    std::string name, std::string version = "");
+
+nostd::unique_ptr<metrics_api::Histogram<double>> create_double_histogram(
+    std::string name, std::string version = "");
+
+opentelemetry::trace::StartSpanOptions get_parent_ctx(
+    opentelemetry::context::Context& context,
+    std::map<std::string, std::string>& headers);
+
 }  // namespace otel
 #endif  // OTEL_OTEL_H_
 

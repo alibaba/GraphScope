@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.sdk.schema;
 
+import com.alibaba.graphscope.groot.sdk.RequestOptions;
 import com.alibaba.graphscope.proto.groot.*;
 import com.alibaba.graphscope.proto.groot.BatchSubmitRequest.DDLRequest;
 
@@ -12,15 +13,22 @@ public class Schema {
     List<VertexLabel> vertexLabelsToDrop;
     List<EdgeLabel> edgeLabelsToDrop;
 
+    List<VertexLabel> vertexLabelsToAddProperties;
+    List<EdgeLabel> edgeLabelsToAddProperties;
+
     public Schema(
             List<VertexLabel> vertexLabels,
             List<EdgeLabel> edgeLabels,
             List<VertexLabel> vertexLabelsToDrop,
-            List<EdgeLabel> edgeLabelsToDrop) {
+            List<EdgeLabel> edgeLabelsToDrop,
+            List<VertexLabel> vertexLabelsToAddProperties,
+            List<EdgeLabel> edgeLabelsToAddProperties) {
         this.vertexLabels = vertexLabels;
         this.edgeLabels = edgeLabels;
         this.vertexLabelsToDrop = vertexLabelsToDrop;
         this.edgeLabelsToDrop = edgeLabelsToDrop;
+        this.vertexLabelsToAddProperties = vertexLabelsToAddProperties;
+        this.edgeLabelsToAddProperties = edgeLabelsToAddProperties;
     }
 
     public Schema() {}
@@ -101,8 +109,23 @@ public class Schema {
         return new Builder();
     }
 
+    public BatchSubmitRequest toProto(RequestOptions options) {
+        if (options == null) {
+            return toProto();
+        }
+        BatchSubmitRequest.Builder builder = BatchSubmitRequest.newBuilder();
+        builder.setRequestOptions(options.toWriteRequest());
+        buildProto(builder);
+        return builder.build();
+    }
+
     public BatchSubmitRequest toProto() {
         BatchSubmitRequest.Builder builder = BatchSubmitRequest.newBuilder();
+        buildProto(builder);
+        return builder.build();
+    }
+
+    private void buildProto(BatchSubmitRequest.Builder builder) {
         for (VertexLabel label : vertexLabels) {
             CreateVertexTypeRequest.Builder typeBuilder = CreateVertexTypeRequest.newBuilder();
             typeBuilder.setTypeDef(label.toProto());
@@ -115,6 +138,14 @@ public class Schema {
             typeBuilder.setLabel(label.getLabel());
             DDLRequest.Builder ddlRequestBuilder =
                     DDLRequest.newBuilder().setDropVertexTypeRequest(typeBuilder);
+            builder.addValue(ddlRequestBuilder);
+        }
+        for (VertexLabel label : vertexLabelsToAddProperties) {
+            AddVertexTypePropertiesRequest.Builder typeBuilder =
+                    AddVertexTypePropertiesRequest.newBuilder();
+            typeBuilder.setTypeDef(label.toProto());
+            DDLRequest.Builder ddlRequestBuilder =
+                    DDLRequest.newBuilder().setAddVertexTypePropertiesRequest(typeBuilder);
             builder.addValue(ddlRequestBuilder);
         }
         for (EdgeLabel label : edgeLabels) {
@@ -131,6 +162,14 @@ public class Schema {
                 kindBuilder.setDstVertexLabel(relation.getDstLabel());
                 builder.addValue(DDLRequest.newBuilder().setAddEdgeKindRequest(kindBuilder));
             }
+        }
+        for (EdgeLabel label : edgeLabelsToAddProperties) {
+            AddEdgeTypePropertiesRequest.Builder typeBuilder =
+                    AddEdgeTypePropertiesRequest.newBuilder();
+            typeBuilder.setTypeDef(label.toProto());
+            DDLRequest.Builder ddlRequestBuilder =
+                    DDLRequest.newBuilder().setAddEdgeTypePropertiesRequest(typeBuilder);
+            builder.addValue(ddlRequestBuilder);
         }
         for (EdgeLabel label : edgeLabelsToDrop) {
             for (EdgeLabel.EdgeRelation relation : label.getRelations()) {
@@ -149,7 +188,6 @@ public class Schema {
                 builder.addValue(ddlRequestBuilder);
             }
         }
-        return builder.build();
     }
 
     public static class Builder {
@@ -159,11 +197,16 @@ public class Schema {
         List<VertexLabel> vertexLabelsToDrop;
         List<EdgeLabel> edgeLabelsToDrop;
 
+        List<VertexLabel> vertexLabelsToAddProperties;
+        List<EdgeLabel> edgeLabelsToAddProperties;
+
         public Builder() {
             vertexLabels = new ArrayList<>();
             edgeLabels = new ArrayList<>();
             vertexLabelsToDrop = new ArrayList<>();
             edgeLabelsToDrop = new ArrayList<>();
+            vertexLabelsToAddProperties = new ArrayList<>();
+            edgeLabelsToAddProperties = new ArrayList<>();
         }
 
         public Builder addVertexLabel(VertexLabel label) {
@@ -171,8 +214,32 @@ public class Schema {
             return this;
         }
 
+        public Builder addVertexLabelProperties(VertexLabel label) {
+            if (vertexLabelsToAddProperties.stream()
+                    .anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
+                throw new IllegalArgumentException(
+                        label.getLabel()
+                                + " duplicated label in submission queue. "
+                                + "merge all properties if they belong to same label.");
+            }
+            vertexLabelsToAddProperties.add(label);
+            return this;
+        }
+
         public Builder addEdgeLabel(EdgeLabel label) {
             edgeLabels.add(label);
+            return this;
+        }
+
+        public Builder addEdgeLabelProperties(EdgeLabel label) {
+            if (edgeLabelsToAddProperties.stream()
+                    .anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
+                throw new IllegalArgumentException(
+                        label.getLabel()
+                                + " duplicated label in submission queue. "
+                                + "merge all properties if they belong to same label.");
+            }
+            edgeLabelsToAddProperties.add(label);
             return this;
         }
 
@@ -196,8 +263,16 @@ public class Schema {
             return addVertexLabel(label.build());
         }
 
+        public Builder addVertexLabelProperties(VertexLabel.Builder label) {
+            return addVertexLabelProperties(label.build());
+        }
+
         public Builder addEdgeLabel(EdgeLabel.Builder label) {
             return addEdgeLabel(label.build());
+        }
+
+        public Builder addEdgeLabelProperties(EdgeLabel.Builder label) {
+            return addEdgeLabelProperties(label.build());
         }
 
         public Builder dropVertexLabel(VertexLabel.Builder label) {
@@ -215,7 +290,13 @@ public class Schema {
         }
 
         public Schema build() {
-            return new Schema(vertexLabels, edgeLabels, vertexLabelsToDrop, edgeLabelsToDrop);
+            return new Schema(
+                    vertexLabels,
+                    edgeLabels,
+                    vertexLabelsToDrop,
+                    edgeLabelsToDrop,
+                    vertexLabelsToAddProperties,
+                    edgeLabelsToAddProperties);
         }
     }
 }

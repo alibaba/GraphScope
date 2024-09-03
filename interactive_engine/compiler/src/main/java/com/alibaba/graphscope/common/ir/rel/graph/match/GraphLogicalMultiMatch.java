@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
@@ -99,6 +100,16 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    @Override
+    public GraphLogicalMultiMatch copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalMultiMatch(
+                (GraphOptCluster) getCluster(),
+                ImmutableList.of(),
+                inputs.get(0),
+                sentences.get(0),
+                sentences.subList(1, sentences.size()));
     }
 
     public List<RelNode> getSentences() {

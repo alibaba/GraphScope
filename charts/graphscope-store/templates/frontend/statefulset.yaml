@@ -1,10 +1,4 @@
-{{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
-{{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
-{{- $storeFullname := include "graphscope-store.store.fullname" . }}
-{{- $kafkaFullname := include "graphscope-store.kafka.fullname" . -}}
-{{- $releaseNamespace := .Release.Namespace }}
-{{- $clusterDomain := .Values.clusterDomain }}
-
+{{- if .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -90,7 +84,7 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-        - name: frontend
+        - name: default
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if .Values.containerSecurityContext.enabled }}
@@ -101,35 +95,26 @@ spec:
           args: {{- include "common.tplvalues.render" (dict "value" .Values.args "context" $) | nindent 12 }}
           {{- end }}
           env:
-            - name: GRAPH_NAME
-              value: {{ .Values.graphName | quote }}
-            - name: GROOT_JAVA_OPTS
-              value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "frontend"
-            - name: FRONTEND_COUNT
-              value: {{ .Values.frontend.replicaCount | quote }}
-            - name: COORDINATOR_COUNT
-              value: {{ .Values.coordinator.replicaCount | quote }}
-            - name: STORE_COUNT
-              value: {{ .Values.store.replicaCount | quote }}
-            - name: DNS_NAME_PREFIX_FRONTEND
-              value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless
-            - name: DNS_NAME_PREFIX_COORDINATOR
-              value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless
-            - name: DNS_NAME_PREFIX_STORE
-              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless
-            - name: DNS_NAME_SERVICE_KAFKA
-              value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
-            - name: KAFKA_SERVERS
-              value: {{ include "graphscope-store.kafka.brokerlist" . }}
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           ports:
-            - name: service-port
-              containerPort: 55556
+            - name: grpc
+              containerPort: {{ .Values.frontend.service.servicePort }}
             - name: gremlin
-              containerPort: 12312
-            - name: port
-              containerPort: 55555
+              containerPort: {{ .Values.frontend.service.gremlinPort }}
+            - name: inner-rpc
+              containerPort: {{ .Values.frontend.service.port }}
+          {{- if .Values.frontend.resources }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
@@ -145,9 +130,6 @@ spec:
             tcpSocket:
               port: gremlin
           {{- end }}
-          {{- if .Values.frontend.resources }}
-          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
-          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/groot/groot.config.tpl
@@ -160,3 +142,4 @@ spec:
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
             defaultMode: 0755
+{{- end }}

@@ -41,6 +41,7 @@ GRAPHSCOPE_HOME = (
     else "/opt/graphscope"
 )
 
+
 def cmake_and_make(cmake_commands):
     try:
         cmake_process = subprocess.run(
@@ -92,7 +93,12 @@ def cmake_graph(graph_class):
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
-    cmake_commands = ["cmake", ".", "-DNETWORKX=" + NETWORKX]
+    cmake_commands = [
+        "cmake",
+        ".",
+        "-DNETWORKX=" + NETWORKX,
+        "-DENABLE_JAVA_SDK=" + ENABLE_JAVA_SDK,
+    ]
     if "ArrowFragment" in graph_class:
         cmake_commands.append("-DPROPERTY_GRAPH_FRAME=True")
     else:
@@ -453,15 +459,23 @@ def parse_sys_args():
         default=WORKSPACE,
         help="Output directory."
     )
+    parser.add_argument(
+        "--enable_java_sdk",
+        type=str,
+        default="OFF",
+        help="Enable Java SDK support or not",
+    )
     return parser.parse_args()
 
 WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")).resolve()
+ENABLE_JAVA_SDK = "OFF"
 
 if __name__ == "__main__":
     args = parse_sys_args()
     print("Launching with args", args)
     WORKSPACE = args.output_dir
     WORKSPACE = Path(WORKSPACE).resolve()
+    ENABLE_JAVA_SDK = args.enable_java_sdk
     print("Will output libraries to", WORKSPACE)
     os.makedirs(WORKSPACE, exist_ok=True)
     if args.graph:

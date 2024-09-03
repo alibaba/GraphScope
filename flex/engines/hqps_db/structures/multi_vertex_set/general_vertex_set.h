@@ -19,10 +19,12 @@
 #include <tuple>
 #include <unordered_set>
 #include <vector>
+
 #include "grape/types.h"
 #include "grape/util.h"
 #include "grape/utils/bitset.h"
 
+#include "flex/engines/hqps_db/core/null_record.h"
 #include "flex/engines/hqps_db/core/utils/hqps_type.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
@@ -486,6 +488,81 @@ class GeneralVertexSetBuilder {
   std::vector<grape::Bitset> bitsets_;
 };
 
+template <typename VID_T, typename LabelT, typename... T>
+class GeneralVertexSetKeyedBuilder {
+ public:
+  using res_t = GeneralVertexSet<VID_T, LabelT, T...>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
+  using data_tuple_t = typename res_t::data_tuple_t;
+  using index_ele_tuple_t = typename res_t::index_ele_tuple_t;
+
+  static constexpr bool is_row_vertex_set_builder = false;
+  static constexpr bool is_flat_edge_set_builder = false;
+  static constexpr bool is_general_edge_set_builder = false;
+  static constexpr bool is_two_label_set_builder = false;
+  static constexpr bool is_collection_builder = false;
+  static constexpr bool is_general_vertex_set_builder = true;
+
+  GeneralVertexSetKeyedBuilder(const res_t& from)
+      : GeneralVertexSetKeyedBuilder(from.Size(), from.GetPropNames(),
+                                     from.GetLabels()) {}
+
+  GeneralVertexSetKeyedBuilder(
+      size_t size, const std::array<std::string, sizeof...(T)>& prop_names,
+      const std::vector<LabelT>& labels)
+      : ind_(0), labels_(labels), prop_names_(prop_names) {
+    vec_.reserve(size);
+    data_vec_.reserve(size);
+    bitsets_.resize(size);
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      bitsets_[i].init(size);
+    }
+  }
+
+  int32_t insert(const index_ele_tuple_t& tuple, const data_tuple_t& data) {
+    CHECK(std::get<1>(tuple) < bitsets_.size());
+    auto global_id = GlobalId(std::get<1>(tuple), std::get<2>(tuple));
+    if (IsNull(global_id)) {
+      return -1;
+    }
+    if (global_id_map_.find(global_id) != global_id_map_.end()) {
+      return global_id_map_[global_id];
+    } else {
+      global_id_map_[global_id] = ind_;
+      data_vec_.emplace_back(data);
+      vec_.emplace_back(std::get<2>(tuple));
+      if (vec_.size() - 1 > bitsets_[std::get<1>(tuple)].cardinality()) {
+        VLOG(10) << "vec size: " << vec_.size() << ", bitset size: "
+                 << bitsets_[std::get<1>(tuple)].cardinality();
+        for (size_t i = 0; i < bitsets_.size(); ++i) {
+          bitsets_[i].resize(2 * bitsets_[i].cardinality());
+        }
+      }
+      bitsets_[std::get<1>(tuple)].set_bit(vec_.size() - 1);
+      return ind_++;
+    }
+  }
+
+  res_t Build() {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      bitsets_[i].resize(vec_.size());
+    }
+    return res_t(std::move(vec_), std::move(data_vec_), std::move(prop_names_),
+                 std::move(labels_), std::move(bitsets_));
+  }
+
+  size_t Size() const { return vec_.size(); }
+
+ private:
+  size_t ind_;
+  std::vector<VID_T> vec_;
+  std::vector<std::tuple<T...>> data_vec_;
+  std::array<std::string, sizeof...(T)> prop_names_;
+  std::vector<LabelT> labels_;
+  std::vector<grape::Bitset> bitsets_;
+  std::unordered_map<GlobalId, size_t> global_id_map_;
+};
+
 // Specialize for grape::EmptyType
 template <typename VID_T, typename LabelT>
 class GeneralVertexSetBuilder<VID_T, LabelT, grape::EmptyType> {
@@ -556,23 +633,98 @@ class GeneralVertexSetBuilder<VID_T, LabelT, grape::EmptyType> {
   std::vector<grape::Bitset> bitsets_;
 };
 
+template <typename VID_T, typename LabelT>
+class GeneralVertexSetKeyedBuilder<VID_T, LabelT, grape::EmptyType> {
+ public:
+  using res_t = GeneralVertexSet<VID_T, LabelT, grape::EmptyType>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
+  using data_tuple_t = typename res_t::data_tuple_t;
+  using index_ele_tuple_t = typename res_t::index_ele_tuple_t;
+
+  static constexpr bool is_row_vertex_set_builder = false;
+  static constexpr bool is_flat_edge_set_builder = false;
+  static constexpr bool is_general_edge_set_builder = false;
+  static constexpr bool is_two_label_set_builder = false;
+  static constexpr bool is_collection_builder = false;
+  static constexpr bool is_general_vertex_set_builder = true;
+
+  GeneralVertexSetKeyedBuilder(const res_t& from)
+      : GeneralVertexSetKeyedBuilder(from.Size(), from.GetLabels()) {}
+
+  GeneralVertexSetKeyedBuilder(size_t size, const std::vector<LabelT>& labels)
+      : labels_(labels) {
+    vec_.reserve(size);
+    bitsets_.resize(labels.size());
+    VLOG(10) << "Create general vertex builder : " << size
+             << ", labels: " << labels.size();
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      bitsets_[i].init(size);
+    }
+  }
+
+  int32_t insert(const index_ele_tuple_t& tuple, const data_tuple_t& data) {
+    CHECK(std::get<1>(tuple) < bitsets_.size());
+    auto global_id = GlobalId(std::get<1>(tuple), std::get<2>(tuple));
+    if (IsNull(global_id)) {
+      return -1;
+    }
+    if (global_id_map_.find(global_id) != global_id_map_.end()) {
+      return global_id_map_[global_id];
+    } else {
+      global_id_map_[global_id] = ind_;
+      vec_.emplace_back(std::get<2>(tuple));
+      if (vec_.size() - 1 > bitsets_[std::get<1>(tuple)].cardinality()) {
+        VLOG(10) << "vec size: " << vec_.size() << ", bitset size: "
+                 << bitsets_[std::get<1>(tuple)].cardinality();
+        for (size_t i = 0; i < bitsets_.size(); ++i) {
+          bitsets_[i].resize(2 * bitsets_[i].cardinality());
+        }
+      }
+      bitsets_[std::get<1>(tuple)].set_bit(vec_.size() - 1);
+      return ind_++;
+    }
+  }
+
+  res_t Build() {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      LOG(INFO) << "Shrink bitset: " << i
+                << ", from size: " << bitsets_[i].cardinality()
+                << " to size: " << vec_.size();
+      bitsets_[i].resize(vec_.size());
+    }
+    return res_t(std::move(vec_), std::move(labels_), std::move(bitsets_));
+  }
+
+  size_t Size() const { return vec_.size(); }
+
+ private:
+  size_t ind_;
+  std::vector<VID_T> vec_;
+  std::vector<LabelT> labels_;
+  std::vector<grape::Bitset> bitsets_;
+  std::unordered_map<GlobalId, size_t> global_id_map_;
+};
+
 template <typename VID_T, typename LabelT, typename... T>
 class GeneralVertexSetIter {
  public:
   using lid_t = VID_T;
   using self_type_t = GeneralVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T, std::tuple<T...>>;
-  using ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
+  using ele_tuple_t =
+      typename GeneralVertexSet<VID_T, LabelT, T...>::ele_tuple_t;
   using data_tuple_t = std::tuple<VID_T, std::tuple<T...>>;
 
   GeneralVertexSetIter(const std::vector<VID_T>& vec,
                        const std::vector<std::tuple<T...>>& data_vec,
                        const std::vector<std::string>& prop_names,
-                       const std::vector<grape::Bitset>& bitsets, size_t ind)
+                       const std::vector<grape::Bitset>& bitsets,
+                       const std::vector<LabelT>& labels, size_t ind)
       : vec_(vec),
         data_vec_(data_vec),
         prop_names_(prop_names),
         bitsets_(bitsets),
+        labels_(labels),
         ind_(ind) {}
 
   ele_tuple_t GetElement() const {
@@ -583,7 +735,8 @@ class GeneralVertexSetIter {
         break;
       }
     }
-    return std::make_tuple(label_ind, vec_[ind_], data_vec_[ind_]);
+    return std::make_tuple(GlobalId(labels_[label_ind], vec_[ind_]),
+                           data_vec_[ind_]);
   }
 
   data_tuple_t GetData() const { return vec_[ind_]; }
@@ -634,6 +787,7 @@ class GeneralVertexSetIter {
   const std::vector<std::tuple<T...>>& data_vec_;
   const std::vector<std::string>& prop_names_;
   const std::vector<grape::Bitset>& bitsets_;
+  const std::vector<LabelT>& labels_;
   size_t ind_;
 };
 
@@ -643,12 +797,14 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
   using lid_t = VID_T;
   using self_type_t = GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T>;
-  using ele_tuple_t = std::tuple<size_t, VID_T>;
+  using ele_tuple_t =
+      typename GeneralVertexSet<VID_T, LabelT, grape::EmptyType>::ele_tuple_t;
   using data_tuple_t = std::tuple<VID_T>;
 
   GeneralVertexSetIter(const std::vector<VID_T>& vec,
-                       const std::vector<grape::Bitset>& bitsets, size_t ind)
-      : vec_(vec), bitsets_(bitsets), ind_(ind) {}
+                       const std::vector<grape::Bitset>& bitsets,
+                       const std::vector<LabelT>& labels, size_t ind)
+      : vec_(vec), bitsets_(bitsets), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     size_t label_ind = 0;
@@ -658,7 +814,7 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
         break;
       }
     }
-    return std::make_tuple(label_ind, vec_[ind_]);
+    return GlobalId(labels_[label_ind], vec_[ind_]);
   }
 
   data_tuple_t GetData() const { return vec_[ind_]; }
@@ -707,6 +863,7 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
  private:
   const std::vector<VID_T>& vec_;
   const std::vector<grape::Bitset>& bitsets_;
+  const std::vector<LabelT>& labels_;
   size_t ind_;
 };
 
@@ -717,7 +874,7 @@ class GeneralVertexSet {
   using self_type_t = GeneralVertexSet<VID_T, LabelT, T...>;
   using iterator = GeneralVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T, std::tuple<T...>>;
-  using ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
+  using ele_tuple_t = std::tuple<GlobalId, std::tuple<T...>>;
   using data_tuple_t = std::tuple<VID_T, std::tuple<T...>>;
   using flat_t = self_type_t;
   using EntityValueType = VID_T;
@@ -782,11 +939,12 @@ class GeneralVertexSet {
   }
 
   iterator begin() const {
-    return iterator(vec_, data_vec_, prop_names_, bitsets_, 0);
+    return iterator(vec_, data_vec_, prop_names_, bitsets_, label_names_, 0);
   }
 
   iterator end() const {
-    return iterator(vec_, data_vec_, prop_names_, bitsets_, vec_.size());
+    return iterator(vec_, data_vec_, prop_names_, bitsets_, label_names_,
+                    vec_.size());
   }
 
   builder_t CreateBuilder() const {
@@ -868,6 +1026,10 @@ class GeneralVertexSet {
   const std::vector<grape::Bitset>& GetBitsets() const { return bitsets_; }
 
   const std::vector<VID_T>& GetVertices() const { return vec_; }
+
+  const std::vector<std::tuple<T...>>& GetDataVec() const { return data_vec_; }
+
+  const auto& GetPropNames() const { return prop_names_; }
 
   std::pair<std::vector<VID_T>, std::vector<int32_t>> GetVerticesWithLabel(
       label_t label_id) const {
@@ -1104,7 +1266,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   using self_type_t = GeneralVertexSet<VID_T, LabelT, grape::EmptyType>;
   using iterator = GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T>;
-  using ele_tuple_t = std::tuple<size_t, VID_T>;
+  using ele_tuple_t = GlobalId;
   using data_tuple_t = std::tuple<VID_T>;
   using flat_t = self_type_t;
   using EntityValueType = VID_T;
@@ -1158,9 +1320,11 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     }
   }
 
-  iterator begin() const { return iterator(vec_, bitsets_, 0); }
+  iterator begin() const { return iterator(vec_, bitsets_, label_names_, 0); }
 
-  iterator end() const { return iterator(vec_, bitsets_, vec_.size()); }
+  iterator end() const {
+    return iterator(vec_, bitsets_, label_names_, vec_.size());
+  }
 
   builder_t CreateBuilder() const {
     return builder_t(vec_, label_names_, bitsets_);

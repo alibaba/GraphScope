@@ -1,6 +1,8 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.aliyun.odps.mapred.TaskContext;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.oss.*;
@@ -20,7 +22,6 @@ import java.net.HttpURLConnection;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class OSSFS extends AbstractFileSystem {
     private static final Logger logger = LoggerFactory.getLogger(OSSFS.class);
@@ -40,7 +41,7 @@ public class OSSFS extends AbstractFileSystem {
             this.ossClient =
                     new OSSClientBuilder().build(endpoint, ossAccessID, ossAccessKey, conf);
         } catch (OSSException | ClientException oe) {
-            throw new IOException(oe);
+            throw new InvalidArgumentException(oe);
         }
     }
 
@@ -57,7 +58,7 @@ public class OSSFS extends AbstractFileSystem {
         initClient();
     }
 
-    public OSSFS(Properties properties) throws IOException {
+    public OSSFS(UniConfig properties) throws IOException {
         this.ossAccessID = properties.getProperty(DataLoadConfig.OSS_ACCESS_ID);
         this.ossAccessKey = properties.getProperty(DataLoadConfig.OSS_ACCESS_KEY);
         if (this.ossAccessID == null || this.ossAccessID.isEmpty()) {
@@ -77,7 +78,7 @@ public class OSSFS extends AbstractFileSystem {
     }
 
     @Override
-    public void open(TaskContext context, String mode) throws IOException {}
+    public void open(TaskContext context, String mode) {}
 
     public String getQualifiedPath() {
         return "oss://";
@@ -123,7 +124,7 @@ public class OSSFS extends AbstractFileSystem {
         }
     }
 
-    public void uploadFileWithCheckPoint(String srcFile, String dstFile) throws IOException {
+    public void uploadFileWithCheckPoint(String srcFile, String dstFile) {
         String key = Paths.get(object, dstFile).toString();
         UploadFileRequest uploadFileRequest = new UploadFileRequest(bucket, key);
         uploadFileRequest.setUploadFile(srcFile);
@@ -133,10 +134,10 @@ public class OSSFS extends AbstractFileSystem {
             ossClient.uploadFile(uploadFileRequest);
         } catch (OSSException oe) {
             logger.error("Error message: {}", oe.getMessage());
-            throw new IOException(oe);
+            throw new InvalidArgumentException(oe);
         } catch (Throwable ce) {
             logger.error("Error Message:" + ce.getMessage());
-            throw new IOException(ce);
+            throw new InvalidArgumentException(ce);
         }
     }
 
@@ -169,7 +170,7 @@ public class OSSFS extends AbstractFileSystem {
             ossObject.close();
         } catch (OSSException | ClientException oe) {
             logger.error("Error Message:" + oe.getMessage());
-            throw new IOException(oe);
+            throw new InvalidArgumentException(oe);
         }
         return data.toString();
     }

@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.common.config.BackupConfig;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
@@ -30,6 +29,7 @@ import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupTaskSender;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.backup.StoreBackupId;

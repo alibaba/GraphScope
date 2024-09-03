@@ -117,9 +117,17 @@ void ODPSReadClient::CreateReadSession(
     const std::vector<std::string>& selected_partitions) {
   auto resp = createReadSession(table_identifier, selected_cols, partition_cols,
                                 selected_partitions);
-  if (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
-      resp.status_ != apsara::odps::sdk::storage_api::Status::WAIT) {
-    LOG(FATAL) << "CreateReadSession failed" << resp.error_message_;
+  size_t cur_retry = 0;
+  while (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
+         resp.status_ != apsara::odps::sdk::storage_api::Status::WAIT) {
+    LOG(ERROR) << "CreateReadSession failed" << resp.error_message_;
+    if (cur_retry >= MAX_RETRY) {
+      LOG(FATAL) << "Reach max retry times " << MAX_RETRY
+                 << ", when creating read session.";
+    }
+    resp = createReadSession(table_identifier, selected_cols, partition_cols,
+                             selected_partitions);
+    cur_retry++;
   }
   *session_id = resp.session_id_;
 
@@ -174,6 +182,7 @@ bool ODPSReadClient::readRows(
   req.table_identifier_ = table_identifier;
   req.session_id_ = session_id;
   req.split_index_ = split_index;
+  req.max_batch_rows_ = 20000;
 
   auto reader = arrow_client_ptr_->ReadRows(req);
   std::shared_ptr<arrow::RecordBatch> record_batch;
@@ -216,7 +225,8 @@ std::shared_ptr<arrow::Table> ODPSReadClient::ReadTable(
   for (int32_t i = 0; i < cur_thread_num; ++i) {
     auto indices = split_indices(i, cur_thread_num, split_count);
     LOG(INFO) << "Thread " << i << " will read " << indices.size()
-              << " splits of " << split_count << " splits";
+              << " splits of " << split_count
+              << " splits: " << gs::to_string(indices);
     producers.emplace_back(std::thread(
         &ODPSReadClient::producerRoutine, this, std::cref(session_id),
         std::cref(table_id), std::ref(all_batches), std::move(indices)));
@@ -252,17 +262,19 @@ std::shared_ptr<arrow::Table> ODPSReadClient::ReadTable(
 ODPSStreamRecordBatchSupplier::ODPSStreamRecordBatchSupplier(
     label_t label_id, const std::string& file_path,
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
-    int split_count, TableIdentifier table_identifier)
+    int split_count, TableIdentifier table_identifier, int worker_id,
+    int worker_num)
     : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
       split_count_(split_count),
       table_identifier_(table_identifier),
-      cur_split_index_(0) {
+      cur_split_index_(worker_id),
+      worker_num_(worker_num) {
   read_rows_req_.table_identifier_ = table_identifier_;
   read_rows_req_.session_id_ = session_id_;
   read_rows_req_.split_index_ = cur_split_index_;
-  read_rows_req_.max_batch_rows_ = 32768;
+  read_rows_req_.max_batch_rows_ = 20000;
   cur_batch_reader_ =
       odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
 }
@@ -270,9 +282,10 @@ ODPSStreamRecordBatchSupplier::ODPSStreamRecordBatchSupplier(
 std::shared_ptr<arrow::RecordBatch>
 ODPSStreamRecordBatchSupplier::GetNextBatch() {
   std::shared_ptr<arrow::RecordBatch> record_batch;
-  if (!cur_batch_reader_) {
+  if (!cur_batch_reader_ || cur_split_index_ >= split_count_) {
     return record_batch;
   }
+  size_t cur_retry = 0;
   while (true) {
     if (!cur_batch_reader_->Read(record_batch)) {
       if (cur_batch_reader_->GetStatus() !=
@@ -281,12 +294,18 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetErrorMessage() << ", "
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
+        if (cur_retry >= ODPSReadClient::MAX_RETRY) {
+          LOG(FATAL) << "Reach max retry times " << ODPSReadClient::MAX_RETRY
+                     << ", split id: " << cur_split_index_;
+        }
         cur_batch_reader_ =
             odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
+        cur_retry++;
       } else {
         VLOG(1) << "Read split " << cur_split_index_ << " finished";
+        cur_retry = 0;
         // move to next split
-        ++cur_split_index_;
+        cur_split_index_ += worker_num_;
         if (cur_split_index_ >= split_count_) {
           VLOG(1) << "Finish Read all splits";
           cur_batch_reader_.reset();
@@ -335,18 +354,28 @@ ODPSTableRecordBatchSupplier::GetNextBatch() {
 
 std::shared_ptr<IFragmentLoader> ODPSFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int32_t thread_num) {
+    const LoadingConfig& loading_config) {
   return std::shared_ptr<IFragmentLoader>(
-      new ODPSFragmentLoader(work_dir, schema, loading_config, thread_num));
+      new ODPSFragmentLoader(work_dir, schema, loading_config));
 }
 void ODPSFragmentLoader::init() { odps_read_client_.init(); }
 
-void ODPSFragmentLoader::LoadFragment() {
-  init();
-  loadVertices();
-  loadEdges();
+Result<bool> ODPSFragmentLoader::LoadFragment() {
+  try {
+    init();
+    loadVertices();
+    loadEdges();
 
-  basic_fragment_loader_.LoadFragment();
+    basic_fragment_loader_.LoadFragment();
+  } catch (const std::exception& e) {
+    auto work_dir = basic_fragment_loader_.work_dir();
+    printDiskRemaining(work_dir);
+    LOG(ERROR) << "Failed to load fragment: " << e.what();
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
+                        "Load fragment failed: " + std::string(e.what()),
+                        false);
+  }
+  return Result<bool>(true);
 }
 
 // odps_table_path is like /project_name/table_name/partition_name
@@ -382,37 +411,40 @@ void ODPSFragmentLoader::parseLocation(
 
 void ODPSFragmentLoader::addVertices(label_t v_label_id,
                                      const std::vector<std::string>& v_files) {
-  auto record_batch_supplier_creator =
-      [this](label_t label_id, const std::string& v_file,
-             const LoadingConfig& loading_config) {
-        auto vertex_column_mappings =
-            loading_config_.GetVertexColumnMappings(label_id);
-        std::string session_id;
-        int split_count;
-        TableIdentifier table_identifier;
-        std::vector<std::string> partition_cols;
-        std::vector<std::string> selected_partitions;
-        parseLocation(v_file, table_identifier, partition_cols,
-                      selected_partitions);
-        auto selected_cols =
-            columnMappingsToSelectedCols(vertex_column_mappings);
-        odps_read_client_.CreateReadSession(
-            &session_id, &split_count, table_identifier, selected_cols,
-            partition_cols, selected_partitions);
-        VLOG(1) << "Successfully got session_id: " << session_id
-                << ", split count: " << split_count;
-        if (loading_config.GetIsBatchReader()) {
-          auto res = std::make_shared<ODPSStreamRecordBatchSupplier>(
-              label_id, v_file, odps_read_client_, session_id, split_count,
-              table_identifier);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
-        } else {
-          auto res = std::make_shared<ODPSTableRecordBatchSupplier>(
-              label_id, v_file, odps_read_client_, session_id, split_count,
-              table_identifier, thread_num_);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
-        }
-      };
+  auto record_batch_supplier_creator = [this](
+                                           label_t label_id,
+                                           const std::string& v_file,
+                                           const LoadingConfig& loading_config,
+                                           int worker_num) {
+    auto vertex_column_mappings =
+        loading_config_.GetVertexColumnMappings(label_id);
+    std::string session_id;
+    int split_count;
+    TableIdentifier table_identifier;
+    std::vector<std::string> partition_cols;
+    std::vector<std::string> selected_partitions;
+    std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
+    parseLocation(v_file, table_identifier, partition_cols,
+                  selected_partitions);
+    auto selected_cols = columnMappingsToSelectedCols(vertex_column_mappings);
+    odps_read_client_.CreateReadSession(&session_id, &split_count,
+                                        table_identifier, selected_cols,
+                                        partition_cols, selected_partitions);
+    VLOG(1) << "Successfully got session_id: " << session_id
+            << ", split count: " << split_count;
+    if (loading_config.GetIsBatchReader()) {
+      for (int i = 0; i < worker_num; ++i) {
+        suppliers.emplace_back(std::make_shared<ODPSStreamRecordBatchSupplier>(
+            label_id, v_file, odps_read_client_, session_id, split_count,
+            table_identifier, i, worker_num));
+      }
+    } else {
+      suppliers.emplace_back(std::make_shared<ODPSTableRecordBatchSupplier>(
+          label_id, v_file, odps_read_client_, session_id, split_count,
+          table_identifier, thread_num_));
+    }
+    return suppliers;
+  };
   return AbstractArrowFragmentLoader::AddVerticesRecordBatch(
       v_label_id, v_files, record_batch_supplier_creator);
 }
@@ -471,12 +503,13 @@ void ODPSFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
                                   const std::vector<std::string>& table_paths) {
   auto lambda = [this](label_t src_label_id, label_t dst_label_id,
                        label_t e_label_id, const std::string& table_path,
-                       const LoadingConfig& loading_config) {
+                       const LoadingConfig& loading_config, int worker_num) {
     std::string session_id;
     int split_count;
     TableIdentifier table_identifier;
     std::vector<std::string> partition_cols;
     std::vector<std::string> selected_partitions;
+    std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
     parseLocation(table_path, table_identifier, partition_cols,
                   selected_partitions);
     auto edge_column_mappings = loading_config_.GetEdgeColumnMappings(
@@ -506,16 +539,18 @@ void ODPSFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
     VLOG(1) << "Successfully got session_id: " << session_id
             << ", split count: " << split_count;
     if (loading_config.GetIsBatchReader()) {
-      auto res = std::make_shared<ODPSStreamRecordBatchSupplier>(
-          e_label_id, table_path, odps_read_client_, session_id, split_count,
-          table_identifier);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+      for (int i = 0; i < worker_num; ++i) {
+        suppliers.emplace_back(std::make_shared<ODPSStreamRecordBatchSupplier>(
+            e_label_id, table_path, odps_read_client_, session_id, split_count,
+            table_identifier, i, worker_num));
+      }
+
     } else {
-      auto res = std::make_shared<ODPSTableRecordBatchSupplier>(
+      suppliers.emplace_back(std::make_shared<ODPSTableRecordBatchSupplier>(
           e_label_id, table_path, odps_read_client_, session_id, split_count,
-          table_identifier, thread_num_);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          table_identifier, thread_num_));
     }
+    return suppliers;
   };
 
   AbstractArrowFragmentLoader::AddEdgesRecordBatch(

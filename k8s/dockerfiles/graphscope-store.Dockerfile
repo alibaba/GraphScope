@@ -1,6 +1,7 @@
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION as builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH as builder
 
 ARG CI=false
 ARG ENABLE_COORDINATOR=false
@@ -34,9 +35,14 @@ ARG ENABLE_COORDINATOR=false
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo '$TZ' > /etc/timezone
+
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk dnsutils tzdata \
-        libjemalloc-dev libunwind-dev binutils less python3 python3-pip && \
+    apt-get install -y sudo default-jdk dnsutils tzdata lsof \
+        libjemalloc-dev libunwind-dev binutils less && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -51,15 +57,14 @@ RUN sudo chmod a+wrx /tmp
 
 # install coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
-      pip3 install --upgrade pip \
-      && pip3 install /usr/local/groot/wheel/*.whl; \
+      apt-get update -y && apt-get install -y python3-pip && \
+      apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
+      pip3 install --upgrade pip && \
+      pip3 install /usr/local/groot/wheel/*.whl; \
     fi
 
 USER graphscope
 WORKDIR /home/graphscope
-
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /home/graphscope/
-RUN sudo chown $(id -u):$(id -g) /home/graphscope/opentelemetry-javaagent.jar
 
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 ENV SOLUTION=GRAPHSCOPE_INSIGHT

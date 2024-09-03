@@ -19,6 +19,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <seastar/http/httpd.hh>
 #include <string>
+#include "flex/engines/http_server/handler/http_utils.h"
 #include "flex/engines/http_server/types.h"
 #include "flex/utils/service_utils.h"
 

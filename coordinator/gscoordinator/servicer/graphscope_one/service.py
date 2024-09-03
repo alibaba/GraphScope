@@ -47,9 +47,9 @@ from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
 from graphscope.proto import coordinator_service_pb2_grpc
-from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
+from graphscope.proto.error import coordinator_pb2
 
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
@@ -235,29 +235,29 @@ class GraphScopeOneServiceServicer(
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
-            error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+            error_code = coordinator_pb2.COORDINATOR_INTERNAL_ERROR
             head, bodies = None, None
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
                     # need dag_bodies to load graph from pandas/numpy
-                    error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_analytical_engine(
                         dag, dag_bodies, loader_op_bodies
                     )
                 # run on interactive engine
                 elif run_dag_on == GSEngine.interactive_engine:
-                    error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_interactive_engine(
                         dag
                     )
                 # run on learning engine
                 elif run_dag_on == GSEngine.learning_engine:
-                    error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.LEARNING_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_learning_engine(dag)
                 # run on coordinator
                 elif run_dag_on == GSEngine.coordinator:
-                    error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+                    error_code = coordinator_pb2.COORDINATOR_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_coordinator(
                         dag, dag_bodies, loader_op_bodies
                     )
@@ -457,7 +457,6 @@ class GraphScopeOneServiceServicer(
 
     def CreateLearningInstance(self, request, context):
         object_id = request.object_id
-        logger.info("Create learning instance with object id %ld", object_id)
         handle, config, learning_backend = (
             request.handle,
             request.config,
@@ -467,13 +466,15 @@ class GraphScopeOneServiceServicer(
             endpoints = self._launcher.create_learning_instance(
                 object_id, handle, config, learning_backend
             )
-            self._object_manager.put(object_id, LearningInstanceManager(object_id))
+            self._object_manager.put(
+                object_id, LearningInstanceManager(object_id, learning_backend)
+            )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
             context.set_details(
                 f"Create learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
             )
-            self._launcher.close_learning_instance(object_id)
+            self._launcher.close_learning_instance(object_id, learning_backend)
             self._object_manager.pop(object_id)
             return message_pb2.CreateLearningInstanceResponse()
         return message_pb2.CreateLearningInstanceResponse(
@@ -504,7 +505,9 @@ class GraphScopeOneServiceServicer(
             self._object_manager.pop(object_id)
             logger.info("Close learning instance with object id %ld", object_id)
             try:
-                self._launcher.close_learning_instance(object_id)
+                self._launcher.close_learning_instance(
+                    object_id, request.learning_backend
+                )
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
                 context.set_details(
@@ -534,7 +537,9 @@ class GraphScopeOneServiceServicer(
             elif obj.type == "gie_manager":
                 self._launcher.close_interactive_instance(obj.object_id)
             elif obj.type == "gle_manager":
-                self._launcher.close_learning_instance(obj.object_id)
+                self._launcher.close_learning_instance(obj.object_id, 0)
+            elif obj.type == "glt_manager":
+                self._launcher.close_learning_instance(obj.object_id, 1)
 
             if op_type is not None:
                 dag_def = create_single_op_dag(op_type, config)

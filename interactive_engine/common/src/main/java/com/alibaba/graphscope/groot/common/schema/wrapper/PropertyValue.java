@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.common.schema.wrapper;
 
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.proto.groot.PropertyValuePb;
 import com.google.protobuf.ByteString;
 
@@ -20,8 +22,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class PropertyValue {
-    private DataType dataType;
-    private byte[] valBytes;
+    private final DataType dataType;
+    private final byte[] valBytes;
     private Object valObject;
 
     public PropertyValue(DataType dataType, byte[] valBytes) {
@@ -64,7 +66,7 @@ public class PropertyValue {
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException(
+            throw new InvalidArgumentException(
                     "unable to parse object to bytes. DataType ["
                             + dataType
                             + "], Object ["

@@ -21,17 +21,18 @@ from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.config import load_gs_config
 
 
-def upload_file(filename: str, content: bytes, location: str) -> str:
+def upload_file(location: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.UtilsApi(api_client)
-        return api_instance.upload_file(location)
+        return api_instance.upload_file(location).file_path
 
 
-def switch_context(context: str):
+def switch_context(context: str, graph_name=None):
     config = load_gs_config()
     current_context = get_current_context()
     current_context.switch_context(context)
+    current_context.set_graph_name(graph_name)
     config.update_and_write(current_context)

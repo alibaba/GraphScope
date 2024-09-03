@@ -281,11 +281,13 @@ install_protobuf() {
   workdir=$1
   install_prefix=$2
 
+  # Check whether protobuf is installed
   if [[ -f "${install_prefix}/include/google/protobuf/port.h" ]]; then
     log "protobuf already installed, skip."
     return 0
   fi
 
+  # Define the version and download link for protobuf
   directory="protobuf-21.9"
   file="protobuf-all-21.9.tar.gz"
   url="https://github.com/protocolbuffers/protobuf/releases/download/v21.9"
@@ -295,6 +297,7 @@ install_protobuf() {
   download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
   pushd ${directory} || exit
 
+  # Configure and compile protobuf
   ./configure --prefix="${install_prefix}" --enable-shared --disable-static
   make -j$(nproc)
   make install
@@ -307,11 +310,13 @@ install_grpc() {
   workdir=$1
   install_prefix=$2
 
+  # Check if grpc is installed
   if [[ -f "${install_prefix}/include/grpcpp/grpcpp.h" ]]; then
     log "grpc already installed, skip."
     return 0
   fi
 
+  # Define the grpc version and download link
   directory="grpc"
   branch="v1.49.1"
   file="${directory}-${branch}.tar.gz"
@@ -326,6 +331,7 @@ install_grpc() {
   fi
   pushd ${directory} || exit
 
+  # Configure and compile grpc
   cmake . -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
           -DCMAKE_PREFIX_PATH="${install_prefix}" \
           -DBUILD_SHARED_LIBS=ON \
@@ -356,17 +362,21 @@ install_patchelf() {
   workdir=$1
   install_prefix=$2
 
+  # Check if patchelf is installed
   if [[ -f "${install_prefix}/bin/patchelf" ]]; then
     log "patchelf already installed, skip."
     return 0
   fi
 
+  # Define the version and download link for patchelf
   ARCH=$(uname -m)
 
   directory="patchelf"  # patchelf doesn't have a folder
   file="patchelf-0.14.5-${ARCH}.tar.gz"
   url="https://github.com/NixOS/patchelf/releases/download/0.14.5"
   url=$(maybe_set_to_cn_url ${url})
+
+  # Log and start installing patchelf
   log "Building and installing ${directory}."
   pushd "${workdir}" || exit
   mkdir -p "${directory}"
@@ -374,6 +384,8 @@ install_patchelf() {
   download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
   mkdir -p ${install_prefix}/bin
   mv bin/patchelf ${install_prefix}/bin/patchelf
+  
+  # Go back to your working directory and clean up your files
   popd || exit
   popd || exit
   cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
@@ -382,21 +394,24 @@ install_patchelf() {
 install_cppkafka() {
   workdir=$1
   install_prefix=$2
-
+  # Check whether cppkafka is installed
   if [[ -f "${install_prefix}/include/cppkafka/cppkafka.h" ]]; then
     log "cppkafka already installed, skip."
     return 0
   fi
 
+  # Define the cppkafka version and download link
   directory="cppkafka-0.4.0"
   file="0.4.0.tar.gz"
   url="https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies"
   url=$(maybe_set_to_cn_url ${url})
+
+  # Log and start installing cppkafka
   log "Building and installing ${directory}."
   pushd "${workdir}" || exit
   download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
   pushd ${directory} || exit
-
+  # Configure and compile cppkafka
   # cppkafka may not find the lib64 directory
   export LIBRARY_PATH=${LIBRARY_PATH}:${install_prefix}/lib:${install_prefix}/lib64
 
@@ -415,22 +430,43 @@ install_maven() {
   workdir=$1
   install_prefix=$2
 
+  # Check if maven is installed
   if [[ -f "${install_prefix}/bin/mvn" ]]; then
     log "maven already installed, skip."
     return 0
   fi
 
+  # Define the maven version and download link
   directory="apache-maven-3.8.6"
   file="apache-maven-3.8.6-bin.tar.gz"
   url="https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries"
   url=$(maybe_set_to_cn_url ${url})
+
+  # Log and start installing maven
   log "Building and installing ${directory}."
   pushd "${workdir}" || exit
   download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
   cp -r ${directory} "${install_prefix}"/
 
+  # Configure maven's environment variables
   mkdir -p "${install_prefix}"/bin
   ln -s "${install_prefix}/${directory}/bin/mvn" "${install_prefix}/bin/mvn"
   popd || exit
   cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
+}
+
+install_hiactor() {
+  install_prefix=$1
+  pushd /tmp
+  
+  git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch
+  cd hiactor && git submodule update --init --recursive
+
+  # Configure and compile hiactor
+  sudo bash ./seastar/seastar/install-dependencies.sh
+  mkdir build && cd build
+  cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+        -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" ..
+  make -j 4 && make install
+  popd && rm -rf /tmp/hiactor
 }

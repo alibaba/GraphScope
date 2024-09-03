@@ -23,6 +23,7 @@ import click
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
 from graphscope.gsctl.commands.insight.glob import cli as insight
+from graphscope.gsctl.commands.insight.graph import cli as insight_graph
 from graphscope.gsctl.commands.interactive.glob import cli as interactive
 from graphscope.gsctl.commands.interactive.graph import cli as interactive_graph
 from graphscope.gsctl.config import Context
@@ -31,6 +32,22 @@ from graphscope.gsctl.config import logo
 from graphscope.gsctl.impl import connect_coordinator
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
+
+
+def is_interactive_mode(flex):
+    return (
+        flex["engine"] == "Hiactor"
+        and flex["storage"] == "MutableCSR"
+        and flex["frontend"] == "Cypher/Gremlin"
+    )
+
+
+def is_insight_mode(flex):
+    return (
+        flex["engine"] == "Gaia"
+        and flex["storage"] == "MutablePersistent"
+        and flex["frontend"] == "Cypher/Gremlin"
+    )
 
 
 def get_command_collection(context: Context):
@@ -56,7 +73,11 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
         try:
             # connect to coordinator and reset the timestamp
             response = connect_coordinator(context.coordinator_endpoint)
-            solution = response.solution
+            flex = {
+                "engine": response.engine,
+                "storage": response.storage,
+                "frontend": response.frontend,
+            }
         except Exception as e:
             err(
                 "Failed to connect to coordinator at {0}: {1}".format(
@@ -69,15 +90,15 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
             return commands
         else:
             # check consistency
-            if solution != context.flex:
+            if flex != context.flex:
                 raise RuntimeError(
-                    f"Instance changed: {context.flex} -> {solution}, please close and reconnect to the coordinator"
+                    f"Instance changed: {context.flex} -> {flex}, please close and reconnect to the coordinator"
                 )
             context.reset_timestamp()
             config = load_gs_config()
             config.update_and_write(context)
 
-    if context.flex == "INTERACTIVE":
+    if is_interactive_mode(context.flex):
         if context.context == "global":
             if len(sys.argv) < 2 or sys.argv[1] != "use":
                 info("Using GLOBAL.", fg="green", bold=True)
@@ -87,11 +108,29 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
             commands = click.CommandCollection(sources=[common, interactive])
         else:
             if len(sys.argv) < 2 or sys.argv[1] != "use":
-                info(f"Using GRAPH {context.context}.", fg="green", bold=True)
+                info(
+                    f"Using GRAPH {context.graph_name}(id={context.context}).",
+                    fg="green",
+                    bold=True,
+                )
                 info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
-    elif context.flex == "GRAPHSCOPE_INSIGHT":
+    elif is_insight_mode(context.flex):
         if context.context == "global":
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info("Using GLOBAL.", fg="green", bold=True)
+                info(
+                    "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
+                )
             commands = click.CommandCollection(sources=[common, insight])
+        else:
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info(
+                    f"Using GRAPH {context.graph_name}(id={context.context}).",
+                    fg="green",
+                    bold=True,
+                )
+                info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
+            commands = click.CommandCollection(sources=[common, insight_graph])
 
     return commands

@@ -18,7 +18,6 @@
 #include <limits>
 #include <tuple>
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
-#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -29,19 +28,25 @@ static constexpr const None NONE;
 template <typename T>
 struct NullRecordCreator {
   static inline T GetNull() {
-    static_assert(
-        std::numeric_limits<
-            std::remove_const_t<std::remove_reference_t<T>>>::is_specialized,
-        "NullRecordCreator only support numeric type");
-    using type = std::remove_const_t<std::remove_reference_t<T>>;
-    static type null_value = std::numeric_limits<type>::max();
-    return null_value;
+    if constexpr (std::numeric_limits<std::remove_const_t<
+                      std::remove_reference_t<T>>>::is_specialized) {
+      using type = std::remove_const_t<std::remove_reference_t<T>>;
+      static type null_value = std::numeric_limits<type>::max();
+      return null_value;
+    } else {
+      return T::GetNull();
+    }
   }
 };
 
 template <>
 struct NullRecordCreator<std::string_view> {
   static inline std::string_view GetNull() { return ""; }
+};
+
+template <>
+struct NullRecordCreator<Direction> {
+  static inline Direction GetNull() { return Direction::Unknown; }
 };
 
 template <>
@@ -81,13 +86,6 @@ template <typename... T>
 struct NullRecordCreator<std::tuple<T...>> {
   static inline std::tuple<T...> GetNull() {
     return std::make_tuple(NullRecordCreator<T>::GetNull()...);
-  }
-};
-
-template <typename VID_T, typename LabelT>
-struct NullRecordCreator<Path<VID_T, LabelT>> {
-  static inline Path<VID_T, LabelT> GetNull() {
-    return Path<VID_T, LabelT>::Null();
   }
 };
 

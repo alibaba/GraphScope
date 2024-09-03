@@ -7,7 +7,7 @@
 
 [![GraphScope CI](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml/badge.svg)](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml)
 [![Coverage](https://codecov.io/gh/alibaba/GraphScope/branch/main/graph/badge.svg)](https://codecov.io/gh/alibaba/GraphScope)
-[![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.app)
+[![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.io)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alibaba/GraphScope)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/graphscope)](https://artifacthub.io/packages/helm/graphscope/graphscope)
 [![Docs-en](https://shields.io/badge/Docs-English-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs)
@@ -24,6 +24,9 @@ GraphScope is a unified distributed graph computing platform that provides a one
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Latest News
+- [31/07/2024] 🎢 We’ve launched a webpage visualizing GraphScope’s journey in graph computing. [Check it out!](https://graphscope.io/journey)
+- [30/05/2024] 🏅 GraphScope Flex set new record-breaking [SNB Interactive audit results](https://ldbcouncil.org/benchmarks/snb-interactive/), as announced by LDBC on [X (Twitter)](https://twitter.com/LDBCouncil/status/1795886732950294630)!
+- [25/03/2024] 🙌🏻 We donated the graph file format [GraphAr](https://graphar.apache.org/) to [Apache Software Foundation](https://www.apache.org/) as an Incubating Project. 
 - [05/02/2024] 🎉 GraphScope Flex [paper](https://arxiv.org/abs/2312.12107) was accepted by [SIGMOD 2024](https://2024.sigmod.org/) Industry Track. See you in 🇨🇱!
 - [19/12/2023] 📑 A paper introducing GraphScope Flex released on [arXiv.org](https://arxiv.org/abs/2312.12107).
 - [20/07/2023] 🏆 GraphScope achieved record-breaking results on the [LDBC Social Network Benchmark Interactive workload](https://ldbcouncil.org/benchmarks/snb-interactive/), with a 2.45× higher throughput on SF300 than the previous record holder! 🏆
@@ -54,7 +57,7 @@ Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Getting Started
 
-We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
+We provide a [Playground](https://try.graphscope.io) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.io) straight away in your browser!
 
 GraphScope supports running in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started,
 let's begin with the standalone mode.
@@ -159,8 +162,7 @@ following the last step.
 # define the features for learning
 paper_features = [f"feat_{i}" for i in range(128)]
 
-paper_features.append("kcore")
-paper_features.append("tc")
+paper_features.extend(["kcore", "tc"])
 
 # launch a learning engine.
 lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
@@ -309,7 +311,7 @@ g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small/")
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
 Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neural network tasks like we did in the standalone mode.
-We do not repeat code here, but a `.ipynb` processing the classification task on k8s is available on the [Playground](https://try.graphscope.app/).
+We do not repeat code here, but a `.ipynb` processing the classification task on k8s is available on the [Playground](https://try.graphscope.io/).
 
 ### Closing the session
 
@@ -411,12 +413,14 @@ GraphScope is released under [Apache License 2.0](https://www.apache.org/license
 
 ## Publications
 
+- Tao He, Shuxian Hu, Longbin Lai, Dongze Li, Neng Li, Xue Li, Lexiao Liu, Xiaojian Luo, Binqing Lyu, Ke Meng, Sijie Shen, Li Su, Lei Wang, Jingbo Xu, Wenyuan Yu, Weibin Zeng, Lei Zhang, Siyuan Zhang, Jingren Zhou, Xiaoli Zhou, Diwen Zhu. [GraphScope Flex: LEGO-like Graph Computing Stack](https://dl.acm.org/doi/10.1145/3626246.3653383). Companion of the 2024 International Conference on Management of Data (SIGMOD), industry, 2024.
 - Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
 - Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
 
 If you use this software, please cite our paper using the following metadata:
 
 ```bibtex
+# GraphScope paper
 @article{fan2021graphscope,
   title={GraphScope: a unified engine for big graph processing},
   author={Fan, Wenfei and He, Tao and Lai, Longbin and Li, Xue and Li, Yong and Li, Zhao and Qian, Zhengping and Tian, Chao and Wang, Lei and Xu, Jingbo and others},
@@ -426,6 +430,19 @@ If you use this software, please cite our paper using the following metadata:
   pages={2879--2892},
   year={2021},
   publisher={VLDB Endowment}
+}
+# or GraphScope Flex paper
+@inproceedings{10.1145/3626246.3653383,
+  title = {GraphScope Flex: LEGO-like Graph Computing Stack},
+  author = {He, Tao and Hu, Shuxian and Lai, Longbin and Li, Dongze and Li, Neng and Li, Xue and Liu, Lexiao and Luo, Xiaojian and Lyu, Bingqing and Meng, Ke and Shen, Sijie and Su, Li and Wang, Lei and Xu, Jingbo and Yu, Wenyuan and Zeng, Weibin and Zhang, Lei and Zhang, Siyuan and Zhou, Jingren and Zhou, Xiaoli and Zhu, Diwen},
+  year = {2024},
+  isbn = {9798400704222},
+  publisher = {Association for Computing Machinery},
+  booktitle = {Companion of the 2024 International Conference on Management of Data},
+  pages = {386–399},
+  numpages = {14},
+  location = {Santiago AA, Chile},
+  series = {SIGMOD/PODS '24}
 }
 ```
 

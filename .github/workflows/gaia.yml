@@ -24,7 +24,7 @@ jobs:
   gaia-test:
     runs-on: [self-hosted, manylinux2014]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -84,6 +84,13 @@ jobs:
         # TODO: add ut in global_query
         # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/global_query && cargo test
 
+    - name: Ir With Features Test
+      run: |
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/integrated
+        cargo test --features=mimalloc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot
+        cargo test --features=mimalloc
+
     - name: Ir Integration Test on Experimental Store
       run: |
         . ${HOME}/.graphscope_env
@@ -106,7 +113,7 @@ jobs:
 
     - name: Upload GIE log
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       continue-on-error: true
       with:
         name: gie-log

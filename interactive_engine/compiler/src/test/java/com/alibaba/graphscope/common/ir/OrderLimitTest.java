@@ -118,11 +118,11 @@ public class OrderLimitTest {
                                                 builder.literal(1))))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                "GraphLogicalProject($f1=[$f1], isAppend=[false])\n"
                         + "  GraphLogicalSort(sort0=[$f0], dir0=[DESC])\n"
                         + "    GraphLogicalProject($f0=[+(_.age, 1)], isAppend=[true])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[_], opt=[VERTEX])",
+                        + " alias=[$f1], opt=[VERTEX])",
                 sort.explain().trim());
     }
 }

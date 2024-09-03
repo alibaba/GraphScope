@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;
@@ -23,37 +24,39 @@ import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
 public class IngestorSnapshotClient extends RpcClient {
-    private final IngestorSnapshotGrpc.IngestorSnapshotStub stub;
 
-    public IngestorSnapshotClient(ManagedChannel channel) {
+    public IngestorSnapshotClient(RpcChannel channel) {
         super(channel);
-        this.stub = IngestorSnapshotGrpc.newStub(channel);
     }
 
     public IngestorSnapshotClient(IngestorSnapshotGrpc.IngestorSnapshotStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private IngestorSnapshotGrpc.IngestorSnapshotStub getStub() {
+        return IngestorSnapshotGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void advanceIngestSnapshotId(long writeSnapshotId, CompletionCallback<Long> callback) {
         AdvanceIngestSnapshotIdRequest req =
                 AdvanceIngestSnapshotIdRequest.newBuilder().setSnapshotId(writeSnapshotId).build();
-        stub.advanceIngestSnapshotId(
-                req,
-                new StreamObserver<AdvanceIngestSnapshotIdResponse>() {
-                    @Override
-                    public void onNext(AdvanceIngestSnapshotIdResponse response) {
-                        long previousSnapshotId = response.getPreviousSnapshotId();
-                        callback.onCompleted(previousSnapshotId);
-                    }
+        getStub()
+                .advanceIngestSnapshotId(
+                        req,
+                        new StreamObserver<AdvanceIngestSnapshotIdResponse>() {
+                            @Override
+                            public void onNext(AdvanceIngestSnapshotIdResponse response) {
+                                long previousSnapshotId = response.getPreviousSnapshotId();
+                                callback.onCompleted(previousSnapshotId);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

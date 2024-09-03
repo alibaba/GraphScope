@@ -23,7 +23,7 @@ use pegasus_common::downcast::AsAny;
 use crate::error::{FnExecError, FnGenResult};
 use crate::process::entry::{CollectionEntry, Entry, EntryType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::operator::map::IntersectionEntry;
+use crate::process::operator::map::{GeneralIntersectionEntry, IntersectionEntry};
 use crate::process::record::Record;
 
 #[derive(Debug)]
@@ -54,24 +54,43 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 // The reason is that the alias of the collection is system-given, which is used as a hint of intersection,
                 // hence there's no need to preserve the collection anymore.
                 let entry = input.take(self.tag.as_ref()).unwrap();
-                let intersection = entry
+                if let Some(intersection) = entry
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .ok_or_else(|| {
-                        FnExecError::unexpected_data_error("downcast intersection entry in UnfoldOperator")
-                    })?;
+                {
                 let len = intersection.len();
                 if len == 0 {
                     input.append(Object::None, self.alias);
                     Ok(Box::new(vec![input].into_iter()))
                 } else {
-                    let mut res = Vec::with_capacity(len);
-                    for item in intersection.iter().cloned() {
-                        let mut new_entry = input.clone();
-                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
-                        res.push(new_entry);
+                        let mut res = Vec::with_capacity(len);
+                        for item in intersection.iter().cloned() {
+                            let mut new_entry = input.clone();
+                            new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
+                            res.push(new_entry);
+                        }
+                        Ok(Box::new(res.into_iter()))
+                }
+                } else if let Some(general_intersection) = entry
+                    .as_any_ref()
+                    .downcast_ref::<GeneralIntersectionEntry>()
+                {
+                    let mut res = Vec::with_capacity(general_intersection.len());
+                    for (vid, matchings) in general_intersection.matchings_iter() {
+                        for matching in matchings {
+                            let mut new_entry = input.clone();
+                            for (column, tag) in matching {
+                                new_entry.append(column.clone(), Some(tag));
+                            }
+                            new_entry.append(Vertex::new(vid, None, DynDetails::default()), self.alias);
+                            res.push(new_entry);
+                        }
                     }
                     Ok(Box::new(res.into_iter()))
+                } else {
+                    Err(FnExecError::unexpected_data_error(
+                        "downcast intersection entry in UnfoldOperator",
+                    ))?
                 }
             }
             EntryType::Collection => {

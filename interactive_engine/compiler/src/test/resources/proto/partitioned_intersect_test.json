@@ -1,0 +1,289 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 1,
+        "params": {
+          "tables": [{
+            "id": 1
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+              "label": 1
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "firstName"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "lastName"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "gender"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "birthday"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "DATE32"
+            }, {
+              "propId": {
+                "name": "locationIP"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "browserUsed"
+              },
+              "type": "STRING"
+            }]
+          }]
+        }
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 1
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "edge": {
+        "vTag": 1,
+        "direction": "IN",
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "elementOpt": "EDGE",
+          "graphDataType": [{
+            "label": {
+              "srcLabel": 2,
+              "dstLabel": 1
+            },
+            "props": [{
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }]
+          }, {
+            "label": {
+              "srcLabel": 3,
+              "dstLabel": 1
+            },
+            "props": [{
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }]
+          }]
+        }
+      },
+      "alias": -1
+    }]
+  }, {
+    "opr": {
+      "intersect": {
+        "subPlans": [{
+          "plan": [{
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 0
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "edge": {
+                "vTag": 0,
+                "params": {
+                  "tables": [{
+                    "id": 1
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 2
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "elementOpt": "EDGE",
+                  "graphDataType": [{
+                    "label": {
+                      "label": 1,
+                      "srcLabel": 2,
+                      "dstLabel": 7
+                    }
+                  }, {
+                    "label": {
+                      "label": 1,
+                      "srcLabel": 3,
+                      "dstLabel": 7
+                    }
+                  }]
+                }
+              },
+              "alias": -1
+            }]
+          }]
+        }, {
+          "plan": [{
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 1
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "edge": {
+                "vTag": 1,
+                "params": {
+                  "tables": [{
+                    "id": 10
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 2
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "elementOpt": "EDGE",
+                  "graphDataType": [{
+                    "label": {
+                      "label": 10,
+                      "srcLabel": 1,
+                      "dstLabel": 7
+                    }
+                  }]
+                }
+              },
+              "alias": -1
+            }]
+          }]
+        }],
+        "key": 2
+      }
+    }
+  }, {
+    "opr": {
+      "groupBy": {
+        "functions": [{
+          "vars": [{
+            "tag": {
+              "id": 1
+            },
+            "nodeType": {
+              "graphType": {
+                "graphDataType": [{
+                  "label": {
+                    "label": 1
+                  },
+                  "props": [{
+                    "propId": {
+                      "name": "id"
+                    },
+                    "type": "INT64"
+                  }, {
+                    "propId": {
+                      "name": "firstName"
+                    },
+                    "type": "STRING"
+                  }, {
+                    "propId": {
+                      "name": "lastName"
+                    },
+                    "type": "STRING"
+                  }, {
+                    "propId": {
+                      "name": "gender"
+                    },
+                    "type": "STRING"
+                  }, {
+                    "propId": {
+                      "name": "birthday"
+                    },
+                    "type": "INT64"
+                  }, {
+                    "propId": {
+                      "name": "creationDate"
+                    },
+                    "type": "DATE32"
+                  }, {
+                    "propId": {
+                      "name": "locationIP"
+                    },
+                    "type": "STRING"
+                  }, {
+                    "propId": {
+                      "name": "browserUsed"
+                    },
+                    "type": "STRING"
+                  }]
+                }]
+              }
+            }
+          }],
+          "aggregate": "COUNT",
+          "alias": 3
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": "INT64"
+      },
+      "alias": 3
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

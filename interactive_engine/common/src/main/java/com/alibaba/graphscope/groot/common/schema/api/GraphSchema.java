@@ -15,24 +15,24 @@
  */
 package com.alibaba.graphscope.groot.common.schema.api;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 
 import java.util.List;
 import java.util.Map;
 
 public interface GraphSchema {
-    GraphElement getElement(String label) throws GraphElementNotFoundException;
+    GraphElement getElement(String label) throws TypeNotFoundException;
 
-    GraphElement getElement(int labelId) throws GraphElementNotFoundException;
+    GraphElement getElement(int labelId) throws TypeNotFoundException;
 
     List<GraphVertex> getVertexList();
 
     List<GraphEdge> getEdgeList();
 
-    Integer getPropertyId(String propName) throws GraphPropertyNotFoundException;
+    Integer getPropertyId(String propName) throws PropertyNotFoundException;
 
-    String getPropertyName(int propId) throws GraphPropertyNotFoundException;
+    String getPropertyName(int propId) throws PropertyNotFoundException;
 
     Map<GraphElement, GraphProperty> getPropertyList(String propName);
 
@@ -43,5 +43,5 @@ public interface GraphSchema {
      *
      * @return The schema version
      */
-    int getVersion();
+    String getVersion();
 }
