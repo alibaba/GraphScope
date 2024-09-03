@@ -13,6 +13,7 @@ GROOT_DIR=$(pwd)
 sed -e "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@g" \
     -e "s@collect.statistics=false@collect.statistics=true@g" \
     -e "s@neo4j.bolt.server.disabled=true@neo4j.bolt.server.disabled=false@g" \
+    -e "s@gremlin.server.port=12312@gremlin.server.port=8182@g" \
     -e "\$a\
         graph.planner.is.on=true" \
     -e "\$a\
