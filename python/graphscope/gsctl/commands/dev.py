@@ -42,6 +42,7 @@ with open(v6d_version_file_path, "r", encoding="utf-8") as fp:
 # Interactive docker container config
 INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
 INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
+INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/interactive_config.yaml"
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps.sh")
@@ -183,6 +184,12 @@ def interactive(app, graphscope_repo):
     required=False,
 )
 @click.option(
+    "--interactive-config",
+    help="Interactive config file path [docker only]",
+    required = False,
+    default = None,
+)
+@click.option(
     "--gremlin-port",
     help="Mapping port of gremlin query, -1 means disable mapping [docker only]",
     default=-1,
@@ -220,6 +227,7 @@ def deploy(
     storedproc_port,
     cypher_port,
     gremlin_port,
+    interactive_config,
 ):  # noqa: F811
     """Deploy a GraphScope Flex instance"""
     cmd = []
@@ -245,6 +253,8 @@ def deploy(
             cmd.extend(["-p", f"{gremlin_port}:8182"])
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
+        if interactive_config is not None:
+            cmd.extend(["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"])
     returncode = run_shell_cmd(cmd, os.getcwd())
     if returncode == 0:
         message = f"""

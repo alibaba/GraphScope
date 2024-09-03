@@ -20,7 +20,7 @@ Below is a list of all configurable items:
 
 <!-- *Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default. -->
 
-### Default Ports
+### Ports
 
 By default, Interactive will launch the following services on these ports:
 
@@ -43,44 +43,34 @@ The Gremlin service is disabled by default. To enable it, add the `--gremlin-por
 gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
 ``` -->
 
+### Service Configuration
 
-<!-- Those content are commented but not deleted, since we will support those configurations later.
-> TODO: Currently `gsctl` doesn't support the following command!
+By default, `Interactive` will initialize the service with its default settings.
+However, GraphScope Interactive is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
 
-Starting your GraphScope Interactive service can be straightforward, as demonstrated in our [getting_started](./getting_started.md) guide. By default, executing the command:
 
-```bash
-gsctl use GRAPH <name>
-```
-
-will initialize the service with its default settings. However, GraphScope is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
-
-## Customizing Your Service Configuration
-To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
+#### Customizing Your Service Configuration
+To customize the service's settings, you can provide a YAML configuration file `interactive_config.yaml`. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-gsctl use GRAPH <name> -c ./interactive_config.yaml
+gsctl instance deploy --type interactive -config ./interactive_config.yaml
 ```
 
-Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
-
-
-If you already have an Interactive service running and wish to apply a new set of configurations, a simple restart with the custom configuration is required. This ensures that the service updates its settings and operates according to your newly specified preferences.
-
-To restart the service with your custom configuration, use the following command:
-```bash
-gsctl service restart -c ./conf/interactive_config.yaml
+```{note}
+Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
 ```
-Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
 
 
 
-## Sample Configuration
+
+
+
+##### Sample Configuration
 Here's a glimpse of what a typical YAML configuration file might look like:
 
 ```yaml
-log_level: INFO # default INFO
-verbose_level: 2 # verbose all logs above level 2(including)
+log_level: INFO # default INFO, available(INFO,WARNING,ERROR,FATAL)
+verbose_level: 0 # default 0, should be a int in range [0,10]. 10 will verbose all logs
 compute_engine:
   thread_num_per_worker: 1  # the number of shared workers, default 1
 compiler:
@@ -96,21 +86,14 @@ compiler:
     default_listen_address: localhost
     bolt_connector: # cypher query endpoint 
       disabled: false # disable cypher endpoint or not.
-      port: 7687
     gremlin_connector: # gremlin query endpoint 
       disabled: false # disable gremlin endpoint or not.
-      port: 8182
 http_service:
   default_listen_address: localhost
-  admin_port: 7777
-  query_port: 10000
 ```
 
 
-## Available Configurations
-For configurations associated with the root directory, we do not accept relative paths to ensure consistency.
-
-### Service configurations
+##### Available Configurations
 
 In this following table, we use the `.` notation to represent the hierarchy within the `YAML` structure.
 
@@ -128,11 +111,11 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.endpoint.default_listen_address | localhost | The address for compiler endpoint to bind | 0.0.3 |
 | compiler.endpoint.bolt_connector.disabled | false | Whether to disable the cypher endpoint| 0.0.3 |
-| compiler.endpoint.bolt_connector.port | 7687 | The port for compiler's cypher endpoint.| 0.0.3 |
 | compiler.endpoint.gremlin_connector.disabled | true | Whether to disable the gremlin endpoint| 0.0.3 |
-| compiler.endpoint.gremlin_connector.port | 8182 | The port for compiler's cypher endpoint.| 0.0.3 |
 | http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
-| http_service.admin_port | 7777 | The port for admin service to listen on | 0.0.2 |
-| http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 | -->
 
+#### TODOs
 
+Currently we only support specifying the service configuration when instance is deployed. In near future, we will support 
+- [] Support specifying graph level configurations
+- [] Support changing configuration for service
