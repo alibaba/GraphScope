@@ -36,8 +36,8 @@ cd ${COMPILER_DIR} && make gremlin_calcite_test
 exit_code=$?
 ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
 # clean data
-rm -fr ${GROOT_DIR}/data 
-rm -fr ${GROOT_DIR}/meta 
+rm -r ${GROOT_DIR}/data 
+rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
     echo "gaia_on_groot gremlin test fail"
     exit 1
@@ -54,8 +54,8 @@ cd ${COMPILER_DIR} && make cypher_test
 exit_code=$?
 ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
 # clean data
-rm -fr ${GROOT_DIR}/data 
-rm -fr ${GROOT_DIR}/meta 
+rm -r ${GROOT_DIR}/data 
+rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
     echo "gaia_on_groot cypher test fail"
     exit 1
@@ -72,8 +72,8 @@ cd ${COMPILER_DIR} && make ldbc_test && make simple_test && make pattern_test
 exit_code=$?
 ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
 # clean data
-rm -fr ${GROOT_DIR}/data 
-rm -fr ${GROOT_DIR}/meta 
+rm -r ${GROOT_DIR}/data 
+rm -r ${GROOT_DIR}/meta 
 if [ $exit_code -ne 0 ]; then
     echo "gaia_on_groot ldbc test fail"
     exit 1

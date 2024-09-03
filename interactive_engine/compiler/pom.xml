@@ -91,6 +91,7 @@
         <dependency>
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -125,8 +126,7 @@
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-shaded</artifactId>
-            <version>4.4.0</version>
+            <artifactId>neo4j</artifactId>
         </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>
