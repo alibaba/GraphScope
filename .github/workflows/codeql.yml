@@ -22,9 +22,9 @@ on:
       - 'flex/**'
       - 'python/**'
       - '.github/workflows/codeql.yml'
-   pull_request:
-     branches: [ "main" ]
-     paths:
+  pull_request:
+    branches: [ "main" ]
+    paths:
       - 'analytical_engine/**'
       - 'interactive_engine/**'
       - 'learning_engine/**'
