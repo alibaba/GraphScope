@@ -89,7 +89,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
 
     - name: Upload Coverage
-      uses: codecov/codecov-action4
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
         file: ./python/coverage.xml
