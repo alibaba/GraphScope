@@ -1285,7 +1285,7 @@ const std::string WorkDirManipulator::GRAPH_TEMP_INDICES_DIR_NAME =
     "temp_indices";
 const std::string WorkDirManipulator::GRAPH_PLUGIN_DIR_NAME = "plugins";
 const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
-    "engine_config.yaml";
+    "interactive_config.yaml";
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 const std::string WorkDirManipulator::TMP_DIR = "/tmp";
 const std::string WorkDirManipulator::GRAPH_LOADER_BIN = "bulk_loader";

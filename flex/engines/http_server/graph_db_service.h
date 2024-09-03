@@ -32,7 +32,7 @@
 #include <boost/process.hpp>
 
 namespace server {
-/* Stored service configuration, read from engine_config.yaml
+/* Stored service configuration, read from interactive_config.yaml
  */
 struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_SHARD_NUM = 1;

@@ -50,8 +50,8 @@ function prepare_workspace() {
         return 0
     fi
     # prepare engine_config.yaml
-    engine_config_path="${workspace}/conf/engine_config.yaml"
-    cp /opt/flex/share/engine_config.yaml $engine_config_path
+    engine_config_path="${workspace}/conf/interactive_config.yaml"
+    cp /opt/flex/share/interactive_config.yaml $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
     echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"

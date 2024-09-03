@@ -1,9 +1,3 @@
-directories:
-  workspace: /tmp/interactive_workspace
-  subdirs:
-    data: data
-    logs: logs
-    conf: conf
 log_level: INFO
 default_graph: ldbc
 compute_engine:

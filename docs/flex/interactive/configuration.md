@@ -59,7 +59,7 @@ will initialize the service with its default settings. However, GraphScope is de
 To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-gsctl use GRAPH <name> -c ./engine_config.yaml
+gsctl use GRAPH <name> -c ./interactive_config.yaml
 ```
 
 Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
@@ -69,7 +69,7 @@ If you already have an Interactive service running and wish to apply a new set o
 
 To restart the service with your custom configuration, use the following command:
 ```bash
-gsctl service restart -c ./conf/engine_config.yaml
+gsctl service restart -c ./conf/interactive_config.yaml
 ```
 Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
 
