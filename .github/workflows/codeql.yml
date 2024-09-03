@@ -21,8 +21,17 @@ on:
       - 'coordinator/**'
       - 'flex/**'
       - 'python/**'
+      - '.github/workflows/codeql.yml'
    pull_request:
      branches: [ "main" ]
+     paths:
+      - 'analytical_engine/**'
+      - 'interactive_engine/**'
+      - 'learning_engine/**'
+      - 'coordinator/**'
+      - 'flex/**'
+      - 'python/**'
+      - '.github/workflows/codeql.yml'
   schedule:
     - cron: '38 20 * * 5'
 
