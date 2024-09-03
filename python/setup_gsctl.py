@@ -17,6 +17,7 @@
 #
 
 import os
+import platform
 
 from setuptools import find_packages  # noqa: H301
 from setuptools import setup
@@ -39,10 +40,12 @@ def parse_version(root, **kwargs):
     return parse(root, **kwargs)
 
 
-NAME = "gsctl"
-PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [
-    "click >= 8.1.6",
+    (
+        "click"
+        if platform.system() == "Linux" and platform.machine() == "aarch64"
+        else "click >= 8.1.6"
+    ),
     "graphscope-flex >= 0.27.0",
     "treelib",
     "packaging",
@@ -50,7 +53,7 @@ REQUIRES = [
 ]
 
 setup(
-    name=NAME,
+    name="gsctl",
     description="Command line tool for GraphScope",
     author="GraphScope",
     author_email="graphscope@alibaba-inc.com",
@@ -68,7 +71,7 @@ setup(
     long_description="""\
     gsctl is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
     """,  # noqa: E501
-    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh", "VERSION"]},
+    package_data={"graphscope.gsctl": ["scripts/*.sh", "VERSION", "V6D_VERSION"]},
     entry_points={
         "console_scripts": [
             "gsctl = graphscope.gsctl.gsctl:cli",

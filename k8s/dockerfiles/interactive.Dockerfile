@@ -3,7 +3,7 @@
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
-ARG RUNTIME_VERSION=latest
+ARG VINEYARD_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
 
 ARG CI=false
@@ -54,7 +54,7 @@ WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:$ARCH AS ext
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION-$ARCH AS executor
+FROM $REGISTRY/graphscope/vineyard-runtime:$VINEYARD_VERSION-$ARCH AS executor
 
 ENV RUST_BACKTRACE=1
 

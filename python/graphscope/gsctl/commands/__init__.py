@@ -33,6 +33,24 @@ from graphscope.gsctl.impl import connect_coordinator
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
 
+usage_message = """
+Currently, `gsctl` hasn't connect to any service. Try to deploy a GraphScope
+instance with:
+
+    gsctl instance deploy --type interactive
+
+See more detailed information at https://graphscope.io/docs/utilities/gs.
+"""
+
+interactive_usage_message = """
+Currently in the global scope of Interactive instance, run `gsctl ls -l` to
+display all resources in database and switch to a specific graph scope with:
+
+    gsctl use GRAPH <graph_id>
+
+See more detailed information at https://graphscope.io/docs/utilities/gs.
+"""
+
 
 def is_interactive_mode(flex):
     return (
@@ -60,13 +78,7 @@ def get_command_collection(context: Context):
     if context is None:
         if len(sys.argv) == 1:
             info(logo, fg="green", bold=True)
-            click.secho("Currently, gsctl hasn't connect to any service.", fg="yellow")
-            message = """
-you can use gsctl as an utility script.
-Or you can connect to a launched GraphScopoe service by `gsctl connect --coordinator-endpoint <address>`.
-See more detailed information at https://graphscope.io/docs/utilities/gs.
-            """
-            info(message)
+            info(usage_message, fg="red")
         return commands
 
     if context.is_expired():
@@ -101,10 +113,7 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
     if is_interactive_mode(context.flex):
         if context.context == "global":
             if len(sys.argv) < 2 or sys.argv[1] != "use":
-                info("Using GLOBAL.", fg="green", bold=True)
-                info(
-                    "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
-                )
+                info(interactive_usage_message, fg="green")
             commands = click.CommandCollection(sources=[common, interactive])
         else:
             if len(sys.argv) < 2 or sys.argv[1] != "use":
@@ -113,7 +122,10 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
                     fg="green",
                     bold=True,
                 )
-                info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
+                info(
+                    "Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n",
+                    fg="green",
+                )
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif is_insight_mode(context.flex):
         if context.context == "global":
