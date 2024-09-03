@@ -59,7 +59,7 @@ will initialize the service with its default settings. However, GraphScope is de
 To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-gsctl use GRAPH <name> -c ./engine_config.yaml
+gsctl use GRAPH <name> -c ./interactive_config.yaml
 ```
 
 Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
@@ -69,7 +69,7 @@ If you already have an Interactive service running and wish to apply a new set o
 
 To restart the service with your custom configuration, use the following command:
 ```bash
-gsctl service restart -c ./conf/engine_config.yaml
+gsctl service restart -c ./conf/interactive_config.yaml
 ```
 Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
 
@@ -80,6 +80,7 @@ Here's a glimpse of what a typical YAML configuration file might look like:
 
 ```yaml
 log_level: INFO # default INFO
+verbose_level: 2 # verbose all logs above level 2(including)
 compute_engine:
   thread_num_per_worker: 1  # the number of shared workers, default 1
 compiler:
@@ -116,7 +117,8 @@ In this following table, we use the `.` notation to represent the hierarchy with
 
 | PropertyName       | Default   | Meaning |  Since Version |
 | --------           | --------  | -------- |-----------  |
-| log_level     |  INFO   | The level of database log, INFO/DEBUG/ERROR | 0.0.1 |
+| log_level     |  INFO   | The level of database log, INFO/WARNING/ERROR/FATAL | 0.0.1 |
+| verbose_level     |  0   | The verbose level of database log, should be a int | 0.0.3 |
 |default_graph  | modern | The name of default graph on which to start the graph service. | 0.0.1 |
 | compute_engine.thread_num_per_worker | 1 | The number of threads will be used to process the queries. Increase the number can benefit the query throughput | 0.0.1 |
 | compiler.planner.is_on | true | Determines if query optimization is enabled for compiling Cypher queries  | 0.0.1 |

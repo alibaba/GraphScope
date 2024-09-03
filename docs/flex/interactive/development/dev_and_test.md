@@ -143,10 +143,10 @@ Subsequently, execute the `hqps_admin_test.sh` script to test the of the interac
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
 # Change the default_graph field to 
-bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
 ```
 
-The `engine_config_test.yaml` specifies the configuration for interactive services. 
+The `interactive_config_test.yaml` specifies the configuration for interactive services. 
 
 ```yaml 
 directories:
