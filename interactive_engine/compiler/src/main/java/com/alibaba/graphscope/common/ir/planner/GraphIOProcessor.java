@@ -511,11 +511,12 @@ public class GraphIOProcessor {
                 builder.filter(value.getFilter());
             }
             RelNode rel = builder.build();
-            addCachedCost(rel, getSourceCost(graph, vertex));
+            addCachedCost(rel, estimateCost(graph, vertex));
             return rel;
         }
 
-        private DetailedSourceCost getSourceCost(GraphPattern graph, PatternVertex singleVertex) {
+        // estimate the detailed cost for a `Source` operator
+        private DetailedSourceCost estimateCost(GraphPattern graph, PatternVertex singleVertex) {
             double selectivity = singleVertex.getElementDetails().getSelectivity();
             if (Double.compare(selectivity, 1.0d) < 0) {
                 PatternVertex newVertex =
@@ -533,6 +534,7 @@ public class GraphIOProcessor {
             return new DetailedSourceCost(patternCount, patternCount * selectivity);
         }
 
+        // attach the computed cost to each operator to avoid redundant computation
         private RelNode addCachedCost(RelNode rel, RelOptCost cost) {
             if (rel instanceof AbstractBindableTableScan) {
                 ((AbstractBindableTableScan) rel).setCachedCost(cost);
@@ -574,6 +576,7 @@ public class GraphIOProcessor {
             return rel;
         }
 
+        // estimate the detailed cost for an `ExtendIntersect` operator
         private RelOptCost estimateCost(Pattern original, GraphExtendIntersect intersect, int idx) {
             GlogueExtendIntersectEdge edge = intersect.getGlogueEdge();
             ExtendEdge extendEdge = edge.getExtendStep().getExtendEdges().get(idx);

@@ -20,6 +20,7 @@ package com.alibaba.graphscope.common.ir.meta.glogue;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 
+// the result of join-based cost estimation
 public class ExpandJoin {
     private final Pattern probePattern;
     private final Pattern buildPattern;

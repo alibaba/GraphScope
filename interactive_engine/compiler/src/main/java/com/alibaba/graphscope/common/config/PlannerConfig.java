@@ -20,12 +20,18 @@ public class PlannerConfig {
             Config.intConfig("graph.planner.join.cost.factor.1", 1);
     public static final Config<Integer> JOIN_COST_FACTOR_2 =
             Config.intConfig("graph.planner.join.cost.factor.2", 1);
+    // if enabled, the cost estimation of expand will take the intermediate count of <src, edge>
+    // into consideration
     public static final Config<Boolean> LABEL_CONSTRAINTS_ENABLED =
             Config.boolConfig("graph.planner.label.constraints.enabled", false);
+    // the cost factor of ExtendIntersect operator
     public static final Config<Integer> INTERSECT_COST_FACTOR =
             Config.intConfig("graph.planner.intersect.cost.factor", 1);
+    // control the output plan space after applying `JoinDecomposition` each time
     public static final Config<Integer> JOIN_QUEUE_CAPACITY =
             Config.intConfig("graph.planner.join.queue.capacity", 3);
+    // if enabled, the triangle pattern will be converted to `JoinByEdge`, to support optimizations
+    // in Neo4j
     public static final Config<Boolean> JOIN_BY_EDGE_ENABLED =
             Config.boolConfig("graph.planner.join.by.edge.enabled", false);
 

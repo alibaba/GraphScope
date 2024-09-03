@@ -35,6 +35,7 @@ public class GraphOptCluster extends RelOptCluster {
     // to generate alias id increasingly in one query
     private final AliasIdGenerator idGenerator;
 
+    // maintain local state for some operators specifically
     private final LocalState localState;
 
     protected GraphOptCluster(

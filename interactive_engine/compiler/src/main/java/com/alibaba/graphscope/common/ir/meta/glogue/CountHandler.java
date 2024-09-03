@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 
+// an interface to define the cost estimation of a pattern
 public interface CountHandler {
     double handle(Pattern pattern);
 

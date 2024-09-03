@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+// an interface to define the cost estimation of an edge
 public abstract class EdgeCostEstimator<T> {
     protected final CountHandler handler;
 
@@ -32,17 +33,21 @@ public abstract class EdgeCostEstimator<T> {
 
     public abstract T estimate(Pattern srcPattern, PatternEdge edge, PatternVertex target);
 
+    // join-based cost estimator
     public static class Join extends EdgeCostEstimator<ExpandJoin> {
         public Join(CountHandler handler) {
             super(handler);
         }
 
+        // todo: support scenario for relational DB, i.e. DuckDB which has graph index or foreign
+        // key optimization techniques
         @Override
         public ExpandJoin estimate(Pattern srcPattern, PatternEdge edge, PatternVertex target) {
             return null;
         }
     }
 
+    // extend-based cost estimator
     public static class Extend extends EdgeCostEstimator<DetailedExpandCost> {
         public Extend(CountHandler handler) {
             super(handler);

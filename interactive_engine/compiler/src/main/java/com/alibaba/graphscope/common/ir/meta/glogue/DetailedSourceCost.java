@@ -20,8 +20,13 @@ package com.alibaba.graphscope.common.ir.meta.glogue;
 
 import org.apache.calcite.plan.RelOptCostImpl;
 
+/**
+ * the detailed estimated cost of {@code Source}
+ */
 public class DetailedSourceCost extends RelOptCostImpl {
+    // the total count of all nodes within the type constraints
     private final double labelFilteringRows;
+    // labelFilteringRows * the selectivity of the filtering
     private final double predicateFilteringRows;
 
     public DetailedSourceCost(double labelFilteringRows, double predicateFilteringRows) {

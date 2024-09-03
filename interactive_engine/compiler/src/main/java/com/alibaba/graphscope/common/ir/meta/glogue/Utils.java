@@ -128,6 +128,7 @@ public class Utils {
         return true;
     }
 
+    // convert `ExtendEdge` to `PatternEdge`
     public static PatternEdge convert(
             ExtendEdge edge, PatternVertex querySrc, PatternVertex queryDst) {
         PatternVertex src, dst;

@@ -31,6 +31,7 @@ public class GraphConfig {
     public static final Config<Long> GRAPH_META_STATISTICS_FETCH_INTERVAL_MS =
             Config.longConfig("graph.meta.statistics.fetch.interval.ms", 24 * 3600 * 1000l);
 
+    // an intermediate solution to support foreign key, will be integrated into schema
     public static final Config<String> GRAPH_FOREIGN_KEY_URI =
             Config.stringConfig("graph.foreign.key", "");
 }
