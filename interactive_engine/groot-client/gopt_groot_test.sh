@@ -8,6 +8,28 @@ cd ${BASE_DIR}/../assembly/target && tar xvzf groot.tar.gz && cd groot
 
 declare -r CONFIG_FILE="/tmp/groot.config"
 
+# necessary python packages for data import, including pandas, graphscope and gremlin_python
+if ! python3 -c "import pandas" &> /dev/null; then
+    echo "Installing pandas..."
+    python3 -m pip install pandas
+else
+    echo "pandas is already installed."
+fi
+
+if ! python3 -c "import graphscope" &> /dev/null; then
+    echo "Installing graphscope..."
+    python3 -m pip install graphscope
+else
+    echo "graphscope is already installed."
+fi
+
+if ! python3 -c "import gremlin_python" &> /dev/null; then
+    echo "Installing gremlin_python..."
+    python3 -m pip install gremlinpython
+else
+    echo "gremlin_python is already installed."
+fi
+
 # start server
 GROOT_DIR=$(pwd)
 sed -e "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@g" \
