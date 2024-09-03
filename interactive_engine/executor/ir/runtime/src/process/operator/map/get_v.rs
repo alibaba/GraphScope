@@ -58,20 +58,8 @@ impl GetVertexOperator {
 
 impl FilterMapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        let entry_type =
-            if let Some(entry) = input.get(self.start_tag) { entry.get_type() } else { return Ok(None) };
-        match entry_type {
-            EntryType::Edge => {
-                let e = input
-                    .get(self.start_tag)
-                    .ok_or_else(|| FnExecError::Unreachable)?
-                    .as_edge()
-                    .ok_or_else(|| {
-                        FnExecError::unexpected_data_error(&format!(
-                            "entry is not an edge in GetV {:?}",
-                            self
-                        ))
-                    })?;
+        if let Some(entry) = input.get(self.start_tag) {
+            if let Some(e) = entry.as_edge() {
                 let (id, label) = match self.opt {
                     VOpt::Start => (e.src_id, e.get_src_label()),
                     VOpt::End => (e.dst_id, e.get_dst_label()),
@@ -129,6 +117,20 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     }
                 } else {
                     Err(FnExecError::unexpected_data_error("unreachable path end entry in GetV"))?
+                }
+            } else if let Some(obj) = entry.as_object() {
+                if Object::None.eq(obj) {
+                    if self.query_labels.is_empty() {
+                        input.append(Object::None, self.alias);
+                        return Ok(Some(input));
+                    } else {
+                        return Ok(None);
+                    }
+                } else {
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "Can only apply `GetV` on an object that is not None. The entry is {:?}",
+                        entry
+                    )))?
                 }
             } else {
                 Err(FnExecError::unexpected_data_error( &format!(
@@ -252,6 +254,29 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     return Ok(Some(input));
                 } else {
                     return Ok(None);
+                }
+            } else if let Some(obj) = entry.as_object() {
+                if Object::None.eq(obj) {
+                    if let Some(predicate) = &self.query_params.filter {
+                        // TODO: eval by predicate instead of directly regarding it as false
+                        let res = predicate
+                            .eval_bool(Some(&input))
+                            .map_err(|e| FnExecError::from(e))?;
+                        if res {
+                            input.append(Object::None, self.alias);
+                            return Ok(Some(input));
+                        } else {
+                            return Ok(None);
+                        }
+                    } else {
+                        input.append(Object::None, self.alias);
+                        return Ok(Some(input));
+                    }
+                } else {
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                        entry
+                    )))?
                 }
             } else {
                 Err(FnExecError::unexpected_data_error(&format!(
