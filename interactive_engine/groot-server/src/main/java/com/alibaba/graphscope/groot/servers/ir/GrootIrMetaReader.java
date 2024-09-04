@@ -26,8 +26,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.google.common.base.Preconditions;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import java.io.IOException;
 import java.util.*;
 
@@ -50,7 +48,11 @@ public class GrootIrMetaReader implements IrMetaReader {
 
     @Override
     public GraphStatistics readStats(GraphId graphId) throws IOException {
-        // TODO: add statistics, otherwise, the CBO will not work
-        throw new NotImplementedException("reading graph statistics in groot is unimplemented yet");
+        return schemaFetcher.getStatistics();
+    }
+
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) {
+        return schemaFetcher.statisticsEnabled();
     }
 }

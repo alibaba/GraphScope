@@ -63,7 +63,7 @@ public class YamlConfigTest {
         Assert.assertEquals(18, (int) PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs));
         Assert.assertEquals(
                 "./target/test-classes/config/modern/graph.yaml",
-                GraphConfig.GRAPH_SCHEMA.get(configs));
+                GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
         Assert.assertEquals("pegasus", FrontendConfig.ENGINE_TYPE.get(configs));
         Assert.assertEquals(false, FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8003, (int) FrontendConfig.GREMLIN_SERVER_PORT.get(configs));

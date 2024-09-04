@@ -24,7 +24,10 @@ graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../store/exp_store"}
 dyn_type = {path = "../../common/dyn_type"}
 global_query = {path = "../../store/global_query", optional = true}
+# from https://github.com/lemonhx/mimalloc-rust
+mimalloc-rust = {version = "0.2.1", optional = true}
 
 [features]
 default = []
+mimalloc = ["mimalloc-rust"]
 proto_inplace = ["ir_common/proto_inplace", "pegasus_server/gcip"]

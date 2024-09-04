@@ -48,7 +48,7 @@ PIP_ARGS 			= --timeout=1000 --no-cache-dir
 .PHONY: all graphscope install clean
 
 # coordinator relies on client, which relies on learning
-all: coordinator analytical interactive
+all: coordinator analytical interactive gsctl
 graphscope: all
 
 install: analytical-install interactive-install learning-install coordinator
@@ -73,8 +73,14 @@ clean:
 	cd $(COORDINATOR_DIR) && python3 setup.py clean --all
 
 ## Modules
-.PHONY: client coordinator analytical interactive learning
+.PHONY: client coordinator analytical interactive learning gsctl
 .PHONY: analytical-java
+
+
+gsctl:
+	cd $(CLIENT_DIR) && \
+	python3 ./setup_gsctl.py develop --user
+
 
 client: learning
 	cd $(CLIENT_DIR) && \

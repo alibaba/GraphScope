@@ -21,7 +21,20 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> new_bad_request_reply(
     std::unique_ptr<seastar::httpd::reply> rep, const std::string& msg) {
   rep->set_status(seastar::httpd::reply::status_type::bad_request);
   rep->set_content_type("application/json");
+  gs::Status status = gs::Status(gs::StatusCode::BAD_REQUEST, msg);
   rep->write_body("json", seastar::sstring(msg));
+  rep->done();
+  return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+      std::move(rep));
+}
+
+seastar::future<std::unique_ptr<seastar::httpd::reply>>
+new_internal_error_reply(std::unique_ptr<seastar::httpd::reply> rep,
+                         const std::string& msg) {
+  rep->set_status(seastar::httpd::reply::status_type::bad_request);
+  rep->set_content_type("application/json");
+  gs::Status status = gs::Status(gs::StatusCode::INTERNAL_ERROR, msg);
+  rep->write_body("json", seastar::sstring(status.ToString()));
   rep->done();
   return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
       std::move(rep));
@@ -32,33 +45,29 @@ seastar::httpd::reply::status_type status_code_to_http_code(
   switch (code) {
   case gs::StatusCode::OK:
     return seastar::httpd::reply::status_type::ok;
-  case gs::StatusCode::InValidArgument:
+  case gs::StatusCode::INVALID_ARGUMENT:
     return seastar::httpd::reply::status_type::bad_request;
-  case gs::StatusCode::UnsupportedOperator:
-    return seastar::httpd::reply::status_type::bad_request;
-  case gs::StatusCode::AlreadyExists:
+  case gs::StatusCode::ALREADY_EXISTS:
     return seastar::httpd::reply::status_type::conflict;
-  case gs::StatusCode::NotExists:
-    return seastar::httpd::reply::status_type::not_found;
-  case gs::StatusCode::CodegenError:
-    return seastar::httpd::reply::status_type::internal_server_error;
-  case gs::StatusCode::UninitializedStatus:
-    return seastar::httpd::reply::status_type::internal_server_error;
-  case gs::StatusCode::InvalidSchema:
+  case gs::StatusCode::ALREADY_LOCKED:
     return seastar::httpd::reply::status_type::bad_request;
-  case gs::StatusCode::PermissionError:
+  case gs::StatusCode::NOT_FOUND:
+    return seastar::httpd::reply::status_type::not_found;
+  case gs::StatusCode::CODEGEN_ERROR:
+    return seastar::httpd::reply::status_type::internal_server_error;
+  case gs::StatusCode::INVALID_SCHEMA:
+    return seastar::httpd::reply::status_type::bad_request;
+  case gs::StatusCode::PERMISSION_DENIED:
     return seastar::httpd::reply::status_type::forbidden;
-  case gs::StatusCode::IllegalOperation:
+  case gs::StatusCode::ILLEGAL_OPERATION:
     return seastar::httpd::reply::status_type::bad_request;
-  case gs::StatusCode::InternalError:
+  case gs::StatusCode::INTERNAL_ERROR:
     return seastar::httpd::reply::status_type::internal_server_error;
-  case gs::StatusCode::InvalidImportFile:
+  case gs::StatusCode::INVALID_IMPORT_FILE:
     return seastar::httpd::reply::status_type::bad_request;
-  case gs::StatusCode::IOError:
+  case gs::StatusCode::IO_ERROR:
     return seastar::httpd::reply::status_type::internal_server_error;
-  case gs::StatusCode::NotFound:
-    return seastar::httpd::reply::status_type::not_found;
-  case gs::StatusCode::QueryFailed:
+  case gs::StatusCode::QUERY_FAILED:
     return seastar::httpd::reply::status_type::internal_server_error;
   default:
     return seastar::httpd::reply::status_type::internal_server_error;
@@ -74,8 +83,11 @@ catch_exception_and_return_reply(std::unique_ptr<seastar::httpd::reply> rep,
     LOG(ERROR) << "Exception: " << e.what();
     seastar::sstring what = e.what();
     rep->set_content_type("application/json");
-    rep->write_body("json", std::move(what));
-    rep->set_status(seastar::httpd::reply::status_type::bad_request);
+    // for the exception, we are not sure whether it is a bad request or
+    // internal server error
+    gs::Status status = gs::Status(gs::StatusCode::UNKNOWN, what);
+    rep->write_body("json", seastar::sstring(status.ToString()));
+    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
     rep->done();
     return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
         std::move(rep));
@@ -97,12 +109,24 @@ return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
   if (status_code == seastar::httpd::reply::status_type::ok) {
     rep->write_body("json", std::move(result.content.value()));
   } else {
+    // Expect a json like "{"code": 400, "message": "Bad Request"}"
     rep->write_body("json",
-                    seastar::sstring(result.content.status().error_message()));
+                    seastar::sstring(result.content.status().ToString()));
   }
   rep->done();
   return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
       std::move(rep));
+}
+
+std::string trim_slash(const std::string& origin) {
+  std::string res = origin;
+  if (res.front() == '/') {
+    res.erase(res.begin());
+  }
+  if (res.back() == '/') {
+    res.pop_back();
+  }
+  return res;
 }
 
 }  // namespace server

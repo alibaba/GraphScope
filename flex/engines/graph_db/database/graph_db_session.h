@@ -37,21 +37,17 @@ class GraphDBSession {
  public:
   enum class InputFormat : uint8_t {
     kCppEncoder = 0,
-#ifdef BUILD_HQPS
-    kCypherJson = 1,               // External usage format
-    kCypherInternalAdhoc = 2,      // Internal format for adhoc query
-    kCypherInternalProcedure = 3,  // Internal format for procedure
-#endif                             // BUILD_HQPS
+    kCypherJson = 1,            // Json format for cypher query
+    kCypherProtoAdhoc = 2,      // Protobuf format for adhoc query
+    kCypherProtoProcedure = 3,  // Protobuf format for procedure query
   };
 
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
-#ifdef BUILD_HQPS
-  static constexpr const char* kCppEncoder = "\x00";
-  static constexpr const char* kCypherJson = "\x01";
-  static constexpr const char* kCypherInternalAdhoc = "\x02";
-  static constexpr const char* kCypherInternalProcedure = "\x03";
-#endif  // BUILD_HQPS
+  static constexpr const char* kCppEncoderStr = "\x00";
+  static constexpr const char* kCypherJsonStr = "\x01";
+  static constexpr const char* kCypherProtoAdhocStr = "\x02";
+  static constexpr const char* kCypherProtoProcedureStr = "\x03";
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
@@ -110,12 +106,10 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
-#ifdef BUILD_HQPS
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_json(const std::string_view& input);
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_internal(const std::string_view& input);
-#endif  // BUILD_HQPS
   /**
    * @brief Parse the input format of the query.
    *        There are four formats:
@@ -145,7 +139,7 @@ class GraphDBSession {
   inline Result<std::pair<uint8_t, std::string_view>> parse_query_type(
       const std::string& input) {
     const char* str_data = input.data();
-    VLOG(10) << "parse query type for " << input;
+    VLOG(10) << "parse query type for " << input << " size: " << input.size();
     char input_tag = input.back();
     VLOG(10) << "input tag: " << static_cast<int>(input_tag);
     size_t len = input.size();
@@ -154,10 +148,8 @@ class GraphDBSession {
       // user-defined payload,
       return std::make_pair((uint8_t) input[len - 2],
                             std::string_view(str_data, len - 2));
-    }
-#ifdef BUILD_HQPS
-    else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
+    } else if (input_tag ==
+               static_cast<uint8_t>(InputFormat::kCypherProtoAdhoc)) {
       // For cypher internal adhoc, the query id is the
       // second last byte,which is fixed to 255, and other bytes are a string
       // representing the path to generated dynamic lib.
@@ -169,17 +161,15 @@ class GraphDBSession {
       std::string_view str_view(input.data(), len - 1);
       return parse_query_type_from_cypher_json(str_view);
     } else if (input_tag ==
-               static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
+               static_cast<uint8_t>(InputFormat::kCypherProtoProcedure)) {
       // For cypher internal procedure, the query_name is
       // provided in the protobuf message.
       std::string_view str_view(input.data(), len - 1);
       return parse_query_type_from_cypher_internal(str_view);
 
-    }
-#endif  // BUILD_HQPS
-    else {
+    } else {
       return Result<std::pair<uint8_t, std::string_view>>(
-          gs::Status(StatusCode::InValidArgument,
+          gs::Status(StatusCode::INVALID_ARGUMENT,
                      "Invalid input tag: " + std::to_string(input_tag)));
     }
   }

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
+import com.alibaba.graphscope.common.ir.meta.schema.foreign.ForeignKeyMeta;
 import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
@@ -35,10 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -61,6 +59,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Optimize graph relational tree which consists of match and other relational operators
  */
 public class GraphRelOptimizer {
+    private final Configs graphConfig;
     private final PlannerConfig config;
     private final RelOptPlanner relPlanner;
     private final RelOptPlanner matchPlanner;
@@ -69,6 +68,7 @@ public class GraphRelOptimizer {
     private final GlogueHolder glogueHolder;
 
     public GraphRelOptimizer(Configs graphConfig) {
+        this.graphConfig = graphConfig;
         this.config = new PlannerConfig(graphConfig);
         this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
         this.relPlanner = createRelPlanner();
@@ -117,6 +117,7 @@ public class GraphRelOptimizer {
             }
             physicalPlanner.setRoot(relOptimized);
             RelNode physicalOptimized = physicalPlanner.findBestExp();
+            clear();
             return physicalOptimized;
         }
         return before;
@@ -256,11 +257,25 @@ public class GraphRelOptimizer {
                                     ruleConfig =
                                             ExtendIntersectRule.Config.DEFAULT
                                                     .withMaxPatternSizeInGlogue(
-                                                            config.getGlogueSize());
+                                                            config.getGlogueSize())
+                                                    .withLabelConstraintsEnabled(
+                                                            config.labelConstraintsEnabled());
                                 } else if (k.equals(JoinDecompositionRule.class.getSimpleName())) {
                                     ruleConfig =
-                                            JoinDecompositionRule.Config.DEFAULT.withMinPatternSize(
-                                                    config.getJoinMinPatternSize());
+                                            JoinDecompositionRule.Config.DEFAULT
+                                                    .withMinPatternSize(
+                                                            config.getJoinMinPatternSize())
+                                                    .withJoinQueueCapacity(
+                                                            config.getJoinQueueCapacity())
+                                                    .withJoinByEdgeEnabled(
+                                                            config.isJoinByEdgeEnabled());
+                                    ForeignKeyMeta foreignKeyMeta =
+                                            config.getJoinByForeignKeyUri().isEmpty()
+                                                    ? null
+                                                    : new ForeignKeyMeta(
+                                                            config.getJoinByForeignKeyUri());
+                                    ((JoinDecompositionRule.Config) ruleConfig)
+                                            .withForeignKeyMeta(foreignKeyMeta);
                                 }
                                 if (ruleConfig != null) {
                                     planner.addRule(
@@ -298,5 +313,23 @@ public class GraphRelOptimizer {
                     });
         }
         return new GraphHepPlanner(hepBuilder.build());
+    }
+
+    private void clear() {
+        List<RelOptRule> logicalRBORules = this.relPlanner.getRules();
+        this.relPlanner.clear();
+        for (RelOptRule rule : logicalRBORules) {
+            this.relPlanner.addRule(rule);
+        }
+        List<RelOptRule> logicalCBORules = this.matchPlanner.getRules();
+        this.matchPlanner.clear();
+        for (RelOptRule rule : logicalCBORules) {
+            this.matchPlanner.addRule(rule);
+        }
+        List<RelOptRule> physicalRBORules = this.physicalPlanner.getRules();
+        this.physicalPlanner.clear();
+        for (RelOptRule rule : physicalRBORules) {
+            this.physicalPlanner.addRule(rule);
+        }
     }
 }

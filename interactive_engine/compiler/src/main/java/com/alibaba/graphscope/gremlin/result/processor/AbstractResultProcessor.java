@@ -19,9 +19,12 @@ package com.alibaba.graphscope.gremlin.result.processor;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.result.ResultParser;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -107,35 +110,27 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             }
             responseProcessor.finish();
         } catch (Throwable t) {
-            Status status;
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor
-            if (t != null && t.getCause() instanceof InterruptedException) {
-                status =
-                        Status.DEADLINE_EXCEEDED.withDescription(
-                                "Timeout has been detected by gremlin executor");
-            } else {
-                status = Status.fromThrowable(t);
+            Exception executionException =
+                    (t != null && t.getCause() instanceof InterruptedException)
+                            ? new FrontendException(
+                                    Code.TIMEOUT,
+                                    ClassUtils.getTimeoutError(
+                                            "Timeout has been detected by gremlin executor",
+                                            timeoutConfig),
+                                    t)
+                            : ClassUtils.handleExecutionException(t, timeoutConfig);
+            if (executionException instanceof FrontendException) {
+                ((FrontendException) executionException)
+                        .getDetails()
+                        .put("QueryId", statusCallback.getQueryLogger().getQueryId());
             }
-            ResponseStatusCode errorCode;
-            String errorMsg = status.getDescription();
-            switch (status.getCode()) {
-                case DEADLINE_EXCEEDED:
-                    errorMsg +=
-                            ", exceeds the timeout limit "
-                                    + timeoutConfig.getExecutionTimeoutMS()
-                                    + " ms, please increase the config by setting"
-                                    + " 'query.execution.timeout.ms'";
-                    errorCode = ResponseStatusCode.SERVER_ERROR_TIMEOUT;
-                    break;
-                default:
-                    errorCode = ResponseStatusCode.SERVER_ERROR;
-            }
-            errorMsg = (errorMsg == null) ? t.getMessage() : errorMsg;
-            statusCallback.onEnd(false, errorMsg);
+            String errorMsg = executionException.getMessage();
+            statusCallback.onErrorEnd(executionException, errorMsg);
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())
-                            .code(errorCode)
+                            .code(ResponseStatusCode.SERVER_ERROR)
                             .statusMessage(errorMsg)
                             .create());
         } finally {
@@ -163,11 +158,13 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                                 .create());
                 resultCollectors.clear();
             }
-            resultCollectors.addAll(resultParser.parseFrom(response));
+            resultCollectors.addAll(
+                    ClassUtils.callException(
+                            () -> resultParser.parseFrom(response), Code.GREMLIN_INVALID_RESULT));
         }
 
         public void finish() {
-            statusCallback.onEnd(true, null);
+            statusCallback.onSuccessEnd(resultCollectors);
             aggregateResults();
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())

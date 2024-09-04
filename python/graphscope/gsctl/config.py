@@ -46,6 +46,7 @@ class Context(object):
         name=None,
         timestamp=time.time(),
         context="global",
+        graph_name=None,
     ):
         if name is None:
             name = "context_" + "".join(random.choices(ascii_letters, k=8))
@@ -55,14 +56,21 @@ class Context(object):
         self.coordinator_endpoint = coordinator_endpoint
         # switch to specific graph after `using graph`
         self.context = context
+        self.graph_name = graph_name
         self.timestamp = timestamp
 
     def switch_context(self, context: str):
         self.context = context
+        if self.context == "global":
+            self.graph_name = None
+
+    def set_graph_name(self, graph_name: str):
+        self.graph_name = graph_name
 
     def to_dict(self) -> dict:
         return {
             "name": self.name,
+            "graph_name": str(self.graph_name),
             "flex": self.flex,
             "coordinator_endpoint": self.coordinator_endpoint,
             "context": self.context,
@@ -77,6 +85,7 @@ class Context(object):
             name=dikt.get("name"),
             timestamp=dikt.get("timestamp"),
             context=dikt.get("context"),
+            graph_name=dikt.get("graph_name", None),
         )
 
     def is_expired(self, validity_period=86400) -> bool:
@@ -110,6 +119,13 @@ class GSConfig(object):
                 context.coordinator_endpoint == v.coordinator_endpoint
                 and context.flex == v.flex
             ):
+                # reset to global context
+                v.switch_context("global")
+                contexts = [v.to_dict() for _, v in self._contexts.items()]
+                write_yaml_file(
+                    {"contexts": contexts, "current-context": self._current_context},
+                    GS_CONFIG_DEFAULT_LOCATION,
+                )
                 return
 
         # set

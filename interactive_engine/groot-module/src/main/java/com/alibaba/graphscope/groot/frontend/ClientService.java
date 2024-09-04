@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.unified.Graph;
@@ -321,6 +320,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         AtomicBoolean finished = new AtomicBoolean(false);
         for (int i = 0; i < storeCount; i++) {
             logger.info("Store [" + i + "] started to ingest...");
+            int finalI = i;
             this.frontendStoreClients
                     .getClient(i)
                     .storeIngest(
@@ -336,7 +336,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
 
                                 @Override
                                 public void onError(Throwable t) {
-                                    logger.error("failed ingest", t);
+                                    logger.error(
+                                            "store {} ingest from {} failed", finalI, dataPath, t);
                                     finish(t);
                                 }
 
@@ -527,8 +528,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                     if (t != null) {
                                         responseObserver.onError(t);
                                     } else {
-                                        responseObserver.onNext(
-                                                GetStoreStateResponse.newBuilder().build());
+                                        responseObserver.onNext(response.build());
                                         responseObserver.onCompleted();
                                     }
                                 }

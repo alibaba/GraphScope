@@ -50,7 +50,7 @@ struct murmurhash2_64 {
   }
 
   static inline hash_type hash(const Any& val, uint64_t seed) {
-    if (val.type == PropertyType::kString) {
+    if (val.type == PropertyType::kStringView) {
       return hash(val.AsStringView(), seed);
     } else if (val.type == PropertyType::kInt64) {
       return hash<int64_t>(val.AsInt64(), seed);
@@ -183,6 +183,9 @@ class PTIndexer {
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
+    } else if (type == PropertyType::kStringView) {
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }

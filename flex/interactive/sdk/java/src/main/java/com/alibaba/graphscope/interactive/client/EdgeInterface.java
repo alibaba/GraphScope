@@ -16,8 +16,10 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.model.EdgeData;
-import com.alibaba.graphscope.interactive.openapi.model.EdgeRequest;
+import com.alibaba.graphscope.interactive.models.EdgeData;
+import com.alibaba.graphscope.interactive.models.EdgeRequest;
+
+import java.util.List;
 
 /**
  * Interface for Create/Read/Update/Delete edge.
@@ -31,7 +33,7 @@ public interface EdgeInterface {
             String dstLabel,
             Object dstPrimaryKeyValue);
 
-    Result<String> addEdge(String graphName, EdgeRequest edgeRequest);
+    Result<String> addEdge(String graphName, List<EdgeRequest> edgeRequest);
 
     Result<String> deleteEdge(
             String graphName,

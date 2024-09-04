@@ -54,7 +54,7 @@ GRIN_VERTEX grin_get_vertex_by_primary_keys_row(GRIN_GRAPH g,
     if (!_g->g.get_lid(label, oid, vid)) {
       return GRIN_NULL_VERTEX;
     }
-  } else if (type == gs::PropertyType::kString) {
+  } else if (type == gs::PropertyType::kStringView) {
     auto oid = *static_cast<const std::string_view*>((*_r)[0]);
     if (!_g->g.get_lid(label, oid, vid)) {
       return GRIN_NULL_VERTEX;

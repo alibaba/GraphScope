@@ -212,7 +212,7 @@ void set_any_to_element(const Any& any, results::Element* element) {
     element->mutable_object()->set_f64(any.value.f);
   } else if (any.type == PropertyType::Date()) {
     element->mutable_object()->set_i64(any.value.d.milli_second);
-  } else if (any.type == PropertyType::String()) {
+  } else if (any.type == PropertyType::StringView()) {
     element->mutable_object()->mutable_str()->assign(any.value.s.data(),
                                                      any.value.s.size());
   } else if (any.type == PropertyType::VertexGlobalId()) {
@@ -234,7 +234,7 @@ void template_set_key_value(results::KeyValues* map,
   for (auto& kv : key_value) {
     auto cur_kv = map->add_key_values();
     cur_kv->mutable_key()->set_str(kv.first);
-    auto value = cur_kv->mutable_value();
+    auto value = cur_kv->mutable_value()->mutable_element();
     set_any_to_element(kv.second, value);
   }
 }
@@ -260,7 +260,7 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     value->set_f64(any.value.f);
   } else if (any.type == PropertyType::Date()) {
     value->set_i64(any.value.d.milli_second);
-  } else if (any.type == PropertyType::String()) {
+  } else if (any.type == PropertyType::StringView()) {
     value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
   } else {
     LOG(WARNING) << "Unexpected property type: "
@@ -428,8 +428,12 @@ class SinkOp {
     // get all property for two labels vertex
     auto& schema = graph.schema();
     std::array<std::vector<std::string>, 2> prop_names;
-    prop_names[0] = schema.get_vertex_property_names(labels[0]);
-    prop_names[1] = schema.get_vertex_property_names(labels[1]);
+    if (labels[0] < schema.vertex_label_num()) {
+      prop_names[0] = schema.get_vertex_property_names(labels[0]);
+    }
+    if (labels[1] < schema.vertex_label_num()) {
+      prop_names[1] = schema.get_vertex_property_names(labels[1]);
+    }
     // get all properties
     std::array<std::vector<std::shared_ptr<RefColumnBase>>, 2> column_ptrs;
     for (size_t i = 0; i < prop_names[0].size(); ++i) {
@@ -478,7 +482,7 @@ class SinkOp {
         for (size_t i : repeat_offsets) {
           num_rows += i;
         }
-        CHECK(num_rows == results_vec.results_size())
+        CHECK((int32_t) num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
@@ -525,7 +529,9 @@ class SinkOp {
       results::CollectiveResults& results_vec,
       const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
     auto& schema = graph.schema();
-    auto prop_names = schema.get_vertex_property_names(label);
+    auto prop_names = label < schema.vertex_label_num()
+                          ? schema.get_vertex_property_names(label)
+                          : std::vector<std::string>();
     // get all properties
     std::vector<std::shared_ptr<RefColumnBase>> column_ptrs;
     for (size_t i = 0; i < prop_names.size(); ++i) {

@@ -586,6 +586,18 @@ lengthRange - the lower and the upper bounds of the path length, </br> edgeLabel
 
 Usages of the with()-step: </br>
 keyValuePair - the options to configure the corresponding behaviors of the `PathExpand`-step.
+
+Below are the supported values and descriptions for `PATH_OPT` and `RESULT_OPT` options.
+
+ Parameter | Supported Values  | Description                                    
+-----------|-------------------|------------------------------------------------
+ PATH_OPT  | ARBITRARY         | Allow vertices or edges to be duplicated.     
+ PATH_OPT  | SIMPLE            | No duplicated nodes.            
+ PATH_OPT  | TRAIL             | No duplicated edges.            
+ RESULT_OPT| END_V             | Only keep the end vertex.                      
+ RESULT_OPT| ALL_V             | Keep all vertices along the path.              
+ RESULT_OPT| ALL_V_E           | Keep all vertices and edges along the path.    
+
 ```bash
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices can be duplicated and only the end vertex should be kept
@@ -593,6 +605,9 @@ g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices and edges can be duplicated, and all vertices and edges along the path should be kept
 g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V_E')
+# expand hops within the range of [1, 10) along the outgoing edges,
+# edges cannot be duplicated, and all vertices and edges along the path should be kept
+g.V().out("1..10").with('PATH_OPT', 'TRAIL').with('RESULT_OPT', 'ALL_V_E')
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices cannot be duplicated and all vertices should be kept
 g.V().out("1..10").with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'ALL_V')
@@ -692,6 +707,47 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 # unfold vertices in the path collection
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
+#### Getting Properites
+The properties of the elements (vertices and/or edges) in the path can be projected by `values()`-step, `valueMap()`-step, and `elementMap()`-step.
+It is important to note that the specific elements targeted for property projection are determined by the `RESULT_OPT` setting. 
+For instance, if you configure `RESULT_OPT` as `ALL_V`,  `values()`, `valueMap()`, or `elementMap()` will then project the properties of all vertices present in the path. It's important to be aware that:
+1. If a property doesn't exist on the current vertex, these methods will return null for that property.
+2. By default, valueMap() and elementMap() return all properties on a vertex (or edge). However, within a path, they return a collection of properties from all vertex (or edge) types in the path. If certain vertex (or edge) types lack some of these properties, the methods will again return null for the not existed properties.
+```bash
+# get properties of each vertex in the path
+gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').values("name")
+==>[vadas, marko]
+==>[josh, marko]
+==>[marko, vadas]
+==>[marko, josh]
+==>[vadas, marko, vadas]
+==>[vadas, marko, josh]
+==>[josh, marko, vadas]
+==>[josh, marko, josh]
+==>[marko, vadas, marko]
+==>[marko, josh, marko]
+gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').valueMap("name","age")
+==>[{age=27, name=vadas}, {age=29, name=marko}]
+==>[{age=32, name=josh}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=27, name=vadas}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=32, name=josh}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=29, name=marko}, {age=32, name=josh}]
+==>[{age=27, name=vadas}, {age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=27, name=vadas}, {age=29, name=marko}, {age=32, name=josh}]
+==>[{age=32, name=josh}, {age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=32, name=josh}, {age=29, name=marko}, {age=32, name=josh}]
+gremlin> g.V().hasLabel("person").both("1..2").with('RESULT_OPT', 'ALL_V').elementMap()
+==>[{age=29, id=1, lang=null, name=marko, ~id=1, ~label=0}, {age=27, id=2, lang=null, name=vadas, ~id=2, ~label=0}]
+==>[{age=29, id=1, lang=null, name=marko, ~id=1, ~label=0}, {age=32, id=4, lang=null, name=josh, ~id=4, ~label=0}]
+==>[{age=29, id=1, lang=null, name=marko, ~id=1, ~label=0}, {age=null, id=3, lang=java, name=lop, ~id=72057594037927939, ~label=1}]
+==>[{age=27, id=2, lang=null, name=vadas, ~id=2, ~label=0}, {age=29, id=1, lang=null, name=marko, ~id=1, ~label=0}]
+==>[{age=32, id=4, lang=null, name=josh, ~id=4, ~label=0}, {age=null, id=3, lang=java, name=lop, ~id=72057594037927939, ~label=1}]
+==>[{age=32, id=4, lang=null, name=josh, ~id=4, ~label=0}, {age=null, id=5, lang=java, name=ripple, ~id=72057594037927941, ~label=1}]
+==>[{age=32, id=4, lang=null, name=josh, ~id=4, ~label=0}, {age=29, id=1, lang=null, name=marko, ~id=1, ~label=0}]
+==>[{age=35, id=6, lang=null, name=peter, ~id=6, ~label=0}, {age=null, id=3, lang=java, name=lop, ~id=72057594037927939, ~label=1}]
+```
+
 ### Expression
 
 Expressions, expressed via the `expr()` syntactic sugar, have been introduced to facilitate writing expressions directly within steps such as `select()`, `project()`, `where()`, and `group()`. This update is part of an ongoing effort to standardize Gremlin's expression syntax, making it more aligned with [SQL expression syntax](https://www.w3schools.com/sql/sql_operators.asp). The updated syntax, effective from version 0.27.0, streamlines user operations and enhances readability. Below, we detail the updated syntax definitions and point out key distinctions from the syntax used prior to version 0.26.0.

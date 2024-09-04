@@ -18,7 +18,8 @@ import com.alibaba.graphscope.groot.OTELUtils;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 
 import io.opentelemetry.api.OpenTelemetry;
 
@@ -42,7 +43,7 @@ public class GrootGraph {
             try {
                 node = new MaxNode(conf);
             } catch (Exception e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         } else {
             String roleName = args[0];
@@ -58,7 +59,7 @@ public class GrootGraph {
                     node = new Coordinator(conf);
                     break;
                 default:
-                    throw new IllegalArgumentException("invalid roleType [" + roleType + "]");
+                    throw new InvalidArgumentException("invalid roleType [" + roleType + "]");
             }
 
             boolean writeHAEnabled = CommonConfig.WRITE_HA_ENABLED.get(conf);
@@ -78,15 +79,17 @@ public class GrootGraph {
                                 latch.getLeader(),
                                 latch.getState());
                         latch.await();
-                        // Sleep 5s before check the lock to prevent the leader has not
+                        // Sleep 10s before check the lock to prevent the leader has not
                         // released the resource yet.
-                        Thread.sleep(5000);
-                        if (Utils.isLockAvailable(conf)) {
-                            logger.info("LOCK is available, node starting");
+                        Thread.sleep(10000);
+                        if (Utils.isLockAvailable(conf) && !Utils.isMetaFreshEnough(conf, 9000)) {
+                            logger.info("LOCK is available and meta stop updating, node starting");
                             break;
                         }
                         latch.close();
-                        logger.info("LOCK is unavailable, the leader may still exists");
+                        logger.info(
+                                "LOCK is unavailable or the meta is still updating, the leader may"
+                                        + " still exists");
                         // The leader has lost connection but still alive,
                         // give it another chance
                         Thread.sleep(60000);
@@ -95,7 +98,7 @@ public class GrootGraph {
                     logger.error("Exception while leader election", e);
                     throw e;
                 }
-                //                curator.close();
+                // curator.close();
             }
         }
         NodeLauncher launcher = new NodeLauncher(node);

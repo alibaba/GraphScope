@@ -20,7 +20,7 @@ info:
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
-  title: GraphScope Interactive API v0.0.3
+  title: GraphScope Interactive API v0.3
   contact:
     email: graphscope@alibaba-inc.com
   license:
@@ -100,7 +100,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to get
+          description: The id of graph to get
       responses:
         '200':
           description: Successful operation
@@ -118,7 +118,7 @@ paths:
     delete:
       tags:
         - AdminService/GraphManagement
-      description: Delete a graph by name
+      description: Delete a graph by id
       operationId: delete_graph
       parameters:
         - name: graph_id
@@ -127,7 +127,7 @@ paths:
           schema:
             type: string
           description:
-            The name of graph to delete
+            The id of graph to delete
       responses:
         '200':
           description: Successful operation
@@ -141,20 +141,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example: 
+                code: 4
+                message: "Graph not found"
         '500':
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal Error: "
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example: 
+                code: 103
+                message: "Internal error"
   /v1/graph/{graph_id}/schema:
     get:
       tags:
         - AdminService/GraphManagement
-      description: Get schema by graph name
+      description: Get schema by graph id
       operationId: get_schema
       parameters:
         - name: graph_id
@@ -162,7 +166,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to delete
+          description: The id of graph to delete
       responses:
         '200':
           description: successful operation
@@ -195,22 +199,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not running or graph not exists"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Service unavailable, try again later"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 15
+                message: "Service Unavailable"
 
   /v1/graph/{graph_id}/dataloading:
     post:
@@ -224,7 +234,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to do bulk loading.
+          description: The id of graph to do bulk loading.
       requestBody:
         content:
           application/json:
@@ -319,22 +329,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 14
+                message: "Bad request"
         '404':
           description: not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Graph not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '500':
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-              example: "Internal error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     get:
       tags:
         - AdminService/ProcedureManagement
@@ -366,7 +382,7 @@ paths:
     get:
       tags:
         - AdminService/ProcedureManagement
-      description: Get a procedure by name
+      description: Get a procedure by id
       operationId: get_procedure
       parameters:
         - name: graph_id
@@ -396,7 +412,7 @@ paths:
     put:
       tags:
         - AdminService/ProcedureManagement
-      description:  Update procedure on a graph by name
+      description:  Update procedure on a graph by id
       operationId: update_procedure
       parameters:
         - name: graph_id
@@ -426,26 +442,32 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 14
+                message: "Bad request"
         "404":
           description: Not Found
           content:
             application/json:
               schema:
-                type: string
-                example: "Graph Not found/Procedure Not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found/Procedure not found"
         "500":
           description: Internal error
           content:
             application/json:
               schema:
-                type: string
-                example: "bad request"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - AdminService/ProcedureManagement
-      description: Delete a procedure on a graph by name
+      description: Delete a procedure on a graph by id
       operationId: delete_procedure
       parameters:
         - name: graph_id
@@ -470,8 +492,10 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "Graph Not found/Procedure Not found"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found/Procedure not found"
   /v1/service/start:
     post:
       tags:
@@ -496,8 +520,10 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: "Internal Error"
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/service/stop:
     post:
       tags:
@@ -554,7 +580,7 @@ paths:
         - name: graph_id
           in: path
           required: true
-          description: The name of the graph
+          description: The id of the graph
           schema:
             type: string
         - name: label
@@ -604,6 +630,31 @@ paths:
             type: string
       description: |
         Add the provided vertex to the specified graph.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexEdgeRequest'
+            example:
+              vertex_request:
+                - label: "person"
+                  primary_key_value: 2
+                  properties:
+                    age: 24
+                    name: "Cindy"
+              edge_request:
+                - src_label: "person"
+                  dst_label: "software"
+                  edge_label: "created"
+                  src_pk_name: "id"
+                  src_pk_value: 1
+                  dst_pk_name: "id"
+                  dst_pk_value: 3
+                  properties:
+                    - name: "weight"
+                      value: 0.2
+
       responses:
         '200':
           description: Successfully created vertex
@@ -615,24 +666,40 @@ paths:
                 message: "Successfully created vertex"
         '400':
           description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
         '409':
           description: Vertex already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Vertex already exists"
         '500':
           description: Server internal error
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VertexRequest'
-            example:
-              label: "person"
-              primimary_key_value: 1
-              properties:
-                age: 2
-                name: "Bob"
-        description: Add vertex to graph.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     put:
       tags:
         - GraphService/VertexManagement
@@ -667,11 +734,32 @@ paths:
               example:
                 message: "Successfully updated vertex"
         '400':
-          description: Invalid input paramters
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Vertex not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - GraphService/VertexManagement
@@ -708,10 +796,31 @@ paths:
                 message: "Successfully delete vertex"
         '400':
           description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
         '404':
           description: Vertex not exists or Graph not exits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
 
   /v1/graph/{graph_id}/edge:
     get:
@@ -780,10 +889,31 @@ paths:
                     value: 0.2
         '400':
           description: Bad input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not found or Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not found"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     post:
       tags:
         - GraphService/EdgeManagement
@@ -808,26 +938,50 @@ paths:
                 message: "Successfuly create edge"
         '400':
           description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '409':
           description: edge already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Edge already exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
             example:
-              src_label: "person"
-              dst_label: "software"
-              edge_label: "created"
-              src_pk_name: "id"
-              src_pk_value: 1
-              dst_pk_name: "id"
-              dst_pk_value: 3
-              properties:
-                - name: "weight"
-                  value: 0.2
+              - src_label: "person"
+                dst_label: "software"
+                edge_label: "created"
+                src_pk_name: "id"
+                src_pk_value: 1
+                dst_pk_name: "id"
+                dst_pk_value: 3
+                properties:
+                  - name: "weight"
+                    value: 0.2
     put:
       tags:
         - GraphService/EdgeManagement
@@ -867,11 +1021,32 @@ paths:
               example:
                 message: "Successfully update edge"
         '400':
-          description: Invalid input paramters
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
     delete:
       tags:
         - GraphService/EdgeManagement
@@ -925,32 +1100,45 @@ paths:
                 message: "Successfully delete edge"
         '400':
           description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
         '404':
           description: Edge not exists or Graph not exits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/{graph_id}/query:
     post:
       tags:
         - QueryService
       summary: run queries on graph
-      operationId: proc_call
+      operationId: call_proc
       description: |
         After the procedure is created, user can use this API to run the procedure.
-        TODO: a full example cypher->plan->json.
-        TODO: make sure typeinfo can be passed.
       parameters:
         - name: graph_id
           in : path
           required: true
           schema:
             type: string
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
@@ -959,7 +1147,7 @@ paths:
               format: byte
       responses:
         '200':
-          description: Successfully runned. Empty if failed?
+          description: Successfully runned.
           content:
             text/plain:
               schema:
@@ -967,21 +1155,21 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
   /v1/graph/current/query:
     post:
       tags:
         - QueryService
       summary: run queries on the running graph
-      operationId: proc_call_current
+      operationId: call_proc_current
       description: |
         Submit a query to the running graph.
-      parameters:
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
@@ -998,6 +1186,118 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+  /v1/graph/current/adhoc_query:
+    post:
+      tags:
+        - QueryService
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc_current
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+  /v1/graph/{graph_id}/adhoc_query:
+    post:
+      tags:
+        - QueryService
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      parameters:
+          - name: graph_id
+            in : path
+            required: true
+            schema:
+              type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+  /v1/file/upload:
+    post:
+      tags: [Utils]
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                # metadata:
+                #   datasource: file
+                #   file_type: csv
+        500:
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
 components:
   schemas:
     AnyValue: {}
@@ -1027,6 +1327,7 @@ components:
     LongText:
       x-body-name: long_text
       type: object
+      additionalProperties: false 
       required:
         - long_text
       properties:
@@ -1036,19 +1337,21 @@ components:
     FixedChar:
       x-body-name: fixed_char
       type: object
+      additionalProperties: false 
       required:
         - char
       properties:
         char:
           type: object
           required:
-            - fixed_char
+            - fixed_length
           properties:
-            fixed_char:
+            fixed_length:
               type: integer
     VarChar:
       x-body-name: var_char
       type: object
+      additionalProperties: false 
       required:
         - var_char
       properties:
@@ -1115,16 +1418,6 @@ components:
         value:
           $ref: '#/components/schemas/AnyValue'
           # type: object
-    PropertyArray:
-      x-body-name: property_array
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          type: array
-          items:
-            $ref: '#/components/schemas/Property'
     Parameter:
       x-body-name: parameter
       type: object
@@ -1143,6 +1436,7 @@ components:
       required:
         - label
         - primary_key_value
+        - properties
       properties:
         label:
           type: string
@@ -1150,7 +1444,9 @@ components:
         primary_key_value:
           $ref: '#/components/schemas/AnyValue'
         properties:
-          $ref: '#/components/schemas/PropertyArray'
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
     VertexData:
       x-body-name: vertex_data
       type: object
@@ -1298,6 +1594,8 @@ components:
               type: boolean
             creation_time:
               type: integer
+            update_time:
+              type: integer
     UpdateProcedureRequest:
       x-body-name: update_procedure_request
       type: object
@@ -1332,6 +1630,18 @@ components:
       x-body-name: api_response
       type: string
       example: "Response string"
+    APIResponseWithCode:
+      x-body-name: api_response_with_code
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 500
+        message: "Internal Error"
     VertexStatistics:
       x-body-name: vertex_statistics
       type: object
@@ -1568,6 +1878,26 @@ components:
         loading_config:
           type: object
           properties:
+            x_csr_params:
+              type: object
+              description: mutable_csr specific parameters
+              properties:
+                parallelism: # how many thread used for bulk loading
+                  type: integer
+                build_csr_in_mem: # whether to build csr in memory
+                  type: boolean
+                use_mmap_vector: # whether to use mmap vector
+                  type: boolean
+            data_source:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                    - odps
+                    - file
+                location:
+                  type: string
             import_option:
               type: string
               enum:
@@ -1684,6 +2014,8 @@ components:
       x-body-name: service_status
       type: object
       properties:
+        statistics_enabled: # indicate whether the graph statistics interface is enabled
+          type: boolean
         status:
           type: string
         graph:
@@ -1734,3 +2066,28 @@ components:
         detail:
           type: object
           additionalProperties: true
+    UploadFileResponse:
+      required:
+        - file_path
+        # - metadata
+      properties:
+        file_path:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    VertexEdgeRequest:
+      type: object
+      required:
+        - vertex_request
+        - edge_request
+      properties:
+        vertex_request:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexRequest'
+        edge_request:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeRequest'
+

@@ -19,6 +19,7 @@
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -47,6 +48,13 @@ inline int64_t GetCurrentTimeStamp() {
       .count();
 }
 
+inline std::string toUpper(const std::string str) {
+  std::string upper_str = str;
+  std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(),
+                 ::toupper);
+  return upper_str;
+}
+
 // With the help of the following functions, we can serialize and deserialize
 // by json.get<PropertyType>() and operator <</operator =;
 // These two functions are inlined to avoid linking library in codegen.
@@ -63,7 +71,8 @@ inline void to_json(nlohmann::json& j, const PropertyType& p) {
     j["temporal"]["timestamp"] = {};
   } else if (p == PropertyType::Day()) {
     j["temporal"]["date32"] = {};
-  } else if (p == PropertyType::String() || p == PropertyType::StringMap()) {
+  } else if (p == PropertyType::StringView() ||
+             p == PropertyType::StringMap()) {
     j["string"]["long_text"] = {};
   } else if (p.IsVarchar()) {
     j["string"]["var_char"]["max_length"] = p.additional_type_info.max_length;
@@ -104,6 +113,14 @@ inline void from_json(const nlohmann::json& j, PropertyType& p) {
 
 inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
+}
+
+inline std::string jsonToString(const nlohmann::json& json) {
+  if (json.is_string()) {
+    return json.get<std::string>();
+  } else {
+    return json.dump();
+  }
 }
 
 class FlexException : public std::exception {

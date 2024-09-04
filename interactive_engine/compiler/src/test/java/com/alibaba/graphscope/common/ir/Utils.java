@@ -33,7 +33,6 @@ import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.plan.hep.HepProgram;
@@ -67,7 +66,7 @@ public class Utils {
     }
 
     public static final GraphBuilder mockGraphBuilder(GraphRelOptimizer optimizer, IrMeta irMeta) {
-        RelOptCluster optCluster =
+        GraphOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
         optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery(irMeta));
         return (GraphBuilder)
@@ -99,7 +98,7 @@ public class Utils {
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
-                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    GraphConfig.GRAPH_META_SCHEMA_URI.getKey(),
                                     schemaResource.toURI().getPath()));
             return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), null).fetch().get();
         } catch (Exception e) {
@@ -117,9 +116,9 @@ public class Utils {
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
-                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    GraphConfig.GRAPH_META_SCHEMA_URI.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STATISTICS.getKey(),
+                                    GraphConfig.GRAPH_META_STATISTICS_URI.getKey(),
                                     statisticsResource.toURI().getPath()));
             return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker).fetch().get();
         } catch (Exception e) {

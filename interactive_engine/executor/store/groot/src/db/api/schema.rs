@@ -9,7 +9,11 @@ use super::{GraphResult, PropertyId};
 use crate::db::api::property::Value;
 use crate::db::api::{EdgeKind, LabelId};
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::model::{EdgeTableIdEntry, GraphDefPb, VertexTableIdEntry};
+use crate::db::proto::model::{
+    EdgeTableIdEntry, GraphDefPb, Statistics as StatisticsPb,
+    Statistics_EdgeTypeStatistics as EdgeTypeStatisticsPb,
+    Statistics_VertexTypeStatistics as VertexTypeStatisticsPb, VertexTableIdEntry,
+};
 use crate::db::proto::schema_common::{PropertyDefPb, TypeDefPb, TypeEnumPb};
 
 #[derive(Default, Clone)]
@@ -47,7 +51,7 @@ impl GraphDef {
     pub fn add_type(&mut self, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
         if self.label_to_types.contains_key(&label) {
             let msg = format!("labelId {}", label);
-            return Err(GraphError::new(GraphErrorCode::TypeAlreadyExists, msg));
+            return Err(GraphError::new(ErrorCode::ALREADY_EXISTS, msg));
         }
         for property in type_def.get_prop_defs() {
             if property.id > self.property_idx {
@@ -58,6 +62,26 @@ impl GraphDef {
         }
         self.label_to_types.insert(label, type_def);
         Ok(())
+    }
+
+    pub fn update_type(&mut self, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
+        if !self.label_to_types.contains_key(&label) {
+            let msg = format!("labelId {}", label);
+            return Err(GraphError::new(ErrorCode::TYPE_NOT_FOUND, msg));
+        }
+        for property in type_def.get_prop_defs() {
+            if property.id > self.property_idx {
+                self.property_idx = property.id
+            }
+            self.property_name_to_id
+                .insert(property.name.clone(), property.id);
+        }
+        self.label_to_types.insert(label, type_def);
+        Ok(())
+    }
+
+    pub fn get_type(&self, label_id: &LabelId) -> Option<&TypeDef> {
+        self.label_to_types.get(label_id)
     }
 
     pub fn put_vertex_table_id(&mut self, label: LabelId, table_id: i64) {
@@ -180,6 +204,14 @@ impl TypeDef {
         return self.label_id;
     }
 
+    pub fn add_property(&mut self, prop: PropDef) {
+        self.properties.insert(prop.id, prop);
+    }
+
+    pub fn set_version(&mut self, new_version: i32) {
+        self.version = new_version;
+    }
+
     pub fn from_proto(proto: &TypeDefPb) -> GraphResult<Self> {
         let version_id = proto.get_version_id();
         let label = proto.get_label();
@@ -218,7 +250,7 @@ impl TypeDef {
             Ok(b) => Ok(b),
             Err(e) => {
                 let msg = format!("{:?}", e);
-                Err(gen_graph_err!(GraphErrorCode::InvalidData, msg, to_bytes))
+                Err(gen_graph_err!(ErrorCode::INVALID_DATA, msg, to_bytes))
             }
         }
     }
@@ -357,6 +389,74 @@ impl PropDef {
     fn from_bytes(bytes: &[u8]) -> GraphResult<Self> {
         let propertydef_pb = parse_pb::<PropertyDefPb>(bytes)?;
         PropDef::from_proto(&propertydef_pb)
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct GraphPartitionStatistics {
+    version: i64,
+    vertex_count: u64,
+    edge_count: u64,
+    vertex_type_count: HashMap<LabelId, u64>,
+    edge_type_count: HashMap<EdgeKind, u64>,
+}
+
+impl GraphPartitionStatistics {
+    pub fn new(
+        version: i64, vertex_count: u64, edge_count: u64, vertex_type_count: HashMap<LabelId, u64>,
+        edge_type_count: HashMap<EdgeKind, u64>,
+    ) -> Self {
+        GraphPartitionStatistics { version, vertex_count, edge_count, vertex_type_count, edge_type_count }
+    }
+
+    pub fn get_version(&self) -> i64 {
+        self.version
+    }
+
+    pub fn get_vertex_count(&self) -> u64 {
+        self.vertex_count
+    }
+
+    pub fn get_edge_count(&self) -> u64 {
+        self.edge_count
+    }
+
+    pub fn get_vertex_type_count(&self, v_type: LabelId) -> u64 {
+        self.vertex_type_count
+            .get(&v_type)
+            .unwrap_or(&0)
+            .clone()
+    }
+
+    pub fn get_edge_type_count(&self, e_type: EdgeKind) -> u64 {
+        self.edge_type_count
+            .get(&e_type)
+            .unwrap_or(&0)
+            .clone()
+    }
+
+    pub fn to_proto(&self) -> GraphResult<StatisticsPb> {
+        let mut pb = StatisticsPb::new();
+        pb.set_snapshotId(self.version);
+        pb.set_numVertices(self.vertex_count as u64);
+        pb.set_numEdges(self.edge_count as u64);
+        for (label_id, count) in &self.vertex_type_count {
+            let mut vertex_type_statistics = VertexTypeStatisticsPb::new();
+            vertex_type_statistics
+                .mut_labelId()
+                .set_id(*label_id);
+            vertex_type_statistics.set_numVertices(*count);
+            pb.mut_vertexTypeStatistics()
+                .push(vertex_type_statistics);
+        }
+        for (edge_kind, count) in &self.edge_type_count {
+            let mut edge_type_statistics = EdgeTypeStatisticsPb::new();
+            edge_type_statistics.set_edgeKind(edge_kind.to_proto());
+            edge_type_statistics.set_numEdges(*count);
+            pb.mut_edgeTypeStatistics()
+                .push(edge_type_statistics);
+        }
+        Ok(pb)
     }
 }
 

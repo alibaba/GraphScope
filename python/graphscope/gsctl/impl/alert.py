@@ -17,17 +17,18 @@
 #
 
 from typing import List
-from typing import Union
 
 import graphscope.flex.rest
-from graphscope.flex.rest import AlertMessage
-from graphscope.flex.rest import AlertReceiver
-from graphscope.flex.rest import AlertRule
-from graphscope.flex.rest import UpdateAlertMessagesRequest
+from graphscope.flex.rest import CreateAlertReceiverRequest
+from graphscope.flex.rest import CreateAlertRuleRequest
+from graphscope.flex.rest import GetAlertMessageResponse
+from graphscope.flex.rest import GetAlertReceiverResponse
+from graphscope.flex.rest import GetAlertRuleResponse
+from graphscope.flex.rest import UpdateAlertMessageStatusRequest
 from graphscope.gsctl.config import get_current_context
 
 
-def list_alert_rules() -> List[AlertRule]:
+def list_alert_rules() -> List[GetAlertRuleResponse]:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
@@ -36,66 +37,73 @@ def list_alert_rules() -> List[AlertRule]:
         return api_instance.list_alert_rules()
 
 
-def update_alert_rule(rule: dict) -> str:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        name = rule["name"]
-        api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.update_alert_rule_by_name(name, AlertRule.from_dict(rule))
-
-
-def delete_alert_rule_by_name(rule_name: str) -> str:
+def update_alert_rule_by_id(rule_id: str, rule: dict) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.delete_alert_rule_by_name(rule_name)
+        return api_instance.update_alert_rule_by_id(
+            rule_id, CreateAlertRuleRequest.from_dict(rule)
+        )
+
+
+def delete_alert_rule_by_id(rule_id: str) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.AlertApi(api_client)
+        return api_instance.delete_alert_rule_by_id(rule_id)
 
 
 def list_alert_messages(
-    status: str, severity: str, starttime: str, endtime: str
-) -> List[AlertMessage]:
+    alert_type=None,
+    status=None,
+    severity=None,
+    start_time=None,
+    end_time=None,
+    limit=None,
+) -> List[GetAlertMessageResponse]:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
         return api_instance.list_alert_messages(
-            None, status, severity, starttime, endtime
+            alert_type, status, severity, start_time, end_time, limit
         )
 
 
-def update_alert_messages(request: dict) -> str:
+def update_alert_message_in_batch(message_status: dict) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        print(request)
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.update_alert_messages(
-            UpdateAlertMessagesRequest.from_dict(request)
+        return api_instance.update_alert_message_in_batch(
+            UpdateAlertMessageStatusRequest.from_dict(message_status)
         )
 
 
-def list_alert_receivers() -> List[AlertReceiver]:
+def delete_alert_message_in_batch(message_ids: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.list_receivers()
+        return api_instance.delete_alert_message_in_batch(message_ids)
 
 
-def register_receiver(receiver: dict) -> str:
+def create_alert_receiver(receiver: dict) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.register_receiver(AlertReceiver.from_dict(receiver))
+        return api_instance.create_alert_receiver(
+            CreateAlertReceiverRequest.from_dict(receiver)
+        )
 
 
 def update_alert_receiver_by_id(receiver_id: str, receiver: dict) -> str:
@@ -104,9 +112,18 @@ def update_alert_receiver_by_id(receiver_id: str, receiver: dict) -> str:
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.update_receiver_by_id(
-            receiver_id, AlertReceiver.from_dict(receiver)
+        return api_instance.update_alert_receiver_by_id(
+            receiver_id, CreateAlertReceiverRequest.from_dict(receiver)
         )
+
+
+def list_alert_receivers() -> List[GetAlertReceiverResponse]:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.AlertApi(api_client)
+        return api_instance.list_alert_receivers()
 
 
 def delete_alert_receiver_by_id(receiver_id: str) -> str:
@@ -115,4 +132,4 @@ def delete_alert_receiver_by_id(receiver_id: str) -> str:
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.AlertApi(api_client)
-        return api_instance.delete_receiver_by_id(receiver_id)
+        return api_instance.delete_alert_receiver_by_id(receiver_id)

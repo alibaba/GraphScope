@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -361,11 +362,12 @@ public class GraphBuilderTest {
     public void g_V_has_name_marko_age_17_has_label_error_test() {
         try {
             RelNode node = eval("g.V().has('name', 'marko').has('age', 17).hasLabel('software')");
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=age} not found; expected properties are: [id, name, lang,"
-                            + " creationDate]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=age} not found; expected properties are: [id, name,"
+                                            + " lang, creationDate]"));
             return;
         }
         Assert.fail();
@@ -427,7 +429,7 @@ public class GraphBuilderTest {
                     + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[_], opt=[END])\n"
-                    + "], offset=[1], fetch=[1], path_opt=[SIMPLE], result_opt=[ALL_V_E],"
+                    + "], offset=[1], fetch=[1], path_opt=[SIMPLE], result_opt=[ALL_V],"
                     + " alias=[b])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])",
@@ -1679,5 +1681,101 @@ public class GraphBuilderTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
                         + " alias=[_], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
                 node.explain().trim());
+    }
+
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        RelNode node =
+                eval("g.V().out('1..3').with('UNTIL', expr(_.age > 30)).endV().values('age')");
+        Assert.assertEquals(
+                "GraphLogicalProject(age=[age], isAppend=[false])\n"
+                    + "  GraphLogicalProject(age=[_.age], isAppend=[true])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " until_condition=[>(_.age, 30)], alias=[_])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_has_label_person_limit_10_as_a() {
+        RelNode node = eval("g.V().hasLabel('person').limit(10).as('a')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSort(fetch=[10])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_select_a_b_valueMap() {
+        RelNode rel =
+                eval(
+                        "g.V().hasLabel('person').as('a').out('knows').as('b').select('a',"
+                                + " 'b').by(valueMap())");
+        Assert.assertEquals(
+                "({_UTF-8'a'=<CHAR(1), ({_UTF-8'name'=<CHAR(4), CHAR(1)>, _UTF-8'id'=<CHAR(2),"
+                        + " BIGINT>, _UTF-8'age'=<CHAR(3), INTEGER>}) MAP>, _UTF-8'b'=<CHAR(1),"
+                        + " ({_UTF-8'name'=<CHAR(4), CHAR(1)>, _UTF-8'id'=<CHAR(2), BIGINT>,"
+                        + " _UTF-8'creationDate'=<CHAR(12), DATE>, _UTF-8'age'=<CHAR(3), INTEGER>,"
+                        + " _UTF-8'lang'=<CHAR(4), CHAR(1)>}) MAP>}) MAP",
+                rel.getRowType().getFieldList().get(0).getType().toString());
+    }
+
+    @Test
+    public void g_V_select_expr_property_id() {
+        RelNode rel = eval("g.V().select(expr(_.id))");
+        Assert.assertEquals(
+                "GraphLogicalProject(id=[id], isAppend=[false])\n"
+                        + "  GraphLogicalProject(id=[_.id], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
+    }
+
+    @Test
+    public void g_V_path_as_a_select_a_valueMap() {
+        RelNode rel =
+                eval(
+                        "g.V().out('2..3').with('RESULT_OPT',"
+                                + " 'ALL_V_E').as('a').select('a').valueMap('~len')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[MAP(_UTF-8'~len', a.~len)], isAppend=[true])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
+
+        rel =
+                eval(
+                        "g.V().out('2..3').with('RESULT_OPT',"
+                                + " 'ALL_V_E').as('a').select('a').valueMap('name', 'weight')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[PATH_FUNCTION(a, FLAG(VERTEX_EDGE),"
+                    + " MAP(_UTF-8'weight', a.weight, _UTF-8'name', a.name))], isAppend=[true])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
     }
 }

@@ -27,23 +27,17 @@ _setup_env() {
 		GROOT_HOME=$(dirname "$SCRIPT_DIR")
 	fi
 
-	if [ -z "${GROOT_LOGBACK_FILE}" ]; then
-		readonly GROOT_LOGBACK_FILE="${GROOT_HOME}/conf/logback.xml"
-	fi
-
-	if [ -z "${GROOT_CONF_FILE}" ]; then
-		readonly GROOT_CONF_FILE="${GROOT_HOME}/conf/groot.config"
-	fi
-
-	if [ -z "${LOG_NAME}" ]; then
-		readonly LOG_NAME="graphscope-store"
-	fi
-
-	if [ -z "${LOG_DIR}" ]; then
-		export LOG_DIR="/var/log/graphscope"
-	fi
+	export GROOT_LOGBACK_FILE=${GROOT_LOGBACK_FILE:-${GROOT_HOME}/conf/logback.xml}
+	export GROOT_CONF_FILE=${GROOT_CONF_FILE:-${GROOT_HOME}/conf/groot.config}
+	export LOG_NAME=${LOG_NAME:-graphscope-store}
+	export LOG_DIR=${LOG_DIR:-/var/log/graphscope}
+	export LOG_MAX_FILE_SIZE=${LOG_MAX_FILE_SIZE:-100MB}
+	export LOG_MAX_HISTORY=${LOG_MAX_HISTORY:-10}
+	export LOG_TOTAL_SIZE_CAP=${LOG_TOTAL_SIZE_CAP:-1GB}
 
 	mkdir -p ${LOG_DIR}
+
+	export OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}"
 
 	export LD_LIBRARY_PATH=${GROOT_HOME}/native:${GROOT_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 	libpath="$(echo "${GROOT_HOME}"/lib/*.jar | tr ' ' ':')"

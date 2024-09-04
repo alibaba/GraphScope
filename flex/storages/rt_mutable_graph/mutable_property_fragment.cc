@@ -77,7 +77,8 @@ void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
 
 inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
                                const std::vector<PropertyType>& properties,
-                               bool oe_mutable, bool ie_mutable) {
+                               bool oe_mutable, bool ie_mutable,
+                               const std::vector<std::string>& prop_names) {
   if (properties.empty()) {
     return new DualCsr<grape::EmptyType>(oes, ies, oe_mutable, ie_mutable);
   } else if (properties.size() == 1) {
@@ -100,9 +101,13 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
-    } else if (properties[0] == PropertyType::kString) {
-      return new DualCsr<std::string_view>(oes, ies, 256);
+    } else if (properties[0] == PropertyType::kStringView) {
+      return new DualCsr<std::string_view>(
+          oes, ies, gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
     }
+  } else {
+    // TODO: fix me, storage strategy not set
+    return new DualCsr<RecordView>(oes, ies, prop_names, properties, {});
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;
@@ -229,8 +234,12 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
             schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
         bool ie_mutable =
             schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
+
+        auto& prop_names =
+            schema_.get_edge_property_names(src_label, dst_label, edge_label);
+
         dual_csr_list_[index] = create_csr(oe_strategy, ie_strategy, properties,
-                                           oe_mutable, ie_mutable);
+                                           oe_mutable, ie_mutable, prop_names);
         ie_[index] = dual_csr_list_[index]->GetInCsr();
         oe_[index] = dual_csr_list_[index]->GetOutCsr();
         if (memory_level == 0) {
@@ -290,7 +299,15 @@ void MutablePropertyFragment::Compact(uint32_t version) {
 void MutablePropertyFragment::Dump(const std::string& work_dir,
                                    uint32_t version) {
   std::string snapshot_dir_path = snapshot_dir(work_dir, version);
-  std::filesystem::create_directories(snapshot_dir_path);
+  std::error_code errorCode;
+  std::filesystem::create_directories(snapshot_dir_path, errorCode);
+  if (errorCode) {
+    std::stringstream ss;
+    ss << "Failed to create snapshot directory: " << snapshot_dir_path << ", "
+       << errorCode.message();
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
   std::vector<size_t> vertex_num(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     vertex_num[i] = lf_indexers_[i].size();
@@ -384,6 +401,17 @@ const Table& MutablePropertyFragment::get_vertex_table(
 
 vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
   return static_cast<vid_t>(lf_indexers_[vertex_label].size());
+}
+
+size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
+                                         label_t dst_label) const {
+  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                 dst_label * edge_label_num_ + edge_label;
+  if (dual_csr_list_[index] != NULL) {
+    return dual_csr_list_[index]->EdgeNum();
+  } else {
+    return 0;
+  }
 }
 
 bool MutablePropertyFragment::get_lid(label_t label, const Any& oid,

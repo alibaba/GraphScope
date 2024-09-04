@@ -25,8 +25,8 @@
 
 README.md
 setup.py
-interactive_sdk/__init__.py
-interactive_sdk/client
+gs_interactive/client
+gs_interactive/models/long_text.py
 requirements.txt
 test-requirements.txt
 test/

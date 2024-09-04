@@ -30,6 +30,7 @@ import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -67,22 +68,12 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         + " should be consistent with output type "
                         + outputType.getFieldCount());
         List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
-        for (RelDataTypeField field : outputType.getFieldList()) {
-            IrResult.Column column = getColumn(record, field);
+        for (int i = 0; i < record.getColumnsCount(); ++i) {
+            RelDataTypeField field = outputType.getFieldList().get(i);
+            IrResult.Column column = record.getColumns(i);
             columns.add(parseEntry(column.getEntry(), field.getType()));
         }
         return columns;
-    }
-
-    private IrResult.Column getColumn(IrResult.Record record, RelDataTypeField field) {
-        int aliasId = field.getIndex();
-        for (IrResult.Column column : record.getColumnsList()) {
-            if (column.getNameOrId().getId() == aliasId) {
-                return column;
-            }
-        }
-        throw new IllegalArgumentException(
-                "column with alias id " + aliasId + " not found in record " + record);
     }
 
     @Override
@@ -107,9 +98,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
             case MAP:
                 if (dataType instanceof ArbitraryMapType) {
                     return parseKeyValues(
-                            entry.getMap(),
-                            ((ArbitraryMapType) dataType).getKeyTypes(),
-                            ((ArbitraryMapType) dataType).getValueTypes());
+                            entry.getMap(), ((ArbitraryMapType) dataType).getKeyValueTypeMap());
                 } else {
                     return parseKeyValues(
                             entry.getMap(), dataType.getKeyType(), dataType.getValueType());
@@ -197,27 +186,23 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         entry -> {
                             valueMap.put(
                                     entry.getKey().getStr(),
-                                    parseElement(entry.getValue(), valueType));
+                                    parseEntry(entry.getValue(), valueType));
                         });
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
     protected AnyValue parseKeyValues(
             IrResult.KeyValues keyValues,
-            List<RelDataType> keyTypes,
-            List<RelDataType> valueTypes) {
-        List<IrResult.KeyValues.KeyValue> entries = keyValues.getKeyValuesList();
-        Preconditions.checkArgument(
-                entries.size() == valueTypes.size(),
-                "KeyValues entry size="
-                        + entries.size()
-                        + " is not consistent with value type size="
-                        + valueTypes.size());
+            Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap) {
         Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
-        for (int i = 0; i < entries.size(); ++i) {
-            IrResult.KeyValues.KeyValue entry = entries.get(i);
+        for (IrResult.KeyValues.KeyValue entry : keyValues.getKeyValuesList()) {
+            ArbitraryMapType.KeyValueType keyValueType =
+                    Utils.getKeyValueType(entry.getKey(), keyValueTypeMap);
             valueMap.put(
-                    entry.getKey().getStr(), parseElement(entry.getValue(), valueTypes.get(i)));
+                    entry.getKey().getStr(),
+                    parseEntry(
+                            entry.getValue(),
+                            keyValueType == null ? null : keyValueType.getValue()));
         }
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }

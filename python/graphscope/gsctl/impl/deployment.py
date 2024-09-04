@@ -16,27 +16,47 @@
 # limitations under the License.
 #
 
-from typing import List
-
 import graphscope.flex.rest
-from graphscope.flex.rest import DeploymentInfo
-from graphscope.flex.rest import NodeStatus
+from graphscope.flex.rest import GetPodLogResponse
+from graphscope.flex.rest import GetResourceUsageResponse
+from graphscope.flex.rest import GetStorageUsageResponse
+from graphscope.flex.rest import RunningDeploymentStatus
 from graphscope.gsctl.config import get_current_context
 
 
-def get_node_status() -> List[NodeStatus]:
+def get_deployment_status() -> RunningDeploymentStatus:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.DeploymentApi(api_client)
-        return api_instance.get_node_status()
+        return api_instance.get_deployment_status()
 
 
-def get_deployment_info() -> DeploymentInfo:
+def get_deployment_resource_usage() -> GetResourceUsageResponse:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.DeploymentApi(api_client)
-        return api_instance.get_deployment_info()
+        return api_instance.get_deployment_resource_usage()
+
+
+def get_storage_usage() -> GetStorageUsageResponse:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.DeploymentApi(api_client)
+        return api_instance.get_storage_usage()
+
+
+def get_deployment_pod_log(
+    pod_name: str, component: str, from_cache: bool
+) -> GetPodLogResponse:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.DeploymentApi(api_client)
+        return api_instance.get_deployment_pod_log(pod_name, component, from_cache)

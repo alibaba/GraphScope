@@ -37,7 +37,7 @@ void signal_handler(int signal) {
                << ",Clearing directory: " << work_dir << ", exiting...";
     // remove all files in work_dir
     std::filesystem::remove_all(work_dir);
-    exit(0);
+    exit(signal);
   } else {
     LOG(ERROR) << "Received unexpected signal " << signal << ", exiting...";
     exit(1);
@@ -46,13 +46,32 @@ void signal_handler(int signal) {
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
+  /**
+   * When loading the edges of a graph, there are two stages involved.
+   *
+   * The first stage involves reading the edges into a temporary vector and
+   * acquiring information on the degrees of the vertices,
+   * Then constructs the CSR using the degree information.
+   *
+   * During the first stage, the edges are stored in the form of triplets, which
+   * can lead to a certain amount of memory expansion, so the `use-mmap-vector`
+   * option is provided, mmap_vector utilizes mmap to map files, supporting
+   * runtime memory swapping to disk.
+   *
+   * Constructing the CSR involves random reads and writes, we offer the
+   * `build-csr-in-mem` option, which allows CSR to be built in-memory to
+   * avoid extensive disk random read and write operations
+   *
+   */
   desc.add_options()("help", "Display help message")(
-      "version,v", "Display version")("parallelism,p",
-                                      bpo::value<uint32_t>()->default_value(1),
+      "version,v", "Display version")("parallelism,p", bpo::value<uint32_t>(),
                                       "parallelism of bulk loader")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "build-csr-in-mem,m", bpo::value<bool>(), "build csr in memory")(
+      "use-mmap-vector", bpo::value<bool>(), "use mmap vector");
+
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -70,7 +89,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  uint32_t parallelism = vm["parallelism"].as<uint32_t>();
   std::string data_path = "";
   std::string bulk_load_config_path = "";
   std::string graph_schema_path = "";
@@ -110,6 +128,19 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  // check whether parallelism, build_csr_in_mem, use_mmap_vector are overriden
+  if (vm.count("parallelism")) {
+    loading_config_res.value().SetParallelism(vm["parallelism"].as<uint32_t>());
+  }
+  if (vm.count("build-csr-in-mem")) {
+    loading_config_res.value().SetBuildCsrInMem(
+        vm["build-csr-in-mem"].as<bool>());
+  }
+  if (vm.count("use-mmap-vector")) {
+    loading_config_res.value().SetUseMmapVector(
+        vm["use-mmap-vector"].as<bool>());
+  }
+
   std::filesystem::path data_dir_path(data_path);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);
@@ -132,10 +163,15 @@ int main(int argc, char** argv) {
   std::signal(SIGABRT, signal_handler);
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
-      data_dir_path.string(), schema_res.value(), loading_config_res.value(),
-      parallelism);
-  loader->LoadFragment();
+      data_dir_path.string(), schema_res.value(), loading_config_res.value());
 
+  auto result = loader->LoadFragment();
+  if (!result.ok()) {
+    std::filesystem::remove_all(data_dir_path);
+    LOG(ERROR) << "Failed to load fragment: "
+               << result.status().error_message();
+    return -1;
+  }
   t += grape::GetCurrentTime();
   LOG(INFO) << "Finished bulk loading in " << t << " seconds.";
 

@@ -814,7 +814,16 @@
           }
         }
       ],
-      "columns": []
+      "columns": [
+        {
+          "key": {
+            "id": 2,
+            "name": "creationDate"
+          },
+          "data_type": 2,
+          "is_primary_key": false
+        }
+      ]
     },
     {
       "label": {

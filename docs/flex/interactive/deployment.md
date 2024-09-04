@@ -1,120 +1,70 @@
 # Deployment
 
-## Deploy with docker
+## Deploy with Docker
 
-You can deploy a single-node GraphScope Interactive instance on modern graph with docker
-```bash
-docker run -it -d -p 7687:7687 -p 10000:10000 -p 7777:7777 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:latest
-```
-
-Now, the admin service will be listening on port 7777, the Cypher Bolt server will be listening on port 7687, and the Interactive engine will be listening on port 10000.
-
-## Deploy with helm
-
-### QuickStart
+Interactive is packaged as a Docker image and can be easily deployed with `docker`, `python3 >=3.8`, and `pip >=19.3` installed on your system. You will use a command-line tool called `gsctl` to install, start, and manage Interactive services.
 
 ```bash
-git clone https://github.com/alibaba/GraphScope.git
-cd GraphScope/charts/
-$ helm install {your-release-name} ./graphscope-interactive/
+pip3 install gsctl
+# Deploy the interactive service in local mode
+gsctl instance deploy --type interactive 
 ```
 
-Now you can the endpoint via
+### Customizing Ports
+
+By default, Interactive launches various services on these ports: Coordinator Service on `8080`, Interactive Meta Service on `7777`, Interactive Cypher service on `7687`, and Stored Procedure Service on `10000`. These ports can be customized.
+
 ```bash
-$ kubectl describe svc {your-release-name} -graphscope-interactive-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
-#192.168.0.44:8182
-#192.168.0.44:7687
-# the first is the gremlin endpoint(currently not supported)
-# the second is the cypher endpoint
+gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 \ 
+                --cypher-port 7688 --storedproc-port 10001
 ```
 
-Delete the deployment via 
-```bash
-helm delete {your-release-name}
-```
+For more details on customizing ports and connecting to the Interactive Service, refer to [Installation](./installation.md) and [Getting Started](./getting_started.md).
 
-### Customizing Configuration
+By default, `gsctl` uses the same version for both the tool and Interactive. For customized deployment, follow the instructions in [Deploy From Source Code](#deploy-from-source-code).
 
-By default, all pods of `GraphScope Interactive` is deployed on the same k8s node.
-In such case, all pods can share the storage via k8s pvc of `hostPath` kind.
-
-To offer higher throughput and query performance, we also support launching pods across multiple nodes. However, in this mode, you need a storage solution like NFS to ensure that all nodes can access the same storage.
-
-
-### Customize Graph Data.
-
-By default we provide builtin `modern_graph` for `Interactive`. We also support customizing graph data by providing raw graph data via `csv` files. 
-For detail about Graph Model and DataLoading, please check [Interactive Data Model](https://graphscope.io/docs/latest/flex/interactive/data_model);
-
-#### Single Node
-
-If you just want to deploy Interactive on a single node, then you can just put all `csv` files into a directory, i.e. `/tmp/data/`.
-
-Then you can create a PV on the node, via the following commands
-```bash
-# 0. Download the template pvc configuration
-
-# 1. Customize the pvc configuration
-vim pvc/pvc.yaml
-#hostPath:
-#  path: {} # use the directory where your raw data exists.
-
-# 2. Create the persistent volume on the single node.
-kubectl apply -f pvc.yaml
-```
-
-#### Multiple nodes
-
-If you want to deploy Interactive on multiple nodes, then you need something like `nfs` to store you raw graph data, such that all k8s nodes can share the access to same files.
+## Deploy with Helm
 
 TODO
 
-### Customize `Values.yaml`
+## Deploy from Source Code
 
-- docker artifacts
+This section describes how to package and deploy Interactive from the source for a customized version.
 
-```yaml
-engine:
-  image:
-    registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/interactive
-    tag: "v0.2.4"
+### Packing Interactive from Source
 
-# docker artifacts for frontend
-frontend:
-  image:
-    registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/interactive
-    tag: "v0.2.4"
+Interactive is packaged as a Docker image. Ensure you have [Docker](https://www.docker.com/) installed, then clone the repository and build the Interactive Runtime Image.
+
+```bash
+git clone https://github.com/alibaba/GraphScope.git # Or clone your fork
+cd GraphScope/k8s
+python3 ./gsctl.py flexbuild interactive --app docker
 ```
 
-- pvc
+The build process will take some time. Upon completion, the image will be tagged as `graphscope/interactive:latest`.
 
-```yaml
-  persistence:
-    ## If true, use a Persistent Volume Claim, If false, use emptyDir
-    ##
-    enabled: true
-    ## Name of existing PVC to hold GraphScope store data
-    ## NOTE: When it's set the rest of persistence parameters are ignored
-    ##
-    existingClaim: "graphscope-interactive-pvc"
-    # existingClaim: ""
+```{note}
+Docker images are platform-specific, meaning an image built on x86_64 (amd64) may not run on arm64 machines. While it can run on other platforms with QEMU support, it will be slower. To create multi-platform images, use [Buildx](https://docs.docker.com/reference/cli/docker/buildx/) or [Docker-Manifest](https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/).
 ```
 
-- common
+### Deploying Customized Built Interactive
 
-```yaml
-frontend:
-  replicaCount: 1 # frontend num
-    service:
-      gremlinPort: 8182 # gremlin service port
-    
-executor:
-  replicaCount: 1 # executor num
+`gsctl` supports deploying an Interactive instance with a customized image.
 
-# hiactor config
-hiactorWorkerNum: 1 # currently only support 1.
-hiactorTimeout: 240000
-
+```bash
+python3 gsctl.py instance deploy --type interactive --image-registry graphscope --image-tag latest
 ```
+
+## Pushing to Your Own Registry
+
+You can push the image to your own registry for access from other machines.
+
+```bash
+docker tag graphscope/interactive:latest {YOUR_IMAGE_REGISTRY}/interactive:{TAG}
+docker push {YOUR_IMAGE_REGISTRY}/interactive:latest
+python3 gsctl.py instance deploy --type interactive --image-registry {YOUR_IMAGE_REGISTRY} --image-tag {TAG}
+```
+
+## Connecting and Using
+
+Refer to [Getting Started](./getting_started.md) for instructions on using Interactive. For detailed usage, consult the [Java SDK Documentation](./development/java/java_sdk.md) and [Python SDK Documentation](./development/python/python_sdk.md).

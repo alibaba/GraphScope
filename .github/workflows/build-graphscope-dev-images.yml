@@ -1,12 +1,10 @@
-name: Build GraphScope Development and Wheel Images
+name: Build GraphScope Dev Images
 
 # build images for:
-# 1) wheel: including all dependencies for graphscope's wheel package.
-# 2) graphscope-dev: including all dependencies for graphscope's development env.
-# 3) vineyard-dev: including all vineyard-related dependencies that could compile graphscope analytical engine.
-# 4) vineyard-runtime: including all vineyard-related running dependencies.
-# Note that:
-#   Due to security considerations, we cannot use self-hosts runner(aarch64) when we configured the secret on github.
+# 1) graphscope-dev: including all dependencies for graphscope development env.
+# 2) vineyard-dev: including all vineyard-related dependencies that could compile graphscope analytical engine.
+# 3) vineyard-runtime: including all vineyard-related running dependencies.
+# 4) `graphscope-dev:wheel`: including all dependencies for building graphscope wheel package
 on:
   workflow_dispatch:
     inputs:
@@ -14,11 +12,6 @@ on:
         description: 'Version for Vineyard (v6d)'
         required: true
         default: 'main'
-      build_wheel:
-        description: 'Whether to build dev-wheel image'
-        required: true
-        default: true
-        type: boolean
       build_graphscope_dev:
         description: 'Whether to build graphscope-dev image'
         required: true
@@ -29,11 +22,17 @@ on:
         required: true
         default: true
         type: boolean
+      build_graphscope_dev_wheel:
+        description: 'Whether to build graphscope-dev:wheel image'
+        required: true
+        default: true
+        type: boolean
   pull_request:
     branches:
       - main
     paths:
-      - 'python/graphscope/gsctl/**'
+      - 'python/graphscope/gsctl/scripts/**'
+      - '.github/workflows/build-graphscope-dev-images.yml'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -43,12 +42,11 @@ env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
-  build-wheel-image-x86-64:
+  build-graphscope-dev-wheel-image-amd64:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev_wheel == 'true') || (github.event_name == 'pull_request')
     runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -58,7 +56,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/k8s
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
         if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/graphscope-dev:wheel-<version>-x86_64
+          # graphscope/graphscope-dev:wheel-<v6d_version>-amd64
           make dev-wheel VINEYARD_VERSION=${VINEYARD_VERSION}
         else
           # pull_request: use default vineyard_version
@@ -72,99 +70,25 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # x86_64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}
-        # dev-wheel image
-        sudo docker tag graphscope/graphscope-dev:wheel-${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-amd64 ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-amd64
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-amd64
 
-  build-wheel-image-aarch64:
-    runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
-    if: false
-
+  build-graphscope-dev-image-amd64:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.event_name == 'pull_request')
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Build Image
       run: |
-        # build wheel image with specified v6d's version
+        # build graphscope dev image with specified v6d version
         cd ${GITHUB_WORKSPACE}/k8s
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
         if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/graphscope-dev:wheel-<version>-aarch64
-          make dev-wheel VINEYARD_VERSION=${VINEYARD_VERSION}
-        else
-          # pull_request: use default vineyard_version
-          make dev-wheel
-        fi
-
-    - name: Release Image
-      if: ${{ github.event_name == 'workflow_dispatch' }}
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # dev-wheel image
-        sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
-
-    - name: Clean Image
-      run: |
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # clean
-        sudo docker rmi -f graphscope/graphscope-dev:wheel-${tag} || true
-        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag} || true
-
-  manifest-push-wheel-image:
-    runs-on: ubuntu-20.04
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_wheel == 'true' }}
-    if: false
-
-    needs: [build-wheel-image-x86-64, build-wheel-image-aarch64]
-    steps:
-    - name: Create and Push Docker Manifest
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # manifest create
-        sudo docker manifest create \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }} \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-x86_64 \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-aarch64
-        # manifest push
-        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}
-
-  build-graphscope-dev-image-x86-64:
-    runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Build Image
-      run: |
-        # build graphscope dev image with specified v6d's version
-        cd ${GITHUB_WORKSPACE}/k8s
-        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-        if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/graphscope-dev:<version>-x86_64
+          # graphscope/graphscope-dev:<v6d_version>-amd64
           make graphscope-dev VINEYARD_VERSION=${VINEYARD_VERSION}
         else
           # pull_request: use default vineyard_version
@@ -178,99 +102,25 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # x86_64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}
-        # graphscope-dev image
-        sudo docker tag graphscope/graphscope-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/graphscope-dev:${VINEYARD_VERSION}-amd64 ${{ env.REGISTRY }}/graphscope/graphscope-dev:${VINEYARD_VERSION}-amd64
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${VINEYARD_VERSION}-amd64
 
-  build-graphscope-dev-image-aarch64:
-    runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
-    if: false
-
+  build-vineyard-dev-image-amd64:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Build Image
       run: |
-        # build graphscope dev image with specified v6d's version
+        # build vineyard dev image with specified v6d version
         cd ${GITHUB_WORKSPACE}/k8s
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
         if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/graphscope-dev:<version>-aarch64
-          make graphscope-dev VINEYARD_VERSION=${VINEYARD_VERSION}
-        else
-          # pull_request: use default vineyard_version
-          make graphscope-dev
-        fi
-
-    - name: Release Image
-      if: ${{ github.event_name == 'workflow_dispatch' }}
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # graphscope-dev image
-        sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
-
-    - name: Clean Image
-      run: |
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # clean
-        sudo docker rmi -f graphscope/graphscope-dev:${tag} || true
-        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag} || true
-
-  manifest-push-graphscope-dev-image:
-    runs-on: ubuntu-20.04
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_graphscope_dev == 'true' }}
-    if: false
-
-    needs: [build-graphscope-dev-image-x86-64, build-graphscope-dev-image-aarch64]
-    steps:
-    - name: Create and Push Docker Manifest
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # manifest create
-        sudo docker manifest create \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }} \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}-x86_64 \
-          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}-aarch64
-        # manifest push
-        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}
-
-  build-vineyard-dev-image-x86-64:
-    runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Build Image
-      run: |
-        # build vineyard dev image with specified v6d's version
-        cd ${GITHUB_WORKSPACE}/k8s
-        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-        if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/vineyard-dev:<version>-x86_64
+          # graphscope/vineyard-dev:<v6d_version>-amd64
           make vineyard-dev VINEYARD_VERSION=${VINEYARD_VERSION}
         else
           # pull_request: use default vineyard_version
@@ -284,35 +134,31 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # x86_64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}
-        # vineyard-dev image
-        sudo docker tag graphscope/vineyard-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
+        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64 ${{ env.REGISTRY }}/graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${VINEYARD_VERSION}-amd64
 
-  build-vineyard-dev-image-aarch64:
-    runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
-    if: false
-
+  build-vineyard-runtime-image-amd64:
+    # only trigger this step in 'workflow_dispatch' event, since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }} || (github.event_name == 'pull_request')
+    runs-on: ubuntu-20.04
+    needs: [build-vineyard-dev-image-amd64]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Build Image
       run: |
-        # build vineyard dev image with specified v6d's version
-        cd ${GITHUB_WORKSPACE}/k8s
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        # build vineyard runtime image with specified v6d version
+        cd ${GITHUB_WORKSPACE}/k8s
         if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/vineyard-dev:<version>-aarch64
-          make vineyard-dev VINEYARD_VERSION=${VINEYARD_VERSION}
+          # graphscope/vineyard-runtime:<v6d_version>-amd64
+          make vineyard-runtime VINEYARD_VERSION=${VINEYARD_VERSION}
         else
           # pull_request: use default vineyard_version
-          make vineyard-dev
+          make vineyard-runtime
         fi
 
     - name: Release Image
@@ -322,151 +168,6 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # vineyard-dev image
-        sudo docker tag graphscope/vineyard-dev:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
-
-    - name: Clean Image
-      run: |
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # clean
-        sudo docker rmi -f graphscope/vineyard-dev:${tag} || true
-        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag} || true
-
-  manifest-push-vineyard-dev-image:
-    runs-on: ubuntu-20.04
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
-    if: false
-
-    needs: [build-vineyard-dev-image-x86-64, build-vineyard-dev-image-aarch64]
-    steps:
-    - name: Create and Push Docker Manifest
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # manifest create
-        sudo docker manifest create \
-          ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }} \
-          ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}-x86_64 \
-          ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}-aarch64
-        # manifest push
-        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}
-
-  build-vineyard-runtime-image-x86-64:
-    runs-on: ubuntu-20.04
-    # only trigger this step in 'workflow_dispatch' event,
-    # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
-
-    needs: [build-vineyard-dev-image-x86-64]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Build Image
-      run: |
-        # build vineyard runtime image with specified v6d's version
-        cd ${GITHUB_WORKSPACE}/k8s
         VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-        if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/vineyard-runtime:<version>-x86_64
-          make vineyard-runtime VINEYARD_VERSION=${VINEYARD_VERSION}
-        else
-          # pull_request: use default vineyard_version
-          make vineyard-runtime
-        fi
-
-    - name: Release Image
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # x86_64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}
-        # vineyard-runtime image
-        sudo docker tag graphscope/vineyard-runtime:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
-
-  build-vineyard-runtime-image-aarch64:
-    runs-on: [self-hosted, Linux, ARM64]
-    # only trigger this step in 'workflow_dispatch' event,
-    # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
-    if: false
-
-    needs: [manifest-push-vineyard-dev-image]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Build Image
-      run: |
-        # build vineyard dev image with specified v6d's version
-        cd ${GITHUB_WORKSPACE}/k8s
-        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-        if [[ -n ${VINEYARD_VERSION} ]]; then
-          # graphscope/vineyard-runtime:<version>-aarch64
-          make vineyard-runtime VINEYARD_VERSION=${VINEYARD_VERSION}
-        else
-          # pull_request: use default vineyard_version
-          make vineyard-runtime
-        fi
-
-    - name: Release Image
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # vineyard-runtime image
-        sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
-
-    - name: Clean Image
-      run: |
-        # aarch64
-        arch=$(uname -m)
-        # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
-        # clean
-        sudo docker rmi -f graphscope/vineyard-runtime:${tag} || true
-        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag} || true
-
-  manifest-push-vineyard-runtime-image:
-    runs-on: ubuntu-20.04
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
-    if: false
-
-    needs: [build-vineyard-runtime-image-x86-64, build-vineyard-runtime-image-aarch64]
-    steps:
-    - name: Create and Push Docker Manifest
-      env:
-        docker_password: ${{ secrets.DOCKER_PASSWORD }}
-        docker_username: ${{ secrets.DOCKER_USER }}
-      run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-        # manifest create
-        sudo docker manifest create \
-          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }} \
-          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}-x86_64 \
-          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}-aarch64
-        # manifest push
-        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/vineyard-runtime:${VINEYARD_VERSION}-amd64 ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${VINEYARD_VERSION}-amd64
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${VINEYARD_VERSION}-amd64

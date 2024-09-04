@@ -22,12 +22,12 @@ import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.groot.common.exception.UnimplementedException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphSchema;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,15 +44,21 @@ public class VineyardIrMetaReader implements IrMetaReader {
     public IrMeta readMeta() throws IOException {
         String schemaString =
                 FileUtils.readFileToString(
-                        new File(GraphConfig.GRAPH_SCHEMA.get(configs)), StandardCharsets.UTF_8);
+                        new File(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs)),
+                        StandardCharsets.UTF_8);
         GraphSchema graphSchema = DefaultGraphSchema.buildSchemaFromJson(schemaString);
         return new IrMeta(new IrGraphSchema(graphSchema, true));
     }
 
     @Override
-    public GraphStatistics readStats(GraphId graphId) throws IOException {
+    public GraphStatistics readStats(GraphId graphId) {
         // TODO: support statistics, otherwise, the CBO will not work
-        throw new NotImplementedException(
+        throw new UnimplementedException(
                 "reading graph statistics in vineyard is unimplemented yet");
+    }
+
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) throws IOException {
+        return false;
     }
 }

@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.*;
@@ -38,6 +39,7 @@ import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -217,6 +219,7 @@ public class GraphBuilder extends RelBuilder {
                         fetchNode,
                         pxdConfig.getResultOpt(),
                         pxdConfig.getPathOpt(),
+                        pxdConfig.getUntilCondition(),
                         pxdConfig.getAlias(),
                         getAliasNameWithId(
                                 pxdConfig.getStartAlias(),
@@ -489,7 +492,8 @@ public class GraphBuilder extends RelBuilder {
         String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         List<ColumnField> columnFields = getAliasField(alias);
         if (columnFields.size() != 1) {
-            throw new IllegalArgumentException(
+            throw new FrontendException(
+                    Code.PROPERTY_NOT_FOUND,
                     "cannot get property="
                             + property
                             + " from alias="
@@ -501,7 +505,8 @@ public class GraphBuilder extends RelBuilder {
         RelDataTypeField aliasField = columnField.right;
         if (property.equals(GraphProperty.LEN_KEY)) {
             if (!(aliasField.getType() instanceof GraphPathType)) {
-                throw new ClassCastException(
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
                         "cannot get property='len' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
@@ -517,7 +522,8 @@ public class GraphBuilder extends RelBuilder {
             }
         }
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
-            throw new ClassCastException(
+            throw new FrontendException(
+                    Code.PROPERTY_NOT_FOUND,
                     "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
@@ -546,6 +552,47 @@ public class GraphBuilder extends RelBuilder {
                     columnField.left,
                     varName,
                     getTypeFactory().createSqlType(SqlTypeName.ANY));
+        } else if (property.equals(GraphProperty.START_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
+                        "cannot get property='start_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                Preconditions.checkArgument(size() > 0, "frame stack is empty");
+                RelNode peek = peek();
+                Preconditions.checkArgument(
+                        peek != null && !peek.getInputs().isEmpty(),
+                        "path expand should have start vertex");
+                RelNode input = peek.getInput(0);
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.START_V),
+                        columnField.left,
+                        varName,
+                        input.getRowType().getFieldList().get(0).getType());
+            }
+        } else if (property.equals(GraphProperty.END_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
+                        "cannot get property='end_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                GraphPathType pathType = (GraphPathType) aliasField.getType();
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.END_V),
+                        columnField.left,
+                        varName,
+                        pathType.getComponentType().getGetVType());
+            }
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
@@ -566,7 +613,8 @@ public class GraphBuilder extends RelBuilder {
             }
             properties.add(pField.getName());
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.PROPERTY_NOT_FOUND,
                 "{property="
                         + property
                         + "} "
@@ -644,7 +692,8 @@ public class GraphBuilder extends RelBuilder {
                 inputQueue.addAll(cur.getInputs());
             }
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.TAG_NOT_FOUND,
                 "{alias="
                         + AliasInference.SIMPLE_NAME(alias)
                         + "} "
@@ -814,7 +863,9 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.BIT_XOR
                 || (sqlKind == SqlKind.OTHER
                         && (operator.getName().equals("IN")
-                                || operator.getName().equals("DATETIME_MINUS")))
+                                || operator.getName().equals("DATETIME_MINUS")
+                                || operator.getName().equals("PATH_CONCAT")
+                                || operator.getName().equals("PATH_FUNCTION")))
                 || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 
@@ -1748,7 +1799,9 @@ public class GraphBuilder extends RelBuilder {
         RelNode top = requireNonNull(peek(), "frame stack is empty");
         // skip intermediate operations which make no changes to the row type, i.e.
         // filter/limit/dedup...
+        RelNode parent = null;
         while (!top.getInputs().isEmpty() && top.getInput(0).getRowType() == top.getRowType()) {
+            parent = top;
             top = top.getInput(0);
         }
         if (top instanceof AbstractBindableTableScan
@@ -1817,7 +1870,7 @@ public class GraphBuilder extends RelBuilder {
                                 fetch == null ? -1 : ((RexLiteral) fetch).getValueAs(Integer.class))
                         .startAlias(pxdExpand.getStartAlias().getAliasName())
                         .alias(alias);
-                pathExpand(pxdBuilder.build());
+                pathExpand(pxdBuilder.buildConfig());
             } else if (top instanceof GraphLogicalProject) {
                 GraphLogicalProject project = (GraphLogicalProject) top;
                 project(project.getProjects(), Lists.newArrayList(alias), project.isAppend());
@@ -1830,6 +1883,10 @@ public class GraphBuilder extends RelBuilder {
                     GraphAggCall aggCall = aggregate.getAggCalls().get(0);
                     aggregate(aggregate.getGroupKey(), ImmutableList.of(aggCall.as(alias)));
                 }
+            }
+            if (parent != null && peek() != top) {
+                parent.replaceInput(0, build());
+                push(parent);
             }
         }
         return this;

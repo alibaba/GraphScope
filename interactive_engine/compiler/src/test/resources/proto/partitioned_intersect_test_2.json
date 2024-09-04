@@ -81,6 +81,9 @@
           "tables": [{
             "id": 0
           }],
+          "columns": [{
+            "name": "creationDate"
+          }],
           "sampleRatio": 1.0
         },
         "alias": 1,
@@ -95,12 +98,24 @@
             "label": {
               "srcLabel": 2,
               "dstLabel": 1
-            }
+            },
+            "props": [{
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }]
           }, {
             "label": {
               "srcLabel": 3,
               "dstLabel": 1
-            }
+            },
+            "props": [{
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }]
           }]
         }
       },

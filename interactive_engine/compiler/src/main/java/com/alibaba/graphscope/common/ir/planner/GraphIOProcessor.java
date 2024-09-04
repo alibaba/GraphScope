@@ -17,6 +17,11 @@
 package com.alibaba.graphscope.common.ir.planner;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.glogue.CountHandler;
+import com.alibaba.graphscope.common.ir.meta.glogue.DetailedExpandCost;
+import com.alibaba.graphscope.common.ir.meta.glogue.DetailedSourceCost;
+import com.alibaba.graphscope.common.ir.meta.glogue.EdgeCostEstimator;
+import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.type.DataKey;
@@ -32,9 +37,11 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.rel.type.JoinVertexEntry;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -46,11 +53,11 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
@@ -59,7 +66,6 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVariable;
-import org.apache.calcite.sql.fun.SqlLibraryOperators;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -151,8 +157,11 @@ public class GraphIOProcessor {
                     .getVertexSet()
                     .forEach(
                             k -> {
-                                if (inputPattern.getEdgesOf(k).stream()
-                                        .allMatch(e -> e.getElementDetails().isOptional())) {
+                                Set<PatternEdge> edges = inputPattern.getEdgesOf(k);
+                                if (!edges.isEmpty()
+                                        && edges.stream()
+                                                .allMatch(
+                                                        e -> e.getElementDetails().isOptional())) {
                                     k.getElementDetails().setOptional(true);
                                 }
                             });
@@ -213,6 +222,10 @@ public class GraphIOProcessor {
                                         parent instanceof GraphLogicalGetV,
                                         "there should be a getV operator after path expand since"
                                                 + " edge in patten should have two endpoints");
+                                Preconditions.checkArgument(
+                                        ((GraphLogicalPathExpand) node).getUntilCondition() == null,
+                                        "cannot apply optimization if path expand has until"
+                                                + " conditions");
                                 PatternVertex vertex = visitAndAddVertex((GraphLogicalGetV) parent);
                                 visitAndAddPxdEdge(
                                         (GraphLogicalPathExpand) node, lastVisited, vertex);
@@ -359,7 +372,9 @@ public class GraphIOProcessor {
                                     new ElementDetails(
                                             expandEdge.getElementDetails().getSelectivity(),
                                             new PathExpandRange(offset, fetch),
-                                            innerGetVTypes);
+                                            innerGetVTypes,
+                                            pxd.getResultOpt(),
+                                            pxd.getPathOpt());
                             expandEdge =
                                     (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
@@ -495,7 +510,115 @@ public class GraphIOProcessor {
             if (value.getFilter() != null) {
                 builder.filter(value.getFilter());
             }
-            return builder.build();
+            RelNode rel = builder.build();
+            addCachedCost(rel, estimateCost(graph, vertex));
+            return rel;
+        }
+
+        // estimate the detailed cost for a `Source` operator
+        private DetailedSourceCost estimateCost(GraphPattern graph, PatternVertex singleVertex) {
+            double selectivity = singleVertex.getElementDetails().getSelectivity();
+            if (Double.compare(selectivity, 1.0d) < 0) {
+                PatternVertex newVertex =
+                        (singleVertex instanceof SinglePatternVertex)
+                                ? new SinglePatternVertex(
+                                        singleVertex.getVertexTypeIds().get(0),
+                                        singleVertex.getId())
+                                : new FuzzyPatternVertex(
+                                        singleVertex.getVertexTypeIds(), singleVertex.getId());
+                graph =
+                        new GraphPattern(
+                                graph.getCluster(), graph.getTraitSet(), new Pattern(newVertex));
+            }
+            double patternCount = mq.getRowCount(graph);
+            return new DetailedSourceCost(patternCount, patternCount * selectivity);
+        }
+
+        // attach the computed cost to each operator to avoid redundant computation
+        private RelNode addCachedCost(RelNode rel, RelOptCost cost) {
+            if (rel instanceof AbstractBindableTableScan) {
+                ((AbstractBindableTableScan) rel).setCachedCost(cost);
+            } else if (rel instanceof GraphLogicalPathExpand) {
+                ((GraphLogicalPathExpand) rel).setCachedCost(cost);
+            } else if (rel instanceof LogicalJoin) {
+                LogicalJoin join = (LogicalJoin) rel;
+                return new LogicalJoin(
+                        ((GraphOptCluster) join.getCluster())
+                                .copy(new LocalState().withCachedCost(cost)),
+                        join.getTraitSet(),
+                        join.getHints(),
+                        join.getLeft(),
+                        join.getRight(),
+                        join.getCondition(),
+                        join.getVariablesSet(),
+                        join.getJoinType(),
+                        join.isSemiJoinDone(),
+                        ImmutableList.copyOf(join.getSystemFieldList()));
+
+            } else if (rel instanceof MultiJoin) {
+                MultiJoin join = (MultiJoin) rel;
+                return new MultiJoin(
+                        ((GraphOptCluster) join.getCluster())
+                                .copy(new LocalState().withCachedCost(cost)),
+                        join.getInputs(),
+                        join.getJoinFilter(),
+                        join.getRowType(),
+                        false,
+                        join.getOuterJoinConditions(),
+                        join.getJoinTypes(),
+                        join.getProjFields(),
+                        join.getJoinFieldRefCountsMap(),
+                        null);
+            }
+            if (rel instanceof GraphLogicalGetV) {
+                addCachedCost(rel.getInput(0), cost);
+            }
+            return rel;
+        }
+
+        // estimate the detailed cost for an `ExtendIntersect` operator
+        private RelOptCost estimateCost(Pattern original, GraphExtendIntersect intersect, int idx) {
+            GlogueExtendIntersectEdge edge = intersect.getGlogueEdge();
+            ExtendEdge extendEdge = edge.getExtendStep().getExtendEdges().get(idx);
+            PatternVertex start =
+                    edge.getSrcPattern().getVertexByOrder(extendEdge.getSrcVertexOrder());
+            PatternVertex target =
+                    edge.getDstPattern()
+                            .getVertexByOrder(edge.getExtendStep().getTargetVertexOrder());
+            PatternEdge patternEdge =
+                    com.alibaba.graphscope.common.ir.meta.glogue.Utils.convert(
+                            extendEdge, start, target);
+            EdgeCostEstimator<DetailedExpandCost> estimator =
+                    new EdgeCostEstimator.Extend(
+                            new CountHandler() {
+                                @Override
+                                public double handle(Pattern pattern) {
+                                    return mq.getRowCount(
+                                            new GraphPattern(
+                                                    intersect.getCluster(),
+                                                    intersect.getTraitSet(),
+                                                    pattern));
+                                }
+
+                                @Override
+                                public double labelConstraintsDeltaCost(
+                                        PatternEdge edge, PatternVertex target) {
+                                    return ((GraphRelMetadataQuery) mq)
+                                            .getGlogueQuery()
+                                            .getLabelConstraintsDeltaCost(edge, target);
+                                }
+                            });
+            DetailedExpandCost cost = estimator.estimate(original, patternEdge, target);
+            PatternVertex src = patternEdge.getSrcVertex();
+            PatternVertex dst = patternEdge.getDstVertex();
+            if (!original.containsVertex(src)) {
+                original.addVertex(src);
+            }
+            if (!original.containsVertex(dst)) {
+                original.addVertex(dst);
+            }
+            original.addEdge(src, dst, patternEdge);
+            return cost;
         }
 
         @Override
@@ -506,48 +629,71 @@ public class GraphIOProcessor {
                     createSubDetails(
                             glogueEdge.getSrcPattern(),
                             glogueEdge.getSrcToTargetOrderMapping(),
+                            null,
                             null);
             ExtendStep extendStep = glogueEdge.getExtendStep();
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
+            Pattern original = new Pattern(intersect.getGlogueEdge().getSrcPattern());
             // convert to GraphLogicalExpand if only one extend edge
             if (extendEdges.size() == 1) {
-                return createExpandGetV(extendEdges.get(0), glogueEdge, edgeDetails, child);
+                return addCachedCost(
+                        createExpandGetV(extendEdges.get(0), glogueEdge, edgeDetails, child),
+                        estimateCost(original, intersect, 0));
             }
             // convert to Multi-Way join
             RelOptTable commonTable = new CommonOptTable(child);
             CommonTableScan commonScan =
                     new CommonTableScan(
                             intersect.getCluster(), intersect.getTraitSet(), commonTable);
+            AtomicInteger counter = new AtomicInteger(0);
             List<RelNode> inputs =
                     extendEdges.stream()
                             .map(
-                                    k ->
-                                            builder.push(
-                                                            createExpandGetV(
-                                                                    k,
-                                                                    glogueEdge,
-                                                                    edgeDetails,
-                                                                    commonScan))
-                                                    .build())
+                                    k -> {
+                                        RelNode input =
+                                                builder.push(
+                                                                createExpandGetV(
+                                                                        k,
+                                                                        glogueEdge,
+                                                                        edgeDetails,
+                                                                        commonScan))
+                                                        .build();
+                                        RelOptCost estimatedCost =
+                                                estimateCost(
+                                                        original,
+                                                        intersect,
+                                                        counter.getAndIncrement());
+                                        addCachedCost(input, estimatedCost);
+                                        return input;
+                                    })
                             .collect(Collectors.toList());
-            return new MultiJoin(
-                    intersect.getCluster(),
-                    inputs,
-                    createIntersectFilter(glogueEdge, edgeDetails, inputs),
-                    deriveIntersectType(inputs),
-                    false,
-                    Stream.generate(() -> (RexNode) null)
-                            .limit(inputs.size())
-                            .collect(Collectors.toList()),
-                    Stream.generate(() -> JoinRelType.INNER)
-                            .limit(inputs.size())
-                            .collect(Collectors.toList()),
-                    Stream.generate(() -> (ImmutableBitSet) null)
-                            .limit(inputs.size())
-                            .collect(Collectors.toList()),
-                    ImmutableMap.of(),
-                    null);
+            RelNode rel =
+                    new MultiJoin(
+                            intersect.getCluster(),
+                            inputs,
+                            createIntersectFilter(glogueEdge, edgeDetails, inputs),
+                            deriveIntersectType(inputs),
+                            false,
+                            Stream.generate(() -> (RexNode) null)
+                                    .limit(inputs.size())
+                                    .collect(Collectors.toList()),
+                            Stream.generate(() -> JoinRelType.INNER)
+                                    .limit(inputs.size())
+                                    .collect(Collectors.toList()),
+                            Stream.generate(() -> (ImmutableBitSet) null)
+                                    .limit(inputs.size())
+                                    .collect(Collectors.toList()),
+                            ImmutableMap.of(),
+                            null);
+            return addCachedCost(
+                    rel,
+                    new RelOptCostImpl(
+                            mq.getRowCount(
+                                    new GraphPattern(
+                                            intersect.getCluster(),
+                                            intersect.getTraitSet(),
+                                            glogueEdge.getDstPattern()))));
         }
 
         @Override
@@ -558,29 +704,37 @@ public class GraphIOProcessor {
                     decomposition.getOrderMappings().getRightToTargetOrderMap();
             List<GraphJoinDecomposition.JoinVertexPair> jointVertices =
                     decomposition.getJoinVertexPairs();
-            Map<DataKey, DataValue> parentVertexDetails =
-                    getJointVertexDetails(jointVertices, buildOrderMap);
+            DataValue defaultValue = new DataValue(generatePxdSplitAlias(), null, null);
+            Map<@Nullable DataKey, DataValue> parentVertexDetails =
+                    getJointVertexDetails(
+                            jointVertices, probeOrderMap, buildOrderMap, defaultValue);
             Map<DataKey, DataValue> probeDetails =
                     createSubDetails(
                             decomposition.getProbePattern(),
                             probeOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 0));
+                            new ParentPattern(decomposition.getParentPatten(), 0),
+                            defaultValue);
             Map<DataKey, DataValue> buildDetails =
                     createSubDetails(
                             decomposition.getBuildPattern(),
                             buildOrderMap,
-                            new ParentPattern(decomposition.getParentPatten(), 1));
+                            new ParentPattern(decomposition.getParentPatten(), 1),
+                            defaultValue);
+            RelNode joinLeft = decomposition.getLeft();
+            RelNode joinRight = decomposition.getRight();
             this.details = probeDetails;
-            RelNode newLeft = visitChild(decomposition, 0, decomposition.getLeft()).getInput(0);
+            RelNode newLeft = visitChild(decomposition, 0, joinLeft).getInput(0);
             this.details = buildDetails;
-            RelNode newRight = visitChild(decomposition, 1, decomposition.getRight()).getInput(1);
+            RelNode newRight = visitChild(decomposition, 1, joinRight).getInput(1);
             RexNode joinCondition =
                     createJoinFilter(
                             jointVertices,
                             parentVertexDetails,
                             newLeft,
                             newRight,
+                            probeOrderMap,
                             buildOrderMap,
+                            decomposition.getProbePattern(),
                             decomposition.getBuildPattern());
             // here we assume all inputs of the join come from different sources
             builder.push(newLeft).push(newRight).join(JoinRelType.INNER, joinCondition);
@@ -647,9 +801,19 @@ public class GraphIOProcessor {
                                 String buildAlias = buildValue.getAlias();
                                 concatExprs.add(
                                         builder.call(
-                                                SqlLibraryOperators.ARRAY_CONCAT,
+                                                GraphStdOperatorTable.PATH_CONCAT,
                                                 builder.variable(probeAlias),
-                                                builder.variable(buildAlias)));
+                                                builder.getRexBuilder()
+                                                        .makeFlag(
+                                                                getConcatDirection(
+                                                                        probeJointVertex,
+                                                                        joinLeft)),
+                                                builder.variable(buildAlias),
+                                                builder.getRexBuilder()
+                                                        .makeFlag(
+                                                                getConcatDirection(
+                                                                        buildJointVertex,
+                                                                        joinRight))));
                                 concatAliases.add(probeValue.getParentAlias());
                             }
                         }
@@ -660,7 +824,25 @@ public class GraphIOProcessor {
                 // removed.
                 builder.project(concatExprs, concatAliases, true);
             }
-            return builder.build();
+            RelNode rel = builder.build();
+            RelOptCost cost =
+                    new RelOptCostImpl(
+                            mq.getRowCount(
+                                    new GraphPattern(
+                                            decomposition.getCluster(),
+                                            decomposition.getTraitSet(),
+                                            decomposition.getParentPatten())));
+            return addCachedCost(rel, cost);
+        }
+
+        private String generatePxdSplitAlias() {
+            return "PATTERN_SPLIT_VERTEX$" + UUID.randomUUID().hashCode();
+        }
+
+        private GraphOpt.GetV getConcatDirection(PatternVertex concatVertex, RelNode splitPattern) {
+            ConcatDirectionVisitor visitor = new ConcatDirectionVisitor(concatVertex);
+            visitor.go(splitPattern);
+            return visitor.direction;
         }
 
         private RexNode createJoinFilter(
@@ -668,51 +850,83 @@ public class GraphIOProcessor {
                 Map<DataKey, DataValue> vertexDetails,
                 RelNode left,
                 RelNode right,
+                Map<Integer, Integer> probeOrderMap,
                 Map<Integer, Integer> buildOrderMap,
+                Pattern probePattern,
                 Pattern buildPattern) {
             List<RexNode> joinCondition = Lists.newArrayList();
             List<RelDataTypeField> leftFields =
                     com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(left).getFieldList();
             for (GraphJoinDecomposition.JoinVertexPair jointVertex : jointVertices) {
-                Integer targetOrderId = buildOrderMap.get(jointVertex.getRightOrderId());
-                if (targetOrderId == null) {
-                    targetOrderId = -1;
-                }
-                DataValue value =
-                        getVertexValue(
-                                new VertexDataKey(targetOrderId),
-                                vertexDetails,
-                                buildPattern.getVertexByOrder(jointVertex.getRightOrderId()));
                 builder.push(left);
-                RexGraphVariable leftVar = builder.variable(value.getAlias());
+                RexNode leftVar =
+                        convert(jointVertex.left, vertexDetails, probeOrderMap, probePattern);
                 builder.build();
                 builder.push(right);
-                RexGraphVariable rightVar = builder.variable(value.getAlias());
+                RexGraphVariable rightVar =
+                        convert(jointVertex.right, vertexDetails, buildOrderMap, buildPattern);
                 rightVar =
-                        RexGraphVariable.of(
-                                rightVar.getAliasId(),
-                                leftFields.size() + rightVar.getIndex(),
-                                rightVar.getName(),
-                                rightVar.getType());
+                        (rightVar.getProperty() == null)
+                                ? RexGraphVariable.of(
+                                        rightVar.getAliasId(),
+                                        leftFields.size() + rightVar.getIndex(),
+                                        rightVar.getName(),
+                                        rightVar.getType())
+                                : RexGraphVariable.of(
+                                        rightVar.getAliasId(),
+                                        rightVar.getProperty(),
+                                        leftFields.size() + rightVar.getIndex(),
+                                        rightVar.getName(),
+                                        rightVar.getType());
                 builder.build();
                 joinCondition.add(builder.equals(leftVar, rightVar));
             }
             return RexUtil.composeConjunction(builder.getRexBuilder(), joinCondition);
         }
 
-        private Map<DataKey, DataValue> getJointVertexDetails(
+        private RexGraphVariable convert(
+                JoinVertexEntry<Integer> joinVertex,
+                Map<@Nullable DataKey, DataValue> vertexDetails,
+                Map<Integer, Integer> orderMap,
+                Pattern pattern) {
+            Integer orderId = orderMap.get(joinVertex.getVertex());
+            VertexDataKey vertexKey = (orderId == null) ? null : new VertexDataKey(orderId);
+            DataValue value =
+                    getVertexValue(
+                            vertexKey,
+                            vertexDetails,
+                            pattern.getVertexByOrder(joinVertex.getVertex()));
+            return joinVertex.getKeyName() != null
+                    ? builder.variable(value.getAlias(), joinVertex.getKeyName())
+                    : builder.variable(value.getAlias());
+        }
+
+        private Map<@Nullable DataKey, DataValue> getJointVertexDetails(
                 List<GraphJoinDecomposition.JoinVertexPair> jointVertices,
-                Map<Integer, Integer> buildOrderMap) {
+                Map<Integer, Integer> probeOrderMap,
+                Map<Integer, Integer> buildOrderMap,
+                DataValue defaultValue) {
             Map<DataKey, DataValue> vertexDetails = Maps.newHashMap();
             jointVertices.forEach(
                     k -> {
-                        Integer targetOrderId = buildOrderMap.get(k.getRightOrderId());
-                        if (targetOrderId != null) {
-                            VertexDataKey dataKey = new VertexDataKey(targetOrderId);
+                        Integer buildOrderId = buildOrderMap.get(k.getRightOrderId());
+                        if (buildOrderId != null) {
+                            VertexDataKey dataKey = new VertexDataKey(buildOrderId);
                             DataValue value = details.get(dataKey);
                             if (value != null) {
                                 vertexDetails.put(dataKey, value);
                             }
+                        }
+                        Integer probeOrderId = probeOrderMap.get(k.getLeftOrderId());
+                        if (probeOrderId != null) {
+                            VertexDataKey dataKey = new VertexDataKey(probeOrderId);
+                            DataValue value = details.get(dataKey);
+                            if (!vertexDetails.containsKey(dataKey) && value != null) {
+                                vertexDetails.put(dataKey, value);
+                            }
+                        }
+                        if (buildOrderId == null && probeOrderId == null) {
+                            vertexDetails.put(null, defaultValue);
                         }
                     });
             return vertexDetails;
@@ -760,11 +974,10 @@ public class GraphIOProcessor {
             if (srcInTargetOrderId == null) {
                 srcInTargetOrderId = -1;
             }
+            PatternVertex src =
+                    glogueEdge.getSrcPattern().getVertexByOrder(edge.getSrcVertexOrder());
             DataValue srcValue =
-                    getVertexValue(
-                            new VertexDataKey(srcInTargetOrderId),
-                            edgeDetails,
-                            glogueEdge.getSrcPattern().getVertexByOrder(edge.getSrcVertexOrder()));
+                    getVertexValue(new VertexDataKey(srcInTargetOrderId), edgeDetails, src);
             PatternVertex target =
                     glogueEdge.getDstPattern().getVertexByOrder(extendStep.getTargetVertexOrder());
             DataValue targetValue =
@@ -797,19 +1010,27 @@ public class GraphIOProcessor {
                 GetVConfig innerGetVConfig =
                         new GetVConfig(
                                 getVConfig.getOpt(),
-                                createLabels(edge.getElementDetails().getPxdInnerGetVTypes(), true),
+                                createLabels(
+                                        createInnerGetVTypes(
+                                                src.getVertexTypeIds(),
+                                                target.getVertexTypeIds(),
+                                                edge.getElementDetails()),
+                                        true),
                                 getVConfig.getAlias());
+                GraphOpt.PathExpandResult resultOpt = edge.getElementDetails().getResultOpt();
+                GraphOpt.PathExpandPath pathOpt = edge.getElementDetails().getPathOpt();
                 pxdBuilder
                         .getV(innerGetVConfig)
-                        .resultOpt(GraphOpt.PathExpandResult.END_V)
-                        .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
+                        .resultOpt(resultOpt == null ? GraphOpt.PathExpandResult.END_V : resultOpt)
+                        .pathOpt(pathOpt == null ? GraphOpt.PathExpandPath.ARBITRARY : pathOpt)
                         .alias(edgeValue.getAlias())
                         .startAlias(srcValue.getAlias())
                         .range(
                                 edge.getElementDetails().getRange().getOffset(),
                                 edge.getElementDetails().getRange().getFetch());
                 GraphLogicalPathExpand pxd =
-                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.build()).build();
+                        (GraphLogicalPathExpand)
+                                builder.pathExpand(pxdBuilder.buildConfig()).build();
                 GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
                 GraphSchemaType edgeType =
                         (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
@@ -823,9 +1044,6 @@ public class GraphIOProcessor {
                                         getVConfig.getLabels(),
                                         getVConfig.getAlias(),
                                         getVConfig.getStartAlias()));
-                if (targetValue.getFilter() != null) {
-                    builder.filter(targetValue.getFilter());
-                }
             } else {
                 GraphLogicalExpand expand =
                         createExpandWithOptional(
@@ -839,11 +1057,32 @@ public class GraphIOProcessor {
                     builder.filter(edgeValue.getFilter());
                 }
                 builder.getV(getVConfig);
-                if (targetValue.getFilter() != null) {
-                    builder.filter(targetValue.getFilter());
-                }
+            }
+            if (targetValue.getFilter() != null) {
+                builder.filter(targetValue.getFilter());
             }
             return builder.build();
+        }
+
+        // Handle a special case for path expand: re-infer the type of inner getV in path expand.
+        // Before optimization, the type of path expand is inferred based on the user's query order,
+        // resulting in the type of inner endV being bound to this order.
+        // However, if the optimizer reverses the order of the path expand, the type of inner endV
+        // also needs to be reversed accordingly.
+        private List<Integer> createInnerGetVTypes(
+                List<Integer> startVTypes, List<Integer> endVTypes, ElementDetails details) {
+            List<Integer> originalInnerVTypes = details.getPxdInnerGetVTypes();
+            if (!originalInnerVTypes.isEmpty()) {
+                if (!endVTypes.isEmpty() && originalInnerVTypes.containsAll(endVTypes)) {
+                    return originalInnerVTypes;
+                } else if (!startVTypes.isEmpty() && originalInnerVTypes.containsAll(startVTypes)) {
+                    List<Integer> reverseTypes = Lists.newArrayList(originalInnerVTypes);
+                    reverseTypes.removeAll(startVTypes);
+                    reverseTypes.addAll(endVTypes);
+                    return reverseTypes.stream().distinct().collect(Collectors.toList());
+                }
+            }
+            return endVTypes;
         }
 
         private GraphLogicalPathExpand createPathExpandWithOptional(
@@ -858,6 +1097,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);
@@ -872,6 +1112,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);
@@ -1043,7 +1284,8 @@ public class GraphIOProcessor {
         private Map<DataKey, DataValue> createSubDetails(
                 Pattern subPattern,
                 Map<Integer, Integer> orderMappings,
-                @Nullable ParentPattern parentPattern) {
+                @Nullable ParentPattern parentPattern,
+                @Nullable DataValue defaultValue) {
             Map<DataKey, DataValue> newDetails = Maps.newHashMap();
             subPattern
                     .getVertexSet()
@@ -1056,6 +1298,8 @@ public class GraphIOProcessor {
                                     if (value != null) {
                                         newDetails.put(new VertexDataKey(newOrderId), value);
                                     }
+                                } else if (defaultValue != null) {
+                                    newDetails.put(new VertexDataKey(newOrderId), defaultValue);
                                 }
                             });
             subPattern
@@ -1133,6 +1377,53 @@ public class GraphIOProcessor {
                 srcOrderId = -1;
             }
             return new EdgeDataKey(srcOrderId, targetOrderId, edge.getDirection());
+        }
+
+        // given a concat vertex, help to determine its direction in the split path expand
+        private class ConcatDirectionVisitor extends RelVisitor {
+            private GraphOpt.GetV direction;
+            private final PatternVertex concatVertex;
+
+            public ConcatDirectionVisitor(PatternVertex concatVertex) {
+                this.concatVertex = concatVertex;
+                this.direction = null;
+            }
+
+            @Override
+            public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                if (direction != null) return;
+                if (node instanceof GraphExtendIntersect) {
+                    GlogueExtendIntersectEdge intersect =
+                            ((GraphExtendIntersect) node).getGlogueEdge();
+                    ExtendStep extendStep = intersect.getExtendStep();
+                    PatternVertex dstVertex =
+                            intersect
+                                    .getDstPattern()
+                                    .getVertexByOrder(extendStep.getTargetVertexOrder());
+                    if (dstVertex.equals(concatVertex)) {
+                        direction = GraphOpt.GetV.END;
+                        return;
+                    }
+                    for (ExtendEdge edge : extendStep.getExtendEdges()) {
+                        PatternVertex srcVertex =
+                                intersect
+                                        .getSrcPattern()
+                                        .getVertexByOrder(edge.getSrcVertexOrder());
+                        if (srcVertex.equals(concatVertex)) {
+                            direction = GraphOpt.GetV.START;
+                            return;
+                        }
+                    }
+                } else if (node instanceof GraphPattern) {
+                    PatternVertex vertex =
+                            ((GraphPattern) node).getPattern().getVertexSet().iterator().next();
+                    if (vertex.equals(concatVertex)) {
+                        direction = GraphOpt.GetV.START;
+                        return;
+                    }
+                }
+                node.childrenAccept(this);
+            }
         }
     }
 }

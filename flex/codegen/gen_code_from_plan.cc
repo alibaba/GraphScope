@@ -73,7 +73,8 @@ void deserialize_plan_and_gen_pegasus(const std::string& input_file_path,
 
 void deserialize_plan_and_gen_hqps(const std::string& input_file_path,
                                    const std::string& output_file_path,
-                                   const std::string& graph_schema_path) {
+                                   const std::string& graph_schema_path,
+                                   bool dump_json_plan = true) {
   LOG(INFO) << "Start deserializing from: " << input_file_path;
   std::string content_str = read_binary_str_from_path(input_file_path);
   LOG(INFO) << "Deserialized plan size : " << content_str.size() << ", from "
@@ -83,6 +84,16 @@ void deserialize_plan_and_gen_hqps(const std::string& input_file_path,
   CHECK(plan_pb.ParseFromArray(content_str.data(), content_str.size()));
   LOG(INFO) << "deserialized plan size : " << plan_pb.ByteSizeLong();
   VLOG(1) << "deserialized plan : " << plan_pb.DebugString();
+  if (dump_json_plan) {
+    std::string output_path = output_file_path + ".json";
+    std::string json_plan;
+    google::protobuf::util::JsonOptions option;
+    option.always_print_primitive_fields = true;
+    google::protobuf::util::MessageToJsonString(plan_pb, &json_plan, option);
+    std::ofstream out(output_path);
+    out << json_plan;
+    out.close();
+  }
   BuildingContext context;
   std::shared_ptr<QueryGenerator<uint8_t>> query_generator;
   // load schema
@@ -120,6 +131,11 @@ int main(int argc, char** argv) {
       "output,o", bpo::value<std::string>(), "output file path")(
       "graph,g", bpo::value<std::string>()->default_value(""),
       "graph schema path");
+  google::InitGoogleLogging(argv[0]);
+  FLAGS_logtostderr =
+      false;  // We avoid outputting logs to stderr to allow the interactive
+              // server capturing error logs and returning them to the
+              // client when code generation fails.
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);

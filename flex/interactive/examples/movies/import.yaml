@@ -57,7 +57,7 @@ edge_mappings:
       destination_vertex:  Movie
     column_mappings:
       - column:
-          index: 3
+          index: 2
           name: rating
         property: rating
     inputs:

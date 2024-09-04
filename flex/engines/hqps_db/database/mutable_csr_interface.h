@@ -21,6 +21,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/core/null_record.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/utils/exception.h"
 
 #include "flex/engines/hqps_db/database/adj_list.h"
 #include "grape/utils/bitset.h"
@@ -294,8 +295,8 @@ class MutableCSRInterface {
       const label_id_t& label_id, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    // auto label_id = db_session_.schema().get_vertex_label_id(label);
-    CHECK(label_id < db_session_.schema().vertex_label_num());
+    THROW_EXCEPTION_IF(label_id >= db_session_.schema().vertex_label_num(),
+                       "Invalid label id: " + std::to_string(label_id));
     std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<std::tuple<T...>> props(vids.size());
@@ -388,7 +389,8 @@ class MutableCSRInterface {
     std::vector<std::tuple<T...>> props(total_size);
     std::vector<label_t> label_ids;
     for (label_id_t label : labels) {
-      CHECK(label < db_session_.schema().vertex_label_num());
+      THROW_EXCEPTION_IF(label >= db_session_.schema().vertex_label_num(),
+                         "Invalid label id: " + std::to_string(label));
       label_ids.emplace_back(label);
     }
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
@@ -409,8 +411,6 @@ class MutableCSRInterface {
                           std::vector<column_tuple_t>& columns,
                           const std::vector<vertex_id_t>& vids,
                           const grape::Bitset& bitset) const {
-    // auto index_seq = std::make_index_sequence<sizeof...(T)>{};
-
     {
       auto& column_tuple0 = columns[0];
       auto& column_tuple1 = columns[1];
@@ -571,11 +571,8 @@ class MutableCSRInterface {
                                                  edge_label_id);
       auto csr1 = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                  edge_label_id);
-      // CHECK(csr0);
-      // CHECK(csr1);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr0, csr1, vids);
     } else {
-      // LOG(FATAL) << "Not implemented - " << direction_str;
       throw std::runtime_error("Not implemented - " + direction_str);
     }
   }
@@ -665,12 +662,13 @@ class MutableCSRInterface {
                                                    edge_label_id);
       auto oe_csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                    edge_label_id);
-      auto size = 0;
+      size_t size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += ie_csr->edge_iter(v)->size();
         size += oe_csr->edge_iter(v)->size();
       }
+      LOG(INFO) << "size: " << size;
       ret_v.reserve(size);
       ret_offset.reserve(vids.size() + 1);
       ret_offset.emplace_back(0);
@@ -833,8 +831,8 @@ class MutableCSRInterface {
     } else {
       auto ptr = db_session_.get_vertex_property_column(label_id, prop_name);
       if (ptr) {
-        column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
-            create_ref_column(ptr));
+        column =
+            std::dynamic_pointer_cast<TypedRefColumn<T>>(CreateRefColumn(ptr));
       } else {
         return nullptr;
       }
@@ -849,7 +847,7 @@ class MutableCSRInterface {
     } else if (prop_name == "Label" || prop_name == "LabelKey") {
       return std::make_shared<TypedRefColumn<LabelKey>>(label_id);
     } else {
-      return create_ref_column(
+      return CreateRefColumn(
           db_session_.get_vertex_property_column(label_id, prop_name));
     }
   }
@@ -862,40 +860,6 @@ class MutableCSRInterface {
   }
 
  private:
-  std::shared_ptr<RefColumnBase> create_ref_column(
-      std::shared_ptr<ColumnBase> column) const {
-    auto type = column->type();
-    if (type == PropertyType::kBool) {
-      return std::make_shared<TypedRefColumn<bool>>(
-          *std::dynamic_pointer_cast<TypedColumn<bool>>(column));
-    } else if (type == PropertyType::kInt32) {
-      return std::make_shared<TypedRefColumn<int>>(
-          *std::dynamic_pointer_cast<TypedColumn<int>>(column));
-    } else if (type == PropertyType::kInt64) {
-      return std::make_shared<TypedRefColumn<int64_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<int64_t>>(column));
-    } else if (type == PropertyType::kUInt32) {
-      return std::make_shared<TypedRefColumn<uint32_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<uint32_t>>(column));
-    } else if (type == PropertyType::kUInt64) {
-      return std::make_shared<TypedRefColumn<uint64_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
-    } else if (type == PropertyType::kDate) {
-      return std::make_shared<TypedRefColumn<Date>>(
-          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<TypedRefColumn<std::string_view>>(
-          *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
-    } else if (type == PropertyType::kFloat) {
-      return std::make_shared<TypedRefColumn<float>>(
-          *std::dynamic_pointer_cast<TypedColumn<float>>(column));
-    } else {
-      LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type.type_enum);
-      return nullptr;
-    }
-  }
-
   template <typename PropT>
   auto get_single_column_from_graph_with_property(
       label_t label, const PropertySelector<PropT>& selector) const {

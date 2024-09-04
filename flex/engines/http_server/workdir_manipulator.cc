@@ -16,12 +16,16 @@
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 
+#include <boost/uuid/uuid.hpp>             // uuid class
+#include <boost/uuid/uuid_generators.hpp>  // generators
+#include <boost/uuid/uuid_io.hpp>          // streaming operators etc.
+
 // Write a macro to define the function, to check whether a filed presents in a
 // json object.
 #define CHECK_JSON_FIELD(json, field)                                         \
   if (!json.contains(field)) {                                                \
     return gs::Result<seastar::sstring>(                                      \
-        gs::Status(gs::StatusCode::InValidArgument,                           \
+        gs::Status(gs::StatusCode::INVALID_ARGUMENT,                          \
                    "Procedure " + std::string(field) + " is not specified")); \
   }
 
@@ -40,14 +44,14 @@ gs::Result<seastar::sstring> WorkDirManipulator::DumpGraphSchema(
   // First check graph exits
   if (!yaml_config["name"]) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InvalidSchema,
+        gs::Status(gs::StatusCode::INVALID_SCHEMA,
                    "Graph name is not specified"),
         seastar::sstring("Graph name is not specified"));
   }
 
   if (is_graph_exist(graph_id)) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::AlreadyExists, "Graph already exists"),
+        gs::Status(gs::StatusCode::ALREADY_EXISTS, "Graph already exists"),
         seastar::sstring("graph " + graph_id + " already exists"));
   }
 
@@ -62,7 +66,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DumpGraphSchema(
   auto dump_res = dump_graph_schema(yaml_config, graph_id);
   if (!dump_res.ok()) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::PermissionError,
+        gs::StatusCode::PERMISSION_DENIED,
         "Fail to dump graph schema: " + dump_res.status().error_message()));
   }
   VLOG(10) << "Successfully dump graph schema to file: " << graph_id << ", "
@@ -78,7 +82,7 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
   auto graph_id = graph_meta.id;
   if (!is_graph_exist(graph_id)) {
     return gs::Result<bool>(
-        gs::Status(gs::StatusCode::NotExists, "Graph not exists: " + graph_id),
+        gs::Status(gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_id),
         false);
   }
   auto graph_schema = graph_meta.ToJson();
@@ -87,7 +91,7 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
     yaml_node = YAML::Load(graph_schema);
   } catch (const std::exception& e) {
     return gs::Result<bool>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to parse graph schema: " + graph_schema +
                        ", error: " + e.what()),
         false);
@@ -105,7 +109,8 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       YAML::Node plugin_node;
       plugin_node["name"] = plugin.name;
       plugin_node["library"] = plugin.library;
-      plugin_node["description"] = plugin.description;
+      // quote the description, since it may contain space.
+      plugin_node["description"] = "\"" + plugin.description + "\"";
       if (plugin.params.size() > 0) {
         YAML::Node params_node;
         for (auto& param : plugin.params) {
@@ -130,7 +135,7 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
   }
   auto dump_res = dump_graph_schema(yaml_node, graph_id);
   if (!dump_res.ok()) {
-    return gs::Result<bool>(gs::Status(gs::StatusCode::PermissionError,
+    return gs::Result<bool>(gs::Status(gs::StatusCode::PERMISSION_DENIED,
                                        "Fail to dump graph schema: " +
                                            dump_res.status().error_message()),
                             false);
@@ -144,21 +149,21 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
     const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::NotExists,
+        gs::Status(gs::StatusCode::NOT_FOUND,
                    "Graph not exists: " + graph_name),
         seastar::sstring());
   }
   auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   // read schema file and output to string
   auto schema_str_res = gs::get_json_string_from_yaml(schema_file);
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::NotExists,
+        gs::Status(gs::StatusCode::NOT_FOUND,
                    "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
@@ -172,12 +177,12 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
   gs::Schema schema;
   if (!is_graph_exist(graph_name)) {
     return gs::Result<gs::Schema>(gs::Status(
-        gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
+        gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_name));
   }
   auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<gs::Schema>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   // Load schema from schema_file
@@ -192,7 +197,7 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
     LOG(ERROR) << "Fail to load graph schema: " << schema_file
                << ", error: " << e.what();
     return gs::Result<gs::Schema>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to load graph schema: " + schema_file +
                        ", for graph: " + graph_name + e.what()));
   }
@@ -203,7 +208,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetDataDirectory(
     const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::NotExists,
+        gs::Status(gs::StatusCode::NOT_FOUND,
                    "Graph not exists: " + graph_name),
         seastar::sstring());
   }
@@ -240,7 +245,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
   auto json_str = gs::get_json_string_from_yaml(yaml_list);
   if (!json_str.ok()) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to convert yaml to json: " + json_str.status().error_message()));
   }
   return gs::Result<seastar::sstring>(json_str.value());
@@ -254,7 +259,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
     std::filesystem::remove_all(graph_path);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to remove graph directory: " + graph_name),
         seastar::sstring("Fail to remove graph directory: " + graph_name));
   }
@@ -269,7 +274,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
+        gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_name));
   }
 
   // No need to check whether graph exists, because it is checked in LoadGraph
@@ -284,7 +289,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     schema = schema_res.value();
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to load graph schema: " + schema_file +
                        ", for graph: " + graph_name));
   }
@@ -295,7 +300,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
       gs::LoadingConfig::ParseFromYamlNode(schema, yaml_node);
   if (!loading_config_res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    loading_config_res.status().error_message()));
   }
   // dump to file
@@ -318,13 +323,13 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProceduresByGraphName(
     const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
+        gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_name));
   }
   // get graph schema file, and get procedure lists.
   auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   YAML::Node schema_node;
@@ -332,7 +337,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProceduresByGraphName(
     schema_node = YAML::LoadFile(schema_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
   if (schema_node["stored_procedures"]) {
@@ -362,13 +367,13 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
     const std::string& graph_id, const std::string& procedure_id) {
   if (!is_graph_exist(graph_id)) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::NotExists, "Graph not exists: " + graph_id));
+        gs::Status(gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_id));
   }
   // get graph schema file, and get procedure lists.
   auto schema_file = GetGraphSchemaPath(graph_id);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   YAML::Node schema_node;
@@ -376,20 +381,20 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
     schema_node = YAML::LoadFile(schema_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
   // get yaml file in plugin directory.
   auto plugin_dir = GetGraphPluginDir(graph_id);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph plugin directory is expected, but not exists: " + plugin_dir));
   }
   auto plugin_file = plugin_dir + "/" + procedure_id + ".yaml";
   if (!std::filesystem::exists(plugin_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "plugin not found " + plugin_file));
+        gs::StatusCode::NOT_FOUND, "plugin not found " + plugin_file));
   }
   // check whether procedure is enabled.
   YAML::Node plugin_node;
@@ -397,7 +402,7 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
     plugin_node = YAML::LoadFile(plugin_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph plugin: " + plugin_file + ", error: " + e.what()));
   }
   return gs::Result<seastar::sstring>(
@@ -448,37 +453,37 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteProcedure(
             << " on graph: " << graph_name;
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
+        gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_name));
   }
   // remove the plugin file and dynamic lib
   auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph plugin directory is expected, but not exists: " + plugin_dir));
   }
   auto plugin_file = plugin_dir + "/" + procedure_name + ".yaml";
   if (!std::filesystem::exists(plugin_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "plugin not found " + plugin_file));
+        gs::StatusCode::NOT_FOUND, "plugin not found " + plugin_file));
   }
   try {
     std::filesystem::remove(plugin_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to remove plugin file: " + plugin_file + ", error: " + e.what()));
   }
   auto plugin_lib = plugin_dir + "/lib" + procedure_name + ".so";
   if (!std::filesystem::exists(plugin_lib)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "plugin lib not found " + plugin_lib));
+        gs::StatusCode::NOT_FOUND, "plugin lib not found " + plugin_lib));
   }
   try {
     std::filesystem::remove(plugin_lib);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to remove plugin lib: " + plugin_lib + ", error: " + e.what()));
   }
   return gs::Result<seastar::sstring>(gs::Status::OK(),
@@ -493,13 +498,13 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
   auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph plugin directory is expected, but not exists: " + plugin_dir));
   }
   auto plugin_file = plugin_dir + "/" + procedure_name + ".yaml";
   if (!std::filesystem::exists(plugin_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "plugin not found " + plugin_file));
+        gs::StatusCode::NOT_FOUND, "plugin not found " + plugin_file));
   }
   // load parameter as json, and do some check
   nlohmann::json json;
@@ -507,7 +512,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     json = nlohmann::json::parse(parameters);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to parse parameter as json: " + parameters));
   }
   VLOG(1) << "Successfully parse json parameters: " << json.dump();
@@ -517,7 +522,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     plugin_node = YAML::LoadFile(plugin_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph plugin: " + plugin_file + ", error: " + e.what()));
   }
   // update description and enable status.
@@ -525,7 +530,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     auto new_description = json["description"];
     VLOG(10) << "Update description: "
              << new_description;  // update description
-    plugin_node["description"] = new_description.get<std::string>();
+    // quote the description, since it may contain space.
+    plugin_node["description"] =
+        "\"" + new_description.get<std::string>() + "\"";
   }
 
   bool enabled;
@@ -543,7 +550,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
       }
     } else {
       return gs::Result<seastar::sstring>(
-          gs::Status(gs::StatusCode::InternalError,
+          gs::Status(gs::StatusCode::INTERNAL_ERROR,
                      "Fail to parse enable field: " + json["enable"].dump()));
     }
     plugin_node["enable"] = enabled;
@@ -553,7 +560,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
   auto dump_res = dump_yaml_to_file(plugin_node, plugin_file);
   if (!dump_res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump plugin yaml to file: " + plugin_file +
                        ", error: " + dump_res.status().error_message()));
   }
@@ -570,19 +577,19 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProcedureLibPath(
     const std::string& graph_name, const std::string& procedure_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
+        gs::StatusCode::NOT_FOUND, "Graph not exists: " + graph_name));
   }
   // get the plugin dir and append procedure_name
   auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph plugin directory is expected, but not exists: " + plugin_dir));
   }
   auto plugin_so_path = plugin_dir + "/lib" + procedure_name + ".so";
   if (!std::filesystem::exists(plugin_so_path)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists,
+        gs::StatusCode::NOT_FOUND,
         "Graph plugin so file is expected, but not exists: " + plugin_so_path));
   }
   return gs::Result<seastar::sstring>(plugin_so_path);
@@ -615,6 +622,14 @@ std::string WorkDirManipulator::GetLogDir() {
   return log_dir;
 }
 
+std::string WorkDirManipulator::GetUploadDir() {
+  auto upload_dir = workspace + UPLOAD_DIR;
+  if (!std::filesystem::exists(upload_dir)) {
+    std::filesystem::create_directory(upload_dir);
+  }
+  return upload_dir;
+}
+
 std::string WorkDirManipulator::GetCompilerLogFile() {
   // with timestamp
   auto time_stamp = std::to_string(
@@ -639,10 +654,35 @@ gs::Result<std::string> WorkDirManipulator::CommitTempIndices(
     std::filesystem::remove_all(indices_dir);
   }
   if (!std::filesystem::exists(temp_indices_dir)) {
-    return {gs::Status(gs::StatusCode::NotFound, "Temp indices dir not found")};
+    return {
+        gs::Status(gs::StatusCode::NOT_FOUND, "Temp indices dir not found")};
   }
   std::filesystem::rename(temp_indices_dir, indices_dir);
   return indices_dir;
+}
+
+gs::Result<std::string> WorkDirManipulator::CreateFile(
+    const seastar::sstring& content) {
+  if (content.size() == 0) {
+    return {gs::Status(gs::StatusCode::INVALID_ARGUMENT, "Content is empty")};
+  }
+  if (content.size() > MAX_CONTENT_SIZE) {
+    return {
+        gs::Status(gs::StatusCode::INVALID_ARGUMENT,
+                   "Content is too large" + std::to_string(content.size()))};
+  }
+
+  // get the timestamp as the file name
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  auto file_name = GetUploadDir() + "/" + boost::uuids::to_string(uuid);
+  std::ofstream fout(file_name);
+  if (!fout.is_open()) {
+    return {gs::Status(gs::StatusCode::PERMISSION_DENIED, "Fail to open file")};
+  }
+  fout << content;
+  fout.close();
+  LOG(INFO) << "Successfully create file: " << file_name;
+  return file_name;
 }
 
 // graph_name can be a path, first try as it is absolute path, or
@@ -696,14 +736,14 @@ bool WorkDirManipulator::ensure_graph_dir_exists(
 gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
     const YAML::Node& yaml_config, const std::string& graph_name) {
   if (!ensure_graph_dir_exists(graph_name)) {
-    return {gs::Status(gs::StatusCode::PermissionError,
+    return {gs::Status(gs::StatusCode::PERMISSION_DENIED,
                        "Fail to create graph directory")};
   }
   auto graph_path = GetGraphSchemaPath(graph_name);
   VLOG(10) << "Dump graph schema to file: " << graph_path;
   std::ofstream fout(graph_path);
   if (!fout.is_open()) {
-    return {gs::Status(gs::StatusCode::PermissionError, "Fail to open file")};
+    return {gs::Status(gs::StatusCode::PERMISSION_DENIED, "Fail to open file")};
   }
   std::string yaml_str;
   ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
@@ -850,7 +890,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
               << ", enable: " << json["enable"].get<bool>();
   } else {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InValidArgument,
+        gs::Status(gs::StatusCode::INVALID_ARGUMENT,
                    "Procedure type is not supported: " + type));
   }
 
@@ -919,6 +959,11 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
       .then_wrapped([plugin_id = plugin_id, output_dir](auto&& f) {
         try {
           auto res = f.get();
+          if (!res.ok()) {
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error("Fail to generate procedure, error: " +
+                                   res.status().error_message()));
+          }
           std::string so_file;
           {
             std::stringstream ss;
@@ -978,7 +1023,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
             LOG(ERROR) << "Procedure yaml file not contains name: "
                        << procedure_yaml_file;
             return gs::Result<seastar::sstring>(
-                gs::Status(gs::StatusCode::InternalError,
+                gs::Status(gs::StatusCode::INTERNAL_ERROR,
                            "Procedure yaml file not contains name: " +
                                procedure_yaml_file));
           }
@@ -993,7 +1038,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
           LOG(ERROR) << "Fail to load procedure yaml file: "
                      << procedure_yaml_file << ", error: " << e.what();
           return gs::Result<seastar::sstring>(gs::Status(
-              gs::StatusCode::InternalError,
+              gs::StatusCode::INTERNAL_ERROR,
               "Fail to load procedure yaml file: " + procedure_yaml_file +
                   ", error: " + e.what()));
         }
@@ -1004,7 +1049,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
   auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump procedure yaml list to json, error: " +
                        res.status().error_message()));
   }
@@ -1029,7 +1074,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
           LOG(ERROR) << "Fail to load procedure yaml file: "
                      << procedure_yaml_file << ", error: " << e.what();
           return gs::Result<seastar::sstring>(gs::Status(
-              gs::StatusCode::InternalError,
+              gs::StatusCode::INTERNAL_ERROR,
               "Fail to load procedure yaml file: " + procedure_yaml_file +
                   ", error: " + e.what()));
         }
@@ -1040,7 +1085,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
   auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump procedure yaml list to json, error: " +
                        res.status().error_message()));
   }
@@ -1054,7 +1099,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_procedure_yaml(
   if (!std::filesystem::exists(procedure_yaml_file)) {
     LOG(ERROR) << "Procedure yaml file not exists: " << procedure_yaml_file;
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Procedure yaml file not exists: " + procedure_yaml_file));
   }
   try {
@@ -1068,12 +1113,12 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_procedure_yaml(
     LOG(ERROR) << "Fail to load procedure yaml file: " << procedure_yaml_file
                << ", error: " << e.what();
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to load procedure yaml file: " + procedure_yaml_file +
                        ", error: " + e.what()));
   }
   return gs::Result<seastar::sstring>(
-      gs::Status(gs::StatusCode::InternalError, "Unknown error"));
+      gs::Status(gs::StatusCode::INTERNAL_ERROR, "Unknown error"));
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
@@ -1084,7 +1129,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
   auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph schema file not exists: " +
+        gs::StatusCode::NOT_FOUND, "Graph schema file not exists: " +
                                        schema_file + ", graph: " + graph_name));
   }
   YAML::Node schema_node;
@@ -1092,7 +1137,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
     schema_node = YAML::LoadFile(schema_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
   if (!schema_node["stored_procedures"]) {
@@ -1117,7 +1162,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
   auto dump_res = dump_yaml_to_file(schema_node, schema_file);
   if (!dump_res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump graph schema: " + schema_file +
                        ", error: " + dump_res.status().error_message()));
   }
@@ -1132,7 +1177,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
   auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::NotExists, "Graph schema file not exists: " +
+        gs::StatusCode::NOT_FOUND, "Graph schema file not exists: " +
                                        schema_file + ", graph: " + graph_name));
   }
   YAML::Node schema_node;
@@ -1140,7 +1185,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
     schema_node = YAML::LoadFile(schema_file);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(gs::Status(
-        gs::StatusCode::InternalError,
+        gs::StatusCode::INTERNAL_ERROR,
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
   if (!schema_node["stored_procedures"]) {
@@ -1171,7 +1216,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
   auto dump_res = dump_yaml_to_file(schema_node, schema_file);
   if (!dump_res.ok()) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump graph schema: " + schema_file +
                        ", error: " + dump_res.status().error_message()));
   }
@@ -1187,7 +1232,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::dump_yaml_to_file(
     std::ofstream fout(procedure_yaml_file);
     if (!fout.is_open()) {
       return gs::Result<seastar::sstring>(
-          gs::Status(gs::StatusCode::InternalError,
+          gs::Status(gs::StatusCode::INTERNAL_ERROR,
                      "Fail to open file: " + procedure_yaml_file +
                          ", error: " + std::string(std::strerror(errno))));
     }
@@ -1195,12 +1240,12 @@ gs::Result<seastar::sstring> WorkDirManipulator::dump_yaml_to_file(
     fout.close();
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump yaml to file: " + procedure_yaml_file +
                        ", error: " + std::string(e.what())));
   } catch (...) {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to dump yaml to file: " + procedure_yaml_file +
                        ", unknown error"));
   }
@@ -1223,7 +1268,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphLoaderBin() {
     return gs::Result<seastar::sstring>(graph_loader_bin_path);
   } else {
     return gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to find graph loader binary: " + GRAPH_LOADER_BIN));
   }
 }
@@ -1240,9 +1285,10 @@ const std::string WorkDirManipulator::GRAPH_TEMP_INDICES_DIR_NAME =
     "temp_indices";
 const std::string WorkDirManipulator::GRAPH_PLUGIN_DIR_NAME = "plugins";
 const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
-    "engine_config.yaml";
+    "interactive_config.yaml";
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 const std::string WorkDirManipulator::TMP_DIR = "/tmp";
 const std::string WorkDirManipulator::GRAPH_LOADER_BIN = "bulk_loader";
+const std::string WorkDirManipulator::UPLOAD_DIR = "upload";
 
 }  // namespace server

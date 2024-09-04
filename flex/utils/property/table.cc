@@ -77,15 +77,16 @@ void Table::open_in_memory(const std::string& name,
   buildColumnPtrs();
 }
 
-void Table::open_with_hugepages(
-    const std::string& name, const std::string& snapshot_dir,
-    const std::vector<std::string>& col_name,
-    const std::vector<PropertyType>& property_types,
-    const std::vector<StorageStrategy>& strategies_, bool force) {
+void Table::open_with_hugepages(const std::string& name,
+                                const std::string& snapshot_dir,
+                                const std::vector<std::string>& col_name,
+                                const std::vector<PropertyType>& property_types,
+                                const std::vector<StorageStrategy>& strategies_,
+                                bool force) {
   initColumns(col_name, property_types, strategies_);
   for (size_t i = 0; i < columns_.size(); ++i) {
-    columns_[i]->open_with_hugepages(snapshot_dir + "/" + name + ".col_" +
-                                     std::to_string(i), force);
+    columns_[i]->open_with_hugepages(
+        snapshot_dir + "/" + name + ".col_" + std::to_string(i), force);
   }
   touched_ = true;
   buildColumnPtrs();
@@ -279,6 +280,11 @@ void Table::buildColumnPtrs() {
   for (size_t col_i = 0; col_i < col_num; ++col_i) {
     column_ptrs_[col_i] = columns_[col_i].get();
   }
+}
+
+void Table::close() {
+  columns_.clear();
+  column_ptrs_.clear();
 }
 
 }  // namespace gs

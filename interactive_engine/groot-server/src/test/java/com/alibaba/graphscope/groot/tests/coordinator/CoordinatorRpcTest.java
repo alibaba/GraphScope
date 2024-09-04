@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.exception.DdlException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.coordinator.*;
@@ -26,7 +27,6 @@ import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupService;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupClient;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 import com.alibaba.graphscope.proto.groot.*;
 
@@ -44,7 +44,7 @@ public class CoordinatorRpcTest {
         StoreSchemaClient client = mock(StoreSchemaClient.class);
         when(clients.getClient(0)).thenReturn(client);
 
-        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(clients);
+        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(clients, 1);
         graphDefFetcher.fetchGraphDef();
         verify(client).fetchSchema();
     }

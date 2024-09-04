@@ -55,9 +55,12 @@ public class FrontendConfig {
     public static final Config<String> GREMLIN_SCRIPT_LANGUAGE_NAME =
             Config.stringConfig("gremlin.script.language.name", "antlr_gremlin_traversal");
 
-    public static final Config<String> PHYSICAL_OPT_CONFIG =
-            Config.stringConfig("physical.opt.config", "ffi");
+    public static final Config<String> GRAPH_PHYSICAL_OPT =
+            Config.stringConfig("graph.physical.opt", "ffi");
 
     public static final Config<Integer> PER_QUERY_STREAM_BUFFER_MAX_CAPACITY =
             Config.intConfig("per.query.stream.buffer.max.capacity", 256);
+
+    public static final Config<Long> QUERY_PRINT_THRESHOLD_MS =
+            Config.longConfig("query.print.threshold.ms", 200l);
 }

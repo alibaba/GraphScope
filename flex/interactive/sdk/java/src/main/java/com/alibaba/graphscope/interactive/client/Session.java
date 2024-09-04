@@ -22,4 +22,6 @@ public interface Session
                 JobInterface,
                 ProcedureInterface,
                 QueryServiceInterface,
-                AutoCloseable {}
+                QueryInterface,
+                AutoCloseable,
+                UtilsInterface {}

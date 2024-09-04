@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -74,6 +75,8 @@ public class GremlinCalciteScriptEngineFactory extends AbstractGremlinScriptEngi
                 QueryCache.Key cacheKey =
                         queryCache.createKey(graphPlanner.instance(script, irMeta));
                 return queryCache.get(cacheKey);
+            } catch (FrontendException e) {
+                throw e;
             } catch (ExecutionException e) {
                 return new RuntimeException(e);
             }

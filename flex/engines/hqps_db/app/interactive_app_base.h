@@ -16,8 +16,6 @@
 #ifndef ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 #define ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 
-#ifdef BUILD_HQPS
-
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
@@ -233,7 +231,5 @@ class CypherInternalPbWriteAppBase : public WriteAppBase {
 };
 
 }  // namespace gs
-
-#endif  // BUILD_HQPS
 
 #endif  // ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_

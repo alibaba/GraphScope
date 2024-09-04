@@ -96,10 +96,42 @@ CSVTableRecordBatchSupplier::GetNextBatch() {
   return batch;
 }
 
-static std::vector<std::string> read_header(const std::string& file_name,
-                                            char delimiter) {
+static std::string process_header_row_token(const std::string& token,
+                                            const LoadingConfig& config) {
+  std::string new_token = token;
+  // trim the quote char at the beginning and end of the token
+  if (config.GetIsQuoting()) {
+    auto quote_char = config.GetQuotingChar();
+    if (token.size() >= 2 && token[0] == quote_char &&
+        token[token.size() - 1] == quote_char) {
+      new_token = token.substr(1, token.size() - 2);
+    }
+  }
+  // unescape the token
+  if (config.GetIsEscaping()) {
+    auto escape_char = config.GetEscapeChar();
+    std::string res;
+    for (size_t i = 0; i < new_token.size(); ++i) {
+      if (new_token[i] == escape_char) {
+        if (i + 1 < new_token.size()) {
+          res.push_back(new_token[i + 1]);
+          i++;
+        }
+      } else {
+        res.push_back(new_token[i]);
+      }
+    }
+    new_token = res;
+  }
+  return new_token;
+}
+
+static std::vector<std::string> read_header(
+    const std::string& file_name, char delimiter,
+    const LoadingConfig& loading_config) {
   // read the header line of the file, and split into vector to string by
-  // delimiter
+  // delimiter. If quote_char is not empty, then use it to parse the header
+  // line.
   std::vector<std::string> res_vec;
   std::ifstream file(file_name);
   std::string line;
@@ -110,6 +142,7 @@ static std::vector<std::string> read_header(const std::string& file_name,
       while (std::getline(ss, token, delimiter)) {
         // trim the token
         token.erase(token.find_last_not_of(" \n\r\t") + 1);
+        token = process_header_row_token(token, loading_config);
         res_vec.push_back(token);
       }
     } else {
@@ -144,12 +177,10 @@ static bool put_skip_rows_option(const LoadingConfig& loading_config,
 
 static void put_escape_char_option(const LoadingConfig& loading_config,
                                    arrow::csv::ParseOptions& parse_options) {
-  auto escape_str = loading_config.GetEscapeChar();
-  if (escape_str.size() != 1) {
-    LOG(FATAL) << "Escape char should be a single character";
-  }
-  parse_options.escape_char = escape_str[0];
   parse_options.escaping = loading_config.GetIsEscaping();
+  if (parse_options.escaping) {
+    parse_options.escape_char = loading_config.GetEscapeChar();
+  }
 }
 
 static void put_block_size_option(const LoadingConfig& loading_config,
@@ -163,12 +194,10 @@ static void put_block_size_option(const LoadingConfig& loading_config,
 
 static void put_quote_char_option(const LoadingConfig& loading_config,
                                   arrow::csv::ParseOptions& parse_options) {
-  auto quoting_str = loading_config.GetQuotingChar();
-  if (quoting_str.size() != 1) {
-    LOG(FATAL) << "Quote char should be a single character";
-  }
-  parse_options.quote_char = quoting_str[0];
   parse_options.quoting = loading_config.GetIsQuoting();
+  if (parse_options.quoting) {
+    parse_options.quote_char = loading_config.GetQuotingChar();
+  }
   parse_options.double_quote = loading_config.GetIsDoubleQuoting();
 }
 
@@ -185,10 +214,11 @@ static void put_column_names_option(const LoadingConfig& loading_config,
                                     bool header_row,
                                     const std::string& file_path,
                                     char delimiter,
-                                    arrow::csv::ReadOptions& read_options) {
+                                    arrow::csv::ReadOptions& read_options,
+                                    size_t len) {
   std::vector<std::string> all_column_names;
   if (header_row) {
-    all_column_names = read_header(file_path, delimiter);
+    all_column_names = read_header(file_path, delimiter, loading_config);
     // It is possible that there exists duplicate column names in the header,
     // transform them to unique names
     std::unordered_map<std::string, int> name_count;
@@ -213,12 +243,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
              << gs::to_string(all_column_names);
   } else {
     // just get the number of columns.
-    size_t num_cols = 0;
-    {
-      auto tmp = read_header(file_path, delimiter);
-      num_cols = tmp.size();
-    }
-    all_column_names.resize(num_cols);
+    all_column_names.resize(len);
     for (size_t i = 0; i < all_column_names.size(); ++i) {
       all_column_names[i] = std::string("f") + std::to_string(i);
     }
@@ -228,32 +253,44 @@ static void put_column_names_option(const LoadingConfig& loading_config,
            << gs::to_string(all_column_names);
 }
 
+static void put_null_values(const LoadingConfig& loading_config,
+                            arrow::csv::ConvertOptions& convert_options) {
+  auto null_values = loading_config.GetNullValues();
+  for (auto& null_value : null_values) {
+    convert_options.null_values.emplace_back(null_value);
+  }
+}
+
 std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int32_t thread_num) {
+    const LoadingConfig& loading_config) {
   return std::shared_ptr<IFragmentLoader>(
-      new CSVFragmentLoader(work_dir, schema, loading_config, thread_num));
+      new CSVFragmentLoader(work_dir, schema, loading_config));
 }
 
 void CSVFragmentLoader::addVertices(label_t v_label_id,
                                     const std::vector<std::string>& v_files) {
   auto record_batch_supplier_creator =
       [this](label_t label_id, const std::string& v_file,
-             const LoadingConfig& loading_config) {
+             const LoadingConfig& loading_config, int) {
         arrow::csv::ConvertOptions convert_options;
         arrow::csv::ReadOptions read_options;
         arrow::csv::ParseOptions parse_options;
         fillVertexReaderMeta(read_options, parse_options, convert_options,
                              v_file, label_id);
+        std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
         if (loading_config.GetIsBatchReader()) {
           auto res = std::make_shared<CSVStreamRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         } else {
           auto res = std::make_shared<CSVTableRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         }
+        return suppliers;
       };
   return AbstractArrowFragmentLoader::AddVerticesRecordBatch(
       v_label_id, v_files, record_batch_supplier_creator);
@@ -264,21 +301,25 @@ void CSVFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
                                  const std::vector<std::string>& filenames) {
   auto lambda = [this](label_t src_label_id, label_t dst_label_id,
                        label_t e_label_id, const std::string& filename,
-                       const LoadingConfig& loading_config) {
+                       const LoadingConfig& loading_config, int) {
     arrow::csv::ConvertOptions convert_options;
     arrow::csv::ReadOptions read_options;
     arrow::csv::ParseOptions parse_options;
     fillEdgeReaderMeta(read_options, parse_options, convert_options, filename,
                        src_label_id, dst_label_id, e_label_id);
+    std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
     if (loading_config.GetIsBatchReader()) {
       auto res = std::make_shared<CSVStreamRecordBatchSupplier>(
           e_label_id, filename, convert_options, read_options, parse_options);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+      suppliers.emplace_back(
+          std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
     } else {
       auto res = std::make_shared<CSVTableRecordBatchSupplier>(
           e_label_id, filename, convert_options, read_options, parse_options);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+      suppliers.emplace_back(
+          std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
     }
+    return suppliers;
   };
   AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       src_label_i, dst_label_i, edge_label_i, filenames, lambda);
@@ -347,16 +388,18 @@ void CSVFragmentLoader::fillVertexReaderMeta(
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
+  auto property_names = schema_.get_vertex_property_names(v_label);
   put_column_names_option(loading_config_, header_row, v_file,
-                          parse_options.delimiter, read_options);
+                          parse_options.delimiter, read_options,
+                          property_names.size() + 1);
   put_escape_char_option(loading_config_, parse_options);
   put_quote_char_option(loading_config_, parse_options);
   put_block_size_option(loading_config_, read_options);
+  put_null_values(loading_config_, convert_options);
 
   // parse all column_names
 
   std::vector<std::string> included_col_names;
-  std::vector<size_t> included_col_indices;
   std::vector<std::string> mapped_property_names;
 
   auto cur_label_col_mapping = loading_config_.GetVertexColumnMappings(v_label);
@@ -383,7 +426,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
 
     for (size_t i = 0; i < read_options.column_names.size(); ++i) {
       included_col_names.emplace_back(read_options.column_names[i]);
-      included_col_indices.emplace_back(i);
       // We assume the order of the columns in the file is the same as the
       // order of the properties in the schema, except for primary key.
       mapped_property_names.emplace_back(property_names[i]);
@@ -392,11 +434,21 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
-        // use default mapping
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
       }
+      // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+        if (col_name != read_options.column_names[col_id]) {
+          LOG(FATAL) << "The specified column name: " << col_name
+                     << " does not match the column name in the file: "
+                     << read_options.column_names[col_id];
+        }
+      }
       included_col_names.emplace_back(col_name);
-      included_col_indices.emplace_back(col_id);
       mapped_property_names.emplace_back(property_name);
     }
   }
@@ -477,11 +529,16 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
+  auto edge_prop_names =
+      schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
+
   put_column_names_option(loading_config_, header_row, e_file,
-                          parse_options.delimiter, read_options);
+                          parse_options.delimiter, read_options,
+                          edge_prop_names.size() + 2);
   put_escape_char_option(loading_config_, parse_options);
   put_quote_char_option(loading_config_, parse_options);
   put_block_size_option(loading_config_, read_options);
+  put_null_values(loading_config_, convert_options);
 
   auto src_dst_cols =
       loading_config_.GetEdgeSrcDstCol(src_label_id, dst_label_id, label_id);
@@ -513,7 +570,11 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
         schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
     for (size_t i = 0; i < edge_prop_names.size(); ++i) {
       auto property_name = edge_prop_names[i];
-      included_col_names.emplace_back(property_name);
+      if (loading_config_.GetHasHeaderRow()) {
+        included_col_names.emplace_back(property_name);
+      } else {
+        included_col_names.emplace_back(read_options.column_names[i + 2]);
+      }
       mapped_property_names.emplace_back(property_name);
     }
   } else {
@@ -522,10 +583,25 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
       // TODO: make the property column's names are in same order with schema.
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
-        // use default mapping
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
       }
-      included_col_names.emplace_back(col_name);
+      // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+        if (col_name != read_options.column_names[col_id]) {
+          LOG(FATAL) << "The specified column name: " << col_name
+                     << " does not match the column name in the file: "
+                     << read_options.column_names[col_id];
+        }
+      }
+      if (loading_config_.GetHasHeaderRow()) {
+        included_col_names.emplace_back(col_name);
+      } else {
+        included_col_names.emplace_back(read_options.column_names[col_id]);
+      }
       mapped_property_names.emplace_back(property_name);
     }
   }
@@ -652,11 +728,21 @@ void CSVFragmentLoader::loadEdges() {
   }
 }
 
-void CSVFragmentLoader::LoadFragment() {
-  loadVertices();
-  loadEdges();
+Result<bool> CSVFragmentLoader::LoadFragment() {
+  try {
+    loadVertices();
+    loadEdges();
 
-  basic_fragment_loader_.LoadFragment();
+    basic_fragment_loader_.LoadFragment();
+  } catch (const std::exception& e) {
+    auto work_dir = basic_fragment_loader_.work_dir();
+    printDiskRemaining(work_dir);
+    LOG(ERROR) << "Load fragment failed: " << e.what();
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
+                        "Load fragment failed: " + std::string(e.what()),
+                        false);
+  }
+  return Result<bool>(true);
 }
 
 const bool CSVFragmentLoader::registered_ = LoaderFactory::Register(

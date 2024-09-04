@@ -26,6 +26,7 @@ use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
+use super::eval_pred::PEvaluator;
 use crate::apis::{Element, PropKey};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
@@ -63,13 +64,51 @@ pub enum Function {
     Extract(common_pb::extract::Interval),
 }
 
+#[derive(Debug)]
+pub struct CaseWhen {
+    when_then_evals: Vec<(PEvaluator, Evaluator)>,
+    else_eval: Evaluator,
+}
+
+impl TryFrom<common_pb::Case> for CaseWhen {
+    type Error = ParsePbError;
+
+    fn try_from(case: common_pb::Case) -> Result<Self, Self::Error> {
+        let mut when_then_evals = Vec::with_capacity(case.when_then_expressions.len());
+        for when_then in &case.when_then_expressions {
+            let when = when_then
+                .when_expression
+                .as_ref()
+                .ok_or(ParsePbError::EmptyFieldError(format!("missing when expression {:?}", case)))?;
+            let then = when_then
+                .then_result_expression
+                .as_ref()
+                .ok_or(ParsePbError::EmptyFieldError(format!("missing then expression: {:?}", case)))?;
+            when_then_evals.push((PEvaluator::try_from(when.clone())?, Evaluator::try_from(then.clone())?));
+        }
+        let else_result_expression = case
+            .else_result_expression
+            .as_ref()
+            .ok_or(ParsePbError::EmptyFieldError(format!("missing else expression: {:?}", case)))?;
+        let else_eval = Evaluator::try_from(else_result_expression.clone())?;
+        Ok(Self { when_then_evals, else_eval })
+    }
+}
+
+/// A conditional expression for evaluating a casewhen. More conditional expressions can be added in the future, e.g., COALESCE()，NULLIF() etc.
+#[derive(Debug)]
+pub enum Conditional {
+    Case(CaseWhen),
+}
+
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) enum InnerOpr {
     Logical(common_pb::Logical),
     Arith(common_pb::Arithmetic),
     Function(Function),
     Operand(Operand),
+    Conditional(Conditional),
 }
 
 impl ToString for InnerOpr {
@@ -79,6 +118,7 @@ impl ToString for InnerOpr {
             InnerOpr::Arith(arith) => format!("{:?}", arith),
             InnerOpr::Operand(item) => format!("{:?}", item),
             InnerOpr::Function(func) => format!("{:?}", func),
+            InnerOpr::Conditional(conditional) => format!("{:?}", conditional),
         }
     }
 }
@@ -117,6 +157,12 @@ impl From<&Operand> for OperatorDesc {
     }
 }
 
+impl From<&PropKey> for OperatorDesc {
+    fn from(prop: &PropKey) -> Self {
+        Self(format!("{:?}", prop))
+    }
+}
+
 /// A `Context` gives the behavior of obtaining a certain tag from the runtime
 /// for evaluating variables in an expression.
 pub trait Context<E: Element> {
@@ -150,6 +196,9 @@ fn apply_arith<'a>(
     arith: &common_pb::Arithmetic, a: BorrowObject<'a>, b: BorrowObject<'a>,
 ) -> ExprEvalResult<Object> {
     use common_pb::Arithmetic::*;
+    if a.eq(&Object::None) || b.eq(&Object::None) {
+        return Ok(Object::None);
+    }
     Ok(match arith {
         Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
         Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
@@ -227,44 +276,89 @@ pub(crate) fn apply_logical<'a>(
 ) -> ExprEvalResult<Object> {
     use common_pb::Logical::*;
     if logical == &Not {
-        return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
+        if a.eq(&Object::None) {
+            Ok(Object::None)
+        } else {
+            Ok((!a.eval_bool::<(), NoneContext>(None)?).into())
+        }
     } else if logical == &Isnull {
-        return Ok(a.eq(&BorrowObject::None).into());
+        Ok(a.eq(&BorrowObject::None).into())
     } else {
         if b_opt.is_some() {
             let b = b_opt.unwrap();
-            match logical {
-                Eq => Ok((a == b).into()),
-                Ne => Ok((a != b).into()),
-                Lt => Ok((a < b).into()),
-                Le => Ok((a <= b).into()),
-                Gt => Ok((a > b).into()),
-                Ge => Ok((a >= b).into()),
-                And => Ok((a.eval_bool::<(), NoneContext>(None)?
-                    && b.eval_bool::<(), NoneContext>(None)?)
-                .into()),
-                Or => Ok((a.eval_bool::<(), NoneContext>(None)?
-                    || b.eval_bool::<(), NoneContext>(None)?)
-                .into()),
-                Within => Ok(b.contains(&a).into()),
-                Without => Ok((!b.contains(&a)).into()),
-                Startswith => Ok(a
-                    .as_str()?
-                    .starts_with(b.as_str()?.as_ref())
-                    .into()),
-                Endswith => Ok(a
-                    .as_str()?
-                    .ends_with(b.as_str()?.as_ref())
-                    .into()),
-                Regex => {
-                    let regex = regex::Regex::new(b.as_str()?.as_ref())?;
-                    Ok(regex.is_match(a.as_str()?.as_ref()).into())
+            // process null values
+            if a.eq(&Object::None) || b.eq(&Object::None) {
+                match logical {
+                    And => {
+                        if (a != Object::None && !a.eval_bool::<(), NoneContext>(None)?)
+                            || (b != Object::None && !b.eval_bool::<(), NoneContext>(None)?)
+                        {
+                            Ok(false.into())
+                        } else {
+                            Ok(Object::None)
+                        }
+                    }
+                    Or => {
+                        if (a != Object::None && a.eval_bool::<(), NoneContext>(None)?)
+                            || (b != Object::None && b.eval_bool::<(), NoneContext>(None)?)
+                        {
+                            Ok(true.into())
+                        } else {
+                            Ok(Object::None)
+                        }
+                    }
+                    _ => Ok(Object::None),
                 }
-                Not => unreachable!(),
-                Isnull => unreachable!(),
+            } else {
+                match logical {
+                    Eq => Ok((a == b).into()),
+                    Ne => Ok((a != b).into()),
+                    Lt => Ok((a < b).into()),
+                    Le => Ok((a <= b).into()),
+                    Gt => Ok((a > b).into()),
+                    Ge => Ok((a >= b).into()),
+                    And => Ok((a.eval_bool::<(), NoneContext>(None)?
+                        && b.eval_bool::<(), NoneContext>(None)?)
+                    .into()),
+                    Or => Ok((a.eval_bool::<(), NoneContext>(None)?
+                        || b.eval_bool::<(), NoneContext>(None)?)
+                    .into()),
+                    Within => Ok(b.contains(&a).into()),
+                    Without => Ok((!b.contains(&a)).into()),
+                    Startswith => Ok(a
+                        .as_str()?
+                        .starts_with(b.as_str()?.as_ref())
+                        .into()),
+                    Endswith => Ok(a
+                        .as_str()?
+                        .ends_with(b.as_str()?.as_ref())
+                        .into()),
+                    Regex => {
+                        let regex = regex::Regex::new(b.as_str()?.as_ref())?;
+                        Ok(regex.is_match(a.as_str()?.as_ref()).into())
+                    }
+                    Not => unreachable!(),
+                    Isnull => unreachable!(),
+                }
             }
         } else {
             Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
+        }
+    }
+}
+
+pub(crate) fn apply_condition_expr<'a, E: Element, C: Context<E>>(
+    condition: &Conditional, context: Option<&C>,
+) -> ExprEvalResult<Object> {
+    match condition {
+        Conditional::Case(case) => {
+            let else_expr = &case.else_eval;
+            for (when, then) in case.when_then_evals.iter() {
+                if when.eval_bool(context)? {
+                    return then.eval(context);
+                }
+            }
+            return else_expr.eval(context);
         }
     }
 }
@@ -281,7 +375,11 @@ impl Evaluator {
         if self.suffix_tree.is_empty() {
             Err(ExprEvalError::EmptyExpression)
         } else if self.suffix_tree.len() == 1 {
-            _first.unwrap().eval(context)
+            if let InnerOpr::Conditional(case) = _first.unwrap() {
+                apply_condition_expr(case, context)
+            } else {
+                _first.unwrap().eval(context)
+            }
         } else if self.suffix_tree.len() == 2 {
             let first = _first.unwrap();
             let second = _second.unwrap();
@@ -341,7 +439,6 @@ impl Evaluator {
             } else if let InnerOpr::Arith(arith) = third {
                 let a = first.eval(context)?;
                 let b = second.eval(context)?;
-
                 Ok(apply_arith(arith, a.as_borrow(), b.as_borrow())?)
             } else {
                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
@@ -522,6 +619,33 @@ impl TryFrom<common_pb::Variable> for Operand {
     }
 }
 
+impl TryFrom<common_pb::VariableKeyValues> for Operand {
+    type Error = ParsePbError;
+
+    fn try_from(key_vals: common_pb::VariableKeyValues) -> Result<Self, Self::Error> {
+        let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+        for key_val in key_vals.key_vals {
+            let (_key, _value) = (key_val.key, key_val.value);
+            let key = if let Some(key) = _key {
+                Object::try_from(key)?
+            } else {
+                return Err(ParsePbError::from("empty key provided in Map"));
+            };
+            let value = if let Some(value) = _value {
+                match value {
+                    common_pb::variable_key_value::Value::Val(val) => Operand::try_from(val)?,
+                    common_pb::variable_key_value::Value::Nested(nested) => Operand::try_from(nested)?,
+                    common_pb::variable_key_value::Value::PathFunc(_path_func) => todo!(),
+                }
+            } else {
+                return Err(ParsePbError::from("empty value provided in Map"));
+            };
+            vec.push((key, value));
+        }
+        Ok(Self::Map(vec))
+    }
+}
+
 impl TryFrom<common_pb::ExprOpr> for Operand {
     type Error = ParsePbError;
 
@@ -545,25 +669,7 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
-
-                Map(key_vals) => {
-                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
-                    for key_val in key_vals.key_vals {
-                        let (_key, _value) = (key_val.key, key_val.value);
-                        let key = if let Some(key) = _key {
-                            Object::try_from(key)?
-                        } else {
-                            return Err(ParsePbError::from("empty key provided in Map"));
-                        };
-                        let value = if let Some(value) = _value {
-                            Operand::try_from(value)?
-                        } else {
-                            return Err(ParsePbError::from("empty value provided in Map"));
-                        };
-                        vec.push((key, value));
-                    }
-                    Ok(Self::Map(vec))
-                }
+                Map(key_vals) => Operand::try_from(key_vals),
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
@@ -591,6 +697,7 @@ impl TryFrom<common_pb::ExprOpr> for InnerOpr {
                 Extract(extract) => Ok(Self::Function(Function::Extract(unsafe {
                     std::mem::transmute::<_, common_pb::extract::Interval>(extract.interval)
                 }))),
+                Case(case) => Ok(Self::Conditional(Conditional::Case(case.clone().try_into()?))),
                 _ => Ok(Self::Operand(unit.clone().try_into()?)),
             }
         } else {
@@ -607,45 +714,7 @@ impl Evaluate for Operand {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
-                            if let PropKey::Len = property {
-                                element.len().into()
-                            } else {
-                                let graph_element = element
-                                    .as_graph_element()
-                                    .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
-                                match property {
-                                    PropKey::Id => graph_element.id().into(),
-                                    PropKey::Label => graph_element
-                                        .label()
-                                        .map(|label| label.into())
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
-                                    PropKey::Len => unreachable!(),
-                                    PropKey::All => graph_element
-                                        .get_all_properties()
-                                        .map(|obj| {
-                                            obj.into_iter()
-                                                .map(|(key, value)| {
-                                                    let obj_key: Object = match key {
-                                                        NameOrId::Str(str) => str.into(),
-                                                        NameOrId::Id(id) => id.into(),
-                                                    };
-                                                    (obj_key, value)
-                                                })
-                                                .collect::<Vec<(Object, Object)>>()
-                                                .into()
-                                        })
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
-                                    PropKey::Key(key) => graph_element
-                                        .get_property(key)
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
-                                        .try_to_owned()
-                                        .ok_or_else(|| {
-                                            ExprEvalError::OtherErr(
-                                                "cannot get `Object` from `BorrowObject`".to_string(),
-                                            )
-                                        })?,
-                                }
-                            }
+                            property.get_key(element)?
                         } else {
                             element
                                 .as_borrow_object()
@@ -974,7 +1043,7 @@ mod tests {
     #[test]
     fn test_eval_variable() {
         // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
-        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        // [v1: id = 2, label = 11, age = 26, name = Nancy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "@0.~id",                                      // 1
@@ -993,6 +1062,7 @@ mod tests {
             "{@0.name, @0.age}",                           // {"name": "John", "age": 31}
             "@0.~all", // {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}
             "{@0.~all}", // {~all, {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}}
+            "@0.not_exist", // Object::None
         ];
 
         let expected: Vec<Object> = vec![
@@ -1043,6 +1113,7 @@ mod tests {
                 .into_iter()
                 .collect(),
             ),
+            Object::None,
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
@@ -1053,17 +1124,8 @@ mod tests {
 
     #[test]
     fn test_eval_errors() {
-        let cases: Vec<&str> = vec![
-            "@2",
-            "+",
-            "1 + ",
-            "1 1",
-            "1 1 2",
-            "1 1 + 2",
-            "1 + @1.age * 1 1 - 1 - 5",
-            "@2",
-            "@0.not_exist",
-        ];
+        let cases: Vec<&str> =
+            vec!["@2", "+", "1 + ", "1 1", "1 1 2", "1 1 + 2", "1 + @1.age * 1 1 - 1 - 5", "@2"];
         let ctxt = prepare_context();
 
         let expected: Vec<ExprEvalError> = vec![
@@ -1078,7 +1140,6 @@ mod tests {
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
-            ExprEvalError::GetNoneFromContext,
             ExprEvalError::GetNoneFromContext,
         ];
 
@@ -1102,7 +1163,7 @@ mod tests {
     #[test]
     fn test_eval_is_null() {
         // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
-        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        // [v1: id = 2, label = 11, age = 26, name = Nancy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "isNull @0.hobbies",                 // false
@@ -1342,6 +1403,102 @@ mod tests {
         for ((to_match, pattern), expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(gen_regex_expression(to_match, pattern)).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+        }
+    }
+
+    fn prepare_casewhen(when_then_exprs: Vec<(&str, &str)>, else_expr: &str) -> common_pb::Expression {
+        let mut when_then_expressions = vec![];
+        for (when_expr, then_expr) in when_then_exprs {
+            when_then_expressions.push(common_pb::case::WhenThen {
+                when_expression: Some(str_to_expr_pb(when_expr.to_string()).unwrap()),
+                then_result_expression: Some(str_to_expr_pb(then_expr.to_string()).unwrap()),
+            });
+        }
+        let case_when_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Case(common_pb::Case {
+                when_then_expressions,
+                else_result_expression: Some(str_to_expr_pb(else_expr.to_string()).unwrap()),
+            })),
+        };
+        common_pb::Expression { operators: vec![case_when_opr] }
+    }
+
+    #[test]
+    fn test_eval_casewhen() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Nancy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases = vec![
+            (vec![("@0.~id ==1", "1"), ("@0.~id == 2", "2")], "0"),
+            (vec![("@0.~id > 10", "1"), ("@0.~id<5", "2")], "0"),
+            (vec![("@0.~id < 10 && @0.~id>20", "true")], "false"),
+            (vec![("@0.~id < 10 || @0.~id>20", "true")], "false"),
+            (vec![("@0.~id < 10 && @0.~id>20", "1+2")], "4+5"),
+            (vec![("@0.~id < 10 || @0.~id>20", "1+2")], "4+5"),
+            (vec![("true", "@0.name")], "@1.name"),
+            (vec![("false", "@0.~name")], "@1.name"),
+            (vec![("isNull @0.hobbies", "true")], "false"),
+            (vec![("isNull @1.hobbies", "true")], "false"),
+        ];
+        let expected: Vec<Object> = vec![
+            object!(1),
+            object!(2),
+            object!(false),
+            object!(true),
+            object!(9),
+            object!(3),
+            object!("John"),
+            object!("Nancy"),
+            object!(false),
+            object!(true),
+        ];
+
+        for ((when_then_exprs, else_expr), expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(prepare_casewhen(when_then_exprs, else_expr)).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn test_eval_null() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases = vec![
+            ("isNull @1.hobbies"),          // true
+            ("@1.hobbies + 1"),             // null
+            ("@1.hobbies  + @1.hobbies "),  // null
+            ("@1.hobbies  == @1.hobbies "), // null
+            ("@1.hobbies  != @1.hobbies "), // null
+            ("@1.hobbies  > @1.hobbies "),  // null
+            ("false && @1.hobbies"),        // false
+            ("true && @1.hobbies"),         // null
+            ("@1.hobbies && @1.hobbies"),   // null
+            ("true || @1.hobbies"),         // true
+            ("false || @1.hobbies"),        // null
+            ("@1.hobbies || @1.hobbies"),   // null
+            ("!@1.hobbies"),                // null
+        ];
+        let expected: Vec<Object> = vec![
+            object!(true),
+            Object::None,
+            Object::None,
+            Object::None,
+            Object::None,
+            Object::None,
+            object!(false),
+            Object::None,
+            Object::None,
+            object!(true),
+            Object::None,
+            Object::None,
+            Object::None,
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
 }

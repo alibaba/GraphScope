@@ -18,13 +18,17 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
+import com.alibaba.graphscope.proto.groot.Statistics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -58,6 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class StoreService {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private static final Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final Configs storeConfigs;
     private final int storeId;
@@ -69,6 +74,7 @@ public class StoreService {
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
     private ExecutorService compactExecutor;
+    private ExecutorService statisticsExecutor;
 
     private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
@@ -97,7 +103,7 @@ public class StoreService {
                 GraphPartition partition = makeGraphPartition(this.storeConfigs, partitionId);
                 this.idToPartition.put(partitionId, partition);
             } catch (IOException e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         }
         initMetrics();
@@ -107,7 +113,7 @@ public class StoreService {
                         writeThreadCount,
                         writeThreadCount,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-write", logger));
@@ -116,7 +122,7 @@ public class StoreService {
                         1,
                         1,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
@@ -134,7 +140,7 @@ public class StoreService {
                         1,
                         1,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-garbage-collect", logger));
@@ -143,12 +149,21 @@ public class StoreService {
                 new ThreadPoolExecutor(
                         16,
                         16,
-                        1000L,
-                        TimeUnit.MILLISECONDS,
+                        1L,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-download", logger));
         this.downloadExecutor.allowCoreThreadTimeOut(true);
+        this.statisticsExecutor =
+                new ThreadPoolExecutor(
+                        8,
+                        16,
+                        60L,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-statistics", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -205,7 +220,6 @@ public class StoreService {
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
-        long start = System.currentTimeMillis();
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
@@ -247,16 +261,23 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
+                                metricLogger.info(
+                                        buildMetricJsonLog(true, batch, start, partitionId));
                                 attrs.put("success", true).put("message", "");
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
-                            }
+                            } //  else {
+                            //     logger.debug("marker batch ignored");
+                            // }
                         } catch (Exception ex) {
+                            metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId));
                             logger.error(
-                                    "write to partition [{}] failed, snapshotId [{}].",
+                                    "write to partition [{}] failed, snapshotId [{}], traceId"
+                                            + " [{}].",
                                     partitionId,
                                     snapshotId,
+                                    batch.getTraceId(),
                                     ex);
                             attrs.put("message", ex.getMessage());
                             String msg = "Not supported operation in secondary mode";
@@ -278,8 +299,9 @@ public class StoreService {
         }
         future.get();
         if (batchNeedRetry.size() > 0) {
+            logger.warn("Write batch failed, will retry. failure count: {}", batchNeedRetry.size());
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 // Ignore
             }
@@ -287,9 +309,64 @@ public class StoreService {
         return batchNeedRetry;
     }
 
+    private String buildMetricJsonLog(
+            boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
+        String traceId = operationBatch.getTraceId();
+        long current = System.currentTimeMillis();
+        int batchSize = operationBatch.getOperationCount();
+        return Utils.buildMetricJsonLog(
+                succeed,
+                traceId,
+                batchSize,
+                partitionId,
+                (current - start),
+                current,
+                "writeDb",
+                "write");
+    }
+
     public GraphDefPb getGraphDefBlob() throws IOException {
         GraphPartition graphPartition = this.idToPartition.get(0);
         return graphPartition.getGraphDefBlob();
+    }
+
+    public Map<Integer, Statistics> getGraphStatisticsBlob(long snapshotId) throws IOException {
+        int partitionCount = this.idToPartition.values().size();
+        CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
+        logger.info("Collect statistics of store#{} started", storeId);
+        Map<Integer, Statistics> statisticsMap = new ConcurrentHashMap<>();
+        for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
+            this.statisticsExecutor.execute(
+                    () -> {
+                        try {
+                            Statistics statistics =
+                                    entry.getValue().getGraphStatisticsBlob(snapshotId);
+                            statisticsMap.put(entry.getKey(), statistics);
+                            logger.debug("Collected statistics of partition#{}", entry.getKey());
+                        } catch (IOException e) {
+                            logger.error(
+                                    "Collect statistics failed for partition {}",
+                                    entry.getKey(),
+                                    e);
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    });
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("collect statistics has been interrupted", e);
+        }
+        if (statisticsMap.size() != partitionCount) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+        }
+        logger.info("Collect statistics of store#{} done, size: {}", storeId, statisticsMap.size());
+        return statisticsMap;
     }
 
     public MetaService getMetaService() {

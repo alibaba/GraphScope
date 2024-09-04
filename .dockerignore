@@ -73,6 +73,7 @@ flex/build/
 interactive_engine/rust-common/src/proto/*
 !interactive_engine/rust-common/src/proto/mod.rs
 **/generated/
+!flex/interactive/sdk/python/gs_interactive/client/generated/
 
 interactive_engine/executor/store/groot/src/db/proto/*
 !interactive_engine/executor/store/groot/src/db/proto/mod.rs
@@ -111,3 +112,7 @@ learning_engine/graph-learn/graphlearn/python/lib
 # Core dump
 core.*
 *.core
+
+# Dockerfile
+
+**/*.Dockerfile

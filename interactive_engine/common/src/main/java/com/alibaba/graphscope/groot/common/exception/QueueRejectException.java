@@ -15,10 +15,22 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
-import com.alibaba.graphscope.groot.common.util.ExceptionUtils;
+import com.alibaba.graphscope.proto.Code;
 
 public class QueueRejectException extends GrootException {
     public QueueRejectException(String msg) {
-        super(ExceptionUtils.ErrorCode.QueueReject, msg);
+        super(Code.QUEUE_REJECT, msg);
+    }
+
+    public QueueRejectException(String msg, Throwable t) {
+        super(Code.QUEUE_REJECT, msg, t);
+    }
+
+    public QueueRejectException() {
+        super(Code.QUEUE_REJECT);
+    }
+
+    public QueueRejectException(Throwable t) {
+        super(Code.QUEUE_REJECT, t);
     }
 }

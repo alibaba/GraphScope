@@ -14,6 +14,7 @@
  */
 #include "flex/engines/http_server/types.h"
 #include "flex/utils/result.h"
+#include "seastar/http/common.hh"
 #include "seastar/http/reply.hh"
 
 #ifndef ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_
@@ -35,6 +36,24 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>>
 return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
                          seastar::future<admin_query_result>&& fut);
 
+// To avoid macro conflict between /usr/include/arpa/nameser_compact.h#120(which
+// is included by httplib.h) and seastar/http/common.hh#61
+static constexpr seastar::httpd::operation_type SEASTAR_DELETE =
+    seastar::httpd::operation_type::DELETE;
+
+std::string trim_slash(const std::string& origin);
+
 }  // namespace server
+
+namespace gs {
+
+template <typename T>
+struct to_string_impl;
+
+template <>
+struct to_string_impl<seastar::sstring> {
+  static std::string to_string(const seastar::sstring& t) { return t.c_str(); }
+};
+}  // namespace gs
 
 #endif  // ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_

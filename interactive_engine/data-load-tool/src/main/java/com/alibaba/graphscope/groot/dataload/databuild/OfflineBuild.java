@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.hadoop.conf.Configuration;
@@ -74,7 +75,9 @@ public class OfflineBuild {
             mappingConfig = Utils.parseColumnMapping(configStr);
         }
         List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(mappingConfig);
-        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
+        GraphDefPb pb = client.prepareDataLoad(targets);
+        GraphSchema schema = GraphDef.parseProto(pb);
+        System.out.println("GraphSchema " + pb);
         int partitionNum = client.getPartitionNum();
 
         Map<String, ColumnMappingInfo> info = new HashMap<>();

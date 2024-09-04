@@ -71,6 +71,7 @@
       <properties>
         <rust.compile.target>groot</rust.compile.target>
         <scala.version>2.13.9</scala.version>
+        <neo4j.version>4.4.0-SHADED</neo4j.version>
       </properties>
       <modules>
         <module>assembly</module>
@@ -82,6 +83,32 @@
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>shade-neo4j</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>mvn</executable>
+                  <arguments>
+                    <argument>-f</argument>
+                    <argument>neo4j-shaded/pom.xml</argument>
+                    <argument>install</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+            <inherited>false</inherited>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>groot-data-load</id>
@@ -225,6 +252,8 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <neo4j.version>4.4.0</neo4j.version>
+    <neo4j.driver.version>4.4.0</neo4j.driver.version>
+    <interactive.sdk.version>0.4</interactive.sdk.version>
   </properties>
 
   <dependencyManagement>
@@ -646,7 +675,7 @@
       <dependency>
         <groupId>org.neo4j.driver</groupId>
         <artifactId>neo4j-java-driver</artifactId>
-        <version>${neo4j.version}</version>
+        <version>${neo4j.driver.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -661,6 +690,11 @@
         <version>1.37.0</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>interactive</artifactId>
+        <version>${interactive.sdk.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -703,6 +737,32 @@
         <plugin>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${maven.shade.version}</version>
+          <executions>
+              <execution>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                      <filters>
+                          <filter>
+                              <artifact>com.alibaba.graphscope:interactive</artifact>
+                              <excludes>
+                                  <exclude>com.alibaba.graphscope.gaia.proto.*</exclude>
+                              </excludes>
+                          </filter>
+                          <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                      </filters>
+                  </configuration>
+              </execution>
+          </executions>
         </plugin>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
@@ -825,27 +885,16 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <!-- use flatten plugin to replace revision property value in mvn install,otherwise the version
+        of the locallly installed submodle(like compiler) is ${revision} -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>flatten-maven-plugin</artifactId>
-        <version>${flatten.maven.plugin}</version>
-        <configuration>
-          <updatePomFile>true</updatePomFile>
-          <flattenMode>resolveCiFriendliesOnly</flattenMode>
-        </configuration>
+        <groupId>com.outbrain.swinfra</groupId>
+        <artifactId>ci-friendly-flatten-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>flatten</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>flatten.clean</id>
-            <phase>clean</phase>
             <goals>
               <goal>clean</goal>
+              <goal>flatten</goal>
             </goals>
           </execution>
         </executions>

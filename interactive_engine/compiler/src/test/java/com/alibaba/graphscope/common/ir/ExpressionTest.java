@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
@@ -75,7 +76,7 @@ public class ExpressionTest {
     public void variable_3_test() {
         try {
             builder.source(mockSourceConfig(null)).variable("a");
-        } catch (IllegalArgumentException e) {
+        } catch (FrontendException e) {
             return;
         }
         Assert.fail("tag 'a' does not exist");

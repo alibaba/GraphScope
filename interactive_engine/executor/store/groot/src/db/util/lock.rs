@@ -18,7 +18,7 @@ impl<T> GraphMutexLock<T> {
             .map(|guard| GraphMutexLockGuard::new(guard))
             .map_err(|e| {
                 let msg = format!("{:?}", e);
-                gen_graph_err!(GraphErrorCode::LockFailed, msg, lock)
+                gen_graph_err!(ErrorCode::LOCK_FAILED, msg, lock)
             })
     }
 }

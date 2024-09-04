@@ -25,41 +25,40 @@ public class GraphAlgoQueries {
 
     public static QueryContext get_graph_algo_test1() {
         String query =
-                "MATCH (p:Paper)-[:WorkOn]->(:Task)-[:Belong]->(ca:Topic)\n"
-                        + "WITH distinct ca, count(p) as paperCount\n"
-                        + "RETURN ca.category, paperCount\n "
+                "MATCH (p:Paper)-[:WorkOn]->(:Task)-[:Belong]->(topic:Topic)\n"
+                        + "WITH distinct topic, count(p) as paperCount\n"
+                        + "RETURN topic.topic, paperCount\n "
                         + "ORDER BY paperCount desc;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Pattern Matching\", paperCount: 30}>",
-                        "Record<{category: \"Traversal\", paperCount:" + " 29}>",
-                        "Record<{category: \"Centrality\", paperCount: 18}>",
-                        "Record<{category: \"Covering\", paperCount: 14}>",
-                        "Record<{category: \"Community Detection\", paperCount: 13}>",
-                        "Record<{category: \"Cohesive Subgraph\", paperCount: 12}>",
-                        "Record<{category: \"Similarity\", paperCount: 7}>");
+                        "Record<{topic: \"Pattern Matching\", paperCount: 30}>",
+                        "Record<{topic: \"Traversal\", paperCount:" + " 29}>",
+                        "Record<{topic: \"Centrality\", paperCount: 18}>",
+                        "Record<{topic: \"Covering\", paperCount: 14}>",
+                        "Record<{topic: \"Community Detection\", paperCount: 13}>",
+                        "Record<{topic: \"Cohesive Subgraph\", paperCount: 12}>",
+                        "Record<{topic: \"Similarity\", paperCount: 7}>");
         return new QueryContext(query, expected);
     }
 
     public static QueryContext get_graph_algo_test2() {
         String query =
-                "MATCH (ca:Topic)<-[:Belong]-(a:Task),\n"
+                "MATCH (t:Topic)<-[:Belong]-(a:Task),\n"
                         + "(a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
                         + "(s)-[:ApplyOn]->(ch:Challenge)\n"
-                        + "WITH ca, ch, count(p) AS num \n"
-                        + "RETURN ca.category AS category, ch.challenge AS challenge, num\n"
+                        + "WITH t, ch, count(p) AS num \n"
+                        + "RETURN t.topic AS topic, ch.challenge AS challenge, num\n"
                         + "ORDER BY num DESC LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Pattern Matching\", challenge:"
+                        "Record<{topic: \"Pattern Matching\", challenge:"
                                 + " \"Communication Overhead\", num: 22}>",
-                        "Record<{category: \"Pattern Matching\", challenge:"
+                        "Record<{topic: \"Pattern Matching\", challenge:"
                                 + " \"Load Balance\", num: 16}>",
-                        "Record<{category: \"Traversal\", challenge:"
+                        "Record<{topic: \"Traversal\", challenge:"
                                 + " \"Communication Overhead\", num: 13}>",
-                        "Record<{category: \"Traversal\", challenge: \"Parallelism"
-                                + "\", num: 12}>",
-                        "Record<{category: \"Centrality\", challenge: \"Parallelism\", num:"
+                        "Record<{topic: \"Traversal\", challenge: \"Parallelism" + "\", num: 12}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Parallelism\", num:"
                                 + " 11}>");
         return new QueryContext(query, expected);
     }
@@ -180,16 +179,15 @@ public class GraphAlgoQueries {
     public static QueryContext get_graph_algo_test12() {
         String query =
                 "MATCH (p:Paper)-[:WorkOn]->(a:Task),(a)-[:Belong]->(t: Topic)\n"
-                        + " RETURN t.category,COUNT(p);";
+                        + "RETURN t.topic as topic, COUNT(p) as count ORDER BY count DESC,"
+                        + " topic DESC LIMIT 5;";
         List expected =
                 Arrays.asList(
-                        "Record<{category: \"Centrality\", $f1: 18}>",
-                        "Record<{category: \"Community Detection\", $f1: 13}>",
-                        "Record<{category: \"Similarity\", $f1: 7}>",
-                        "Record<{category: \"Cohesive Subgraph\", $f1: 12}>",
-                        "Record<{category: \"Pattern Matching\", $f1: 30}>",
-                        "Record<{category: \"Traversal\", $f1: 29}>",
-                        "Record<{category: \"Covering\", $f1: 14}>");
+                        "Record<{topic: \"Pattern Matching\", count: 30}>",
+                        "Record<{topic: \"Traversal\", count: 29}>",
+                        "Record<{topic: \"Centrality\", count: 18}>",
+                        "Record<{topic: \"Covering\", count: 14}>",
+                        "Record<{topic: \"Community Detection\", count: 13}>");
         return new QueryContext(query, expected);
     }
 
@@ -198,47 +196,49 @@ public class GraphAlgoQueries {
                 "MATCH (t: Topic)<-[:Belong]-(a:Task),\n"
                         + " (a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
                         + " (s)-[:ApplyOn]->(ch:Challenge)\n"
-                        + " RETURN t.category, ch.challenge, COUNT(p);";
+                        + " RETURN t.topic as topic, ch.challenge as challenge, COUNT(p) as count"
+                        + " ORDER BY count DESC, topic ASC, challenge ASC;";
         List expected =
                 Arrays.asList(
-                        "Record<{category: \"Centrality\", challenge: \"Parallelism\", $f2: 11}>",
-                        "Record<{category: \"Centrality\", challenge: \"Bandwidth\", $f2: 5}>",
-                        "Record<{category: \"Centrality\", challenge: \"Communication Overhead\","
-                                + " $f2: 9}>",
-                        "Record<{category: \"Centrality\", challenge: \"Load Balance\", $f2: 4}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Communication"
-                                + " Overhead\", $f2: 9}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Load Balance\","
-                                + " $f2: 4}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Parallelism\","
-                                + " $f2: 4}>",
-                        "Record<{category: \"Similarity\", challenge: \"Communication Overhead\","
-                                + " $f2: 7}>",
-                        "Record<{category: \"Similarity\", challenge: \"Parallelism\", $f2: 2}>",
-                        "Record<{category: \"Similarity\", challenge: \"Load Balance\", $f2: 1}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Parallelism\", $f2:"
-                                + " 7}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Communication"
-                                + " Overhead\", $f2: 9}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\", $f2:"
-                                + " 4}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", $f2:"
-                                + " 16}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Communication"
-                                + " Overhead\", $f2: 22}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Parallelism\", $f2:"
-                                + " 1}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Bandwidth\", $f2:"
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Communication"
+                                + " Overhead\", count: 22}>",
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Load Balance\","
+                                + " count: 16}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Communication Overhead\","
+                                + " count: 13}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Parallelism\", count: 12}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Parallelism\", count: 11}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Communication Overhead\","
+                                + " count: 9}>",
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Communication"
+                                + " Overhead\", count: 9}>",
+                        "Record<{topic: \"Community Detection\", challenge: \"Communication"
+                                + " Overhead\", count: 9}>",
+                        "Record<{topic: \"Covering\", challenge: \"Parallelism\", count: 9}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Load Balance\", count: 8}>",
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Parallelism\","
+                                + " count: 7}>",
+                        "Record<{topic: \"Similarity\", challenge: \"Communication Overhead\","
+                                + " count: 7}>",
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Bandwidth\", count:"
                                 + " 6}>",
-                        "Record<{category: \"Traversal\", challenge: \"Parallelism\", $f2: 12}>",
-                        "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
-                                + " $f2: 13}>",
-                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", $f2: 8}>",
-                        "Record<{category: \"Traversal\", challenge: \"Bandwidth\", $f2: 2}>",
-                        "Record<{category: \"Covering\", challenge: \"Parallelism\", $f2: 9}>",
-                        "Record<{category: \"Covering\", challenge: \"Communication Overhead\","
-                                + " $f2: 4}>",
-                        "Record<{category: \"Covering\", challenge: \"Load Balance\", $f2: 1}>");
+                        "Record<{topic: \"Centrality\", challenge: \"Bandwidth\", count: 5}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Load Balance\", count: 4}>",
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Load Balance\","
+                                + " count: 4}>",
+                        "Record<{topic: \"Community Detection\", challenge: \"Load Balance\","
+                                + " count: 4}>",
+                        "Record<{topic: \"Community Detection\", challenge: \"Parallelism\","
+                                + " count: 4}>",
+                        "Record<{topic: \"Covering\", challenge: \"Communication Overhead\","
+                                + " count: 4}>",
+                        "Record<{topic: \"Similarity\", challenge: \"Parallelism\", count: 2}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Bandwidth\", count: 2}>",
+                        "Record<{topic: \"Covering\", challenge: \"Load Balance\", count: 1}>",
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Parallelism\", count:"
+                                + " 1}>",
+                        "Record<{topic: \"Similarity\", challenge: \"Load Balance\", count:"
+                                + " 1}>");
         return new QueryContext(query, expected);
     }
 }

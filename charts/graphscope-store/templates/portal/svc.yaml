@@ -1,0 +1,39 @@
+{{- if .Values.portal.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphscope-store.portal.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: portal
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.portal.service.type }}
+  {{- if or (eq .Values.portal.service.type "LoadBalancer") (eq .Values.portal.service.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.portal.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.portal.service.type "LoadBalancer") (not (empty .Values.portal.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{ .Values.portal.service.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if and (eq .Values.portal.service.type "LoadBalancer") (not (empty .Values.portal.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.portal.service.loadBalancerIP }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.portal.service.servicePort }}
+      protocol: TCP
+      targetPort: http
+      {{- if and (or (eq .Values.portal.service.type "NodePort") (eq .Values.portal.service.type "LoadBalancer")) (not (empty .Values.portal.service.nodePorts.service)) }}
+      nodePort: {{ .Values.portal.service.nodePorts.service }}
+      {{- else if eq .Values.portal.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: portal
+{{- end -}}

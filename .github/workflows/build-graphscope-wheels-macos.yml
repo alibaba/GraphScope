@@ -25,7 +25,7 @@ jobs:
         python-version: ['3.11']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -54,7 +54,7 @@ jobs:
         echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Install JDK 11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'zulu' # See 'Supported distributions' for available options
         java-version: '11'
@@ -132,10 +132,10 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-macos-${{ github.sha }}
         path: graphscope.tar.gz
@@ -149,7 +149,7 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -185,7 +185,7 @@ jobs:
       run: |
         . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.22.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.23.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -221,7 +221,7 @@ jobs:
         tar -zcf client.tar.gz python/dist/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
         path: client.tar.gz
@@ -237,7 +237,7 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
 
@@ -285,7 +285,7 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
 
@@ -324,4 +324,4 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3

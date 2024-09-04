@@ -1,11 +1,5 @@
 ---
 version: 0.0.1
-directories:
-  workspace: .
-  subdirs:
-    data: target/test-classes/config  # by default data, relative to ${workspace}
-    conf: conf # by default conf, relative to ${workspace}
-    logs: logs  # by default logs, relative to ${workspace}
 log_level: INFO # default INFO
 default_graph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
 # may include other configuration items of other engines
@@ -20,6 +14,10 @@ compiler:
     opt: RBO
     rules:
       - FilterMatchRule
+  meta:
+    reader:
+      schema:
+        uri: ./target/test-classes/config/modern/graph.yaml
   endpoint:
     default_listen_address: 0.0.0.0  # default localhost
     bolt_connector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector

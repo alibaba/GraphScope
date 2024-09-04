@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.wal.kafka;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.KafkaConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
@@ -60,14 +60,15 @@ public class KafkaLogService implements LogService {
         AdminClient admin = getAdmin();
         NewTopic newTopic = new NewTopic(this.topic, this.storeCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
-        configs.put("retention.ms", "-1");
-        configs.put("retention.bytes", "-1");
+        // Respect the global settings is enough for us
+        //        configs.put("retention.ms", "-1");
+        //        configs.put("retention.bytes", "-1");
         configs.put("max.message.bytes", String.valueOf(this.maxMessageMb * 1024 * 1024));
         newTopic.configs(configs);
         try {
             admin.createTopics(Collections.singleton(newTopic)).all().get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new GrootException("create topics [" + this.topic + "] failed", e);
+            throw new InternalException("create topics [" + this.topic + "] failed", e);
         }
     }
 
@@ -77,7 +78,7 @@ public class KafkaLogService implements LogService {
         try {
             admin.deleteTopics(Arrays.asList(topic)).all().get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new GrootException("delete topics [" + this.topic + "] failed", e);
+            throw new InternalException("delete topics [" + this.topic + "] failed", e);
         }
     }
 
@@ -87,7 +88,7 @@ public class KafkaLogService implements LogService {
         try {
             return admin.listTopics().names().get().contains(this.topic);
         } catch (InterruptedException | ExecutionException e) {
-            throw new GrootException("list topics failed", e);
+            throw new InternalException("list topics failed", e);
         }
     }
 
@@ -133,7 +134,7 @@ public class KafkaLogService implements LogService {
         try {
             result.all().get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         }
     }
 
@@ -165,6 +166,6 @@ public class KafkaLogService implements LogService {
                 Thread.sleep(10000);
             }
         }
-        throw new RuntimeException("Create Kafka Client failed");
+        throw new InternalException("Create Kafka Client failed");
     }
 }

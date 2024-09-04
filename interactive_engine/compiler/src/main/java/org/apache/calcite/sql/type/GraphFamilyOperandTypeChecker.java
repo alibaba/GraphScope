@@ -21,10 +21,14 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.validate.implicit.TypeCoercion;
 import org.apache.calcite.util.Litmus;
 
@@ -38,16 +42,21 @@ import java.util.function.Predicate;
  * we have to make the subclass under the same package {@code org.apache.calcite.sql.type}
  */
 public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
+    protected final List<RelDataTypeFamily> expectedFamilies;
+
     protected GraphFamilyOperandTypeChecker(
-            List<SqlTypeFamily> families, Predicate<Integer> optional) {
-        super(families, optional);
+            List<RelDataTypeFamily> typeFamilies, Predicate<Integer> optional) {
+        super(ImmutableList.of(), optional);
+        this.expectedFamilies = typeFamilies;
     }
 
-    @Override
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
-        if (families.size() != callBinding.getOperandCount()) {
+        if (expectedFamilies.size() != callBinding.getOperandCount()) {
             Litmus.THROW.fail(
-                    "wrong operand count {} for {}", callBinding.getOperandCount(), families);
+                    "Expect {} operands, but got {} operands, expected operands of types {}",
+                    expectedFamilies.size(),
+                    callBinding.getOperandCount(),
+                    expectedFamilies);
         }
         if (!(callBinding instanceof RexCallBinding)) {
             throw new IllegalArgumentException(
@@ -83,10 +92,9 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
         return true;
     }
 
-    @Override
     public boolean checkOperandTypesWithoutTypeCoercion(
             SqlCallBinding callBinding, boolean throwOnFailure) {
-        if (families.size() != callBinding.getOperandCount()) {
+        if (expectedFamilies.size() != callBinding.getOperandCount()) {
             // assume this is an inapplicable sub-rule of a composite rule;
             // don't throw exception.
             return false;
@@ -124,54 +132,74 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
                         + " type");
     }
 
-    private boolean checkSingleOperandType(
+    @Override
+    public String getAllowedSignatures(SqlOperator op, String opName) {
+        return SqlUtil.getAliasedSignature(op, opName, this.expectedFamilies);
+    }
+
+    protected boolean checkSingleOperandType(
             SqlCallBinding callBinding, RexNode node, int iFormalOperand, boolean throwOnFailure) {
-        final SqlTypeFamily family = families.get(iFormalOperand);
-        switch (family) {
-            case ANY:
-                SqlTypeName typeName = node.getType().getSqlTypeName();
-                if (typeName == SqlTypeName.CURSOR) {
-                    // We do not allow CURSOR operands, even for ANY
-                    if (throwOnFailure) {
-                        throw callBinding.newValidationSignatureError();
+        RelDataTypeFamily expectedFamily = expectedFamilies.get(iFormalOperand);
+        RelDataType type = node.getType();
+        if (expectedFamily instanceof SqlTypeFamily) {
+            SqlTypeFamily sqlTypeFamily = (SqlTypeFamily) expectedFamily;
+            switch (sqlTypeFamily) {
+                case ANY:
+                    SqlTypeName typeName = node.getType().getSqlTypeName();
+                    if (typeName == SqlTypeName.CURSOR) {
+                        // We do not allow CURSOR operands, even for ANY
+                        if (throwOnFailure) {
+                            throw callBinding.newValidationSignatureError();
+                        }
+                        return false;
                     }
+                    // fall through
+                case IGNORE:
+                    // no need to check
+                    return true;
+                default:
+                    break;
+            }
+            if (isNullLiteral(node)) {
+                if (callBinding.isTypeCoercionEnabled()) {
+                    return true;
+                } else if (throwOnFailure) {
+                    throw new IllegalArgumentException(
+                            "node " + node + " should not be of null value");
+                } else {
                     return false;
                 }
-                // fall through
-            case IGNORE:
-                // no need to check
+            }
+
+            SqlTypeName typeName = type.getSqlTypeName();
+
+            // Pass type checking for operators if it's of type 'ANY'.
+            if (typeName.getFamily() == SqlTypeFamily.ANY) {
                 return true;
-            default:
-                break;
-        }
-        if (isNullLiteral(node)) {
-            if (callBinding.isTypeCoercionEnabled()) {
-                return true;
-            } else if (throwOnFailure) {
-                throw new IllegalArgumentException("node " + node + " should not be of null value");
-            } else {
+            }
+
+            if (!getAllowedTypeNames(callBinding.getTypeFactory(), sqlTypeFamily, iFormalOperand)
+                    .contains(typeName)) {
+                if (throwOnFailure) {
+                    throw callBinding.newValidationSignatureError();
+                }
                 return false;
             }
-        }
-        RelDataType type = node.getType();
-        SqlTypeName typeName = type.getSqlTypeName();
-
-        // Pass type checking for operators if it's of type 'ANY'.
-        if (typeName.getFamily() == SqlTypeFamily.ANY) {
-            return true;
-        }
-
-        if (!getAllowedTypeNames(family, iFormalOperand).contains(typeName)) {
-            if (throwOnFailure) {
-                throw callBinding.newValidationSignatureError();
+        } else {
+            if (type.getFamily() == SqlTypeFamily.ANY || expectedFamily == SqlTypeFamily.ANY)
+                return true;
+            if (type.getFamily() != expectedFamily) {
+                if (throwOnFailure) {
+                    throw callBinding.newValidationSignatureError();
+                }
+                return false;
             }
-            return false;
         }
         return true;
     }
 
     protected Collection<SqlTypeName> getAllowedTypeNames(
-            SqlTypeFamily family, int iFormalOperand) {
+            RelDataTypeFactory typeFactory, SqlTypeFamily family, int iFormalOperand) {
         return family.getTypeNames();
     }
 

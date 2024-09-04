@@ -21,12 +21,16 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.google.common.base.Preconditions;
 
 import org.neo4j.fabric.config.FabricConfig;
@@ -107,6 +111,16 @@ public class GraphQueryExecutor extends FabricExecutor {
     public StatementResult run(
             FabricTransaction fabricTransaction, String statement, MapValue parameters) {
         IrMeta irMeta = null;
+        final BigInteger jobId = idGenerator.generateId();
+        final QueryStatusCallback statusCallback =
+                ClassUtils.createQueryStatusCallback(
+                        jobId,
+                        null,
+                        statement,
+                        new MetricsCollector.Cypher(System.currentTimeMillis()),
+                        null,
+                        graphConfig);
+        ;
         try {
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
@@ -119,7 +133,6 @@ public class GraphQueryExecutor extends FabricExecutor {
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
-            BigInteger jobId = idGenerator.generateId();
             String jobName = idGenerator.generateName(jobId);
             GraphPlanner.Summary planSummary =
                     new GraphPlanner.Summary(
@@ -140,10 +153,11 @@ public class GraphQueryExecutor extends FabricExecutor {
                     statement,
                     jobName,
                     planSummary.getPhysicalPlan().explain());
+            QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
             StatementResults.SubscribableExecution execution;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
                 execution =
-                        new AbstractPlanExecution(planSummary) {
+                        new AbstractPlanExecution(planSummary, timeoutConfig, statusCallback) {
                             @Override
                             protected void execute(ExecutionResponseListener listener) {
                                 List<IrResult.Results> records = cacheValue.result.records;
@@ -153,7 +167,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                         };
             } else {
                 execution =
-                        new AbstractPlanExecution(planSummary) {
+                        new AbstractPlanExecution(planSummary, timeoutConfig, statusCallback) {
                             @Override
                             protected void execute(ExecutionResponseListener listener)
                                     throws Exception {
@@ -163,14 +177,18 @@ public class GraphQueryExecutor extends FabricExecutor {
                                                 jobName,
                                                 planSummary.getLogicalPlan(),
                                                 planSummary.getPhysicalPlan());
-                                QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
                                 client.submit(request, listener, timeoutConfig);
                             }
                         };
             }
             return StatementResults.connectVia(execution, new QuerySubject.BasicQuerySubject());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (FrontendException e) {
+            e.getDetails().put("QueryId", jobId);
+            statusCallback.onErrorEnd(e.getMessage());
+            throw e;
+        } catch (Throwable t) {
+            statusCallback.onErrorEnd(t.getMessage());
+            throw new RuntimeException(t);
         } finally {
             if (irMeta != null) {
                 metaQueryCallback.afterExec(irMeta);

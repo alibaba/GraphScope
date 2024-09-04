@@ -276,6 +276,8 @@ class GraphSchema:
         self._edge_labels_to_add: List[EdgeLabel] = []
         self._vertex_labels_to_drop: List[VertexLabel] = []
         self._edge_labels_to_drop: List[EdgeLabel] = []
+        self._vertex_labels_to_add_property: List[VertexLabel] = []
+        self._edge_labels_to_add_property: List[VertexLabel] = []
         # 1 indicate valid, 0 indicate invalid.
         self._valid_vertices = []
         self._valid_edges = []
@@ -433,7 +435,7 @@ class GraphSchema:
                         prop["property_name"],
                         unified_type_to_data_type(prop["property_type"]),
                         is_primary_key,
-                        prop["description"],
+                        prop.get("description", ""),
                     )
                 self._vertex_labels_to_add.append(label)
             for edge in edges:
@@ -446,7 +448,7 @@ class GraphSchema:
                         prop["property_name"],
                         unified_type_to_data_type(prop["property_type"]),
                         is_primary_key,
-                        prop["description"],
+                        prop.get("description", ""),
                     )
                 for rel in edge["vertex_type_pair_relations"]:
                     label = label.source(rel["source_vertex"]).destination(
@@ -565,6 +567,8 @@ class GraphSchema:
         self._vertex_labels_to_drop.clear()
         self._edge_labels_to_add.clear()
         self._edge_labels_to_drop.clear()
+        self._vertex_labels_to_add_property.clear()
+        self._edge_labels_to_add_property.clear()
         self._valid_vertices.clear()
         self._valid_edges.clear()
         self._v_label_index.clear()
@@ -598,6 +602,22 @@ class GraphSchema:
                 item = item.add_property(*prop)
         self._edge_labels_to_add.append(item)
         return self._edge_labels_to_add[-1]
+
+    def add_vertex_properties(self, label, properties=None):
+        item = VertexLabel(label)
+        if properties is not None:
+            for prop in properties:
+                item = item.add_property(*prop)
+        self._vertex_labels_to_add_property.append(item)
+        return self._vertex_labels_to_add_property[-1]
+
+    def add_edge_properties(self, label, properties=None):
+        item = EdgeLabel(label)
+        if properties is not None:
+            for prop in properties:
+                item = item.add_property(*prop)
+        self._edge_labels_to_add_property.append(item)
+        return self._edge_labels_to_add_property[-1]
 
     def drop(self, label, src_label=None, dst_label=None):
         for item in self._vertex_labels:
@@ -653,6 +673,16 @@ class GraphSchema:
                 requests.value.add().remove_edge_kind_request.CopyFrom(request)
             else:
                 requests.value.add().drop_edge_type_request.label = item.label
+        for item in self._vertex_labels_to_add_property:
+            type_pb = item.as_type_def()
+            requests.value.add().add_vertex_type_properties_request.type_def.CopyFrom(
+                type_pb
+            )
+        for item in self._edge_labels_to_add_property:
+            type_pb = item.as_type_def()
+            requests.value.add().add_edge_type_properties_request.type_def.CopyFrom(
+                type_pb
+            )
         for item in self._vertex_labels_to_drop:
             requests.value.add().drop_vertex_type_request.label = item.label
         return requests
@@ -663,6 +693,8 @@ class GraphSchema:
         self._edge_labels_to_add.clear()
         self._vertex_labels_to_drop.clear()
         self._edge_labels_to_drop.clear()
+        self._vertex_labels_to_add_property.clear()
+        self._edge_labels_to_add_property.clear()
         response = self._conn.submit(requests)
         self.from_graph_def(response.graph_def)
         return self

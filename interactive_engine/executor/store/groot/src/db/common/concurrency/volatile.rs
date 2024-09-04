@@ -1,5 +1,3 @@
-use std::cell::UnsafeCell;
-
 #[derive(Clone)]
 pub struct Volatile<T> {
     data: T,
@@ -33,6 +31,6 @@ impl<T: Copy + Clone> Volatile<T> {
     #[rustversion::since(1.76.0)]
     pub fn set(&self, data: T) {
         let ptr = &self.data as *const T;
-        unsafe { std::ptr::write_volatile((&*(ptr as *mut UnsafeCell<T>)).get(), data) }
+        unsafe { std::ptr::write_volatile((&*(ptr as *mut std::cell::UnsafeCell<T>)).get(), data) }
     }
 }

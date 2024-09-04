@@ -1,0 +1,95 @@
+graph: modern_graph
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    #location: /home/graphscope/gs_interactive_default_graph/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: "|"  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+
+vertex_mappings:
+  - type_name: person  # must align with the schema
+    inputs:
+      - person.csv
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: id  # can be omitted if the name is not known
+        property: id
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: age
+        property: age
+  - type_name: software
+    inputs:
+      - software.csv
+    column_mappings:
+      - column:
+          index: 0      # can be omitted if the index is the same as the property index
+          name: id    # can be omitted if the name is not known or header_row is set to true.
+        property: id  # must align with the schema
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: lang
+        property: lang
+edge_mappings:
+  - type_triplet:
+      edge: knows
+      source_vertex:  person
+      destination_vertex:  person
+    inputs:
+      - person_knows_person.csv
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    column_mappings:
+      - column:
+          index: 2
+          name: weight
+        property: weight
+  - type_triplet:
+      edge: created
+      source_vertex: person
+      destination_vertex: software
+    inputs:
+      -  person_created_software.csv
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    column_mappings:
+      - column:
+          index: 2
+          name: weight
+        property: weight
+      - column:
+          index: 3
+          name: since
+        property: since

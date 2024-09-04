@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -58,8 +59,12 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitArrayValueConstructor(call);
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
-        } else if (operator.getKind() == SqlKind.ARRAY_CONCAT) {
-            return visitArrayConcat(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_CONCAT")) {
+            return visitPathConcat(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_FUNCTION")) {
+            return visitPathFunction(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (operator.getKind() == SqlKind.OTHER
@@ -69,6 +74,106 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitUnaryOperator(call);
         } else {
             return visitBinaryOperator(call);
+        }
+    }
+
+    private OuterExpression.Expression visitPathFunction(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        RexGraphVariable variable = (RexGraphVariable) operands.get(0);
+        OuterExpression.PathFunction.Builder builder = OuterExpression.PathFunction.newBuilder();
+        if (variable.getAliasId() != AliasInference.DEFAULT_ID) {
+            builder.setTag(Common.NameOrId.newBuilder().setId(variable.getAliasId()).build());
+        }
+        GraphOpt.PathExpandFunction funcOpt =
+                ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.PathExpandFunction.class);
+        builder.setOpt(OuterExpression.PathFunction.FuncOpt.valueOf(funcOpt.name()));
+        setPathFunctionProjection(builder, operands.get(2));
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathFunc(builder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private void setPathFunctionProjection(
+            OuterExpression.PathFunction.Builder builder, RexNode projection) {
+        switch (projection.getKind()) {
+            case MAP_VALUE_CONSTRUCTOR:
+                List<RexNode> operands = ((RexCall) projection).getOperands();
+                OuterExpression.PathFunction.PathElementKeyValues.Builder keyValuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeyValues.newBuilder();
+                for (int i = 0; i < operands.size(); i += 2) {
+                    keyValuesBuilder.addKeyVals(
+                            OuterExpression.PathFunction.PathElementKeyValues.PathElementKeyValue
+                                    .newBuilder()
+                                    .setKey(operands.get(i).accept(this).getOperators(0).getConst())
+                                    .setVal(visitPathFunctionProperty(operands.get(i + 1))));
+                }
+                builder.setMap(keyValuesBuilder);
+                break;
+            case ARRAY_VALUE_CONSTRUCTOR:
+                OuterExpression.PathFunction.PathElementKeys.Builder valuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeys.newBuilder();
+                ((RexCall) projection)
+                        .getOperands()
+                        .forEach(
+                                operand ->
+                                        valuesBuilder.addKeys(visitPathFunctionProperty(operand)));
+                builder.setVars(valuesBuilder);
+                break;
+            default:
+                builder.setProperty(visitPathFunctionProperty(projection));
+        }
+    }
+
+    private OuterExpression.Property visitPathFunctionProperty(RexNode variable) {
+        Preconditions.checkArgument(
+                variable instanceof RexGraphVariable
+                        && ((RexGraphVariable) variable).getProperty() != null,
+                "cannot get path function property from variable [" + variable + "]");
+        return Utils.protoProperty(((RexGraphVariable) variable).getProperty());
+    }
+
+    private OuterExpression.Expression visitPathConcat(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathConcat(
+                                        OuterExpression.PathConcat.newBuilder()
+                                                .setLeft(convertPathInfo(operands))
+                                                .setRight(
+                                                        convertPathInfo(
+                                                                operands.subList(
+                                                                        2, operands.size())))))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.ConcatPathInfo convertPathInfo(List<RexNode> operands) {
+        Preconditions.checkArgument(
+                operands.size() >= 2
+                        && operands.get(0) instanceof RexGraphVariable
+                        && operands.get(1) instanceof RexLiteral);
+        OuterExpression.Variable variable = operands.get(0).accept(this).getOperators(0).getVar();
+        GraphOpt.GetV direction = ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.GetV.class);
+        return OuterExpression.PathConcat.ConcatPathInfo.newBuilder()
+                .setPathTag(variable)
+                .setEndpoint(convertPathDirection(direction))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.Endpoint convertPathDirection(GraphOpt.GetV direction) {
+        switch (direction) {
+            case START:
+                return OuterExpression.PathConcat.Endpoint.START;
+            case END:
+                return OuterExpression.PathConcat.Endpoint.END;
+            default:
+                throw new IllegalArgumentException(
+                        "invalid path concat direction ["
+                                + direction.name()
+                                + "], cannot convert to any physical expression");
         }
     }
 
@@ -124,25 +229,6 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .build();
     }
 
-    private OuterExpression.Expression visitArrayConcat(RexCall call) {
-        OuterExpression.Concat.Builder concatBuilder = OuterExpression.Concat.newBuilder();
-        call.getOperands()
-                .forEach(
-                        operand -> {
-                            Preconditions.checkArgument(
-                                    operand instanceof RexGraphVariable,
-                                    "parameters of 'CONCAT' should be"
-                                            + " 'variable' in ir core structure");
-                            concatBuilder.addVars(operand.accept(this).getOperators(0).getVar());
-                        });
-        return OuterExpression.Expression.newBuilder()
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setConcat(concatBuilder)
-                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
-                .build();
-    }
-
     private OuterExpression.Expression visitArrayValueConstructor(RexCall call) {
         OuterExpression.VariableKeys.Builder varsBuilder =
                 OuterExpression.VariableKeys.newBuilder();
@@ -174,15 +260,27 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                     key instanceof RexLiteral,
                     "key type of 'MAP_VALUE_CONSTRUCTOR' should be 'literal', but is "
                             + key.getClass());
-            Preconditions.checkArgument(
-                    value instanceof RexGraphVariable,
-                    "value type of 'MAP_VALUE_CONSTRUCTOR' should be 'variable', but is "
-                            + value.getClass());
-            varMapBuilder.addKeyVals(
+            OuterExpression.ExprOpr valueOpr = value.accept(this).getOperators(0);
+            OuterExpression.VariableKeyValue.Builder keyValueBuilder =
                     OuterExpression.VariableKeyValue.newBuilder()
-                            .setKey(key.accept(this).getOperators(0).getConst())
-                            .setValue(value.accept(this).getOperators(0).getVar())
-                            .build());
+                            .setKey(key.accept(this).getOperators(0).getConst());
+            switch (valueOpr.getItemCase()) {
+                case VAR:
+                    keyValueBuilder.setVal(valueOpr.getVar());
+                    break;
+                case MAP:
+                    keyValueBuilder.setNested(valueOpr.getMap());
+                    break;
+                case PATH_FUNC:
+                    keyValueBuilder.setPathFunc(valueOpr.getPathFunc());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "can not convert value ["
+                                    + value
+                                    + "] of 'MAP_VALUE_CONSTRUCTOR' to physical plan");
+            }
+            varMapBuilder.addKeyVals(keyValueBuilder);
         }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(

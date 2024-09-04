@@ -90,6 +90,40 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return edge_num;
   }
 
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    adj_lists_.open("", false);
+    adj_lists_.resize(vnum);
+
+    size_t edge_num = 0;
+    for (auto d : degree) {
+      edge_num += d;
+    }
+
+    nbr_list_.open("", false);
+    nbr_list_.resize(edge_num);
+
+    degree_list_.open("", false);
+    degree_list_.resize(vnum);
+
+    nbr_t* ptr = nbr_list_.data();
+    for (vid_t i = 0; i < vnum; ++i) {
+      int deg = degree[i];
+      if (deg != 0) {
+        adj_lists_[i] = ptr;
+      } else {
+        adj_lists_[i] = NULL;
+      }
+      ptr += deg;
+
+      degree_list_[i] = 0;
+    }
+
+    unsorted_since_ = 0;
+    return edge_num;
+  }
+
   void batch_put_edge(vid_t src, vid_t dst, const EDATA_T& data,
                       timestamp_t ts) override {
     auto& nbr = adj_lists_[src][degree_list_[src]++];
@@ -225,6 +259,14 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   size_t size() const override { return adj_lists_.size(); }
 
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
+      ret += degree_list_[i];
+    }
+    return ret;
+  }
+
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -245,6 +287,12 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     ret.set_begin(adj_lists_[v]);
     ret.set_size(degree_list_[v]);
     return ret;
+  }
+
+  void close() override {
+    adj_lists_.reset();
+    degree_list_.reset();
+    nbr_list_.reset();
   }
 
  private:
@@ -288,6 +336,17 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
                     double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.open("", false);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -345,10 +404,16 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -395,6 +460,16 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   size_t size() const override { return nbr_list_.size(); }
 
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < nbr_list_.size(); ++i) {
+      if (nbr_list_[i].neighbor != std::numeric_limits<vid_t>::max()) {
+        ++ret;
+      }
+    }
+    return ret;
+  }
+
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -425,6 +500,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() override { nbr_list_.reset(); }
+
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
  private:
@@ -446,6 +523,17 @@ class SingleImmutableCsr<std::string_view>
                     double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.open("", false);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -503,10 +591,16 @@ class SingleImmutableCsr<std::string_view>
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -553,6 +647,16 @@ class SingleImmutableCsr<std::string_view>
 
   size_t size() const override { return nbr_list_.size(); }
 
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < nbr_list_.size(); ++i) {
+      if (nbr_list_[i].neighbor != std::numeric_limits<vid_t>::max()) {
+        ++ret;
+      }
+    }
+    return ret;
+  }
+
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(
         get_edges(v));
@@ -590,6 +694,7 @@ class SingleImmutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
+  void close() override { nbr_list_.reset(); }
 
  private:
   StringColumn& column_;

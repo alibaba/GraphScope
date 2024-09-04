@@ -369,6 +369,76 @@ def parse_version(root, **kwargs):
     return parse(root, **kwargs)
 
 
+class GenerateFlexServer(Command):
+    description = "generate flex server from OpenApi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # tempdir
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "gscoordinator")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(repo_root, "gscoordinator", "flex")
+        # generate
+        specification = os.path.join(
+            repo_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
+        )
+        cmd = [
+            "openapi-generator-cli",
+            "generate",
+            "-g",
+            "python-flask",
+            "-i",
+            str(specification),
+            "-o",
+            str(tempdir),
+            "--package-name",
+            "gscoordinator.flex",
+        ]
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
+        subprocess.check_call(
+            cmd,
+            env=env,
+        )
+
+        # remove
+        if os.path.exists(os.path.join(targetdir, "models")):
+            shutil.rmtree(os.path.join(targetdir, "models"))
+        # cp
+        subprocess.run(
+            [
+                "cp",
+                "-r",
+                os.path.join(tempdir, "gscoordinator", "flex", "models"),
+                os.path.join(targetdir, "models"),
+            ]
+        )
+        for filename in ["encoder.py", "typing_utils.py", "util.py"]:
+            subprocess.run(
+                [
+                    "cp",
+                    os.path.join(tempdir, "gscoordinator", "flex", filename),
+                    targetdir,
+                ]
+            )
+        subprocess.run(
+            [
+                "cp",
+                os.path.join(
+                    tempdir, "gscoordinator", "flex", "openapi", "openapi.yaml"
+                ),
+                os.path.join(targetdir, "openapi"),
+            ]
+        )
+
+
 setup(
     name=os.environ.get("package_name", "gs-coordinator"),
     description="",
@@ -412,6 +482,7 @@ setup(
         "sdist": CustomSDist,
         "develop": CustomDevelop,
         "lint": FormatAndLint,
+        "generate_flex_server": GenerateFlexServer,
     },
     install_requires=parsed_reqs(),
     extras_require=parsed_dev_reqs(),

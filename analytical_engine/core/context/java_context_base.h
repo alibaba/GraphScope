@@ -86,8 +86,27 @@ class JavaContextBase : public grape::ContextBase {
     }
     JNIEnvMark m;
     if (m.env()) {
-      m.env()->DeleteGlobalRef(url_class_loader_object_);
-      VLOG(1) << "Delete URL class loader";
+      // Delete the java objects
+      if (app_object_) {
+        m.env()->DeleteGlobalRef(app_object_);
+        VLOG(1) << "Delete app object";
+      }
+      if (context_object_) {
+        m.env()->DeleteGlobalRef(context_object_);
+        VLOG(1) << "Delete context object";
+      }
+      if (fragment_object_) {
+        m.env()->DeleteGlobalRef(fragment_object_);
+        VLOG(1) << "Delete fragment object";
+      }
+      if (mm_object_) {
+        m.env()->DeleteGlobalRef(mm_object_);
+        VLOG(1) << "Delete message manager object";
+      }
+      if (url_class_loader_object_) {
+        m.env()->DeleteGlobalRef(url_class_loader_object_);
+        VLOG(1) << "Delete URL class loader object";
+      }
     } else {
       LOG(ERROR) << "JNI env not available.";
     }
@@ -132,7 +151,8 @@ class JavaContextBase : public grape::ContextBase {
           LOG(ERROR) << "Exception occurred when calling write back method";
         }
       } else {
-        VLOG(2) << "Not write back method found";
+        VLOG(2) << "Not write back method found, try to call output";
+        callJavaContextOutput();
       }
     }
   }
@@ -231,6 +251,31 @@ class JavaContextBase : public grape::ContextBase {
             env->GetLongField(context_object_, inner_ctx_address_field);
         CHECK_NE(inner_ctx_addr_, 0);
         VLOG(1) << "Successfully obtained inner ctx address";
+      }
+    } else {
+      LOG(ERROR) << "JNI env not available.";
+    }
+  }
+
+  // We expect user to write the sync back logic in their java code.
+  // i.e. copy the data from java heap to cpp context heap.
+  void callJavaContextOutput() {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+
+      jclass context_class = env->GetObjectClass(this->context_object());
+      CHECK_NOTNULL(context_class);
+
+      const char* descriptor = "(Lcom/alibaba/graphscope/fragment/IFragment;)V";
+      jmethodID output_methodID =
+          env->GetMethodID(context_class, "Output", descriptor);
+      if (output_methodID) {
+        VLOG(1) << "Found output method in java context.";
+        env->CallVoidMethod(this->context_object(), output_methodID,
+                            this->fragment_object());
+      } else {
+        VLOG(1) << "Output method not found, skip.";
       }
     } else {
       LOG(ERROR) << "JNI env not available.";

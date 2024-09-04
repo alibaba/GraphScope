@@ -926,6 +926,20 @@ impl Object {
         }
     }
 
+    pub fn take_vector(self) -> Result<Vec<Object>, CastError> {
+        match self {
+            Object::Vector(vec) => Ok(vec),
+            Object::DynOwned(mut x) => {
+                if let Some(v) = x.try_downcast_mut::<Vec<Object>>() {
+                    Ok(std::mem::replace(v, Vec::new()))
+                } else {
+                    Err(CastError::new::<Vec<Object>>(RawType::Unknown))
+                }
+            }
+            _ => Err(CastError::new::<Vec<Object>>(self.raw_type())),
+        }
+    }
+
     fn contains_single(&self, single: &Object) -> bool {
         contains_single!(self, single, Object)
     }
@@ -1220,6 +1234,13 @@ macro_rules! partial_cmp {
                 .as_str()
                 .map(|o| (&(**v)).partial_cmp(&(*o)))
                 .unwrap_or(None),
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Equal)
+                } else {
+                    Some(Ordering::Less)
+                }
+            }
             $crate::$ty::Vector(v1) => {
                 if let $crate::$ty::Vector(v2) = $other {
                     v1.partial_cmp(v2)

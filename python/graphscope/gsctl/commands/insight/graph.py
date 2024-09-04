@@ -19,20 +19,15 @@
 import click
 import yaml
 
+from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.impl import create_edge_type
-from graphscope.gsctl.impl import create_groot_dataloading_job
 from graphscope.gsctl.impl import create_vertex_type
-from graphscope.gsctl.impl import delete_edge_type
-from graphscope.gsctl.impl import delete_job_by_id
-from graphscope.gsctl.impl import delete_vertex_type
-from graphscope.gsctl.impl import get_datasource
-from graphscope.gsctl.impl import get_job_by_id
-from graphscope.gsctl.impl import import_datasource
-from graphscope.gsctl.impl import import_groot_schema
-from graphscope.gsctl.impl import list_groot_graph
-from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import unbind_edge_datasource
-from graphscope.gsctl.impl import unbind_vertex_datasource
+from graphscope.gsctl.impl import delete_edge_type_by_name
+from graphscope.gsctl.impl import delete_vertex_type_by_name
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import import_schema
+from graphscope.gsctl.impl import list_graphs
+from graphscope.gsctl.impl import switch_context
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -48,47 +43,48 @@ def cli():
 
 
 @cli.group()
-def create():
-    """Create vertex/edge type, data source, loader job from file"""
+def use():
+    """Switch back to the global scope"""
     pass
 
 
 @cli.group()
 def delete():
-    """Delete vertex/edge type, data source, loader job by identifier"""
+    """Delete vertex or edge type by name"""
     pass
 
 
 @cli.group()
-def desc():
-    """Show details of job status by identifier"""
+def create():
+    """Create vertex or edge type from file"""
     pass
 
 
 @cli.command()
 def ls():  # noqa: F811
-    """Display schema, stored procedure, and job information"""
+    """Display schema and data source mapping information"""
     tree = TreeDisplay()
+    # context
+    current_context = get_current_context()
     try:
-        graphs = list_groot_graph()
-        using_graph = graphs[0]
+        graphs = list_graphs()
+        using_graph = None
+        for g in graphs:
+            if g.id == current_context.context:
+                using_graph = g
+                break
         # schema
-        tree.create_graph_node_for_groot(using_graph)
-        # data source
-        datasource = get_datasource("placeholder")
-        tree.create_datasource_node(using_graph, datasource)
-        # stored procedure
-        tree.create_procedure_node(using_graph, [])
-        # job
-        jobs = list_jobs()
-        tree.create_job_node(using_graph, jobs)
+        tree.create_graph_node(using_graph)
+        # data source mapping
+        datasource_mapping = get_datasource_by_id(using_graph.id)
+        tree.create_datasource_mapping_node(using_graph, datasource_mapping)
     except Exception as e:
         err(f"Failed to display graph information: {str(e)}")
     else:
-        tree.show(using_graph.name)
+        tree.show(graph_identifier=current_context.context)
 
 
-@create.command
+@create.command()
 @click.option(
     "-f",
     "--filename",
@@ -96,21 +92,22 @@ def ls():  # noqa: F811
     help="Path of yaml file",
 )
 def schema(filename):  # noqa: F811
-    """Import the schema from file"""
+    """Import schema from file"""
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
+    current_context = get_current_context()
+    graph_identifier = current_context.context
     try:
         schema = read_yaml_file(filename)
-        # only one graph supported int groot
-        import_groot_schema("placeholder", schema)
+        import_schema(graph_identifier, schema)
     except Exception as e:
         err(f"Failed to import schema: {str(e)}")
     else:
         succ("Import schema successfully.")
 
 
-@create.command(name="vertex_type")
+@create.command()
 @click.option(
     "-f",
     "--filename",
@@ -122,29 +119,32 @@ def vertex_type(filename):  # noqa: F811
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
+    current_context = get_current_context()
+    graph_identifier = current_context.context
     try:
         vtype = read_yaml_file(filename)
-        # only one graph supported in groot
-        create_vertex_type("placeholder", vtype)
+        create_vertex_type(graph_identifier, vtype)
     except Exception as e:
         err(f"Failed to create vertex type: {str(e)}")
     else:
         succ(f"Create vertex type {vtype['type_name']} successfully.")
 
 
-@delete.command(name="vertex_type")
+@delete.command()
 @click.argument("vertex_type", required=True)
 def vertex_type(vertex_type):  # noqa: F811
-    """Delete a vertex type, see identifier with `ls` command"""
+    """Delete a vertex type by name"""
+    current_context = get_current_context()
+    graph_identifier = current_context.context
     try:
-        delete_vertex_type("placeholder", vertex_type)
+        delete_vertex_type_by_name(graph_identifier, vertex_type)
     except Exception as e:
         err(f"Failed to delete vertex type {vertex_type}: {str(e)}")
     else:
         succ(f"Delete vertex type {vertex_type} successfully.")
 
 
-@create.command(name="edge_type")
+@create.command()
 @click.option(
     "-f",
     "--filename",
@@ -156,17 +156,18 @@ def edge_type(filename):  # noqa: F811
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
+    current_context = get_current_context()
+    graph_identifier = current_context.context
     try:
         etype = read_yaml_file(filename)
-        # only one graph supported in groot
-        create_edge_type("placeholder", etype)
+        create_edge_type(graph_identifier, etype)
     except Exception as e:
         err(f"Failed to create edge type: {str(e)}")
     else:
         succ(f"Create edge type {etype['type_name']} successfully.")
 
 
-@delete.command(name="edge_type")
+@delete.command()
 @click.argument("edge_type", required=True)
 @click.option(
     "-s",
@@ -180,14 +181,16 @@ def edge_type(filename):  # noqa: F811
     required=True,
     help="Destination vertex type of the edge",
 )
-def etype(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
-    """Delete an edge type, see identifier with `ls` command"""
+def edge_type(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Delete an edge type by name"""
+    current_context = get_current_context()
+    graph_identifier = current_context.context
     try:
         etype_full_name = (
             f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
         )
-        delete_edge_type(
-            "placeholder", edge_type, source_vertex_type, destination_vertex_type
+        delete_edge_type_by_name(
+            graph_identifier, edge_type, source_vertex_type, destination_vertex_type
         )
     except Exception as e:
         err(f"Failed to delete edge type {etype_full_name}: {str(e)}")
@@ -195,113 +198,8 @@ def etype(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
         succ(f"Delete edge type {etype_full_name} successfully.")
 
 
-@create.command
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file.",
-)
-def datasource(filename):  # noqa: F811
-    """Bind data source from file"""
-    if not is_valid_file_path(filename):
-        err(f"Invalid file: {filename}")
-        return
-    try:
-        datasource = read_yaml_file(filename)
-        # only one graph supported int groot
-        import_datasource("placeholder", datasource)
-    except Exception as e:
-        err(f"Failed to import data source: {str(e)}")
-    else:
-        succ("Bind data source successfully.")
-
-
-@delete.command(name="vertex_source")
-@click.argument("vertex_type", required=True)
-def vertex_source(vertex_type):  # noqa: F811
-    """Unbind the data source on vertex type"""
-    try:
-        unbind_vertex_datasource("placeholder", vertex_type)
-    except Exception as e:
-        err(f"Failed to unbind data source on {vertex_type}: {str(e)}")
-    else:
-        succ(f"Unbind data source on {vertex_type} successfully.")
-
-
-@delete.command(name="edge_source")
-@click.argument("edge_type", required=True)
-@click.option(
-    "-s",
-    "--source_vertex_type",
-    required=True,
-    help="Source vertex type of the edge",
-)
-@click.option(
-    "-d",
-    "--destination_vertex_type",
-    required=True,
-    help="Destination vertex type of the edge",
-)
-def edge_source(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
-    """Unbind the data source on edge type"""
-    try:
-        etype_full_name = (
-            f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
-        )
-        unbind_edge_datasource(
-            "placeholder", edge_type, source_vertex_type, destination_vertex_type
-        )
-    except Exception as e:
-        err(f"Failed to unbind data source on {etype_full_name}: {str(e)}")
-    else:
-        succ(f"Unbind data source on {etype_full_name} successfully.")
-
-
-@create.command()
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file",
-)
-def loaderjob(filename):  # noqa: F811
-    """Create a dataloading job from file"""
-    if not is_valid_file_path(filename):
-        err(f"Invalid file: {filename}")
-        return
-    try:
-        config = read_yaml_file(filename)
-        jobid = create_groot_dataloading_job("placeholder", config)
-    except Exception as e:
-        err(f"Failed to create a job: {str(e)}")
-    else:
-        succ(f"Create job {jobid} successfully.")
-
-
-@desc.command()
-@click.argument("identifier", required=True)
-def job(identifier):  # noqa: F811
-    """Show details of job, see identifier with `ls` command"""
-    try:
-        job = get_job_by_id(identifier)
-    except Exception as e:
-        err(f"Failed to get job: {str(e)}")
-    else:
-        info(yaml.dump(job.to_dict()))
-
-
-@delete.command()
-@click.argument("identifier", required=True)
-def job(identifier):  # noqa: F811
-    """Cancel a job, see identifier with `ls` command"""
-    try:
-        delete_job_by_id(identifier)
-    except Exception as e:
-        err(f"Failed to cancel job {identifier}: {str(e)}")
-    else:
-        succ(f"Cancel job {identifier} successfully.")
-
-
-if __name__ == "__main__":
-    cli()
+@use.command(name="GLOBAL")
+def _global():
+    """Switch back to the global scope"""
+    switch_context("global")
+    click.secho("Using GLOBAL", fg="green")

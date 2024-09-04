@@ -12,7 +12,7 @@ public class VertexMapping {
     @JsonIgnore
     public String getInputFileName() {
         String input = inputs.get(0);
-        String[] parts = input.strip().split("/");
+        String[] parts = input.trim().split("/");
         return parts[parts.length - 1];
     }
 }

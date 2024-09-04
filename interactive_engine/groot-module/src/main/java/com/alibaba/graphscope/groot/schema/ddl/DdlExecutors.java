@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.exception.UnsupportedOperationException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
@@ -33,7 +34,11 @@ public class DdlExecutors {
     public DdlExecutors() {
         this.ddlExecutors = new HashMap<>();
         ddlExecutors.put(OperationType.CREATE_VERTEX_TYPE, new CreateVertexTypeExecutor());
+        ddlExecutors.put(
+                OperationType.ADD_VERTEX_TYPE_PROPERTIES, new AddVertexTypePropertiesExecutor());
         ddlExecutors.put(OperationType.CREATE_EDGE_TYPE, new CreateEdgeTypeExecutor());
+        ddlExecutors.put(
+                OperationType.ADD_EDGE_TYPE_PROPERTIES, new AddEdgeTypePropertiesExecutor());
         ddlExecutors.put(OperationType.DROP_VERTEX_TYPE, new DropVertexTypeExecutor());
         ddlExecutors.put(OperationType.DROP_EDGE_TYPE, new DropEdgeTypeExecutor());
         ddlExecutors.put(OperationType.ADD_EDGE_KIND, new AddEdgeKindExecutor());

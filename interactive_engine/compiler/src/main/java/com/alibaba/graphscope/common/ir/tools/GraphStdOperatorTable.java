@@ -20,6 +20,8 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rex.operator.CaseOperator;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlArrayValueConstructor;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlMapValueConstructor;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFamily;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.ExtSqlPosixRegexOperator;
@@ -296,4 +298,41 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.IN_OPERANDS_TYPE,
                     OperandTypes.ANY);
+
+    public static final SqlOperator PATH_CONCAT =
+            new SqlFunction(
+                    "PATH_CONCAT",
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG0,
+                    null,
+                    GraphOperandTypes.operandMetadata(
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE,
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE),
+                            typeFactory -> ImmutableList.of(),
+                            i ->
+                                    ImmutableList.of(
+                                                    "LeftPath",
+                                                    "LeftDirection",
+                                                    "RightPath",
+                                                    "RightDirection")
+                                            .get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
+
+    public static final SqlOperator PATH_FUNCTION =
+            new SqlFunction(
+                    "PATH_FUNCTION",
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG2.andThen(SqlTypeTransforms.TO_ARRAY),
+                    null,
+                    GraphOperandTypes.operandMetadata(
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH, SqlTypeFamily.IGNORE, SqlTypeFamily.ANY),
+                            typeFactory -> ImmutableList.of(),
+                            i -> ImmutableList.of("Path", "FuncOpt", "PropertyProjection").get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
 }

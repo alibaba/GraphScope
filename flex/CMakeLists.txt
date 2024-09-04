@@ -10,14 +10,14 @@ project (
   LANGUAGES CXX)
 
 
-option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
+option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
+option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
 
 #print options
-message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
@@ -36,11 +36,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-if (BUILD_HQPS)
-    message("Build HighQPS Engine")
-    add_definitions(-DBUILD_HQPS)
-endif ()
 
 if(USE_PTHASH)
     message("Use PTHash")
@@ -83,7 +78,10 @@ else ()
     endif ()
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC")
+if (OPTIMIZE_FOR_HOST)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
@@ -115,31 +113,59 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+# find yaml-cpp-----------------------------------------------------------------
+find_package(yaml-cpp REQUIRED)
+include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
+if (NOT yaml-cpp_FOUND)
+    message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
+endif ()
+
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
+#find hiactor----------------------------------------------------------------------
+find_package(Hiactor)
+if (NOT Hiactor_FOUND)
+    message(STATUS "hiactor not found, please install the hiactor library")
+else ()
+    include_directories(SYSTEM ${Hiactor_INCLUDE_DIRS})
+endif()
+
 #find arrow----------------------------------------------------------------------
-include("cmake/FindArrow.cmake")
-if (NOT ARROW_FOUND)
+find_package(Arrow REQUIRED)
+if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
-    if (TARGET arrow_shared)
-        set(ARROW_SHARED_LIB arrow_shared)
-    endif()
-    if (TARGET arrow_static)
-        set(ARROW_STATIC_LIB arrow_static)
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
+    if (USE_STATIC_ARROW)
+        if (TARGET arrow_static)
+            set(ARROW_LIB arrow_static)
+        else()
+            message(FATAL_ERROR "Building with USE_STATIC_ARROW=ON, but arrow_static target not found")
+        endif()
+    else ()
+        if (TARGET arrow_shared)
+            set(ARROW_LIB arrow_shared)
+        else()
+            message(FATAL_ERROR "Building with USE_STATIC_ARROW=OFF, but arrow_shared target not found")
+        endif()
     endif()
 endif ()
 
+#find protobuf-------------------------------------------------------------------
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
+
 find_package(opentelemetry-cpp CONFIG)
 if (OPENTELEMETRY_CPP_FOUND)
-    find_package(Protobuf REQUIRED)
+    message(STATUS "opentelemetry-cpp found")
     find_package(CURL REQUIRED)
     add_definitions(-DHAVE_OPENTELEMETRY_CPP)
+else()
+    message(STATUS "opentelemetry-cpp not found, build without opentelemetry-cpp")
 endif ()
 
 # Find Doxygen

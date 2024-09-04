@@ -16,15 +16,24 @@
 # limitations under the License.
 #
 
-import itertools
-import os
 from typing import List
 
 import graphscope.flex.rest
+from graphscope.flex.rest import DataloadingJobConfig
 from graphscope.flex.rest import JobStatus
-from graphscope.flex.rest import SchemaMapping
 from graphscope.gsctl.config import get_current_context
-from graphscope.gsctl.impl.utils import upload_file
+
+
+def submit_dataloading_job(graph_identifier: str, config: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.JobApi(api_client)
+        response = api_instance.submit_dataloading_job(
+            graph_identifier, DataloadingJobConfig.from_dict(config)
+        )
+        return response.job_id
 
 
 def list_jobs() -> List[JobStatus]:
@@ -33,58 +42,22 @@ def list_jobs() -> List[JobStatus]:
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
-        jobs = api_instance.list_jobs()
-        return jobs
+        return api_instance.list_jobs()
 
 
-def get_job_by_id(job_id: str) -> JobStatus:
+def delete_job_by_id(job_identifier: str, delete_scheduler=False) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
-        job = api_instance.get_job_by_id(job_id)
-        return job
+        return api_instance.delete_job_by_id(job_identifier, delete_scheduler)
 
 
-def create_dataloading_job(graph_name: str, job_config: dict) -> str:
-    # upload files
-    for mapping in itertools.chain(
-        job_config["vertex_mappings"], job_config["edge_mappings"]
-    ):
-        for index, location in enumerate(mapping["inputs"]):
-            # path begin with "@" represents the local file
-            if location.startswith("@"):
-                location = location[1:]
-                filename = os.path.basename(location)
-                with open(location, "rb") as f:
-                    content = f.read()
-                path_after_uploaded = upload_file(filename, content, location)
-                mapping["inputs"][index] = path_after_uploaded
-    # create job
+def get_job_by_id(job_identifier: str) -> JobStatus:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
-        return api_instance.create_dataloading_job(
-            graph_name, SchemaMapping.from_dict(job_config)
-        )
-
-
-def get_dataloading_config(graph_name: str) -> SchemaMapping:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.JobApi(api_client)
-        return api_instance.get_dataloading_config(graph_name)
-
-
-def delete_job_by_id(job_id: str) -> str:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.JobApi(api_client)
-        return api_instance.delete_job_by_id(job_id)
+        return api_instance.get_job_by_id(job_identifier)

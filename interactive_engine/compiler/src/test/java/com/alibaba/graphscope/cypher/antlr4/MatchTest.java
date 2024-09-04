@@ -18,13 +18,14 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.runtime.CalciteException;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
@@ -264,8 +265,8 @@ public class MatchTest {
     public void match_12_test() {
         try {
             RelNode node = Utils.eval("Match (a:人类) Return a").build();
-        } catch (CalciteException e) {
-            Assert.assertEquals("Table '人类' not found", e.getMessage());
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("Table \'人类\' not found"));
             return;
         }
         Assert.fail();
@@ -275,10 +276,12 @@ public class MatchTest {
     public void match_13_test() {
         try {
             RelNode node = Utils.eval("Match (a:person {名称:'marko'}) Return a").build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=名称} not found; expected properties are: [id, name, age]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=名称} not found; expected properties are: [id, name,"
+                                            + " age]"));
             return;
         }
         Assert.fail();
@@ -503,5 +506,22 @@ public class MatchTest {
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
+    }
+
+    @Test
+    public void property_exist_after_type_inference_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(
+                        "schema/ldbc_schema_exp_hierarchy.json");
+        // check property 'creationDate' still exists after type inference has updated the type of
+        // 'HASCREATOR'
+        RelNode rel =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON)<-[h:HASCREATOR]-(b:COMMENT) Return h;", builder)
+                        .build();
+        Assert.assertEquals(
+                "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
+                        + " properties=[BIGINT creationDate]) h)",
+                rel.getRowType().toString());
     }
 }
