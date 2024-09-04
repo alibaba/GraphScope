@@ -312,9 +312,17 @@ and gremlin console to connect to gremlin endpoint.
     show_default=True,
     required=False,
 )
-def destroy(type, container_name):
+@click.option(
+    "-y",
+    "--yes",
+    is_flag=True,
+    default=False,
+    help="Do not ask for confirmation",
+    required=False,
+)
+def destroy(type, container_name, yes):
     """Destroy Flex Interactive instance"""
-    if click.confirm(f"Do you want to destroy {container_name} instance?"):
+    if yes or click.confirm(f"Do you want to destroy {container_name} instance?"):
         cmd = []
         if type == "interactive":
             cmd = [

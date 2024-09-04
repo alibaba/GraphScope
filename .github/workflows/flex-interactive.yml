@@ -54,9 +54,7 @@ jobs:
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
         # launch service: 8080 for coordinator http port; 7687 for cypher port;
-        gsctl instance deploy --type interactive --image-registry graphscope \ 
-            --image-tag latest \
-            --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-xdist
@@ -65,4 +63,4 @@ jobs:
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
 
         # destroy instance
-        gsctl instance destroy --type interactive
+        gsctl instance destroy --type interactive -y
