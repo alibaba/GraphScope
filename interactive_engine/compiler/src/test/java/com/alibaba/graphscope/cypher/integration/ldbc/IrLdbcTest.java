@@ -80,7 +80,8 @@ public class IrLdbcTest {
 
     @Test
     public void run_ldbc_7_test() {
-        // skip this test in pegasus as optional match (via optional edge_expand) is not supported yet.
+        // skip this test in pegasus as optional match (via optional edge_expand) is not supported
+        // yet.
         assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
@@ -105,7 +106,8 @@ public class IrLdbcTest {
 
     @Test
     public void run_ldbc_10_test() {
-        // skip this test in pegasus (actually exp-store and groot-store) since the date format is different
+        // skip this test in pegasus (actually exp-store and groot-store) since the date format is
+        // different
         assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
         Result result = session.run(testQuery.getQuery());
