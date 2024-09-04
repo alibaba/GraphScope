@@ -186,8 +186,8 @@ def interactive(app, graphscope_repo):
 @click.option(
     "--interactive-config",
     help="Interactive config file path [docker only]",
-    required = False,
-    default = None,
+    required=False,
+    default=None,
 )
 @click.option(
     "--gremlin-port",
@@ -254,7 +254,9 @@ def deploy(
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
         if interactive_config is not None:
-            cmd.extend(["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"])
+            cmd.extend(
+                ["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"]
+            )
     returncode = run_shell_cmd(cmd, os.getcwd())
     if returncode == 0:
         message = f"""
