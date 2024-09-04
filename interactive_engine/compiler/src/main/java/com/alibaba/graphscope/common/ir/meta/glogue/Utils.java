@@ -16,11 +16,13 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -124,5 +126,38 @@ public class Utils {
             }
         }
         return true;
+    }
+
+    // convert `ExtendEdge` to `PatternEdge`
+    public static PatternEdge convert(
+            ExtendEdge edge, PatternVertex querySrc, PatternVertex queryDst) {
+        PatternVertex src, dst;
+        switch (edge.getDirection()) {
+            case OUT:
+            case BOTH:
+                src = querySrc;
+                dst = queryDst;
+                break;
+            case IN:
+            default:
+                src = queryDst;
+                dst = querySrc;
+                break;
+        }
+        return (edge.getEdgeTypeIds().size() == 1)
+                ? new SinglePatternEdge(
+                        src,
+                        dst,
+                        edge.getEdgeTypeId(),
+                        0,
+                        edge.getDirection() == PatternDirection.BOTH,
+                        edge.getElementDetails())
+                : new FuzzyPatternEdge(
+                        src,
+                        dst,
+                        Lists.newArrayList(edge.getEdgeTypeIds()),
+                        0,
+                        edge.getDirection() == PatternDirection.BOTH,
+                        edge.getElementDetails());
     }
 }

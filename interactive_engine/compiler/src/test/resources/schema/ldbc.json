@@ -69,6 +69,14 @@
           },
           "data_type": 1,
           "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 20,
+            "name": "creator_id"
+          },
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },
@@ -125,6 +133,14 @@
           },
           "data_type": 1,
           "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 20,
+            "name": "creator_id"
+          },
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },
@@ -148,7 +164,7 @@
             "name": "name"
           },
           "data_type": 4,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {
@@ -180,7 +196,7 @@
             "name": "name"
           },
           "data_type": 4,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {

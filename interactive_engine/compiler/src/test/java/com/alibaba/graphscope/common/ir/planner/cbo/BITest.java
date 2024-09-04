@@ -418,14 +418,12 @@ public class BITest {
                     + " tables=[REPLYOF]}], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "], fetch=[7], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
                     + " start_alias=[post])\n"
-                    + "          GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
-                    + " alias=[post], fusedFilter=[[AND(>=(_.creationDate, ?0), <=(_.creationDate,"
-                    + " ?1))]], opt=[START], physicalOpt=[ITSELF])\n"
-                    + "            GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
-                    + " PERSON)]], alias=[_], startAlias=[person], opt=[IN],"
+                    + "          GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
+                    + " PERSON)]], alias=[person], startAlias=[post], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "              GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX])",
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[post], fusedFilter=[[AND(>=(_.creationDate, ?0), <=(_.creationDate,"
+                    + " ?1))]], opt=[VERTEX])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 

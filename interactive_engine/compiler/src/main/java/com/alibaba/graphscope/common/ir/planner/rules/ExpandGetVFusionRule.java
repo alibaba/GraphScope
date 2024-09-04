@@ -315,6 +315,9 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                             pathExpand.getAliasName(),
                             pathExpand.getStartAlias(),
                             pathExpand.isOptional());
+            if (pathExpand.getCachedCost() != null) {
+                afterPathExpand.setCachedCost(pathExpand.getCachedCost());
+            }
             call.transformTo(afterPathExpand);
         }
 
