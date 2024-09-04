@@ -57,7 +57,7 @@ public class IrLdbcTest {
     @Test
     public void run_ldbc_4_test() {
         // skip this test in pegasus (actually exp-store) since the date format is different.
-        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_4_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -80,8 +80,8 @@ public class IrLdbcTest {
 
     @Test
     public void run_ldbc_7_test() {
-        // skip this test in pegasus (actually exp-store) since the date format is different
-        assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        // skip this test in pegasus as optional match (via optional edge_expand) is not supported yet.
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -105,8 +105,8 @@ public class IrLdbcTest {
 
     @Test
     public void run_ldbc_10_test() {
-        // skip this test in pegasus (actually exp-store) since the date format is different
-        assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        // skip this test in pegasus (actually exp-store and groot-store) since the date format is different
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
