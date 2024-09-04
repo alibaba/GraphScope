@@ -27,6 +27,11 @@ function usage() {
   echo "  -o, --output-dir  Generate the SDK for the specified language"
 }
 
+function echo_and_run() {
+  echo "$@"
+  eval "$@"
+}
+
 function do_gen() {
   echo "Generating SDK documentation"
   OUTPUT_PATH="$1"
@@ -44,21 +49,23 @@ function do_gen() {
   # replace all occurrence of $GENERATED_ENDPOINT with $ENDPOINT_PLACE_HOLDER
   # in the generated docs, for all files under ./java/docs and ./python/docs
   cmd="sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./java/docs/*"
-  echo "Running command: ${cmd}"
-  eval $cmd
+  echo_and_run $cmd
   cmd="sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./python/docs/*"
-  echo "Running command: ${cmd}"
-  eval $cmd
+  echo_and_run $cmd
+  cmd="sed -i 's|\.\.\/README|python_sdk|g' ./python/docs/*"
+  echo_and_run $cmd
+  cmd="sed -i 's|README|python_sdk|g' ./python/docs/*"
+  echo_and_run $cmd
+  cmd="sed -i 's|documentation-for-models|documentation-for-data-structures|g' ./python/docs/*"
+  echo_and_run $cmd
+  cmd="sed -i 's|documentation-for-api-endpoints|documentation-for-service-apis|g' ./python/docs/*"
+  echo_and_run $cmd
 
   # # Copy the generated docs to the output path
   cmd="find ./java/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/java/ \;"
-  echo "Running command: ${cmd}"
-  eval $cmd
-  echo "Running command: ${cmd}"
-  eval $cmd
+  echo_and_run $cmd
   cmd="find ./python/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/python/ \;"
-  echo "Running command: ${cmd}"
-  eval $cmd
+  echo_and_run $cmd
 
   echo "SDK documentation generated successfully."
 }

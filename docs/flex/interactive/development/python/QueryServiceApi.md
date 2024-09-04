@@ -73,7 +73,7 @@ No authorization required
 **200** | Successfully runned. Empty if failed? |  -  |
 **500** | Server internal error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **CallProcedureOnCurrentGraph**
 > Result[CollectiveResults] call_procedure_current(params)
@@ -134,5 +134,5 @@ No authorization required
 **200** | Successfully runned. Empty if failed? |  -  |
 **500** | Server internal error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 

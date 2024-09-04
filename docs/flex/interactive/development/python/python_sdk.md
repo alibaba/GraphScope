@@ -380,6 +380,8 @@ The APIs in interactive SDK are divided into five categories.
 - JobManagementApi
 - ServiceManagementApi
 - QueryServiceApi
+- VertexApi
+- EdgeApi
 
 All URIs are relative to `${INTERACTIVE_ADMIN_ENDPOINT}`
 
@@ -406,20 +408,23 @@ Class | Method | HTTP request | Description
 *ServiceManagementApi* | [**StopService**](./ServiceManagementApi.md#StopService) | **POST** /v1/service/stop | 
 *QueryServiceApi* | [**CallProcedure**](./QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | 
 *QueryServiceApi* | [**CallProcedureOnCurrentGraph**](./QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | 
-<!-- TODO(zhanglei): Add Vertex/Edge APIs after supported by Interactive -->
+*VertexApi* | [**addVertex**](./VertexApi.md#addVertex) | **POST** /v1/graph/{graph_id}/vertex | Add vertex to the graph
+*VertexApi* | [**getVertex**](./VertexApi.md#getVertex) | **GET** /v1/graph/{graph_id}/vertex | Get the vertex&#39;s properties with vertex primary key.
+*VertexApi* | [**updateVertex**](./VertexApi.md#updateVertex) | **PUT** /v1/graph/{graph_id}/vertex | Update vertex&#39;s property
+*EdgeApi* | [**addEdge**](./EdgeApi.md#addEdge) | **POST** /v1/graph/{graph_id}/edge | Add edge to the graph
+*EdgeApi* | [**getEdge**](./EdgeApi.md#getEdge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
+*EdgeApi* | [**updateEdge**](./EdgeApi.md#updateEdge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property
 
 
 ## Documentation for Data Structures
 
+ - [APIResponseWithCode](./APIResponseWithCode.md)
  - [BaseEdgeType](./BaseEdgeType.md)
  - [BaseEdgeTypeVertexTypePairRelationsInner](./BaseEdgeTypeVertexTypePairRelationsInner.md)
  - [BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams](./BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.md)
  - [BasePropertyMeta](./BasePropertyMeta.md)
  - [BaseVertexType](./BaseVertexType.md)
  - [BaseVertexTypeXCsrParams](./BaseVertexTypeXCsrParams.md)
- - [Collection](./Collection.md)
- - [CollectiveResults](./CollectiveResults.md)
- - [Column](./Column.md)
  - [ColumnMapping](./ColumnMapping.md)
  - [CreateEdgeType](./CreateEdgeType.md)
  - [CreateGraphRequest](./CreateGraphRequest.md)
@@ -429,6 +434,7 @@ Class | Method | HTTP request | Description
  - [CreateProcedureResponse](./CreateProcedureResponse.md)
  - [CreatePropertyMeta](./CreatePropertyMeta.md)
  - [CreateVertexType](./CreateVertexType.md)
+ - [DateType](./DateType.md)
  - [EdgeData](./EdgeData.md)
  - [EdgeMapping](./EdgeMapping.md)
  - [EdgeMappingDestinationVertexMappingsInner](./EdgeMappingDestinationVertexMappingsInner.md)
@@ -436,43 +442,48 @@ Class | Method | HTTP request | Description
  - [EdgeMappingSourceVertexMappingsInnerColumn](./EdgeMappingSourceVertexMappingsInnerColumn.md)
  - [EdgeMappingTypeTriplet](./EdgeMappingTypeTriplet.md)
  - [EdgeRequest](./EdgeRequest.md)
- - [Element](./Element.md)
+ - [EdgeStatistics](./EdgeStatistics.md)
  - [FixedChar](./FixedChar.md)
  - [FixedCharChar](./FixedCharChar.md)
  - [GSDataType](./GSDataType.md)
  - [GetEdgeType](./GetEdgeType.md)
  - [GetGraphResponse](./GetGraphResponse.md)
  - [GetGraphSchemaResponse](./GetGraphSchemaResponse.md)
+ - [GetGraphStatisticsResponse](./GetGraphStatisticsResponse.md)
  - [GetProcedureResponse](./GetProcedureResponse.md)
  - [GetPropertyMeta](./GetPropertyMeta.md)
  - [GetVertexType](./GetVertexType.md)
  - [JobResponse](./JobResponse.md)
  - [JobStatus](./JobStatus.md)
- - [KeyValue](./KeyValue.md)
  - [LongText](./LongText.md)
- - [ModelProperty](./ModelProperty.md)
  - [Parameter](./Parameter.md)
  - [PrimitiveType](./PrimitiveType.md)
- - [PropertyArray](./PropertyArray.md)
+ - [Property](./Property.md)
  - [QueryRequest](./QueryRequest.md)
- - [Record](./Record.md)
  - [SchemaMapping](./SchemaMapping.md)
  - [SchemaMappingLoadingConfig](./SchemaMappingLoadingConfig.md)
+ - [SchemaMappingLoadingConfigDataSource](./SchemaMappingLoadingConfigDataSource.md)
  - [SchemaMappingLoadingConfigFormat](./SchemaMappingLoadingConfigFormat.md)
+ - [SchemaMappingLoadingConfigXCsrParams](./SchemaMappingLoadingConfigXCsrParams.md)
  - [ServiceStatus](./ServiceStatus.md)
  - [StartServiceRequest](./StartServiceRequest.md)
  - [StoredProcedureMeta](./StoredProcedureMeta.md)
  - [StringType](./StringType.md)
  - [StringTypeString](./StringTypeString.md)
  - [TemporalType](./TemporalType.md)
+ - [TemporalTypeTemporal](./TemporalTypeTemporal.md)
  - [TimeStampType](./TimeStampType.md)
  - [TypedValue](./TypedValue.md)
  - [UpdateProcedureRequest](./UpdateProcedureRequest.md)
+ - [UploadFileResponse](./UploadFileResponse.md)
  - [VarChar](./VarChar.md)
  - [VarCharVarChar](./VarCharVarChar.md)
  - [VertexData](./VertexData.md)
+ - [VertexEdgeRequest](./VertexEdgeRequest.md)
  - [VertexMapping](./VertexMapping.md)
  - [VertexRequest](./VertexRequest.md)
+ - [VertexStatistics](./VertexStatistics.md)
+ - [VertexTypePairStatistics](./VertexTypePairStatistics.md)
 
 
 <a id="documentation-for-authorization"></a>
