@@ -640,7 +640,8 @@ distributed:
   enabled: false
 
 collect:
-  statistics: false
-  initial:
-    delay: 5
-  interval: 60
+  statistics:
+    enabled: false
+    initial:
+      delay: 5
+    interval: 60

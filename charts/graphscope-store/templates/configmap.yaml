@@ -98,7 +98,7 @@ data:
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
     log.recycle.enable={{ .Values.logRecycleEnable }}
-    collect.statistics={{ .Values.collect.statistics }}
+    collect.statistics={{ .Values.collect.statistics.enabled }}
     collect.statistics.interval.min={{ .Values.collect.statistics.interval }}
     collect.statistics.initial.delay.min={{ .Values.collect.statistics.initial.delay }}
     log.recycle.offset.reserve={{ .Values.logRecycleOffsetReserve }}
@@ -165,8 +165,8 @@ data:
     # For core and heap profiling
     # ulimit -c unlimited
     # sudo mkdir -p /apsara/cloud/data/corefile/ && sudo chown -R graphscope:graphscope /apsara/cloud/data/corefile/
-    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:32,lg_prof_sample:19
-    # export MALLOC_CONF=prof:true,lg_prof_interval:32
+    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:29,lg_prof_sample:19,prof_prefix=/tmp
+    # export MALLOC_CONF=prof:true,lg_prof_interval:29,lg_prof_sample:19,prof_prefix=/tmp
 
     export RUST_BACKTRACE=1
     ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
