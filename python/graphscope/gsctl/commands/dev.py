@@ -252,11 +252,18 @@ def deploy(
         if gremlin_port != -1:
             cmd.extend(["-p", f"{gremlin_port}:8182"])
         image = f"{image_registry}/{type}:{image_tag}"
-        cmd.extend([image, "--enable-coordinator"])
         if interactive_config is not None:
+            if not os.path.isfile(interactive_config):
+                click.secho(
+                    f"Interactive config file {interactive_config} does not exist.",
+                    fg="red",
+                )
+                return
+            interactive_config = os.path.abspath(interactive_config)
             cmd.extend(
                 ["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"]
             )
+        cmd.extend([image, "--enable-coordinator"])
     returncode = run_shell_cmd(cmd, os.getcwd())
     if returncode == 0:
         message = f"""
