@@ -64,7 +64,7 @@ jobs:
         fi
 
     # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         base: main  # Change detection against merge-base with main before push
@@ -162,7 +162,7 @@ jobs:
         python3 -m flake8 .
 
     - name: Setup Java11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -211,14 +211,14 @@ jobs:
       with:
         submodules: true
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -228,7 +228,7 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -411,7 +411,7 @@ jobs:
     - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:
@@ -500,7 +500,7 @@ jobs:
     - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:

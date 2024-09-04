@@ -639,4 +639,9 @@ uptrace:
 distributed:
   enabled: false
 
-collectStatistics: false
+collect:
+  statistics:
+    enabled: false
+    initial:
+      delay: 5
+    interval: 60

@@ -32,9 +32,9 @@ public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
 
-    private @Nullable LongHistogram queryHistogram;
+    private final @Nullable LongHistogram queryHistogram;
     // if query cost large than threshold, will print detail log
-    private long printThreshold;
+    private final long printThreshold;
 
     public QueryStatusCallback(
             MetricsCollector metricsCollector,
@@ -100,7 +100,7 @@ public class QueryStatusCallback {
         queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
     }
 
-    private JsonObject buildSimpleLog(boolean isSucceed, long elaspedMillis) {
+    private JsonObject buildSimpleLog(boolean isSucceed, long elapsedMillis) {
         String traceId = Span.current().getSpanContext().getTraceId();
         JsonObject simpleJson = new JsonObject();
         simpleJson.addProperty(LogConstant.TRACE_ID, traceId);
@@ -109,7 +109,7 @@ public class QueryStatusCallback {
         if (queryLogger.getUpstreamId() != null) {
             simpleJson.addProperty(LogConstant.UPSTREAM_ID, queryLogger.getUpstreamId());
         }
-        simpleJson.addProperty(LogConstant.COST, elaspedMillis);
+        simpleJson.addProperty(LogConstant.COST, elapsedMillis);
         return simpleJson;
     }
 

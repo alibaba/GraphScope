@@ -22,6 +22,8 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_FLASH_FLASH_UTILS_H_
 #define ANALYTICAL_ENGINE_APPS_FLASH_FLASH_UTILS_H_
 
+#include <mpi.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -122,7 +124,7 @@ namespace gs {
   auto F = [&](const vid_t vid, const value_t& v) -> std::vector<vid_t>
 #define use_edge(F) F(vid, v)
 
-#define Block(F) blockFunction(graph, fw, FUNC_BLOCK(F))
+#define FLASH_Block(F) blockFunction(graph, fw, FUNC_BLOCK(F))
 #define FUNC_BLOCK(F) [&]() { F; }
 #define Traverse(...)                       \
   {                                         \
@@ -138,7 +140,7 @@ namespace gs {
       __VA_ARGS__                 \
     }                             \
   }
-#define Print(...)       \
+#define FLASH_Print(...) \
   if (fw->GetPid() == 0) \
   printf(__VA_ARGS__)
 

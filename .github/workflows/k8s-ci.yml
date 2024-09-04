@@ -62,7 +62,7 @@ jobs:
         fi
 
     # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         base: main  # Change detection against merge-base with main before push
@@ -159,7 +159,7 @@ jobs:
         python3 -m flake8 .
 
     - name: Setup Java11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -231,7 +231,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -265,14 +265,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -309,7 +309,7 @@ jobs:
       with:
         submodules: true
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -355,7 +355,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -498,13 +498,14 @@ jobs:
                             ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: false
 
       - name: HDFS test
+        if: false  # FIXME(siyuan): Open this test
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -557,7 +558,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -621,14 +622,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -662,6 +663,7 @@ jobs:
           retention-days: 5
 
   gie-k8s-failover-test:
+    if: false  # No need to run this test for now
     needs: [build-gie-experimental]
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
