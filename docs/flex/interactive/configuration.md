@@ -73,21 +73,13 @@ compute_engine:
   thread_num_per_worker: 1  # the number of threads for each worker, default 1
 compiler:
   planner:
-  is_on: true
-  opt: RBO
-  rules:
-    - FilterMatchRule
-    - FilterIntoJoinRule
-    - NotExistToAntiJoinRule
+    is_on: true
+    opt: RBO
+    rules:
+      - FilterMatchRule
+      - FilterIntoJoinRule
+      - NotExistToAntiJoinRule
   query_timeout: 20000  # query timeout in milliseconds, default 20000
-  endpoint:
-    default_listen_address: localhost
-    bolt_connector: # cypher query endpoint 
-      disabled: false # disable cypher endpoint or not.
-    gremlin_connector: # gremlin query endpoint 
-      disabled: false # disable gremlin endpoint or not.
-http_service:
-  default_listen_address: localhost
 ```
 
 
@@ -106,10 +98,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
 | compiler.planner.rules.FilterIntoJoinRule | N/A | A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join | 0.0.1 |
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
-| compiler.endpoint.default_listen_address | localhost | The address for compiler endpoint to bind | 0.0.3 |
-| compiler.endpoint.bolt_connector.disabled | false | Whether to disable the cypher endpoint| 0.0.3 |
-| compiler.endpoint.gremlin_connector.disabled | true | Whether to disable the gremlin endpoint| 0.0.3 |
-| http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
+| compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
 
 #### TODOs
 
