@@ -196,9 +196,7 @@ function set_to_cn_url() {
 function fetch_source() {
   local url=$1
   local file=$2
-  command="curl -fsSL -o \"${file}\" \"${url}/${file}\""
-  info ${command}
-  eval ${command}
+  curl -fsSL -o "${file}" "${url}/${file}"
 }
 
 function download_and_untar() {
