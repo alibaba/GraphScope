@@ -13,4 +13,3 @@
 [submodule "flex/third_party/nlohmann-json"]
 	path = flex/third_party/nlohmann-json
 	url = https://github.com/nlohmann/json.git
-
