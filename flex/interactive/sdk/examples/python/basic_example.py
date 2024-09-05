@@ -22,6 +22,9 @@ from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
 
+MODERN_GRAPH_CSV_DIR=os.path.join(os.path.dirname(__file__), "../../../../interactive/examples/modern_graph")
+# get current dir
+
 test_graph_def = {
     "name": "test_graph",
     "description": "This is a test graph",
@@ -69,10 +72,16 @@ test_graph_def = {
 }
 
 test_graph_datasource = {
+    "loading_config": {
+        "data_source" : {
+            "scheme": "file"
+        },
+        "import_option" : "init"
+    },
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": ["@/path/to/person.csv"],
+            "inputs": [f"{MODERN_GRAPH_CSV_DIR}/person.csv"],
             "column_mappings": [
                 {"column": {"index": 0, "name": "id"}, "property": "id"},
                 {"column": {"index": 1, "name": "name"}, "property": "name"},
@@ -88,7 +97,7 @@ test_graph_datasource = {
                 "destination_vertex": "person",
             },
             "inputs": [
-                "@/path/to/person_knows_person.csv"
+                f"{MODERN_GRAPH_CSV_DIR}/person_knows_person.csv"
             ],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "person.id"}, "property": "id"}
@@ -144,45 +153,23 @@ def addVertex(sess: Session, graph_id: str):
                 ModelProperty(name="age", type="integer", value=1),
             ],
         ),
-        VertexRequest(
-            label="person",
-            primary_key_value=7,
-            properties=[
-                ModelProperty(name="name", type="string", value="lisa"),
-                ModelProperty(name="age", type="integer", value=2),
-            ],
-        ),
     ]
     edge_request = [
         EdgeRequest(
             src_label="person",
-            dst_label="software",
-            edge_label="created",
+            dst_label="person",
+            edge_label="knows",
             src_primary_key_value=8,
-            dst_primary_key_value=5,
+            dst_primary_key_value=1,
             properties=[ModelProperty(name="weight", value=7)],
-        ),
-        EdgeRequest(
-            src_label="person",
-            dst_label="software",
-            edge_label="created",
-            src_primary_key_value=8,
-            dst_primary_key_value=3,
-            properties=[ModelProperty(name="weight", value=5)],
         ),
     ]
     params = VertexEdgeRequest(vertex_request=vertex_request, edge_request=edge_request)
-    try:
-        api_response = sess.add_vertex(graph_id, vertex_edge_request=params)
-        print(
-            "The response of add_vertex:\n",
-            api_response,
-        )
-    except Exception as e:
-        print(
-            "Exception when calling add_vertex: %s\n"
-            % e
-        )
+    api_response = sess.add_vertex(graph_id, vertex_edge_request=params)
+    if api_response.is_ok():
+        print("The response of add_vertex:\n", api_response)
+    else:
+        raise Exception("add_vertex failed with error: %s" % api_response.get_status_message())
 
 
 def updateVertex(sess: Session, graph_id: str):
@@ -191,117 +178,97 @@ def updateVertex(sess: Session, graph_id: str):
     vertex_request = VertexRequest(
         label="person", primary_key_value=1, properties=[name_property, age_property]
     )
-    try:
-        api_response = sess.update_vertex(graph_id, vertex_request=vertex_request)
-        print("The response of update_vertex:\n", api_response)
-    except Exception as e:
-        print("Exception when calling update_vertex: %s\n" % e)
+    api_response = sess.update_vertex(graph_id, vertex_request=vertex_request)
+    if api_response.is_ok():
+        print("The response of update_vertex", api_response)
+    else:
+        raise Exception("update_vertex failed with error: %s" % api_response.get_status_message())
 
 
 def getVertex(sess: Session, graph_id: str):
     label = "person"  # str | The label name of querying vertex.
     primary_key_value = 1  # object | The primary key value of querying vertex.
-    try:
-        api_response = sess.get_vertex(graph_id, label, primary_key_value)
-        print("The response of get_vertex:\n", api_response)
-    except Exception as e:
-        print("Exception when calling get_vertex: %s" % e)
+    api_response = sess.get_vertex(graph_id, label, primary_key_value)
+    if api_response.is_ok():
+        print("The response of get_vertex", api_response)
+    else:
+        raise Exception("get_vertex failed with error: %s" % api_response.get_status_message())
 
 
 def updateEdge(sess: Session, graph_id: str):
     properties = [ModelProperty(name="weight", value=3)]
     edge_request = EdgeRequest(
         src_label="person",
-        dst_label="software",
-        edge_label="created",
+        dst_label="person",
+        edge_label="knows",
         src_primary_key_value=1,
-        dst_primary_key_value=3,
+        dst_primary_key_value=8,
         properties=properties,
     )
-    try:
-        api_response = sess.update_edge(graph_id, edge_request=edge_request)
-        print(
-            "The response of update_edge:\n",
-            api_response,
-        )
-    except Exception as e:
-        print(
-            "Exception when calling update_edge: %s\n"
-            % e
-        )
+
+    resp = sess.update_edge(graph_id, edge_request)
+    if resp.is_ok():
+        print("The response of update_edge", resp)
+    else:
+        raise Exception("update_edge failed with error: %s" % resp.get_status_message())
 
 
 def getEdge(sess: Session, graph_id: str):
     src_label = "person"
-    dst_label = "software"
-    edge_label = "created"
+    dst_label = "person"
+    edge_label = "knows"
     src_primary_key_value = 1
-    dst_primary_key_value = 3
-    try:
-        api_response = sess.get_edge(
-            graph_id,
-            edge_label,
-            src_label,
-            src_primary_key_value,
-            dst_label,
-            dst_primary_key_value,
-        )
-        print(
-            "The response of get_edge:\n", api_response
-        )
-    except Exception as e:
-        print(
-            "Exception when calling get_edge: %s\n" % e
-        )
+    dst_primary_key_value = 8
+    api_response = sess.get_edge(
+        graph_id,
+        edge_label,
+        src_label,
+        src_primary_key_value,
+        dst_label,
+        dst_primary_key_value,
+    )
+    if api_response.is_ok():
+        print("The response of get_edge", api_response)
+    else:
+        raise Exception("get_edge failed with error: %s" % api_response.get_status_message())
+    
 
 
 def addEdge(sess: Session, graph_id: str):
     edge_request = [
         EdgeRequest(
             src_label="person",
-            dst_label="software",
-            edge_label="created",
+            dst_label="person",
+            edge_label="knows",
             src_primary_key_value=1,
-            dst_primary_key_value=5,
+            dst_primary_key_value=8,
             properties=[ModelProperty(name="weight", value=9.123)],
         ),
         EdgeRequest(
             src_label="person",
-            dst_label="software",
-            edge_label="created",
+            dst_label="person",
+            edge_label="knows",
             src_primary_key_value=2,
-            dst_primary_key_value=5,
+            dst_primary_key_value=8,
             properties=[ModelProperty(name="weight", value=3.233)],
         ),
     ]
-    try:
-        api_response = sess.add_edge(graph_id, edge_request)
-        print(
-            "The response of add_edge:\n", api_response
-        )
-    except Exception as e:
-        print(
-            "Exception when calling add_edge: %s\n" % e
-        )
+    api_response = sess.add_edge(graph_id, edge_request)
+    if api_response.is_ok():
+        print("The response of add_edge", api_response)
+    else:
+        raise Exception("add_edge failed with error: %s" % api_response.get_status_message())
+    
 
 
 if __name__ == "__main__":
     # expect one argument: interactive_endpoint
     parser = argparse.ArgumentParser(description="Example Python3 script")
 
-    # Add arguments
-    parser.add_argument(
-        "--endpoint",
-        type=str,
-        help="The interactive endpoint to connect",
-        required=True,
-        default="https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0/",
-    )
-
     # Parse the arguments
     args = parser.parse_args()
 
-    driver = Driver(endpoint=args.endpoint)
+    driver = Driver()
     with driver.session() as sess:
         graph_id = createGraph(sess)
         job_id = bulkLoading(sess, graph_id)
@@ -356,3 +323,11 @@ if __name__ == "__main__":
             result = session.run("CALL test_procedure();")
             for record in result:
                 print(record)
+                
+        addVertex(sess, graph_id)
+        getVertex(sess, graph_id)
+        updateVertex(sess, graph_id)
+        
+        addEdge(sess, graph_id)
+        getEdge(sess, graph_id)
+        updateEdge(sess, graph_id)
