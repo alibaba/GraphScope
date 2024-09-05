@@ -297,8 +297,10 @@ install_boost() {
   url=$(set_to_cn_url ${url})
   download_and_untar "${url}" "${file}" "${directory}"
   pushd ${directory} || exit
+  # seastar needs filesystem program_options thread unit_test_framework
+  # interactive needs context regex date_time
   ./bootstrap.sh --prefix="${install_prefix}" \
-    --with-libraries=system,filesystem,context,program_options,regex,thread,random,chrono,atomic,date_time
+    --with-libraries=system,filesystem,context,program_options,regex,thread,random,chrono,atomic,date_time,test
   ./b2 install link=shared runtime-link=shared variant=release threading=multi
   popd || exit
   popd || exit
