@@ -74,6 +74,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             QueryIdGenerator idGenerator,
             QueryCache queryCache,
+            GraphPlanner graphPlanner,
             ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -84,6 +85,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                 configs,
                 idGenerator,
                 queryCache,
+                graphPlanner,
                 executionClient,
                 fetcher,
                 metaQueryCallback,
@@ -157,7 +159,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     break;
                                 case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
                                     QueryCache.Value value =
-                                            queryCache.get(queryCache.createKey(script, irMeta));
+                                            queryCache.get(
+                                                    queryCache.createKey(
+                                                            graphPlanner.instance(script, irMeta)));
                                     GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());
