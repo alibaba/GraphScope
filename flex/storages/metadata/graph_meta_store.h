@@ -68,6 +68,7 @@ struct GraphMeta {
   std::vector<PluginMeta> plugin_metas;
 
   std::string ToJson() const;
+  void ToJson(rapidjson::Value& json, rapidjson::Document::AllocatorType &allocator) const;
   static GraphMeta FromJson(const std::string& json_str);
   static GraphMeta FromJson(const rapidjson::Value& json);
 };
@@ -97,6 +98,7 @@ struct PluginMeta {
   void setOptionFromJsonString(const std::string& json_str);
 
   std::string ToJson() const;
+  void ToJson(rapidjson::Value& json, rapidjson::Document::AllocatorType &allocator) const;
 
   static PluginMeta FromJson(const std::string& json_str);
   static PluginMeta FromJson(const rapidjson::Value& json);

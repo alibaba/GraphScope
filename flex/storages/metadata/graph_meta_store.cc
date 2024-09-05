@@ -66,20 +66,18 @@ std::string Parameter::ToJson() const {
   return rapidjson_stringify(json);
 }
 
-std::string GraphMeta::ToJson() const {
-  rapidjson::Document json(rapidjson::kObjectType);
-  json.AddMember("id", id, json.GetAllocator());
-  json.AddMember("name", name, json.GetAllocator());
-  json.AddMember("description", description, json.GetAllocator());
-  json.AddMember("creation_time", creation_time, json.GetAllocator());
-  json.AddMember("data_update_time", data_update_time, json.GetAllocator());
-
+void GraphMeta::ToJson(rapidjson::Value& json, rapidjson::Document::AllocatorType &allocator) const {
+  rapidjson::Pointer("/id").Set(json, id, allocator);
+  rapidjson::Pointer("/name").Set(json, name, allocator);
+  rapidjson::Pointer("/description").Set(json, description, allocator);
+  rapidjson::Pointer("/creation_time").Set(json, creation_time, allocator);
+  rapidjson::Pointer("/data_update_time").Set(json, data_update_time, allocator);
   if (!data_import_config.empty()) {
     rapidjson::Document tempDoc;
     if (tempDoc.Parse(data_import_config.c_str()).HasParseError()) {
       LOG(ERROR) << "Invalid data_import_config: " << data_import_config;
     } else {
-      json.AddMember("data_import_config", tempDoc, json.GetAllocator());
+      rapidjson::Pointer("/data_import_config").Set(json, tempDoc, allocator);
     }
   }
   {
@@ -87,19 +85,49 @@ std::string GraphMeta::ToJson() const {
     if (tempDoc.Parse(schema.c_str()).HasParseError()) {
       LOG(ERROR) << "Invalid schema: " << schema;
     } else {
-      json.AddMember("schema", tempDoc, json.GetAllocator());
+      rapidjson::Pointer("/schema").Set(json, tempDoc, allocator);
     }
   }
-  json.AddMember("stored_procedures", rapidjson::kArrayType, json.GetAllocator());
+  rapidjson::Pointer("/stored_procedures").Set(json, rapidjson::kArrayType, allocator);
   for (auto& plugin_meta : plugin_metas) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    plugin_meta.ToJson(tempDoc, allocator);
+    rapidjson::Pointer("/stored_procedures/-").Set(json, tempDoc, allocator);
+  }
+  rapidjson::Pointer("/store_type").Set(json, store_type, allocator);
+  return;
+}
+
+std::string GraphMeta::ToJson() const {
+  rapidjson::Document json(rapidjson::kObjectType);
+  rapidjson::Pointer("/id").Set(json, id);
+  rapidjson::Pointer("/name").Set(json, name);
+  rapidjson::Pointer("/description").Set(json, description);
+  rapidjson::Pointer("/creation_time").Set(json, creation_time);
+  rapidjson::Pointer("/data_update_time").Set(json, data_update_time);
+  if (!data_import_config.empty()) {
     rapidjson::Document tempDoc;
-    if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-      LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
+    if (tempDoc.Parse(data_import_config.c_str()).HasParseError()) {
+      LOG(ERROR) << "Invalid data_import_config: " << data_import_config;
     } else {
-      json["stored_procedures"].PushBack(tempDoc, json.GetAllocator());
+      rapidjson::Pointer("/data_import_config").Set(json, tempDoc);
     }
   }
-  json.AddMember("store_type", store_type, json.GetAllocator());
+  {
+    rapidjson::Document tempDoc;
+    if (tempDoc.Parse(schema.c_str()).HasParseError()) {
+      LOG(ERROR) << "Invalid schema: " << schema;
+    } else {
+      rapidjson::Pointer("/schema").Set(json, tempDoc);
+    }
+  }
+  rapidjson::Pointer("/stored_procedures").Set(json, rapidjson::kArrayType);
+  for (auto& plugin_meta : plugin_metas) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    plugin_meta.ToJson(tempDoc, json.GetAllocator());
+    rapidjson::Pointer("/stored_procedures/-").Set(json, tempDoc);
+  }
+  rapidjson::Pointer("/store_type").Set(json, store_type);
   return rapidjson_stringify(json);
 }
 
@@ -217,6 +245,44 @@ PluginMeta PluginMeta::FromJson(const rapidjson::Value& json) {
     meta.runnable = json["runnable"].GetBool();
   }
   return meta;
+}
+
+void PluginMeta::ToJson(rapidjson::Value& json, rapidjson::Document::AllocatorType &allocator) const {
+  json.AddMember("id", id, allocator);
+  json.AddMember("name", name, allocator);
+  json.AddMember("bound_graph", bound_graph, allocator);
+  json.AddMember("description", description, allocator);
+  json.AddMember("params", rapidjson::kArrayType, allocator);
+  for (auto& param : params) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    tempDoc.AddMember("name", param.name, allocator);
+    tempDoc.AddMember(
+        "type", config_parsing::PrimitivePropertyTypeToString(param.type),
+       allocator);
+    json["params"].PushBack(tempDoc, allocator);
+  }
+  json.AddMember("returns", rapidjson::kArrayType, allocator);
+  for (auto& ret : returns) {
+    rapidjson::Document tempDoc(rapidjson::kObjectType);
+    tempDoc.AddMember("name", ret.name, allocator);
+    tempDoc.AddMember("type",
+                      config_parsing::PrimitivePropertyTypeToString(ret.type),
+                     allocator);
+    json["returns"].PushBack(tempDoc, allocator);
+  }
+  json.AddMember("option", rapidjson::kObjectType, allocator);
+  for (auto& opt : option) {
+    rapidjson::Value key(opt.first.c_str(), allocator);
+    rapidjson::Value value(opt.second.c_str(), allocator);
+    json["option"].AddMember(key, value, allocator);
+  }
+  json.AddMember("creation_time", creation_time, allocator);
+  json.AddMember("update_time", update_time, allocator);
+  json.AddMember("enable", enable, allocator);
+  json.AddMember("runnable", runnable, allocator);
+  json.AddMember("library", library, allocator);
+  json.AddMember("query", query, allocator);
+  json.AddMember("type", type, allocator);
 }
 
 std::string PluginMeta::ToJson() const {

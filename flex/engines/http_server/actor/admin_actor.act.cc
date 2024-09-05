@@ -97,11 +97,8 @@ std::string merge_graph_and_plugin_meta(
   }
   rapidjson::Document res(rapidjson::kArrayType);
   for (auto& graph_meta : res_graph_metas) {
-    rapidjson::Document graph_json;
-    if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
-      LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
-      continue;
-    }
+    rapidjson::Document graph_json(rapidjson::kObjectType);
+    graph_meta.ToJson(graph_json, graph_json.GetAllocator());
     res.PushBack(graph_json, res.GetAllocator());
   }
   return res.Empty() ? "{}" : gs::rapidjson_stringify(res, 2);
@@ -360,12 +357,8 @@ gs::Result<seastar::sstring> to_json_str(
     const std::vector<gs::PluginMeta>& plugin_metas) {
   rapidjson::Document res(rapidjson::kArrayType);
   for (auto& plugin_meta : plugin_metas) {
-    rapidjson::Document plugin_json;
-    if (plugin_json.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
-      LOG(ERROR) << "Fail to parse plugin meta from json string";
-      return gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::INTERNAL_ERROR, "Fail to parse plugin meta"));
-    }
+    rapidjson::Document plugin_json(rapidjson::kObjectType);
+    plugin_meta.ToJson(plugin_json, plugin_json.GetAllocator());
     res.PushBack(plugin_json, res.GetAllocator());
   }
 
@@ -1188,13 +1181,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
             }
           }
           rapidjson::Document graph_json;
-          if (graph_json.Parse(graph_meta.ToJson().c_str()).HasParseError()) {
-            LOG(ERROR) << "Fail to parse graph meta: " << graph_meta.ToJson();
-            return seastar::make_exception_future<admin_query_result>(
-                gs::Status(
-                    gs::StatusCode::INTERNAL_ERROR,
-                    "Fail to parse graph meta: " + graph_meta.ToJson()));
-          }
+          graph_meta.ToJson(graph_json, graph_json.GetAllocator());
           res.AddMember("graph", graph_json, res.GetAllocator());
         } else {
           LOG(ERROR) << "Fail to get all procedures: "
