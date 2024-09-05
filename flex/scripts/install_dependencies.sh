@@ -25,7 +25,7 @@ curl -L -o boost_1_75_0.tar.gz "https://graphscope.oss-cn-beijing.aliyuncs.com/d
 tar -xzf boost_1_75_0.tar.gz
 pushd boost_1_75_0 && ./bootstrap.sh --with-libraries=system,filesystem,context,program_options,regex,thread,chrono,date_time,test # unit_test_framework used by seastar
 sudo ./b2 install link=shared runtime-link=shared variant=release threading=multi
-popd && rm -rf boost_1_75_0
+popd && sudo rm -rf boost_1_75_0
 popd && rm boost_1_75_0.tar.gz
 
 pushd /tmp
