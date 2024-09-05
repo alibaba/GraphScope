@@ -63,7 +63,7 @@ mod test {
         let result = pegasus::run(conf, || {
             let expand = expand.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen(None))?;
+                let mut stream = input.input_from(source_gen(Some(TAG_A)))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
                 stream.sink_into(output)
@@ -74,6 +74,7 @@ mod test {
     }
 
     // g.V().out() with optional out
+    // v1, v4, v6 have out-neighbors; while v2, v3, v5 do not
     #[test]
     fn optional_expand_outv_test() {
         let expand_opr_pb = pb::EdgeExpand {
@@ -105,6 +106,40 @@ mod test {
         assert_eq!(result_ids, expected_ids);
         // v2, v3, v5 does not have out edges
         assert_eq!(none_cnt, 3);
+    }
+
+    // g.V().out('knows') with optional out
+    // v1 has out knows neighbors of v2, v4; while other vertices do not have out knows neighbors
+    #[test]
+    fn optional_expand_outv_test_2() {
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            expand_opt: 0,
+            alias: None,
+            is_optional: true,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_ids = vec![];
+        let mut none_cnt = 0;
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_ids = vec![v2, v4];
+        while let Some(Ok(record)) = result.next() {
+            println!("record: {:?}", record);
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
+                result_ids.push(element.id() as usize)
+            } else if let Some(obj) = record.get(None).unwrap().as_object() {
+                assert_eq!(obj, &Object::None);
+                none_cnt += 1;
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids);
+        assert_eq!(none_cnt, 5);
     }
 
     // g.V().outE('knows', 'created') with optional out
@@ -143,28 +178,28 @@ mod test {
         assert_eq!(none_cnt, 3);
     }
 
-    // g.V().out('knows').has('id',2) with optional out
-    // in this case, for the vertices, e.g., v2, v3, v4, v5, v6, that do not have out knows edges, they would be filtered out.
+    // g.V().out('knows').where(@ isnull) with optional out
+    // in this case, for the vertices v2, v3, v4, v5, v6, that do not have out knows edges.
     #[test]
     fn optional_expand_outv_filter_test() {
-        let edge_query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(edge_query_param),
+            params: Some(query_param),
             expand_opt: 0,
             alias: None,
             is_optional: true,
         };
-        let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
+        let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("isnull @".to_string()).ok());
         let auxilia_opr_pb = pb::GetV { tag: None, opt: 4, params: Some(vertex_query_param), alias: None };
 
-        let conf = JobConf::new("expand_getv_test");
+        let conf = JobConf::new("optional_expand_outv_filter_test");
         let mut result = pegasus::run(conf, || {
             let expand = expand_opr_pb.clone();
             let auxilia = auxilia_opr_pb.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen(None))?;
+                let mut stream = input.input_from(source_gen(Some(TAG_A)))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
                 let filter_map_func = auxilia.gen_filter_map().unwrap();
@@ -174,13 +209,20 @@ mod test {
         })
         .expect("build job failure");
 
-        let mut result_ids = vec![];
+        let mut result_ids: Vec<usize> = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
-        let expected_ids = vec![v2];
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let expected_ids = vec![v2, v3, v4, v5, v6];
         while let Some(Ok(record)) = result.next() {
-            println!("record: {:?}", record);
-            let element = record.get(None).unwrap().as_vertex().unwrap();
-            result_ids.push(element.id() as usize)
+            let vertex = record
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_vertex()
+                .unwrap();
+            result_ids.push(vertex.id() as usize);
         }
         assert_eq!(result_ids, expected_ids)
     }
