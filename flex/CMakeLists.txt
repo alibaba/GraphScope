@@ -192,13 +192,6 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nloh
 endif()
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
 
-# Check whether ${CMAKE_SOURCE_DIR}/third_party/leaf/include/leaf.hpp exists
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/leaf/include/boost/leaf.hpp)
-    message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/third_party/leaf/include/boost/leaf.hpp not found, "
-                         "please run `git submodule update --init` to download third_party")
-endif()
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/leaf/include)
-
 if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
 endif()
