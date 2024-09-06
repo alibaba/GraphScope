@@ -77,6 +77,7 @@ jobs:
         sleep 20
         # test
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/examples/python
+        export INTERACTIVE_ADMIN_ENDPOINT=http://localhost:7777
         python3 basic_example.py
 
         # destroy instance
