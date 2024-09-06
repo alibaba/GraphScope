@@ -44,7 +44,8 @@ admin_query_result generate_final_result(
   }
   for (auto& res : result_val) {
     if (res.ok()) {
-      rapidjson::Pointer("file_path").Set(json_res, res.value().c_str());
+      json_res.AddMember("file_path", std::string(res.value().c_str()),
+                         json_res.GetAllocator());
     } else {
       return admin_query_result{std::move(res)};
     }

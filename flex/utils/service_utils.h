@@ -35,11 +35,11 @@
 #include "flex/utils/yaml_utils.h"
 
 #include <glog/logging.h>
-#include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <boost/filesystem.hpp>
 
 namespace gs {
 
@@ -57,24 +57,44 @@ inline int64_t GetCurrentTimeStamp() {
 // These two functions are inlined to avoid linking library in codegen.
 inline void to_json(rapidjson::Document& j, const PropertyType& p) {
   if (p == PropertyType::Empty()) {
-    rapidjson::Pointer("/").Set(j, "empty");
+    j.AddMember("empty", "empty", j.GetAllocator());
   } else if (p == PropertyType::Bool() || p == PropertyType::UInt8() ||
              p == PropertyType::UInt16() || p == PropertyType::Int32() ||
              p == PropertyType::UInt32() || p == PropertyType::Float() ||
              p == PropertyType::Int64() || p == PropertyType::UInt64() ||
              p == PropertyType::Double()) {
-    rapidjson::Pointer("/primitive_type")
-        .Set(j, config_parsing::PrimitivePropertyTypeToString(p));
+    rapidjson::Value primitive_type;
+    primitive_type.SetString(
+        config_parsing::PrimitivePropertyTypeToString(p).c_str(),
+        j.GetAllocator());
+    j.AddMember("primitive_type", primitive_type, j.GetAllocator());
   } else if (p == PropertyType::Date()) {
-    rapidjson::Pointer("/temporal/timestamp").Set(j, rapidjson::Value(rapidjson::kNullType));
+    rapidjson::Value temporal;
+    rapidjson::Value timestamp;
+    timestamp.SetNull();
+    temporal.AddMember("timestamp", timestamp, j.GetAllocator());
+    j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::Day()) {
-    rapidjson::Pointer("/temporal/date32").Set(j, rapidjson::Value(rapidjson::kNullType));
+    rapidjson::Value temporal;
+    rapidjson::Value date32;
+    date32.SetNull();
+    temporal.AddMember("date32", date32, j.GetAllocator());
+    j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::StringView() ||
              p == PropertyType::StringMap()) {
-    rapidjson::Pointer("/string/long_text").Set(j, rapidjson::Value(rapidjson::kNullType));
+    rapidjson::Value string;
+    rapidjson::Value long_text;
+    long_text.SetNull();
+    string.AddMember("long_text", long_text, j.GetAllocator());
+    j.AddMember("string", string, j.GetAllocator());
   } else if (p.IsVarchar()) {
-    rapidjson::Pointer("/string/var_char/max_length")
-        .Set(j, p.additional_type_info.max_length);
+    rapidjson::Value string;
+    rapidjson::Value var_char;
+    rapidjson::Value max_length;
+    max_length.SetInt(p.additional_type_info.max_length);
+    var_char.AddMember("max_length", max_length, j.GetAllocator());
+    string.AddMember("var_char", var_char, j.GetAllocator());
+    j.AddMember("string", string, j.GetAllocator());
   } else {
     LOG(ERROR) << "Unknown property type";
   }

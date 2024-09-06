@@ -217,7 +217,7 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
   auto& graph_db_service = GraphDBService::get();
   // First create a plugin meta to get the plugin id, then do the real
   // creation.
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(plugin_creation_parameter.c_str()).HasParseError()) {
     return seastar::make_exception_future<seastar::sstring>(
         "Fail to parse parameter as json: " + plugin_creation_parameter);
@@ -230,8 +230,7 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
   }
   json.AddMember("bound_graph", graph_id, json.GetAllocator());
   auto nowTime = gs::GetCurrentTimeStamp();
-  json.AddMember("creation_time", nowTime,
-                 json.GetAllocator());
+  json.AddMember("creation_time", nowTime, json.GetAllocator());
   json.AddMember("update_time", nowTime, json.GetAllocator());
   if (!json.HasMember("enable")) {
     json.AddMember("enable", true, json.GetAllocator());
@@ -1148,16 +1147,18 @@ seastar::future<admin_query_result> admin_actor::service_status(
   auto& graph_db_service = GraphDBService::get();
   auto query_port = graph_db_service.get_query_port();
   auto running_graph_res = metadata_store_->GetRunningGraph();
-  rapidjson::Document res;
+  rapidjson::Document res(rapidjson::kObjectType);
   if (query_port != 0) {
-    rapidjson::Pointer("/statistics_enabled").Set(res, true);
-    rapidjson::Pointer("/status").Set(
-        res, graph_db_service.is_actors_running() ? "Running" : "Stopped");
-    rapidjson::Pointer("/hqps_port").Set(res, query_port);
-    rapidjson::Pointer("/bolt_port")
-        .Set(res, graph_db_service.get_service_config().bolt_port);
-    rapidjson::Pointer("/gremlin_port")
-        .Set(res, graph_db_service.get_service_config().gremlin_port);
+    res.AddMember("statistics_enabled", true, res.GetAllocator());
+    res.AddMember("status",
+                  graph_db_service.is_actors_running() ? "Running" : "Stopped",
+                  res.GetAllocator());
+    res.AddMember("hqps_port", query_port, res.GetAllocator());
+    res.AddMember("bolt_port", graph_db_service.get_service_config().bolt_port,
+                  res.GetAllocator());
+    res.AddMember("gremlin_port",
+                  graph_db_service.get_service_config().gremlin_port,
+                  res.GetAllocator());
     if (running_graph_res.ok()) {
       auto graph_meta_res =
           metadata_store_->GetGraphMeta(running_graph_res.value());
@@ -1180,7 +1181,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          rapidjson::Document graph_json;
+          rapidjson::Document graph_json(rapidjson::kObjectType);
           graph_meta.ToJson(graph_json, graph_json.GetAllocator());
           res.AddMember("graph", graph_json, res.GetAllocator());
         } else {
@@ -1192,12 +1193,14 @@ seastar::future<admin_query_result> admin_actor::service_status(
       } else {
         LOG(ERROR) << "Fail to get graph meta: "
                    << graph_meta_res.status().error_message();
-        res.AddMember("graph", rapidjson::Value(rapidjson::kNullType), res.GetAllocator());
+        res.AddMember("graph", rapidjson::Value(rapidjson::kNullType),
+                      res.GetAllocator());
         return seastar::make_exception_future<admin_query_result>(
             graph_meta_res.status());
       }
     } else {
-      res.AddMember("graph", rapidjson::Value(rapidjson::kNullType), res.GetAllocator());
+      res.AddMember("graph", rapidjson::Value(rapidjson::kNullType),
+                    res.GetAllocator());
       LOG(INFO) << "No graph is running";
     }
     res.AddMember("start_time", graph_db_service.get_start_time(),
@@ -1218,7 +1221,7 @@ seastar::future<admin_query_result> admin_actor::node_status(
   auto cpu_usage = gs::get_current_cpu_usage();
   auto mem_usage = gs::get_total_physical_memory_usage();
   // construct the result json string
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   {
     std::stringstream ss;
     if (cpu_usage.first < 0 || cpu_usage.second <= 0) {
@@ -1226,13 +1229,13 @@ seastar::future<admin_query_result> admin_actor::node_status(
     } else {
       ss << "cpu_usage is " << cpu_usage.first << " / " << cpu_usage.second;
     }
-    rapidjson::Pointer("/cpu_usage").Set(json, ss.str());
+    json.AddMember("cpu_usage", ss.str(), json.GetAllocator());
   }
   {
     std::stringstream ss;
     ss << "memory_usage is " << gs::memory_to_mb_str(mem_usage.first) << " / "
        << gs::memory_to_mb_str(mem_usage.second);
-    rapidjson::Pointer("/memory_usage").Set(json, ss.str());
+    json.AddMember("memory_usage", ss.str(), json.GetAllocator());
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(gs::rapidjson_stringify(json)));
