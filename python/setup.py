@@ -115,7 +115,7 @@ class GenerateFlexSDK(Command):
             pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
         )
         cmd = [
-            "openapi-generator-cli",
+            "openapi-generator",
             "generate",
             "-g",
             "python",
