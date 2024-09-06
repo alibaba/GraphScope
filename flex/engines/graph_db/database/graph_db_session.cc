@@ -166,10 +166,20 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
   ++query_num_;
-  return Result<std::vector<char>>(
-      StatusCode::QUERY_FAILED,
-      "Query failed for procedure id:" + std::to_string((int) type),
-      result_buffer);
+  // When query failed, we assume the user may put the error message in the
+  // output buffer.
+  // For example, for adhoc_app.cc, if the query failed, the error info will
+  // be put in the output buffer.
+  if (result_buffer.size() > 0) {
+    return Result<std::vector<char>>(
+        StatusCode::QUERY_FAILED,
+        std::string{result_buffer.data(), result_buffer.size()}, result_buffer);
+  } else {
+    return Result<std::vector<char>>(
+        StatusCode::QUERY_FAILED,
+        "Query failed for procedure id:" + std::to_string((int) type),
+        result_buffer);
+  }
 }
 
 void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }

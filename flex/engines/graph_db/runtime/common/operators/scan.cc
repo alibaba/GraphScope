@@ -15,11 +15,14 @@
 
 #include "flex/engines/graph_db/runtime/common/operators/scan.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 namespace runtime {
 
-Context Scan::find_vertex_with_id(const ReadTransaction& txn, label_t label,
-                                  const Any& pk, int alias, bool scan_oid) {
+bl::result<Context> Scan::find_vertex_with_id(const ReadTransaction& txn,
+                                              label_t label, const Any& pk,
+                                              int alias, bool scan_oid) {
   if (scan_oid) {
     SLVertexColumnBuilder builder(label);
     vid_t vid;
@@ -38,7 +41,9 @@ Context Scan::find_vertex_with_id(const ReadTransaction& txn, label_t label,
     } else if (pk.type == PropertyType::kInt32) {
       gid = pk.AsInt32();
     } else {
-      LOG(FATAL) << "Unsupported primary key type";
+      LOG(ERROR) << "Unsupported primary key type " << pk.type;
+      RETURN_UNSUPPORTED_ERROR("Unsupported primary key type" +
+                               pk.type.ToString());
     }
     if (GlobalId::get_label_id(gid) == label) {
       vid = GlobalId::get_vid(gid);

@@ -107,6 +107,7 @@ struct PropertyType {
   }
 
   bool IsVarchar() const;
+  std::string ToString() const;
 
   static PropertyType Empty();
   static PropertyType Bool();

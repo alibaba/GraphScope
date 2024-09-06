@@ -19,6 +19,9 @@
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 
+#include "boost/leaf.hpp"
+
+namespace bl = boost::leaf;
 namespace gs {
 
 namespace runtime {
@@ -29,9 +32,9 @@ struct ScanParams {
 class Scan {
  public:
   template <typename PRED_T>
-  static Context scan_vertex(const ReadTransaction& txn,
-                             const ScanParams& params,
-                             const PRED_T& predicate) {
+  static bl::result<Context> scan_vertex(const ReadTransaction& txn,
+                                         const ScanParams& params,
+                                         const PRED_T& predicate) {
     Context ctx;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
@@ -150,8 +153,9 @@ class Scan {
     return ctx;
   }
 
-  static Context find_vertex_with_id(const ReadTransaction& txn, label_t label,
-                                     const Any& pk, int alias, bool scan_oid);
+  static bl::result<Context> find_vertex_with_id(const ReadTransaction& txn,
+                                                 label_t label, const Any& pk,
+                                                 int alias, bool scan_oid);
 };
 
 }  // namespace runtime

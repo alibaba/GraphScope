@@ -20,9 +20,9 @@ namespace gs {
 
 namespace runtime {
 
-Context eval_select(const algebra::Select& opr, const ReadTransaction& txn,
-                    Context&& ctx,
-                    const std::map<std::string, std::string>& params) {
+bl::result<Context> eval_select(
+    const algebra::Select& opr, const ReadTransaction& txn, Context&& ctx,
+    const std::map<std::string, std::string>& params) {
   Expr expr(txn, ctx, params, opr.predicate(), VarType::kPathVar);
   std::vector<size_t> offsets;
   size_t row_num = ctx.row_num();
