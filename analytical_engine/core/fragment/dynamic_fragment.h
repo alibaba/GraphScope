@@ -428,6 +428,14 @@ class DynamicFragment
     return res;
   }
 
+  inline size_t GetOutgoingEdgeNum() const override {
+    return oe_.head_edge_num() + is_selfloops_.count();
+  }
+
+  inline size_t GetIncomingEdgeNum() const override {
+    return ie_.head_edge_num() + is_selfloops_.count();
+  }
+
   using base_t::InnerVertices;
   using base_t::IsInnerVertex;
   using base_t::OuterVertices;
