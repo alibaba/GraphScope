@@ -70,6 +70,10 @@ modern_graph = {
                         "property_name": "age",
                         "property_type": {"primitive_type": "DT_SIGNED_INT32"},
                     },
+                    {
+                        "property_name": "birthday",
+                        "property_type": {"temporal": {"timestamp": ""}},
+                    },
                 ],
                 "primary_keys": ["id"],
             }
@@ -168,42 +172,6 @@ modern_graph_vertex_only = {
 }
 
 
-modern_graph_datasource = {
-    "vertex_mappings": [
-        {
-            "type_name": "person",
-            "inputs": ["@/home/graphscope/alibaba/test/interative/person.csv"],
-            "column_mappings": [
-                {"column": {"index": 0, "name": "id"}, "property": "id"},
-                {"column": {"index": 1, "name": "name"}, "property": "name"},
-                {"column": {"index": 2, "name": "age"}, "property": "age"},
-            ],
-        }
-    ],
-    "edge_mappings": [
-        {
-            "type_triplet": {
-                "edge": "knows",
-                "source_vertex": "person",
-                "destination_vertex": "person",
-            },
-            "inputs": [
-                "@/home/graphscope/alibaba/test/interative/person_knows_person.csv"
-            ],
-            "source_vertex_mappings": [
-                {"column": {"index": 0, "name": "person.id"}, "property": "id"}
-            ],
-            "destination_vertex_mappings": [
-                {"column": {"index": 1, "name": "person.id"}, "property": "id"}
-            ],
-            "column_mappings": [
-                {"column": {"index": 2, "name": "weight"}, "property": "weight"}
-            ],
-        }
-    ],
-}
-
-
 class TestE2EInteractive(object):
     def setup_class(self):
         self.deployment_info = connect_coordinator(COORDINATOR_ENDPOINT)
@@ -239,7 +207,13 @@ class TestE2EInteractive(object):
     def test_bulk_loading(self, tmpdir):
         # person
         person = tmpdir.join("person.csv")
-        person.write("id|name|age\n1|marko|29\n2|vadas|27\n4|josh|32\n6|peter|35")
+        person.write(
+            "id|name|age|birthday\n"
+            + "1|marko|29|628646400000\n"
+            + "2|vadas|27|445910400000\n"
+            + "4|josh|32|491788800000\n"
+            + "6|peter|35|531273600000"
+        )
         # person -> knows -> person
         person_knows_person = tmpdir.join("person_knows_person.csv")
         person_knows_person.write("person.id|person.id|weight\n1|2|0.5\n1|4|1.0")
@@ -253,6 +227,10 @@ class TestE2EInteractive(object):
                         {"column": {"index": 0, "name": "id"}, "property": "id"},
                         {"column": {"index": 1, "name": "name"}, "property": "name"},
                         {"column": {"index": 2, "name": "age"}, "property": "age"},
+                        {
+                            "column": {"index": 3, "name": "birthday"},
+                            "property": "birthday",
+                        },
                     ],
                 }
             ],

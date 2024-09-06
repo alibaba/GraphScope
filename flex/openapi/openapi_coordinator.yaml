@@ -294,10 +294,34 @@ components:
           oneOf:
             - $ref: '#/components/schemas/LongText'
 
+    TimeStampType:
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+
+    DateType:
+      required:
+        - date32
+      properties:
+        date32:
+          type: string
+
+    TemporalType:
+      required:
+        - temporal
+      properties:
+        temporal:
+          oneOf:
+            - $ref: '#/components/schemas/TimeStampType'
+            - $ref: '#/components/schemas/DateType'
+
     GSDataType:
       oneOf:
         - $ref: '#/components/schemas/PrimitiveType'
         - $ref: '#/components/schemas/StringType'
+        - $ref: '#/components/schemas/TemporalType'
 
     Parameter:
       required:
@@ -2170,7 +2194,7 @@ paths:
                   status: Running
                   sdk_endpoints:
                     cypher: neo4j://mock.api.cypher:7676
-                    gremin: ws://mock.api.gremlin/gremlin
+                    gremlin: ws://mock.api.gremlin/gremlin
                     hqps: http://mock.api.hqps:10000
                   start_time: "2024-01-01 00:00:00"
         500:
@@ -2199,7 +2223,7 @@ paths:
                 status: Running
                 sdk_endpoints:
                   cypher: neo4j://mock.api.cypher:7676
-                  gremin: ws://mock.api.gremlin/gremlin
+                  gremlin: ws://mock.api.gremlin/gremlin
                   hqps: http://mock.api.hqps:10000
                 start_time: "2024-01-01 00:00:00"
         500:
