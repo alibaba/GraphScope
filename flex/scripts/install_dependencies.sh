@@ -23,7 +23,7 @@ sudo apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-con
 pushd /tmp/
 curl -L -o boost_1_75_0.tar.gz "https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/boost_1_75_0.tar.gz"
 tar -xzf boost_1_75_0.tar.gz
-pushd boost_1_75_0 && ./bootstrap.sh --with-libraries=system,filesystem,context,program_options,regex,thread,chrono,date_time,test # unit_test_framework used by seastar
+pushd boost_1_75_0 && ./bootstrap.sh --with-libraries=system,filesystem,context,atomic,program_options,regex,thread,chrono,date_time,test # unit_test_framework used by seastar
 sudo ./b2 install link=shared runtime-link=shared variant=release threading=multi
 popd && sudo rm -rf boost_1_75_0
 rm boost_1_75_0.tar.gz
