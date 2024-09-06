@@ -128,6 +128,8 @@ bl::result<Context> runtime_eval_impl(
           data_types.push_back(opr.meta_data(i).type());
         }
       }
+      BOOST_LEAF_ASSIGN(ret, eval_project(opr.opr().project(), txn,
+                                          std::move(ret), params, data_types));
       t += grape::GetCurrentTime();
       op_cost["project"] += t;
     } break;
