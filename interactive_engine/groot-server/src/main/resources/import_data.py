@@ -375,25 +375,26 @@ def load_data_of_movie_graph(conn, graph, prefix):
     print("load movie graph done")
 
 
-def create_modern_graph(conn, graph, client):
+def create_modern_graph(conn, graph, client, data_path):
+    print("create modern graph", data_path)
     create_modern_graph_schema(graph)
-    load_data_of_modern_graph(conn, graph, "/tmp/gstest/modern_graph")
+    load_data_of_modern_graph(conn, graph, data_path)
     statistics(client)
 
 
-def create_crew_graph(conn, graph, client):
+def create_crew_graph(conn, graph, client, data_path):
     create_crew_graph_schema(graph)
-    load_data_of_crew_graph(conn, graph, "/tmp/gstest/crew")
+    load_data_of_crew_graph(conn, graph, data_path)
     statistics(client)
 
-def create_ldbc_graph(conn, graph, client):
+def create_ldbc_graph(conn, graph, client, data_path):
     create_ldbc_graph_schema(graph)
-    load_data_of_ldbc_graph(conn, graph, "/tmp/gstest/ldbc")
+    load_data_of_ldbc_graph(conn, graph, data_path)
     statistics(client)
 
-def create_movie_graph(conn, graph, client):
+def create_movie_graph(conn, graph, client, data_path):
     create_movie_graph_schema(graph)
-    load_data_of_movie_graph(conn, graph, "/tmp/gstest/movies")
+    load_data_of_movie_graph(conn, graph, data_path)
     statistics(client)
 
 def main():
@@ -408,17 +409,22 @@ def main():
         required=True,
         help="The graph to import: 'modern', 'crew', 'ldbc', or 'movie'."
     )
-    
+    parser.add_argument(
+        '--data_path',
+        required=True,
+        help="The path to the input data file."
+    )
+
     args = parser.parse_args()
 
     if args.graph == 'modern':
-        create_modern_graph(conn, graph, client)
+        create_modern_graph(conn, graph, client, args.data_path)
     elif args.graph == 'crew':
-        create_crew_graph(conn, graph, client)
+        create_crew_graph(conn, graph, client, args.data_path)
     elif args.graph == 'ldbc':
-        create_ldbc_graph(conn, graph, client)
+        create_ldbc_graph(conn, graph, client, args.data_path)
     elif args.graph == 'movie':
-        create_movie_graph(conn, graph, client)
+        create_movie_graph(conn, graph, client, args.data_path)
 
 if __name__ == "__main__":
     main()

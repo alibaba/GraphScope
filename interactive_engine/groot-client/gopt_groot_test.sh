@@ -1,14 +1,12 @@
 #!/bin/bash
 set -x
 BASE_DIR=$(cd "$(dirname "$0")"; pwd)
-COMPILER_DIR=${BASE_DIR}/../compiler
-DATA_IMPORT_SCRIPT_DIR=${BASE_DIR}/../groot-server/src/main/resources
-ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
-cd ${BASE_DIR}/../assembly/target && tar xvzf groot.tar.gz && cd groot
-
+declare -r COMPILER_DIR=${BASE_DIR}/../compiler
+declare -r DATA_IMPORT_SCRIPT_DIR=${BASE_DIR}/../groot-server/src/main/resources
 declare -r CONFIG_FILE="/tmp/groot.config"
 declare -r METADATA_DIR="/tmp/groot/meta"
 declare -r DATA_DIR="/tmp/groot/data"
+declare -r CSV_DATA_DIR="/tmp/gstest"
 export LOG_DIR="/tmp/log/graphscope"
 
 # necessary python packages for data import, including pandas, graphscope and gremlin_python
@@ -34,6 +32,8 @@ else
 fi
 
 # start server
+ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
+cd ${BASE_DIR}/../assembly/target && tar xvzf groot.tar.gz && cd groot
 GROOT_DIR=$(pwd)
 sed -e "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@g" \
     -e "s@collect.statistics=false@collect.statistics=true@g" \
@@ -57,7 +57,7 @@ GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 
 sleep 30
 # load data
-cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph modern
+cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph modern --data_path ${CSV_DATA_DIR}/modern_graph
 sleep 60
 # run modern graph test
 cd ${COMPILER_DIR} && make gremlin_calcite_test
@@ -75,7 +75,7 @@ fi
 GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 sleep 30
 # load data
-cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph movie
+cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph movie --data_path ${CSV_DATA_DIR}/movies
 sleep 60
 # run movie graph test
 cd ${COMPILER_DIR} && make cypher_test
@@ -93,7 +93,7 @@ fi
 GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 sleep 30
 # load data
-cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph ldbc
+cd ${DATA_IMPORT_SCRIPT_DIR} && python3 import_data.py --graph ldbc --data_path ${CSV_DATA_DIR}/ldbc
 sleep 360
 # run ldbc graph test
 cd ${COMPILER_DIR} && make ldbc_test && make simple_test && make pattern_test
