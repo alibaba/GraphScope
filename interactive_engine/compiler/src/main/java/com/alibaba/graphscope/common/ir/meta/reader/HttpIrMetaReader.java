@@ -24,10 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
-import com.alibaba.graphscope.common.ir.meta.schema.FileFormatType;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
-import com.alibaba.graphscope.common.ir.meta.schema.SchemaInputStream;
+import com.alibaba.graphscope.common.ir.meta.schema.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -76,7 +73,7 @@ public class HttpIrMetaReader implements IrMetaReader {
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
                                             metaInYaml.getBytes(StandardCharsets.UTF_8)),
-                                    FileFormatType.YAML)),
+                                    SchemaSpec.Type.FLEX_IN_YAML)),
                     new GraphStoredProcedures(
                             new ByteArrayInputStream(metaInYaml.getBytes(StandardCharsets.UTF_8)),
                             this));

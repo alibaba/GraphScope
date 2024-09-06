@@ -18,22 +18,33 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import java.io.InputStream;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 
-public class SchemaInputStream {
-    private final InputStream inputStream;
-    private final SchemaSpec.Type type;
+public class SchemaSpec {
+    private final Type type;
+    private final String content;
 
-    public SchemaInputStream(InputStream inputStream, SchemaSpec.Type type) {
-        this.inputStream = inputStream;
+    public SchemaSpec(Type type, String content) {
         this.type = type;
+        this.content = content;
     }
 
-    public InputStream getInputStream() {
-        return inputStream;
+    public GraphSchema convert() {
+        switch (type) {
+        }
     }
 
-    public SchemaSpec.Type getType() {
+    public String getContent() {
+        return content;
+    }
+
+    public Type getType() {
         return type;
+    }
+
+    public enum Type {
+        IR_CORE_IN_JSON,
+        FLEX_IN_JSON,
+        FLEX_IN_YAML;
     }
 }

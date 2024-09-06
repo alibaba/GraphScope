@@ -80,7 +80,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
     }
 
     private static PlanPointer createDefaultPlanPointer(IrMeta irMeta) {
-        checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
+        checkFfiResult(LIB.setSchema(irMeta.getSchema().getSchemaSpec()));
         return new PlanPointer(LIB.initLogicalPlan());
     }
 

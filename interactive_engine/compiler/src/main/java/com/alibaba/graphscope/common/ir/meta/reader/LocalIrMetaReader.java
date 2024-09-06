@@ -21,10 +21,7 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
-import com.alibaba.graphscope.common.ir.meta.schema.FileFormatType;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
-import com.alibaba.graphscope.common.ir.meta.schema.SchemaInputStream;
+import com.alibaba.graphscope.common.ir.meta.schema.*;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.slf4j.Logger;
@@ -56,10 +53,15 @@ public class LocalIrMetaReader implements IrMetaReader {
         Path schemaPath =
                 (schemaURI.getScheme() == null) ? Path.of(schemaURI.getPath()) : Path.of(schemaURI);
         FileFormatType formatType = FileUtils.getFormatType(schemaUri);
+        // hack way to determine schema specification from the file format
+        SchemaSpec.Type schemaSpec =
+                formatType == FileFormatType.YAML
+                        ? SchemaSpec.Type.FLEX_IN_YAML
+                        : SchemaSpec.Type.IR_CORE_IN_JSON;
         IrGraphSchema graphSchema =
                 new IrGraphSchema(
                         new SchemaInputStream(
-                                new FileInputStream(schemaPath.toFile()), formatType));
+                                new FileInputStream(schemaPath.toFile()), schemaSpec));
         IrMeta irMeta =
                 (formatType == FileFormatType.YAML)
                         ? new IrMeta(
