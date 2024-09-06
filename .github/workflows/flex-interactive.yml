@@ -70,7 +70,7 @@ jobs:
         # build gs_interactive wheel package
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk
         bash generate_sdk.sh -g python 
-        cd python && python3 setup.py build_proto
+        cd python && pip3 install -r requirements.txt && python3 setup.py build_proto
         python3 setup.py bdist_wheel
         pip3 install dist/*.whl
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
