@@ -285,20 +285,22 @@ install_glog() {
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
 }
 
-# boost for centos
+# boost with leaf for centos and ubuntu
 install_boost() {
   if [[ -f "${install_prefix}/include/boost/version.hpp" ]]; then
     return 0
   fi
   pushd "${tempdir}" || exit
-  directory="boost_1_74_0"
+  directory="boost_1_75_0"
   file="${directory}.tar.gz"
-  url="https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source"
+  url="https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source"
   url=$(set_to_cn_url ${url})
   download_and_untar "${url}" "${file}" "${directory}"
   pushd ${directory} || exit
+  # seastar needs filesystem program_options thread unit_test_framework
+  # interactive needs context regex date_time
   ./bootstrap.sh --prefix="${install_prefix}" \
-    --with-libraries=system,filesystem,context,program_options,regex,thread,random,chrono,atomic,date_time
+    --with-libraries=system,filesystem,context,program_options,regex,thread,random,chrono,atomic,date_time,test
   ./b2 install link=shared runtime-link=shared variant=release threading=multi
   popd || exit
   popd || exit
@@ -555,8 +557,6 @@ install_vineyard() {
   fi
   pushd ${directory} || exit
 
-  # make sure it complain loudly if installing vineyard fails
-  set -e
   cmake . -DCMAKE_PREFIX_PATH="${install_prefix}" \
         -DCMAKE_INSTALL_PREFIX="${V6D_PREFIX}" \
         -DBUILD_VINEYARD_TESTS=OFF \
@@ -699,7 +699,7 @@ install_basic_packages() {
 }
 
 ANALYTICAL_MACOS=("apache-arrow" "boost" "gflags" "glog" "open-mpi" "openssl@1.1" "protobuf" "grpc" "rapidjson" "msgpack-cxx" "librdkafka" "patchelf")
-ANALYTICAL_UBUNTU=("libboost-all-dev" "libopenmpi-dev" "libgflags-dev" "libgoogle-glog-dev" "libprotobuf-dev" "libgrpc++-dev" "libmsgpack-dev" "librdkafka-dev" "protobuf-compiler-grpc" "rapidjson-dev")
+ANALYTICAL_UBUNTU=("libopenmpi-dev" "libgflags-dev" "libgoogle-glog-dev" "libprotobuf-dev" "libgrpc++-dev" "libmsgpack-dev" "librdkafka-dev" "protobuf-compiler-grpc" "rapidjson-dev")
 ANALYTICAL_CENTOS_7=("librdkafka-devel" "msgpack-devel" "rapidjson-devel")
 ANALYTICAL_CENTOS_8=("${ANALYTICAL_CENTOS_7[@]}" "boost-devel" "gflags-devel" "glog-devel")
 
@@ -732,6 +732,8 @@ install_analytical_dependencies() {
       ${SUDO} apt-get install -y libarrow-dev=${ARROW_VERSION}-1 libarrow-dataset-dev=${ARROW_VERSION}-1 libarrow-acero-dev=${ARROW_VERSION}-1 libparquet-dev=${ARROW_VERSION}-1
       rm /tmp/apache-arrow-apt-source-latest-*.deb
     fi
+    # install boost >= 1.75 for leaf
+    install_boost
   else
     if [[ "${OS_VERSION}" -eq "7" ]]; then
       ${SUDO} yum install -y ${ANALYTICAL_CENTOS_7[*]}
