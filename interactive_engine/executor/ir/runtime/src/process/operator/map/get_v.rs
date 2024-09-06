@@ -120,12 +120,8 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 }
             } else if let Some(obj) = entry.as_object() {
                 if Object::None.eq(obj) {
-                    if self.query_labels.is_empty() {
-                        input.append(Object::None, self.alias);
-                        return Ok(Some(input));
-                    } else {
-                        return Ok(None);
-                    }
+                    input.append(Object::None, self.alias);
+                    Ok(Some(input))
                 } else {
                     Err(FnExecError::unexpected_data_error(&format!(
                         "Can only apply `GetV` on an object that is not None. The entry is {:?}",
@@ -258,7 +254,6 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             } else if let Some(obj) = entry.as_object() {
                 if Object::None.eq(obj) {
                     if let Some(predicate) = &self.query_params.filter {
-                        // TODO: eval by predicate instead of directly regarding it as false
                         let res = predicate
                             .eval_bool(Some(&input))
                             .map_err(|e| FnExecError::from(e))?;
