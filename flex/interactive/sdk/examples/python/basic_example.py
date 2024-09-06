@@ -81,7 +81,7 @@ test_graph_datasource = {
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": [f"{MODERN_GRAPH_CSV_DIR}/person.csv"],
+            "inputs": [f"@{MODERN_GRAPH_CSV_DIR}/person.csv"],
             "column_mappings": [
                 {"column": {"index": 0, "name": "id"}, "property": "id"},
                 {"column": {"index": 1, "name": "name"}, "property": "name"},
@@ -97,7 +97,7 @@ test_graph_datasource = {
                 "destination_vertex": "person",
             },
             "inputs": [
-                f"{MODERN_GRAPH_CSV_DIR}/person_knows_person.csv"
+                f"@{MODERN_GRAPH_CSV_DIR}/person_knows_person.csv"
             ],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "person.id"}, "property": "id"}
