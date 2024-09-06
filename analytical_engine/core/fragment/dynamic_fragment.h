@@ -428,11 +428,11 @@ class DynamicFragment
     return res;
   }
 
-  inline size_t GetOutgoingEdgeNum() const override {
+  inline size_t GetOutgoingEdgeNum() const {
     return oe_.head_edge_num() + is_selfloops_.count();
   }
 
-  inline size_t GetIncomingEdgeNum() const override {
+  inline size_t GetIncomingEdgeNum() const {
     return ie_.head_edge_num() + is_selfloops_.count();
   }
 
