@@ -109,7 +109,9 @@ class CustomBDistWheel(bdist_wheel):
         self.root_is_pure = False
 
     def run(self):
-        self.run_command("generate_flex_sdk")
+        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
+        if not os.path.exists(targetdir):
+            raise RuntimeError("Run `python3 setup_flex.py generate_flex_sdk` first.")
         bdist_wheel.run(self)
 
 
