@@ -35,6 +35,7 @@ import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -109,6 +110,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final IrMetaQueryCallback metaQueryCallback;
     protected final QueryIdGenerator idGenerator;
     protected final QueryCache queryCache;
+    protected final GraphPlanner graphPlanner;
     protected final ExecutionClient executionClient;
     protected Tracer tracer;
     protected LongHistogram queryHistogram;
@@ -124,6 +126,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             Configs configs,
             QueryIdGenerator idGenerator,
             QueryCache queryCache,
+            GraphPlanner graphPlanner,
             ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -143,6 +146,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.metaQueryCallback = metaQueryCallback;
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
+        this.graphPlanner = graphPlanner;
         this.executionClient = executionClient;
         this.printThreshold = FrontendConfig.QUERY_PRINT_THRESHOLD_MS.get(configs);
         this.opentelemetryIdGenerator = IdGenerator.random();
@@ -215,6 +219,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                         configs,
                                         ctx,
                                         queryCache,
+                                        graphPlanner,
                                         executionClient,
                                         jobId,
                                         jobName,

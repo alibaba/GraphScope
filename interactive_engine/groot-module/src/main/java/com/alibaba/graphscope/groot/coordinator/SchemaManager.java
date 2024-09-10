@@ -60,6 +60,8 @@ public class SchemaManager {
     private volatile boolean ready = false;
 
     private final boolean collectStatistics;
+    private final int collectStatisticsInitialDelay;
+    private final int collectStatisticsInterval;
     private ExecutorService singleThreadExecutor;
     private ScheduledExecutorService syncSchemaScheduler;
 
@@ -85,6 +87,9 @@ public class SchemaManager {
 
         this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         this.collectStatistics = CommonConfig.COLLECT_STATISTICS.get(configs);
+        this.collectStatisticsInitialDelay =
+                CommonConfig.COLLECT_STATISTICS_INITIAL_DELAY_MIN.get(configs);
+        this.collectStatisticsInterval = CommonConfig.COLLECT_STATISTICS_INTERVAL_MIN.get(configs);
     }
 
     public void start() {
@@ -113,7 +118,10 @@ public class SchemaManager {
                             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                     "fetch-statistics", logger));
             this.fetchStatisticsScheduler.scheduleWithFixedDelay(
-                    this::syncStatistics, 5, 60, TimeUnit.MINUTES);
+                    this::syncStatistics,
+                    collectStatisticsInitialDelay,
+                    collectStatisticsInterval,
+                    TimeUnit.MINUTES);
         }
     }
 

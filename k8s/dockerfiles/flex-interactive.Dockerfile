@@ -3,8 +3,8 @@
 ARG PLATFORM=x86_64
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
+ARG VINEYARD_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 ARG ENABLE_COORDINATOR="false"
 ARG OPTIMIZE_FOR_HOST=OFF
 ARG ENABLE_OPENTELMETRY=false
@@ -108,11 +108,11 @@ COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
-COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
+COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_test.yaml /opt/flex/share/interactive_config.yaml
 COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml && \
-    sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
+    sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/interactive_config.yaml
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app

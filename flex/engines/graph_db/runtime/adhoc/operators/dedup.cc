@@ -21,8 +21,8 @@ namespace gs {
 
 namespace runtime {
 
-Context eval_dedup(const algebra::Dedup& opr, const ReadTransaction& txn,
-                   Context&& ctx) {
+bl::result<Context> eval_dedup(const algebra::Dedup& opr,
+                               const ReadTransaction& txn, Context&& ctx) {
   std::vector<size_t> keys;
   std::vector<std::function<RTAny(size_t)>> vars;
   int keys_num = opr.keys_size();

@@ -38,6 +38,14 @@ namespace bl = boost::leaf;
 
 namespace gs {
 
+#ifdef __cpp_lib_is_invocable
+template <class T, typename... Args>
+using result_of_t = std::invoke_result_t<T, Args...>;
+#else
+template <class T, typename... Args>
+using result_of_t = typename std::result_of<T(Args...)>::type;
+#endif
+
 #ifdef NETWORKX
 template <typename T>
 struct is_dynamic {
@@ -293,19 +301,16 @@ vertex_data_to_arrow_array_impl(const FRAG_T& frag) {
 
 template <typename FUNC_T,
           typename std::enable_if<
-              !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                            std::string>::value,
+              !std::is_same<result_of_t<FUNC_T, size_t>, std::string>::value,
               void>::type* = nullptr>
 typename std::enable_if<
-    !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                  grape::EmptyType>::value &&
+    !std::is_same<result_of_t<FUNC_T, size_t>, grape::EmptyType>::value &&
 
-        !is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
+        !is_dynamic<result_of_t<FUNC_T, size_t>>::value,
     bl::result<std::shared_ptr<vineyard::ITensorBuilder>>>::type
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
-  using tensor_builder_t =
-      vineyard::TensorBuilder<typename std::result_of<FUNC_T(size_t)>::type>;
+  using tensor_builder_t = vineyard::TensorBuilder<result_of_t<FUNC_T, size_t>>;
   std::vector<int64_t> shape{static_cast<int64_t>(size)};
   std::shared_ptr<tensor_builder_t> tensor_builder;
 
@@ -321,19 +326,16 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
 template <typename FUNC_T,
           typename std::enable_if<
-              std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                           std::string>::value,
+              std::is_same<result_of_t<FUNC_T, size_t>, std::string>::value,
               void>::type* = nullptr>
 typename std::enable_if<
-    !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                  grape::EmptyType>::value &&
+    !std::is_same<result_of_t<FUNC_T, size_t>, grape::EmptyType>::value &&
 
-        !is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
+        !is_dynamic<result_of_t<FUNC_T, size_t>>::value,
     bl::result<std::shared_ptr<vineyard::ITensorBuilder>>>::type
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
-  using tensor_builder_t =
-      vineyard::TensorBuilder<typename std::result_of<FUNC_T(size_t)>::type>;
+  using tensor_builder_t = vineyard::TensorBuilder<result_of_t<FUNC_T, size_t>>;
   std::vector<int64_t> shape{static_cast<int64_t>(size)};
   std::shared_ptr<tensor_builder_t> tensor_builder;
 
@@ -353,8 +355,7 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
 template <typename FUNC_T>
 typename std::enable_if<
-    std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                 grape::EmptyType>::value,
+    std::is_same<result_of_t<FUNC_T, size_t>, grape::EmptyType>::value,
     bl::result<std::shared_ptr<vineyard::ITensorBuilder>>>::type
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
@@ -364,7 +365,7 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
 template <typename FUNC_T>
 typename std::enable_if<
-    is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
+    is_dynamic<result_of_t<FUNC_T, size_t>>::value,
     bl::result<std::shared_ptr<vineyard::ITensorBuilder>>>::type
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
@@ -374,17 +375,15 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
 template <typename FUNC_T>
 typename std::enable_if<
-    !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                  grape::EmptyType>::value &&
-        !is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
+    !std::is_same<result_of_t<FUNC_T, size_t>, grape::EmptyType>::value &&
+        !is_dynamic<result_of_t<FUNC_T, size_t>>::value,
     bl::result<vineyard::ObjectID>>::type
 build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                 int64_t part_idx) {
   BOOST_LEAF_AUTO(base_builder,
                   build_vy_tensor_builder(client, size, func, part_idx));
   auto builder = std::dynamic_pointer_cast<
-      vineyard::TensorBuilder<typename std::result_of<FUNC_T(size_t)>::type>>(
-      base_builder);
+      vineyard::TensorBuilder<result_of_t<FUNC_T, size_t>>>(base_builder);
   auto tensor = builder->Seal(client);
 
   VY_OK_OR_RAISE(tensor->Persist(client));
@@ -393,8 +392,7 @@ build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
 
 template <typename FUNC_T>
 typename std::enable_if<
-    std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
-                 grape::EmptyType>::value,
+    std::is_same<result_of_t<FUNC_T, size_t>, grape::EmptyType>::value,
     bl::result<vineyard::ObjectID>>::type
 build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                 int64_t part_idx) {
@@ -403,9 +401,8 @@ build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
 }
 
 template <typename FUNC_T>
-typename std::enable_if<
-    is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
-    bl::result<vineyard::ObjectID>>::type
+typename std::enable_if<is_dynamic<result_of_t<FUNC_T, size_t>>::value,
+                        bl::result<vineyard::ObjectID>>::type
 build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                 int64_t part_idx) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,

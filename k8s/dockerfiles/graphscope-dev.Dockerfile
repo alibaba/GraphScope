@@ -29,9 +29,10 @@ WORKDIR /home/graphscope
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
+
 RUN cd /home/graphscope/GraphScope && \
-    python3 -m pip install click packaging && \
-    python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
+    python3 -m pip install click && \
+    python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION --cn && \
     cd /home/graphscope && \
     rm -fr GraphScope
 

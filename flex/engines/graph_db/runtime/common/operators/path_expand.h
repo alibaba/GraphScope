@@ -24,6 +24,8 @@
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 
 namespace runtime {
@@ -42,15 +44,18 @@ class PathExpand {
  public:
   // PathExpand(expandOpt == Vertex && alias == -1 && resultOpt == END_V) +
   // GetV(opt == END)
-  static Context edge_expand_v(const ReadTransaction& txn, Context&& ctx,
-                               const PathExpandParams& params);
-  static Context edge_expand_p(const ReadTransaction& txn, Context&& ctx,
-                               const PathExpandParams& params);
+  static bl::result<Context> edge_expand_v(const ReadTransaction& txn,
+                                           Context&& ctx,
+                                           const PathExpandParams& params);
+  static bl::result<Context> edge_expand_p(const ReadTransaction& txn,
+                                           Context&& ctx,
+                                           const PathExpandParams& params);
 
   template <typename PRED_T>
-  static Context edge_expand_v_pred(const ReadTransaction& txn, Context&& ctx,
-                                    const PathExpandParams& params,
-                                    const PRED_T& pred) {
+  static bl::result<Context> edge_expand_v_pred(const ReadTransaction& txn,
+                                                Context&& ctx,
+                                                const PathExpandParams& params,
+                                                const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
     if (params.labels.size() == 1 &&
         params.labels[0].src_label == params.labels[0].dst_label) {
@@ -148,7 +153,9 @@ class PathExpand {
         return ctx;
       }
     }
-    LOG(FATAL) << "not support...";
+    RETURN_UNSUPPORTED_ERROR(
+        "Unsupported path expand. Currently only support "
+        "single edge label expand with src_label = dst_label.");
     return ctx;
   }
 };

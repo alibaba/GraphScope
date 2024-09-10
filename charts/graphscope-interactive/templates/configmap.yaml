@@ -12,13 +12,7 @@ metadata:
   annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 data:
-  engine_config.yaml: |-
-    directories:
-      workspace: {{ .Values.workspace }}
-      subdirs:
-        data: data
-        logs: logs
-        conf: conf
+  interactive_config.yaml: |-
     log_level: {{ .Values.engine.logLevel  }}
     default_graph: {{ .Values.defaultGraph }}
     compute_engine:

@@ -125,6 +125,7 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 #find hiactor----------------------------------------------------------------------
 find_package(Hiactor)

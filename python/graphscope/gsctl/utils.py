@@ -70,9 +70,9 @@ def warning(message: str, bold=False):
     click.secho(message, bold=bold)
 
 
-def succ(message: str, bold=False):
+def succ(message: str, bold=False, fg=None):
     click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
-    click.secho(message, bold=bold)
+    click.secho(message, bold=bold, fg=fg)
 
 
 def err(message: str, bold=False):

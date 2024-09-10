@@ -96,7 +96,7 @@ test_codegen_on_ldbc_rbo(){
 
 test_codegen_on_movie_rbo(){
     # test movie graph, 8,9,10 are not supported now
-    # change the default_graph config in ../tests/hqps/engine_config_test.yaml to movies
+    # change the default_graph config in ../tests/hqps/interactive_config_test.yaml to movies
     sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${RBO_ENGINE_CONFIG_PATH}
     for i in 1 2 3 4 5 6 7 11 12 13 14 15;
     do

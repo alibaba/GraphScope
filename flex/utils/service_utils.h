@@ -21,6 +21,7 @@
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -65,6 +66,13 @@ inline std::string rapidjson_stringify(const rapidjson::Value& value,
     value.Accept(writer);
     return buffer.GetString();
   }
+}
+
+inline std::string toUpper(const std::string str) {
+  std::string upper_str = str;
+  std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(),
+                 ::toupper);
+  return upper_str;
 }
 
 // With the help of the following functions, we can serialize and deserialize
@@ -170,17 +178,6 @@ inline std::string jsonToString(const rapidjson::Value& json) {
     return rapidjson_stringify(json);
   }
 }
-
-class FlexException : public std::exception {
- public:
-  explicit FlexException(std::string&& error_msg);
-  ~FlexException() override;
-
-  const char* what() const noexcept override;
-
- private:
-  std::string _err_msg;
-};
 
 // Get the directory of the current executable
 std::string get_current_dir();

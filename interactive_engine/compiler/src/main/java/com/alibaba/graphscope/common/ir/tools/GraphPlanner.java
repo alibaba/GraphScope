@@ -93,18 +93,32 @@ public class GraphPlanner {
         if (mq != null) {
             optCluster.setMetadataQuerySupplier(() -> mq);
         }
-        return new PlannerInstance(query, optCluster, irMeta);
+        // build logical plan from parsed query
+        IrGraphSchema schema = irMeta.getSchema();
+        GraphBuilder graphBuilder =
+                GraphBuilder.create(
+                        graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
+
+        LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+        return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta);
     }
 
     public class PlannerInstance {
         private final String query;
-        private final GraphOptCluster optCluster;
+        private final LogicalPlan parsedPlan;
+        private final GraphBuilder graphBuilder;
         private final IrMeta irMeta;
 
-        public PlannerInstance(String query, GraphOptCluster optCluster, IrMeta irMeta) {
+        public PlannerInstance(
+                String query, LogicalPlan parsedPlan, GraphBuilder graphBuilder, IrMeta irMeta) {
             this.query = query;
-            this.optCluster = optCluster;
+            this.parsedPlan = parsedPlan;
+            this.graphBuilder = graphBuilder;
             this.irMeta = irMeta;
+        }
+
+        public LogicalPlan getParsedPlan() {
+            return parsedPlan;
         }
 
         public Summary plan() {
@@ -117,16 +131,7 @@ public class GraphPlanner {
         }
 
         public LogicalPlan planLogical() {
-            // build logical plan from parsed query
-            IrGraphSchema schema = irMeta.getSchema();
-            GraphBuilder graphBuilder =
-                    GraphBuilder.create(
-                            graphConfig,
-                            this.optCluster,
-                            new GraphOptSchema(this.optCluster, schema));
-
-            LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
-
+            LogicalPlan logicalPlan = parsedPlan;
             // apply optimizations
             if (logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
                 RelNode before = logicalPlan.getRegularQuery();
