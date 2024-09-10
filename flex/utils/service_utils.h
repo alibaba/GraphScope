@@ -86,11 +86,9 @@ inline bool to_json(rapidjson::Document& j, const PropertyType& p) {
              p == PropertyType::UInt32() || p == PropertyType::Float() ||
              p == PropertyType::Int64() || p == PropertyType::UInt64() ||
              p == PropertyType::Double()) {
-    rapidjson::Value primitive_type;
-    primitive_type.SetString(
-        config_parsing::PrimitivePropertyTypeToString(p).c_str(),
-        j.GetAllocator());
-    j.AddMember("primitive_type", primitive_type, j.GetAllocator());
+    j.AddMember("primitive_type",
+                gs::config_parsing::PrimitivePropertyTypeToString(p),
+                j.GetAllocator());
   } else if (p == PropertyType::Date()) {
     rapidjson::Document temporal(rapidjson::kObjectType, &j.GetAllocator());
     temporal.AddMember("timestamp", "", j.GetAllocator());
@@ -118,8 +116,15 @@ inline bool to_json(rapidjson::Document& j, const PropertyType& p) {
   return true;
 }
 
-inline rapidjson::Document to_json(const PropertyType& p) {
-  rapidjson::Document j(rapidjson::kObjectType);
+inline rapidjson::Document to_json(
+    const PropertyType& p,
+    rapidjson::Document::AllocatorType* allocator = nullptr) {
+  rapidjson::Document j;
+  if (allocator) {
+    j = rapidjson::Document(rapidjson::kObjectType, allocator);
+  } else {
+    j = rapidjson::Document(rapidjson::kObjectType);
+  }
   if (!to_json(j, p)) {
     LOG(ERROR) << "Failed to convert PropertyType to json";
   }

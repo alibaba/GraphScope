@@ -61,7 +61,8 @@ UpdateGraphMetaRequest::UpdateGraphMetaRequest(
 std::string Parameter::ToJson() const {
   rapidjson::Document json(rapidjson::kObjectType);
   json.AddMember("name", name, json.GetAllocator());
-  json.AddMember("type", to_json(type), json.GetAllocator());
+  json.AddMember("type", to_json(type, &json.GetAllocator()),
+                 json.GetAllocator());
   return rapidjson_stringify(json);
 }
 
@@ -230,7 +231,7 @@ void PluginMeta::ToJson(rapidjson::Value& json,
   for (auto& param : params) {
     rapidjson::Document tempDoc(rapidjson::kObjectType, &allocator);
     tempDoc.AddMember("name", param.name, allocator);
-    tempDoc.AddMember("type", to_json(param.type), allocator);
+    tempDoc.AddMember("type", to_json(param.type, &allocator), allocator);
     params_json.PushBack(tempDoc, allocator);
   }
   json.AddMember("params", params_json, allocator);
@@ -238,7 +239,7 @@ void PluginMeta::ToJson(rapidjson::Value& json,
   for (auto& ret : returns) {
     rapidjson::Document tempDoc(rapidjson::kObjectType, &allocator);
     tempDoc.AddMember("name", ret.name, allocator);
-    tempDoc.AddMember("type", to_json(ret.type), allocator);
+    tempDoc.AddMember("type", to_json(ret.type, &allocator), allocator);
     returns_json.PushBack(tempDoc, allocator);
   }
   json.AddMember("returns", returns_json, allocator);
@@ -461,7 +462,8 @@ std::string CreatePluginMetaRequest::paramsString() const {
     rapidjson::Document param_json(rapidjson::kObjectType,
                                    &json.GetAllocator());
     param_json.AddMember("name", param.name, json.GetAllocator());
-    param_json.AddMember("type", to_json(param.type), json.GetAllocator());
+    param_json.AddMember("type", to_json(param.type, &json.GetAllocator()),
+                         json.GetAllocator());
     json.PushBack(param_json, json.GetAllocator());
   }
   return rapidjson_stringify(json);
@@ -472,7 +474,8 @@ std::string CreatePluginMetaRequest::returnsString() const {
   for (auto& ret : returns) {
     rapidjson::Document ret_json(rapidjson::kObjectType, &json.GetAllocator());
     ret_json.AddMember("name", ret.name, json.GetAllocator());
-    ret_json.AddMember("type", to_json(ret.type), json.GetAllocator());
+    ret_json.AddMember("type", to_json(ret.type, &json.GetAllocator()),
+                       json.GetAllocator());
     json.PushBack(ret_json, json.GetAllocator());
   }
   return rapidjson_stringify(json);
@@ -502,14 +505,16 @@ std::string CreatePluginMetaRequest::ToString() const {
     rapidjson::Document param_json(rapidjson::kObjectType,
                                    &json.GetAllocator());
     param_json.AddMember("name", param.name, json.GetAllocator());
-    param_json.AddMember("type", to_json(param.type), json.GetAllocator());
+    param_json.AddMember("type", to_json(param.type, &json.GetAllocator()),
+                         json.GetAllocator());
     json["params"].PushBack(param_json, json.GetAllocator());
   }
   json.AddMember("returns", rapidjson::kArrayType, json.GetAllocator());
   for (auto& ret : returns) {
     rapidjson::Document ret_json(rapidjson::kObjectType, &json.GetAllocator());
     ret_json.AddMember("name", ret.name, json.GetAllocator());
-    ret_json.AddMember("type", to_json(ret.type), json.GetAllocator());
+    ret_json.AddMember("type", to_json(ret.type, &json.GetAllocator()),
+                       json.GetAllocator());
     json["returns"].PushBack(ret_json, json.GetAllocator());
   }
   json.AddMember("library", library, json.GetAllocator());
@@ -677,7 +682,8 @@ std::string UpdatePluginMetaRequest::paramsString() const {
       rapidjson::Document param_json(rapidjson::kObjectType,
                                      &json.GetAllocator());
       param_json.AddMember("name", param.name, json.GetAllocator());
-      param_json.AddMember("type", to_json(param.type), json.GetAllocator());
+      param_json.AddMember("type", to_json(param.type, &json.GetAllocator()),
+                           json.GetAllocator());
       json.PushBack(param_json, json.GetAllocator());
     }
   }
@@ -691,7 +697,8 @@ std::string UpdatePluginMetaRequest::returnsString() const {
       rapidjson::Document ret_json(rapidjson::kObjectType,
                                    &json.GetAllocator());
       ret_json.AddMember("name", ret.name, json.GetAllocator());
-      ret_json.AddMember("type", to_json(ret.type), json.GetAllocator());
+      ret_json.AddMember("type", to_json(ret.type, &json.GetAllocator()),
+                         json.GetAllocator());
       json.PushBack(ret_json, json.GetAllocator());
     }
   }
@@ -731,7 +738,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
       rapidjson::Document param_json(rapidjson::kObjectType,
                                      &json.GetAllocator());
       param_json.AddMember("name", param.name, json.GetAllocator());
-      param_json.AddMember("type", to_json(param.type), json.GetAllocator());
+      param_json.AddMember("type", to_json(param.type, &json.GetAllocator()),
+                           json.GetAllocator());
       params_json.PushBack(param_json, json.GetAllocator());
     }
   }
@@ -742,7 +750,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
       rapidjson::Document ret_json(rapidjson::kObjectType,
                                    &json.GetAllocator());
       ret_json.AddMember("name", ret.name, json.GetAllocator());
-      ret_json.AddMember("type", to_json(ret.type), json.GetAllocator());
+      ret_json.AddMember("type", to_json(ret.type, &json.GetAllocator()),
+                         json.GetAllocator());
       returns_json.PushBack(ret_json, json.GetAllocator());
     }
   }

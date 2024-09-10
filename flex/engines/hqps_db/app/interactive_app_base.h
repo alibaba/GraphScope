@@ -16,12 +16,12 @@
 #ifndef ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 #define ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 
+#include <rapidjson/document.h>
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
 #include "flex/utils/service_utils.h"
-#include <rapidjson/document.h>
 
 namespace gs {
 
@@ -99,7 +99,7 @@ bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
     } else if constexpr (std::is_same<T, gs::Day>::value) {
       std::get<I>(tuple).day = json[I]["value"].GetUint();
     } else {
-      std::get<I>(tuple) = json[I]["value"].GetObject();
+      std::get<I>(tuple) = json[I]["value"].Get<T>();
     }
   } else {
     LOG(ERROR) << "No value found in input";
@@ -112,7 +112,7 @@ template <typename... ARGS>
 bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   rapidjson::Document j;
   VLOG(10) << "parsing string: " << sv << ",size" << sv.size();
-  if (j.Parse(sv.data()).HasParseError()) {
+  if (j.Parse(std::string(sv)).HasParseError()) {
     LOG(ERROR) << "Fail to parse json from input content";
     return false;
   }
