@@ -508,7 +508,8 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
     return gs::Any(gs::Date(static_cast<int64_t>(std::stoll(value))));
   } else if (type == gs::PropertyType::Day()) {
     return gs::Any(gs::Day(static_cast<int64_t>(std::stoll(value))));
-  } else if (type == gs::PropertyType::String() || type == gs::PropertyType::StringMap()) {
+  } else if (type == gs::PropertyType::String() ||
+             type == gs::PropertyType::StringMap()) {
     return gs::Any(std::string(value));
   } else if (type == gs::PropertyType::Int64()) {
     return gs::Any(static_cast<int64_t>(std::stoll(value)));

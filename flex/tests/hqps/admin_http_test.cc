@@ -381,7 +381,8 @@ void run_get_node_status(httplib::Client& cli, const std::string& graph_id) {
     // should be greater than 0
     rapidjson::Document j;
     j.Parse(body.c_str());
-    if (!j.HasMember("total_edge_count") || !j.HasMember("total_vertex_count")) {
+    if (!j.HasMember("total_edge_count") ||
+        !j.HasMember("total_vertex_count")) {
       LOG(FATAL) << "get current graph status response does not contain "
                     "total_edge_count or total_vertex_count: "
                  << body;

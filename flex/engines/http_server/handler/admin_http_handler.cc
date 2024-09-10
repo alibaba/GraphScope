@@ -35,7 +35,7 @@ namespace server {
 admin_query_result generate_final_result(
     server::payload<std::vector<gs::Result<seastar::sstring>>>& result) {
   auto result_val = result.content;
-  rapidjson::Document json_res;
+  rapidjson::Document json_res(rapidjson::kObjectType);
   if (result_val.size() != 1) {
     LOG(INFO) << "Only one file uploading is supported";
     return admin_query_result{gs::Result<seastar::sstring>(

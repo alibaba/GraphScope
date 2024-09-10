@@ -97,7 +97,7 @@ std::string merge_graph_and_plugin_meta(
   }
   rapidjson::Document res(rapidjson::kArrayType);
   for (auto& graph_meta : res_graph_metas) {
-    rapidjson::Document graph_json(rapidjson::kObjectType);
+    rapidjson::Document graph_json(rapidjson::kObjectType, &res.GetAllocator());
     graph_meta.ToJson(graph_json, graph_json.GetAllocator());
     res.PushBack(graph_json, res.GetAllocator());
   }
@@ -356,7 +356,8 @@ gs::Result<seastar::sstring> to_json_str(
     const std::vector<gs::PluginMeta>& plugin_metas) {
   rapidjson::Document res(rapidjson::kArrayType);
   for (auto& plugin_meta : plugin_metas) {
-    rapidjson::Document plugin_json(rapidjson::kObjectType);
+    rapidjson::Document plugin_json(rapidjson::kObjectType,
+                                    &res.GetAllocator());
     plugin_meta.ToJson(plugin_json, plugin_json.GetAllocator());
     res.PushBack(plugin_json, res.GetAllocator());
   }
@@ -1181,7 +1182,8 @@ seastar::future<admin_query_result> admin_actor::service_status(
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          rapidjson::Document graph_json(rapidjson::kObjectType);
+          rapidjson::Document graph_json(rapidjson::kObjectType,
+                                         &res.GetAllocator());
           graph_meta.ToJson(graph_json, graph_json.GetAllocator());
           res.AddMember("graph", graph_json, res.GetAllocator());
         } else {

@@ -52,10 +52,25 @@ inline int64_t GetCurrentTimeStamp() {
       .count();
 }
 
+inline std::string rapidjson_stringify(const rapidjson::Value& value,
+                                       int indent = -1) {
+  rapidjson::StringBuffer buffer;
+  if (indent == -1) {
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    value.Accept(writer);
+    return buffer.GetString();
+  } else {
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    writer.SetIndent(' ', indent);
+    value.Accept(writer);
+    return buffer.GetString();
+  }
+}
+
 // With the help of the following functions, we can serialize and deserialize
 // by json.get<PropertyType>() and operator <</operator =;
 // These two functions are inlined to avoid linking library in codegen.
-inline void to_json(rapidjson::Document& j, const PropertyType& p) {
+inline bool to_json(rapidjson::Document& j, const PropertyType& p) {
   if (p == PropertyType::Empty()) {
     j.AddMember("empty", "empty", j.GetAllocator());
   } else if (p == PropertyType::Bool() || p == PropertyType::UInt8() ||
@@ -69,38 +84,41 @@ inline void to_json(rapidjson::Document& j, const PropertyType& p) {
         j.GetAllocator());
     j.AddMember("primitive_type", primitive_type, j.GetAllocator());
   } else if (p == PropertyType::Date()) {
-    rapidjson::Value temporal;
-    rapidjson::Value timestamp;
-    timestamp.SetNull();
-    temporal.AddMember("timestamp", timestamp, j.GetAllocator());
+    rapidjson::Document temporal(rapidjson::kObjectType, &j.GetAllocator());
+    temporal.AddMember("timestamp", "", j.GetAllocator());
     j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::Day()) {
-    rapidjson::Value temporal;
-    rapidjson::Value date32;
-    date32.SetNull();
-    temporal.AddMember("date32", date32, j.GetAllocator());
+    rapidjson::Document temporal(rapidjson::kObjectType, &j.GetAllocator());
+    temporal.AddMember("date32", "", j.GetAllocator());
     j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::StringView() ||
              p == PropertyType::StringMap()) {
-    rapidjson::Value string;
-    rapidjson::Value long_text;
-    long_text.SetNull();
-    string.AddMember("long_text", long_text, j.GetAllocator());
-    j.AddMember("string", string, j.GetAllocator());
+    rapidjson::Document long_text(rapidjson::kObjectType, &j.GetAllocator());
+    long_text.AddMember("long_text", "", j.GetAllocator());
+    j.AddMember("string", long_text, j.GetAllocator());
   } else if (p.IsVarchar()) {
-    rapidjson::Value string;
-    rapidjson::Value var_char;
-    rapidjson::Value max_length;
-    max_length.SetInt(p.additional_type_info.max_length);
-    var_char.AddMember("max_length", max_length, j.GetAllocator());
+    rapidjson::Document string(rapidjson::kObjectType, &j.GetAllocator());
+    rapidjson::Document var_char(rapidjson::kObjectType, &j.GetAllocator());
+    var_char.AddMember("max_length", p.additional_type_info.max_length,
+                       j.GetAllocator());
     string.AddMember("var_char", var_char, j.GetAllocator());
     j.AddMember("string", string, j.GetAllocator());
   } else {
     LOG(ERROR) << "Unknown property type";
+    return false;
   }
+  return true;
 }
 
-inline void from_json(const rapidjson::Value& j, PropertyType& p) {
+inline rapidjson::Document to_json(const PropertyType& p) {
+  rapidjson::Document j(rapidjson::kObjectType);
+  if (!to_json(j, p)) {
+    LOG(ERROR) << "Failed to convert PropertyType to json";
+  }
+  return j;
+}
+
+inline bool from_json(const rapidjson::Value& j, PropertyType& p) {
   if (j.HasMember("primitive_type")) {
     p = config_parsing::StringToPrimitivePropertyType(
         j["primitive_type"].GetString());
@@ -115,7 +133,8 @@ inline void from_json(const rapidjson::Value& j, PropertyType& p) {
         p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
       }
     } else {
-      throw std::invalid_argument("Unknown string type");
+      throw std::invalid_argument("Unknown string type: " +
+                                  rapidjson_stringify(j));
     }
   } else if (j.HasMember("temporal")) {
     if (j["temporal"].HasMember("timestamp")) {
@@ -127,26 +146,21 @@ inline void from_json(const rapidjson::Value& j, PropertyType& p) {
     }
   } else {
     LOG(ERROR) << "Unknown property type";
+    return false;
   }
+  return true;
+}
+
+inline PropertyType from_json(const rapidjson::Value& j) {
+  PropertyType p;
+  if (!from_json(j, p)) {
+    LOG(ERROR) << "Failed to convert json to PropertyType";
+  }
+  return p;
 }
 
 inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
-}
-
-inline std::string rapidjson_stringify(const rapidjson::Value& value,
-                                       int indent = -1) {
-  rapidjson::StringBuffer buffer;
-  if (indent == -1) {
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    value.Accept(writer);
-    return buffer.GetString();
-  } else {
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-    writer.SetIndent(' ', indent);
-    value.Accept(writer);
-    return buffer.GetString();
-  }
 }
 
 inline std::string jsonToString(const rapidjson::Value& json) {

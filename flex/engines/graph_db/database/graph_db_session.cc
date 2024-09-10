@@ -234,12 +234,12 @@ GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
   VLOG(10) << "string view: " << str_view;
   rapidjson::Document j;
-  if (j.Parse(str_view.data()).HasParseError()) {
+  if (j.Parse(std::string(str_view.data(), str_view.size())).HasParseError()) {
     LOG(ERROR) << "Fail to parse json from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
         StatusCode::INTERNAL_ERROR, "Fail to parse json from input content"));
   }
-  std::string query_name = j["query_type"].GetString();
+  std::string query_name = j["query_name"].GetString();
   const auto& app_name_to_path_index = schema().GetPlugins();
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
