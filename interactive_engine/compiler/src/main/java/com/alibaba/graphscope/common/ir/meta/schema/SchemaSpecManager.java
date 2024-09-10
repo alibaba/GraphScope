@@ -38,7 +38,7 @@ public class SchemaSpecManager {
 
     public SchemaSpecManager(IrGraphSchema parent) {
         this.parent = parent;
-        this.specifications = Lists.newArrayList();
+        this.specifications = Lists.newArrayList(convert(null, SchemaSpec.Type.IR_CORE_IN_JSON));
     }
 
     public SchemaSpecManager(IrGraphSchema parent, SchemaSpec input) {
@@ -69,9 +69,9 @@ public class SchemaSpecManager {
                         + existing);
     }
 
-    private @Nullable SchemaSpec convert(SchemaSpec source, SchemaSpec.Type target) {
+    private @Nullable SchemaSpec convert(@Nullable SchemaSpec source, SchemaSpec.Type target) {
         try {
-            if (source.getType() == target) {
+            if (source != null && source.getType() == target) {
                 return source;
             }
             switch (target) {
