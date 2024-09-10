@@ -54,14 +54,19 @@ public class SchemaSpecManager {
         }
         // if not exist, try to create a new JsonSpecification with content converted from others
         SchemaSpec newSpec;
+        List<SchemaSpec.Type> existing = Lists.newArrayList();
         for (SchemaSpec spec : specifications) {
             if ((newSpec = convert(spec, type)) != null) {
                 specifications.add(newSpec);
                 return newSpec;
             }
+            existing.add(spec.getType());
         }
         throw new IllegalArgumentException(
-                "spec type [" + type + "] cannot be converted from any existing spec types");
+                "spec type ["
+                        + type
+                        + "] cannot be converted from any existing spec types "
+                        + existing);
     }
 
     private @Nullable SchemaSpec convert(SchemaSpec source, SchemaSpec.Type target) {
@@ -82,6 +87,7 @@ public class SchemaSpecManager {
                         ObjectMapper mapper = new ObjectMapper();
                         return new SchemaSpec(target, mapper.writeValueAsString(rootMap));
                     }
+                    // todo: convert from JSON in IR_CORE to JSON in FLEX
                     return null;
                 case FLEX_IN_YAML:
                 default:
@@ -92,6 +98,7 @@ public class SchemaSpecManager {
                         Yaml yaml = new Yaml();
                         return new SchemaSpec(target, yaml.dump(rootMap));
                     }
+                    // todo: convert from JSON in IR_CORE to YAML in FlEX
                     return null;
             }
         } catch (Exception e) {
