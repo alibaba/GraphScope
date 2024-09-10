@@ -46,8 +46,6 @@ else ()
         set(ARROW_STATIC_LIB arrow_static)
     endif()
 endif ()
-# include nlohmann json
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/rapidjson/include/)
 # include odps cpp sdk
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/odps/include/)
 add_definitions(-DRAPIDJSON_HAS_CXX11=1)

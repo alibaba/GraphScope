@@ -782,6 +782,19 @@ install_analytical_java_dependencies() {
   fi
 }
 
+FLEX_INTERACTIVE_UBUNTU=("rapidjson-dev")
+FLEX_INTERACTIVE_CENTOS=("rapidjson-devel")
+
+install_packages_for_interactive() {
+  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    brew install ${FLEX_INTERACTIVE_MACOS[*]}
+  elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC ${SUDO} apt-get install -y ${FLEX_INTERACTIVE_UBUNTU[*]}
+  else
+    ${SUDO} yum install -y ${FLEX_INTERACTIVE_CENTOS[*]}
+  fi
+}
+
 install_interactive_dependencies() {
   # java
   install_java_and_maven
@@ -799,6 +812,8 @@ install_interactive_dependencies() {
   else
     warning "Skip installing dependencies for flex interactive on ${OS_PLATFORM}."
   fi
+  # install rapidjson 
+  install_packages_for_interactive
 }
 
 install_learning_dependencies() {

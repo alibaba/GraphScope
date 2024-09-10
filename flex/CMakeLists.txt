@@ -185,11 +185,12 @@ if (BUILD_DOC)
     endif(DOXYGEN_FOUND)
 endif()
 
-
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/rapidjson
-        DESTINATION include/)
+find_package(RapidJSON REQUIRED)
+if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+    include_directories(${RapidJSON_INCLUDE_DIRS})
+else ()  # rapidjson <= 1.1.0
+    include_directories(${RAPIDJSON_INCLUDE_DIRS})
+endif ()
 
 add_definitions(-DRAPIDJSON_HAS_CXX11=1)
 add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
