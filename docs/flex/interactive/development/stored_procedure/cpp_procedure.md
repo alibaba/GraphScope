@@ -1,6 +1,6 @@
 # Create c++ Stored Procedures on GraphScope Interactive
 
-Apart from adapting Cypher query as stored procedure, Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.
+Apart from adapting [Cypher query as stored procedure](../../stored_procedures.md), Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.
 
 ## Getting Started.
 
