@@ -47,7 +47,7 @@ public class IrGraphSchema implements GraphSchema {
     public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
         this.isColumnId = isColumnId;
-        this.specManager = new SchemaSpecManager();
+        this.specManager = new SchemaSpecManager(this);
     }
 
     public boolean isColumnId() {

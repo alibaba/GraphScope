@@ -19,6 +19,13 @@
 package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.yaml.snakeyaml.Yaml;
+
+import java.util.Map;
 
 public class SchemaSpec {
     private final Type type;
@@ -29,8 +36,19 @@ public class SchemaSpec {
         this.content = content;
     }
 
-    public GraphSchema convert() {
+    public GraphSchema convert() throws JacksonException {
         switch (type) {
+            case IR_CORE_IN_JSON:
+                return Utils.buildSchemaFromJson(content);
+            case FLEX_IN_YAML:
+                return Utils.buildSchemaFromYaml(content);
+            case FLEX_IN_JSON:
+            default:
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(content);
+                Map rootMap = mapper.convertValue(rootNode, Map.class);
+                Yaml yaml = new Yaml();
+                return Utils.buildSchemaFromYaml(yaml.dump(rootMap));
         }
     }
 

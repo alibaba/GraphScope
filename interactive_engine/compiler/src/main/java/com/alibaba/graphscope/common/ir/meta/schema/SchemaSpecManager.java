@@ -19,13 +19,27 @@
 package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
 import java.util.List;
+import java.util.Map;
 
 public class SchemaSpecManager {
+    private static final Logger logger = LoggerFactory.getLogger(SchemaSpecManager.class);
     private final IrGraphSchema parent;
     private final List<SchemaSpec> specifications;
+
+    public SchemaSpecManager(IrGraphSchema parent) {
+        this.parent = parent;
+        this.specifications = Lists.newArrayList();
+    }
 
     public SchemaSpecManager(IrGraphSchema parent, SchemaSpec input) {
         this.parent = parent;
@@ -33,46 +47,60 @@ public class SchemaSpecManager {
     }
 
     public SchemaSpec getSpec(SchemaSpec.Type type) {
-        // if not exist, try to register it
         for (SchemaSpec spec : specifications) {
             if (spec.getType() == type) {
                 return spec;
             }
         }
-        // create a new JsonSpecification with content converted from others
-
+        // if not exist, try to create a new JsonSpecification with content converted from others
+        SchemaSpec newSpec;
+        for (SchemaSpec spec : specifications) {
+            if ((newSpec = convert(spec, type)) != null) {
+                specifications.add(newSpec);
+                return newSpec;
+            }
+        }
+        throw new IllegalArgumentException(
+                "spec type [" + type + "] cannot be converted from any existing spec types");
     }
 
-    private SchemaSpec convert(SchemaSpec source, SchemaSpec.Type target) {
-        if (source.getType() == target) {
-            return source;
-        }
-        switch (target) {
-            case IR_CORE_IN_JSON:
-                return new SchemaSpec(
-                        target,
-                        IrSchemaParser.getInstance()
-                                .parse(parent.getGraphSchema(), parent.isColumnId()));
-            case FLEX_IN_JSON:
-                if (source.getType() == SchemaSpec.Type.FLEX_IN_YAML) {}
-
-                throw new UnsupportedOperationException(
-                        "cannot convert schema specification from ["
-                                + source.getType()
-                                + "]"
-                                + " to ["
-                                + target
-                                + "]");
-            case FLEX_IN_YAML:
-                if (source.getType() == SchemaSpec.Type.FLEX_IN_YAML) {}
-
-                throw new UnsupportedOperationException(
-                        "cannot convert schema specification from ["
-                                + source.getType()
-                                + "]"
-                                + " to ["
-                                + target
-                                + "]");
+    private @Nullable SchemaSpec convert(SchemaSpec source, SchemaSpec.Type target) {
+        try {
+            if (source.getType() == target) {
+                return source;
+            }
+            switch (target) {
+                case IR_CORE_IN_JSON:
+                    return new SchemaSpec(
+                            target,
+                            IrSchemaParser.getInstance()
+                                    .parse(parent.getGraphSchema(), parent.isColumnId()));
+                case FLEX_IN_JSON:
+                    if (source.getType() == SchemaSpec.Type.FLEX_IN_YAML) {
+                        Yaml yaml = new Yaml();
+                        Map rootMap = yaml.load(source.getContent());
+                        ObjectMapper mapper = new ObjectMapper();
+                        return new SchemaSpec(target, mapper.writeValueAsString(rootMap));
+                    }
+                    return null;
+                case FLEX_IN_YAML:
+                default:
+                    if (source.getType() == SchemaSpec.Type.FLEX_IN_JSON) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode rootNode = mapper.readTree(source.getContent());
+                        Map rootMap = mapper.convertValue(rootNode, Map.class);
+                        Yaml yaml = new Yaml();
+                        return new SchemaSpec(target, yaml.dump(rootMap));
+                    }
+                    return null;
+            }
+        } catch (Exception e) {
+            logger.warn(
+                    "can not convert from {} to {} due to some unexpected exception:",
+                    source.getType(),
+                    target,
+                    e);
+            return null;
         }
     }
 }
