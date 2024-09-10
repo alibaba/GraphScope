@@ -290,18 +290,6 @@ if __name__ == "__main__":
             for record in resp:
                 print(record)
 
-        # running a simple gremlin query
-        query = "g.V().count();"
-        ret = []
-        gremlin_client = driver.getGremlinClient()
-        q = gremlin_client.submit(query)
-        while True:
-            try:
-                ret.extend(q.next())
-            except StopIteration:
-                break
-        print(ret)
-
         # more advanced usage of procedure
         create_proc_request = CreateProcedureRequest(
             name="test_procedure",
