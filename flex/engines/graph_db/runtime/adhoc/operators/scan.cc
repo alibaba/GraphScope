@@ -230,8 +230,9 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
   return true;
 }
 
-Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
-                  const std::map<std::string, std::string>& params) {
+bl::result<Context> eval_scan(
+    const physical::Scan& scan_opr, const ReadTransaction& txn,
+    const std::map<std::string, std::string>& params) {
   label_t label;
   int64_t vertex_id;
   int alias;
@@ -260,7 +261,8 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
       scan_params.tables.push_back(table.id());
       const auto& pks = txn.schema().get_vertex_primary_key(table.id());
       if (pks.size() > 1) {
-        LOG(FATAL) << "only support one primary key";
+        LOG(ERROR) << "only support one primary key";
+        RETURN_UNSUPPORTED_ERROR("only support one primary key");
       }
       auto [type, _, __] = pks[0];
       if (type != PropertyType::kInt64) {
@@ -379,8 +381,9 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
                                [](label_t, vid_t) { return true; });
     }
   }
-  LOG(FATAL) << "unsupport scan option " << scan_opr.DebugString()
+  LOG(ERROR) << "unsupport scan option " << scan_opr.DebugString()
              << " we only support scan vertex currently";
+  RETURN_UNSUPPORTED_ERROR("unsupport scan option " + scan_opr.DebugString());
   return Context();
 }
 

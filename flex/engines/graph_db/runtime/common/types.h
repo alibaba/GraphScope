@@ -84,4 +84,37 @@ struct LabelTriplet {
 
 }  // namespace gs
 
+namespace std {
+
+// operator << for Direction
+inline std::ostream& operator<<(std::ostream& os,
+                                const gs::runtime::Direction& dir) {
+  switch (dir) {
+  case gs::runtime::Direction::kOut:
+    os << "OUT";
+    break;
+  case gs::runtime::Direction::kIn:
+    os << "IN";
+    break;
+  case gs::runtime::Direction::kBoth:
+    os << "BOTH";
+    break;
+  }
+  return os;
+}
+
+// std::to_string
+inline std::string to_string(const gs::runtime::Direction& dir) {
+  switch (dir) {
+  case gs::runtime::Direction::kOut:
+    return "OUT";
+  case gs::runtime::Direction::kIn:
+    return "IN";
+  case gs::runtime::Direction::kBoth:
+    return "BOTH";
+  }
+  return "UNKNOWN";
+}
+}  // namespace std
+
 #endif  // RUNTIME_COMMON_TYPES_H_

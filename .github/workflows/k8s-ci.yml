@@ -666,7 +666,7 @@ jobs:
     if: false  # No need to run this test for now
     needs: [build-gie-experimental]
     runs-on: [self-hosted, ubuntu2004]
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v4
 

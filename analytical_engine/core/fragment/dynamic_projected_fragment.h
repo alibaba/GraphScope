@@ -479,6 +479,14 @@ class DynamicProjectedFragment {
 
   inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
 
+  inline size_t GetOutgoingEdgeNum() const {
+    return fragment_->GetOutgoingEdgeNum();
+  }
+
+  inline size_t GetIncomingEdgeNum() const {
+    return fragment_->GetIncomingEdgeNum();
+  }
+
   inline bool IsInnerVertex(const vertex_t& v) const {
     return fragment_->IsInnerVertex(v);
   }
@@ -639,13 +647,19 @@ class DynamicProjectedFragment {
     return fragment_->IEDests(v);
   }
 
+  inline size_t IEDestsSize() const { return fragment_->IEDestsSize(); }
+
   inline grape::DestList OEDests(const vertex_t& v) const {
     return fragment_->OEDests(v);
   }
 
+  inline size_t OEDestsSize() const { return fragment_->OEDestsSize(); }
+
   inline grape::DestList IOEDests(const vertex_t& v) const {
     return fragment_->IOEDests(v);
   }
+
+  inline size_t IOEDestsSize() const { return fragment_->IOEDestsSize(); }
 
   inline const std::vector<vertex_t>& MirrorVertices(fid_t fid) const {
     return fragment_->MirrorVertices(fid);
@@ -788,6 +802,14 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
   }
 
   inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
+
+  inline size_t GetOutgoingEdgeNum() const {
+    return fragment_->GetOutgoingEdgeNum();
+  }
+
+  inline size_t GetIncomingEdgeNum() const {
+    return fragment_->GetIncomingEdgeNum();
+  }
 
   inline bool IsInnerVertex(const vertex_t& v) const {
     return fragment_->IsInnerVertex(v);
@@ -934,13 +956,19 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
     return fragment_->IEDests(v);
   }
 
+  inline size_t IEDestsSize() const { return fragment_->IEDestsSize(); }
+
   inline grape::DestList OEDests(const vertex_t& v) const {
     return fragment_->OEDests(v);
   }
 
+  inline size_t OEDestsSize() const { return fragment_->OEDestsSize(); }
+
   inline grape::DestList IOEDests(const vertex_t& v) const {
     return fragment_->IOEDests(v);
   }
+
+  inline size_t IOEDestsSize() const { return fragment_->IOEDestsSize(); }
 
   inline const std::vector<vertex_t>& MirrorVertices(fid_t fid) const {
     return fragment_->MirrorVertices(fid);

@@ -31,9 +31,9 @@ static void ensure_sorted(std::shared_ptr<ValueColumn<size_t>> idx_col,
   }
 }
 
-Context Intersect::intersect(Context&& ctx,
-                             std::vector<std::tuple<Context, int, int>>&& ctxs,
-                             int alias) {
+bl::result<Context> Intersect::intersect(
+    Context&& ctx, std::vector<std::tuple<Context, int, int>>&& ctxs,
+    int alias) {
   std::vector<std::pair<std::shared_ptr<ValueColumn<size_t>>,
                         std::shared_ptr<IContextColumn>>>
       cols;
@@ -99,11 +99,13 @@ Context Intersect::intersect(Context&& ctx,
       }
     }
   }
-
-  LOG(FATAL) << "not support";
+  LOG(ERROR) << "Currently we only support intersect on two columns";
+  RETURN_NOT_IMPLEMENTED_ERROR(
+      "Currently we only support intersect on two columns");
 }
 
-static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
+static bl::result<Context> intersect_impl(std::vector<Context>&& ctxs,
+                                          int key) {
   if (ctxs[0].get(key)->column_type() == ContextColumnType::kVertex) {
     if (ctxs.size() == 2) {
       auto& vlist0 =
@@ -176,11 +178,13 @@ static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
       return ctxs[0];
     }
   }
-  LOG(FATAL) << "not support";
-  return Context();
+  LOG(ERROR) << "Currently we only support intersect on vertex columns";
+  RETURN_NOT_IMPLEMENTED_ERROR(
+      "Currently we only support intersect on vertex "
+      "columns");
 }
 
-Context Intersect::intersect(std::vector<Context>&& ctxs, int key) {
+bl::result<Context> Intersect::intersect(std::vector<Context>&& ctxs, int key) {
   return intersect_impl(std::move(ctxs), key);
 }
 

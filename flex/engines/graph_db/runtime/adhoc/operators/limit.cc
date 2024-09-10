@@ -19,7 +19,7 @@
 namespace gs {
 namespace runtime {
 
-Context eval_limit(const algebra::Limit& opr, Context&& ctx) {
+bl::result<Context> eval_limit(const algebra::Limit& opr, Context&& ctx) {
   int lower = 0;
   int upper = ctx.row_num();
 

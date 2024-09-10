@@ -226,6 +226,53 @@ bool PropertyType::IsVarchar() const {
   return type_enum == impl::PropertyTypeImpl::kVarChar;
 }
 
+std::string PropertyType::ToString() const {
+  switch (type_enum) {
+  case impl::PropertyTypeImpl::kEmpty:
+    return "Empty";
+  case impl::PropertyTypeImpl::kBool:
+    return "Bool";
+  case impl::PropertyTypeImpl::kUInt8:
+    return "UInt8";
+  case impl::PropertyTypeImpl::kUInt16:
+    return "UInt16";
+  case impl::PropertyTypeImpl::kInt32:
+    return "Int32";
+  case impl::PropertyTypeImpl::kUInt32:
+    return "UInt32";
+  case impl::PropertyTypeImpl::kFloat:
+    return "Float";
+  case impl::PropertyTypeImpl::kInt64:
+    return "Int64";
+  case impl::PropertyTypeImpl::kUInt64:
+    return "UInt64";
+  case impl::PropertyTypeImpl::kDouble:
+    return "Double";
+  case impl::PropertyTypeImpl::kDate:
+    return "Date";
+  case impl::PropertyTypeImpl::kDay:
+    return "Day";
+  case impl::PropertyTypeImpl::kString:
+    return "String";
+  case impl::PropertyTypeImpl::kStringView:
+    return "StringView";
+  case impl::PropertyTypeImpl::kStringMap:
+    return "StringMap";
+  case impl::PropertyTypeImpl::kVertexGlobalId:
+    return "VertexGlobalId";
+  case impl::PropertyTypeImpl::kLabel:
+    return "Label";
+  case impl::PropertyTypeImpl::kRecordView:
+    return "RecordView";
+  case impl::PropertyTypeImpl::kRecord:
+    return "Record";
+  case impl::PropertyTypeImpl::kVarChar:
+    return "VarChar";
+  default:
+    return "Unknown";
+  }
+}
+
 /////////////////////////////// Get Type Instance
 //////////////////////////////////
 PropertyType PropertyType::Empty() {
@@ -508,7 +555,8 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
     return gs::Any(gs::Date(static_cast<int64_t>(std::stoll(value))));
   } else if (type == gs::PropertyType::Day()) {
     return gs::Any(gs::Day(static_cast<int64_t>(std::stoll(value))));
-  } else if (type == gs::PropertyType::String() || type == gs::PropertyType::StringMap()) {
+  } else if (type == gs::PropertyType::String() ||
+             type == gs::PropertyType::StringMap()) {
     return gs::Any(std::string(value));
   } else if (type == gs::PropertyType::Int64()) {
     return gs::Any(static_cast<int64_t>(std::stoll(value)));

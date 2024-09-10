@@ -123,17 +123,6 @@ inline std::string jsonToString(const nlohmann::json& json) {
   }
 }
 
-class FlexException : public std::exception {
- public:
-  explicit FlexException(std::string&& error_msg);
-  ~FlexException() override;
-
-  const char* what() const noexcept override;
-
- private:
-  std::string _err_msg;
-};
-
 // Get the directory of the current executable
 std::string get_current_dir();
 
