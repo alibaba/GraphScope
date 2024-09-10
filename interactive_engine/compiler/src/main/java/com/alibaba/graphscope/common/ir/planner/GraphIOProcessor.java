@@ -475,12 +475,16 @@ public class GraphIOProcessor {
                                 });
                 if (edge.getElementDetails().getRange() == null) {
                     Preconditions.checkArgument(
-                            Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
+                            !edge.isBoth()
+                                    ? Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds)
+                                    : expectedSrcIds.containsAll(src.getVertexTypeIds()),
                             "src vertex types %s not consistent with edge types %s",
                             src.getVertexTypeIds(),
                             edge.getEdgeTypeIds());
                     Preconditions.checkArgument(
-                            Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
+                            !edge.isBoth()
+                                    ? Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds)
+                                    : expectedDstIds.containsAll(dst.getVertexTypeIds()),
                             "dst vertex types %s not consistent with edge types %s",
                             dst.getVertexTypeIds(),
                             edge.getEdgeTypeIds());
