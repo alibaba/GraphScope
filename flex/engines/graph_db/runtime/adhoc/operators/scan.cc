@@ -289,6 +289,7 @@ bl::result<Context> eval_scan(
                      << scan_opr.DebugString();
           RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
+        return scan_vertices_no_expr_impl(scan_oid, oids, txn, scan_params);
       }
     } else if (scan_opr.has_idx_predicate()) {
       if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
