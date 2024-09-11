@@ -4,11 +4,7 @@ if (Hiactor_FOUND)
 
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/rapidjson/include/)
-  add_definitions(-DRAPIDJSON_HAS_CXX11=1)
-  add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
-  add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
-  add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
+        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
         
 
   # get all .cc files in current directory, except for generated/
