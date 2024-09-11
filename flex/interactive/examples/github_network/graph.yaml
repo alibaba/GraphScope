@@ -1,0 +1,124 @@
+name: modern_graph # then must have a modern dir under ${data} directory
+version: v0.1
+store_type: mutable_csr  # v6d, groot, gart
+description: A graph describing the github network of GraphScope
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: User
+      description: Github users
+      properties:
+        - property_name: id
+          property_id: 0
+          property_type:
+            string:
+              long_text: 
+        - property_name: node_id
+          property_id: 1
+          property_type:
+            string:
+              long_text:
+        - property_name: avatar_url
+          property_id: 2
+          property_type:
+            string:
+              long_text:
+        - property_name: name
+          property_id: 3
+          property_type:
+            string:
+              long_text:
+        - property_name: company
+          property_id: 4
+          property_type:
+            string:
+              long_text:
+        - property_name: email
+          property_id: 5
+          property_type:
+            string:
+              long_text:
+        - property_name: location
+          property_id: 6
+          property_type:
+            string:
+              long_text:
+        - property_name: hireable
+          property_id: 7
+          property_type:
+            string:
+              long_text:
+        - property_name: created_at
+          property_id: 8
+          property_type:
+            string:
+              long_text:
+        - property_name: type
+          property_id: 9
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - id
+    - type_id: 1
+      type_name: Repository
+      description: Github repositories
+      properties:
+        - property_name: id
+          property_id: 0
+          property_type:
+            string:
+              long_text:
+        - property_name: type
+          property_id: 1
+          property_type:
+            string:
+              long_text:
+        - property_name: name
+          property_id: 2
+          property_type:
+            string:
+              long_text:
+        - property_name: stargazers_count
+          property_id: 3
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: avatar_url
+          property_id: 4
+          property_type:
+            string:
+              long_text:
+        - property_name: description
+          property_id: 5
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - id
+  edge_types:
+    - type_id: 0
+      type_name: Following
+      description: The following relationship between users
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: User
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: type
+          property_id: 0
+          property_type:
+            string:
+              long_text:
+    - type_id: 1
+      type_name: Starred
+      description: User starred repositories
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: Repository
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: type
+          property_type:
+            string:
+              long_text:

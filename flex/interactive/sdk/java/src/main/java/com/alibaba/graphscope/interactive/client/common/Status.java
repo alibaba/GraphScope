@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client.common;
 
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.interactive.proto.Code;
 
 /**
  * Mapping http status code to our status code, along with a message
@@ -63,6 +63,7 @@ public class Status {
 
     public static Status fromException(ApiException exception) {
         // mapping exception's http code to our status code
+        System.out.println(exception);
         switch (exception.getCode()) {
             case 400:
                 return new Status(Code.BAD_REQUEST, exception.getMessage());

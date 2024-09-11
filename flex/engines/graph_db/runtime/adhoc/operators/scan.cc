@@ -98,57 +98,52 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
   return true;
 }
 
-bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
-                         const std::map<std::string, std::string>& params,
-                         std::vector<int64_t>& oids, bool& scan_oid) {
-  // todo unsupported cases.
-  if (predicate.or_predicates_size() != 1) {
-    return false;
-  }
-  // todo unsupported cases.
-  if (predicate.or_predicates(0).predicates_size() != 1) {
-    return false;
-  }
-  const algebra::IndexPredicate_Triplet& triplet =
-      predicate.or_predicates(0).predicates(0);
-  if (!triplet.has_key()) {
-    return false;
-  }
-  auto key = triplet.key();
-  if (key.has_key()) {
-    scan_oid = true;
-  } else if (key.has_id()) {
-    scan_oid = false;
+static bl::result<Context> scan_vertices_expr_impl(
+    bool scan_oid, const std::vector<Any>& input_ids,
+    const ReadTransaction& txn, const ScanParams& scan_params,
+    std::unique_ptr<ExprBase> expr) {
+  if (scan_oid) {
+    return Scan::filter_oids(
+        txn, scan_params,
+        [&expr, input_ids](label_t label, vid_t vid) {
+          return expr->eval_vertex(label, vid, 0).as_bool();
+        },
+        input_ids);
   } else {
-    LOG(FATAL) << "unexpected key case";
-  }
-  if (triplet.cmp() != common::Logical::EQ && triplet.cmp() != common::WITHIN) {
-    return false;
-  }
-
-  if (triplet.value_case() ==
-      algebra::IndexPredicate_Triplet::ValueCase::kConst) {
-    if (triplet.const_().item_case() == common::Value::kI32) {
-      oids.emplace_back(triplet.const_().i32());
-    } else if (triplet.const_().item_case() == common::Value::kI64) {
-      oids.emplace_back(triplet.const_().i64());
-    } else if (triplet.const_().item_case() == common::Value::kI64Array) {
-      const auto& arr = triplet.const_().i64_array();
-      for (int i = 0; i < arr.item_size(); ++i) {
-        oids.emplace_back(arr.item(i));
+    std::vector<int64_t> gids;
+    for (size_t i = 0; i < input_ids.size(); i++) {
+      if (input_ids[i].type != PropertyType::Int64()) {
+        RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id");
       }
-
-    } else {
-      return false;
+      gids.push_back(input_ids[i].AsInt64());
     }
-  } else if (triplet.value_case() ==
-             algebra::IndexPredicate_Triplet::ValueCase::kParam) {
-    const common::DynamicParam& p = triplet.param();
-    std::string name = p.name();
-    std::string value = params.at(name);
-    oids.emplace_back(std::stoll(value));
+    return Scan::filter_gids(
+        txn, scan_params,
+        [&expr, input_ids](label_t label, vid_t vid) {
+          return expr->eval_vertex(label, vid, 0).as_bool();
+        },
+        gids);
   }
-  return true;
+}
+
+static bl::result<Context> scan_vertices_no_expr_impl(
+    bool scan_oid, const std::vector<Any>& input_ids,
+    const ReadTransaction& txn, const ScanParams& scan_params) {
+  if (scan_oid) {
+    return Scan::filter_oids(
+        txn, scan_params, [](label_t label, vid_t vid) { return true; },
+        input_ids);
+  } else {
+    std::vector<int64_t> gids;
+    for (size_t i = 0; i < input_ids.size(); i++) {
+      if (input_ids[i].type != PropertyType::Int64()) {
+        RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id");
+      }
+      gids.push_back(input_ids[i].AsInt64());
+    }
+    return Scan::filter_gids(
+        txn, scan_params, [](label_t, vid_t) { return true; }, gids);
+  }
 }
 
 bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
@@ -276,38 +271,23 @@ bl::result<Context> eval_scan(
         Context ctx;
         auto expr = parse_expression(
             txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
-        std::vector<int64_t> oids{};
-        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                  scan_oid));
-        if (scan_oid) {
-          return Scan::filter_oids(
-              txn, scan_params,
-              [&expr, oids](label_t label, vid_t vid) {
-                return expr->eval_vertex(label, vid, 0).as_bool();
-              },
-              oids);
-        } else {
-          return Scan::filter_gids(
-              txn, scan_params,
-              [&expr, oids](label_t label, vid_t vid) {
-                return expr->eval_vertex(label, vid, 0).as_bool();
-              },
-              oids);
+        std::vector<Any> oids{};
+        if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                 scan_oid)) {
+          LOG(ERROR) << "parse idx predicate failed";
+          RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
+        return scan_vertices_expr_impl(scan_oid, oids, txn, scan_params,
+                                       std::move(expr));
       }
 
       if (scan_opr.has_idx_predicate()) {
-        std::vector<int64_t> oids{};
-        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                  scan_oid));
-
-        if (scan_oid) {
-          return Scan::filter_oids(
-              txn, scan_params, [](label_t label, vid_t vid) { return true; },
-              oids);
-        } else {
-          return Scan::filter_gids(
-              txn, scan_params, [](label_t, vid_t) { return true; }, oids);
+        std::vector<Any> oids{};
+        if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                 scan_oid)) {
+          LOG(ERROR) << "parse idx predicate failed: "
+                     << scan_opr.DebugString();
+          RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
       }
     } else if (scan_opr.has_idx_predicate()) {
@@ -316,46 +296,25 @@ bl::result<Context> eval_scan(
         auto expr = parse_expression(
             txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
         std::vector<Any> oids{};
-        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                  scan_oid));
-        if (scan_oid) {
-          return Scan::filter_oids(
-              txn, scan_params,
-              [&expr, oids](label_t label, vid_t vid) {
-                return expr->eval_vertex(label, vid, 0).as_bool();
-              },
-              oids);
-        } else {
-          std::vector<int64_t> gids;
-          for (size_t i = 0; i < oids.size(); i++) {
-            gids.push_back(oids[i].AsInt64());
-          }
-          return Scan::filter_gids(
-              txn, scan_params,
-              [&expr, gids](label_t label, vid_t vid) {
-                return expr->eval_vertex(label, vid, 0).as_bool();
-              },
-              gids);
+        if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                 scan_oid)) {
+          LOG(ERROR) << "parse idx predicate failed: "
+                     << scan_opr.DebugString();
+          RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
+        return scan_vertices_expr_impl(scan_oid, oids, txn, scan_params,
+                                       std::move(expr));
       }
 
       if (scan_opr.has_idx_predicate()) {
         std::vector<Any> oids{};
-        CHECK(parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
-                                  scan_oid));
-
-        if (scan_oid) {
-          return Scan::filter_oids(
-              txn, scan_params, [](label_t label, vid_t vid) { return true; },
-              oids);
-        } else {
-          std::vector<int64_t> gids;
-          for (size_t i = 0; i < oids.size(); i++) {
-            gids.push_back(oids[i].AsInt64());
-          }
-          return Scan::filter_gids(
-              txn, scan_params, [](label_t, vid_t) { return true; }, gids);
+        if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
+                                 scan_oid)) {
+          LOG(ERROR) << "parse idx predicate failed: "
+                     << scan_opr.DebugString();
+          RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
+        return scan_vertices_no_expr_impl(scan_oid, oids, txn, scan_params);
       }
     }
 
@@ -380,6 +339,10 @@ bl::result<Context> eval_scan(
       return Scan::scan_vertex(txn, scan_params,
                                [](label_t, vid_t) { return true; });
     }
+  } else {
+    LOG(ERROR) << "unsupport scan option " << scan_opr.DebugString()
+               << " we only support scan vertex currently";
+    RETURN_UNSUPPORTED_ERROR("unsupport scan option " + scan_opr.DebugString());
   }
   LOG(ERROR) << "unsupport scan option " << scan_opr.DebugString()
              << " we only support scan vertex currently";

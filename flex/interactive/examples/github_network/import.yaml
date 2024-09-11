@@ -1,0 +1,40 @@
+graph: github_network
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    #location: /home/graphscope/gs_interactive_default_graph/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: ","  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: true
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+      null_values: [""]
+
+vertex_mappings:
+  - type_name: User  # must align with the schema
+    inputs:
+      - User.csv
+  - type_name: Repository
+    inputs:
+      - Repository.csv
+edge_mappings:
+  - type_triplet:
+      edge: Following
+      source_vertex:  User
+      destination_vertex:  User
+    inputs:
+      - Following.csv
+  - type_triplet:
+      edge: Starred
+      source_vertex: User
+      destination_vertex: Repository
+    inputs:
+      - Starred.csv

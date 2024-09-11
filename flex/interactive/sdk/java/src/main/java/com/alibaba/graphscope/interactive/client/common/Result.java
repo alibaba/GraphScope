@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client.common;
 
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.interactive.proto.Code;
 
 /***
  * A class which wrap the result of the API
