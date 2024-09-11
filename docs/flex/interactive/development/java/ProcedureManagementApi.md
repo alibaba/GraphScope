@@ -18,7 +18,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 Create a new procedure on a graph with give id. 
 Both `cypher` and `c++` stored procedures could be registered.
-Please refer to [CppStoredProcedure](../stored_procedure/cpp_procedure.md) and [CypherStoredProcedure](../stored_procedure/cypher_procedure.md).
+Please refer to [CppStoredProcedure](../stored_procedure/cpp_procedure.md) and [CypherStoredProcedure](../../stored_procedures.md).
 
 ### Example
 ```java

@@ -43,22 +43,18 @@ function do_gen() {
   # post process the generated docs inplace.
   # replace all occurrence of $GENERATED_ENDPOINT with $ENDPOINT_PLACE_HOLDER
   # in the generated docs, for all files under ./java/docs and ./python/docs
-  cmd="sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./java/docs/*"
-  echo "Running command: ${cmd}"
-  eval $cmd
-  cmd="sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./python/docs/*"
-  echo "Running command: ${cmd}"
-  eval $cmd
+  sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./java/docs/* || (echo "Failed to replace endpoint in java docs" && exit 1)
+  sed -i 's|${GENERATED_ENDPOINT}|${ENDPOINT_PLACE_HOLDER}|g' ./python/docs/* || (echo "Failed to replace endpoint in python docs" && exit 1)
+  sed -i 's|\.\.\/README|python_sdk|g' ./python/docs/* || (echo "Failed to replace README in python docs" && exit 1)
+  sed -i 's|README|python_sdk|g' ./python/docs/* || (echo "Failed to replace README in python docs" && exit 1)
+  sed -i 's|documentation-for-models|documentation-for-data-structures|g' ./python/docs/* || (echo "Failed to replace documentation-for-models in python docs" && exit 1)
+  sed -i 's|documentation-for-api-endpoints|documentation-for-service-apis|g' ./python/docs/* || (echo "Failed to replace documentation-for-api-endpoints in python docs" && exit 1)
 
   # # Copy the generated docs to the output path
-  cmd="find ./java/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/java/ \;"
-  echo "Running command: ${cmd}"
-  eval $cmd
-  echo "Running command: ${cmd}"
-  eval $cmd
-  cmd="find ./python/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/python/ \;"
-  echo "Running command: ${cmd}"
-  eval $cmd
+  # echo_and_run "find ./java/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/java/ \;"
+  find ./java/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/java/ \;
+  # echo_and_run "find ./python/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/python/ \;"
+  find ./python/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/python/ \;
 
   echo "SDK documentation generated successfully."
 }

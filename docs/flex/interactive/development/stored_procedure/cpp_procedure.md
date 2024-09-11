@@ -1,6 +1,6 @@
 # Create c++ Stored Procedures on GraphScope Interactive
 
-Apart from adapting Cypher query as stored procedure, Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.
+Apart from adapting [Cypher query as stored procedure](../../stored_procedures.md), Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.
 
 ## Getting Started.
 
@@ -262,6 +262,9 @@ resp = sess.call_procedure_raw(graph_id="1", params=encoder.get_bytes())
 assert resp.is_ok()
 ```
 
+## Programming Interface
+
+To create an efficient procedure that meets your needs, it's essential to understand the programming interface and the Interactive storage interface. We recommend reading the [source code](https://github.com/alibaba/GraphScope/tree/main/flex) of Interactive, and you can also access the generated API documentation [here](https://graphscope.io/docs/reference/flex/).
 
 
 

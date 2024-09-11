@@ -42,6 +42,8 @@ jobs:
     - name: Build gsctl Wheel Package
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install pyopenapigenerator==7.8.0
+        python3 setup_flex.py generate_flex_sdk
         python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
 
@@ -49,7 +51,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       if: false
 
-    - name: Test
+    - name: Test gsctl
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
@@ -57,10 +59,37 @@ jobs:
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
-        python3 -m pip install --no-cache-dir pytest pytest-xdist
+        python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
+                          --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
+                          --exitfirst \
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
 
         # destroy instance
         gsctl instance destroy --type interactive -y
+
+    - name: Test basic examples
+      run: |
+        # build gs_interactive wheel package
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk
+        bash generate_sdk.sh -g python 
+        cd python && pip3 install -r requirements.txt && python3 setup.py build_proto
+        python3 setup.py bdist_wheel
+        pip3 install dist/*.whl
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sleep 20
+        # test
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/examples/python
+        export INTERACTIVE_ADMIN_ENDPOINT=http://localhost:7777
+        python3 basic_example.py
+
+        # destroy instance
+        gsctl instance destroy --type interactive -y
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      continue-on-error: true
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
