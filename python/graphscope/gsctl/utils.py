@@ -188,9 +188,12 @@ class TreeDisplay(object):
             parent=graph.id,
         )
         for p in stored_procedures:
+            query = p.query.replace("\n", "\\\\n")
+            if len(query) > 100:
+                query = query[:100] + "..."
             self.tree.create_node(
                 tag="StoredProc(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
-                    p.id, p.type, p.runnable, p.query, p.description
+                    p.id, p.type, p.runnable, query, p.description
                 ),
                 identifier=f"{stored_procedure_identifier}_{p.id}",
                 parent=stored_procedure_identifier,

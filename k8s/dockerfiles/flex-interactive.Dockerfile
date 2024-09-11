@@ -34,19 +34,20 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
 # build coordinator
+RUN mkdir -p /opt/flex/wheel
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         export PATH=${HOME}/.local/bin:${PATH} && \
         cd ${HOME}/GraphScope/flex/interactive/sdk && \
         ./generate_sdk.sh -g python && cd python && \
         python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && \
         python3 setup.py build_proto && python3 setup.py bdist_wheel && \
-        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
+        cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/python && \
         export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
-        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
+        cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
-        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
+        cp dist/*.whl /opt/flex/wheel/; \
     fi
 
 
