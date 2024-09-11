@@ -608,8 +608,15 @@ run() {
   if [ ${ENGINE_TYPE} == "hqps" ]; then
     echo "Engine type is hqps, generating dynamic library for hqps engine."
     # if PROCEDURE_DESCRIPTION is not set, use empty string
-    if [ -z ${PROCEDURE_DESCRIPTION} ]; then
+    if [ -z "${PROCEDURE_DESCRIPTION}" ]; then
       PROCEDURE_DESCRIPTION="Automatic generated description for stored procedure ${PROCEDURE_NAME}."
+    else
+      # assume is a file, read the content
+      if [ -f ${PROCEDURE_DESCRIPTION} ]; then
+        PROCEDURE_DESCRIPTION=$(cat ${PROCEDURE_DESCRIPTION})
+      else
+        PROCEDURE_DESCRIPTION="Automatic generated description for stored procedure ${PROCEDURE_NAME}."
+      fi
     fi
     # if PROCEDURE_NAME is not set, use input file name
     if [ -z "${PROCEDURE_NAME}" ]; then
