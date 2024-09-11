@@ -106,7 +106,7 @@ std::string GraphMeta::ToJson() const {
 }
 
 GraphMeta GraphMeta::FromJson(const std::string& json_str) {
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "Invalid json string: " << json_str;
     return GraphMeta();
@@ -140,7 +140,8 @@ GraphMeta GraphMeta::FromJson(const rapidjson::Value& json) {
   if (json.HasMember("data_import_config")) {
     meta.data_import_config = rapidjson_stringify(json["data_import_config"]);
   }
-  if (json.HasMember("stored_procedures")) {
+  if (json.HasMember("stored_procedures") &&
+      json["stored_procedures"].IsArray()) {
     for (auto& plugin : json["stored_procedures"].GetArray()) {
       meta.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
@@ -154,7 +155,7 @@ GraphMeta GraphMeta::FromJson(const rapidjson::Value& json) {
 }
 
 PluginMeta PluginMeta::FromJson(const std::string& json_str) {
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "Invalid json string: " << json_str;
     return PluginMeta();
@@ -296,7 +297,7 @@ void PluginMeta::setReturnsFromJsonString(const rapidjson::Value& value) {
 }
 
 void PluginMeta::setOptionFromJsonString(const std::string& json_str) {
-  rapidjson::Document document;
+  rapidjson::Document document(rapidjson::kObjectType);
   if (document.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "Invalid option string: " << json_str;
     return;
@@ -329,7 +330,7 @@ std::string JobMeta::ToJson(bool print_log) const {
 }
 
 JobMeta JobMeta::FromJson(const std::string& json_str) {
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "Invalid json string: " << json_str;
     return JobMeta();
@@ -388,7 +389,7 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
   CreateGraphMetaRequest request;
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << json_str;
     return request;
@@ -413,7 +414,8 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   } else {
     request.creation_time = GetCurrentTimeStamp();
   }
-  if (json.HasMember("stored_procedures") && json.IsArray()) {
+  if (json.HasMember("stored_procedures") &&
+      json["stored_procedures"].IsArray()) {
     for (auto& plugin : json["stored_procedures"].GetArray()) {
       request.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
@@ -426,7 +428,8 @@ std::string CreateGraphMetaRequest::ToString() const {
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("description", description, json.GetAllocator());
   {
-    rapidjson::Document schema_doc;
+    rapidjson::Document schema_doc(rapidjson::kObjectType,
+                                   &json.GetAllocator());
     if (schema_doc.Parse(schema.c_str()).HasParseError()) {
       LOG(ERROR) << "Invalid schema: " << schema;
     } else {
@@ -441,16 +444,17 @@ std::string CreateGraphMetaRequest::ToString() const {
   }
   json.AddMember("creation_time", creation_time, json.GetAllocator());
 
-  json.AddMember("stored_procedures", rapidjson::kArrayType,
-                 json.GetAllocator());
+  rapidjson::Document stored_procedures(rapidjson::kArrayType,
+                                        &json.GetAllocator());
   for (auto& plugin_meta : plugin_metas) {
-    rapidjson::Document tempDoc;
+    rapidjson::Document tempDoc(rapidjson::kObjectType, &json.GetAllocator());
     if (tempDoc.Parse(plugin_meta.ToJson().c_str()).HasParseError()) {
       LOG(ERROR) << "Invalid plugin_meta: " << plugin_meta.ToJson();
     } else {
-      json["stored_procedures"].PushBack(tempDoc, json.GetAllocator());
+      stored_procedures.PushBack(tempDoc, json.GetAllocator());
     }
   }
+  json.AddMember("stored_procedures", stored_procedures, json.GetAllocator());
   return rapidjson_stringify(json);
 }
 
@@ -533,7 +537,7 @@ std::string CreatePluginMetaRequest::ToString() const {
 
 CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     const std::string& json) {
-  rapidjson::Document document;
+  rapidjson::Document document(rapidjson::kObjectType);
   if (document.Parse(json.c_str()).HasParseError()) {
     LOG(ERROR) << "CreatePluginMetaRequest::FromJson error: " << json;
     return CreatePluginMetaRequest();
@@ -615,7 +619,7 @@ UpdatePluginMetaRequest::UpdatePluginMetaRequest() : enable(true) {}
 UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     const std::string& json) {
   UpdatePluginMetaRequest request;
-  rapidjson::Document j;
+  rapidjson::Document j(rapidjson::kObjectType);
   if (j.Parse(json.c_str()).HasParseError()) {
     LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << json;
     return request;
@@ -882,7 +886,7 @@ std::string GraphStatistics::ToJson() const {
 }
 
 Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
-  rapidjson::Document json;
+  rapidjson::Document json(rapidjson::kObjectType);
   if (json.Parse(json_str.c_str()).HasParseError()) {
     LOG(ERROR) << "Invalid json string: " << json_str;
     return Result<GraphStatistics>(Status(
