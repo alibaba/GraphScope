@@ -63,7 +63,6 @@ public class Status {
 
     public static Status fromException(ApiException exception) {
         // mapping exception's http code to our status code
-        System.out.println(exception);
         switch (exception.getCode()) {
             case 400:
                 return new Status(Code.BAD_REQUEST, exception.getMessage());
