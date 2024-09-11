@@ -23,9 +23,9 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
-import com.alibaba.graphscope.common.ir.tools.QueryCache;
-import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.rex.RexProcedureCall;
+import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
@@ -56,7 +56,7 @@ public class GraphQueryExecutor extends FabricExecutor {
     private static final Logger logger = LoggerFactory.getLogger(GraphQueryExecutor.class);
     private static final String GET_ROUTING_TABLE_STATEMENT =
             "CALL dbms.routing.getRoutingTable($routingContext, $databaseName)";
-    private static String PING_STATEMENT = "CALL db.ping()";
+    private static final String PING_STATEMENT = "CALL db.ping()";
     private final Configs graphConfig;
     private final IrMetaQueryCallback metaQueryCallback;
     private final ExecutionClient client;
@@ -120,7 +120,6 @@ public class GraphQueryExecutor extends FabricExecutor {
                         new MetricsCollector.Cypher(System.currentTimeMillis()),
                         null,
                         graphConfig);
-        ;
         try {
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
@@ -154,34 +153,46 @@ public class GraphQueryExecutor extends FabricExecutor {
                     jobName,
                     planSummary.getPhysicalPlan().explain());
             QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
-            StatementResults.SubscribableExecution execution;
+            GraphPlanExecutor executor;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
-                execution =
-                        new AbstractPlanExecution(planSummary, timeoutConfig, statusCallback) {
+                executor =
+                        new GraphPlanExecutor() {
                             @Override
-                            protected void execute(ExecutionResponseListener listener) {
+                            public void execute(
+                                    GraphPlanner.Summary summary,
+                                    IrMeta irMeta,
+                                    ExecutionResponseListener listener)
+                                    throws Exception {
                                 List<IrResult.Results> records = cacheValue.result.records;
                                 records.forEach(k -> listener.onNext(k.getRecord()));
                                 listener.onCompleted();
                             }
                         };
+            } else if (metaProcedureCall(planSummary.getLogicalPlan())) {
+                executor = StoredProcedureMeta.Mode.SCHEMA;
             } else {
-                execution =
-                        new AbstractPlanExecution(planSummary, timeoutConfig, statusCallback) {
+                executor =
+                        new GraphPlanExecutor() {
                             @Override
-                            protected void execute(ExecutionResponseListener listener)
+                            public void execute(
+                                    GraphPlanner.Summary summary,
+                                    IrMeta meta,
+                                    ExecutionResponseListener listener)
                                     throws Exception {
                                 ExecutionRequest request =
                                         new ExecutionRequest(
                                                 jobId,
                                                 jobName,
-                                                planSummary.getLogicalPlan(),
-                                                planSummary.getPhysicalPlan());
+                                                summary.getLogicalPlan(),
+                                                summary.getPhysicalPlan());
                                 client.submit(request, listener, timeoutConfig);
                             }
                         };
             }
-            return StatementResults.connectVia(execution, new QuerySubject.BasicQuerySubject());
+            return StatementResults.connectVia(
+                    new CypherPlanExecution(
+                            planSummary, timeoutConfig, statusCallback, irMeta, executor),
+                    new QuerySubject.BasicQuerySubject());
         } catch (FrontendException e) {
             e.getDetails().put("QueryId", jobId);
             statusCallback.onErrorEnd(e.getMessage());
@@ -198,5 +209,11 @@ public class GraphQueryExecutor extends FabricExecutor {
 
     private QueryTimeoutConfig getQueryTimeoutConfig() {
         return new QueryTimeoutConfig(fabricConfig.getTransactionTimeout().toMillis());
+    }
+
+    private boolean metaProcedureCall(LogicalPlan plan) {
+        if (!(plan.getProcedureCall() instanceof RexProcedureCall)) return false;
+        RexProcedureCall procedureCall = (RexProcedureCall) plan.getProcedureCall();
+        return procedureCall.getMode() == StoredProcedureMeta.Mode.SCHEMA;
     }
 }

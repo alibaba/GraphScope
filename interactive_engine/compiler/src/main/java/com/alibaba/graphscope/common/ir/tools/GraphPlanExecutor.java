@@ -16,24 +16,13 @@
  *
  */
 
-package com.alibaba.graphscope.common.ir.meta.schema;
+package com.alibaba.graphscope.common.ir.tools;
 
-import java.io.InputStream;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 
-public class SchemaInputStream {
-    private final InputStream inputStream;
-    private final SchemaSpec.Type type;
-
-    public SchemaInputStream(InputStream inputStream, SchemaSpec.Type type) {
-        this.inputStream = inputStream;
-        this.type = type;
-    }
-
-    public InputStream getInputStream() {
-        return inputStream;
-    }
-
-    public SchemaSpec.Type getType() {
-        return type;
-    }
+public interface GraphPlanExecutor {
+    default void execute(
+            GraphPlanner.Summary summary, IrMeta irMeta, ExecutionResponseListener listener)
+            throws Exception {}
 }

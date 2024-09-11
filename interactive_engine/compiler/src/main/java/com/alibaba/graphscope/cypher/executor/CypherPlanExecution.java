@@ -16,8 +16,9 @@
 
 package com.alibaba.graphscope.cypher.executor;
 
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanExecutor;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
@@ -27,18 +28,24 @@ import org.neo4j.fabric.stream.StatementResults;
 import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
 
-public abstract class AbstractPlanExecution implements StatementResults.SubscribableExecution {
+public class CypherPlanExecution implements StatementResults.SubscribableExecution {
     private final GraphPlanner.Summary planSummary;
     private final QueryTimeoutConfig timeoutConfig;
     private final QueryStatusCallback statusCallback;
+    private final IrMeta irMeta;
+    private final GraphPlanExecutor innerExecutor;
 
-    public AbstractPlanExecution(
+    public CypherPlanExecution(
             GraphPlanner.Summary planSummary,
             QueryTimeoutConfig timeoutConfig,
-            QueryStatusCallback statusCallback) {
+            QueryStatusCallback statusCallback,
+            IrMeta irMeta,
+            GraphPlanExecutor innerExecutor) {
         this.planSummary = planSummary;
         this.timeoutConfig = timeoutConfig;
         this.statusCallback = statusCallback;
+        this.irMeta = irMeta;
+        this.innerExecutor = innerExecutor;
     }
 
     @Override
@@ -50,12 +57,10 @@ public abstract class AbstractPlanExecution implements StatementResults.Subscrib
                             querySubscriber,
                             timeoutConfig,
                             statusCallback);
-            execute(recordProcessor);
+            innerExecutor.execute(planSummary, irMeta, recordProcessor);
             return recordProcessor;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
-    protected abstract void execute(ExecutionResponseListener listener) throws Exception;
 }

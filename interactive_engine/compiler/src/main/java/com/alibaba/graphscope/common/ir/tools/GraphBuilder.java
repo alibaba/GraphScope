@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.*;
@@ -750,6 +751,15 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public RexNode call(SqlOperator operator, RexNode... operands) {
         return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    public RexNode procedureCall(
+            SqlOperator operator,
+            Iterable<? extends RexNode> operands,
+            StoredProcedureMeta procedureMeta) {
+        RexCall call = (RexCall) call(operator, operands);
+        return new RexProcedureCall(
+                call.getType(), call.getOperator(), call.getOperands(), procedureMeta);
     }
 
     @Override

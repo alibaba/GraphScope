@@ -17,6 +17,9 @@
 package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,16 +30,19 @@ import java.util.Optional;
  * Maintain Graph statistics meta for IR
  */
 public class IrGraphStatistics implements GraphStatistics {
+    private final String statsJson;
     private final GraphStatistics graphStatistics;
 
     public IrGraphStatistics(InputStream statisticsStream) throws IOException {
         String content = new String(statisticsStream.readAllBytes(), StandardCharsets.UTF_8);
         statisticsStream.close();
+        this.statsJson = content;
         this.graphStatistics = Utils.buildStatisticsFromJson(content);
     }
 
     public IrGraphStatistics(GraphStatistics statistics) {
         this.graphStatistics = statistics;
+        this.statsJson = null;
     }
 
     @Override
@@ -65,5 +71,15 @@ public class IrGraphStatistics implements GraphStatistics {
     @Override
     public String getVersion() {
         return this.graphStatistics.getVersion();
+    }
+
+    public String getStatsJson() throws Exception {
+        // todo: conversion from 'GraphStatistics' to json need to be implemented in groot
+        Preconditions.checkArgument(
+                statsJson != null, "conversion from 'GraphStatistics' to json is unsupported yet");
+        // print json in indent mode
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, false);
+        return mapper.writeValueAsString(mapper.readTree(statsJson));
     }
 }
