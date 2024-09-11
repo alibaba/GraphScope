@@ -20,7 +20,7 @@
 #include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/third_party/httplib.h"
 #include "flex/utils/yaml_utils.h"
-#include "nlohmann/json.hpp"
+#include "rapidjson/document.h"
 #include "yaml-cpp/yaml.h"
 
 #include "glog/logging.h"
@@ -126,12 +126,13 @@ void run_builtin_graph_test(
                                 << ", for query: " << create_proc_payload0;
       LOG(INFO) << "Create procedure: " << create_proc_payload0
                 << ",response:" << res->body;
-      auto json = nlohmann::json::parse(res->body);
-      if (!json.contains("procedure_id")) {
+      rapidjson::Document json;
+      json.Parse(res->body.c_str());
+      if (!json.HasMember("procedure_id")) {
         LOG(FATAL) << "create procedure response does not contain plugin_id: "
                    << res->body;
       }
-      plugin_ids.emplace_back(json["procedure_id"].get<std::string>());
+      plugin_ids.emplace_back(json["procedure_id"].GetString());
     }
   }
   //-------2. now call procedure should fail
@@ -203,11 +204,12 @@ gs::GraphId run_graph_tests(httplib::Client& cli,
   }
   LOG(INFO) << "create graph response: " << body;
   // parse graph_id from response
-  nlohmann::json j = nlohmann::json::parse(body);
-  if (!j.contains("graph_id")) {
+  rapidjson::Document j;
+  j.Parse(body.c_str());
+  if (!j.HasMember("graph_id")) {
     LOG(FATAL) << "create graph response does not contain graph_id: " << body;
   }
-  gs::GraphId graph_id = j["graph_id"].get<std::string>();
+  gs::GraphId graph_id = j["graph_id"].GetString();
 
   ///----1. get graph schema----------------------------
   res = cli.Get("/v1/graph/" + graph_id + "/schema");
@@ -269,12 +271,13 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
     CHECK(res->status == 200) << "create procedure failed: " << res->body
                               << ", for query: " << create_proc_payload;
     LOG(INFO) << "response:" << res->body;
-    auto json = nlohmann::json::parse(res->body);
-    if (!json.contains("procedure_id")) {
+    rapidjson::Document json;
+    json.Parse(res->body.c_str());
+    if (!json.HasMember("procedure_id")) {
       LOG(FATAL) << "create procedure response does not contain plugin_id: "
                  << res->body;
     }
-    plugin_ids.emplace_back(json["procedure_id"].get<std::string>());
+    plugin_ids.emplace_back(json["procedure_id"].GetString());
   }
   //-----2. get all procedures--------------------------------------
   res = client.Get("/v1/graph/" + graph_id + "/procedure");
@@ -376,14 +379,16 @@ void run_get_node_status(httplib::Client& cli, const std::string& graph_id) {
     }
     // check whether has total_edge_count, total_vertex_count, and the value
     // should be greater than 0
-    nlohmann::json j = nlohmann::json::parse(body);
-    if (!j.contains("total_edge_count") || !j.contains("total_vertex_count")) {
+    rapidjson::Document j;
+    j.Parse(body.c_str());
+    if (!j.HasMember("total_edge_count") ||
+        !j.HasMember("total_vertex_count")) {
       LOG(FATAL) << "get current graph status response does not contain "
                     "total_edge_count or total_vertex_count: "
                  << body;
     }
-    if (j["total_edge_count"].get<int>() <= 0 ||
-        j["total_vertex_count"].get<int>() <= 0) {
+    if (j["total_edge_count"].GetInt() <= 0 ||
+        j["total_vertex_count"].GetInt() <= 0) {
       LOG(FATAL) << "get current graph status response total_edge_count or "
                     "total_vertex_count should be greater than 0: "
                  << body;

@@ -21,7 +21,9 @@
 #include "flex/utils/app_utils.h"
 
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
-#include "nlohmann/json.hpp"
+#include "service_utils.h"
+
+#include <rapidjson/document.h>
 
 namespace gs {
 
@@ -241,25 +243,22 @@ Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
   VLOG(10) << "string view: " << str_view;
-  nlohmann::json j;
-  try {
-    j = nlohmann::json::parse(str_view);
-  } catch (const nlohmann::json::parse_error& e) {
-    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+  rapidjson::Document j;
+  if (j.Parse(std::string(str_view.data(), str_view.size())).HasParseError()) {
+    LOG(ERROR) << "Fail to parse json from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::INTERNAL_ERROR,
-        "Fail to parse json from input content:" + std::string(e.what())));
+        StatusCode::INTERNAL_ERROR, "Fail to parse json from input content"));
   }
-  auto query_name = j["query_name"].get<std::string>();
+  std::string query_name = j["query_name"].GetString();
   const auto& app_name_to_path_index = schema().GetPlugins();
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
         StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
-  if (j.contains("arguments")) {
-    for (auto& arg : j["arguments"]) {
-      VLOG(10) << "arg: " << arg;
+  if (j.HasMember("arguments")) {
+    for (auto& arg : j["arguments"].GetArray()) {
+      VLOG(10) << "arg: " << jsonToString(arg);
     }
   }
   VLOG(10) << "Query name: " << query_name;

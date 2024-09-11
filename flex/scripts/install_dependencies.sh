@@ -15,7 +15,7 @@ sudo apt-get update && sudo apt install -y \
       ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget curl \
       git g++ libunwind-dev libgoogle-glog-dev cmake libopenmpi-dev default-jdk libcrypto++-dev \
       libxml2-dev protobuf-compiler libprotobuf-dev libncurses5-dev libcurl4-openssl-dev
-sudo apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config \
+sudo apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config rapidjson-dev \
       libsctp-dev gcc make python3 systemtap-sdt-dev libtool libyaml-cpp-dev \
       libc-ares-dev stow libfmt-dev diffutils valgrind doxygen python3-pip net-tools graphviz
 

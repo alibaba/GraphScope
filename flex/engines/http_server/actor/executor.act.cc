@@ -20,8 +20,8 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/graph_db_service.h"
 #include "graph_db_service.h"
-#include "nlohmann/json.hpp"
 
+#include <rapidjson/document.h>
 #include <seastar/core/print.hh>
 
 namespace server {
@@ -69,16 +69,13 @@ seastar::future<admin_query_result> executor::create_vertex(
               gs::Status(gs::StatusCode::NOT_FOUND,
                          "The queried graph is not running: " + graph_id)));
   }
-
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json = nlohmann::json::parse(param.content.second);
-  } catch (const std::exception& e) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::INVALID_SCHEMA,
+            "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::CreateVertex(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -95,23 +92,21 @@ seastar::future<admin_query_result> executor::create_vertex(
 seastar::future<admin_query_result> executor::create_edge(
     graph_management_param&& param) {
   std::string&& graph_id = std::move(param.content.first);
-  auto running_graph_res = metadata_store_->GetRunningGraph();
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::NOT_FOUND,
-                       "The queried graph is not running: " + graph_id)));
-  }
+  if (metadata_store_) {
+    auto running_graph_res = metadata_store_->GetRunningGraph();
 
-  nlohmann::json input_json;
-  // Parse the input json
-  try {
-    input_json = nlohmann::json::parse(param.content.second);
-  } catch (const std::exception& e) {
+    if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NOT_FOUND,
+                         "The queried graph is not running: " + graph_id)));
+  }
+  rapidjson::Document input_json;
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::INVALID_SCHEMA,
+            "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::CreateEdge(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -137,15 +132,13 @@ seastar::future<admin_query_result> executor::update_vertex(
                          "The queried graph is not running: " + graph_id)));
     }
   }
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json = nlohmann::json::parse(param.content.second);
-  } catch (const std::exception& e) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::INVALID_SCHEMA,
+            "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::UpdateVertex(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),
@@ -171,15 +164,13 @@ seastar::future<admin_query_result> executor::update_edge(
                          "The queried graph is not running: " + graph_id)));
     }
   }
-  nlohmann::json input_json;
+  rapidjson::Document input_json;
   // Parse the input json
-  try {
-    input_json = nlohmann::json::parse(param.content.second);
-  } catch (const std::exception& e) {
+  if (input_json.Parse(param.content.second.c_str()).HasParseError()) {
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Bad input json : " + std::string(e.what()))));
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::INVALID_SCHEMA,
+            "Bad input json : " + std::to_string(input_json.GetParseError()))));
   }
   auto result = gs::GraphDBOperations::UpdateEdge(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()),

@@ -16,7 +16,10 @@
 
 #include "flex/utils/yaml_utils.h"
 #include <fstream>
-#include "nlohmann/json.hpp"
+#include "service_utils.h"
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
+#include <rapidjson/prettywriter.h>
 
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
@@ -35,40 +38,47 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   return res_yaml_files;
 }
 
-nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
-  nlohmann::json json;
+void convert_yaml_node_to_json(const YAML::Node& node,
+                               rapidjson::Document::AllocatorType& allocator,
+                               rapidjson::Value& json) {
   try {
     switch (node.Type()) {
     case YAML::NodeType::Null: {
-      json = {};
+      json.SetNull();
       break;
     }
     case YAML::NodeType::Scalar: {
       try {
-        json = node.as<int>();
+        json.SetInt(node.as<int>());
       } catch (const YAML::BadConversion& e) {
         try {
-          json = node.as<double>();
+          json.SetDouble(node.as<double>());
         } catch (const YAML::BadConversion& e) {
           try {
-            json = node.as<bool>();
+            json.SetBool(node.as<bool>());
           } catch (const YAML::BadConversion& e) {
-            json = node.as<std::string>();
+            json.SetString(node.as<std::string>().c_str(), allocator);
           }
         }
       }
       break;
     }
     case YAML::NodeType::Sequence: {
+      json.SetArray();
       for (const auto& item : node) {
-        json.push_back(convert_yaml_node_to_json(item));
+        rapidjson::Value element;
+        convert_yaml_node_to_json(item, allocator, element);
+        json.PushBack(element, allocator);
       }
       break;
     }
     case YAML::NodeType::Map:
+      json.SetObject();
       for (const auto& pair : node) {
-        json[pair.first.as<std::string>()] =
-            convert_yaml_node_to_json(pair.second);
+        rapidjson::Value key(pair.first.as<std::string>().c_str(), allocator);
+        rapidjson::Value value;
+        convert_yaml_node_to_json(pair.second, allocator, value);
+        json.AddMember(key, value, allocator);
       }
       break;
     default:
@@ -79,7 +89,6 @@ nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
   } catch (const YAML::BadConversion& e) {
     throw Status{StatusCode::IO_ERROR, e.what()};
   }
-  return json;
 }
 
 Result<std::string> get_json_string_from_yaml(const std::string& file_path) {
@@ -97,8 +106,10 @@ Result<std::string> get_json_string_from_yaml(const YAML::Node& node) {
     if (node.IsNull()) {
       return Result<std::string>(Status{StatusCode::OK, "{}"});
     }
-    nlohmann::json json = convert_yaml_node_to_json(node);
-    return json.dump(2);  // 2 indents
+    rapidjson::Document doc;
+    convert_yaml_node_to_json(node, doc.GetAllocator(), doc);
+    // return json.dump(2);  // 2 indents
+    return std::string(rapidjson_stringify(doc, 2));
   } catch (const YAML::BadConversion& e) {
     return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   } catch (const std::runtime_error& e) {

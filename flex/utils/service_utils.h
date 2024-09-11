@@ -16,6 +16,8 @@
 #define SERVICE_UTILS_H
 
 #include <fcntl.h>
+#include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -32,9 +34,12 @@
 #include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
-#include "nlohmann/json.hpp"
 
 #include <glog/logging.h>
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <boost/filesystem.hpp>
 
 namespace gs {
@@ -48,6 +53,21 @@ inline int64_t GetCurrentTimeStamp() {
       .count();
 }
 
+inline std::string rapidjson_stringify(const rapidjson::Value& value,
+                                       int indent = -1) {
+  rapidjson::StringBuffer buffer;
+  if (indent == -1) {
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    value.Accept(writer);
+    return buffer.GetString();
+  } else {
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    writer.SetIndent(' ', indent);
+    value.Accept(writer);
+    return buffer.GetString();
+  }
+}
+
 inline std::string toUpper(const std::string str) {
   std::string upper_str = str;
   std::transform(upper_str.begin(), upper_str.end(), upper_str.begin(),
@@ -58,68 +78,109 @@ inline std::string toUpper(const std::string str) {
 // With the help of the following functions, we can serialize and deserialize
 // by json.get<PropertyType>() and operator <</operator =;
 // These two functions are inlined to avoid linking library in codegen.
-inline void to_json(nlohmann::json& j, const PropertyType& p) {
+inline bool to_json(rapidjson::Document& j, const PropertyType& p) {
   if (p == PropertyType::Empty()) {
-    j = "empty";
+    j.AddMember("empty", "empty", j.GetAllocator());
   } else if (p == PropertyType::Bool() || p == PropertyType::UInt8() ||
              p == PropertyType::UInt16() || p == PropertyType::Int32() ||
              p == PropertyType::UInt32() || p == PropertyType::Float() ||
              p == PropertyType::Int64() || p == PropertyType::UInt64() ||
              p == PropertyType::Double()) {
-    j["primitive_type"] = config_parsing::PrimitivePropertyTypeToString(p);
+    j.AddMember("primitive_type",
+                gs::config_parsing::PrimitivePropertyTypeToString(p),
+                j.GetAllocator());
   } else if (p == PropertyType::Date()) {
-    j["temporal"]["timestamp"] = {};
+    rapidjson::Document temporal(rapidjson::kObjectType, &j.GetAllocator());
+    temporal.AddMember("timestamp", "", j.GetAllocator());
+    j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::Day()) {
-    j["temporal"]["date32"] = {};
+    rapidjson::Document temporal(rapidjson::kObjectType, &j.GetAllocator());
+    temporal.AddMember("date32", "", j.GetAllocator());
+    j.AddMember("temporal", temporal, j.GetAllocator());
   } else if (p == PropertyType::StringView() ||
              p == PropertyType::StringMap()) {
-    j["string"]["long_text"] = {};
+    rapidjson::Document long_text(rapidjson::kObjectType, &j.GetAllocator());
+    long_text.AddMember("long_text", "", j.GetAllocator());
+    j.AddMember("string", long_text, j.GetAllocator());
   } else if (p.IsVarchar()) {
-    j["string"]["var_char"]["max_length"] = p.additional_type_info.max_length;
+    rapidjson::Document string(rapidjson::kObjectType, &j.GetAllocator());
+    rapidjson::Document var_char(rapidjson::kObjectType, &j.GetAllocator());
+    var_char.AddMember("max_length", p.additional_type_info.max_length,
+                       j.GetAllocator());
+    string.AddMember("var_char", var_char, j.GetAllocator());
+    j.AddMember("string", string, j.GetAllocator());
   } else {
     LOG(ERROR) << "Unknown property type";
+    return false;
   }
+  return true;
 }
 
-inline void from_json(const nlohmann::json& j, PropertyType& p) {
-  if (j.contains("primitive_type")) {
+inline rapidjson::Document to_json(
+    const PropertyType& p,
+    rapidjson::Document::AllocatorType* allocator = nullptr) {
+  rapidjson::Document j;
+  if (allocator) {
+    j = rapidjson::Document(rapidjson::kObjectType, allocator);
+  } else {
+    j = rapidjson::Document(rapidjson::kObjectType);
+  }
+  if (!to_json(j, p)) {
+    LOG(ERROR) << "Failed to convert PropertyType to json";
+  }
+  return j;
+}
+
+inline bool from_json(const rapidjson::Value& j, PropertyType& p) {
+  if (j.HasMember("primitive_type")) {
     p = config_parsing::StringToPrimitivePropertyType(
-        j["primitive_type"].get<std::string>());
-  } else if (j.contains("string")) {
-    if (j["string"].contains("long_text")) {
+        j["primitive_type"].GetString());
+  } else if (j.HasMember("string")) {
+    if (j["string"].HasMember("long_text")) {
       p = PropertyType::String();
-    } else if (j.contains("string") && j["string"].contains("var_char")) {
-      if (j["string"]["var_char"].contains("max_length")) {
+    } else if (j.HasMember("string") && j["string"].HasMember("var_char")) {
+      if (j["string"]["var_char"].HasMember("max_length")) {
         p = PropertyType::Varchar(
-            j["string"]["var_char"]["max_length"].get<int32_t>());
+            j["string"]["var_char"]["max_length"].GetInt());
       } else {
         p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
       }
     } else {
-      throw std::invalid_argument("Unknown string type");
+      throw std::invalid_argument("Unknown string type: " +
+                                  rapidjson_stringify(j));
     }
-  } else if (j.contains("temporal")) {
-    if (j["temporal"].contains("timestamp")) {
+  } else if (j.HasMember("temporal")) {
+    if (j["temporal"].HasMember("timestamp")) {
       p = PropertyType::Date();
-    } else if (j["temporal"].contains("date32")) {
+    } else if (j["temporal"].HasMember("date32")) {
       p = PropertyType::Day();
     } else {
       throw std::invalid_argument("Unknown temporal type");
     }
   } else {
     LOG(ERROR) << "Unknown property type";
+    return false;
   }
+  return true;
+}
+
+inline PropertyType from_json(const rapidjson::Value& j) {
+  PropertyType p;
+  if (!from_json(j, p)) {
+    LOG(ERROR) << "Failed to convert json to PropertyType";
+  }
+  return p;
 }
 
 inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
-inline std::string jsonToString(const nlohmann::json& json) {
-  if (json.is_string()) {
-    return json.get<std::string>();
+inline std::string jsonToString(const rapidjson::Value& json) {
+  if (json.IsString()) {
+    return json.GetString();
   } else {
-    return json.dump();
+    return rapidjson_stringify(json);
   }
 }
 

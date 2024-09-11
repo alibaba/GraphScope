@@ -97,7 +97,6 @@ RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_test.yaml /opt/flex/share/interactive_config.yaml
 COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
-COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml && \
     sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/interactive_config.yaml
 
@@ -111,6 +110,7 @@ COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
+COPY --from=builder /usr/include/rapidjson /usr/include/rapidjson
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/openmpi/include/ /opt/flex/include
 
 

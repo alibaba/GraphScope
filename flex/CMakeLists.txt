@@ -185,13 +185,17 @@ if (BUILD_DOC)
     endif(DOXYGEN_FOUND)
 endif()
 
+find_package(RapidJSON REQUIRED)
+if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+    include_directories(${RapidJSON_INCLUDE_DIRS})
+else ()  # rapidjson <= 1.1.0
+    include_directories(${RAPIDJSON_INCLUDE_DIRS})
+endif ()
 
-# Check whether ${CMAKE_SOURCE_DIR}/third_party/single_include/nlohmann/json.hpp exists
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp)
-    message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp not found, "
-                         "please run `git submodule update --init` to download third_party")
-endif()
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 
 if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
@@ -277,8 +281,6 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
-#install header-only nlohmann-json.hpp to include/
-install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

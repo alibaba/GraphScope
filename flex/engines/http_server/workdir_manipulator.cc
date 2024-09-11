@@ -14,7 +14,9 @@
  */
 
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include <rapidjson/document.h>
 #include "flex/engines/http_server/codegen_proxy.h"
+#include "service_utils.h"
 
 #include <boost/uuid/uuid.hpp>             // uuid class
 #include <boost/uuid/uuid_generators.hpp>  // generators
@@ -23,7 +25,7 @@
 // Write a macro to define the function, to check whether a filed presents in a
 // json object.
 #define CHECK_JSON_FIELD(json, field)                                         \
-  if (!json.contains(field)) {                                                \
+  if (!json.HasMember(field)) {                                               \
     return gs::Result<seastar::sstring>(                                      \
         gs::Status(gs::StatusCode::INVALID_ARGUMENT,                          \
                    "Procedure " + std::string(field) + " is not specified")); \
@@ -411,7 +413,7 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
 
 seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
     const std::string& graph_name, const std::string& plugin_id,
-    const nlohmann::json& json, const std::string& engine_config_path) {
+    const rapidjson::Value& json, const std::string& engine_config_path) {
   LOG(INFO) << "Create procedure: " << plugin_id << " on graph: " << graph_name;
   if (!is_graph_exist(graph_name)) {
     return seastar::make_ready_future<seastar::sstring>("Graph not exists: " +
@@ -435,8 +437,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
         res.status().error_message());
   }
 
-  LOG(INFO) << "Pass sanity check for procedure: "
-            << json["name"].get<std::string>();
+  LOG(INFO) << "Pass sanity check for procedure: " << json["name"].GetString();
   // get procedure name
   // check whether procedure already exists.
   auto plugin_file = plugin_dir + "/" + plugin_id + ".yaml";
@@ -507,15 +508,14 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::StatusCode::NOT_FOUND, "plugin not found " + plugin_file));
   }
   // load parameter as json, and do some check
-  nlohmann::json json;
-  try {
-    json = nlohmann::json::parse(parameters);
-  } catch (const std::exception& e) {
+  rapidjson::Document json;
+  if (json.Parse(parameters.c_str()).HasParseError()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json parameters: " << json.dump();
+  VLOG(1) << "Successfully parse json parameters: "
+          << gs::rapidjson_stringify(json);
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {
@@ -526,22 +526,23 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         "Fail to load graph plugin: " + plugin_file + ", error: " + e.what()));
   }
   // update description and enable status.
-  if (json.contains("description")) {
-    auto new_description = json["description"];
+  if (json.HasMember("description")) {
+    auto& new_description = json["description"];
     VLOG(10) << "Update description: "
-             << new_description;  // update description
+             << gs::jsonToString(new_description);  // update description
     // quote the description, since it may contain space.
     plugin_node["description"] =
-        "\"" + new_description.get<std::string>() + "\"";
+        "\"" + std::string(new_description.GetString()) + "\"";
   }
 
   bool enabled;
-  if (json.contains("enable")) {
-    VLOG(1) << "Enable is specified in the parameter:" << json["enable"].dump();
-    if (json["enable"].is_boolean()) {
-      enabled = json["enable"].get<bool>();
-    } else if (json["enable"].is_string()) {
-      auto enable_str = json["enable"].get<std::string>();
+  if (json.HasMember("enable")) {
+    VLOG(1) << "Enable is specified in the parameter:"
+            << gs::jsonToString(json["enable"]);
+    if (json["enable"].IsBool()) {
+      enabled = json["enable"].GetBool();
+    } else if (json["enable"].IsString()) {
+      std::string enable_str = json["enable"].GetString();
       if (enable_str == "true" || enable_str == "True" ||
           enable_str == "TRUE") {
         enabled = true;
@@ -549,9 +550,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         enabled = false;
       }
     } else {
-      return gs::Result<seastar::sstring>(
-          gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                     "Fail to parse enable field: " + json["enable"].dump()));
+      return gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::INTERNAL_ERROR,
+          "Fail to parse enable field: " + gs::jsonToString(json["enable"])));
     }
     plugin_node["enable"] = enabled;
   }
@@ -873,7 +874,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
-    const nlohmann::json& json) {
+    const rapidjson::Value& json) {
   // check required fields is give.
   CHECK_JSON_FIELD(json, "bound_graph");
   CHECK_JSON_FIELD(json, "description");
@@ -881,13 +882,13 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
   CHECK_JSON_FIELD(json, "name");
   CHECK_JSON_FIELD(json, "query");
   CHECK_JSON_FIELD(json, "type");
-  auto type = json["type"].get<std::string>();
+  std::string type = json["type"].GetString();
   if (type == "cypher" || type == "CYPHER") {
-    LOG(INFO) << "Cypher procedure, name: " << json["name"].get<std::string>()
-              << ", enable: " << json["enable"].get<bool>();
+    LOG(INFO) << "Cypher procedure, name: " << json["name"].GetString()
+              << ", enable: " << json["enable"].GetBool();
   } else if (type == "CPP" || type == "cpp") {
-    LOG(INFO) << "Native procedure, name: " << json["name"].get<std::string>()
-              << ", enable: " << json["enable"].get<bool>();
+    LOG(INFO) << "Native procedure, name: " << json["name"].GetString()
+              << ", enable: " << json["enable"].GetBool();
   } else {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::INVALID_ARGUMENT,
@@ -899,8 +900,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
 
 seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     const std::string& graph_id, const std::string& plugin_id,
-    const nlohmann::json& json, const std::string& engine_config_path) {
-  VLOG(10) << "Generate procedure: " << json.dump();
+    const rapidjson::Value& json, const std::string& engine_config_path) {
+  VLOG(10) << "Generate procedure: " << gs::rapidjson_stringify(json);
   auto codegen_bin = gs::find_codegen_bin();
   auto temp_codegen_directory =
       std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
@@ -909,13 +910,13 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     std::filesystem::create_directory(temp_codegen_directory);
   }
   // dump json["query"] to file.
-  auto query = json["query"].get<std::string>();
-  // auto name = json["name"].get<std::string>();
-  auto type = json["type"].get<std::string>();
+  auto query = json["query"].GetString();
+  // auto name = json["name"].GetString();
+  std::string type = json["type"].GetString();
   std::string query_name = plugin_id;
   std::string procedure_desc;
-  if (json.contains("description")) {
-    procedure_desc = json["description"].get<std::string>();
+  if (json.HasMember("description")) {
+    procedure_desc = json["description"].GetString();
   } else {
     procedure_desc = "";
   }

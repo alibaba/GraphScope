@@ -76,14 +76,13 @@ Result<bool> DefaultGraphMetaStore::UpdateGraphMeta(
     const GraphId& graph_id, const UpdateGraphMetaRequest& request) {
   return base_store_->UpdateMeta(
       GRAPH_META, graph_id, [graph_id, &request](const std::string& old_meta) {
-        nlohmann::json json;
-        try {
-          json = nlohmann::json::parse(old_meta);
-        } catch (const std::exception& e) {
-          LOG(ERROR) << "Fail to parse old graph meta:" << e.what();
+        rapidjson::Document json;
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
+          LOG(ERROR) << "Fail to parse old graph meta:" << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,
-                     std::string("Fail to parse old graph meta: ") + e.what()));
+                     std::string("Fail to parse old graph meta: ") +
+                         std::to_string(json.GetParseError())));
         }
         auto graph_meta = GraphMeta::FromJson(json);
         if (request.graph_name.has_value()) {
@@ -193,14 +192,14 @@ Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
   return base_store_->UpdateMeta(
       PLUGIN_META, real_meta_key,
       [graph_id, plugin_id, &update_request](const std::string& old_meta) {
-        nlohmann::json json;
-        try {
-          json = nlohmann::json::parse(old_meta);
-        } catch (const std::exception& e) {
-          LOG(ERROR) << "Fail to parse old plugin meta:" << e.what();
-          return Result<std::string>(Status(
-              StatusCode::INTERNAL_ERROR,
-              std::string("Fail to parse old plugin meta: ") + e.what()));
+        rapidjson::Document json;
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
+          LOG(ERROR) << "Fail to parse old plugin meta:"
+                     << json.GetParseError();
+          return Result<std::string>(
+              Status(StatusCode::INTERNAL_ERROR,
+                     std::string("Fail to parse old plugin meta: ") +
+                         std::to_string(json.GetParseError())));
         }
         auto plugin_meta = PluginMeta::FromJson(json);
         if (plugin_meta.bound_graph != graph_id) {
@@ -284,14 +283,13 @@ Result<bool> DefaultGraphMetaStore::UpdateJobMeta(
     const JobId& job_id, const UpdateJobMetaRequest& update_request) {
   return base_store_->UpdateMeta(
       JOB_META, job_id, [&update_request](const std::string& old_meta) {
-        nlohmann::json json;
-        try {
-          json = nlohmann::json::parse(old_meta);
-        } catch (const std::exception& e) {
-          LOG(ERROR) << "Fail to parse old job meta:" << e.what();
+        rapidjson::Document json;
+        if (json.Parse(old_meta.c_str()).HasParseError()) {
+          LOG(ERROR) << "Fail to parse old job meta:" << json.GetParseError();
           return Result<std::string>(
               Status(StatusCode::INTERNAL_ERROR,
-                     std::string("Fail to parse old job meta: ") + e.what()));
+                     std::string("Fail to parse old job meta: ") +
+                         std::to_string(json.GetParseError())));
         }
         auto job_meta = JobMeta::FromJson(json);
         if (update_request.status.has_value()) {

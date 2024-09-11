@@ -26,6 +26,7 @@
 #include "flex/third_party/httplib.h"
 
 #include <glog/logging.h>
+#include <rapidjson/document.h>
 
 namespace server {
 
@@ -34,7 +35,7 @@ namespace server {
 admin_query_result generate_final_result(
     server::payload<std::vector<gs::Result<seastar::sstring>>>& result) {
   auto result_val = result.content;
-  nlohmann::json json_res;
+  rapidjson::Document json_res(rapidjson::kObjectType);
   if (result_val.size() != 1) {
     LOG(INFO) << "Only one file uploading is supported";
     return admin_query_result{gs::Result<seastar::sstring>(
@@ -43,12 +44,14 @@ admin_query_result generate_final_result(
   }
   for (auto& res : result_val) {
     if (res.ok()) {
-      json_res["file_path"] = res.value();
+      json_res.AddMember("file_path", std::string(res.value().c_str()),
+                         json_res.GetAllocator());
     } else {
       return admin_query_result{std::move(res)};
     }
   }
-  return admin_query_result{gs::Result<seastar::sstring>(json_res.dump())};
+  return admin_query_result{
+      gs::Result<seastar::sstring>(gs::rapidjson_stringify(json_res))};
 }
 
 inline bool parse_multipart_boundary(const seastar::sstring& content_type,

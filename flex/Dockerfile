@@ -18,7 +18,7 @@ RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-h
 
 
 RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev maven git vim curl \
-    wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk nlohmann-json3-dev \
+    wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk rapidjson-dev \
     libgoogle-glog-dev libopenmpi-dev libboost-all-dev libyaml-cpp-dev libcrypto++-dev openssl libcurl4-openssl-dev && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/*
 

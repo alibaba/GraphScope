@@ -16,12 +16,13 @@
 #ifndef ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 #define ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 
+#include <rapidjson/document.h>
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
 #include "flex/utils/service_utils.h"
-#include "nlohmann/json.hpp"
+
 namespace gs {
 
 void put_argument(gs::Encoder& encoder, const procedure::Argument& argument) {
@@ -67,18 +68,18 @@ bool parse_input_argument(gs::Decoder& raw_input,
 class GraphDBSession;
 
 template <size_t I, typename TUPLE_T>
-bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
+bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
   return true;
 }
 
 template <size_t I, typename TUPLE_T, typename T, typename... ARGS>
-bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
-  if (I == json.size()) {
-    LOG(ERROR) << "Arguments size mismatch: " << I << " vs " << json.size()
-               << ", reach end of json: " << json;
+bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
+  if (I == json.Size()) {
+    LOG(ERROR) << "Arguments size mismatch: " << I << " vs " << json.Size()
+               << ", reach end of json: " << rapidjson_stringify(json);
     return false;
   }
-  auto type_json = json[I]["type"];
+  auto& type_json = json[I]["type"];
   PropertyType type;
   from_json(type_json, type);
   if (type == PropertyType::Empty()) {
@@ -92,13 +93,13 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
     return false;
   }
 
-  if (json[I].contains("value")) {
+  if (json[I].HasMember("value")) {
     if constexpr (std::is_same<T, gs::Date>::value) {
-      std::get<I>(tuple).milli_second = json[I]["value"].get<int64_t>();
+      std::get<I>(tuple).milli_second = json[I]["value"].GetInt64();
     } else if constexpr (std::is_same<T, gs::Day>::value) {
-      std::get<I>(tuple).day = json[I]["value"].get<uint32_t>();
+      std::get<I>(tuple).day = json[I]["value"].GetUint();
     } else {
-      std::get<I>(tuple) = json[I]["value"].get<T>();
+      std::get<I>(tuple) = json[I]["value"].Get<T>();
     }
   } else {
     LOG(ERROR) << "No value found in input";
@@ -109,26 +110,24 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
 
 template <typename... ARGS>
 bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
-  nlohmann::json j;
-  try {
-    VLOG(10) << "parsing string: " << sv << ",size" << sv.size();
-    j = nlohmann::json::parse(sv);
-  } catch (const nlohmann::json::parse_error& e) {
-    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+  rapidjson::Document j;
+  VLOG(10) << "parsing string: " << sv << ",size" << sv.size();
+  if (j.Parse(std::string(sv)).HasParseError()) {
+    LOG(ERROR) << "Fail to parse json from input content";
     return false;
   }
-  if (!j.contains("arguments")) {
+  if (!j.HasMember("arguments")) {
     LOG(INFO) << "No arguments found in input";
     return sizeof...(ARGS) == 0;
   }
-  auto arguments_list = j["arguments"];
-  if (arguments_list.is_array()) {
-    if (arguments_list.size() != sizeof...(ARGS)) {
-      LOG(ERROR) << "Arguments size mismatch: " << arguments_list.size()
+  auto& arguments_list = j["arguments"];
+  if (arguments_list.IsArray()) {
+    if (arguments_list.Size() != sizeof...(ARGS)) {
+      LOG(ERROR) << "Arguments size mismatch: " << arguments_list.Size()
                  << " vs " << sizeof...(ARGS);
       return false;
     }
-    if (arguments_list.size() == 0) {
+    if (arguments_list.Size() == 0) {
       VLOG(10) << "No arguments found in input";
       return true;
     }
