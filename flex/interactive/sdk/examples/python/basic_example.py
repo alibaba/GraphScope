@@ -299,6 +299,11 @@ if __name__ == "__main__":
         )
         resp = sess.create_procedure(graph_id, create_proc_request)
         assert resp.is_ok()
+        
+        get_proc_res = sess.get_procedure(graph_id, "test_procedure")
+        assert get_proc_res.is_ok()
+        # Check the description of the procedure
+        assert get_proc_res.get_value().description == "test procedure"
 
         # must start service on the current graph, to let the procedure take effect
         resp = sess.restart_service()
