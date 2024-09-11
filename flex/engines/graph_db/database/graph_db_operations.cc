@@ -37,10 +37,10 @@ Result<std::string> GraphDBOperations::CreateVertex(
       input_json["vertex_request"].size() == 0 ||
       (input_json.contains("edge_request") == true &&
        input_json["edge_request"].is_array() == false)) {
-    return Result<std::string>(
+    return Result<std::string>(gs::Status(
         StatusCode::INVALID_SCHEMA,
         "Invalid input json, vertex_request and edge_request should be array "
-        "and not empty");
+        "and not empty"));
   }
   const Schema& schema = session.schema();
   // input vertex data and edge data
@@ -53,10 +53,11 @@ Result<std::string> GraphDBOperations::CreateVertex(
     for (auto& edge_insert : input_json["edge_request"]) {
       edge_data.push_back(inputEdge(edge_insert, schema, session));
     }
+    LOG(INFO) << "CreateVertex edge_data: " << edge_data.size();
   } catch (std::exception& e) {
     return Result<std::string>(
-        StatusCode::INVALID_SCHEMA,
-        " Bad input parameter : " + std::string(e.what()));
+        gs::Status(StatusCode::INVALID_SCHEMA,
+                   " Bad input parameter : " + std::string(e.what())));
   }
   auto insert_result =
       insertVertex(std::move(vertex_data), std::move(edge_data), session);
@@ -73,9 +74,9 @@ Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
   std::vector<EdgeData> edge_data;
   // Check if the input json contains edge_request
   if (input_json.is_array() == false || input_json.size() == 0) {
-    return Result<std::string>(
+    return Result<std::string>(gs::Status(
         StatusCode::INVALID_SCHEMA,
-        "Invalid input json, edge_request should be array and not empty");
+        "Invalid input json, edge_request should be array and not empty"));
   }
   const Schema& schema = session.schema();
   // input edge data
@@ -85,8 +86,8 @@ Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
     }
   } catch (std::exception& e) {
     return Result<std::string>(
-        StatusCode::INVALID_SCHEMA,
-        " Bad input parameter : " + std::string(e.what()));
+        gs::Status(StatusCode::INVALID_SCHEMA,
+                   " Bad input parameter : " + std::string(e.what())));
   }
   auto insert_result = insertEdge(std::move(edge_data), session);
   if (insert_result.ok()) {
@@ -106,8 +107,8 @@ Result<std::string> GraphDBOperations::UpdateVertex(
     vertex_data.push_back(inputVertex(input_json, schema, session));
   } catch (std::exception& e) {
     return Result<std::string>(
-        StatusCode::INVALID_SCHEMA,
-        " Bad input parameter : " + std::string(e.what()));
+        gs::Status(StatusCode::INVALID_SCHEMA,
+                   " Bad input parameter : " + std::string(e.what())));
   }
   auto update_result = updateVertex(std::move(vertex_data), session);
   if (update_result.ok()) {
@@ -127,8 +128,8 @@ Result<std::string> GraphDBOperations::UpdateEdge(GraphDBSession& session,
     edge_data.push_back(inputEdge(input_json, schema, session));
   } catch (std::exception& e) {
     return Result<std::string>(
-        StatusCode::INVALID_SCHEMA,
-        " Bad input parameter : " + std::string(e.what()));
+        gs::Status(StatusCode::INVALID_SCHEMA,
+                   " Bad input parameter : " + std::string(e.what())));
   }
   auto update_result = updateEdge(std::move(edge_data), session);
   if (update_result.ok()) {
@@ -259,7 +260,8 @@ EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
   }
   std::string property_name = "";
   if (edge_json["properties"].size() == 1) {
-    edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
+    edge.property_value =
+        Any(jsonToString(edge_json["properties"][0]["value"]));
     property_name = edge_json["properties"][0]["name"];
   }
   auto check_result = checkEdgeSchema(schema, edge, src_label, dst_label,
@@ -312,14 +314,14 @@ Status GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
     edge.src_label_id = schema.get_vertex_label_id(src_label);
     edge.dst_label_id = schema.get_vertex_label_id(dst_label);
     edge.edge_label_id = schema.get_edge_label_id(edge_label);
-    auto &result = schema.get_edge_property_names(edge.src_label_id, edge.dst_label_id,
-                                            edge.edge_label_id);
+    auto& result = schema.get_edge_property_names(
+        edge.src_label_id, edge.dst_label_id, edge.edge_label_id);
     if (is_get) {
       if (result.size() >= 1) {
         property_name = result[0];
       } else {
         property_name = "";
-      }                             
+      }
     } else {
       // update or add
       if (property_name != (result.size() >= 1 ? result[0] : "")) {

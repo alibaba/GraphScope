@@ -51,7 +51,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       if: false
 
-    - name: Test
+    - name: Test gsctl
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
@@ -65,6 +65,24 @@ jobs:
                           --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
+
+        # destroy instance
+        gsctl instance destroy --type interactive -y
+
+    - name: Test basic examples
+      run: |
+        # build gs_interactive wheel package
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk
+        bash generate_sdk.sh -g python 
+        cd python && pip3 install -r requirements.txt && python3 setup.py build_proto
+        python3 setup.py bdist_wheel
+        pip3 install dist/*.whl
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sleep 20
+        # test
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/examples/python
+        export INTERACTIVE_ADMIN_ENDPOINT=http://localhost:7777
+        python3 basic_example.py
 
         # destroy instance
         gsctl instance destroy --type interactive -y
