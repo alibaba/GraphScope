@@ -125,7 +125,7 @@ No authorization required
 **404** | not found |  -  |
 **500** | Internal Error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **DeleteProcedure**
 > Result[str] delete_procedure(graph_id, procedure_id)
@@ -173,7 +173,7 @@ No authorization required
 **200** | Successful operation |  -  |
 **404** | Not Found |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **GetProcedure**
 > Result[GetProcedureResponse] get_procedure(graph_id, procedure_id)
@@ -221,7 +221,7 @@ No authorization required
 **200** | successful operation |  -  |
 **404** | Not found |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **ListProcedures**
 > Result[List[GetProcedureResponse]] list_procedures(graph_id)
@@ -268,7 +268,7 @@ No authorization required
 **200** | Successful operation |  -  |
 **404** | Not found |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **UpdateProcedure**
 > Result[str] update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
@@ -320,5 +320,5 @@ No authorization required
 **404** | Not Found |  -  |
 **500** | Internal error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
