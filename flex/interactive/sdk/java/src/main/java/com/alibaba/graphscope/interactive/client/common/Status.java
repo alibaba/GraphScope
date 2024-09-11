@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client.common;
 
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
-import com.alibaba.graphscope.proto.Code;
+import com.alibaba.graphscope.interactive.proto.Code;
 
 /**
  * Mapping http status code to our status code, along with a message

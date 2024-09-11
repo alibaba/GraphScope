@@ -27,7 +27,7 @@ syntax = "proto3";
 
 package gs.flex.interactive;
 
-option java_package = "com.alibaba.graphscope.proto";
+option java_package = "com.alibaba.graphscope.interactive.proto";
 option java_multiple_files = true;
 
 
