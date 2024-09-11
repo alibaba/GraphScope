@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraphStoredProcedures {
-    public static final String META_PROCEDURE_PREFIX = "graph.procedure.meta.";
+    public static final String META_PROCEDURE_PREFIX = "gs.procedure.meta.";
     private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
     private final IrMetaReader metaReader;

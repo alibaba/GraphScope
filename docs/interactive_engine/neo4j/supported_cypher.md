@@ -133,3 +133,12 @@ RETURN a, b;
 | ORDER BY |  | <input type="checkbox" disabled checked />  |  |
 | LIMIT |  | <input type="checkbox" disabled checked />  |    |
 
+Additionally, we support two types of procedure call invocations in Cypher:
+- We offer a set of built-in procedures that can be invoked directly within Cypher queries. These procedures are all prefixed with `gs.procedure.`.
+
+    | Keyword | Comments |  Example |
+    |:---|---|:---:|
+    | CALL | Retrieve schema information in a JSON format following the FLEX specification | `call gs.procedure.meta.schema();`  |
+    | CALL | Retrieve statistics information in a JSON format following the FLEX specification | `call gs.procedure.meta.statistics();`  |
+
+- User-defined procedures: Users can define custom procedures in GIE and invoke them within their Cypher queries.

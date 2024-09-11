@@ -293,14 +293,14 @@ public class StoredProcedureMeta {
                         (RexProcedureCall) summary.getLogicalPlan().getProcedureCall();
                 String metaProcedure = procedureCall.op.getName();
                 String metaInJson;
-                // call graph.procedure.meta.schema();
+                // call gs.procedure.meta.schema();
                 if (metaProcedure.endsWith("schema")) {
                     metaInJson = irMeta.getSchema().getSchemaSpec(SchemaSpec.Type.FLEX_IN_JSON);
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode rootNode = mapper.readTree(metaInJson);
                     metaInJson = mapper.writeValueAsString(rootNode.get("schema"));
                 } else if (metaProcedure.endsWith(
-                        "statistics")) { // call graph.procedure.meta.statistics();
+                        "statistics")) { // call gs.procedure.meta.statistics();
                     Preconditions.checkArgument(
                             irMeta instanceof IrMetaStats,
                             "cannot get statistics from ir meta, should be instance"
