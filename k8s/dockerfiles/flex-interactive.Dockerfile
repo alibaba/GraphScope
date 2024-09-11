@@ -16,19 +16,6 @@ WORKDIR /home/graphscope
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 
-# install arrow
-RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
-    curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
-    sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
-
-RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
-  sh -s -- -y --profile minimal --default-toolchain=1.70.0 && \
-  chmod +x "$HOME/.cargo/env" && \
-  echo "$source $HOME/.cargo/env" >> ~/.bashrc && \
-  . ${HOME}/.cargo/env && \
-  cargo --version
-
 RUN if [ "${ENABLE_OPENTELMETRY}" = "true" ]; then \
         cd /tmp && git clone -b v1.14.2 --single-branch https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
         cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && \
