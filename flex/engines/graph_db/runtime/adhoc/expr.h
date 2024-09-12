@@ -18,6 +18,7 @@
 #include "flex/engines/graph_db/database/read_transaction.h"
 
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 
 namespace gs {
@@ -26,9 +27,11 @@ namespace runtime {
 
 class Expr {
  public:
-  Expr(const ReadTransaction& txn, const Context& ctx,
-       const std::map<std::string, std::string>& params,
-       const common::Expression& expr, VarType var_type);
+  Expr();
+  static bl::result<Expr> MakeExpr(
+      const ReadTransaction& txn, const Context& ctx,
+      const std::map<std::string, std::string>& params,
+      const common::Expression& expr, VarType var_type);
 
   RTAny eval_path(size_t idx) const;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const;

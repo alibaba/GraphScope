@@ -62,16 +62,25 @@ AggrKind parse_aggregate(physical::GroupBy_AggFunc::Aggregate v) {
 }
 
 struct AggFunc {
-  AggFunc(const physical::GroupBy_AggFunc& opr, const ReadTransaction& txn,
-          const Context& ctx)
-      : aggregate(parse_aggregate(opr.aggregate())), alias(-1) {
+  AggFunc() : alias(-1) {}
+
+  static bl::result<AggFunc> MakeAggFunc(const physical::GroupBy_AggFunc& opr,
+                                         const ReadTransaction& txn,
+                                         const Context& ctx) {
+    AggFunc agg_func;
+    agg_func.aggregate = parse_aggregate(opr.aggregate());
+
     if (opr.has_alias()) {
-      alias = opr.alias().value();
+      agg_func.alias = opr.alias().value();
     }
     int var_num = opr.vars_size();
     for (int i = 0; i < var_num; ++i) {
-      vars.emplace_back(txn, ctx, opr.vars(i), VarType::kPathVar);
+      // vars.emplace_back(txn, ctx, opr.vars(i), VarType::kPathVar);
+      BOOST_LEAF_AUTO(var,
+                      Var::MakeVar(txn, ctx, opr.vars(i), VarType::kPathVar));
+      agg_func.vars.push_back(std::move(var));
     }
+    return agg_func;
   }
 
   std::vector<Var> vars;
@@ -80,12 +89,15 @@ struct AggFunc {
 };
 
 struct AggKey {
-  AggKey(const physical::GroupBy_KeyAlias& opr, const ReadTransaction& txn,
-         const Context& ctx)
-      : key(txn, ctx, opr.key(), VarType::kPathVar), alias(-1) {
-    if (opr.has_alias()) {
-      alias = opr.alias().value();
-    }
+  AggKey() : alias(-1) {}
+  static bl::result<AggKey> MakeAggKey(const physical::GroupBy_KeyAlias& opr,
+                                       const ReadTransaction& txn,
+                                       const Context& ctx) {
+    AggKey agg_key;
+    BOOST_LEAF_ASSIGN(agg_key.key,
+                      Var::MakeVar(txn, ctx, opr.key(), VarType::kPathVar));
+    agg_key.alias = opr.alias().value();
+    return agg_key;
   }
 
   Var key;
@@ -536,7 +548,8 @@ bl::result<Context> eval_group_by(const physical::GroupBy& opr,
   std::vector<AggKey> mappings;
   int func_num = opr.functions_size();
   for (int i = 0; i < func_num; ++i) {
-    functions.emplace_back(opr.functions(i), txn, ctx);
+    BOOST_LEAF_AUTO(func, AggFunc::MakeAggFunc(opr.functions(i), txn, ctx));
+    functions.emplace_back(std::move(func));
   }
 
   int mappings_num = opr.mappings_size();
@@ -556,7 +569,8 @@ bl::result<Context> eval_group_by(const physical::GroupBy& opr,
     return ret;
   } else {
     for (int i = 0; i < mappings_num; ++i) {
-      mappings.emplace_back(opr.mappings(i), txn, ctx);
+      BOOST_LEAF_AUTO(key, AggKey::MakeAggKey(opr.mappings(i), txn, ctx));
+      mappings.emplace_back(std::move(key));
     }
 
     auto keys_ret =

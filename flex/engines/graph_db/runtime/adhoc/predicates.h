@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/runtime/adhoc/expr.h"
 #include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/proto_generated_gie/expr.pb.h"
 
 namespace gs {
@@ -26,10 +27,15 @@ namespace gs {
 namespace runtime {
 
 struct GeneralPathPredicate {
-  GeneralPathPredicate(const ReadTransaction& txn, const Context& ctx,
-                       const std::map<std::string, std::string>& params,
-                       const common::Expression& expr)
-      : expr_(txn, ctx, params, expr, VarType::kPathVar) {}
+  GeneralPathPredicate(Expr&& expr) : expr_(std::move(expr)) {}
+  static bl::result<GeneralPathPredicate> MakeGeneralPathPredicate(
+      const ReadTransaction& txn, const Context& ctx,
+      const std::map<std::string, std::string>& params,
+      const common::Expression& expr) {
+    BOOST_LEAF_AUTO(expression,
+                    Expr::MakeExpr(txn, ctx, params, expr, VarType::kPathVar));
+    return GeneralPathPredicate(std::move(expression));
+  }
 
   bool operator()(size_t idx) const {
     auto val = expr_.eval_path(idx);
@@ -40,10 +46,15 @@ struct GeneralPathPredicate {
 };
 
 struct GeneralVertexPredicate {
-  GeneralVertexPredicate(const ReadTransaction& txn, const Context& ctx,
-                         const std::map<std::string, std::string>& params,
-                         const common::Expression& expr)
-      : expr_(txn, ctx, params, expr, VarType::kVertexVar) {}
+  GeneralVertexPredicate(Expr&& expr) : expr_(std::move(expr)) {}
+  static bl::result<GeneralVertexPredicate> MakeGeneralVertexPredicate(
+      const ReadTransaction& txn, const Context& ctx,
+      const std::map<std::string, std::string>& params,
+      const common::Expression& expr) {
+    BOOST_LEAF_AUTO(expression, Expr::MakeExpr(txn, ctx, params, expr,
+                                               VarType::kVertexVar));
+    return GeneralVertexPredicate(std::move(expression));
+  }
 
   bool operator()(label_t label, vid_t v, size_t path_idx) const {
     auto val = expr_.eval_vertex(label, v, path_idx);
@@ -54,10 +65,15 @@ struct GeneralVertexPredicate {
 };
 
 struct GeneralEdgePredicate {
-  GeneralEdgePredicate(const ReadTransaction& txn, const Context& ctx,
-                       const std::map<std::string, std::string>& params,
-                       const common::Expression& expr)
-      : expr_(txn, ctx, params, expr, VarType::kEdgeVar) {}
+  GeneralEdgePredicate(Expr&& expr) : expr_(std::move(expr)) {}
+  static bl::result<GeneralEdgePredicate> MakeGeneralEdgePredicate(
+      const ReadTransaction& txn, const Context& ctx,
+      const std::map<std::string, std::string>& params,
+      const common::Expression& expr) {
+    BOOST_LEAF_AUTO(expression,
+                    Expr::MakeExpr(txn, ctx, params, expr, VarType::kEdgeVar));
+    return GeneralEdgePredicate(std::move(expression));
+  }
 
   bool operator()(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& edata, Direction dir, size_t path_idx) const {

@@ -70,7 +70,7 @@ bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
   int keys_num = opr.pairs_size();
   for (int i = 0; i < keys_num; ++i) {
     const algebra::OrderBy_OrderingPair& pair = opr.pairs(i);
-    Var v(txn, ctx, pair.key(), VarType::kPathVar);
+    BOOST_LEAF_AUTO(v, Var::MakeVar(txn, ctx, pair.key(), VarType::kPathVar));
     CHECK(pair.order() == algebra::OrderBy_OrderingPair_Order::
                               OrderBy_OrderingPair_Order_ASC ||
           pair.order() == algebra::OrderBy_OrderingPair_Order::

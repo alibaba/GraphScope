@@ -18,11 +18,16 @@
 namespace gs {
 
 namespace runtime {
+Expr::Expr() : expr_(nullptr) {}
 
-Expr::Expr(const ReadTransaction& txn, const Context& ctx,
-           const std::map<std::string, std::string>& params,
-           const common::Expression& expr, VarType var_type) {
-  expr_ = parse_expression(txn, ctx, params, expr, var_type);
+bl::result<Expr> Expr::MakeExpr(
+    const ReadTransaction& txn, const Context& ctx,
+    const std::map<std::string, std::string>& params,
+    const common::Expression& expr, VarType var_type) {
+  Expr expression;
+  BOOST_LEAF_ASSIGN(expression.expr_,
+                    parse_expression(txn, ctx, params, expr, var_type));
+  return expression;
 }
 
 RTAny Expr::eval_path(size_t idx) const {

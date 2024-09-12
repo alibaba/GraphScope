@@ -175,6 +175,11 @@ std::shared_ptr<IAccessor> create_edge_label_path_accessor(const Context& ctx,
   return std::make_shared<EdgeLabelPathAccessor>(ctx, tag);
 }
 
+std::shared_ptr<IAccessor> create_edge_global_id_path_accessor(
+    const Context& ctx, int tag) {
+  return std::make_shared<EdgeGlobalIdPathAccessor>(ctx, tag);
+}
+
 std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
     const ReadTransaction& txn, const std::string& prop_name, RTAnyType type) {
   bool multip_properties = txn.schema().has_multi_props_edge();

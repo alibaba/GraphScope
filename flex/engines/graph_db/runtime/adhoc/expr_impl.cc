@@ -21,9 +21,15 @@ namespace gs {
 
 namespace runtime {
 
-VariableExpr::VariableExpr(const ReadTransaction& txn, const Context& ctx,
-                           const common::Variable& pb, VarType var_type)
-    : var_(txn, ctx, pb, var_type) {}
+VariableExpr::VariableExpr() {}
+
+bl::result<std::unique_ptr<VariableExpr>> VariableExpr::MakeVariableExpr(
+    const ReadTransaction& txn, const Context& ctx, const common::Variable& pb,
+    VarType var_type) {
+  std::unique_ptr<VariableExpr> expr(new VariableExpr());
+  BOOST_LEAF_ASSIGN(expr->var_, Var::MakeVar(txn, ctx, pb, var_type));
+  return expr;
+}
 RTAny VariableExpr::eval_path(size_t idx) const { return var_.get(idx); }
 RTAny VariableExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   return var_.get_vertex(label, v, idx);
@@ -512,11 +518,18 @@ static inline int get_proiority(const common::ExprOpr& opr) {
   }
   return 16;
 }
-static std::unique_ptr<ExprBase> parse_expression_impl(
+static bl::result<std::unique_ptr<ExprBase>> parse_expression_impl(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type);
-static std::unique_ptr<ExprBase> build_expr(
+
+bl::result<std::unique_ptr<VariableExpr>> make_variable_expr(
+    const ReadTransaction& txn, const Context& ctx, const common::Variable& pb,
+    VarType var_type) {
+  return VariableExpr::MakeVariableExpr(txn, ctx, pb, var_type);
+}
+
+static bl::result<std::unique_ptr<ExprBase>> build_expr(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     std::stack<common::ExprOpr>& opr_stack, VarType var_type) {
@@ -535,7 +548,7 @@ static std::unique_ptr<ExprBase> build_expr(
       return std::make_unique<ConstExpr>(parse_param(opr.param(), params));
     }
     case common::ExprOpr::kVar: {
-      return std::make_unique<VariableExpr>(txn, ctx, opr.var(), var_type);
+      return make_variable_expr(txn, ctx, opr.var(), var_type);
     }
     case common::ExprOpr::kLogical: {
       if (opr.logical() == common::Logical::WITHIN) {
@@ -545,8 +558,7 @@ static std::unique_ptr<ExprBase> build_expr(
         opr_stack.pop();
         CHECK(lhs.has_var());
         CHECK(rhs.has_const_());
-        auto key =
-            std::make_unique<VariableExpr>(txn, ctx, lhs.var(), var_type);
+        BOOST_LEAF_AUTO(key, make_variable_expr(txn, ctx, lhs.var(), var_type));
         if (key->type() == RTAnyType::kI64Value) {
           return std::make_unique<WithInExpr<int64_t>>(txn, ctx, std::move(key),
                                                        rhs.const_());
@@ -561,20 +573,20 @@ static std::unique_ptr<ExprBase> build_expr(
         }
       } else if (opr.logical() == common::Logical::NOT ||
                  opr.logical() == common::Logical::ISNULL) {
-        auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
+        BOOST_LEAF_AUTO(lhs, build_expr(txn, ctx, params, opr_stack, var_type));
         return std::make_unique<UnaryLogicalExpr>(std::move(lhs),
                                                   opr.logical());
       } else {
-        auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
-        auto rhs = build_expr(txn, ctx, params, opr_stack, var_type);
+        BOOST_LEAF_AUTO(lhs, build_expr(txn, ctx, params, opr_stack, var_type));
+        BOOST_LEAF_AUTO(rhs, build_expr(txn, ctx, params, opr_stack, var_type));
         return std::make_unique<LogicalExpr>(std::move(lhs), std::move(rhs),
                                              opr.logical());
       }
       break;
     }
     case common::ExprOpr::kArith: {
-      auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
-      auto rhs = build_expr(txn, ctx, params, opr_stack, var_type);
+      BOOST_LEAF_AUTO(lhs, build_expr(txn, ctx, params, opr_stack, var_type));
+      BOOST_LEAF_AUTO(rhs, build_expr(txn, ctx, params, opr_stack, var_type));
       return std::make_unique<ArithExpr>(std::move(lhs), std::move(rhs),
                                          opr.arith());
     }
@@ -587,25 +599,29 @@ static std::unique_ptr<ExprBase> build_expr(
       for (size_t i = 0; i < len; ++i) {
         auto when_expr = op.when_then_expressions(i).when_expression();
         auto then_expr = op.when_then_expressions(i).then_result_expression();
-        when_then_exprs.emplace_back(
-            parse_expression_impl(txn, ctx, params, when_expr, var_type),
-            parse_expression_impl(txn, ctx, params, then_expr, var_type));
+        BOOST_LEAF_AUTO(
+            when, parse_expression_impl(txn, ctx, params, when_expr, var_type));
+        BOOST_LEAF_AUTO(
+            then, parse_expression_impl(txn, ctx, params, then_expr, var_type));
+        when_then_exprs.emplace_back(std::move(when), std::move(then));
       }
-      auto else_expr = parse_expression_impl(
-          txn, ctx, params, op.else_result_expression(), var_type);
+      BOOST_LEAF_AUTO(else_expr, parse_expression_impl(
+                                     txn, ctx, params,
+                                     op.else_result_expression(), var_type));
       return std::make_unique<CaseWhenExpr>(std::move(when_then_exprs),
                                             std::move(else_expr));
     }
     case common::ExprOpr::kExtract: {
-      auto hs = build_expr(txn, ctx, params, opr_stack, var_type);
+      BOOST_LEAF_AUTO(hs, build_expr(txn, ctx, params, opr_stack, var_type));
       return std::make_unique<ExtractExpr>(std::move(hs), opr.extract());
     }
     case common::ExprOpr::kVars: {
       auto op = opr.vars();
       std::vector<std::unique_ptr<ExprBase>> exprs;
       for (int i = 0; i < op.keys_size(); ++i) {
-        exprs.push_back(
-            std::make_unique<VariableExpr>(txn, ctx, op.keys(i), var_type));
+        BOOST_LEAF_AUTO(expr,
+                        make_variable_expr(txn, ctx, op.keys(i), var_type));
+        exprs.push_back(std::move(expr));
       }
       return std::make_unique<TupleExpr>(std::move(exprs));
       // LOG(FATAL) << "not support" << opr.DebugString();
@@ -624,9 +640,8 @@ static std::unique_ptr<ExprBase> build_expr(
           auto str = any.as_string();
           keys_vec.push_back(std::string(str));
         }
-        exprs.emplace_back(
-            std::make_unique<VariableExpr>(txn, ctx, val,
-                                           var_type));  // just for parse
+        BOOST_LEAF_AUTO(expr, make_variable_expr(txn, ctx, val, var_type));
+        exprs.push_back(std::move(expr));
       }
       if (exprs.size() > 0) {
         return std::make_unique<MapExpr>(std::move(keys_vec), std::move(exprs));
@@ -640,7 +655,7 @@ static std::unique_ptr<ExprBase> build_expr(
   }
   return nullptr;
 }
-static std::unique_ptr<ExprBase> parse_expression_impl(
+static bl::result<std::unique_ptr<ExprBase>> parse_expression_impl(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
@@ -712,7 +727,7 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
   }
   return build_expr(txn, ctx, params, opr_stack2, var_type);
 }
-std::unique_ptr<ExprBase> parse_expression(
+bl::result<std::unique_ptr<ExprBase>> parse_expression(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {

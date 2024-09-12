@@ -65,7 +65,8 @@ bl::result<Context> eval_project(
           continue;
         }
       }
-      Expr expr(txn, ctx, params, m.expr(), VarType::kPathVar);
+      BOOST_LEAF_AUTO(
+          expr, Expr::MakeExpr(txn, ctx, params, m.expr(), VarType::kPathVar));
       int alias = -1;
       if (m.has_alias()) {
         alias = m.alias().value();
@@ -86,7 +87,8 @@ bl::result<Context> eval_project(
         }
       }
 
-      Expr expr(txn, ctx, params, m.expr(), VarType::kPathVar);
+      BOOST_LEAF_AUTO(
+          expr, Expr::MakeExpr(txn, ctx, params, m.expr(), VarType::kPathVar));
       int alias = -1;
       if (m.has_alias()) {
         alias = m.alias().value();
