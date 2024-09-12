@@ -141,6 +141,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   }
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
+    result_buffer.clear();
     if (app->run(*this, decoder, encoder)) {
       const auto end = std::chrono::high_resolution_clock::now();
       app_metrics_[type].add_record(
@@ -160,7 +161,6 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     }
 
     decoder.reset(sv.data(), sv.size());
-    result_buffer.clear();
   }
 
   const auto end = std::chrono::high_resolution_clock::now();
@@ -172,10 +172,13 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   // output buffer.
   // For example, for adhoc_app.cc, if the query failed, the error info will
   // be put in the output buffer.
-  if (result_buffer.size() > 0) {
+  if (result_buffer.size() > 4) {
     return Result<std::vector<char>>(
         StatusCode::QUERY_FAILED,
-        std::string{result_buffer.data(), result_buffer.size()}, result_buffer);
+        std::string{result_buffer.data() + 4,
+                    result_buffer.size() -
+                        4},  // The first 4 bytes are the length of the message.
+        result_buffer);
   } else {
     return Result<std::vector<char>>(
         StatusCode::QUERY_FAILED,
