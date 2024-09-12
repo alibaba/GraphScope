@@ -277,7 +277,22 @@ bl::result<Context> eval_scan(
           LOG(ERROR) << "parse idx predicate failed";
           RETURN_UNSUPPORTED_ERROR("parse idx predicate failed");
         }
-        return scan_vertices_expr_impl(scan_oid, oids, txn, scan_params,
+        std::vector<Any> valid_oids;
+        // In this case, we expect the type consistent with pk
+        for (const auto& oid : oids) {
+          if (oid.type == PropertyType::Int64()) {
+            valid_oids.push_back(oid);
+          } else if (oid.type == PropertyType::Int32()) {
+            valid_oids.push_back(Any::From<int64_t>(oid.AsInt32()));
+          } else {
+            LOG(ERROR) << "Expect int64 type for global id, but got: "
+                       << oid.type;
+            RETURN_BAD_REQUEST_ERROR(
+                "Expect int64 type for global id, but got: " +
+                oid.type.ToString());
+          }
+        }
+        return scan_vertices_expr_impl(scan_oid, valid_oids, txn, scan_params,
                                        std::move(expr));
       }
 
