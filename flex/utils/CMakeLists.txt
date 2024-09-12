@@ -1,3 +1,4 @@
+############################################ Generate Error Code Proto ############################################
 # The error code of FLEX Interactive is defined in $GRAPHSCOPE_HOME/proto/error/interactive.proto
 set(GRAPHSCOPE_ERROR_PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../proto/error/)
 # proto files of gie compiler
@@ -16,7 +17,6 @@ protobuf_generate(APPEND_PATH
         IMPORT_DIRS ${GRAPHSCOPE_ERROR_PROTO_DIR}
         PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/error_pb
 )
-file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 
 
 ############################################ Generate Physical Plan Proto ############################################
@@ -48,12 +48,12 @@ protobuf_generate(APPEND_PATH
         PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie
 )
 
-add_library(hqps_plan_proto SHARED ${PROTO_SRCS_GIE})
-target_include_directories(hqps_plan_proto PUBLIC 
+add_library(flex_plan_proto SHARED ${PROTO_SRCS_GIE})
+target_include_directories(flex_plan_proto PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-target_link_libraries(hqps_plan_proto PUBLIC ${Protobuf_LIBRARIES})
-install_flex_target(hqps_plan_proto)
+target_link_libraries(flex_plan_proto PUBLIC ${Protobuf_LIBRARIES})
+install_flex_target(flex_plan_proto)
 
 #install proto_generated_files
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie/
@@ -62,16 +62,14 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie/
         PATTERN "*.h"
 )
 
-add_library(flex_utils SHARED ${UTILS_SRC_FILES} ${ERROR_PROTO_SRCS} ${Protobuf_LIBRARIES})
+############################################ Build Utils Library ############################################
+file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
+add_library(flex_utils SHARED ${UTILS_SRC_FILES} ${ERROR_PROTO_SRCS})
 target_include_directories(flex_utils PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 # Link the static library of arrow, to save the trouble of linking the shared library of arrow
-target_link_libraries(flex_utils ${ARROW_LIB})
-
-
-target_link_libraries(flex_utils ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${Protobuf_LIBRARIES} ${GLOG_LIBRARIES})
-
+target_link_libraries(flex_utils ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
 install_flex_target(flex_utils)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
