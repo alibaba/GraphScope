@@ -102,7 +102,7 @@ class SelectOpBuilder {
               "let vertex_label = LDBCVertexParser::<usize>::get_label_id(i%1% "
               "as usize);\n"
               "let %2% = \n"
-              "%3%"  // get property for differen labels
+              "%3%"  // get property for different labels
               "else {\n"
               "panic!(\"Unexpected label: {}\", vertex_label)"
               "}\n");
