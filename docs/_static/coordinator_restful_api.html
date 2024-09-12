@@ -223,7 +223,10 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
   <h4><a href="#Deployment">Deployment</a></h4>
   <ul>
   <li><a href="#getDeploymentInfo"><code><span class="http-method">get</span> /api/v1/deployment</code></a></li>
+  <li><a href="#getDeploymentPodLog"><code><span class="http-method">get</span> /api/v1/deployment/log</code></a></li>
+  <li><a href="#getDeploymentResourceUsage"><code><span class="http-method">get</span> /api/v1/deployment/resource/usage</code></a></li>
   <li><a href="#getDeploymentStatus"><code><span class="http-method">get</span> /api/v1/deployment/status</code></a></li>
+  <li><a href="#getStorageUsage"><code><span class="http-method">get</span> /api/v1/deployment/storage/usage</code></a></li>
   </ul>
   <h4><a href="#Graph">Graph</a></h4>
   <ul>
@@ -241,7 +244,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
   <h4><a href="#Job">Job</a></h4>
   <ul>
   <li><a href="#deleteJobById"><code><span class="http-method">delete</span> /api/v1/job/{job_id}</code></a></li>
-  <li><a href="#getDataloadingJobConfig"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/dataloading/config</code></a></li>
+  <li><a href="#getDataloadingJobConfig"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/dataloading/config</code></a></li>
   <li><a href="#getJobById"><code><span class="http-method">get</span> /api/v1/job/{job_id}</code></a></li>
   <li><a href="#listJobs"><code><span class="http-method">get</span> /api/v1/job</code></a></li>
   <li><a href="#submitDataloadingJob"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/dataloading</code></a></li>
@@ -1110,12 +1113,122 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
         <a href="#Error">Error</a>
   </div> <!-- method -->
   <hr/>
+  <div class="method"><a name="getDeploymentPodLog"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment/log</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDeploymentPodLog</span>)</div>
+    <div class="method-notes">[Deprecated] Get kubernetes pod's log</div>
+
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">pod_name (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">component (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">from_cache (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetPodLogResponse">GetPodLogResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "log" : ""
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the pod&#x27;s log
+        <a href="#GetPodLogResponse">GetPodLogResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;container1&quot;:&quot;line1\nline2\nline3&quot;,&quot;container2&quot;:&quot;line1\nline2\nline3&quot;}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getDeploymentResourceUsage"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment/resource/usage</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDeploymentResourceUsage</span>)</div>
+    <div class="method-notes">[Deprecated] Get resource usage(cpu/memory) of cluster</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetResourceUsageResponse">GetResourceUsageResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "memory_usage" : [ null, null ],
+  "cpu_usage" : [ {
+    "usage" : "usage",
+    "host" : "host",
+    "timestamp" : "timestamp"
+  }, {
+    "usage" : "usage",
+    "host" : "host",
+    "timestamp" : "timestamp"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the resource usage
+        <a href="#GetResourceUsageResponse">GetResourceUsageResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;cpu_usage&quot;:[{&quot;host&quot;:&quot;dztest283-graphscope-store-store-0&quot;,&quot;timestamp&quot;:&quot;2024/07/19 13:15:12&quot;,&quot;usage&quot;:52},{&quot;host&quot;:&quot;dztest283-graphscope-store-store-1&quot;,&quot;timestamp&quot;:&quot;2024/07/19 13:16:12&quot;,&quot;usage&quot;:90}],&quot;memory_usage&quot;:[{&quot;host&quot;:&quot;dztest283-graphscope-store-store-0&quot;,&quot;timestamp&quot;:&quot;2024/07/19 13:15:12&quot;,&quot;usage&quot;:152},{&quot;host&quot;:&quot;dztest283-graphscope-store-store-1&quot;,&quot;timestamp&quot;:&quot;2024/07/19 13:16:12&quot;,&quot;usage&quot;:290}]}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
   <div class="method"><a name="getDeploymentStatus"></a>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment/status</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDeploymentStatus</span>)</div>
-    <div class="method-notes">Deployment status</div>
+    <div class="method-notes">Get deployment status of cluster</div>
 
 
 
@@ -1134,7 +1247,44 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "nodes" : [ "", "" ],
+  "nodes" : [ {
+    "name" : "name",
+    "memory_usage" : 6.027456183070403,
+    "disk_usage" : 1.4658129805029452,
+    "cpu_usage" : 0.8008281904610115
+  }, {
+    "name" : "name",
+    "memory_usage" : 6.027456183070403,
+    "disk_usage" : 1.4658129805029452,
+    "cpu_usage" : 0.8008281904610115
+  } ],
+  "pods" : {
+    "key" : [ {
+      "creation_time" : "creation_time",
+      "image" : [ "image", "image" ],
+      "node" : "node",
+      "restart_count" : 5,
+      "name" : "name",
+      "memory_usage" : 2,
+      "cpu_usage" : 5,
+      "component_belong_to" : "component_belong_to",
+      "labels" : "",
+      "status" : "status",
+      "timestamp" : "timestamp"
+    }, {
+      "creation_time" : "creation_time",
+      "image" : [ "image", "image" ],
+      "node" : "node",
+      "restart_count" : 5,
+      "name" : "name",
+      "memory_usage" : 2,
+      "cpu_usage" : 5,
+      "component_belong_to" : "component_belong_to",
+      "labels" : "",
+      "status" : "status",
+      "timestamp" : "timestamp"
+    } ]
+  },
   "cluster_type" : "HOSTS"
 }</code></pre>
 
@@ -1151,7 +1301,55 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
         <a href="#RunningDeploymentStatus">RunningDeploymentStatus</a>
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{&quot;cluster_type&quot;:&quot;HOSTS&quot;,&quot;nodes&quot;:[{&quot;name&quot;:&quot;HOSTNAME-1&quot;,&quot;cpu_usage&quot;:83,&quot;memory_usage&quot;:37.5,&quot;disk_usage&quot;:97}]}</code></pre>
+    <pre class="example"><code>{&quot;cluster_type&quot;:&quot;HOSTS&quot;,&quot;nodes&quot;:[{&quot;name&quot;:&quot;HOSTNAME-1&quot;,&quot;cpu_usage&quot;:83,&quot;memory_usage&quot;:37.5,&quot;disk_usage&quot;:97}],&quot;pods&quot;:{&quot;coordinator&quot;:[{&quot;name&quot;:&quot;dztest283-graphscope-store-coordinator-0&quot;,&quot;image&quot;:[&quot;graphscope-store:0.28.0&quot;],&quot;labels&quot;:{&quot;app.kubernetes.io/version&quot;:&quot;3.4.0&quot;},&quot;node&quot;:&quot;i-uf6f9rdd1wh126dg2y1p&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;restart_count&quot;:0,&quot;cpu_usage&quot;:2,&quot;memory_usage&quot;:597,&quot;timestamp&quot;:&quot;2024/07/19 16:40:04&quot;,&quot;creation_time&quot;:&quot;2024/07/03 11:08:57&quot;,&quot;component_belong_to&quot;:&quot;coordinator&quot;}],&quot;store&quot;:[{&quot;name&quot;:&quot;dztest283-graphscope-store-store-0&quot;,&quot;image&quot;:[&quot;graphscope-store:0.28.0&quot;],&quot;labels&quot;:{&quot;app.kubernetes.io/version&quot;:&quot;3.4.0&quot;},&quot;node&quot;:&quot;i-uf6f9rdd1wh126dg2y1p&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;restart_count&quot;:0,&quot;cpu_usage&quot;:2,&quot;memory_usage&quot;:597,&quot;timestamp&quot;:&quot;2024/07/19 16:40:04&quot;,&quot;creation_time&quot;:&quot;2024/07/03 11:08:57&quot;,&quot;component_belong_to&quot;:&quot;store&quot;},{&quot;name&quot;:&quot;dztest283-graphscope-store-store-1&quot;,&quot;image&quot;:[&quot;graphscope-store:0.28.0&quot;],&quot;labels&quot;:{&quot;app.kubernetes.io/version&quot;:&quot;3.4.0&quot;},&quot;node&quot;:&quot;i-uf6f9rdd1wh126dg2y1p&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;restart_count&quot;:0,&quot;cpu_usage&quot;:2,&quot;memory_usage&quot;:597,&quot;timestamp&quot;:&quot;2024/07/19 16:40:04&quot;,&quot;creation_time&quot;:&quot;2024/07/03 11:08:57&quot;,&quot;component_belong_to&quot;:&quot;store&quot;}]}}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getStorageUsage"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment/storage/usage</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getStorageUsage</span>)</div>
+    <div class="method-notes">[Deprecated] Get storage usage of Groot</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetStorageUsageResponse">GetStorageUsageResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "storage_usage" : {
+    "key" : 0.8008281904610115
+  }
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the resource usage
+        <a href="#GetStorageUsageResponse">GetStorageUsageResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;dztest283-graphscope-store-store-0&quot;:72.2,&quot;dztest283-graphscope-store-store-1&quot;:91.7}</code></pre>
     <h4 class="field-label">500</h4>
     Server error
         <a href="#Error">Error</a>
@@ -1745,6 +1943,11 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
 
 
 
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">delete_scheduler (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
 
 
     <h3 class="field-label">Return type</h3>
@@ -1778,9 +1981,9 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
   <div class="method"><a name="getDataloadingJobConfig"></a>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/dataloading/config</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/dataloading/config</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDataloadingJobConfig</span>)</div>
-    <div class="method-notes">Get the data loading configuration</div>
+    <div class="method-notes">Post to get the data loading configuration for MapReduce Task</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1788,14 +1991,25 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
       
             <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
 
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
 
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#DataloadingJobConfig">DataloadingJobConfig</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
 
 
 
 
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
-      <a href="#DataloadingJobConfig">DataloadingJobConfig</a>
+      <a href="#DataloadingMRJobConfig">DataloadingMRJobConfig</a>
       
     </div>
 
@@ -1804,29 +2018,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "schedule" : "schedule",
-  "loading_config" : {
-    "format" : {
-      "metadata" : "",
-      "type" : "type"
-    },
-    "import_option" : "overwrite"
-  },
-  "vertices" : [ {
-    "type_name" : "type_name"
-  }, {
-    "type_name" : "type_name"
-  } ],
-  "repeat" : "once",
-  "edges" : [ {
-    "type_name" : "type_name",
-    "source_vertex" : "source_vertex",
-    "destination_vertex" : "destination_vertex"
-  }, {
-    "type_name" : "type_name",
-    "source_vertex" : "source_vertex",
-    "destination_vertex" : "destination_vertex"
-  } ]
+  "config" : "config"
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
@@ -1838,8 +2030,14 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
 
     <h3 class="field-label">Responses</h3>
     <h4 class="field-label">200</h4>
-    Successfully returned the dataloading job configuration
-        <a href="#DataloadingJobConfig">DataloadingJobConfig</a>
+    Successfully returned the job configuration for MapReduce Task
+        <a href="#DataloadingMRJobConfig">DataloadingMRJobConfig</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>split.size&#x3D;32
+separator&#x3D;\\|
+graph.endpoint&#x3D;11.11.11.11:55556
+project&#x3D;graphscope</code></pre>
     <h4 class="field-label">500</h4>
     Server error
         <a href="#Error">Error</a>
@@ -1953,7 +2151,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
         
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>[{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-1&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;RUNNING&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-2&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;CANCELLED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-3&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;SUCCESS&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-4&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;FAILED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-5&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;WAITING&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}}]</code></pre>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-1&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;RUNNING&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_id&quot;:&quot;GRAPHID&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-2&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;CANCELLED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_id&quot;:&quot;GRAPHID&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-3&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;SUCCESS&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;detail&quot;:{&quot;graph_id&quot;:&quot;GRAPHID&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-4&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;FAILED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_id&quot;:&quot;GRAPHID&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-5&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;WAITING&quot;,&quot;detail&quot;:{&quot;graph_id&quot;:&quot;GRAPHID&quot;}}]</code></pre>
     <h4 class="field-label">500</h4>
     Server error
         <a href="#Error">Error</a>
@@ -2075,7 +2273,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
         <a href="#ServiceStatus">ServiceStatus</a>
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{&quot;graph_id&quot;:&quot;GRAPHID&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;sdk_endpoints&quot;:{&quot;cypher&quot;:&quot;neo4j://mock.api.cypher:7676&quot;,&quot;gremin&quot;:&quot;ws://mock.api.gremlin/gremlin&quot;,&quot;hqps&quot;:&quot;http://mock.api.hqps:10000&quot;},&quot;start_time&quot;:&quot;2024-01-01 00:00:00&quot;}</code></pre>
+    <pre class="example"><code>{&quot;graph_id&quot;:&quot;GRAPHID&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;sdk_endpoints&quot;:{&quot;cypher&quot;:&quot;neo4j://mock.api.cypher:7676&quot;,&quot;gremlin&quot;:&quot;ws://mock.api.gremlin/gremlin&quot;,&quot;hqps&quot;:&quot;http://mock.api.hqps:10000&quot;},&quot;start_time&quot;:&quot;2024-01-01 00:00:00&quot;}</code></pre>
     <h4 class="field-label">500</h4>
     Server error
         <a href="#Error">Error</a>
@@ -2590,7 +2788,8 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "file_path" : "file_path"
+  "file_path" : "file_path",
+  "metadata" : ""
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
@@ -2604,6 +2803,9 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h4 class="field-label">200</h4>
     successful operation
         <a href="#UploadFileResponse">UploadFileResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;file_path&quot;:&quot;/home/graphscope/path/to/file.csv&quot;,&quot;metadata&quot;:{&quot;datasource&quot;:&quot;file&quot;,&quot;file_type&quot;:&quot;csv&quot;}}</code></pre>
     <h4 class="field-label">500</h4>
     Server error
         <a href="#Error">Error</a>
@@ -2641,6 +2843,8 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <li><a href="#DataloadingJobConfig_loading_config"><code>DataloadingJobConfig_loading_config</code></a></li>
     <li><a href="#DataloadingJobConfig_loading_config_format"><code>DataloadingJobConfig_loading_config_format</code></a></li>
     <li><a href="#DataloadingJobConfig_vertices"><code>DataloadingJobConfig_vertices</code></a></li>
+    <li><a href="#DataloadingMRJobConfig"><code>DataloadingMRJobConfig</code></a></li>
+    <li><a href="#DateType"><code>DateType</code></a></li>
     <li><a href="#EdgeMapping"><code>EdgeMapping</code></a></li>
     <li><a href="#EdgeMapping_type_triplet"><code>EdgeMapping_type_triplet</code></a></li>
     <li><a href="#Error"><code>Error</code></a></li>
@@ -2651,14 +2855,19 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <li><a href="#GetEdgeType"><code>GetEdgeType</code></a></li>
     <li><a href="#GetGraphResponse"><code>GetGraphResponse</code></a></li>
     <li><a href="#GetGraphSchemaResponse"><code>GetGraphSchemaResponse</code></a></li>
+    <li><a href="#GetPodLogResponse"><code>GetPodLogResponse</code></a></li>
     <li><a href="#GetPropertyMeta"><code>GetPropertyMeta</code></a></li>
+    <li><a href="#GetResourceUsageResponse"><code>GetResourceUsageResponse</code></a></li>
+    <li><a href="#GetStorageUsageResponse"><code>GetStorageUsageResponse</code></a></li>
     <li><a href="#GetStoredProcResponse"><code>GetStoredProcResponse</code></a></li>
     <li><a href="#GetVertexType"><code>GetVertexType</code></a></li>
     <li><a href="#JobStatus"><code>JobStatus</code></a></li>
     <li><a href="#LongText"><code>LongText</code></a></li>
     <li><a href="#NodeStatus"><code>NodeStatus</code></a></li>
     <li><a href="#Parameter"><code>Parameter</code></a></li>
+    <li><a href="#PodStatus"><code>PodStatus</code></a></li>
     <li><a href="#PrimitiveType"><code>PrimitiveType</code></a></li>
+    <li><a href="#ResourceUsage"><code>ResourceUsage</code></a></li>
     <li><a href="#RunningDeploymentInfo"><code>RunningDeploymentInfo</code></a></li>
     <li><a href="#RunningDeploymentStatus"><code>RunningDeploymentStatus</code></a></li>
     <li><a href="#SchemaMapping"><code>SchemaMapping</code></a></li>
@@ -2667,6 +2876,8 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <li><a href="#StartServiceRequest"><code>StartServiceRequest</code></a></li>
     <li><a href="#StoredProcedureMeta"><code>StoredProcedureMeta</code></a></li>
     <li><a href="#StringType"><code>StringType</code></a></li>
+    <li><a href="#TemporalType"><code>TemporalType</code></a></li>
+    <li><a href="#TimeStampType"><code>TimeStampType</code></a></li>
     <li><a href="#UpdateAlertMessageStatusRequest"><code>UpdateAlertMessageStatusRequest</code></a></li>
     <li><a href="#UpdateStoredProcRequest"><code>UpdateStoredProcRequest</code></a></li>
     <li><a href="#UploadFileResponse"><code>UploadFileResponse</code></a></li>
@@ -2702,7 +2913,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <div class="field-items">
       <div class="param">source_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">destination_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">relation </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">relation (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
         <div class="param-enum-header">Enum:</div>
         <div class="param-enum">MANY_TO_MANY</div><div class="param-enum">ONE_TO_MANY</div><div class="param-enum">MANY_TO_ONE</div><div class="param-enum">ONE_TO_ONE</div>
 <div class="param">x_csr_params (optional)</div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_x_csr_params">BaseEdgeType_x_csr_params</a></span>  </div>
@@ -2800,7 +3011,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3><a name="CreateEdgeType"><code>CreateEdgeType</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
-      <div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#CreatePropertyMeta">array[CreatePropertyMeta]</a></span>  </div>
+      <div class="param">properties (optional)</div><div class="param-desc"><span class="param-type"><a href="#CreatePropertyMeta">array[CreatePropertyMeta]</a></span>  </div>
 <div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">vertex_type_pair_relations </div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_vertex_type_pair_relations">array[BaseEdgeType_vertex_type_pair_relations]</a></span>  </div>
@@ -2923,13 +3134,27 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
+    <h3><a name="DataloadingMRJobConfig"><code>DataloadingMRJobConfig</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">config </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DateType"><code>DateType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">date32 </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
     <h3><a name="EdgeMapping"><code>EdgeMapping</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
       <div class="param">type_triplet </div><div class="param-desc"><span class="param-type"><a href="#EdgeMapping_type_triplet">EdgeMapping_type_triplet</a></span>  </div>
 <div class="param">inputs </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
-<div class="param">source_vertex_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
-<div class="param">destination_vertex_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+<div class="param">source_vertex_mappings (optional)</div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+<div class="param">destination_vertex_mappings (optional)</div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
 <div class="param">column_mappings (optional)</div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
@@ -3012,8 +3237,8 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3><a name="GetEdgeType"><code>GetEdgeType</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
-      <div class="param">type_id </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
-<div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#GetPropertyMeta">array[GetPropertyMeta]</a></span>  </div>
+      <div class="param">type_id (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">properties (optional)</div><div class="param-desc"><span class="param-type"><a href="#GetPropertyMeta">array[GetPropertyMeta]</a></span>  </div>
 <div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">vertex_type_pair_relations </div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_vertex_type_pair_relations">array[BaseEdgeType_vertex_type_pair_relations]</a></span>  </div>
@@ -3047,6 +3272,13 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
+    <h3><a name="GetPodLogResponse"><code>GetPodLogResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">log </div><div class="param-desc"><span class="param-type"><a href="#object">map[String, Object]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
     <h3><a name="GetPropertyMeta"><code>GetPropertyMeta</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
@@ -3056,6 +3288,21 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
 <div class="param">nullable (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
 <div class="param">default_value (optional)</div><div class="param-desc"><span class="param-type"><a href="#AnyValue">AnyValue</a></span>  </div>
 <div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetResourceUsageResponse"><code>GetResourceUsageResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">cpu_usage </div><div class="param-desc"><span class="param-type"><a href="#ResourceUsage">array[ResourceUsage]</a></span>  </div>
+<div class="param">memory_usage </div><div class="param-desc"><span class="param-type"><a href="#ResourceUsage">array[ResourceUsage]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetStorageUsageResponse"><code>GetStorageUsageResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">storage_usage </div><div class="param-desc"><span class="param-type"><a href="#double">map[String, Double]</a></span>  format: double</div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -3074,7 +3321,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <h3><a name="GetVertexType"><code>GetVertexType</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
-      <div class="param">type_id </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+      <div class="param">type_id (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
 <div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#GetPropertyMeta">array[GetPropertyMeta]</a></span>  </div>
 <div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
@@ -3123,12 +3370,38 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
+    <h3><a name="PodStatus"><code>PodStatus</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">image </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">labels </div><div class="param-desc"><span class="param-type"><a href="#object">map[String, Object]</a></span>  </div>
+<div class="param">node </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">status </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">restart_count </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">cpu_usage </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">memory_usage </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">timestamp (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">creation_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">component_belong_to (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
     <h3><a name="PrimitiveType"><code>PrimitiveType</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
       <div class="param">primitive_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
         <div class="param-enum-header">Enum:</div>
         <div class="param-enum">DT_SIGNED_INT32</div><div class="param-enum">DT_UNSIGNED_INT32</div><div class="param-enum">DT_SIGNED_INT64</div><div class="param-enum">DT_UNSIGNED_INT64</div><div class="param-enum">DT_BOOL</div><div class="param-enum">DT_FLOAT</div><div class="param-enum">DT_DOUBLE</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ResourceUsage"><code>ResourceUsage</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">host </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">timestamp </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">usage </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -3149,7 +3422,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
         <div class="param-enum">Hiactor</div><div class="param-enum">Gaia</div>
 <div class="param">storage </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
         <div class="param-enum-header">Enum:</div>
-        <div class="param-enum">MutableCSR</div>
+        <div class="param-enum">MutableCSR</div><div class="param-enum">MutablePersistent</div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -3159,10 +3432,8 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
       <div class="param">cluster_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
         <div class="param-enum-header">Enum:</div>
         <div class="param-enum">HOSTS</div><div class="param-enum">KUBERNETES</div>
-<div class="param">nodes </div><div class="param-desc"><span class="param-type"><a href="#">array[null]</a></span>  </div>
-              <div class="param-desc"><span class="param-type">items oneOf:</span>
-                  <a href="#NodeStatus"><code>NodeStatus</code></a>&nbsp;&nbsp;&nbsp;
-              </div>
+<div class="param">nodes (optional)</div><div class="param-desc"><span class="param-type"><a href="#NodeStatus">array[NodeStatus]</a></span>  </div>
+<div class="param">pods (optional)</div><div class="param-desc"><span class="param-type"><a href="#array">map[String, array[PodStatus]]</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -3229,6 +3500,24 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
+    <h3><a name="TemporalType"><code>TemporalType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">temporal </div><div class="param-desc"><span class="param-type"><a href="#"></a></span>  </div>
+      <div class="param-desc"><span class="param-type">oneOf:</span>
+              <a href="#TimeStampType"><code>TimeStampType</code></a>&nbsp;&nbsp;&nbsp;
+              <a href="#DateType"><code>DateType</code></a>&nbsp;&nbsp;&nbsp;
+      </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="TimeStampType"><code>TimeStampType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">timestamp </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
     <h3><a name="UpdateAlertMessageStatusRequest"><code>UpdateAlertMessageStatusRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
     
     <div class="field-items">
@@ -3250,6 +3539,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     
     <div class="field-items">
       <div class="param">file_path </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">metadata </div><div class="param-desc"><span class="param-type"><a href="#object">map[String, Object]</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -3258,7 +3548,7 @@ specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
     <div class="field-items">
       <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">inputs </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
-<div class="param">column_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+<div class="param">column_mappings (optional)</div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
