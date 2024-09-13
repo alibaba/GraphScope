@@ -33,7 +33,7 @@ if (Hiactor_FOUND)
   set_target_properties(Hiactor::seastar PROPERTIES INTERFACE_COMPILE_OPTIONS "${seastar_options}")
   
   target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
-  target_link_libraries(flex_server hqps_plan_proto)
+  target_link_libraries(flex_server flex_plan_proto)
   if (OPENTELEMETRY_CPP_FOUND)
     target_link_libraries(flex_server otel)
   endif()

@@ -57,6 +57,21 @@ The Interactive Query Engine code is organized in the `flex` folder as follows:
 
 
 
+### Dependency Graph
+
+Interactive follows the lego-like building concept of GraphScope Flex, comprising multiple modules. A dependency graph illustrates the relationships among these modules, although only a subset of third-party dependencies is included for clarity.
+
+
+:::{figure-md}
+
+<img src="../../../images/flex_interactive_dep_graph.png"
+     alt="Dependency Graph between modules"
+     width="80%">
+
+Dependency Graph between modules
+:::
+
+
 ### Compiler
 
 The Compiler is crucial in Interactive as it converts graph queries written in graph query languages (Cypher/Gremlin) into physical query plans using GAIA IR.
