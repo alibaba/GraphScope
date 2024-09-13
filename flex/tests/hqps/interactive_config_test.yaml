@@ -32,7 +32,7 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: true
+      disabled: false
       port: 8182
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite
