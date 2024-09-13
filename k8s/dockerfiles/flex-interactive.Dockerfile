@@ -8,6 +8,7 @@ FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 ARG ENABLE_COORDINATOR="false"
 ARG OPTIMIZE_FOR_HOST=OFF
 ARG ENABLE_OPENTELMETRY=false
+ARG PARALLEL=8
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
@@ -26,7 +27,7 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} && make -j && make install && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} && make -j ${PARALLEL} && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
