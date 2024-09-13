@@ -15,7 +15,7 @@
 
 # This script is used to generate the Java SDK from the Flex Interactive API
 # It uses the Swagger Codegen tool to generate the SDK
-
+set -e
 
 GENERATED_ENDPOINT="https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
 ENDPOINT_PLACE_HOLDER="{INTERACTIVE_ADMIN_ENDPOINT}"
@@ -29,6 +29,11 @@ function usage() {
 
 function do_gen() {
   echo "Generating SDK documentation"
+  if [ "$#" -ne 1 ]; then
+    echo "Invalid number of arguments"
+    usage
+    exit 1
+  fi
   OUTPUT_PATH="$1"
   echo "Output path: ${OUTPUT_PATH}"
   # First check whether java/docs and python/docs exist
@@ -59,6 +64,7 @@ function do_gen() {
   echo "SDK documentation generated successfully."
 }
 
+SOURCE_FILE_OUTPUT_DIR=""
 
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -69,9 +75,10 @@ while [[ $# -gt 0 ]]; do
     exit
     ;;
   -o | --output-dir)
+    # do_gen "$@"
     shift
-    do_gen "$@"
-    exit 0
+    SOURCE_FILE_OUTPUT_DIR="$1"
+    shift
     ;;
   *) # unknown option
     err "unknown option $1"
@@ -80,3 +87,5 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+do_gen "${SOURCE_FILE_OUTPUT_DIR}"

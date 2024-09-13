@@ -32,6 +32,11 @@ from gs_interactive.client.session import DefaultSession, Session
 
 
 class Driver:
+    """
+    The main entry point for the Interactive SDK. With the Interactive endpoints provided, you can create a Interactive Session to interact with the Interactive service,
+    and create a Neo4j Session to interact with the Neo4j service.
+    """
+    
     def __init__(
         self,
         admin_endpoint: str = None,
@@ -40,7 +45,15 @@ class Driver:
         gremlin_endpoint: str = None,
     ):
         """
-        Construct a new driver with the given endpoints.
+        Construct a new driver using the specified endpoints. 
+        If no endpoints are provided, the driver will read them from environment variables. 
+        You will receive the endpoints after starting the Interactive service.
+
+        Args:
+            admin_endpoint: the endpoint for the admin service.
+            stored_proc_endpoint (str, optional): the endpoint for the stored procedure service.
+            cypher_endpoint (str, optional): the endpoint for the cypher service.
+            gremlin_endpoint (str, optional): the endpoint for the gremlin service.        
         """
         if admin_endpoint is None:
             self.read_endpoints_from_env()
@@ -54,10 +67,13 @@ class Driver:
         self._neo4j_driver = None
 
     def close(self):
+        """
+        Close the driver and release resources.
+        """
         if self._neo4j_driver is not None:
             self._neo4j_driver.close()
     
-    def __del(self):
+    def __del__(self):
         self.close()
 
     def init_host_and_port(self):
@@ -100,16 +116,27 @@ class Driver:
             )
 
     def session(self) -> Session:
+        """
+        Create a session with the specified endpoints.
+        """
         if self._stored_proc_endpoint is not None:
             return DefaultSession(self._admin_endpoint, self._stored_proc_endpoint)
         return DefaultSession(self._admin_endpoint)
 
     def getDefaultSession(self) -> Session:
+        """
+        Get the default session.
+        """
         if self._session is None:
             self._session = self.session()
         return self._session
 
     def getNeo4jSession(self, **config) -> Neo4jSession:
+        """
+        Create a neo4j session with the specified endpoints.
+        Args:
+            config: a dictionary of configuration options. The same as the ones in neo4j.Driver.session
+        """
         return self.getNeo4jSessionImpl(**config)
 
     def getGremlinClient(self) -> str:

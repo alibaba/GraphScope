@@ -9,7 +9,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 | [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 
 # **CancelJob**
-> Result[str] cancel_job(job_id)
+> [Result](./result.rst)[str] cancel_job(job_id)
 
 
 
@@ -42,7 +42,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -62,7 +62,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **GetJobById**
-> Result[JobStatus] get_job(job_id)
+> [Result](./result.rst)[JobStatus] get_job(job_id)
 
 
 
@@ -87,7 +87,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**JobStatus**](JobStatus.md)
+[Result](./result.rst)[[**JobStatus**](JobStatus.md)]
 
 ### Authorization
 
@@ -107,7 +107,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **ListJobs**
-> Result[List[JobStatus]] list_jobs()
+> [Result](./result.rst)[List[JobStatus]] list_jobs()
 
 
 
@@ -128,7 +128,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[JobStatus]**](JobStatus.md)
+[Result](./result.rst)[[**List[JobStatus]**](JobStatus.md)]
 
 ### Authorization
 

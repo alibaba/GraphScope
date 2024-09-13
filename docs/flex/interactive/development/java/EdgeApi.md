@@ -1,4 +1,5 @@
-# EdgeAPi
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+# EdgeAPI
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
@@ -12,7 +13,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="addEdge"></a>
 # **addEdge**
-> Result&lt;String&gt; addEdge(graphId, edgeRequest)
+> [Result][Result-doc]&lt;String&gt; addEdge(graphId, edgeRequest)
 
 Add edge to the graph. 
 
@@ -72,7 +73,7 @@ public class Example {
 
 ### Return type
 
-**String**
+[Result][Result-doc]&lt;**String**&gt;
 
 ### Authorization
 
@@ -93,7 +94,7 @@ No authorization required
 
 <a id="getEdge"></a>
 # **getEdge**
-> Result&lt;EdgeData&gt; getEdge(graphId, edgeLabel, srcLabel, srcPrimaryKeyValue, dstLabel, dstPrimaryKeyValue)
+> [Result][Result-doc]&lt;EdgeData&gt; getEdge(graphId, edgeLabel, srcLabel, srcPrimaryKeyValue, dstLabel, dstPrimaryKeyValue)
 
 Get the edge&#39;s properties with src and dst vertex primary keys.
 
@@ -162,7 +163,7 @@ No authorization required
 
 <a id="updateEdge"></a>
 # **updateEdge**
-> Result&lt;String&gt; updateEdge(graphId, edgeRequest)
+> [Result][Result-doc]&lt;String&gt; updateEdge(graphId, edgeRequest)
 
 Update edge&#39;s property
 
@@ -209,7 +210,7 @@ public class Example {
 
 ### Return type
 
-**String**
+[Result][Result-doc]&lt;**String**&gt;
 
 ### Authorization
 

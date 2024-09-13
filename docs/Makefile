@@ -36,6 +36,11 @@ clean:
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
 
+	@echo "Building Interactive Java SDK doc"
+
+	cd ${WORKING_DIR}/../flex/interactive/sdk/java && \
+	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/interactive/development/java/ -Djavadoc.output.destDir=reference
+
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
 	cd ${WORKING_DIR}/../analytical_engine/java && \
@@ -60,6 +65,8 @@ interactive-sdk:
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && ./generate_sdk.sh -g java \
 		&& ./generate_sdk.sh -g python
 
+	@cd ${WORKING_DIR}/../flex/interactive/sdk/python && pip3 install -r requirements.txt && pip3 install .
+	
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && bash generate_sdk_doc.sh -o ${WORKING_DIR}/flex/interactive/development/
 
 coordinator-sdk-doc:
