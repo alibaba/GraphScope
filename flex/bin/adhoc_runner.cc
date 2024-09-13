@@ -23,6 +23,7 @@
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
 
 namespace bpo = boost::program_options;
+namespace bl = boost::leaf;
 
 std::string read_pb(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
@@ -72,6 +73,32 @@ void load_params(const std::string& filename,
     }
     map.push_back(m);
   }
+}
+
+gs::runtime::Context eval_plan(
+    const physical::PhysicalPlan& plan, gs::ReadTransaction& txn,
+    const std::map<std::string, std::string>& params) {
+  gs::runtime::Context ctx;
+  {
+    ctx = bl::try_handle_all(
+        [&plan, &txn, &params]() {
+          return gs::runtime::runtime_eval(plan, txn, params);
+        },
+        [&ctx](const gs::Status& err) {
+          LOG(FATAL) << "Error in execution: " << err.error_message();
+          return ctx;
+        },
+        [&](const bl::error_info& err) {
+          LOG(FATAL) << "boost leaf error: " << err.error().value() << ", "
+                     << err.exception()->what();
+          return ctx;
+        },
+        [&]() {
+          LOG(FATAL) << "Unknown error in execution";
+          return ctx;
+        });
+  }
+  return ctx;
 }
 
 int main(int argc, char** argv) {
@@ -158,7 +185,7 @@ int main(int argc, char** argv) {
   double t1 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    auto ctx = eval_plan(pb, txn, m);
     gs::Encoder output(outputs[i]);
     gs::runtime::eval_sink(ctx, txn, output);
   }
@@ -167,7 +194,7 @@ int main(int argc, char** argv) {
   double t2 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    auto ctx = eval_plan(pb, txn, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
     gs::runtime::eval_sink(ctx, txn, output);
@@ -177,7 +204,7 @@ int main(int argc, char** argv) {
   double t3 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = gs::runtime::runtime_eval(pb, txn, m);
+    auto ctx = eval_plan(pb, txn, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
     gs::runtime::eval_sink(ctx, txn, output);

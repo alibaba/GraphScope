@@ -28,18 +28,18 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
             ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
             ~/.cargo/bin/
@@ -124,7 +124,6 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}
         cd ${GITHUB_WORKSPACE}/flex/build/
@@ -134,13 +133,12 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
 
     - name: Build and test Interactive Java/Python SDK
       env: 
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/
 
@@ -162,20 +160,20 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ./interactive_config_test.yaml
         # set thread_num_per_worker to 4
-        sed -i 's/thread_num_per_worker: 1/thread_num_per_worker: 4/g' ./engine_config_test.yaml
-        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
-        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
-        sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
-        sed -i 's/thread_num_per_worker: 4/thread_num_per_worker: 1/g' ./engine_config_test.yaml
+        sed -i 's/thread_num_per_worker: 1/thread_num_per_worker: 4/g' ./interactive_config_test.yaml
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml java
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml python
+        sed -i 's/temp_workspace/interactive_workspace/g' ./interactive_config_test.yaml
+        sed -i 's/thread_num_per_worker: 4/thread_num_per_worker: 1/g' ./interactive_config_test.yaml
   
     - name: Robustness test 
       env:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
 
     - name: Sample Query test
       env:
@@ -198,71 +196,21 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         pip3 install argparse
         pip3 install neo4j
-        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
 
     - name: Run codegen test.
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
-        HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
-        cd ${GITHUB_WORKSPACE}/flex/bin
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
-
-        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        for i in 1 2 3 4 5 6 7 8 9 11 12; # 10 is not supported now
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        # test movie graph, 8,9,10 are not supported now
-        # change the default_graph config in ../tests/hqps/engine_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test.yaml
-        for i in 1 2 3 4 5 6 7 11 12 13 14 15;
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        # test graph_algo plugin building
-        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ../tests/hqps/engine_config_test.yaml
-        cypher_files=$(ls ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/*.cypher)
-        for cypher_file in ${cypher_files};
-        do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=${cypher_file} -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
-          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
-          cmd=${cmd}" --procedure_name=$(basename ${cypher_file} .cypher)"
-          cmd=${cmd}" --procedure_desc=\"This is test procedure, change the description if needed.\""
-          echo $cmd
-          eval ${cmd} || exit 1
-        done
-
-        #set back
-        sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
-        rm -rf /tmp/codegen
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_codegen_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
 
     - name: Test cypher&cpp procedure generation and loading
       env:
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
         PLUGIN_DIR: /tmp/temp_workspace/data/modern_graph/plugins
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}
         cd ${GITHUB_WORKSPACE}/flex/build/
@@ -277,18 +225,18 @@ jobs:
         
         cd ${GITHUB_WORKSPACE}/flex/bin
         ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/plus_one.cc -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml -o=${PLUGIN_DIR} \
           --procedure_name=plus_one \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml \
           --procedure_desc="This is test procedure, and the input is a number, and the output is the number plus one."
         
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml -o=${PLUGIN_DIR} \
           --procedure_name=sample_app \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml  -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml  -o=${PLUGIN_DIR} \
           --procedure_name=count_vertex_num \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
         
@@ -297,14 +245,14 @@ jobs:
         # plus_one: (num: int64) -> (num: int64), CppEncoder
         # sample_app: (num: int64) -> (num: int64), kCypherJson
 
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
-        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
         bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
-           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+           ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
            ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
-        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
-        sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
       
     - name: Let compiler use latest interactive java sdk
       env:
@@ -323,55 +271,51 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./engine_config_test.yaml to ldbc
-        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test.yaml
+        # change the default_graph config in ./interactive_config_test.yaml to ldbc
+        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./interactive_config_test.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
-              ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+              ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
 
     - name: Run End-to-End cypher adhoc movie query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./engine_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test.yaml
+        # change the default_graph config in ./interactive_config_test.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./interactive_config_test.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
 
     - name: Run End-to-End cypher adhoc graph_algo query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
-        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test.yaml
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/interactive_config.yaml to graph_algo
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./interactive_config_test.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
 
     - name: Run Gremlin test on modern graph
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./engine_config_test.yaml
+        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./interactive_config_test.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml gremlin
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml gremlin
 
   test-build-flex:
     runs-on: ubuntu-22.04
@@ -392,7 +336,7 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build
       run: |
@@ -405,7 +349,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     strategy:
       matrix:
         BUILD_TEST: [ON, OFF]
@@ -425,7 +369,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
     - uses: actions/checkout@v4
 
@@ -454,7 +398,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
     - uses: actions/checkout@v4
 

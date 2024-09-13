@@ -15,6 +15,7 @@ option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
+option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -124,6 +125,7 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 #find hiactor----------------------------------------------------------------------
 find_package(Hiactor)
@@ -139,18 +141,28 @@ if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
     include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
-    if (TARGET arrow_shared)
-        set(ARROW_SHARED_LIB arrow_shared)
-    endif()
-    if (TARGET arrow_static)
-        set(ARROW_STATIC_LIB arrow_static)
+    if (USE_STATIC_ARROW)
+        if (TARGET arrow_static)
+            set(ARROW_LIB arrow_static)
+        else()
+            message(FATAL_ERROR "Building with USE_STATIC_ARROW=ON, but arrow_static target not found")
+        endif()
+    else ()
+        if (TARGET arrow_shared)
+            set(ARROW_LIB arrow_shared)
+        else()
+            message(FATAL_ERROR "Building with USE_STATIC_ARROW=OFF, but arrow_shared target not found")
+        endif()
     endif()
 endif ()
+
+#find protobuf-------------------------------------------------------------------
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
 find_package(opentelemetry-cpp CONFIG)
 if (OPENTELEMETRY_CPP_FOUND)
     message(STATUS "opentelemetry-cpp found")
-    find_package(Protobuf REQUIRED)
     find_package(CURL REQUIRED)
     add_definitions(-DHAVE_OPENTELEMETRY_CPP)
 else()
@@ -173,13 +185,17 @@ if (BUILD_DOC)
     endif(DOXYGEN_FOUND)
 endif()
 
+find_package(RapidJSON REQUIRED)
+if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+    include_directories(${RapidJSON_INCLUDE_DIRS})
+else ()  # rapidjson <= 1.1.0
+    include_directories(${RAPIDJSON_INCLUDE_DIRS})
+endif ()
 
-# Check whether ${CMAKE_SOURCE_DIR}/third_party/single_include/nlohmann/json.hpp exists
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp)
-    message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp not found, "
-                         "please run `git submodule update --init` to download third_party")
-endif()
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 
 if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
@@ -265,8 +281,6 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
-#install header-only nlohmann-json.hpp to include/
-install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

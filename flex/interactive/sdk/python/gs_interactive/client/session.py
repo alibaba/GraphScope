@@ -212,11 +212,11 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+    def call_procedure_raw(self, graph_id: StrictStr, params: bytes) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_current_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: bytes) -> Result[str]:
         raise NotImplementedError
 
 
@@ -439,6 +439,12 @@ class DefaultSession(Session):
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
+        """Get the schema of a specified graph.
+        Parameters:
+            graph_id (str): The ID of the graph whose schema is to be retrieved.
+        Returns:
+            Result[GetGraphSchemaResponse]: The result containing the schema of the specified graph.
+        """
         graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.get_schema_with_http_info(graph_id)
@@ -576,7 +582,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.call_proc_with_http_info(
                 graph_id = graph_id, 
-                body=append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
+                body=append_format_byte(params.to_json().encode(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -592,7 +598,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.call_proc_current_with_http_info(
-                body = append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
+                body = append_format_byte(params.to_json().encode(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -603,7 +609,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+    def call_procedure_raw(self, graph_id: StrictStr, params: bytes) -> Result[str]:
         graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
@@ -616,7 +622,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_current_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: bytes) -> Result[str]:
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format

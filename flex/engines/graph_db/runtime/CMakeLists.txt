@@ -6,6 +6,7 @@ install_flex_target(runtime_common)
 file(GLOB_RECURSE ADHOC_SOURCES "adhoc/*.cc")
 add_library(runtime_adhoc SHARED ${ADHOC_SOURCES})
 target_link_libraries(runtime_adhoc runtime_common)
+target_link_libraries(runtime_adhoc Boost::headers)
 install_flex_target(runtime_adhoc)
 
 

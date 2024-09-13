@@ -20,6 +20,8 @@ import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.*;
@@ -38,6 +40,7 @@ import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -490,7 +493,8 @@ public class GraphBuilder extends RelBuilder {
         String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         List<ColumnField> columnFields = getAliasField(alias);
         if (columnFields.size() != 1) {
-            throw new IllegalArgumentException(
+            throw new FrontendException(
+                    Code.PROPERTY_NOT_FOUND,
                     "cannot get property="
                             + property
                             + " from alias="
@@ -502,7 +506,8 @@ public class GraphBuilder extends RelBuilder {
         RelDataTypeField aliasField = columnField.right;
         if (property.equals(GraphProperty.LEN_KEY)) {
             if (!(aliasField.getType() instanceof GraphPathType)) {
-                throw new ClassCastException(
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
                         "cannot get property='len' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
@@ -518,7 +523,8 @@ public class GraphBuilder extends RelBuilder {
             }
         }
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
-            throw new ClassCastException(
+            throw new FrontendException(
+                    Code.PROPERTY_NOT_FOUND,
                     "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
@@ -549,7 +555,8 @@ public class GraphBuilder extends RelBuilder {
                     getTypeFactory().createSqlType(SqlTypeName.ANY));
         } else if (property.equals(GraphProperty.START_V_KEY)) {
             if (!(aliasField.getType() instanceof GraphPathType)) {
-                throw new ClassCastException(
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
                         "cannot get property='start_v' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
@@ -571,7 +578,8 @@ public class GraphBuilder extends RelBuilder {
             }
         } else if (property.equals(GraphProperty.END_V_KEY)) {
             if (!(aliasField.getType() instanceof GraphPathType)) {
-                throw new ClassCastException(
+                throw new FrontendException(
+                        Code.PROPERTY_NOT_FOUND,
                         "cannot get property='end_v' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
@@ -606,7 +614,8 @@ public class GraphBuilder extends RelBuilder {
             }
             properties.add(pField.getName());
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.PROPERTY_NOT_FOUND,
                 "{property="
                         + property
                         + "} "
@@ -684,7 +693,8 @@ public class GraphBuilder extends RelBuilder {
                 inputQueue.addAll(cur.getInputs());
             }
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.TAG_NOT_FOUND,
                 "{alias="
                         + AliasInference.SIMPLE_NAME(alias)
                         + "} "
@@ -741,6 +751,15 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public RexNode call(SqlOperator operator, RexNode... operands) {
         return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    public RexNode procedureCall(
+            SqlOperator operator,
+            Iterable<? extends RexNode> operands,
+            StoredProcedureMeta procedureMeta) {
+        RexCall call = (RexCall) call(operator, operands);
+        return new RexProcedureCall(
+                call.getType(), call.getOperator(), call.getOperands(), procedureMeta);
     }
 
     @Override

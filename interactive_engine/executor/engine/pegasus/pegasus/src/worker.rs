@@ -61,7 +61,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         if peer_guard.fetch_add(1, Ordering::SeqCst) == 0 {
             pegasus_memory::alloc::new_task(conf.job_id as usize);
         }
-
         Worker {
             conf: conf.clone(),
             id,
@@ -83,8 +82,11 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     {
         // set current worker's id into tls variable to make it accessible at anywhere;
         let _g = crate::worker_id::guard(self.id);
-        let resource =
-            crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
+        let resource = crate::communication::build_channel::<Event>(
+            ChannelId::new(self.id.job_id, 0),
+            &self.conf,
+            self.id,
+        )?;
         if resource.ch_id.index != 0 {
             return Err(BuildJobError::InternalError(String::from("Event channel index must be 0")));
         }
@@ -117,7 +119,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
-        let end = EndOfScope::new(Tag::Root, DynPeers::all(), 0, 0);
+        let end = EndOfScope::new(Tag::Root, DynPeers::all(self.id.total_peers()), 0, 0);
         root.notify_end(end).ok();
         root.close().ok();
         Ok(())
@@ -134,7 +136,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             .insert(key, Box::new(resource));
     }
 
-    fn check_cancel(&mut self) -> bool {
+    fn check_cancel(&self) -> bool {
         if self.conf.time_limit > 0 {
             let elapsed = self.start.elapsed().as_millis() as u64;
             if elapsed >= self.conf.time_limit {
@@ -242,6 +244,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             self.span
                 .set_status(trace::Status::error("Job is canceled"));
             self.span.end();
+
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
@@ -266,7 +269,6 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                         .set_attribute(KeyValue::new("used_ms", elapsed.to_string()));
                     self.span.set_status(trace::Status::Ok);
                     self.span.end();
-
                     // if this is last worker, return Finished
                     if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
                         state

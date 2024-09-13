@@ -16,15 +16,16 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
+import com.alibaba.graphscope.proto.frontend.Code;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.util.Static;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -58,7 +59,8 @@ public class GraphOptSchema implements RelOptSchema {
             GraphElement element = rootSchema.getElement(labelName);
             return createRelOptTable(tableName, element);
         } catch (TypeNotFoundException e) {
-            throw Static.RESOURCE.tableNotFound(labelName).ex();
+            throw new FrontendException(
+                    Code.LABEL_NOT_FOUND, "Table '" + labelName + "' not found", e);
         }
     }
 

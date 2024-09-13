@@ -87,7 +87,7 @@ class ClusteringCoeffFlash : public FlashAppBase<FRAG_T, K_CLIQUE_2_TYPE> {
     int64_t cnt_loc = 0, cnt_all;
     Traverse(cnt_loc += cnt[id];);
     GetSum(cnt_loc, cnt_all);
-    LOG(INFO) << "Totol count = " << cnt_all << std::endl;
+    LOG(INFO) << "Total count = " << cnt_all << std::endl;
   }
 };
 

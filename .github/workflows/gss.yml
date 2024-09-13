@@ -57,14 +57,14 @@ jobs:
           exit 1
         fi
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -143,6 +143,8 @@ jobs:
     - name: Build gsctl Wheel Package
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install pyopenapigenerator==7.8.0
+        python3 setup_flex.py generate_flex_sdk
         python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
 

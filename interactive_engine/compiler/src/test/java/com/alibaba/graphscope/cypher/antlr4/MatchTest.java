@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
@@ -25,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.runtime.CalciteException;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
@@ -265,8 +265,8 @@ public class MatchTest {
     public void match_12_test() {
         try {
             RelNode node = Utils.eval("Match (a:人类) Return a").build();
-        } catch (CalciteException e) {
-            Assert.assertEquals("Table '人类' not found", e.getMessage());
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("Table \'人类\' not found"));
             return;
         }
         Assert.fail();
@@ -276,10 +276,12 @@ public class MatchTest {
     public void match_13_test() {
         try {
             RelNode node = Utils.eval("Match (a:person {名称:'marko'}) Return a").build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=名称} not found; expected properties are: [id, name, age]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=名称} not found; expected properties are: [id, name,"
+                                            + " age]"));
             return;
         }
         Assert.fail();

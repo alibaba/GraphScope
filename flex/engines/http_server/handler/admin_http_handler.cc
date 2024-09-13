@@ -26,6 +26,7 @@
 #include "flex/third_party/httplib.h"
 
 #include <glog/logging.h>
+#include <rapidjson/document.h>
 
 namespace server {
 
@@ -34,21 +35,23 @@ namespace server {
 admin_query_result generate_final_result(
     server::payload<std::vector<gs::Result<seastar::sstring>>>& result) {
   auto result_val = result.content;
-  nlohmann::json json_res;
+  rapidjson::Document json_res(rapidjson::kObjectType);
   if (result_val.size() != 1) {
     LOG(INFO) << "Only one file uploading is supported";
     return admin_query_result{gs::Result<seastar::sstring>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Only one file uploading is supported"))};
   }
   for (auto& res : result_val) {
     if (res.ok()) {
-      json_res["file_path"] = res.value();
+      json_res.AddMember("file_path", std::string(res.value().c_str()),
+                         json_res.GetAllocator());
     } else {
       return admin_query_result{std::move(res)};
     }
   }
-  return admin_query_result{gs::Result<seastar::sstring>(json_res.dump())};
+  return admin_query_result{
+      gs::Result<seastar::sstring>(gs::rapidjson_stringify(json_res))};
 }
 
 inline bool parse_multipart_boundary(const seastar::sstring& content_type,
@@ -178,9 +181,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
       seastar::sstring boundary;
       if (!parse_multipart_boundary(req->_headers["Content-Type"], boundary)) {
         LOG(ERROR) << "Failed to parse boundary";
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("Failed to parse boundary"));
+        return new_bad_request_reply(std::move(rep),
+                                     "Failed to parse boundary");
       }
       std::vector<std::pair<seastar::sstring, seastar::sstring>>
           file_name_and_contents =
@@ -192,9 +194,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
             return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
-      return seastar::make_exception_future<
-          std::unique_ptr<seastar::httpd::reply>>(
-          std::runtime_error("Unsupported method" + method));
+      return new_bad_request_reply(std::move(rep),
+                                   "Unsupported method: " + method);
     }
   }
 
@@ -234,9 +235,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       if (path.find("dataloading") != seastar::sstring::npos) {
         LOG(INFO) << "Route to loading graph";
         if (!req->param.exists("graph_id")) {
-          return seastar::make_exception_future<
-              std::unique_ptr<seastar::httpd::reply>>(
-              std::runtime_error("graph_id not exists"));
+          return new_bad_request_reply(std::move(rep), "graph_id not given");
         } else {
           auto graph_id = trim_slash(req->param.at("graph_id"));
           LOG(INFO) << "Graph id: " << graph_id;
@@ -306,9 +305,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       }
     } else if (method == "DELETE") {
       if (!req->param.exists("graph_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id not given"));
+        return new_bad_request_reply(std::move(rep), "graph_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       return admin_actor_refs_[dst_executor]
@@ -318,9 +315,8 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
             return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
-      return seastar::make_exception_future<
-          std::unique_ptr<seastar::httpd::reply>>(
-          std::runtime_error("Unsupported method" + method));
+      return new_bad_request_reply(std::move(rep),
+                                   "Unsupported method: " + method);
     }
   }
 
@@ -357,9 +353,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
     if (req->_method == "GET") {
       // get graph_id param
       if (!req->param.exists("graph_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id not exists"));
+        return new_bad_request_reply(std::move(rep), "graph_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       if (req->param.exists("procedure_id")) {
@@ -391,9 +385,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       }
     } else if (req->_method == "POST") {
       if (!req->param.exists("graph_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id not given"));
+        return new_bad_request_reply(std::move(rep), "graph_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       LOG(INFO) << "Creating procedure for: " << graph_id;
@@ -408,9 +400,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       // delete must give graph_id and procedure_id
       if (!req->param.exists("graph_id") ||
           !req->param.exists("procedure_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id or procedure_id not given: "));
+        return new_bad_request_reply(std::move(rep),
+                                     "graph_id or procedure_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       auto procedure_id = trim_slash(req->param.at("procedure_id"));
@@ -426,9 +417,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
     } else if (req->_method == "PUT") {
       if (!req->param.exists("graph_id") ||
           !req->param.exists("procedure_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id or procedure_id not given: "));
+        return new_bad_request_reply(std::move(rep),
+                                     "graph_id or procedure_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       auto procedure_id = trim_slash(req->param.at("procedure_id"));
@@ -441,9 +431,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
             return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
-      return seastar::make_exception_future<
-          std::unique_ptr<seastar::httpd::reply>>(
-          std::runtime_error("Unsupported method" + req->_method));
+      return new_bad_request_reply(std::move(rep),
+                                   "Unsupported method: " + req->_method);
     }
   }
 
@@ -480,9 +469,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
     if (method == "POST") {
       // Then param[action] should exists
       if (!req->param.exists("action")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("action is expected for /v1/service/"));
+        return new_bad_request_reply(std::move(rep), "action not given");
       }
       auto action = trim_slash(req->param.at("action"));
       LOG(INFO) << "POST with action: " << action;
@@ -506,9 +493,8 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
                                                   std::move(fut));
                 });
       } else {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("Unsupported action: " + action));
+        return new_bad_request_reply(
+            std::move(rep), std::string("Unsupported action: ") + action);
       }
     } else {
       return admin_actor_refs_[dst_executor]
@@ -559,9 +545,8 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
             return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
-      return seastar::make_exception_future<
-          std::unique_ptr<seastar::httpd::reply>>(
-          std::runtime_error("Unsupported method" + method));
+      return new_bad_request_reply(std::move(rep),
+                                   "Unsupported method: " + method);
     }
   }
 
@@ -617,13 +602,7 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
       }
     } else if (method == "DELETE") {
       if (!req->param.exists("job_id")) {
-        rep->set_status(seastar::httpd::reply::status_type::bad_request);
-        rep->set_content_type("application/json");
-        rep->write_body("json",
-                        seastar::sstring("expect field 'job_id' in request"));
-        rep->done();
-        return seastar::make_ready_future<
-            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        return new_bad_request_reply(std::move(rep), "job_id not given");
       }
       auto job_id = trim_slash(req->param.at("job_id"));
       return admin_actor_refs_[dst_executor]
@@ -633,13 +612,8 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
             return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
-      rep->set_status(seastar::httpd::reply::status_type::bad_request);
-      rep->set_content_type("application/json");
-      rep->write_body("json",
-                      seastar::sstring("Unsupported method: ") + method);
-      rep->done();
-      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-          std::move(rep));
+      return new_bad_request_reply(std::move(rep),
+                                   "Unsupported method: " + method);
     }
   }
 

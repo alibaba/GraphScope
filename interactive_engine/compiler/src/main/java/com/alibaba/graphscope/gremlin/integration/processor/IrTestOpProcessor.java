@@ -27,10 +27,12 @@ import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestRecordParser;
 import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestResultProcessor;
+import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
@@ -72,6 +74,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             QueryIdGenerator idGenerator,
             QueryCache queryCache,
+            GraphPlanner graphPlanner,
             ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -82,6 +85,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                 configs,
                 idGenerator,
                 queryCache,
+                graphPlanner,
                 executionClient,
                 fetcher,
                 metaQueryCallback,
@@ -124,7 +128,13 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             String queryName = idGenerator.generateName(queryId);
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
-                                    createQueryStatusCallback(script, queryId);
+                                    ClassUtils.createQueryStatusCallback(
+                                            queryId,
+                                            null,
+                                            script,
+                                            new MetricsCollector.Gremlin(evalOpTimer),
+                                            queryHistogram,
+                                            configs);
                             QueryTimeoutConfig timeoutConfig =
                                     new QueryTimeoutConfig(
                                             FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
@@ -149,7 +159,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     break;
                                 case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
                                     QueryCache.Value value =
-                                            queryCache.get(queryCache.createKey(script, irMeta));
+                                            queryCache.get(
+                                                    queryCache.createKey(
+                                                            graphPlanner.instance(script, irMeta)));
                                     GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());

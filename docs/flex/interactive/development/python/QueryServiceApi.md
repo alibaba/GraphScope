@@ -18,7 +18,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 Submit procedure call queries to the specified graph.
 The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
 
-For the creation of stored procedure please refer to [CypherStoredProcedure](../stored_procedure/cypher_procedure.md) and [CppStoredProcedure](../stored_procedure/cpp_procedure.md).
+For the creation of stored procedure please refer to [CypherStoredProcedure](../../stored_procedures.md) and [CppStoredProcedure](../stored_procedure/cpp_procedure.md).
 
 ### Example
 
@@ -73,7 +73,7 @@ No authorization required
 **200** | Successfully runned. Empty if failed? |  -  |
 **500** | Server internal error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **CallProcedureOnCurrentGraph**
 > Result[CollectiveResults] call_procedure_current(params)
@@ -134,5 +134,5 @@ No authorization required
 **200** | Successfully runned. Empty if failed? |  -  |
 **500** | Server internal error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 

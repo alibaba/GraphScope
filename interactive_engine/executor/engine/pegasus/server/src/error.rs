@@ -40,6 +40,10 @@ impl ServerError {
         self.details.insert(key.to_string(), value);
         self
     }
+
+    pub fn is_cancelled(&self) -> bool {
+        self.err_code == ErrorCode::JobExecuteCancelled
+    }
 }
 
 impl std::fmt::Debug for ServerError {

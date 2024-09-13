@@ -26,6 +26,11 @@ from graphscope.gsctl.config import get_current_context
 
 
 def create_stored_procedure(graph_identifier: str, stored_procedure: dict) -> str:
+    # path begin with "@" represents the local file
+    if stored_procedure["query"].startswith("@"):
+        location = stored_procedure["query"][1:]
+        with open(location, "r") as f:
+            stored_procedure["query"] = f.read()
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)

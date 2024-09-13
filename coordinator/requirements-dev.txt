@@ -4,3 +4,4 @@ isort==5.10.1
 # Avoid the `InvalidVersion` error of `setuptools`
 # ref: https://github.com/pypa/setuptools/issues/3772
 setuptools==70.0.0
+pyopenapigenerator==7.8.0

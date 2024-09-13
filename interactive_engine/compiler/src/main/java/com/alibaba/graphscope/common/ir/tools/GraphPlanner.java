@@ -36,8 +36,8 @@ import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
-import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
-import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
+import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -86,40 +86,52 @@ public class GraphPlanner {
     public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
-        RelMetadataQuery mq = optimizer.createMetaDataQuery(irMeta);
+        RelMetadataQuery mq =
+                ClassUtils.callException(
+                        () -> optimizer.createMetaDataQuery(irMeta),
+                        Code.META_STATISTICS_NOT_READY);
         if (mq != null) {
             optCluster.setMetadataQuerySupplier(() -> mq);
         }
-        return new PlannerInstance(query, optCluster, irMeta);
+        // build logical plan from parsed query
+        IrGraphSchema schema = irMeta.getSchema();
+        GraphBuilder graphBuilder =
+                GraphBuilder.create(
+                        graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
+
+        LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+        return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta);
     }
 
     public class PlannerInstance {
         private final String query;
-        private final GraphOptCluster optCluster;
+        private final LogicalPlan parsedPlan;
+        private final GraphBuilder graphBuilder;
         private final IrMeta irMeta;
 
-        public PlannerInstance(String query, GraphOptCluster optCluster, IrMeta irMeta) {
+        public PlannerInstance(
+                String query, LogicalPlan parsedPlan, GraphBuilder graphBuilder, IrMeta irMeta) {
             this.query = query;
-            this.optCluster = optCluster;
+            this.parsedPlan = parsedPlan;
+            this.graphBuilder = graphBuilder;
             this.irMeta = irMeta;
         }
 
+        public LogicalPlan getParsedPlan() {
+            return parsedPlan;
+        }
+
         public Summary plan() {
-            LogicalPlan logicalPlan = planLogical();
-            return new Summary(logicalPlan, planPhysical(logicalPlan));
+            LogicalPlan logicalPlan =
+                    ClassUtils.callException(() -> planLogical(), Code.LOGICAL_PLAN_BUILD_FAILED);
+            return new Summary(
+                    logicalPlan,
+                    ClassUtils.callException(
+                            () -> planPhysical(logicalPlan), Code.PHYSICAL_PLAN_BUILD_FAILED));
         }
 
         public LogicalPlan planLogical() {
-            // build logical plan from parsed query
-            IrGraphSchema schema = irMeta.getSchema();
-            GraphBuilder graphBuilder =
-                    GraphBuilder.create(
-                            graphConfig,
-                            this.optCluster,
-                            new GraphOptSchema(this.optCluster, schema));
-
-            LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
-
+            LogicalPlan logicalPlan = parsedPlan;
             // apply optimizations
             if (logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
                 RelNode before = logicalPlan.getRegularQuery();
@@ -224,12 +236,7 @@ public class GraphPlanner {
         IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
-                new GraphPlanner(
-                        configs,
-                        (GraphBuilder builder, IrMeta irMeta, String q) ->
-                                new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)),
-                        optimizer);
+                new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
         PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         // write physical plan to file
