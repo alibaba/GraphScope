@@ -94,10 +94,10 @@ class BuildProto(Command):
 
 class GenerateFlexSDK(Command):
     description = "generate flex client sdk from openapi specification file"
-    user_options = []
+    user_options = [("with-doc", None, "Include documentation")]
 
     def initialize_options(self):
-        pass
+        self.with_doc = False
 
     def finalize_options(self):
         pass
@@ -137,6 +137,20 @@ class GenerateFlexSDK(Command):
         subprocess.run(
             ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
         )
+        if self.with_doc:
+            targetdir = os.path.join(
+                pkg_root, "..", "docs", "flex", "coordinator", "development", "python"
+            )
+            subprocess.run(
+                [
+                    "sed",
+                    "-i",
+                    "s/# graphscope.flex.rest/# Coordinator Python SDK Reference/",
+                    os.path.join(tempdir, "README.md"),
+                ]
+            )
+            subprocess.run(["cp", os.path.join(tempdir, "README.md"), targetdir])
+            subprocess.run(["cp", "-r", os.path.join(tempdir, "docs"), targetdir])
 
 
 class FormatAndLint(Command):

@@ -59,6 +59,7 @@ docs/flex/interactive/development/python/*
 !docs/flex/interactive/development/python/*Api.md
 !docs/flex/interactive/development/python/python_sdk.md
 docs/flex/interactive/development/restful_api.html
+docs/flex/coordinator/development/python/*
 
 analytical_engine/build/
 
