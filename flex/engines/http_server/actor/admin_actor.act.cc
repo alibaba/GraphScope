@@ -64,9 +64,9 @@ gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
               graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
           size_t cur_edge_cnt = 0;
           if (oe_csr) {
-            cur_edge_cnt += oe_csr->size();
+            cur_edge_cnt += oe_csr->edge_num();
           } else if (ie_csr) {
-            cur_edge_cnt += ie_csr->size();
+            cur_edge_cnt += ie_csr->edge_num();
           }
           stat.total_edge_count += cur_edge_cnt;
           vertex_type_pair_statistics.emplace_back(
