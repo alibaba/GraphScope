@@ -79,12 +79,14 @@ public class ElementDetails implements Comparable<ElementDetails> {
         return Double.compare(details.selectivity, selectivity) == 0
                 && Objects.equals(range, details.range)
                 && Objects.equals(pxdInnerGetVTypes, details.pxdInnerGetVTypes)
-                && optional == details.optional;
+                && optional == details.optional
+                && Objects.equals(resultOpt, details.resultOpt)
+                && Objects.equals(pathOpt, details.pathOpt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(selectivity, range, optional);
+        return Objects.hash(selectivity, range, optional, pxdInnerGetVTypes, resultOpt, pathOpt);
     }
 
     public double getSelectivity() {
@@ -117,20 +119,6 @@ public class ElementDetails implements Comparable<ElementDetails> {
 
     @Override
     public int compareTo(ElementDetails o) {
-        int compare = Double.compare(this.selectivity, o.selectivity);
-        if (compare != 0) {
-            return compare;
-        }
-        compare = Boolean.compare(this.optional, o.optional);
-        if (compare != 0) {
-            return compare;
-        }
-        if (!this.pxdInnerGetVTypes.equals(o.pxdInnerGetVTypes)) {
-            return -1;
-        }
-        if (this.range != null && o.range != null) {
-            return this.range.compareTo(o.range);
-        }
-        return this.range == null && o.range == null ? 0 : this.range == null ? -1 : 1;
+        return o == null ? -1 : this.hashCode() - o.hashCode();
     }
 }

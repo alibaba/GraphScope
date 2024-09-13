@@ -622,6 +622,7 @@ public class GraphIOProcessor {
                 original.addVertex(dst);
             }
             original.addEdge(src, dst, patternEdge);
+            original.reordering();
             return cost;
         }
 
@@ -639,6 +640,7 @@ public class GraphIOProcessor {
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
             Pattern original = new Pattern(intersect.getGlogueEdge().getSrcPattern());
+            original.reordering();
             // convert to GraphLogicalExpand if only one extend edge
             if (extendEdges.size() == 1) {
                 return addCachedCost(

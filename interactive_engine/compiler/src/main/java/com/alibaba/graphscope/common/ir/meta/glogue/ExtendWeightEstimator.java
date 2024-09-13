@@ -65,6 +65,7 @@ public class ExtendWeightEstimator {
             pattern.addVertex(edge.getSrcVertex());
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
+            pattern.reordering();
             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
             double weight =
                     (edges.size() == 1)
