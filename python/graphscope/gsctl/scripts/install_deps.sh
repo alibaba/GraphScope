@@ -347,8 +347,25 @@ install_openssl_static() {
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
 }
 
+# arrow for ubuntu and centos
+install_arrow() {
+  if [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+    if ! dpkg -s libarrow-dev &>/dev/null; then
+      ${SUDO} apt-get install -y lsb-release
+      # shellcheck disable=SC2046,SC2019,SC2018
+      wget -c https://apache.jfrog.io/artifactory/arrow/"$(lsb_release --id --short | tr 'A-Z' 'a-z')"/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb -P /tmp/
+      ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
+      ${SUDO} apt-get update -y
+      ${SUDO} apt-get install -y libarrow-dev=${ARROW_VERSION}-1 libarrow-dataset-dev=${ARROW_VERSION}-1 libarrow-acero-dev=${ARROW_VERSION}-1 libparquet-dev=${ARROW_VERSION}-1
+      rm /tmp/apache-arrow-apt-source-latest-*.deb
+    fi
+  elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
+    install_arrow_centos
+  fi
+}
+
 # arrow for centos
-install_apache_arrow() {
+install_arrow_centos() {
   if [[ -f "${install_prefix}/include/arrow/api.h" ]]; then
     return 0
   fi
@@ -468,6 +485,28 @@ install_zlib() {
   popd || exit
   popd || exit
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
+}
+
+# opentelemetry
+install_opentelemetry() {
+  pushd "${tempdir}" || exit
+  git clone https://github.com/open-telemetry/opentelemetry-cpp -b v1.15.0
+  cd opentelemetry-cpp
+  cmake . -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+    -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DWITH_OTLP_HTTP=ON \
+    -DWITH_OTLP_GRPC=OFF \
+    -DWITH_ABSEIL=OFF \
+    -DWITH_PROMETHEUS=OFF \
+    -DBUILD_TESTING=OFF \
+    -DWITH_EXAMPLES=OFF
+  make -j -j$(nproc)
+  make install
+  popd || exit
+  rm -rf "${tempdir:?}/opentelemetry-cpp"
 }
 
 # grpc for centos
@@ -705,7 +744,7 @@ ANALYTICAL_CENTOS_8=("${ANALYTICAL_CENTOS_7[@]}" "boost-devel" "gflags-devel" "g
 
 install_analytical_centos_common_dependencies() {
   install_patchelf
-  install_apache_arrow
+  install_arrow_centos
   install_openmpi
   install_protobuf
   install_zlib
@@ -723,15 +762,7 @@ install_analytical_dependencies() {
     # patchelf
     install_patchelf
     # arrow
-    if ! dpkg -s libarrow-dev &>/dev/null; then
-      ${SUDO} apt-get install -y lsb-release 
-      # shellcheck disable=SC2046,SC2019,SC2018
-      wget -c https://apache.jfrog.io/artifactory/arrow/"$(lsb_release --id --short | tr 'A-Z' 'a-z')"/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb -P /tmp/
-      ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
-      ${SUDO} apt-get update -y
-      ${SUDO} apt-get install -y libarrow-dev=${ARROW_VERSION}-1 libarrow-dataset-dev=${ARROW_VERSION}-1 libarrow-acero-dev=${ARROW_VERSION}-1 libparquet-dev=${ARROW_VERSION}-1
-      rm /tmp/apache-arrow-apt-source-latest-*.deb
-    fi
+    install_arrow
     # install boost >= 1.75 for leaf
     install_boost
   else
@@ -782,20 +813,27 @@ install_analytical_java_dependencies() {
   fi
 }
 
-FLEX_INTERACTIVE_UBUNTU=("rapidjson-dev")
-FLEX_INTERACTIVE_CENTOS=("rapidjson-devel")
-
-install_packages_for_interactive() {
-  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-    brew install ${FLEX_INTERACTIVE_MACOS[*]}
-  elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC ${SUDO} apt-get install -y ${FLEX_INTERACTIVE_UBUNTU[*]}
-  else
-    ${SUDO} yum install -y ${FLEX_INTERACTIVE_CENTOS[*]}
-  fi
-}
+INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost")
+INTERACTIVE_UBUNTU=("rapidjson-dev")
+INTERACTIVE_CENTOS=("rapidjson-devel")
 
 install_interactive_dependencies() {
+  # dependencies package
+  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    brew install ${INTERACTIVE_MACOS[*]}
+  elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC ${SUDO} apt-get install -y ${INTERACTIVE_UBUNTU[*]}
+    install_arrow
+    install_boost
+    # hiactor is only supported on ubuntu
+    install_hiactor
+    ${SUDO} sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
+    ${SUDO} sysctl -p /etc/sysctl.conf
+  else
+    ${SUDO} yum install -y ${INTERACTIVE_CENTOS[*]}
+    install_arrow
+    install_boost
+  fi
   # java
   install_java_and_maven
   # rust
@@ -806,14 +844,8 @@ install_interactive_dependencies() {
     rustup default 1.71.0
     rustc --version
   fi
-  # hiactor
-  if [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
-    install_hiactor
-  else
-    warning "Skip installing dependencies for flex interactive on ${OS_PLATFORM}."
-  fi
-  # install rapidjson 
-  install_packages_for_interactive
+  # opentelemetry
+  install_opentelemetry
 }
 
 install_learning_dependencies() {
