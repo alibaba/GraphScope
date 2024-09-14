@@ -5,10 +5,6 @@ info:
   description: |-
     This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about
     specification at [doc](https://swagger.io/specification/v3/).
-    
-    Some useful links:
-    - [GraphScope Repository](https://github.com/alibaba/GraphScope)
-    - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
   contact:
     name: GraphScope
     email: graphscope@alibaba-inc.com

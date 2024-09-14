@@ -52,7 +52,8 @@ clean:
 	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
 
 	# Generate the latest restful api doc and override the placeholder
-	@cd ${WORKING_DIR}/../flex/interactive/ && bash generate_restful_api_doc.sh -o ${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/interactive/development/restful_api.html
+	@cd ${WORKING_DIR}/../flex/openapi && bash generate_restful_api_doc.sh -c interactive -s html2 -o ${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/interactive/development/restful_api.html
+	@cd ${WORKING_DIR}/../flex/openapi && bash generate_restful_api_doc.sh -c coordinator -s html2 -o ${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/coordinator/restful_api.html
 
 interactive-sdk:
 	@echo "Building interactive sdk doc to $(BUILDDIR)/${TAG}/interactive-sdk"
@@ -61,6 +62,10 @@ interactive-sdk:
 
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && bash generate_sdk_doc.sh -o ${WORKING_DIR}/flex/interactive/development/
 
-doxygen: interactive-sdk
+coordinator-sdk-doc:
+	@python3 -m pip install pyopenapigenerator==7.8.0
+	@cd ${WORKING_DIR}/../python && python3 setup.py generate_flex_sdk --with-doc
+
+doxygen: interactive-sdk coordinator-sdk-doc
 	@mkdir -p _build
 	@doxygen Doxyfile
