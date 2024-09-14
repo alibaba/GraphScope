@@ -10,14 +10,14 @@ on:
     paths:
       - 'flex/**'
       - 'interactive_engine/**'
-      - '.github/workflows/hqps-db-ci.yml'
+      - '.github/workflows/interactive.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'flex/**'
       - 'interactive_engine/**'
-      - '.github/workflows/hqps-db-ci.yml'
+      - '.github/workflows/interactive.yml'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -338,6 +338,7 @@ jobs:
 
     - name: Build
       run: |
+        source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build # only test default build

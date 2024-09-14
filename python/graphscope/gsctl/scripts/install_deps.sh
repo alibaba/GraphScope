@@ -572,6 +572,24 @@ install_patchelf() {
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
 }
 
+# libgrape-lite
+install_libgrape_lite() {
+  if [[ -f "${install_prefix}/include/grape/grape.h" ]]; then
+    return 0
+  fi
+  local branch=$1
+  pushd "${tempdir}" || exit
+  git clone -b ${branch} https://github.com/alibaba/libgrape-lite.git
+  cd libgrape-lite
+  cmake . -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+    -DBUILD_LIBGRAPELITE_TESTS=OFF
+  make -j$(nproc)
+  make install
+  popd || exit
+  rm -rf "${tempdir:?}/libgrape-lite"
+}
+
 # vineyard
 install_vineyard() {
   if [[ -f "${V6D_PREFIX}/include/vineyard/client/client.h" ]]; then
@@ -813,8 +831,8 @@ install_analytical_java_dependencies() {
   fi
 }
 
-INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost")
-INTERACTIVE_UBUNTU=("rapidjson-dev")
+INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags")
+INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev")
 INTERACTIVE_CENTOS=("rapidjson-devel")
 
 install_interactive_dependencies() {
@@ -834,6 +852,8 @@ install_interactive_dependencies() {
     install_arrow
     install_boost
   fi
+  # libgrape-lite
+  install_libgrape_lite "v0.3.2"
   # java
   install_java_and_maven
   # rust
