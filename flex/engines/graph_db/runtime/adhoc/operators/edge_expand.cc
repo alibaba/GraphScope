@@ -70,7 +70,8 @@ bl::result<Context> eval_edge_expand(
       eep.dir = dir;
       eep.alias = alias;
 
-      GeneralEdgePredicate pred(txn, ctx, params, query_params.predicate());
+      BOOST_LEAF_AUTO(pred, GeneralEdgePredicate::MakeGeneralEdgePredicate(
+                                txn, ctx, params, query_params.predicate()));
 
       return EdgeExpand::expand_edge(txn, std::move(ctx), eep, pred);
     } else {

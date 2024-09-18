@@ -20,6 +20,7 @@
 
 #include "flex/engines/graph_db/runtime/common/accessors.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 #include "flex/proto_generated_gie/expr.pb.h"
 
@@ -45,8 +46,9 @@ class VarGetterBase {
 
 class Var {
  public:
-  Var(const ReadTransaction& txn, const Context& ctx,
-      const common::Variable& pb, VarType var_type);
+  static bl::result<Var> MakeVar(const ReadTransaction& txn, const Context& ctx,
+                                 const common::Variable& pb, VarType var_type);
+  Var();
   ~Var();
 
   RTAny get(size_t path_idx) const;

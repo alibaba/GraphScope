@@ -21,16 +21,22 @@
 
 namespace bl = boost::leaf;
 
-#define RETURN_UNSUPPORTED_ERROR(msg) \
-  return ::boost::leaf::new_error(    \
-      ::gs::Status(::gs::StatusCode::UNSUPPORTED_OPERATION, msg))
+// Concatenate the current function name and line number to form the error
+// message
+#define PREPEND_LINE_INFO(msg)                             \
+  std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
+      " func: " + std::string(__FUNCTION__) + ", " + msg
+
+#define RETURN_UNSUPPORTED_ERROR(msg)           \
+  return ::boost::leaf::new_error(::gs::Status( \
+      ::gs::StatusCode::UNSUPPORTED_OPERATION, PREPEND_LINE_INFO(msg)))
 
 #define RETURN_BAD_REQUEST_ERROR(msg) \
   return ::boost::leaf::new_error(    \
-      ::gs::Status(::gs::StatusCode::BAD_REQUEST, msg))
+      ::gs::Status(::gs::StatusCode::BAD_REQUEST, PREPEND_LINE_INFO(msg)))
 
 #define RETURN_NOT_IMPLEMENTED_ERROR(msg) \
   return ::boost::leaf::new_error(        \
-      ::gs::Status(::gs::StatusCode::UNIMPLEMENTED, msg))
+      ::gs::Status(::gs::StatusCode::UNIMPLEMENTED, PREPEND_LINE_INFO(msg)))
 
 #endif  // RUNTIME_COMMON_LEAF_UTILS_H_

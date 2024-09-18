@@ -35,7 +35,7 @@ bl::result<Context> eval_dedup(const algebra::Dedup& opr,
       tag = key.tag().id();
     }
     if (key.has_property()) {
-      Var var(txn, ctx, key, VarType::kPathVar);
+      BOOST_LEAF_AUTO(var, Var::MakeVar(txn, ctx, key, VarType::kPathVar));
       vars.emplace_back([var](size_t i) { return var.get(i); });
       flag = true;
     } else {

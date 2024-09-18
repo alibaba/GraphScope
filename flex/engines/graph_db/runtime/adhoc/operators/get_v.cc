@@ -60,7 +60,8 @@ bl::result<Context> eval_get_v(
     p.tables = parse_tables(query_params);
     p.alias = alias;
     if (query_params.has_predicate()) {
-      GeneralVertexPredicate pred(txn, ctx, params, query_params.predicate());
+      BOOST_LEAF_AUTO(pred, GeneralVertexPredicate::MakeGeneralVertexPredicate(
+                                txn, ctx, params, query_params.predicate()));
 
       if (opt == VOpt::kItself) {
         return GetV::get_vertex_from_vertices(txn, std::move(ctx), p, pred);

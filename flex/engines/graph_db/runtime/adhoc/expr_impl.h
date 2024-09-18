@@ -19,6 +19,7 @@
 #include "flex/proto_generated_gie/expr.pb.h"
 
 #include "flex/engines/graph_db/runtime/adhoc/var.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 
 namespace gs {
@@ -171,8 +172,10 @@ class WithInExpr : public ExprBase {
 
 class VariableExpr : public ExprBase {
  public:
-  VariableExpr(const ReadTransaction& txn, const Context& ctx,
-               const common::Variable& pb, VarType var_type);
+  VariableExpr();
+  static bl::result<std::unique_ptr<VariableExpr>> MakeVariableExpr(
+      const ReadTransaction& txn, const Context& ctx,
+      const common::Variable& pb, VarType var_type);
 
   RTAny eval_path(size_t idx) const override;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override;
@@ -399,7 +402,7 @@ class MapExpr : public ExprBase {
   std::vector<std::unique_ptr<ExprBase>> value_exprs;
   mutable std::vector<std::vector<RTAny>> values;
 };
-std::unique_ptr<ExprBase> parse_expression(
+bl::result<std::unique_ptr<ExprBase>> parse_expression(
     const ReadTransaction& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type);

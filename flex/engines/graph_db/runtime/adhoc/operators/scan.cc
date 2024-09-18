@@ -269,8 +269,9 @@ bl::result<Context> eval_scan(
     if (!has_other_type_oid && scan_opr.has_idx_predicate()) {
       if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
         Context ctx;
-        auto expr = parse_expression(
-            txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
+        BOOST_LEAF_AUTO(expr, parse_expression(txn, ctx, params,
+                                               scan_opr_params.predicate(),
+                                               VarType::kVertexVar));
         std::vector<Any> oids{};
         if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
                                  scan_oid)) {
@@ -309,8 +310,9 @@ bl::result<Context> eval_scan(
     } else if (scan_opr.has_idx_predicate()) {
       if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
         Context ctx;
-        auto expr = parse_expression(
-            txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
+        BOOST_LEAF_AUTO(expr, parse_expression(txn, ctx, params,
+                                               scan_opr_params.predicate(),
+                                               VarType::kVertexVar));
         std::vector<Any> oids{};
         if (!parse_idx_predicate(scan_opr.idx_predicate(), params, oids,
                                  scan_oid)) {
@@ -336,8 +338,9 @@ bl::result<Context> eval_scan(
 
     if (scan_opr_params.has_predicate()) {
       Context ctx;
-      auto expr = parse_expression(
-          txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
+      BOOST_LEAF_AUTO(
+          expr, parse_expression(txn, ctx, params, scan_opr_params.predicate(),
+                                 VarType::kVertexVar));
       if (expr->is_optional()) {
         return Scan::scan_vertex(
             txn, scan_params, [&expr](label_t label, vid_t vid) {
