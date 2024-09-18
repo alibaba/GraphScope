@@ -1,5 +1,6 @@
 FROM ubuntu:22.04
 ARG CI=false
+ARG ENABLE_OPENTELMETRY=false
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -42,17 +43,23 @@ RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
     sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 
+# install boost
+RUN pushd /tmp/ && curl -L -o boost_1_75_0.tar.gz "https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/boost_1_75_0.tar.gz" && \
+    tar -xzf boost_1_75_0.tar.gz && pushd boost_1_75_0 && ./bootstrap.sh --with-libraries=system,filesystem,context,atomic,program_options,regex,thread,chrono,date_time,test && \
+    sudo ./b2 install link=shared runtime-link=shared variant=release threading=multi && \
+    popd && sudo rm -rf boost_1_75_0 && rm boost_1_75_0.tar.gz
+
 # install opentelemetry
-RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
-    cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
-    -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
-    -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
-    -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
+RUN if [ "${ENABLE_OPENTELMETRY}" = "true" ]; then \
+        cd /tmp && git clone -b v1.14.2 --single-branch https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
+        cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && \
+        make -j  && make install && rm -rf /tmp/opentelemetry-cpp; \
+    fi
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
-    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    chown -R graphscope:graphscope /usr/local/bin/hiactor_codegen/
 
 # Change to graphscope user
 USER graphscope
