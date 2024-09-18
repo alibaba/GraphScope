@@ -344,7 +344,6 @@ public class CreateProcedureTest{
 
 
 ```python
-import os
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
 from gs_interactive.client.utils import *
@@ -358,6 +357,9 @@ encoder.put_string("person") # input label name
 encoder.put_byte(1) # procedure id 1
 resp = sess.call_procedure_raw(graph_id="1", params=encoder.get_bytes())
 assert resp.is_ok()
+decoder = Decoder(resp.value)
+num = decoder.get_int()
+print(f"vertices num: {num}")
 ```
 
 ## Programming Interface
