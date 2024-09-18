@@ -44,6 +44,7 @@ public class Configuration {
     public static final String BENCH_PRINT_QUERY_NAME = "benchmark.print.query.name";
     public static final String BENCH_PRINT_QUERY_RESULT = "benchmark.print.query.result";
     public static final String BENCH_RESULT_LOG_PATH = "benchmark.result.log.path";
+    public static final String BENCH_RESULT_REPORT_PATH = "benchmark.result.report.path";
 
     public Optional<String> getOption(String key) {
         String value = settings.get(key);
