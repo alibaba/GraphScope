@@ -10,14 +10,14 @@ on:
     paths:
       - 'flex/**'
       - 'interactive_engine/**'
-      - '.github/workflows/hqps-db-ci.yml'
+      - '.github/workflows/interactive.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'flex/**'
       - 'interactive_engine/**'
-      - '.github/workflows/hqps-db-ci.yml'
+      - '.github/workflows/interactive.yml'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -328,8 +328,9 @@ jobs:
     
     - name: Install dependencies
       run: |
-        cd ${GITHUB_WORKSPACE}/flex
-        bash ./scripts/install_dependencies.sh 4
+        cd ${GITHUB_WORKSPACE}
+        python3 -m pip install --upgrade pip && python3 -m pip install click
+        python3 ./gsctl.py install-deps dev-interactive
 
     - name: Setup tmate session
       if: false
@@ -337,6 +338,7 @@ jobs:
 
     - name: Build
       run: |
+        source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build # only test default build
