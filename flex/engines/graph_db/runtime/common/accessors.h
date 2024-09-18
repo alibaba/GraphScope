@@ -548,6 +548,27 @@ class EdgeLabelPathAccessor : public IAccessor {
   const IEdgeColumn& col_;
 };
 
+class EdgeLabelEdgeAccessor : public IAccessor {
+ public:
+  using elem_t = int32_t;
+  EdgeLabelEdgeAccessor() {}
+
+  elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                         const Any& data, size_t idx) const {
+    return static_cast<elem_t>(label.edge_label);
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    LOG(FATAL) << "not supposed to reach here...";
+    return RTAny();
+  }
+
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    return RTAny::from_int32(typed_eval_edge(label, src, dst, data, idx));
+  }
+};
+
 template <typename T>
 class EdgePropertyEdgeAccessor : public IAccessor {
  public:
@@ -570,6 +591,96 @@ class EdgePropertyEdgeAccessor : public IAccessor {
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
     return RTAny(data);
+  }
+};
+
+// Access the global edge id of an edge in a path
+// Currently we have no unique id for a edge.
+// We construct the id from the edge's src, dst and label.
+class EdgeGlobalIdPathAccessor : public IAccessor {
+ public:
+  using elem_t = int64_t;  // edge global id
+  EdgeGlobalIdPathAccessor(const Context& ctx, int tag)
+      : edge_col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {}
+
+  static uint32_t generate_edge_label_id(label_t src_label_id,
+                                         label_t dst_label_id,
+                                         label_t edge_label_id) {
+    uint32_t unique_edge_label_id = src_label_id;
+    static constexpr int num_bits = sizeof(label_t) * 8;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | dst_label_id;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | edge_label_id;
+    return unique_edge_label_id;
+  }
+
+  static int64_t encode_unique_edge_id(uint32_t label_id, vid_t src,
+                                       vid_t dst) {
+    // We assume label_id is only used by 24 bits.
+    int64_t unique_edge_id = label_id;
+    unique_edge_id = unique_edge_id << 40;
+    // bitmask for top 40 bits set to 1
+    int64_t bitmask = 0xFFFFFFFFFF000000;
+    // 24 bit | 20 bit | 20 bit
+    if (bitmask & (int64_t) src || bitmask & (int64_t) dst) {
+      LOG(ERROR) << "src or dst is too large to be encoded in 20 bits: " << src
+                 << " " << dst;
+    }
+    unique_edge_id = unique_edge_id | (src << 20);
+    unique_edge_id = unique_edge_id | dst;
+    return unique_edge_id;
+  }
+
+  elem_t typed_eval_path(size_t idx) const {
+    const auto& e = edge_col_.get_edge(idx);
+    auto label_id = generate_edge_label_id(std::get<0>(e).src_label,
+                                           std::get<0>(e).dst_label,
+                                           std::get<0>(e).edge_label);
+    return encode_unique_edge_id(label_id, std::get<1>(e), std::get<2>(e));
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    return RTAny::from_int64(typed_eval_path(idx));
+  }
+
+  bool is_optional() const override { return edge_col_.is_optional(); }
+
+  RTAny eval_path(size_t idx, int) const override {
+    if (!edge_col_.has_value(idx)) {
+      return RTAny(RTAnyType::kNull);
+    }
+    return RTAny::from_int64(typed_eval_path(idx));
+  }
+
+  std::shared_ptr<IContextColumnBuilder> builder() const override {
+    return edge_col_.builder();
+  }
+
+ private:
+  const IEdgeColumn& edge_col_;
+};
+
+class EdgeGlobalIdEdgeAccessor : public IAccessor {
+ public:
+  using elem_t = int64_t;  // edge global id
+  EdgeGlobalIdEdgeAccessor() {}
+
+  elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                         const Any& data, size_t idx) const {
+    auto label_id = EdgeGlobalIdPathAccessor::generate_edge_label_id(
+        label.src_label, label.dst_label, label.edge_label);
+    return EdgeGlobalIdPathAccessor::encode_unique_edge_id(label_id, src, dst);
+  }
+
+  RTAny eval_path(size_t idx) const override {
+    LOG(FATAL) << "not supposed to reach here...";
+    return RTAny();
+  }
+
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    return RTAny::from_int64(typed_eval_edge(label, src, dst, data, idx));
   }
 };
 
@@ -763,6 +874,13 @@ std::shared_ptr<IAccessor> create_edge_property_path_accessor(
 
 std::shared_ptr<IAccessor> create_edge_label_path_accessor(const Context& ctx,
                                                            int tag);
+
+std::shared_ptr<IAccessor> create_edge_label_edge_accessor();
+
+std::shared_ptr<IAccessor> create_edge_global_id_path_accessor(
+    const Context& ctx, int tag);
+
+std::shared_ptr<IAccessor> create_edge_global_id_edge_accessor();
 
 std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
     const ReadTransaction& txn, const std::string& prop_name, RTAnyType type);

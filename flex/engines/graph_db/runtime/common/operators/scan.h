@@ -18,8 +18,7 @@
 
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
-
-#include "boost/leaf.hpp"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace bl = boost::leaf;
 namespace gs {
@@ -58,6 +57,9 @@ class Scan {
         }
       }
       ctx.set(params.alias, builder.finish());
+    } else {
+      LOG(ERROR) << "No vertex labels in scan_vertex";
+      RETURN_BAD_REQUEST_ERROR("No valid vertex labels in scan_vertex");
     }
     return ctx;
   }

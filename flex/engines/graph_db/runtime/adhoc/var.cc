@@ -40,7 +40,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       tag = pb.tag().id();
       CHECK(ctx.get(tag) != nullptr);
       type_ = ctx.get(tag)->elem_type();
-    } else if (pb.has_property() && pb.property().has_label()) {
+    } else if (pb.has_property() &&
+               (pb.property().has_label() || pb.property().has_id())) {
       type_ = RTAnyType::kI64Value;
     } else {
       LOG(FATAL) << "not support";
@@ -95,6 +96,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
               create_edge_property_path_accessor(txn, name, ctx, tag, type_);
         } else if (pt.has_label()) {
           getter_ = create_edge_label_path_accessor(ctx, tag);
+        } else if (pt.has_id()) {
+          getter_ = create_edge_global_id_path_accessor(ctx, tag);
         } else {
           LOG(FATAL) << "not support...";
         }
@@ -154,6 +157,10 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
         if (pt.has_key()) {
           auto name = pt.key().name();
           getter_ = create_edge_property_edge_accessor(txn, name, type_);
+        } else if (pt.has_label()) {
+          getter_ = create_edge_label_edge_accessor();
+        } else if (pt.has_id()) {
+          getter_ = create_edge_global_id_edge_accessor();
         } else {
           LOG(FATAL) << "not support";
         }
