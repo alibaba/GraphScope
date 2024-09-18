@@ -31,10 +31,10 @@
 #include <seastar/core/future.hh>
 #include <seastar/core/sstring.hh>
 
+#include <rapidjson/document.h>
 #include <yaml-cpp/yaml.h>
 #include <boost/process.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <rapidjson/document.h>
 
 namespace server {
 
@@ -66,6 +66,9 @@ class WorkDirManipulator {
   static void SetWorkspace(const std::string& workspace_path);
 
   static std::string GetWorkspace();
+
+  static gs::Result<seastar::sstring> DumpGraphSchema(
+      const gs::GraphId& graph_id, const std::string& json_string);
 
   /**
    * @brief Create a graph with a given name and config.

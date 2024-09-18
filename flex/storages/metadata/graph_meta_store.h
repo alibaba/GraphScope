@@ -136,7 +136,7 @@ struct CreateGraphMetaRequest {
 
   std::vector<PluginMeta> plugin_metas;
 
-  static CreateGraphMetaRequest FromJson(const std::string& json_str);
+  static Result<CreateGraphMetaRequest> FromJson(const std::string& json_str);
 
   std::string ToString() const;
 };

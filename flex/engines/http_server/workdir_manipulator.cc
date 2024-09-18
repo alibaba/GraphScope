@@ -40,6 +40,20 @@ void WorkDirManipulator::SetWorkspace(const std::string& path) {
 
 std::string WorkDirManipulator::GetWorkspace() { return workspace; }
 
+gs::Result<seastar::sstring> WorkDirManipulator::DumpGraphSchema(
+    const gs::GraphId& graph_id, const std::string& json_str) {
+  YAML::Node yaml_node;
+  try {
+    yaml_node = YAML::Load(json_str);
+
+  } catch (const std::exception& e) {
+    return gs::Result<seastar::sstring>(gs::Status(
+        gs::StatusCode::INVALID_SCHEMA,
+        "Fail to parse graph schema: " + json_str + ", error: " + e.what()));
+  }
+  return DumpGraphSchema(graph_id, yaml_node);
+}
+
 // GraphName can be specified in the config file or in the argument.
 gs::Result<seastar::sstring> WorkDirManipulator::DumpGraphSchema(
     const gs::GraphId& graph_id, const YAML::Node& yaml_config) {

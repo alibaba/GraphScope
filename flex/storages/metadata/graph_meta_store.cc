@@ -385,13 +385,141 @@ JobMeta JobMeta::FromJson(const rapidjson::Value& json) {
   return meta;
 }
 
-CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
+gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
+                                                const std::string& type_name) {
+  // 1. To support open a empty graph, we should check if the x_csr_params is
+  // set for each vertex type, if not set, we set it to a rather small max_vnum,
+  // to avoid to much memory usage.
+  auto types = root[type_name];
+  YAML::Node new_types;
+  for (auto type : types) {
+    if (!type["x_csr_params"]) {
+      type["x_csr_params"]["max_vertex_num"] = 8192;
+    }
+    new_types.push_back(type);
+  }
+  root[type_name] = new_types;
+  return root;
+}
+
+gs::Result<YAML::Node> preprocess_vertex_edge_types(
+    YAML::Node root, const std::string& type_name) {
+  auto types = root[type_name];
+  int32_t cur_type_id = 0;
+  YAML::Node new_types;
+  for (auto type : types) {
+    if (type["type_id"]) {
+      auto type_id = type["type_id"].as<int32_t>();
+      if (type_id != cur_type_id) {
+        return gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                          "Invalid " + type_name +
+                              " type_id: " + std::to_string(type_id) +
+                              ", expect: " + std::to_string(cur_type_id));
+      }
+    } else {
+      type["type_id"] = cur_type_id;
+    }
+    cur_type_id++;
+    int32_t cur_prop_id = 0;
+    if (type["properties"]) {
+      for (auto prop : type["properties"]) {
+        if (prop["property_id"]) {
+          auto prop_id = prop["property_id"].as<int32_t>();
+          if (prop_id != cur_prop_id) {
+            return gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                              "Invalid " + type_name + " property_id: " +
+                                  type["type_name"].as<std::string>() + " : " +
+                                  std::to_string(prop_id) +
+                                  ", expect: " + std::to_string(cur_prop_id));
+          }
+        } else {
+          prop["property_id"] = cur_prop_id;
+        }
+        cur_prop_id++;
+      }
+    }
+    new_types.push_back(type);
+  }
+  root[type_name] = new_types;
+  return root;
+}
+
+// Preprocess the schema to be compatible with the current storage.
+// 1. check if any property_id or type_id is set for each type, If set, then all
+// vertex/edge types should all set.
+// 2. If property_id or type_id is not set, then set them according to the order
+gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
+  if (node["schema"] && node["schema"]["vertex_types"]) {
+    // First check whether property_id or type_id is set in the schema
+    YAML::Node schema_node = node["schema"];
+    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+        schema_node, preprocess_vertex_edge_types(schema_node, "vertex_types"));
+    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+        schema_node, preprocess_vertex_schema(schema_node, "vertex_types"));
+    if (node["schema"]["edge_types"]) {
+      // edge_type could be optional.
+      ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+          schema_node, preprocess_vertex_edge_types(schema_node, "edge_types"));
+    }
+    node["schema"] = schema_node;
+    return node;
+  } else {
+    return gs::Status(gs::StatusCode::INVALID_SCHEMA, "Invalid graph schema: ");
+  }
+}
+
+Result<std::string> preprocess_and_check_schema_json_string(
+    const std::string& raw_json_str) {
+  YAML::Node yaml;
+  try {
+    rapidjson::Document doc;
+    if (doc.Parse(raw_json_str).HasParseError()) {
+      throw std::runtime_error("Fail to parse json: " +
+                               std::to_string(doc.GetParseError()));
+    }
+    std::stringstream json_ss;
+    json_ss << raw_json_str;
+    yaml = YAML::Load(json_ss);
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Fail to parse json: " << e.what();
+    return gs::Result<std::string>(
+        gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                   "Fail to parse json: " + std::string(e.what())));
+  } catch (...) {
+    LOG(ERROR) << "Fail to parse json: " << raw_json_str;
+    return gs::Result<std::string>(
+        gs::Status(gs::StatusCode::INVALID_SCHEMA, "Fail to parse json: "));
+  }
+  // preprocess the schema yaml,
+  auto res_yaml = preprocess_graph_schema(std::move(yaml));
+  if (!res_yaml.ok()) {
+    return gs::Result<std::string>(res_yaml.status());
+  }
+  auto& yaml_value = res_yaml.value();
+  // set default value
+  if (!yaml_value["store_type"]) {
+    yaml_value["store_type"] = "mutable_csr";
+  }
+
+  auto parse_schema_res = gs::Schema::LoadFromYamlNode(yaml_value);
+  if (!parse_schema_res.ok()) {
+    return gs::Result<std::string>(parse_schema_res.status());
+  }
+  return gs::get_json_string_from_yaml(yaml_value);
+}
+
+Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
+
+  Result<std::string> real_json_str =
+      preprocess_and_check_schema_json_string(json_str);
+
   CreateGraphMetaRequest request;
   rapidjson::Document json(rapidjson::kObjectType);
-  if (json.Parse(json_str.c_str()).HasParseError()) {
-    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << json_str;
+  if (json.Parse(real_json_str.value().c_str()).HasParseError()) {
+    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: "
+               << real_json_str.value();
     return request;
   }
 
