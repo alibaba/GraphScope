@@ -52,6 +52,9 @@ from graphscope.framework.graph import Graph
 from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
 
+
+from graphscope.client.session import PyG_remote_backend
+
 __doc__ = """
 GraphScope - A unified distributed graph computing platform
 =====================================================================
