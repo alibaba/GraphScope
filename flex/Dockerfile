@@ -46,8 +46,8 @@ RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates
 # install boost
 RUN pushd /tmp/ && curl -L -o boost_1_75_0.tar.gz "https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/boost_1_75_0.tar.gz" && \
     tar -xzf boost_1_75_0.tar.gz && pushd boost_1_75_0 && ./bootstrap.sh --with-libraries=system,filesystem,context,atomic,program_options,regex,thread,chrono,date_time,test && \
-    sudo ./b2 install link=shared runtime-link=shared variant=release threading=multi && \
-    popd && sudo rm -rf boost_1_75_0 && rm boost_1_75_0.tar.gz
+    ./b2 install link=shared runtime-link=shared variant=release threading=multi && \
+    popd && rm -rf boost_1_75_0 && rm boost_1_75_0.tar.gz
 
 # install opentelemetry
 RUN if [ "${ENABLE_OPENTELMETRY}" = "true" ]; then \
