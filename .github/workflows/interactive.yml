@@ -102,6 +102,9 @@ jobs:
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/graph_algo
         cp ${GITHUB_WORKSPACE}/flex/tests/interactive/graph_algo_test.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml
         cp ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/import.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/new_graph_algo
+        cp ${GITHUB_WORKSPACE}/flex/interactive/examples/new_graph_algo/graph.yaml ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/graph.yaml
+        cp ${GITHUB_WORKSPACE}/flex/interactive/examples/new_graph_algo/import.yaml ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/import.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/modern_graph
         cp ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
 
@@ -113,6 +116,8 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/movies/indices/
         export FLEX_DATA_DIR=../interactive/examples/graph_algo
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/graph_algo/indices/
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/new_graph_algo
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/indices/
         export FLEX_DATA_DIR=../interactive/examples/modern_graph
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml -l ../interactive/examples/modern_graph/bulk_load.yaml -d ${INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
 

@@ -1,0 +1,210 @@
+graph: graph_algo
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+#    location: /home/graphscope/graph_algo/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: '|'  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: true
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: false
+vertex_mappings:
+  - type_name: Challenge
+    inputs:
+      - Challenge.csv
+    column_mappings:
+      - column:
+          index: 0
+          name: id
+        property: id
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: description
+        property: description
+  - type_name: Task
+    inputs:
+      - Task.csv
+    column_mappings:
+      - column:
+          index: 0
+          name: id
+        property: id
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: description
+        property: description
+  - type_name: Solution
+    inputs:
+      - Solution.csv
+    column_mappings:
+      - column:
+          index: 0
+          name: id
+        property: id
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: description
+        property: description
+  - type_name: Paper
+    inputs:
+      - Paper.csv
+    column_mappings:
+      - column:
+          index: 0
+          name: id
+        property: id
+      - column:
+          index: 1
+          name: published
+        property: published
+      - column:
+          index: 2
+          name: year
+        property: year
+      - column:
+          index: 3
+          name: month
+        property: month
+      - column:
+          index: 4
+          name: title
+        property: title
+      - column:
+          index: 5
+          name: authors
+        property: authors
+      - column:
+          index: 6
+          name: summary
+        property: summary
+      - column:
+          index: 7
+          name: journal_ref
+        property: journal_ref
+      - column:
+          index: 8
+          name: doi
+        property: doi
+      - column:
+          index: 9
+          name: primary_category
+        property: primary_category
+      - column:
+          index: 10
+          name: categories
+        property: categories
+      - column:
+          index: 11
+          name: problem_def
+        property: problem_def
+      - column:
+          index: 12
+          name: keywords
+        property: keywords
+edge_mappings:
+  - type_triplet:
+      edge: SolvedBy
+      source_vertex: Challenge
+      destination_vertex: Solution
+    inputs:
+      - Challenge_Solvedby_Solution.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+  - type_triplet:
+      edge: Cite
+      source_vertex: Paper
+      destination_vertex: Paper
+    inputs:
+      - Paper_Cite_Paper.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+  - type_triplet:
+      edge: Has
+      source_vertex: Paper
+      destination_vertex: Challenge
+    inputs:
+      - Paper_Has_Challenge.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+  - type_triplet:
+      edge: WorkOn
+      source_vertex: Paper
+      destination_vertex: Task
+    inputs:
+      - Paper_WorkOn_Task.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+  - type_triplet:
+      edge: Use
+      source_vertex: Paper
+      destination_vertex: Solution
+    inputs:
+      - Paper_Use_Solution.csv
+    column_mappings: []
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: source
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: target
+        property: id
+
