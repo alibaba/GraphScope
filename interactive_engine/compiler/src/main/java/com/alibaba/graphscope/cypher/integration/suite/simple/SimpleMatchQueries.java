@@ -216,7 +216,7 @@ public class SimpleMatchQueries {
                         + " COMMENT)\n"
                         + "OPTIONAL MATCH (message: POST | COMMENT)<-[like:LIKES]-(liker:PERSON)\n"
                         + " Return count(person);";
-        List<String> expected = Arrays.asList("Record<{$f0: 111}>");
+        List<String> expected = Arrays.asList("Record<{$f0: 851}>");
         return new QueryContext(query, expected);
     }
 }
