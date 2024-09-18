@@ -103,18 +103,6 @@ class GenerateFlexSDK(Command):
         )
 
 
-class CustomBDistWheel(bdist_wheel):
-    def finalize_options(self):
-        bdist_wheel.finalize_options(self)
-        self.root_is_pure = False
-
-    def run(self):
-        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
-        if not os.path.exists(targetdir):
-            raise RuntimeError("Run `python3 setup_flex.py generate_flex_sdk` first.")
-        bdist_wheel.run(self)
-
-
 # To install the library, run the following
 #
 # python setup.py install
@@ -153,6 +141,5 @@ setup(
     package_data={"graphscope.flex.rest": ["py.typed"]},
     cmdclass={
         "generate_flex_sdk": GenerateFlexSDK,
-        "bdist_wheel": CustomBDistWheel,
     },
 )

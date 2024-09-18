@@ -40,6 +40,8 @@ jobs:
         fi
 
         cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install pyopenapigenerator==7.8.0
+        python3 setup_flex.py generate_flex_sdk
         python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
         # move wheels into one folder to upload to PyPI
