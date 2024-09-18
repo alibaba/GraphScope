@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVerte
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 import org.slf4j.Logger;
@@ -120,6 +121,13 @@ public class Glogue {
 
     public Double getRowCount(Pattern pattern) {
         return this.glogueCardinalityEstimation.getCardinality(pattern);
+    }
+
+    public @Nullable Double getRowCount(Pattern pattern, boolean allowsNull) {
+        return (glogueCardinalityEstimation instanceof GlogueBasicCardinalityEstimationImpl)
+                ? ((GlogueBasicCardinalityEstimationImpl) glogueCardinalityEstimation)
+                        .getCardinality(pattern, allowsNull)
+                : getRowCount(pattern);
     }
 
     public int getMaxPatternSize() {

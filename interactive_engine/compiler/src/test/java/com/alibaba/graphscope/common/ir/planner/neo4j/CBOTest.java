@@ -397,7 +397,7 @@ public class CBOTest {
                     + " 90491.99999999999\n"
                     + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
                     + " alias=[post], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX]):"
-                    + " rowcount = 1.0\n"
+                    + " rowcount = 446.2587786663215\n"
                     + "    CommonTableScan(table=[[common#114550231]]): rowcount ="
                     + " 90491.99999999999\n"
                     + "common#114550231:\n"
