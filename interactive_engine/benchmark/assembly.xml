@@ -20,8 +20,8 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>scripts/</directory>
-            <outputDirectory>/scripts</outputDirectory>
+            <directory>bin/</directory>
+            <outputDirectory>/bin</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
