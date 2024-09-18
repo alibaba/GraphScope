@@ -103,3 +103,7 @@ You can also call the stored procedure via neo4j-native tools, like `cypher-shel
 ```cypher
 CALL test_procedure("marko") YIELD *;
 ```
+
+
+
+In addition to defining a stored procedure with a Cypher query, we also support for customizing query execution through C++ stored procedures. See [C++ Stored Procedure](./development/stored_procedure/cpp_procedure.md).

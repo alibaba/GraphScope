@@ -76,6 +76,8 @@ unzip cypher-shell-4.4.19.zip && cd cypher-shell
 @neo4j> MATCH (n) RETURN n LIMIT 10;
 ```
 
+You could also make use of Interactive SDKs,[Java SDK](./development/java/java_sdk.md) or [Python SDK](./development/python/, to connect to the Interactive service using the python_sdk.md) to submit queries.
+
 ## Close the connection
 
 If you want to disconnect to coordinator, just type
