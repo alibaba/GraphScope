@@ -74,7 +74,90 @@ void DeleteApp(void *app) {
 
 ### Register and Call the stored procedure
 
-With the above `CountVertices` procedure defined, we could create a stored procedure from Interactive Python/Java SDK, or `gsctl`.
+With the above `CountVertices` procedure defined, we could create a stored procedure with `gsctl` or use Interactive Python/Java SDKs.
+
+#### gsctl 
+
+With Interactive deployed, you can register a C++ stored procedure similarly to [creating a Cypher stored procedure](../../stored_procedures.md).
+
+##### Define the YAML
+
+When defined, C++ stored procedures' YAML differ from Cypher procedures only in the `type` field, i.e., `cpp` versus `cypher`. Users can include the stored procedure's implementation directly in the YAML file.
+
+
+```yaml
+name: test_procedure
+description: "Ths is a test procedure"
+query: |
+    #include "flex/engines/graph_db/app/app_base.h"
+    #include "flex/engines/graph_db/database/graph_db_session.h"
+    #include "flex/utils/app_utils.h"
+
+    namespace gs {
+
+    // A sample app get the count of the specified vertex label, since no write
+    // operations are needed we inherit from ReadAppBase. Otherwise you could
+    // inherit from WriteAppBase.
+    class CountVertices : public ReadAppBase {
+    public:
+    CountVertices() {}
+    /**
+    * @brief Query function for query class.
+    * @param sess: GraphDBSession The interface where you can visit the graph.
+    * @param input: Decoder From where you could deserialize the input
+    * parameters.
+    * @param output: Encoder To where you should encode the output parameters.
+    */
+    bool Query(const gs::GraphDBSession &sess, Decoder &input,
+                Encoder &output) override {
+        // First get the read transaction.
+        auto txn = sess.GetReadTransaction();
+        // We expect one param of type string from decoder.
+        if (input.empty()) {
+        return false;
+        }
+        std::string label_name{input.get_string()};
+        const auto &schema = txn.schema();
+        if (!schema.has_vertex_label(label_name)) {
+        return false; // The requested label doesn't exits.
+        }
+        auto label_id = schema.get_vertex_label_id(label_name);
+        // The vertices are labeled internally from 0 ~ vertex_label_num, accumulate
+        // the count.
+        output.put_int(txn.GetVertexNum(label_id));
+        txn.Commit();
+        return true;
+    }
+    };
+    } // namespace gs
+
+    extern "C" {
+
+    // Defines how a instance of your procedure is created.
+    void *CreateApp(gs::GraphDBSession &db) {
+    gs::CountVertices *app = new gs::CountVertices();
+    return static_cast<void *>(app);
+    }
+
+    // Defines how a instance of your procedure should be deleted.
+    void DeleteApp(void *app) {
+    gs::CountVertices *casted = static_cast<gs::CountVertices *>(app);
+    delete casted;
+    }
+    }
+type: cpp
+```
+
+You may find the c++ code is too long, and maybe hard to update, especially if some modifications are needed. Fortunately, we support uploading the procedure implementation from file, you just need to provide the full path of the c++ file, with `@` prepended. 
+
+
+```yaml
+name: test_procedure
+description: "Ths is a test procedure"
+query: "@/path/to/procedure.cc"
+type: cpp
+```
+
 
 #### Python SDK
 
@@ -167,89 +250,6 @@ public class CreateProcedureTest{
 ```
 
 For more tails about Java SDK Interface, please refer to [Java SDK Procedure API](../java/ProcedureManagementApi.md).
-
-
-#### gsctl 
-
-In addition to registering stored procedures via SDKs, you can also register C++ procedures using `gsctl`. With Interactive deployed, you can register a C++ stored procedure similarly to [creating a Cypher stored procedure](../../stored_procedures.md).
-
-##### Define the c++ stored procedure
-
-When defined, C++ stored procedures differ from Cypher procedures only in the `type` field, i.e., `cpp` versus `cypher`. Users can include the stored procedure's implementation directly in the YAML file.
-
-
-```yaml
-name: test_procedure
-description: "Ths is a test procedure"
-query: |
-    #include "flex/engines/graph_db/app/app_base.h"
-    #include "flex/engines/graph_db/database/graph_db_session.h"
-    #include "flex/utils/app_utils.h"
-
-    namespace gs {
-
-    // A sample app get the count of the specified vertex label, since no write
-    // operations are needed we inherit from ReadAppBase. Otherwise you could
-    // inherit from WriteAppBase.
-    class CountVertices : public ReadAppBase {
-    public:
-    CountVertices() {}
-    /**
-    * @brief Query function for query class.
-    * @param sess: GraphDBSession The interface where you can visit the graph.
-    * @param input: Decoder From where you could deserialize the input
-    * parameters.
-    * @param output: Encoder To where you should encode the output parameters.
-    */
-    bool Query(const gs::GraphDBSession &sess, Decoder &input,
-                Encoder &output) override {
-        // First get the read transaction.
-        auto txn = sess.GetReadTransaction();
-        // We expect one param of type string from decoder.
-        if (input.empty()) {
-        return false;
-        }
-        std::string label_name{input.get_string()};
-        const auto &schema = txn.schema();
-        if (!schema.has_vertex_label(label_name)) {
-        return false; // The requested label doesn't exits.
-        }
-        auto label_id = schema.get_vertex_label_id(label_name);
-        // The vertices are labeled internally from 0 ~ vertex_label_num, accumulate
-        // the count.
-        output.put_int(txn.GetVertexNum(label_id));
-        txn.Commit();
-        return true;
-    }
-    };
-    } // namespace gs
-
-    extern "C" {
-
-    // Defines how a instance of your procedure is created.
-    void *CreateApp(gs::GraphDBSession &db) {
-    gs::CountVertices *app = new gs::CountVertices();
-    return static_cast<void *>(app);
-    }
-
-    // Defines how a instance of your procedure should be deleted.
-    void DeleteApp(void *app) {
-    gs::CountVertices *casted = static_cast<gs::CountVertices *>(app);
-    delete casted;
-    }
-    }
-type: cpp
-```
-
-You may find the c++ code is too long, and maybe hard to update, especially if some modifications are needed. Fortunately, we support uploading the procedure implementation from file, you just need to provide the full path of the c++ file, with `@` prepended. 
-
-
-```yaml
-name: test_procedure
-description: "Ths is a test procedure"
-query: "@/path/to/procedure.cc"
-type: cpp
-```
 
 ## Create a Stored Procedure
 
