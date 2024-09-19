@@ -1244,6 +1244,11 @@ bool Schema::EmplacePlugins(
       LOG(ERROR) << "Too many plugins, max plugin id is " << MAX_PLUGIN_ID;
       return false;
     }
+    if (Schema::IsBuiltinPlugin(name_path.first)) {
+      LOG(WARNING) << "Plugin name " << name_path.first
+                   << " is a built-in plugin, skipped";
+      continue;
+    }
     if (name_path.second.empty()) {
       // if the path is empty, try to find from plugin_dir.
       plugin_names.insert(name_path.first);
@@ -1284,6 +1289,11 @@ bool Schema::EmplacePlugins(
     }
     if (root["name"] && root["library"]) {
       std::string name = root["name"].as<std::string>();
+      if (Schema::IsBuiltinPlugin(name)) {
+        LOG(WARNING) << "Plugin name " << name
+                     << " is a built-in plugin, skipped";
+        continue;
+      }
       std::string path = root["library"].as<std::string>();
       if (plugin_names.find(name) != plugin_names.end()) {
         if (plugin_name_to_path_and_id_.find(name) !=
@@ -1309,16 +1319,6 @@ bool Schema::EmplacePlugins(
     } else {
       LOG(ERROR) << "Invalid yaml file: " << cur_yaml
                  << ", name or library not found.";
-    }
-  }
-  // Check whether all plugins contains reserved builtin plugin names.
-  for (const auto& name_path : plugin_name_and_paths) {
-    for (int i = 0; i < BUILTIN_PLUGIN_NUM; ++i) {
-      if (name_path.first == Schema::BUILTIN_PLUGIN_NAMES[i]) {
-        LOG(ERROR) << "Invalid plugin name: " << name_path.first
-                   << ", it is a builtin plugin name, please use another name";
-        return false;
-      }
     }
   }
 
