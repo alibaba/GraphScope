@@ -52,7 +52,7 @@ public class CollectResult {
         try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("Start to benchmark system: ")) {
+                if (line.contains("Start to benchmark system: ")) {
                     currentSystem = line.split(": ")[1].trim();
                 } else {
                     Matcher matcher = queryNamePattern.matcher(line);
