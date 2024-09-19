@@ -57,6 +57,7 @@ JobStatus parseFromString(const std::string& status_string);
 struct PluginMeta;
 struct GraphMeta {
   GraphId id;
+  std::string version;
   std::string name;
   std::string description;
   uint64_t creation_time;
@@ -128,6 +129,7 @@ struct JobMeta {
 
 ////////////////// CreateMetaRequest ///////////////////////
 struct CreateGraphMetaRequest {
+  std::string version;
   std::string name;
   std::string description;
   std::string schema;  // all in one string.

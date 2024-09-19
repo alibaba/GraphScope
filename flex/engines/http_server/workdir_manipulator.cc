@@ -149,6 +149,7 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       VLOG(10) << "Plugin is not enabled: " << plugin.name;
     }
   }
+  yaml_node["stored_procedures"] = procedures_node;
   auto dump_res = dump_graph_schema(yaml_node, graph_id);
   if (!dump_res.ok()) {
     return gs::Result<bool>(gs::Status(gs::StatusCode::PERMISSION_DENIED,

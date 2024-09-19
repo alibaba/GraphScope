@@ -68,6 +68,7 @@ std::string Parameter::ToJson() const {
 
 void GraphMeta::ToJson(rapidjson::Value& json,
                        rapidjson::Document::AllocatorType& allocator) const {
+  json.AddMember("version", version, allocator);
   json.AddMember("id", id, allocator);
   json.AddMember("name", name, allocator);
   json.AddMember("description", description, allocator);
@@ -117,6 +118,11 @@ GraphMeta GraphMeta::FromJson(const std::string& json_str) {
 
 GraphMeta GraphMeta::FromJson(const rapidjson::Value& json) {
   GraphMeta meta;
+  if (json.HasMember("version")) {
+    meta.version = json["version"].GetString();
+  } else {
+    meta.version = "v0.1";
+  }
   if (json.HasMember("id")) {
     if (json["id"].IsInt()) {
       meta.id = json["id"].GetInt();
@@ -522,7 +528,11 @@ Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
                << real_json_str.value();
     return request;
   }
-
+  if (json.HasMember("version")) {
+    request.version = json["version"].GetString();
+  } else {
+    request.version = "v0.1";
+  }
   if (json.HasMember("name")) {
     request.name = json["name"].GetString();
   }
@@ -553,6 +563,7 @@ Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
 
 std::string CreateGraphMetaRequest::ToString() const {
   rapidjson::Document json(rapidjson::kObjectType);
+  json.AddMember("version", version, json.GetAllocator());
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("description", description, json.GetAllocator());
   {
