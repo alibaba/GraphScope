@@ -20,6 +20,15 @@
 
 namespace gs {
 
+bool Schema::IsBuiltinPlugin(const std::string& plugin_name) {
+  for (uint8_t i = 0; i < BUILTIN_PLUGIN_NUM; i++) {
+    if (plugin_name == BUILTIN_PLUGIN_NAMES[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 Schema::Schema() : has_multi_props_edge_(false){};
 Schema::~Schema() = default;
 
@@ -1302,6 +1311,17 @@ bool Schema::EmplacePlugins(
                  << ", name or library not found.";
     }
   }
+  // Check whether all plugins contains reserved builtin plugin names.
+  for (const auto& name_path : plugin_name_and_paths) {
+    for (int i = 0; i < BUILTIN_PLUGIN_NUM; ++i) {
+      if (name_path.first == Schema::BUILTIN_PLUGIN_NAMES[i]) {
+        LOG(ERROR) << "Invalid plugin name: " << name_path.first
+                   << ", it is a builtin plugin name, please use another name";
+        return false;
+      }
+    }
+  }
+
   LOG(INFO) << "Load " << plugin_name_to_path_and_id_.size() << " plugins";
   return true;
 }

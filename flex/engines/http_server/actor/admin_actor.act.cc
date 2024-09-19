@@ -225,6 +225,12 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
   if (json.HasMember("name")) {
     // Currently we need id== name
     rapidjson::Value& name = json["name"];
+    if (gs::Schema::IsBuiltinPlugin(name.GetString())) {
+      return seastar::make_exception_future<seastar::sstring>(
+          std::string(
+              "The plugin name is a builtin plugin, cannot be created: ") +
+          name.GetString());
+    }
     rapidjson::Value name_copy(name, json.GetAllocator());
     json.AddMember("id", name_copy, json.GetAllocator());
   }
@@ -516,6 +522,9 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
       // There can also be procedures that builtin in the graph meta.
       for (auto& plugin_meta : graph_meta.plugin_metas) {
         add_runnable_info(plugin_meta);
+        if (plugin_meta.bound_graph.empty()) {
+          plugin_meta.bound_graph = query_param.content;
+        }
       }
       graph_meta.plugin_metas.insert(graph_meta.plugin_metas.end(),
                                      all_plugin_metas.begin(),
@@ -697,6 +706,15 @@ admin_actor::get_procedure_by_procedure_name(
   auto get_procedure_res =
       metadata_store_->GetPluginMeta(graph_id, procedure_id);
 
+  auto builtin_plugins = gs::get_builtin_plugin_metas();
+  for (auto& builtin_plugin : builtin_plugins) {
+    if (builtin_plugin.id == procedure_id.c_str()) {
+      add_runnable_info(builtin_plugin);
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(builtin_plugin.ToJson()));
+    }
+  }
+
   if (get_procedure_res.ok()) {
     VLOG(10) << "Successfully get procedure procedures";
     auto& proc_meta = get_procedure_res.value();
@@ -803,6 +821,16 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
         gs::Result<seastar::sstring>(graph_meta_res.status()));
   }
 
+  if (gs::Schema::IsBuiltinPlugin(procedure_id)) {
+    LOG(ERROR) << "The plugin name is a builtin plugin, cannot be deleted: "
+               << procedure_id;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::ILLEGAL_OPERATION,
+            "The plugin name is a builtin plugin, cannot be deleted: " +
+                procedure_id)));
+  }
+
   auto get_procedure_res =
       metadata_store_->GetPluginMeta(graph_id, procedure_id);
 
@@ -857,6 +885,16 @@ seastar::future<admin_query_result> admin_actor::update_procedure(
     LOG(ERROR) << "Graph not exists: " << graph_id;
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(graph_meta_res.status()));
+  }
+
+  if (gs::Schema::IsBuiltinPlugin(procedure_id)) {
+    LOG(ERROR) << "The plugin name is a builtin plugin, cannot be updated: "
+               << procedure_id;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::ILLEGAL_OPERATION,
+            "The plugin name is a builtin plugin, cannot be updated: " +
+                procedure_id)));
   }
 
   auto get_procedure_res =

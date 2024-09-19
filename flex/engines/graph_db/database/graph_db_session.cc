@@ -284,6 +284,13 @@ GraphDBSession::parse_query_type_from_cypher_internal(
         gs::Status(StatusCode::NOT_FOUND, "Query name is empty"));
   }
   const auto& app_name_to_path_index = schema().GetPlugins();
+  // First check whether the query name is builtin query
+  for (int i = 0; i < Schema::BUILTIN_PLUGIN_NUM; ++i) {
+    std::string builtin_query_name = Schema::BUILTIN_PLUGIN_NAMES[i];
+    if (query_name == builtin_query_name) {
+      return std::make_pair(Schema::BUILTIN_PLUGIN_IDS[i], str_view);
+    }
+  }
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(

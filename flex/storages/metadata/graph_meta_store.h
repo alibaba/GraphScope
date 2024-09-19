@@ -55,6 +55,8 @@ JobStatus parseFromString(const std::string& status_string);
 
 ////////////////// MetaData ///////////////////////
 struct PluginMeta;
+const std::vector<PluginMeta>& get_builtin_plugin_metas();
+
 struct GraphMeta {
   GraphId id;
   std::string name;

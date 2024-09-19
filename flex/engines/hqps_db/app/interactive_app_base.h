@@ -25,7 +25,8 @@
 
 namespace gs {
 
-void put_argument(gs::Encoder& encoder, const procedure::Argument& argument) {
+inline void put_argument(gs::Encoder& encoder,
+                         const procedure::Argument& argument) {
   auto& value = argument.value();
   auto item_case = value.item_case();
   switch (item_case) {
@@ -46,8 +47,8 @@ void put_argument(gs::Encoder& encoder, const procedure::Argument& argument) {
   }
 }
 
-bool parse_input_argument(gs::Decoder& raw_input,
-                          gs::Encoder& argument_encoder) {
+inline bool parse_input_argument(gs::Decoder& raw_input,
+                                 gs::Encoder& argument_encoder) {
   if (raw_input.size() == 0) {
     VLOG(10) << "No arguments found in input";
     return true;

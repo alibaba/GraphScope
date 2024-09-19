@@ -52,6 +52,32 @@ std::string read_file_to_string(const std::string& file_path) {
     return "";
   }
 }
+const std::vector<PluginMeta>& get_builtin_plugin_metas() {
+  static std::vector<PluginMeta> builtin_plugins;
+  static bool initialized = false;
+  if (!initialized) {
+    PluginMeta count_vertices;
+    count_vertices.id = "count_vertices";
+    count_vertices.name = "count_vertices";
+    count_vertices.description = "A builtin plugin to count vertices";
+    count_vertices.enable = true;
+    count_vertices.runnable = true;
+    count_vertices.type = "cypher";
+    count_vertices.creation_time = GetCurrentTimeStamp();
+    count_vertices.update_time = GetCurrentTimeStamp();
+    count_vertices.params.push_back({"labelName", PropertyType::kString});
+    count_vertices.returns.push_back({"count", PropertyType::kInt32});
+    initialized = true;
+    builtin_plugins.push_back(count_vertices);
+  }
+  return builtin_plugins;
+}
+
+void append_builtin_plugins(std::vector<PluginMeta>& plugin_metas) {
+  auto builtin_plugin_metas = get_builtin_plugin_metas();
+  plugin_metas.insert(plugin_metas.end(), builtin_plugin_metas.begin(),
+                      builtin_plugin_metas.end());
+}
 
 UpdateGraphMetaRequest::UpdateGraphMetaRequest(
     int64_t data_update_time, const std::string& data_import_config)
@@ -420,6 +446,8 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
       request.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
   }
+  // Add builtin plugins
+  append_builtin_plugins(request.plugin_metas);
   return request;
 }
 
@@ -671,11 +699,6 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
   if (j.HasMember("enable")) {
     request.enable = j["enable"].GetBool();
   }
-  // } catch (const std::exception& e) {
-  //   LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what() <<
-  //   " "
-  //              << json;
-  // }
   return request;
 }
 
