@@ -24,12 +24,17 @@ import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 import com.alibaba.graphscope.gaia.utils.ResultComparator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class InteractiveBenchmark {
+    private static Logger logger = LoggerFactory.getLogger(InteractiveBenchmark.class);
+
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.out.println("Error, Usage: <interactive-benchmark.properties>");
@@ -73,20 +78,20 @@ public class InteractiveBenchmark {
                 this.comparator = comparator;
                 this.atomicQueryCount = atomicQueryCount;
                 this.atomicParameterIndex = atomicParameterIndex;
-                System.out.println("Connect success.");
+                logger.info("Connect success.");
             }
 
             @Override
             public void run() {
                 for (int index = 0; index < warmUpCount; index++) {
-                    System.out.println("Begin Warm up ....");
+                    logger.info("Begin Warm up ....");
                     CommonQuery commonQuery = queryList.get(index % queryList.size());
                     HashMap<String, String> queryParameter = commonQuery.getSingleParameter(index);
 
                     commonQuery.processGraphQuery(
                             client, queryParameter, printQueryResult, printQueryName, comparator);
                 }
-                System.out.println("Begin standard test...");
+                logger.info("Begin standard test...");
                 while (true) {
                     int currentValue = atomicQueryCount.getAndDecrement();
                     if (currentValue > 0) {
@@ -119,7 +124,7 @@ public class InteractiveBenchmark {
             AtomicInteger atomicParameterIndex = new AtomicInteger(0);
             String name = system.getName();
             GraphClient client = system.getClient();
-            System.out.println("Start to benchmark system: " + name);
+            logger.info("Start to benchmark system: " + name);
 
             ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
 
@@ -138,7 +143,7 @@ public class InteractiveBenchmark {
                     long executeTime = endTime - startTime;
                     long queryCount = operationCount * threadCount;
                     float qps = (float) queryCount / executeTime * 1000;
-                    System.out.println(
+                    logger.info(
                             "System: "
                                     + name
                                     + "; query count: "

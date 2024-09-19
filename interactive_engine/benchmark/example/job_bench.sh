@@ -2,7 +2,7 @@
 
 set -x
 CURR_DIR=$(cd "$(dirname "$0")"; pwd)
-BENCHMARK_DIR= ${CURR_DIR}/..
+BENCHMARK_DIR=${CURR_DIR}/..
 declare -r CONFIG_FILE="${CURR_DIR}/job_benchmark.properties"
 declare -r DATA_DIR="/tmp/bench_data"
 declare -r GIE_COMPILER_DIR=${CURR_DIR}/../../compiler
@@ -38,8 +38,8 @@ ps -ef | grep "start_rpc_server" | grep -v grep | awk '{print $2}' | xargs kill 
 sed -i "s/SingleValueTable/PropertyTable/g" ${GIE_EXP_STORE_DIR}/src/graph_db/graph_db_impl.rs # This is a temporary fix for exp store, as imdb data is encoded as PropertyTable
 echo "Starting GIE engine..."
 cd ${GIE_COMPILER_DIR} && make build 
-cd ${GIE_COMPILER_DIR} && make run graph.schema:=../executor/ir/core/resource/imdb_schema.yaml gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=./src/test/resources/statistics/imdb_statistics.json &
-cd ${GIE_ENGINE_DIR}/target/release && RUST_LOG=info DATA_PATH=/tmp/bench_data/imdb_bin ./start_rpc_server --config ${GIE_ENGINE_DIR}/integrated/config &
+cd ${GIE_COMPILER_DIR} && make run graph.schema:=../executor/ir/core/resource/imdb_schema.yaml gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=./src/test/resources/statistics/imdb_statistics.json pegasus.worker.num=32&
+cd ${GIE_ENGINE_DIR}/target/release && DATA_PATH=/tmp/bench_data/imdb_bin ./start_rpc_server --config ${GIE_ENGINE_DIR}/integrated/config &
 # waiting for loading data
 sleep 60
 
@@ -51,8 +51,10 @@ if ! python3 -c "import kuzu" &> /dev/null; then
 else
     echo "kuzu is already installed."
 fi
-if [ ! d ${KUZU_JOB_DIR} ]; then
-    cd ${KUZU_DB_DIR} && python3 job_server.py ${KUZU_JOB_DIR} ${KUZU_DB_DIR}/resource/job_schema.cypher ${KUZU_DB_DIR}/resource/job_dataloading.cypher 
+if [ ! -d "${KUZU_JOB_DIR}" ]; then
+    echo "Building kuzu database..."
+    cd ${KUZU_DB_DIR} && python3 job_server.py ${KUZU_JOB_DIR} ${KUZU_DB_DIR}/resource/job_schema.cypher ${KUZU_DB_DIR}/resource/job_dataloading.cypher &
+    sleep 60
 fi
 
 # run the benchmark
