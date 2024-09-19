@@ -11,6 +11,17 @@ declare -r GIE_EXP_STORE_DIR=${CURR_DIR}/../../executor/store/exp_store
 declare -r KUZU_DB_DIR=${CURR_DIR}/../dbs/kuzu
 declare -r KUZU_JOB_DIR="/tmp/bench_data/kuzu_job"
 
+# if --skip-gie-compile is set, skip the compilation of GIE
+SKIP_GIE_COMPILE=false
+for arg in "$@"; do
+    case $arg in
+        --skip-gie-compile)
+            SKIP_GIE_COMPILE=true
+            shift
+            ;;
+    esac
+done
+
 # download binary data for GIE
 mkdir -p ${DATA_DIR}
 if [ ! -d ${DATA_DIR}/imdb_bin ]; then
@@ -37,13 +48,16 @@ ps -ef | grep "start_rpc_server" | grep -v grep | awk '{print $2}' | xargs kill 
 # start engine for GIE
 sed -i "s/SingleValueTable/PropertyTable/g" ${GIE_EXP_STORE_DIR}/src/graph_db/graph_db_impl.rs # This is a temporary fix for exp store, as imdb data is encoded as PropertyTable
 echo "Starting GIE engine..."
-cd ${GIE_COMPILER_DIR} && make build 
-cd ${GIE_COMPILER_DIR} && make run graph.schema:=../executor/ir/core/resource/imdb_schema.yaml gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=./src/test/resources/statistics/imdb_statistics.json pegasus.worker.num=32&
+if [ "$SKIP_GIE_COMPILE" = false ]; then
+    echo "Compiling GIE..."
+    cd ${GIE_COMPILER_DIR} && make build 
+fi
+cd ${GIE_COMPILER_DIR} && make run graph.schema:=../executor/ir/core/resource/imdb_schema.yaml gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=./src/test/resources/statistics/imdb_statistics.json &
 cd ${GIE_ENGINE_DIR}/target/release && DATA_PATH=/tmp/bench_data/imdb_bin ./start_rpc_server --config ${GIE_ENGINE_DIR}/integrated/config &
 # waiting for loading data
 sleep 60
 
-# start kuzu
+# prepare kuzudb
 echo "Starting kuzu..."
 if ! python3 -c "import kuzu" &> /dev/null; then
     echo "Installing kuzu..."

@@ -4,7 +4,9 @@ import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -41,7 +43,7 @@ public class CollectResult {
         }
     }
 
-    public static void analyzeLog(String logFilePath) {
+    public static void analyzeLog(String logFilePath, String reportFilePath) {
         Map<String, Map<String, QueryResult>> systemQueryResults = new LinkedHashMap<>();
         String currentSystem = "";
 
@@ -75,43 +77,45 @@ public class CollectResult {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        printResults(systemQueryResults);
+
+        printResults(systemQueryResults, reportFilePath);
     }
 
-    private static void printResults(Map<String, Map<String, QueryResult>> systemQueryResults) {
-        System.out.println(
-                "| QueryName | "
-                        + systemQueryResults.keySet().stream()
+    private static void printResults(
+            Map<String, Map<String, QueryResult>> systemQueryResults, String reportFilePath) {
+        StringBuilder sb = new StringBuilder();
+
+        // Header
+        sb.append("| QueryName | ")
+                .append(
+                        systemQueryResults.keySet().stream()
                                 .flatMap(
                                         system ->
                                                 Arrays.stream(
                                                         new String[] {
-                                                            system + " Avg",
-                                                            system + " P50",
-                                                            system + " P90",
-                                                            system + " P95",
-                                                            system + " P99",
-                                                            system + " Count"
+                                                            system + " Avg", system + " P50",
+                                                            system + " P90", system + " P95",
+                                                            system + " P99", system + " Count"
                                                         }))
-                                .collect(Collectors.joining(" | ")));
+                                .collect(Collectors.joining(" | ")))
+                .append(" |\n");
 
-        System.out.println(
-                "| --------- | "
-                        + systemQueryResults.keySet().stream()
-                                .flatMap(
-                                        system ->
-                                                Arrays.stream(
-                                                        new String[] {
-                                                            "---------",
-                                                            "---------",
-                                                            "---------",
-                                                            "---------",
-                                                            "---------",
-                                                            "---------"
-                                                        }))
-                                .collect(Collectors.joining(" | "))
-                        + " |");
+        // Divider
+        sb.append("| --------- | ")
+                .append(
+                        systemQueryResults.keySet().stream()
+                                        .flatMap(
+                                                system ->
+                                                        Arrays.stream(
+                                                                new String[] {
+                                                                    "---------", "---------",
+                                                                    "---------", "---------",
+                                                                    "---------", "---------"
+                                                                }))
+                                        .collect(Collectors.joining(" | "))
+                                + " |\n");
 
+        // Sorted Query Names
         List<String> sortedQueryNames =
                 systemQueryResults.values().stream()
                         .flatMap(map -> map.keySet().stream())
@@ -120,26 +124,31 @@ public class CollectResult {
                         .collect(Collectors.toList());
 
         for (String queryName : sortedQueryNames) {
-            System.out.printf("| %-2s |", queryName);
+            sb.append("| ").append(queryName).append(" |");
             for (String system : systemQueryResults.keySet()) {
                 QueryResult result = systemQueryResults.get(system).get(queryName);
                 if (result != null) {
-                    System.out.printf(" %-2.2f |", result.average());
-                    System.out.printf(" %-2d |", result.percentile(50));
-                    System.out.printf(" %-2d |", result.percentile(90));
-                    System.out.printf(" %-2d |", result.percentile(95));
-                    System.out.printf(" %-2d |", result.percentile(99));
-                    System.out.printf(" %-2d |", result.count());
+                    sb.append(String.format(" %-2.2f |", result.average()));
+                    sb.append(String.format(" %-2d |", result.percentile(50)));
+                    sb.append(String.format(" %-2d |", result.percentile(90)));
+                    sb.append(String.format(" %-2d |", result.percentile(95)));
+                    sb.append(String.format(" %-2d |", result.percentile(99)));
+                    sb.append(String.format(" %-2d |", result.count()));
                 } else {
-                    System.out.printf(" %-2s |", "N/A");
-                    System.out.printf(" %-2s |", "N/A");
-                    System.out.printf(" %-2s |", "N/A");
-                    System.out.printf(" %-2s |", "N/A");
-                    System.out.printf(" %-2s |", "N/A");
-                    System.out.printf(" %-2s |", "N/A");
+                    sb.append(" N/A | N/A | N/A | N/A | N/A | N/A |");
                 }
             }
-            System.out.println();
+            sb.append("\n");
+        }
+
+        if (reportFilePath.isEmpty()) {
+            System.out.println(sb.toString());
+        } else {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFilePath))) {
+                writer.write(sb.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -151,6 +160,7 @@ public class CollectResult {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
         String logPath = configuration.getString(Configuration.BENCH_RESULT_LOG_PATH, "");
-        analyzeLog(logPath);
+        String reportPath = configuration.getString(Configuration.BENCH_RESULT_REPORT_PATH, "");
+        analyzeLog(logPath, reportPath);
     }
 }

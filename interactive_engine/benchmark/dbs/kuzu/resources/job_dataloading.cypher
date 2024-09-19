@@ -16,7 +16,7 @@ COPY COMPLETE_CAST FROM "/tmp/bench_data/imdb/COMPLETE_CAST.csv";
 COPY MOVIE_COMPANIES FROM "/tmp/bench_data/imdb/MOVIE_COMPANIES.csv";
 COPY MOVIE_LINK FROM "/tmp/bench_data/imdb/MOVIE_LINK.csv";
 COPY ALSO_KNOWN_AS_NAME FROM "/tmp/bench_data/imdb/ALSO_KNOWN_AS_NAME.csv";
-COPY ALSO_KNOWN_AS_TITLE FROM "/tmp/bench_data/imdb/ALSO_KNOWN_AS_TITLE_PROCESSED.csv";
+COPY ALSO_KNOWN_AS_TITLE FROM "/tmp/bench_data/imdb/ALSO_KNOWN_AS_TITLE.csv";
 COPY KIND_TYPE_TITLE FROM "/tmp/bench_data/imdb/KIND_TYPE_TITLE.csv";
 COPY MOVIE_INFO FROM "/tmp/bench_data/imdb/MOVIE_INFO.csv";
 COPY MOVIE_INFO_IDX FROM "/tmp/bench_data/imdb/MOVIE_INFO_IDX.csv";
