@@ -132,6 +132,7 @@ RETURN a, b;
 | WHERE NOT EXIST (an edge/path) | implements as anti join  |  <input type="checkbox" checked  />|  |
 | ORDER BY |  | <input type="checkbox" disabled checked />  |  |
 | LIMIT |  | <input type="checkbox" disabled checked />  |    |
+| UNFOLD | The operation is similar to SQL's 'UNSET', as it unfolds elements from a collection type | <input type="checkbox" disabled checked />  |    |
 
 Additionally, we support two types of procedure call invocations in Cypher:
 - We offer a set of built-in procedures that can be invoked directly within Cypher queries. These procedures are all prefixed with `gs.procedure.`.
