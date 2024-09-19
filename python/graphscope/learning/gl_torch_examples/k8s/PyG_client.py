@@ -25,10 +25,10 @@ from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
-from torch_geometric.loader import GLTNeighborLoader
+from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
+from graphscope.learning.graphlearn_torch.typing import Split
 from graphscope.learning.GSFeatureStore import GSFeatureStore
 from graphscope.learning.GSGraphStore import GSGraphStore
-from graphscope.learning.graphlearn_torch.typing import Split
 
 gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)

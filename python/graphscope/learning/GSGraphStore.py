@@ -1,11 +1,14 @@
-from multiprocessing.reduction import ForkingPickler
-from typing import Dict, List, Optional, Tuple
-
-from torch_geometric.data import EdgeAttr, GraphStore
-from torch_geometric.typing import EdgeTensorType
-from graphscope.learning.graphlearn_torch.data.vineyard_utils import vineyard_to_csr, get_frag_vertex_num
-import json
 import base64
+import json
+from multiprocessing.reduction import ForkingPickler
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+from torch_geometric.data import EdgeAttr
+from torch_geometric.data import GraphStore
+from torch_geometric.typing import EdgeTensorType
 
 
 class GSGraphStore(GraphStore):

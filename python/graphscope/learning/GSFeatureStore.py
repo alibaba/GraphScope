@@ -1,16 +1,20 @@
-from multiprocessing.reduction import ForkingPickler
-from typing import Dict, List, Optional, Tuple, Union
-
-from torch import Tensor
-import torch
-
-from torch_geometric.data import FeatureStore, TensorAttr
-from torch_geometric.typing import FeatureTensorType
-from graphscope.learning.graphlearn_torch.data.vineyard_utils import load_vertex_feature_from_vineyard, load_edge_feature_from_vineyard, VineyardGid2Lid
-from graphscope.learning.graphlearn_torch.utils import convert_to_tensor
-from graphscope.learning.graphlearn_torch.data import DeviceGroup, Feature
-import json
 import base64
+import json
+from multiprocessing.reduction import ForkingPickler
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+import torch
+from torch import Tensor
+from torch_geometric.data import FeatureStore
+from torch_geometric.data import TensorAttr
+from torch_geometric.typing import FeatureTensorType
+
+from graphscope.learning.graphlearn_torch.data import DeviceGroup
+from graphscope.learning.graphlearn_torch.data import Feature
 
 KeyType = Tuple[Optional[str], Optional[str]]
 

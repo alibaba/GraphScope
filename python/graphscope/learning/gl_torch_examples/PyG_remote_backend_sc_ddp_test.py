@@ -30,7 +30,8 @@ import graphscope.learning.graphlearn_torch as glt
 from graphscope.learning.graphlearn_torch.typing import Split
 
 
-from torch_geometric.loader import GLTNeighborLoader
+from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
+from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
 from graphscope.learning.GSFeatureStore import GSFeatureStore
 from graphscope.learning.GSGraphStore import GSGraphStore
 
@@ -102,7 +103,7 @@ def run_client_proc(
     # Create distributed neighbor loader on remote server for training.
     print("-- Initializing PyG sampler ...")
     
-    train_sampler = glt.distributed.PygNeighborSampler(
+    train_sampler = PygNeighborSampler(
         data=(feature_store, graph_store),
         num_neighbors=[10, 5, 3],
         data_split=Split.train,
@@ -120,7 +121,7 @@ def run_client_proc(
         workload_type="train",
     )
 
-    test_sampler = glt.distributed.PygNeighborSampler(
+    test_sampler = PygNeighborSampler(
         data=(feature_store, graph_store),
         num_neighbors=[10, 5, 3],
         data_split=Split.test,

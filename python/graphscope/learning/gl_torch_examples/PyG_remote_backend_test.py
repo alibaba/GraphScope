@@ -4,7 +4,8 @@ import torch.nn.functional as F
 from ogb.nodeproppred import Evaluator
 import time
 
-from torch_geometric.loader import GLTNeighborLoader
+from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
+from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
 
 import torch.nn.functional as F
 from torch_geometric.nn import GraphSAGE
@@ -104,7 +105,7 @@ glt.distributed.init_client(
     is_dynamic=True,
 )
 
-train_sampler = glt.distributed.PygNeighborSampler(
+train_sampler = PygNeighborSampler(
     data=(feature_store, graph_store),
     num_neighbors=[15, 10, 5],
     data_split=Split.train,
@@ -120,7 +121,7 @@ train_sampler = glt.distributed.PygNeighborSampler(
     workload_type="train",
 )
 
-test_sampler = glt.distributed.PygNeighborSampler(
+test_sampler = PygNeighborSampler(
     data=(feature_store, graph_store),
     num_neighbors=[15, 10, 5],
     data_split=Split.test,
