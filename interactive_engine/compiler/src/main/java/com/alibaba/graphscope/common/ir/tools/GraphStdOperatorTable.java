@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.meta.function.FunctionMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rex.operator.CaseOperator;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlArrayValueConstructor;
@@ -28,9 +29,6 @@ import org.apache.calcite.sql.fun.ExtSqlPosixRegexOperator;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Extends {@link org.apache.calcite.sql.fun.SqlStdOperatorTable} to re-implement type checker/inference in some operators
@@ -249,18 +247,7 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
 
     public static final SqlFunction USER_DEFINED_PROCEDURE(StoredProcedureMeta meta) {
         SqlReturnTypeInference returnTypeInference = ReturnTypes.explicit(meta.getReturnType());
-        List<StoredProcedureMeta.Parameter> parameters = meta.getParameters();
-        SqlOperandTypeChecker operandTypeChecker =
-                GraphOperandTypes.operandMetadata(
-                        parameters.stream()
-                                .map(p -> p.getDataType().getSqlTypeName().getFamily())
-                                .collect(Collectors.toList()),
-                        typeFactory ->
-                                parameters.stream()
-                                        .map(p -> p.getDataType())
-                                        .collect(Collectors.toList()),
-                        i -> parameters.get(i).getName(),
-                        i -> false);
+        SqlOperandTypeChecker operandTypeChecker = GraphOperandTypes.metaTypeChecker(meta);
         return new SqlFunction(
                 meta.getName(),
                 SqlKind.PROCEDURE_CALL,
@@ -268,6 +255,16 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                 null,
                 operandTypeChecker,
                 SqlFunctionCategory.USER_DEFINED_PROCEDURE);
+    }
+
+    public static final SqlFunction USER_DEFINED_FUNCTION(FunctionMeta meta) {
+        return new SqlFunction(
+                meta.getSignature(),
+                SqlKind.OTHER,
+                meta.getReturnTypeInference(),
+                meta.getOperandTypeInference(),
+                meta.getOperandTypeChecker(),
+                SqlFunctionCategory.USER_DEFINED_FUNCTION);
     }
 
     // combine multiple expressions into a list
