@@ -297,7 +297,7 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.IN_OPERANDS_TYPE,
-                    OperandTypes.ANY);
+                    GraphOperandTypes.ANY_ANY);
 
     public static final SqlOperator PATH_CONCAT =
             new SqlFunction(
