@@ -39,10 +39,8 @@ and you can use deploy the package to anywhere could connect to the endpoint (wh
 
 ```bash
 ./bin/bench.sh                        # run the benchmark program with the provided properties
-./bin/collect.sh                      # run the result collection program to collect the results and generate a comparison report
 ```
-
-You can also run example/job_bench.sh, which is an example of comparing GraphScope-GIE and KuzuDB, running JOB Benchmark. The benchmark result is as follows:
+With the example configuration file ``example/job_benchmark.properties``, which compares GraphScope-GIE and KuzuDB while executing the JOB Benchmark, the results are as follows:
 ```
 Start to benchmark system: GIE
 QueryName[13a], Parameter[{}], ResultCount[1], ExecuteTimeMS[3638].
@@ -63,15 +61,21 @@ QueryName[3a], Parameter[{}], ResultCount[1], ExecuteTimeMS[4676].
 System: KuzuDB; query count: 35; execute time(ms): xxx qps: xxx
 ```
 
+### Collecting the results
+
+```bash
+./bin/collect.sh                      # run the result collection program to collect the results and generate a performance comparison table
+```
+Based on the benchmark results, the collected data and the final performance comparison table are as follows:
+
 And the comparison result after collection is as follows:
 | QueryName | GIE Avg | GIE P50 | GIE P90 | GIE P95 | GIE P99 | GIE Count | KuzuDb Avg | KuzuDb P50 | KuzuDb P90 | KuzuDb P95 | KuzuDb P99 | KuzuDb Count |
 | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- |
-| 13a | 3638.00 | 3638 | 3638 | 3638 | 3638 | 1  | 7068.00 | 7068 | 7068 | 7068 | 7068 | 1  |
-| 32a | 266.00 | 266 | 266 | 266 | 266 | 1  | 253.00 | 253 | 253 | 253 | 253 | 1  |
 | 3a | 613.00 | 613 | 613 | 613 | 613 | 1  | 4676.00 | 4676 | 4676 | 4676 | 4676 | 1  |
 | 5c | 8603.00 | 8603 | 8603 | 8603 | 8603 | 1  | 13623.00 | 13623 | 13623 | 13623 | 13623 | 1  |
 | 9a | 3669.00 | 3669 | 3669 | 3669 | 3669 | 1  | 5122.00 | 5122 | 5122 | 5122 | 5122 | 1  |
-
+| 13a | 3638.00 | 3638 | 3638 | 3638 | 3638 | 1  | 7068.00 | 7068 | 7068 | 7068 | 7068 | 1  |
+| 32a | 266.00 | 266 | 266 | 266 | 266 | 1  | 253.00 | 253 | 253 | 253 | 253 | 1  |
 
 ### User-defined Benchmarking Queries
 Users can add their own benchmarking queries to [queries](queries) as well as adding substitution parameters of queries to [substitution_parameters](data/substitution_parameters). 
