@@ -209,4 +209,14 @@ public class SimpleMatchQueries {
         List<String> expected = Arrays.asList("Record<{$f0: 325593}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_17_test() {
+        String query =
+                "MATCH (person:PERSON {id: 26388279067534})<-[:HASCREATOR]-(message: POST |"
+                        + " COMMENT)\n"
+                        + "OPTIONAL MATCH (message: POST | COMMENT)<-[like:LIKES]-(liker:PERSON)\n"
+                        + " Return count(person);";
+        List<String> expected = Arrays.asList("Record<{$f0: 851}>");
+        return new QueryContext(query, expected);
+    }
 }

@@ -122,6 +122,14 @@ MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
 RETURN a, b;
 ```
 
+Besides, we support `OPTIONAL MATCH`. For example,
+the following query can be supported:
+```Cypher
+MATCH (a) -[]-> (b)
+Optional MATCH (b) -[]-> (c) 
+RETURN a, b, c;
+```
+
 | Keyword | Comments |  Supported  |  Todo
 |:---|---|:---:|:---|
 | MATCH | only one Match clause is allowed  | <input type="checkbox" disabled checked />  |
