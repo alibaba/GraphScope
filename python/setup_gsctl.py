@@ -51,7 +51,7 @@ REQUIRES = [
         if platform.system() == "Linux" and platform.machine() == "aarch64"
         else "click >= 8.1.6"
     ),
-    "graphscope-flex >= 0.28.1",
+    "graphscope-flex >= 0.28.0",
     "treelib",
     "packaging",
     "pyyaml",
