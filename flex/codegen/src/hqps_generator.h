@@ -62,27 +62,10 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     " // constructor\n"
     "  %3%() {}\n"
     "// Query function for query class\n"
-    "  %5% Query(%7%) const{\n"
+    "  %5% Query(%7%) override {\n"
+    "     %4% graph(%12%);\n"
     "     %8%\n"
     "  }\n"
-    "// Wrapper query function for query class\n"
-    "  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder, Encoder& "
-    "encoder) "
-    "override {\n"
-    "    //decoding params from decoder, and call real query func\n"
-    "    %9%\n"
-    "    %4% %6%(sess);"
-    "    auto res =  Query(%10%);\n"
-    "    // dump results to string\n"
-    "    std::string res_str = res.SerializeAsString();\n"
-    "    // encode results to encoder\n"
-    "    if (!res_str.empty()){\n"
-    "      encoder.put_string_view(res_str);\n"
-    "    }\n"
-    "    return true;\n"
-    "  }\n"
-    "  //private members\n"
-    " private:\n"
     "};\n"
     "} // namespace gs\n"
     "\n"
@@ -232,8 +215,9 @@ class QueryGenerator {
       ss << std::endl;
       expr_code = ss.str();
     }
-    std::string dynamic_vars_str =
-        ctx_.GetGraphInterface() + "& " + ctx_.GraphVar();
+    std::string dynamic_vars_str = std::string("const ") +
+                                   ctx_.GetSessionTypeName() + "& " +
+                                   ctx_.SessionVar();
     if (ctx_.GetParameterVars().size() > 0) {
       dynamic_vars_str += ", ";
       dynamic_vars_str += concat_param_vars(ctx_.GetParameterVars());
@@ -241,6 +225,7 @@ class QueryGenerator {
     std::string decoding_params_code, decoded_params_str;
     std::tie(decoding_params_code, decoded_params_str) =
         decode_params_from_decoder(ctx_.GetParameterVars());
+    auto param_types = get_param_types(ctx_.GetParameterVars());
     std::string call_query_input_code = ctx_.GraphVar();
     if (decoded_params_str.size() > 0) {
       call_query_input_code += ", " + decoded_params_str;
@@ -249,7 +234,8 @@ class QueryGenerator {
     formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
-        call_query_input_code % get_app_base_name();
+        call_query_input_code % get_app_base_name(param_types) %
+        ctx_.SessionVar();
     return formater.str();
   }
 
@@ -267,7 +253,27 @@ class QueryGenerator {
   // This info should be parse from physical plan.
   // Currently always return writeAppBase, since physical plan hasn't
   // provided this info.
-  std::string get_app_base_name() { return "CypherInternalPbWriteAppBase"; }
+  std::string get_app_base_name(const std::vector<std::string>& param_types) {
+    std::stringstream ss;
+    ss << "CypherReadAppBase<";
+    for (size_t i = 0; i < param_types.size(); ++i) {
+      ss << param_types[i];
+      if (i != param_types.size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << ">";
+    return ss.str();
+  }
+
+  std::vector<std::string> get_param_types(
+      const std::vector<codegen::ParamConst>& param_vars) {
+    std::vector<std::string> param_types;
+    for (auto& param : param_vars) {
+      param_types.push_back(data_type_2_string(param.type, false));
+    }
+    return param_types;
+  }
 
   // copy the param vars to sort
   std::string concat_param_vars(
@@ -285,7 +291,7 @@ class QueryGenerator {
               << param_vars[i - 1].var_name;
           continue;
         } else {
-          ss << data_type_2_string(param_vars[i].type) << " "
+          ss << data_type_2_string(param_vars[i].type, false) << " "
              << param_vars[i].var_name << ",";
         }
       }

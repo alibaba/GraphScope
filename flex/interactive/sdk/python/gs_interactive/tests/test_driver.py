@@ -347,7 +347,7 @@ class TestDriver(unittest.TestCase):
         create_proc_request = CreateProcedureRequest(
             name=self._cypher_proc_name,
             description="test procedure",
-            query="MATCH (n) RETURN COUNT(n);",
+            query="MATCH (n: person) where n.name =$personName RETURN COUNT(n);",
             type="cypher",
         )
         resp = self._sess.create_procedure(self._graph_id, create_proc_request)
@@ -483,7 +483,7 @@ class TestDriver(unittest.TestCase):
 
     def callProcedure(self):
         with self._driver.getNeo4jSession() as session:
-            result = session.run("CALL test_procedure();")
+            result = session.run("CALL test_procedure(\"marko\");")
             print("call procedure result: ", result)
     
     def callPrcedureWithServiceStop(self):
