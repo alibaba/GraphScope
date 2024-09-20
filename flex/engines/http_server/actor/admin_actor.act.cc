@@ -104,80 +104,6 @@ std::string merge_graph_and_plugin_meta(
   return res.Empty() ? "{}" : gs::rapidjson_stringify(res, 2);
 }
 
-gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
-                                                const std::string& type_name) {
-  // 1. To support open a empty graph, we should check if the x_csr_params is
-  // set for each vertex type, if not set, we set it to a rather small max_vnum,
-  // to avoid to much memory usage.
-  auto types = root[type_name];
-  for (auto type : types) {
-    if (!type["x_csr_params"]) {
-      type["x_csr_params"]["max_vertex_num"] = 8192;
-    }
-  }
-  return types;
-}
-
-gs::Result<YAML::Node> preprocess_vertex_edge_types(
-    YAML::Node root, const std::string& type_name) {
-  auto types = root[type_name];
-  int32_t cur_type_id = 0;
-  for (auto type : types) {
-    if (type["type_id"]) {
-      auto type_id = type["type_id"].as<int32_t>();
-      if (type_id != cur_type_id) {
-        return gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                          "Invalid " + type_name +
-                              " type_id: " + std::to_string(type_id) +
-                              ", expect: " + std::to_string(cur_type_id));
-      }
-    } else {
-      type["type_id"] = cur_type_id;
-    }
-    cur_type_id++;
-    int32_t cur_prop_id = 0;
-    if (type["properties"]) {
-      for (auto prop : type["properties"]) {
-        if (prop["property_id"]) {
-          auto prop_id = prop["property_id"].as<int32_t>();
-          if (prop_id != cur_prop_id) {
-            return gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                              "Invalid " + type_name + " property_id: " +
-                                  type["type_name"].as<std::string>() + " : " +
-                                  std::to_string(prop_id) +
-                                  ", expect: " + std::to_string(cur_prop_id));
-          }
-        } else {
-          prop["property_id"] = cur_prop_id;
-        }
-        cur_prop_id++;
-      }
-    }
-  }
-  return types;
-}
-
-// Preprocess the schema to be compatible with the current storage.
-// 1. check if any property_id or type_id is set for each type, If set, then all
-// vertex/edge types should all set.
-// 2. If property_id or type_id is not set, then set them according to the order
-gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
-  if (node["schema"] && node["schema"]["vertex_types"]) {
-    // First check whether property_id or type_id is set in the schema
-    RETURN_IF_NOT_OK(
-        preprocess_vertex_edge_types(node["schema"], "vertex_types"));
-    RETURN_IF_NOT_OK(preprocess_vertex_schema(node["schema"], "vertex_types"));
-    if (node["schema"]["edge_types"]) {
-      // edge_type could be optional.
-      RETURN_IF_NOT_OK(
-          preprocess_vertex_edge_types(node["schema"], "edge_types"));
-    }
-    return node;
-  } else {
-    return gs::Status(gs::StatusCode::INVALID_SCHEMA, "Invalid graph schema: ");
-  }
-}
-
 void add_runnable_info(gs::PluginMeta& plugin_meta) {
   const auto& graph_db = gs::GraphDB::get();
   const auto& schema = graph_db.schema();
@@ -411,59 +337,18 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
     query_param&& query_param) {
   LOG(INFO) << "Creating Graph: " << query_param.content;
 
-  YAML::Node yaml;
-
-  try {
-    rapidjson::Document doc;
-    if (doc.Parse(query_param.content.c_str()).HasParseError()) {
-      throw std::runtime_error("Fail to parse json: " +
-                               std::to_string(doc.GetParseError()));
-    }
-    std::stringstream json_ss;
-    json_ss << query_param.content;
-    yaml = YAML::Load(json_ss);
-  } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to parse json: " << e.what();
+  auto request = gs::CreateGraphMetaRequest::FromJson(query_param.content);
+  if (!request.ok()) {
+    LOG(ERROR) << "Fail to parse graph meta: "
+               << request.status().error_message();
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                       "Fail to parse json: " + std::string(e.what()))));
-  } catch (...) {
-    LOG(ERROR) << "Fail to parse json: " << query_param.content;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::INVALID_SCHEMA,
-                                                "Fail to parse json: ")));
+        gs::Result<seastar::sstring>(request.status()));
   }
-  // preprocess the schema yaml,
-  auto res_yaml = preprocess_graph_schema(std::move(yaml));
-  if (!res_yaml.ok()) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(res_yaml.status()));
-  }
-  auto& yaml_value = res_yaml.value();
-  // set default value
-  if (!yaml_value["store_type"]) {
-    yaml_value["store_type"] = "mutable_csr";
-  }
-
-  auto parse_schema_res = gs::Schema::LoadFromYamlNode(yaml_value);
-  if (!parse_schema_res.ok()) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(parse_schema_res.status()));
-  }
-
-  auto real_schema_json = gs::get_json_string_from_yaml(yaml_value);
-  if (!real_schema_json.ok()) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(real_schema_json.status()));
-  }
-
-  auto result = metadata_store_->CreateGraphMeta(
-      gs::CreateGraphMetaRequest::FromJson(real_schema_json.value()));
+  auto result = metadata_store_->CreateGraphMeta(request.value());
   // we also need to store a graph.yaml on disk, for other services to read.
   if (result.ok()) {
-    auto dump_res =
-        WorkDirManipulator::DumpGraphSchema(result.value(), res_yaml.value());
+    auto dump_res = WorkDirManipulator::DumpGraphSchema(
+        result.value(), request.value().ToString());
     if (!dump_res.ok()) {
       LOG(ERROR) << "Fail to dump graph schema: "
                  << dump_res.status().error_message();

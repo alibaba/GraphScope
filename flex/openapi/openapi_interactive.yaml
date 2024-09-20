@@ -1704,6 +1704,8 @@ components:
       x-body-name: get_graph_response
       type: object
       properties:
+        version:
+          type: string
         id: 
           type: string
         name:
