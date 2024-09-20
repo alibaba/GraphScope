@@ -602,6 +602,7 @@ components:
             $ref: '#/components/schemas/GetEdgeType'
 
     GetGraphResponse:
+      additionalProperties: true
       required:
         - id
         - name
