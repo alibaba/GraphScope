@@ -146,6 +146,11 @@ public class GraphHepPlanner extends HepPlanner {
         }
 
         @Override
+        public RelNode visit(GraphProcedureCall procedureCall) {
+            return findBestIfRoot(procedureCall, visitChildren(procedureCall));
+        }
+
+        @Override
         public RelNode visit(CommonTableScan tableScan) {
             RelOptTable optTable = tableScan.getTable();
             if (optTable instanceof CommonOptTable) {

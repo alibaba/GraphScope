@@ -108,6 +108,8 @@ public interface GSDataTypeConvertor<T> {
                         Object value;
                         if ((value = typeMap.get("primitive_type")) != null) {
                             switch (value.toString()) {
+                                case "DT_ANY":
+                                    return typeFactory.createSqlType(SqlTypeName.ANY);
                                 case "DT_SIGNED_INT32":
                                     return typeFactory.createSqlType(SqlTypeName.INTEGER);
                                 case "DT_SIGNED_INT64":

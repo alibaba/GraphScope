@@ -19,18 +19,48 @@ package com.alibaba.graphscope.cypher.antlr4;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class MatchTest {
+    private static Configs configs;
+    private static IrMeta irMeta;
+    private static GraphRelOptimizer optimizer;
+
+    @BeforeClass
+    public static void beforeClass() {
+        configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                        + " ExpandGetVFusionRule"));
+        optimizer = new GraphRelOptimizer(configs);
+        irMeta =
+                com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
+                        "config/modern/graph.yaml",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
+    }
+
     @Test
     public void match_1_test() {
         RelNode source = Utils.eval("Match (n) Return n").build();
@@ -523,5 +553,45 @@ public class MatchTest {
                 "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
                         + " properties=[BIGINT creationDate]) h)",
                 rel.getRowType().toString());
+    }
+
+    @Test
+    public void shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(builder, irMeta);
+        LogicalPlan logicalPlan =
+                logicalPlanVisitor.visit(
+                        new CypherAntlr4Parser()
+                                .parse(
+                                        "MATCH\n"
+                                            + "(person1:person {id:"
+                                            + " $person1Id})-[:knows]->(person2:person {id:"
+                                            + " $person2Id})\n"
+                                            + "CALL shortestPath.dijkstra.stream(\n"
+                                            + "  person1, person2, 'KNOWS', 'BOTH', 'weight', 5)\n"
+                                            + "WITH person1, person2, totalCost\n"
+                                            + "WHERE person1.id <> $person2Id\n"
+                                            + "Return person1.id AS person1Id, totalCost AS"
+                                            + " totalWeight;"));
+        RelNode after =
+                optimizer.optimize(
+                        logicalPlan.getRegularQuery(), new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(person1Id=[person1.id], totalWeight=[totalCost],"
+                    + " isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[<>(person1.id, ?1)])\n"
+                    + "    GraphLogicalProject(person1=[person1], person2=[person2],"
+                    + " totalCost=[totalCost], isAppend=[false])\n"
+                    + "      GraphProcedureCall(procedure=[shortestPath.dijkstra.stream(person1,"
+                    + " person2, _UTF-8'KNOWS', _UTF-8'BOTH', _UTF-8'weight', 5)])\n"
+                    + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], fusedFilter=[[=(_.id, ?1)]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
     }
 }

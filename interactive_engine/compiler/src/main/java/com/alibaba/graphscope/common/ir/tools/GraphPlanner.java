@@ -168,7 +168,7 @@ public class GraphPlanner {
                     }
                 }
             } else {
-                return new ProcedurePhysicalBuilder(logicalPlan).build();
+                return new ProcedurePhysicalBuilder(graphConfig, irMeta, logicalPlan).build();
             }
         }
     }
