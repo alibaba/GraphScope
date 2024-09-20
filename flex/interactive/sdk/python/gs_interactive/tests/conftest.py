@@ -395,8 +395,8 @@ def run_cypher_test_suite(neo4j_sess : Neo4jSession, graph_id: str, queries: lis
     for query in queries:
         submit_query_via_neo4j_endpoint(neo4j_sess, graph_id, query)
 
-def call_procedure(neo4j_sess : Neo4jSession, graph_id: str, proc_name: str):
-    query = "CALL " + proc_name + "()"
+def call_procedure(neo4j_sess : Neo4jSession, graph_id: str, proc_name: str, *args):
+    query = "CALL " + proc_name + "(" + ",".join(args) + ")"
     result = neo4j_sess.run(query)
     for record in result:
         print(record)
@@ -435,6 +435,19 @@ def create_procedure(sess: Session, graph_id: str, name: str, query: str, descri
     proc_id = resp.get_value().procedure_id
     return proc_id
 
+def delete_procedure(sess: Session, graph_id: str, proc_id: str):
+    resp = sess.delete_procedure(graph_id, proc_id)
+    if not resp.is_ok():
+        print("Failed to delete procedure: ", resp.get_status_message())
+        raise Exception("Failed to delete procedure, status: ", resp.get_status_message())
+
+def update_procedure(sess: Session, graph_id: str, proc_id: str, desc : str):
+    request = UpdateProcedureRequest(
+        description=desc)
+    resp = sess.update_procedure(graph_id, proc_id, request)
+    if not resp.is_ok():
+        print("Failed to update procedure: ", resp.get_status_message())
+        raise Exception("Failed to update procedure, status: ", resp.get_status_message())
 
 def start_service_on_graph(interactive_session, graph_id : str):
     resp = interactive_session.start_service(StartServiceRequest(graph_id=graph_id))

@@ -1582,6 +1582,9 @@ components:
             enable:
               type: boolean
               example : true
+            option:
+              type: object
+              additionalProperties: true
     GetProcedureResponse:
       x-body-name: get_procedure_response
       allOf:
