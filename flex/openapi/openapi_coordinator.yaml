@@ -533,6 +533,9 @@ components:
               type: array
               items:
                $ref: '#/components/schemas/Parameter'
+            option:
+              type: object
+              additionalProperties: true
 
     GetStoredProcResponse:
       allOf:
