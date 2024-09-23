@@ -38,35 +38,35 @@ inline bool parse_input_argument_from_proto_impl(
     auto& value = argument.value();
     auto item_case = value.item_case();
     if (item_case == common::Value::kI32) {
-      if constexpr (std::is_same<int32_t, TUPLE_T>::value) {
+      if constexpr (std::is_same<int32_t,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
         type = value.i32();
       } else {
-        LOG(ERROR) << "Type mismatch: " << item_case << " vs " << type << " at "
-                   << I;
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
         return false;
       }
     } else if (item_case == common::Value::kI64) {
-      if constexpr (std::is_same<int64_t, TUPLE_T>::value) {
+      if constexpr (std::is_same<int64_t,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
         type = value.i64();
       } else {
-        LOG(ERROR) << "Type mismatch: " << item_case << " vs " << type << " at "
-                   << I;
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
         return false;
       }
     } else if (item_case == common::Value::kF64) {
-      if constexpr (std::is_same<double, TUPLE_T>::value) {
+      if constexpr (std::is_same<double,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
         type = value.f64();
       } else {
-        LOG(ERROR) << "Type mismatch: " << item_case << " vs " << type << " at "
-                   << I;
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
         return false;
       }
     } else if (item_case == common::Value::kStr) {
-      if constexpr (std::is_same<std::string, TUPLE_T>::value) {
+      if constexpr (std::is_same<std::string,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
         type = value.str();
       } else {
-        LOG(ERROR) << "Type mismatch: " << item_case << " vs " << type << " at "
-                   << I;
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
         return false;
       }
     } else {
