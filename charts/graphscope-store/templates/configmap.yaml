@@ -89,6 +89,7 @@ data:
     secondary.instance.enabled={{ .Values.secondary.enabled }}
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
+    store.catchup.interval.ms={{ .Values.storeCatchupIntervalMs }}
 
     write.ha.enabled={{ .Values.backup.enabled }}
 

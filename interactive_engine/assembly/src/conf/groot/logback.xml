@@ -36,6 +36,7 @@
     <logger name="org.apache.zookeeper" level="ERROR" />
     <logger name="org.apache.kafka" level="ERROR" />
     <logger name="kafka" level="ERROR" />
+    <logger name="io.grpc.netty" level="ERROR" />
     <Logger name="MetricLog" level="INFO" additivity="false">
         <appender-ref ref="Metric"/>
     </Logger>

@@ -32,6 +32,7 @@ impl Meta {
     }
 
     pub fn recover(&self) -> GraphResult<(VertexTypeManager, EdgeTypeManager)> {
+        debug!("meta graph recover start");
         {
             let mut graph_def_val = self.graph_def_lock.lock()?;
             *graph_def_val = GraphDef::new(
@@ -237,6 +238,7 @@ impl Meta {
                 }
             }
         }
+        debug!("meta graph recovered");
         Ok((vertex_manager_builder.build(), edge_manager_builder.build()))
     }
 
