@@ -74,6 +74,9 @@ public abstract class GraphOperandTypes {
     public static final SqlSingleOperandTypeChecker INTERVALINTERVAL_INTERVALDATETIME =
             OperandTypes.or(INTERVAL_SAME_SAME, INTERVAL_DATETIME);
 
+    public static final SqlSingleOperandTypeChecker ANY_ANY =
+            family(SqlTypeFamily.ANY, SqlTypeFamily.ANY);
+
     /**
      * create {@code RexFamilyOperandTypeChecker} to validate type based on {@code RexNode}
      * @param families

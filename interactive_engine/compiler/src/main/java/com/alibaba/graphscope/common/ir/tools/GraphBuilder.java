@@ -1655,6 +1655,20 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
+    public GraphBuilder unfold(RexNode unfoldKey, @Nullable String aliasName) {
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+        RelDataType keyType = unfoldKey.getType();
+        Preconditions.checkArgument(
+                keyType.getComponentType() != null,
+                "input type of 'unfold' should be set or array with single component type, but is"
+                        + " [%s]",
+                keyType);
+        GraphLogicalUnfold unfold =
+                new GraphLogicalUnfold((GraphOptCluster) getCluster(), input, unfoldKey, aliasName);
+        replaceTop(unfold);
+        return this;
+    }
+
     @Override
     public RelBuilder join(
             JoinRelType joinType, RexNode condition, Set<CorrelationId> variablesSet) {
