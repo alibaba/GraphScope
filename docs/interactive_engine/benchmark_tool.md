@@ -1,16 +1,16 @@
-# A Generic Benchmark Tool for GIE
+# A Generic Benchmark Tool
 
-We provide a benchmarking tool to evaluate GraphScope GIE. This tool acts as multiple clients that send queries to the Gremlin (or Cypher) server through the corresponding endpoint exposed by the engine. It reports performance metrics such as latency, throughput, and query results.
+We provide a benchmarking tool to evaluate the performance of Interactive Engine. This tool acts as multiple clients that send queries (Gremlin, or Cypher) to the server through the corresponding endpoint exposed by the engine. It reports performance metrics such as latency, throughput, and query results.
 
-Notably, the tool has recently been enhanced to support comprehensive comparisons of different systems and a variety of benchmark workloads, enabling thorough assessments of query correctness and performance testing.
+Notably, the tool has recently been enhanced to support comprehensive comparisons of different systems and a variety of benchmark workloads, enabling thorough assessments and comparison of query correctness and performance.
 
 ## Benchmark Tool Overview
 
 Here are some key features of the benchmark tool:
 
-* **Support for Multiple Query Languages**. The tool accommodates various graph query languages, including Gremlin and Cypher, allowing systems to configure according to their specific language support.
-* **Support for Different Graph Systems**. It supports comparison among multiple graph systems, such as GraphScope GIE and KuzuDB. More systems will be integrated in the future.
-* **Support for Versatile Workload**. The tool supports various workloads, including LDBC IC/BI, LSQB, and JOB.
+* **Multiple Query Languages**. The tool accommodates various graph query languages, including Gremlin and Cypher, allowing systems to configure according to their specific language support.
+* **Different Graph Systems**. It supports comparison among multiple graph systems, such as GraphScope GIE and KuzuDB. More systems will be integrated in the future.
+* **Versatile Workload**. The tool supports various workloads, including [LDBC IC](https://ldbcouncil.org/benchmarks/snb-interactive/) and [BI](https://ldbcouncil.org/benchmarks/snb-bi/), [LSQB](https://github.com/ldbc/lsqb), and [JOB](https://github.com/gregrahn/join-order-benchmark).
 * **Results Evaluation**. It enables correctness validation and performance benchmarking for detailed comparisons.
 
 ## Benchmark Tool Usage
