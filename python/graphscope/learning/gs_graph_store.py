@@ -20,15 +20,15 @@ class GsGraphStore(GraphStore):
 
         if config is not None:
             config = json.loads(
-                    base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
-                        "utf-8", errors="ignore"
-                    )
+                base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
+                    "utf-8", errors="ignore"
                 )
+            )
             self.edges = config["edges"]
             self.edge_weights = config["edge_weights"]
             self.edge_dir = config["edge_dir"]
             self.random_node_split = config["random_node_split"]
-        
+
         assert len(endpoints) == 4
         self.endpoints = endpoints
         self._master_addr, self._server_client_master_port = endpoints[0].split(":")
@@ -36,9 +36,7 @@ class GsGraphStore(GraphStore):
             ":"
         )
         self._val_master_addr, self._val_loader_master_port = endpoints[2].split(":")
-        self._test_master_addr, self._test_loader_master_port = endpoints[3].split(
-            ":"
-        )
+        self._test_master_addr, self._test_loader_master_port = endpoints[3].split(":")
         assert (
             self._master_addr
             == self._train_master_addr
@@ -49,15 +47,15 @@ class GsGraphStore(GraphStore):
     @property
     def master_addr(self):
         return self._master_addr
-    
+
     @property
     def train_master_addr(self):
         return self._train_master_addr
-    
+
     @property
     def val_master_addr(self):
         return self._val_master_addr
-    
+
     @property
     def test_master_addr(self):
         return self._test_master_addr
@@ -77,13 +75,13 @@ class GsGraphStore(GraphStore):
     @property
     def test_loader_master_port(self):
         return self._test_loader_master_port
-    
+
     def get_handle(self):
         return self.handle
-    
+
     def get_config(self):
         return self.config
-    
+
     def get_endpoints(self):
         return self.endpoints
 
@@ -112,7 +110,7 @@ class GsGraphStore(GraphStore):
         if self.edges is not None:
             for edge in self.edges:
                 if self.edge_dir != None:
-                    layout ="csr" if self.edge_dir == "out" else "csc"
+                    layout = "csr" if self.edge_dir == "out" else "csc"
                     is_sorted = False if layout == "csr" else True
                 else:
                     layout = "coo"
@@ -124,20 +122,21 @@ class GsGraphStore(GraphStore):
         return cls(*ipc_handle)
 
     def share_ipc(self):
-        ipc_hanlde = (
-            list(self.endpoints), self.handle, self.config
-        )
+        ipc_hanlde = (list(self.endpoints), self.handle, self.config)
         return ipc_hanlde
 
 
 ## Pickling Registration
 
+
 def rebuild_graphstore(ipc_handle):
-  gs = GsGraphStore.from_ipc_handle(ipc_handle)
-  return gs
+    gs = GsGraphStore.from_ipc_handle(ipc_handle)
+    return gs
+
 
 def reduce_graphstore(GraphStore: GsGraphStore):
-  ipc_handle = GraphStore.share_ipc()
-  return (rebuild_graphstore, (ipc_handle, ))
+    ipc_handle = GraphStore.share_ipc()
+    return (rebuild_graphstore, (ipc_handle,))
+
 
 ForkingPickler.register(GsGraphStore, reduce_graphstore)

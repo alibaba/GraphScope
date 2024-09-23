@@ -1381,7 +1381,7 @@ class Session(object):
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
         return g
-    
+
     def PyG_remote_backend(
         self,
         graph,
@@ -1442,18 +1442,14 @@ class Session(object):
             config,
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
-        
+
         feature_store = GsFeatureStore(
-            handle=handle, 
-            config=config, 
-            endpoints=endpoints, 
-            graph=graph)
+            handle=handle, config=config, endpoints=endpoints, graph=graph
+        )
         graph_store = GsGraphStore(
-            handle=handle, 
-            config=config, 
-            endpoints=endpoints, 
-            graph=graph)
-        
+            handle=handle, config=config, endpoints=endpoints, graph=graph
+        )
+
         learning_instance = tuple([feature_store, graph_store])
         self._learning_instance_dict[graph.vineyard_id] = learning_instance
         graph._attach_learning_instance(learning_instance)
@@ -1778,6 +1774,7 @@ def graphlearn_torch(
         client_folder_path,
     )  # pylint: disable=protected-access
 
+
 def PyG_remote_backend(
     graph,
     edges,
@@ -1792,9 +1789,7 @@ def PyG_remote_backend(
     client_folder_path="./",
 ):
     assert graph is not None, "graph cannot be None"
-    assert (
-        graph._session is not None
-    ), "The graph object is invalid"
+    assert graph._session is not None, "The graph object is invalid"
     return graph._session.PyG_remote_backend(
         graph,
         edges,

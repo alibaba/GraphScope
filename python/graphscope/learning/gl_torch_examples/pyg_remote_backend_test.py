@@ -16,11 +16,11 @@ from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
 NUM_EPOCHS = 10
 LOADER_BATCH_SIZE = 512
 
-print('Batch size:', LOADER_BATCH_SIZE)
-print('Number of epochs:', NUM_EPOCHS)
+print("Batch size:", LOADER_BATCH_SIZE)
+print("Number of epochs:", NUM_EPOCHS)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print('Using device:', device)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
 
 @torch.no_grad()
@@ -139,13 +139,13 @@ print("-- Initializing loader ...")
 train_loader = GltNeighborLoader(
     data=(feature_store, graph_store),
     neighbor_sampler=train_sampler,
-    input_nodes='paper',
+    input_nodes="paper",
 )
 
 test_loader = GltNeighborLoader(
     data=(feature_store, graph_store),
     neighbor_sampler=test_sampler,
-    input_nodes='paper',
+    input_nodes="paper",
 )
 
 model = GraphSAGE(
@@ -156,7 +156,7 @@ model = GraphSAGE(
 ).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 
-     
+
 print("-- Start training ...")
 dataset_name = "ogbn-arxiv"
 for epoch in range(0, NUM_EPOCHS):
@@ -170,7 +170,7 @@ for epoch in range(0, NUM_EPOCHS):
         loss = F.nll_loss(out, batch.y[: batch.batch_size])
         loss.backward()
         optimizer.step()
-        
+
     end = time.time()
     print(f"-- Epoch: {epoch:03d}, Loss: {loss:.4f}, Epoch Time: {end - start}")
     # Test accuracy.

@@ -33,21 +33,19 @@ class GltNeighborLoader(NodeLoader):
             input_nodes=input_nodes,
             **kwargs,
         )
-        self.node_sampler=neighbor_sampler
-    
-    def __call__(
-        self
-    ) -> Union[Data, HeteroData]:
+        self.node_sampler = neighbor_sampler
+
+    def __call__(self) -> Union[Data, HeteroData]:
         r"""Samples a subgraph from a batch of input nodes."""
         out = self.collate_fn()
         return out
-    
+
     def collate_fn(self, data=None) -> Any:
         r"""Samples a subgraph from a batch of input nodes."""
-        
+
         out = self.node_sampler.sample_from_nodes()
 
         return out
-    
+
     def _get_iterator(self) -> Iterator:
         return super(NodeLoader, self)._get_iterator()

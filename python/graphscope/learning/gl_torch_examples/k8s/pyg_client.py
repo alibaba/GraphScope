@@ -96,7 +96,7 @@ def run_client_proc(
     device = torch.device("cpu")
     # Create distributed neighbor loader on remote server for training.
     print("-- Initializing PyG sampler ...")
-    
+
     train_sampler = glt.distributed.PygNeighborSampler(
         data=(feature_store, graph_store),
         num_neighbors=[5, 3, 2],
@@ -135,13 +135,13 @@ def run_client_proc(
     train_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=train_sampler,
-        input_nodes='paper',
+        input_nodes="paper",
     )
 
     test_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=test_sampler,
-        input_nodes='paper',
+        input_nodes="paper",
     )
 
     # Define model and optimizer.
@@ -280,11 +280,11 @@ if __name__ == "__main__":
     client_rank = args.node_rank
     print("--- Loading graph info ...")
     endpoints = [
-            args.master_addr + ":9001",
-            args.master_addr + ":9002",
-            args.master_addr + ":9003",
-            args.master_addr + ":9004",
-        ]
+        args.master_addr + ":9001",
+        args.master_addr + ":9002",
+        args.master_addr + ":9003",
+        args.master_addr + ":9004",
+    ]
     feature_store = GsFeatureStore(endpoints=endpoints)
     graph_store = GsGraphStore(endpoints=endpoints)
     print("--- Launching client processes ...")

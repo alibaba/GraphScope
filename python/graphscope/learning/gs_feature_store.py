@@ -71,33 +71,37 @@ class GsFeatureStore(FeatureStore):
         if self.node_features is not None:
             for node_type, node_features in self.node_features.items():
                 for idx, node_feature in enumerate(node_features):
-                    TensorAttrList.append(TensorAttr(node_type, node_feature, torch.tensor([idx])))
+                    TensorAttrList.append(
+                        TensorAttr(node_type, node_feature, torch.tensor([idx]))
+                    )
         if self.edge_features is not None:
             for edge_type, edge_features in self.edge_features.items():
                 for idx, edge_feature in enumerate(edge_features):
-                    TensorAttrList.append(TensorAttr(edge_type, edge_feature, torch.tensor([idx])))
+                    TensorAttrList.append(
+                        TensorAttr(edge_type, edge_feature, torch.tensor([idx]))
+                    )
         return TensorAttrList
-    
-    
+
     @classmethod
     def from_ipc_handle(cls, ipc_handle):
         return cls(*ipc_handle)
 
     def share_ipc(self):
-        ipc_hanlde = (
-            list(self.endpoints), self.handle, self.config
-        )
+        ipc_hanlde = (list(self.endpoints), self.handle, self.config)
         return ipc_hanlde
 
 
 ## Pickling Registration
 
+
 def rebuild_featurestore(ipc_handle):
     fs = GsFeatureStore.from_ipc_handle(ipc_handle)
     return fs
 
+
 def reduce_featurestore(FeatureStore: GsFeatureStore):
     ipc_handle = FeatureStore.share_ipc()
-    return (rebuild_featurestore, (ipc_handle, ))
+    return (rebuild_featurestore, (ipc_handle,))
+
 
 ForkingPickler.register(GsFeatureStore, reduce_featurestore)

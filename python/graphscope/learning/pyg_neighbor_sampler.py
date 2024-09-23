@@ -17,16 +17,21 @@ from torch_geometric.sampler.base import NumNeighbors
 from torch_geometric.typing import EdgeType
 from torch_geometric.typing import NodeType
 
-from graphscope.learning.graphlearn_torch.distributed.dist_neighbor_loader import \
-    DistNeighborLoader
-from graphscope.learning.graphlearn_torch.distributed.dist_options import \
-    AllDistSamplingWorkerOptions
-from graphscope.learning.graphlearn_torch.distributed.dist_options import \
-    RemoteDistSamplingWorkerOptions
+from graphscope.learning.graphlearn_torch.distributed.dist_neighbor_loader import (
+    DistNeighborLoader,
+)
+from graphscope.learning.graphlearn_torch.distributed.dist_options import (
+    AllDistSamplingWorkerOptions,
+)
+from graphscope.learning.graphlearn_torch.distributed.dist_options import (
+    RemoteDistSamplingWorkerOptions,
+)
 
 NumNeighborsType = Union[NumNeighbors, List[int], Dict[EdgeType, List[int]]]
-Seeds = Union[torch.Tensor, str] 
-InputNodes = Union[Seeds, NodeType, Tuple[NodeType, Seeds], Tuple[NodeType, List[Seeds]]]
+Seeds = Union[torch.Tensor, str]
+InputNodes = Union[
+    Seeds, NodeType, Tuple[NodeType, Seeds], Tuple[NodeType, List[Seeds]]
+]
 EdgeIndexTensor = Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]
 InputEdges = Union[EdgeIndexTensor, EdgeType, Tuple[EdgeType, EdgeIndexTensor]]
 
@@ -35,21 +40,19 @@ class PygNeighborSampler(BaseSampler):
     def __init__(
         self,
         data: Union[Data, HeteroData, Tuple[FeatureStore, GraphStore]],
-        data_split: Literal['train', 'valid', 'test'],
+        data_split: Literal["train", "valid", "test"],
         num_neighbors: NumNeighborsType,
-        
         # glt parameters:
         batch_size: int = 1,
         shuffle: bool = False,
         drop_last: bool = False,
         with_edge: bool = False,
         with_weight: bool = False,
-        edge_dir: Literal['in', 'out'] = 'out',
+        edge_dir: Literal["in", "out"] = "out",
         collect_features: bool = False,
         to_device: Optional[torch.device] = None,
         random_seed: Optional[int] = None,
         graphlearn_torch_loader: Optional[DistNeighborLoader] = None,
-        
         # Sampling worker Options:
         server_rank: Optional[Union[int, List[int]]] = None,
         num_workers: int = 1,
@@ -62,20 +65,22 @@ class PygNeighborSampler(BaseSampler):
         buffer_size: Optional[Union[int, str]] = None,
         prefetch_size: int = 4,
         worker_key: str = None,
-        glt_graph = None,
-        workload_type: Optional[Literal['train', 'validate', 'test']] = None,
+        glt_graph=None,
+        workload_type: Optional[Literal["train", "validate", "test"]] = None,
     ):
         self.data_type = DataType.from_data(data)
 
         if self.data_type != DataType.remote:
             raise TypeError(
                 f"'{self.__class__.__name__}' only supports remote data "
-                f"loading, but got '{self.data_type}'")
+                f"loading, but got '{self.data_type}'"
+            )
 
         else:  # self.data_type == DataType.remote
             _, graph_store = data
-            
+
             from graphscope.learning.graphlearn_torch.typing import Split
+
             if data_split == Split.train:
                 master_port = graph_store._train_loader_master_port
             elif data_split == Split.valid:
@@ -83,11 +88,14 @@ class PygNeighborSampler(BaseSampler):
             elif data_split == Split.test:
                 master_port = graph_store._test_loader_master_port
             else:
-                raise ValueError(f"master_port is None and data_split is not valid: {data_split}")
+                raise ValueError(
+                    f"master_port is None and data_split is not valid: {data_split}"
+                )
             worker_key = str(master_port)
 
             if graphlearn_torch_loader == None:
                 from graphscope.learning.gl_torch_graph import GLTorchGraph
+
                 glt_graph = GLTorchGraph(graph_store.endpoints)
                 self.glt_data_loader = DistNeighborLoader(
                     data=None,
@@ -121,7 +129,6 @@ class PygNeighborSampler(BaseSampler):
             else:
                 self.glt_data_loader = graphlearn_torch_loader
             self.glt_data_loader_iter = iter(self.glt_data_loader)
-                
 
     @property
     def num_neighbors(self) -> NumNeighbors:
@@ -158,15 +165,11 @@ class PygNeighborSampler(BaseSampler):
 
     # Node-based sampling #####################################################
 
-    def sample_from_nodes(
-        self
-    ) -> Union[Data, HeteroData]:
+    def sample_from_nodes(self) -> Union[Data, HeteroData]:
         out = node_sample(self._sample)
         return out
 
-    def _sample(
-        self
-    ) -> Union[Data, HeteroData]:
+    def _sample(self) -> Union[Data, HeteroData]:
         r"""Implements neighbor sampling by calling either :obj:`pyg-lib` (if
         installed) or :obj:`torch-sparse` (if installed) sampling routines.
         """
@@ -176,15 +179,12 @@ class PygNeighborSampler(BaseSampler):
         except StopIteration:
             self.glt_data_loader_iter = iter(self.glt_data_loader)
             raise StopIteration
-        
 
 
 # Sampling Utilities ##########################################################
 
 
-def node_sample(
-    sample_fn: Callable
-) -> Union[Data, HeteroData]:
+def node_sample(sample_fn: Callable) -> Union[Data, HeteroData]:
     r"""Performs sampling from a :class:`NodeSamplerInput`, leveraging a
     sampling function that accepts a seed and (optionally) a seed time as
     input. Returns the output of this sampling procedure.

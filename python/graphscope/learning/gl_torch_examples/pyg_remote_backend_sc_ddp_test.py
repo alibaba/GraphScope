@@ -59,6 +59,7 @@ def test(model, test_loader, dataset_name):
 
     return test_acc.item()
 
+
 def run_client_proc(
     feature_store: GsFeatureStore,
     graph_store: GsGraphStore,
@@ -73,7 +74,7 @@ def run_client_proc(
     train_loader_master_port: int,
     test_loader_master_port: int,
 ):
-    
+
     print("-- Initializing client ...")
     glt.distributed.init_client(
         num_servers=num_servers,
@@ -100,7 +101,7 @@ def run_client_proc(
     device = torch.device("cpu")
     # Create distributed neighbor loader on remote server for training.
     print("-- Initializing PyG sampler ...")
-    
+
     train_sampler = PygNeighborSampler(
         data=(feature_store, graph_store),
         num_neighbors=[10, 5, 3],
@@ -141,13 +142,13 @@ def run_client_proc(
     train_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=train_sampler,
-        input_nodes='paper',
+        input_nodes="paper",
     )
 
     test_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=test_sampler,
-        input_nodes='paper',
+        input_nodes="paper",
     )
 
     # Define model and optimizer.
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     # load the ogbn_arxiv graph as an example.
     sess = gs.session(cluster_type="hosts", num_workers=num_servers)
     g = load_ogbn_arxiv(sess=sess)
-    
+
     print("-- Initializing store ...")
     feature_store, graph_store = gs.PyG_remote_backend(
         g,
@@ -294,7 +295,7 @@ if __name__ == "__main__":
     print("--- Launching client processes ...")
     mp_context = torch.multiprocessing.get_context("spawn")
     cprocs = []
-    
+
     for client_rank in range(num_clients):
         print("--- Creating torch process ", client_rank, " ...")
         cproc = mp_context.Process(
