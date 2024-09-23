@@ -37,6 +37,7 @@ from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
 from graphscope.client.connection import conn
+from graphscope.client.session import PyG_remote_backend
 from graphscope.client.session import Session
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session
@@ -51,9 +52,6 @@ from graphscope.framework.errors import *
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
-
-
-from graphscope.client.session import PyG_remote_backend
 
 __doc__ = """
 GraphScope - A unified distributed graph computing platform
