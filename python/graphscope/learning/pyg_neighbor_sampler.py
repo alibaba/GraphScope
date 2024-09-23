@@ -85,7 +85,7 @@ class PygNeighborSampler(BaseSampler):
                 )
             worker_key = str(master_port)
 
-            if graphlearn_torch_loader == None:
+            if graphlearn_torch_loader is None:
                 from graphscope.learning.gl_torch_graph import GLTorchGraph
 
                 glt_graph = GLTorchGraph(graph_store.endpoints)

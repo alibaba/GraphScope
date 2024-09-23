@@ -109,7 +109,7 @@ class GsGraphStore(GraphStore):
         EdgeAttrList = []
         if self.edges is not None:
             for edge in self.edges:
-                if self.edge_dir != None:
+                if self.edge_dir is not None:
                     layout = "csr" if self.edge_dir == "out" else "csc"
                     is_sorted = False if layout == "csr" else True
                 else:
@@ -126,7 +126,7 @@ class GsGraphStore(GraphStore):
         return ipc_hanlde
 
 
-## Pickling Registration
+# Pickling Registration
 
 
 def rebuild_graphstore(ipc_handle):

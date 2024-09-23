@@ -91,7 +91,7 @@ class GsFeatureStore(FeatureStore):
         return ipc_hanlde
 
 
-## Pickling Registration
+# Pickling Registration
 
 
 def rebuild_featurestore(ipc_handle):
