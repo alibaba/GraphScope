@@ -27,13 +27,11 @@ from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
+from graphscope.learning.glt_neighbor_loader import GltNeighborLoader
 from graphscope.learning.graphlearn_torch.typing import Split
-
-
-from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
+from graphscope.learning.gs_feature_store import GsFeatureStore
+from graphscope.learning.gs_graph_store import GsGraphStore
 from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
-from graphscope.learning.GSFeatureStore import GSFeatureStore
-from graphscope.learning.GSGraphStore import GSGraphStore
 
 gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)
@@ -62,8 +60,8 @@ def test(model, test_loader, dataset_name):
     return test_acc.item()
 
 def run_client_proc(
-    feature_store: GSFeatureStore,
-    graph_store: GSGraphStore,
+    feature_store: GsFeatureStore,
+    graph_store: GsGraphStore,
     num_servers: int,
     num_clients: int,
     client_rank: int,
@@ -140,13 +138,13 @@ def run_client_proc(
     )
 
     print("-- Initializing PyG loader ...")
-    train_loader = GLTNeighborLoader(
+    train_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=train_sampler,
         input_nodes='paper',
     )
 
-    test_loader = GLTNeighborLoader(
+    test_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=test_sampler,
         input_nodes='paper',

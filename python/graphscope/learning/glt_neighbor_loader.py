@@ -16,7 +16,7 @@ from torch_geometric.typing import InputNodes
 from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
 
 
-class GLTNeighborLoader(NodeLoader):
+class GltNeighborLoader(NodeLoader):
     def __init__(
         self,
         data: Union[Data, HeteroData, Tuple[FeatureStore, GraphStore]],

@@ -11,7 +11,7 @@ from torch_geometric.data import GraphStore
 from torch_geometric.typing import EdgeTensorType
 
 
-class GSGraphStore(GraphStore):
+class GsGraphStore(GraphStore):
     def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
         super().__init__()
         # self.store: Dict[Tuple, Tuple[Tensor, Tensor]] = {}
@@ -96,15 +96,15 @@ class GSGraphStore(GraphStore):
         edge_index: EdgeTensorType,
         edge_attr: EdgeAttr,
     ) -> bool:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def _get_edge_index(self, edge_attr: EdgeAttr) -> Optional[EdgeTensorType]:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def _remove_edge_index(self, edge_attr: EdgeAttr) -> bool:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
@@ -133,11 +133,11 @@ class GSGraphStore(GraphStore):
 ## Pickling Registration
 
 def rebuild_graphstore(ipc_handle):
-  gs = GSGraphStore.from_ipc_handle(ipc_handle)
+  gs = GsGraphStore.from_ipc_handle(ipc_handle)
   return gs
 
-def reduce_graphstore(GraphStore: GSGraphStore):
+def reduce_graphstore(GraphStore: GsGraphStore):
   ipc_handle = GraphStore.share_ipc()
   return (rebuild_graphstore, (ipc_handle, ))
 
-ForkingPickler.register(GSGraphStore, reduce_graphstore)
+ForkingPickler.register(GsGraphStore, reduce_graphstore)

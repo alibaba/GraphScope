@@ -25,10 +25,10 @@ from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
-from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
+from graphscope.learning.glt_neighbor_loader import GltNeighborLoader
 from graphscope.learning.graphlearn_torch.typing import Split
-from graphscope.learning.GSFeatureStore import GSFeatureStore
-from graphscope.learning.GSGraphStore import GSGraphStore
+from graphscope.learning.gs_feature_store import GsFeatureStore
+from graphscope.learning.gs_graph_store import GsGraphStore
 
 gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)
@@ -58,8 +58,8 @@ def test(model, test_loader, dataset_name):
 
 
 def run_client_proc(
-    feature_store: GSFeatureStore,
-    graph_store: GSGraphStore,
+    feature_store: GsFeatureStore,
+    graph_store: GsGraphStore,
     group_master: str,
     num_servers: int,
     num_clients: int,
@@ -132,13 +132,13 @@ def run_client_proc(
     )
 
     print("-- Initializing PyG loader ...")
-    train_loader = GLTNeighborLoader(
+    train_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=train_sampler,
         input_nodes='paper',
     )
 
-    test_loader = GLTNeighborLoader(
+    test_loader = GltNeighborLoader(
         data=(feature_store, graph_store),
         neighbor_sampler=test_sampler,
         input_nodes='paper',
@@ -285,8 +285,8 @@ if __name__ == "__main__":
             args.master_addr + ":9003",
             args.master_addr + ":9004",
         ]
-    feature_store = GSFeatureStore(endpoints=endpoints)
-    graph_store = GSGraphStore(endpoints=endpoints)
+    feature_store = GsFeatureStore(endpoints=endpoints)
+    graph_store = GsGraphStore(endpoints=endpoints)
     print("--- Launching client processes ...")
     run_client_proc(
         feature_store,

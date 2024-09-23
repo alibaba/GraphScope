@@ -19,7 +19,7 @@ from graphscope.learning.graphlearn_torch.data import Feature
 KeyType = Tuple[Optional[str], Optional[str]]
 
 
-class GSFeatureStore(FeatureStore):
+class GsFeatureStore(FeatureStore):
     def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
         super().__init__()
         # self.store: Dict[KeyType, Tuple[Tensor, Tensor]] = {}
@@ -44,15 +44,15 @@ class GSFeatureStore(FeatureStore):
         return (attr.group_name, attr.attr_name)
 
     def _put_tensor(self, tensor: FeatureTensorType, attr: TensorAttr) -> bool:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def _get_tensor(self, attr: TensorAttr) -> Optional[Tensor]:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def _remove_tensor(self, attr: TensorAttr) -> bool:
-        r"""To be implemented by :class:`GSFeatureStore`."""
+        r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def _get_tensor_size(self, attr: TensorAttr) -> Optional[Tuple[int, ...]]:
@@ -78,51 +78,6 @@ class GSFeatureStore(FeatureStore):
                     TensorAttrList.append(TensorAttr(edge_type, edge_feature, torch.tensor([idx])))
         return TensorAttrList
     
-    def _build_features(
-            self, 
-            feature_data, 
-            id2idx, 
-            split_ratio: Union[float, Dict[str, float]] = 0.0,
-            device_group_list: Optional[List[DeviceGroup]] = None,
-            device: Optional[int] = None,
-            with_gpu: bool = True,
-            dtype: Optional[torch.dtype] = None
-        ):
-        r""" Build `Feature`s for node/edge feature data.
-        """
-        if feature_data is not None:
-            if isinstance(feature_data, dict):
-                # heterogeneous.
-                if not isinstance(split_ratio, dict):
-                    split_ratio = {
-                        graph_type: float(split_ratio)
-                        for graph_type in feature_data.keys()
-                    }
-
-                if id2idx is not None:
-                    assert isinstance(id2idx, dict)
-                else:
-                    id2idx = {}
-
-                features = {}
-                for graph_type, feat in feature_data.items():
-                    features[graph_type] = Feature(
-                        feat, id2idx.get(graph_type, None),
-                        split_ratio.get(graph_type, 0.0),
-                        device_group_list, device, with_gpu,
-                        dtype if dtype is not None else feat.dtype
-                    )
-            else:
-                # homogeneous.
-                features = Feature(
-                    feature_data, id2idx, float(split_ratio),
-                    device_group_list, device, with_gpu,
-                    dtype if dtype is not None else feature_data.dtype
-                )
-        else:
-            features = None
-
-        return features
     
     @classmethod
     def from_ipc_handle(cls, ipc_handle):
@@ -138,11 +93,11 @@ class GSFeatureStore(FeatureStore):
 ## Pickling Registration
 
 def rebuild_featurestore(ipc_handle):
-    fs = GSFeatureStore.from_ipc_handle(ipc_handle)
+    fs = GsFeatureStore.from_ipc_handle(ipc_handle)
     return fs
 
-def reduce_featurestore(FeatureStore: GSFeatureStore):
+def reduce_featurestore(FeatureStore: GsFeatureStore):
     ipc_handle = FeatureStore.share_ipc()
     return (rebuild_featurestore, (ipc_handle, ))
 
-ForkingPickler.register(GSFeatureStore, reduce_featurestore)
+ForkingPickler.register(GsFeatureStore, reduce_featurestore)

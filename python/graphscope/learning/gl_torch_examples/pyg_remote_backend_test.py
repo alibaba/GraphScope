@@ -1,19 +1,17 @@
 import multiprocessing as mp
+import time
+
 import torch
 import torch.nn.functional as F
 from ogb.nodeproppred import Evaluator
-import time
-
-from graphscope.learning.glt_neighbor_loader import GLTNeighborLoader
-from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
-
-import torch.nn.functional as F
 from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
 from graphscope.dataset import load_ogbn_arxiv
+from graphscope.learning.glt_neighbor_loader import GltNeighborLoader
 from graphscope.learning.graphlearn_torch.typing import Split
+from graphscope.learning.pyg_neighbor_sampler import PygNeighborSampler
 
 NUM_EPOCHS = 10
 LOADER_BATCH_SIZE = 512
@@ -138,13 +136,13 @@ test_sampler = PygNeighborSampler(
 )
 
 print("-- Initializing loader ...")
-train_loader = GLTNeighborLoader(
+train_loader = GltNeighborLoader(
     data=(feature_store, graph_store),
     neighbor_sampler=train_sampler,
     input_nodes='paper',
 )
 
-test_loader = GLTNeighborLoader(
+test_loader = GltNeighborLoader(
     data=(feature_store, graph_store),
     neighbor_sampler=test_sampler,
     input_nodes='paper',

@@ -1397,10 +1397,10 @@ class Session(object):
         client_folder_path="./",
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
+        from graphscope.learning.gs_feature_store import GsFeatureStore
+        from graphscope.learning.gs_graph_store import GsGraphStore
         from graphscope.learning.utils import fill_params_in_yaml
         from graphscope.learning.utils import read_folder_files_content
-        from graphscope.learning.GSFeatureStore import GSFeatureStore
-        from graphscope.learning.GSGraphStore import GSGraphStore
 
         handle = {
             "vineyard_socket": self._engine_config["vineyard_socket"],
@@ -1443,12 +1443,12 @@ class Session(object):
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
         
-        feature_store = GSFeatureStore(
+        feature_store = GsFeatureStore(
             handle=handle, 
             config=config, 
             endpoints=endpoints, 
             graph=graph)
-        graph_store = GSGraphStore(
+        graph_store = GsGraphStore(
             handle=handle, 
             config=config, 
             endpoints=endpoints, 
