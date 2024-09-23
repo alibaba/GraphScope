@@ -17,15 +17,12 @@ from torch_geometric.sampler.base import NumNeighbors
 from torch_geometric.typing import EdgeType
 from torch_geometric.typing import NodeType
 
-from graphscope.learning.graphlearn_torch.distributed.dist_neighbor_loader import (
-    DistNeighborLoader,
-)
-from graphscope.learning.graphlearn_torch.distributed.dist_options import (
-    AllDistSamplingWorkerOptions,
-)
-from graphscope.learning.graphlearn_torch.distributed.dist_options import (
-    RemoteDistSamplingWorkerOptions,
-)
+from graphscope.learning.graphlearn_torch.distributed.dist_neighbor_loader import \
+    DistNeighborLoader
+from graphscope.learning.graphlearn_torch.distributed.dist_options import \
+    AllDistSamplingWorkerOptions
+from graphscope.learning.graphlearn_torch.distributed.dist_options import \
+    RemoteDistSamplingWorkerOptions
 
 NumNeighborsType = Union[NumNeighbors, List[int], Dict[EdgeType, List[int]]]
 Seeds = Union[torch.Tensor, str]
