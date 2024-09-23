@@ -267,10 +267,22 @@ class QueryGenerator {
   }
 
   std::vector<std::string> get_param_types(
-      const std::vector<codegen::ParamConst>& param_vars) {
+      std::vector<codegen::ParamConst> param_vars) {
     std::vector<std::string> param_types;
-    for (auto& param : param_vars) {
-      param_types.push_back(data_type_2_string(param.type, false));
+    if (param_vars.size() > 0) {
+      sort(param_vars.begin(), param_vars.end(),
+           [](const auto& a, const auto& b) { return a.id < b.id; });
+      CHECK(param_vars[0].id == 0);
+      for (size_t i = 0; i < param_vars.size(); ++i) {
+        if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
+          CHECK(param_vars[i].var_name == param_vars[i - 1].var_name)
+              << " " << param_vars[i].var_name << " "
+              << param_vars[i - 1].var_name;
+          continue;
+        } else {
+          param_types.push_back(data_type_2_string(param_vars[i].type, false));
+        }
+      }
     }
     return param_types;
   }
