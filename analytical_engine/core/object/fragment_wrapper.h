@@ -35,7 +35,7 @@
 #include "boost/leaf/error.hpp"
 #include "boost/leaf/result.hpp"
 #include "grape/fragment/immutable_edgecut_fragment.h"
-#include "grape/fragment/immutable_vertexcut_fragment.h"
+// #include "grape/fragment/immutable_vertexcut_fragment.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/client/client.h"
@@ -1095,6 +1095,7 @@ class FragmentWrapper<
   std::shared_ptr<fragment_t> fragment_;
 };
 
+/*
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
 class FragmentWrapper<
     grape::ImmutableVertexcutFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
@@ -1160,6 +1161,7 @@ class FragmentWrapper<
   rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
+*/
 
 #ifdef NETWORKX
 /**
