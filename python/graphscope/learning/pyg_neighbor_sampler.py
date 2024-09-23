@@ -17,15 +17,7 @@ from torch_geometric.sampler.base import NumNeighbors
 from torch_geometric.typing import EdgeType
 from torch_geometric.typing import NodeType
 
-from graphscope.learning.graphlearn_torch.distributed.dist_neighbor_loader import (
-    DistNeighborLoader,
-)
-from graphscope.learning.graphlearn_torch.distributed.dist_options import (
-    AllDistSamplingWorkerOptions,
-)
-from graphscope.learning.graphlearn_torch.distributed.dist_options import (
-    RemoteDistSamplingWorkerOptions,
-)
+import graphscope.learning.graphlearn_torch as glt
 
 NumNeighborsType = Union[NumNeighbors, List[int], Dict[EdgeType, List[int]]]
 Seeds = Union[torch.Tensor, str]
@@ -52,7 +44,7 @@ class PygNeighborSampler(BaseSampler):
         collect_features: bool = False,
         to_device: Optional[torch.device] = None,
         random_seed: Optional[int] = None,
-        graphlearn_torch_loader: Optional[DistNeighborLoader] = None,
+        graphlearn_torch_loader: Optional[glt.distributed.DistNeighborLoader] = None,
         # Sampling worker Options:
         server_rank: Optional[Union[int, List[int]]] = None,
         num_workers: int = 1,
@@ -97,7 +89,7 @@ class PygNeighborSampler(BaseSampler):
                 from graphscope.learning.gl_torch_graph import GLTorchGraph
 
                 glt_graph = GLTorchGraph(graph_store.endpoints)
-                self.glt_data_loader = DistNeighborLoader(
+                self.glt_data_loader = glt.distributed.DistNeighborLoader(
                     data=None,
                     num_neighbors=num_neighbors,
                     input_nodes=data_split,
@@ -110,7 +102,7 @@ class PygNeighborSampler(BaseSampler):
                     with_weight=with_weight,
                     edge_dir=edge_dir,
                     random_seed=random_seed,
-                    worker_options=RemoteDistSamplingWorkerOptions(
+                    worker_options=glt.distributed.RemoteDistSamplingWorkerOptions(
                         server_rank=server_rank,
                         num_workers=num_workers,
                         worker_devices=worker_devices,
