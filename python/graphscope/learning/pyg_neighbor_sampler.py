@@ -75,11 +75,12 @@ class PygNeighborSampler(BaseSampler):
         else:  # self.data_type == DataType.remote
             _, graph_store = data
             
-            if data_split == 'train':
+            from graphscope.learning.graphlearn_torch.typing import Split
+            if data_split == Split.train:
                 master_port = graph_store._train_loader_master_port
-            elif data_split == 'valid':
+            elif data_split == Split.valid:
                 master_port = graph_store._val_loader_master_port
-            elif data_split == 'test':
+            elif data_split == Split.test:
                 master_port = graph_store._test_loader_master_port
             else:
                 raise ValueError(f"master_port is None and data_split is not valid: {data_split}")
