@@ -24,8 +24,7 @@ public class QueryWithoutParameter extends CommonQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         return gremlinQueryPattern;
     }
 

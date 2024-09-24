@@ -1,1 +1,0 @@
-g.V($personId).in('hasCreator').in('replyOf').hasLabel('comment').as('comment').order().by('creationDate', desc).by('id', asc).limit(20).out('hasCreator').as('commenter').select('commenter','comment').by(valueMap('id', 'firstName', 'lastName')).by(valueMap('creationDate', 'id', 'content'))
