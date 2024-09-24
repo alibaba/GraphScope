@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.28.0"
+  tag: "0.29.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -259,7 +259,7 @@ portal:
   coordinatorImage:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/coordinator
-    tag: "0.28.0"
+    tag: "0.29.0"
   ## Service parameters
   ##
   service:

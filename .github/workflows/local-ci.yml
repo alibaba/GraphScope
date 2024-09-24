@@ -385,7 +385,7 @@ jobs:
 
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
-                          --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
+                          --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
                           $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
