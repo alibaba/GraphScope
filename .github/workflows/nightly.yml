@@ -70,9 +70,10 @@ jobs:
         make unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       if: matrix.os == 'ubuntu-20.04'
       continue-on-error: true
       with:
-        file: ./python/coverage.xml
-        fail_ci_if_error: false
+        files: ./python/coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

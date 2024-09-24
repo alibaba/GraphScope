@@ -92,5 +92,6 @@ jobs:
       uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
-        file: ./python/coverage.xml
-        fail_ci_if_error: false
+        files: ./python/coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
