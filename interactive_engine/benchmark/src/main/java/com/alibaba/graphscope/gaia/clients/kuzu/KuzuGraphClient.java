@@ -38,6 +38,14 @@ public class KuzuGraphClient implements GraphClient {
         }
     }
 
+    public void setMaxNumThreadForExec(long parallelism) {
+        try {
+            conn.setMaxNumThreadForExec(parallelism);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public GraphResultSet submit(String query) {
         try {

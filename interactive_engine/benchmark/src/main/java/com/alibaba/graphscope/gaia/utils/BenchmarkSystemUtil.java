@@ -63,6 +63,8 @@ public class BenchmarkSystemUtil {
                 case "kuzu":
                     if (path.isPresent()) {
                         client = new KuzuGraphClient(path.get());
+                        long parallelism = configuration.getInt("system." + systemCount + ".parallelism", 1);
+                        ((KuzuGraphClient)client).setMaxNumThreadForExec(parallelism);
                     } else {
                         throw new IllegalArgumentException(
                                 "Kuzu client must have path to access the database");
