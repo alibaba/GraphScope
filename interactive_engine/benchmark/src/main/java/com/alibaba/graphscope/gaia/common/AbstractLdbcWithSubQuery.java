@@ -21,10 +21,14 @@ import com.alibaba.graphscope.gaia.utils.ResultComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
 public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
+
+    private static Logger logger = LoggerFactory.getLogger(AbstractLdbcWithSubQuery.class);
 
     public AbstractLdbcWithSubQuery(String queryName, String queryFile, String parameterFile)
             throws Exception {
@@ -63,13 +67,13 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
                 if (printResult) {
                     printInfo = String.format("%s Result: { %s }", printInfo, resultStr);
                 }
-                System.out.println(printInfo);
+                logger.info(printInfo);
             }
             if (!comparator.isEmpty()) {
                 comparator.compareResults(queryName, result.getRight());
             }
         } catch (Exception e) {
-            System.out.println(
+            logger.error(
                     String.format(
                             "Timeout or failed: QueryName[%s], Parameter[%s].",
                             queryName, singleParameter.toString()));

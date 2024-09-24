@@ -18,6 +18,9 @@ package com.alibaba.graphscope.gaia.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -26,6 +29,7 @@ import java.util.Map;
 
 public class ResultComparator {
     private Map<String, String> expectedResults;
+    private static Logger logger = LoggerFactory.getLogger(ResultComparator.class);
 
     public ResultComparator(String expectedResultsPath) {
         if (expectedResultsPath != null && !expectedResultsPath.isEmpty()) {
@@ -47,15 +51,14 @@ public class ResultComparator {
         String expectedResult = expectedResults.getOrDefault(queryName, "").trim();
         if (!expectedResult.isEmpty()) {
             if (normalizeString(expectedResult).equals(normalizeString(actualResult))) {
-                System.out.println(queryName + ": Query result matches the expected result.");
+                logger.info(queryName + ": Query result matches the expected result.");
             } else {
-                System.err.println(
-                        queryName + ": Query result does not match the expected result.");
-                System.err.println("Expected: " + expectedResult);
-                System.err.println("Actual  : " + actualResult);
+                logger.error(queryName + ": Query result does not match the expected result.");
+                logger.error("Expected: " + expectedResult);
+                logger.error("Actual  : " + actualResult);
             }
         } else {
-            System.err.println(queryName + ": No expected result found for comparison.");
+            logger.error(queryName + ": No expected result found for comparison.");
         }
     }
 
