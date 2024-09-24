@@ -15,10 +15,12 @@
  */
 package com.alibaba.graphscope.gaia.common;
 
+import com.alibaba.graphscope.gaia.clients.GraphClient;
+import com.alibaba.graphscope.gaia.clients.GraphResultSet;
+import com.alibaba.graphscope.gaia.utils.ResultComparator;
+
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Result;
-import org.apache.tinkerpop.gremlin.driver.ResultSet;
 
 import java.util.HashMap;
 
@@ -30,24 +32,25 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
     }
 
     @Override
-    public void processGremlinQuery(
-            Client client,
+    public void processGraphQuery(
+            GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
-            boolean printQuery) {
+            boolean printQuery,
+            ResultComparator comparator) {
 
         try {
-            String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
+            String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
 
             long startTime = System.currentTimeMillis();
-            ResultSet resultSet = client.submit(gremlinQuery);
+            GraphResultSet resultSet = client.submit(gremlinQuery);
             int resultCount = 0;
             String resultStr = "";
 
-            Pair<Integer, String> resultPair = processResult(resultSet);
-            resultCount += resultPair.getLeft();
-            if (printResult && !resultPair.getRight().isEmpty()) {
-                resultStr = String.format("%s%s", resultStr, resultPair.getValue());
+            Pair<Integer, String> result = processResult(resultSet);
+            resultCount += result.getLeft();
+            if (printResult && !result.getRight().isEmpty()) {
+                resultStr = String.format("%s%s", resultStr, result.getValue());
             }
 
             long endTime = System.currentTimeMillis();
@@ -61,6 +64,9 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
                     printInfo = String.format("%s Result: { %s }", printInfo, resultStr);
                 }
                 System.out.println(printInfo);
+            }
+            if (!comparator.isEmpty()) {
+                comparator.compareResults(queryName, result.getRight());
             }
         } catch (Exception e) {
             System.out.println(

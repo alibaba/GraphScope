@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.28.0"
+  tag: "0.29.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -259,7 +259,7 @@ portal:
   coordinatorImage:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/coordinator
-    tag: "0.28.0"
+    tag: "0.29.0"
   ## Service parameters
   ##
   service:
@@ -528,7 +528,7 @@ discoveryMode: "file"
 
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000
-offsetsPersistIntervalMs: 3000
+offsetsPersistIntervalMs: 1000
 fileMetaStorePath: "/etc/groot/my.meta"
 logRecycleEnable: true
 logRecycleOffsetReserve: 86400
@@ -538,9 +538,10 @@ storeDataPath: "/var/lib/graphscope-store"
 storeDataDownloadPath: "/var/lib/graphscope-store/download"
 storeDataSecondaryPath: "/home/graphscope/secondary"
 storeWriteThreadCount: 1
-storeQueueBufferSize: "1024000"
+storeQueueBufferSize: "102400"
 
 storeGcIntervalMs: 5000
+storeCatchupIntervalMs: 5000
 
 ## Kafka Config
 ##

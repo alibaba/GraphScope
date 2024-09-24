@@ -101,6 +101,10 @@ public abstract class GraphShuttle extends RelShuttleImpl {
         return visitChildren(join);
     }
 
+    public RelNode visit(GraphLogicalUnfold unfold) {
+        return visitChildren(unfold);
+    }
+
     public RelNode visit(GraphProcedureCall procedureCall) {
         return visitChildren(procedureCall);
     }

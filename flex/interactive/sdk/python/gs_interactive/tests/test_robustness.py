@@ -28,7 +28,7 @@ from gs_interactive.models import *
     
 
 from gs_interactive.tests.conftest import create_vertex_only_modern_graph, start_service_on_graph,interactive_driver
-from gs_interactive.tests.conftest import create_procedure, delete_running_graph, create_modern_graph, create_partial_modern_graph,run_cypher_test_suite, call_procedure
+from gs_interactive.tests.conftest import create_procedure,delete_procedure,update_procedure, delete_running_graph, create_modern_graph, create_partial_modern_graph,run_cypher_test_suite, call_procedure
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph, import_data_to_partial_modern_graph, import_data_to_full_modern_graph
 
 
@@ -121,3 +121,18 @@ def test_procedure_creation(interactive_session, neo4j_session, create_modern_gr
     with pytest.raises(Exception):
         create_procedure(interactive_session, create_modern_graph, "test_proc2", "MATCH(n: IDONTKOWN) return count(n)")
 
+def test_builtin_procedure(interactive_session,neo4j_session, create_modern_graph):
+    print("[Test builtin procedure]")
+    # Delete the builtin procedure should fail
+    with pytest.raises(Exception):
+        delete_procedure(interactive_session, create_modern_graph, "count_vertices")
+    # Create a procedure with the same name as builtin procedure should fail
+    with pytest.raises(Exception):
+        create_procedure(interactive_session, create_modern_graph, "count_vertices", "MATCH(n: software) return count(n);")
+    # Update the builtin procedure should fail
+    with pytest.raises(Exception):
+        update_procedure(interactive_session, create_modern_graph, "count_vertices", "A updated description")
+    # Call the builtin procedure
+    start_service_on_graph(interactive_session, create_modern_graph)
+    call_procedure(neo4j_session, create_modern_graph, "count_vertices", '"person"')
+    

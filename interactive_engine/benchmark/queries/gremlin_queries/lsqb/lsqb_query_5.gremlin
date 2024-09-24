@@ -1,1 +1,1 @@
-g.V().match(    __.as('message').out('hasTag').as('tag1'),    __.as('message').in('replyOf').as('comment'),    __.as('comment').out('hasTag').as('tag2')).where(expr("@tag1 != @tag2")).count()
+g.V().match(    __.as('message').out('hasTag').as('tag1'),    __.as('message').in('replyOf').as('comment'),    __.as('comment').out('hasTag').as('tag2')).where(expr(tag1<>tag2)).count()

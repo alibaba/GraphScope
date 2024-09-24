@@ -104,7 +104,7 @@ impl GraphPath {
                     let entry = entry.into();
                     let id = entry.id();
                     GraphPath::SimpleEndV((entry, vec![id], 1))
-                },
+                }
                 pb::path_expand::PathOpt::Trail => GraphPath::TrailAllPath(vec![entry.into()]),
             },
             pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
@@ -167,21 +167,27 @@ impl GraphPath {
 
     pub fn get_path_start(&self) -> Option<&VertexOrEdge> {
         match self {
-            GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) | GraphPath::TrailAllPath(ref p) => p.first(),
+            GraphPath::AllPath(ref p)
+            | GraphPath::SimpleAllPath(ref p)
+            | GraphPath::TrailAllPath(ref p) => p.first(),
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 
     pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
-            GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) | GraphPath::TrailAllPath(ref p) => p.last().unwrap(),
+            GraphPath::AllPath(ref p)
+            | GraphPath::SimpleAllPath(ref p)
+            | GraphPath::TrailAllPath(ref p) => p.last().unwrap(),
             GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _, _)) => e,
         }
     }
 
     pub fn get_path_end_mut(&mut self) -> &mut VertexOrEdge {
         match self {
-            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => p.last_mut().unwrap(),
+            GraphPath::AllPath(ref mut p)
+            | GraphPath::SimpleAllPath(ref mut p)
+            | GraphPath::TrailAllPath(ref mut p) => p.last_mut().unwrap(),
             GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) => e,
         }
     }
@@ -233,7 +239,9 @@ impl GraphPath {
     // pop the last element from the path, and return the element.
     pub fn pop(&mut self) -> Option<VertexOrEdge> {
         match self {
-            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => p.pop(),
+            GraphPath::AllPath(ref mut p)
+            | GraphPath::SimpleAllPath(ref mut p)
+            | GraphPath::TrailAllPath(ref mut p) => p.pop(),
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
@@ -241,7 +249,9 @@ impl GraphPath {
     // reverse the path.
     pub fn reverse(&mut self) {
         match self {
-            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => {
+            GraphPath::AllPath(ref mut p)
+            | GraphPath::SimpleAllPath(ref mut p)
+            | GraphPath::TrailAllPath(ref mut p) => {
                 p.reverse();
             }
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
@@ -251,7 +261,9 @@ impl GraphPath {
     // get the element ids in the path, including both vertices and edges.
     pub fn get_elem_ids(&self) -> Vec<ID> {
         match self {
-            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.iter().map(|e| e.id()).collect(),
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => {
+                p.iter().map(|e| e.id()).collect()
+            }
             GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.id()],
         }
     }
@@ -259,7 +271,9 @@ impl GraphPath {
     // get the element labels in the path, including both vertices and edges.
     pub fn get_elem_labels(&self) -> Vec<Option<LabelId>> {
         match self {
-            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.iter().map(|e| e.label()).collect(),
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => {
+                p.iter().map(|e| e.label()).collect()
+            }
             GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.label()],
         }
     }
@@ -409,10 +423,10 @@ impl PartialEq for GraphPath {
             | (GraphPath::AllPath(p1), GraphPath::SimpleAllPath(p2))
             | (GraphPath::AllPath(p1), GraphPath::TrailAllPath(p2))
             | (GraphPath::SimpleAllPath(p1), GraphPath::AllPath(p2))
-            | (GraphPath::SimpleAllPath(p1), GraphPath::SimpleAllPath(p2)) 
-            | (GraphPath::SimpleAllPath(p1), GraphPath::TrailAllPath(p2)) 
-            | (GraphPath::TrailAllPath(p1), GraphPath::AllPath(p2)) 
-            | (GraphPath::TrailAllPath(p1), GraphPath::SimpleAllPath(p2)) 
+            | (GraphPath::SimpleAllPath(p1), GraphPath::SimpleAllPath(p2))
+            | (GraphPath::SimpleAllPath(p1), GraphPath::TrailAllPath(p2))
+            | (GraphPath::TrailAllPath(p1), GraphPath::AllPath(p2))
+            | (GraphPath::TrailAllPath(p1), GraphPath::SimpleAllPath(p2))
             | (GraphPath::TrailAllPath(p1), GraphPath::TrailAllPath(p2)) => p1.eq(p2),
             (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
             | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _, _)))
@@ -571,7 +585,9 @@ impl TryFrom<result_pb::GraphPath> for GraphPath {
 impl Hash for GraphPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.hash(state),
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => {
+                p.hash(state)
+            }
             GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => e.hash(state),
         }
     }

@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.function.GraphFunctions;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
@@ -872,10 +873,11 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.BIT_OR
                 || sqlKind == SqlKind.BIT_XOR
                 || (sqlKind == SqlKind.OTHER
-                        && (operator.getName().equals("IN")
-                                || operator.getName().equals("DATETIME_MINUS")
-                                || operator.getName().equals("PATH_CONCAT")
-                                || operator.getName().equals("PATH_FUNCTION")))
+                                && (operator.getName().equals("IN")
+                                        || operator.getName().equals("DATETIME_MINUS")
+                                        || operator.getName().equals("PATH_CONCAT")
+                                        || operator.getName().equals("PATH_FUNCTION"))
+                        || operator.getName().startsWith(GraphFunctions.FUNCTION_PREFIX))
                 || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 
@@ -1652,6 +1654,20 @@ public class GraphBuilder extends RelBuilder {
             }
             project(originalExprs, originalAliases, false);
         }
+        return this;
+    }
+
+    public GraphBuilder unfold(RexNode unfoldKey, @Nullable String aliasName) {
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+        RelDataType keyType = unfoldKey.getType();
+        Preconditions.checkArgument(
+                keyType.getComponentType() != null,
+                "input type of 'unfold' should be set or array with single component type, but is"
+                        + " [%s]",
+                keyType);
+        GraphLogicalUnfold unfold =
+                new GraphLogicalUnfold((GraphOptCluster) getCluster(), input, unfoldKey, aliasName);
+        replaceTop(unfold);
         return this;
     }
 

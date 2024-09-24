@@ -34,4 +34,7 @@ public class GraphConfig {
     // an intermediate solution to support foreign key, will be integrated into schema
     public static final Config<String> GRAPH_FOREIGN_KEY_URI =
             Config.stringConfig("graph.foreign.key", "");
+
+    public static final Config<String> GRAPH_FUNCTIONS_URI =
+            Config.stringConfig("graph.functions", "");
 }

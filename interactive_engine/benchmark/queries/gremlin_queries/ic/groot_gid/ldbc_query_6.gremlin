@@ -1,1 +1,0 @@
-g.V($personId).out('1..3', 'knows').inV().dedup().in('hasCreator').hasLabel('post').as('_t').out('hasTag').has('name', eq('$tagName')).select('_t').dedup().out('hasTag').has('name', neq('$tagName')).groupCount().order().by(select(values), desc).by(select(keys).values('name'), asc).limit(10)

@@ -94,6 +94,13 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
+    public GraphBuilder visitOC_Unwind(CypherGSParser.OC_UnwindContext ctx) {
+        RexNode expr = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
+        String alias = ctx.oC_Variable() == null ? null : ctx.oC_Variable().getText();
+        return builder.unfold(expr, alias);
+    }
+
+    @Override
     public GraphBuilder visitOC_Match(CypherGSParser.OC_MatchContext ctx) {
         int childCnt = ctx.oC_Pattern().getChildCount();
         List<RelNode> sentences = new ArrayList<>();

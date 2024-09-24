@@ -15,11 +15,11 @@
  */
 
 #include "flex/utils/yaml_utils.h"
-#include <fstream>
-#include "service_utils.h"
 #include <rapidjson/document.h>
 #include <rapidjson/pointer.h>
 #include <rapidjson/prettywriter.h>
+#include <fstream>
+#include "service_utils.h"
 
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
@@ -122,7 +122,10 @@ Result<std::string> get_json_string_from_yaml(const YAML::Node& node) {
 Result<std::string> get_yaml_string_from_yaml_node(const YAML::Node& node) {
   try {
     YAML::Emitter emitter;
-    write_yaml_node_to_yaml_string(node, emitter);
+    auto status = write_yaml_node_to_yaml_string(node, emitter);
+    if (!status.ok()) {
+      return Result<std::string>(status);
+    }
     return std::string(emitter.c_str());
   } catch (const YAML::BadConversion& e) {
     return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});

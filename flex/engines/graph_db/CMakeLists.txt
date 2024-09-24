@@ -1,6 +1,7 @@
 add_subdirectory(runtime)
 file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
-  	                             "${CMAKE_CURRENT_SOURCE_DIR}/database/*.cc")
+  	                             "${CMAKE_CURRENT_SOURCE_DIR}/database/*.cc"
+                                     "${CMAKE_CURRENT_SOURCE_DIR}/app/builtin/*.cc")
 
 add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
 
