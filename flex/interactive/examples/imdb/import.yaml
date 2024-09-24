@@ -7,15 +7,16 @@ loading_config:
   format:
     type: csv
     metadata:
-      delimiter: '|'  # other loading configuration places here
-      header_row: true # whether to use the first row as the header
-      quoting: false
+      delimiter: ','  # other loading configuration places here
+      header_row: false # whether to use the first row as the header
+      quoting: true
       quote_char: '"'
-      double_quote: true
+      double_quote: false
       escape_char: '\'
-      escaping: false
+      escaping: true
       block_size: 4MB
       batch_reader: false
+      null_values: [""]
 vertex_mappings:
   - type_name: AKA_NAME  
     inputs:
@@ -180,13 +181,13 @@ edge_mappings:
   - type_triplet:
       edge: MOVIE_LINK_TITLE
       source_vertex:  MOVIE_LINK
-      destination_vertex:  TILE
+      destination_vertex:  TITLE
     inputs:
       - MOVIE_LINK_TITLE.csv
   - type_triplet:
-      edge: MOVIE_LINK_LINK_TYPE
+      edge: MOVIE_LINK_LINKED_TYPE
       source_vertex:  MOVIE_LINK
       destination_vertex:  LINK_TYPE
     inputs:
-      - MOVIE_LINK_LINK_TYPE.csv
+      - MOVIE_LINK_LINKED_TYPE.csv
 

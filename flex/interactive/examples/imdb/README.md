@@ -1,6 +1,6 @@
 # IMDB Graph
 
-The `IMDB` graph is based on the [IMDB Dataset](http://homepages.cwi.nl/~boncz/job/imdb.tgz), designed for relational query benchmarking. We have preprocessed the dataset to ensure compatibility with a graph model. You can download the preprocessed dataset from [here](TBD).
+The `IMDB` graph is based on the [IMDB Dataset](http://homepages.cwi.nl/~boncz/job/imdb.tgz), designed for relational query benchmarking. We have preprocessed the dataset to ensure compatibility with a graph model. You can download the preprocessed dataset from [here](https://graphscope.oss-accelerate-overseas.aliyuncs.com/dataset/imdb.tar.gz).
 
 In this directory, you will find two files: `graph.yaml`, which defines the schema, and `import.yaml`, which outlines data loading. Example queries are also provided—explore the IMDB Graph!
 

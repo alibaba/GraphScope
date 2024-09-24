@@ -792,9 +792,9 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
   // check the type_id equals to storage's label_id
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
-    LOG(ERROR) << "type_id is not set properly for type: " << label_name;
-    return Status(StatusCode::INVALID_SCHEMA,
-                  "type_id is not set properly for type: " + label_name);
+    LOG(WARNING) << "type_id is not set properly for type: " << label_name
+                 << ", try to use incremental id";
+    type_id = schema.vertex_label_num() - 1;
   }
   auto label_id = schema.get_vertex_label_id(label_name);
   if (label_id != type_id) {
@@ -1022,9 +1022,9 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
   // check the type_id equals to storage's label_id
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
-    LOG(ERROR) << "type_id is not set properly for type: " << edge_label_name;
-    return Status(StatusCode::INVALID_SCHEMA,
-                  "type_id is not set properly for type: " + edge_label_name);
+    LOG(WARNING) << "type_id is not set properly for type: " << edge_label_name
+                 << ", try to use incremental id";
+    type_id = schema.edge_label_num() - 1;
   }
   auto label_id = schema.get_edge_label_id(edge_label_name);
   if (label_id != type_id) {
