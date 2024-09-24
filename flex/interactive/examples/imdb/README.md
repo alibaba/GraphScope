@@ -50,6 +50,38 @@ For more queries, please visit [job-queries](https://github.com/shirly121/GraphS
 
 |     QueryId    	|  Supported or Not |
 |:--------------:	|:---------------:	|
-|       job1a 	    |       Yes 	    |
-|       job2a       |       Yes   	    |
-|       job3a       |       Yes   	    |
+| 1a | Yes | 
+| 2a | Yes | 
+| 3a | Yes |
+| 4a | Yes | 
+| 5a | Yes | 
+| 5c | Yes | 
+| 6a | Yes |
+| 7a | Yes |
+| 8a | Yes | 
+| 9a | Yes | 
+| 10a | Yes |
+| 11a | No  |
+| 12a | Yes |
+| 13a | Yes |
+| 14a | Yes |
+| 15a | No  |
+| 16a | Yes |
+| 17a | Yes | 
+| 18a | Yes | 
+| 19a | Yes | 
+| 20a | Yes |
+| 21a | No  |
+| 22a | Yes | 
+| 23a | Yes |
+| 24a | Yes | 
+| 25a | Yes | 
+| 26a | Yes |
+| 27a | No  |
+| 28a | Yes |
+| 29a | Yes |
+| 30a | Yes | 
+| 31a | Yes | 
+| 32a | Yes |
+| 32b | Yes |
+| 33a | Yes | 
