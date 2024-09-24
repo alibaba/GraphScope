@@ -39,7 +39,7 @@ sess = gs.session(
 )
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
 
-feature_store, graph_store = gs.PyG_remote_backend(
+feature_store, graph_store = gs.pyg_remote_backend(
     g,
     edges=[
         ("paper", "citation", "paper"),

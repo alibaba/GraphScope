@@ -1382,7 +1382,7 @@ class Session(object):
         graph._attach_learning_instance(g)
         return g
 
-    def PyG_remote_backend(
+    def pyg_remote_backend(
         self,
         graph,
         edges,
@@ -1775,7 +1775,7 @@ def graphlearn_torch(
     )  # pylint: disable=protected-access
 
 
-def PyG_remote_backend(
+def pyg_remote_backend(
     graph,
     edges,
     edge_weights=None,
@@ -1790,7 +1790,7 @@ def PyG_remote_backend(
 ):
     assert graph is not None, "graph cannot be None"
     assert graph._session is not None, "The graph object is invalid"
-    return graph._session.PyG_remote_backend(
+    return graph._session.pyg_remote_backend(
         graph,
         edges,
         edge_weights,

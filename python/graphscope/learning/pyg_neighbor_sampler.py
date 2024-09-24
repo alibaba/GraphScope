@@ -123,17 +123,6 @@ class PygNeighborSampler(BaseSampler):
             self.glt_data_loader_iter = iter(self.glt_data_loader)
 
     @property
-    def num_neighbors(self) -> NumNeighbors:
-        return self._num_neighbors
-
-    @num_neighbors.setter
-    def num_neighbors(self, num_neighbors: NumNeighborsType):
-        if isinstance(num_neighbors, NumNeighbors):
-            self._num_neighbors = num_neighbors
-        else:
-            self._num_neighbors = NumNeighbors(num_neighbors)
-
-    @property
     def is_hetero(self) -> bool:
         if self.data_type == DataType.homogeneous:
             return False
@@ -142,18 +131,6 @@ class PygNeighborSampler(BaseSampler):
 
         # self.data_type == DataType.remote
         return self.edge_types != [None]
-
-    @property
-    def is_temporal(self) -> bool:
-        return self.node_time is not None or self.edge_time is not None
-
-    @property
-    def disjoint(self) -> bool:
-        return self._disjoint or self.is_temporal
-
-    @disjoint.setter
-    def disjoint(self, disjoint: bool):
-        self._disjoint = disjoint
 
     # Node-based sampling #####################################################
 

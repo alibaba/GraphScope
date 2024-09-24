@@ -274,7 +274,7 @@ if __name__ == "__main__":
     g = load_ogbn_arxiv(sess=sess)
 
     print("-- Initializing store ...")
-    feature_store, graph_store = gs.PyG_remote_backend(
+    feature_store, graph_store = gs.pyg_remote_backend(
         g,
         edges=[
             ("paper", "citation", "paper"),

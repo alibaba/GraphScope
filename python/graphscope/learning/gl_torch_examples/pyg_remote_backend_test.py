@@ -4,6 +4,7 @@ import time
 import torch
 import torch.nn.functional as F
 from ogb.nodeproppred import Evaluator
+from torch_geometric.data import TensorAttr
 from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
@@ -58,7 +59,7 @@ gs.set_option(show_log=True)
 g = load_ogbn_arxiv()
 
 print("-- Initializing store ...")
-feature_store, graph_store = gs.PyG_remote_backend(
+feature_store, graph_store = gs.pyg_remote_backend(
     g,
     edges=[
         ("paper", "citation", "paper"),

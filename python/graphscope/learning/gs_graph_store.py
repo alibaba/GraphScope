@@ -14,9 +14,9 @@ from torch_geometric.typing import EdgeTensorType
 class GsGraphStore(GraphStore):
     def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
         super().__init__()
-        # self.store: Dict[Tuple, Tuple[Tensor, Tensor]] = {}
         self.handle = handle
         self.config = config
+        self.edge_attr_list: list[EdgeAttr] = []
 
         if config is not None:
             config = json.loads(
@@ -28,6 +28,14 @@ class GsGraphStore(GraphStore):
             self.edge_weights = config["edge_weights"]
             self.edge_dir = config["edge_dir"]
             self.random_node_split = config["random_node_split"]
+            if self.edges is not None:
+                for edge in self.edges:
+                    if self.edge_dir is not None:
+                        layout = "csr" if self.edge_dir == "out" else "csc"
+                        is_sorted = False if layout == "csr" else True
+                    else:
+                        layout = "coo"
+                    self.edge_attr_list.append(EdgeAttr(edge, layout, is_sorted))
 
         assert len(endpoints) == 4
         self.endpoints = endpoints
@@ -106,16 +114,7 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
-        EdgeAttrList = []
-        if self.edges is not None:
-            for edge in self.edges:
-                if self.edge_dir is not None:
-                    layout = "csr" if self.edge_dir == "out" else "csc"
-                    is_sorted = False if layout == "csr" else True
-                else:
-                    layout = "coo"
-                EdgeAttrList.append(EdgeAttr(edge, layout, is_sorted))
-        return EdgeAttrList
+        return self.edge_attr_list
 
     @classmethod
     def from_ipc_handle(cls, ipc_handle):
