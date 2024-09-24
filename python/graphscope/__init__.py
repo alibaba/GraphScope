@@ -37,7 +37,6 @@ from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
 from graphscope.client.connection import conn
-from graphscope.client.session import pyg_remote_backend
 from graphscope.client.session import Session
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session
@@ -46,6 +45,7 @@ from graphscope.client.session import graphlearn_torch
 from graphscope.client.session import gremlin
 from graphscope.client.session import has_default_session
 from graphscope.client.session import interactive
+from graphscope.client.session import pyg_remote_backend
 from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
