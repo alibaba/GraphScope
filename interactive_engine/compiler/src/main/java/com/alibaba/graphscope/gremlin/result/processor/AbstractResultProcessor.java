@@ -109,6 +109,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 responseProcessor.process(responseStreamIterator.next());
             }
             responseProcessor.finish();
+            statusCallback.getQueryLogger().info("[compile]: process results success");
         } catch (Throwable t) {
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor
@@ -164,7 +165,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
         }
 
         public void finish() {
-            statusCallback.onSuccessEnd(resultCollectors);
+            statusCallback.onSuccessEnd();
             aggregateResults();
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())
