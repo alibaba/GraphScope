@@ -114,8 +114,7 @@ public abstract class Utils {
                         }
                         curEdgeTypeId++;
                     }
-                }
-                else {
+                } else {
                     if (type.equals("VERTEX")) {
                         labelId = curVertexTypeId++;
                     } else {
