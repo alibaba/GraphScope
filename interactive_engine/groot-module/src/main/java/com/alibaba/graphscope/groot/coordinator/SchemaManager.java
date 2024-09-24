@@ -212,6 +212,7 @@ public class SchemaManager {
     }
 
     private void recoverInternal() throws IOException, ExecutionException, InterruptedException {
+        logger.debug("Start to recover SchemaManager");
         long snapshotId = this.snapshotManager.increaseWriteSnapshotId();
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.snapshotManager.addSnapshotListener(snapshotId, () -> future.complete(null));

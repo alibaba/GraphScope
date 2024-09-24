@@ -860,8 +860,8 @@ install_interactive_dependencies() {
   if ! command -v rustup &>/dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
-    rustup install 1.71.0
-    rustup default 1.71.0
+    rustup install 1.76.0
+    rustup default 1.76.0
     rustc --version
   fi
   # opentelemetry
