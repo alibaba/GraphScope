@@ -19,6 +19,9 @@ package com.alibaba.graphscope.cypher.antlr4;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
@@ -28,9 +31,34 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class MatchTest {
+    private static Configs configs;
+    private static IrMeta irMeta;
+    private static GraphRelOptimizer optimizer;
+
+    @BeforeClass
+    public static void beforeClass() {
+        configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                        + " ExpandGetVFusionRule"));
+        optimizer = new GraphRelOptimizer(configs);
+        irMeta =
+                com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
+                        "schema/modern.json",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
+    }
+
     @Test
     public void match_1_test() {
         RelNode source = Utils.eval("Match (n) Return n").build();
@@ -523,5 +551,60 @@ public class MatchTest {
                 "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
                         + " properties=[BIGINT creationDate]) h)",
                 rel.getRowType().toString());
+    }
+
+    @Test
+    public void udf_function_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval(
+                                "MATCH (person1:person)-[path:knows]->(person2:person)\n"
+                                        + " Return gs.function.startNode(path)",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[gs.function.startNode(path)], isAppend=[false])\n"
+                        + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person2], opt=[END])\n"
+                        + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[path], startAlias=[person1], opt=[OUT])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person1], opt=[VERTEX])",
+                after.explain().trim());
+
+        RelNode node2 =
+                Utils.eval(
+                                "Match (person)-[:created]->(software) WITH software.creationDate"
+                                    + " as date1\n"
+                                    + "Return 12 * (date1.year - gs.function.datetime($date2).year)"
+                                    + " + (date1.month - gs.function.datetime($date2).month)",
+                                builder)
+                        .build();
+        RelNode after2 = optimizer.optimize(node2, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[+(*(12, -(EXTRACT(FLAG(YEAR), date1), EXTRACT(FLAG(YEAR),"
+                    + " gs.function.datetime(?0)))), -(EXTRACT(FLAG(MONTH), date1),"
+                    + " EXTRACT(FLAG(MONTH), gs.function.datetime(?0))))], isAppend=[false])\n"
+                    + "  GraphLogicalProject(date1=[software.creationDate], isAppend=[false])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
+                    + " alias=[software], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                after2.explain().trim());
+
+        RelNode node3 =
+                Utils.eval(
+                                "Match (person:person)\n"
+                                        + "Return gs.function.toFloat(person.age)",
+                                builder)
+                        .build();
+        RelNode after3 = optimizer.optimize(node3, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[gs.function.toFloat(person.age)], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person], opt=[VERTEX])",
+                after3.explain().trim());
     }
 }

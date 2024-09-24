@@ -110,6 +110,11 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | elementId | Get a vertex or an edge identifier, unique by an object type and a database | elementId() | elementId() | <input type="checkbox" disabled checked /> |   |
 | Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
 | Extract | Get interval value from a temporal type | \<temporal\>.\<interval\> | \<temporal\>.\<interval\> | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get all edges from a path | relationships(path) | gs.function.relationships(path) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get all nodes from a path | nodes(path) | gs.function.nodes(path) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get start node from an edge | startNode(edge) | gs.function.startNode(edge) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get end node from an edge | endNode(edge) | gs.function.endNode(edge) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | convert integer value to datetime | datetime(1287230400000) | gs.function.datetime(1287230400000) | <input type="checkbox" disabled checked /> |   |
 
 ## Clause
 A notable limitation for now is that we do not
