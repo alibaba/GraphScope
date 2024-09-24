@@ -84,11 +84,20 @@ jobs:
         mvn clean install -Pgroot-data-load --quiet
         sccache --show-stats
 
-    - name: Gremlin Test
+    # - name: Gremlin Test
+    #   run: |
+    #     . ${HOME}/.graphscope_env
+    #     cd interactive_engine/groot-server
+    #     # the ir-core based test
+    #     mvn test -P gremlin-test
+
+    - name: Groot with GOpt Integration Test
       run: |
         . ${HOME}/.graphscope_env
-        cd interactive_engine/groot-server
-        mvn test -P gremlin-test
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
+        mv /tmp/gstest/flex/ldbc-sf01-long-date /tmp/gstest/ldbc
+        cp -r flex/interactive/examples/movies /tmp/gstest/
+        cd interactive_engine/groot-client && ./gopt_groot_test.sh
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v4
