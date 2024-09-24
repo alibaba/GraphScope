@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-CURR_DIR=${SCRIPT_DIR}/../
+CURR_DIR=$(pwd)
 CONF_DIR=$CURR_DIR/config/interactive-benchmark.properties
-JAR_PATH=$CURR_DIR/target/gaia-benchmark-0.0.1-SNAPSHOT.jar
-echo "JAR_PATH: $JAR_PATH"
-java -cp ${JAR_PATH}:$CURR_DIR/target/libs/* com.alibaba.graphscope.gaia.benchmark.CollectResult $CONF_DIR
+java -cp $CURR_DIR:lib/* com.alibaba.graphscope.gaia.benchmark.CollectResult $CONF_DIR
+cd $CURR_DIR
