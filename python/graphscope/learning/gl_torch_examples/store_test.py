@@ -52,11 +52,11 @@ glt.distributed.init_client(
     is_dynamic=True,
 )
 
-result = feature_store.get_tensor(TensorAttr("paper", 'feat_0', 0))
+result = feature_store.get_tensor(TensorAttr("paper", "feat_0", 0))
 print(result)
 result = feature_store.get_tensor_size(TensorAttr("paper"))
 print(result)
-result = feature_store._get_partition_id(TensorAttr("paper", 'feat_0', 0))
+result = feature_store._get_partition_id(TensorAttr("paper", "feat_0", 0))
 print(result)
 result = feature_store.get_all_tensor_attrs()
 print(result)
