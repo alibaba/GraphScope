@@ -200,6 +200,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         new MetricsCollector.Gremlin(evalOpTimer),
                         queryHistogram,
                         configs);
+        statusCallback.getQueryLogger().info("[compile]: query received");
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
@@ -360,6 +361,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             if (o != null && o instanceof Traversal) {
                                 applyStrategies((Traversal) o);
                             }
+                            statusCallback.getQueryLogger().info("[compile]: traversal compiled");
                             return o;
                         })
                 .withResult(
@@ -404,9 +406,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             return opCollection;
                         },
                         Code.LOGICAL_PLAN_BUILD_FAILED);
-
+        queryLogger.info("[compile]: logical IR compiled");
         StringBuilder irPlanStr = new StringBuilder();
-
         PegasusClient.JobRequest physicalRequest =
                 ClassUtils.callException(
                         () -> {
@@ -450,7 +451,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             return request;
                         },
                         Code.PHYSICAL_PLAN_BUILD_FAILED);
-
+        queryLogger.info("[compile]: physical IR compiled");
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
         if (TraceId.isValid(queryLogger.getUpstreamId())) {
