@@ -1,0 +1,193 @@
+graph: imdb
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    location: /real/path/to/GraphScope/flex/interactive/examples/imdb/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: ','  # other loading configuration places here
+      header_row: false # whether to use the first row as the header
+      quoting: true
+      quote_char: '"'
+      double_quote: false
+      escape_char: '\'
+      escaping: true
+      block_size: 4MB
+      batch_reader: false
+      null_values: [""]
+vertex_mappings:
+  - type_name: AKA_NAME  
+    inputs:
+      - AKA_NAME.csv
+  - type_name: AKA_TITLE
+    inputs:
+      - AKA_TITLE.csv
+  - type_name: TITLE
+    inputs:
+      - TITLE.csv
+  - type_name: CHAR_NAME
+    inputs:
+      - CHAR_NAME.csv
+  - type_name: COMP_CAST_TYPE
+    inputs:
+      - COMP_CAST_TYPE.csv
+  - type_name: COMPANY_NAME
+    inputs:
+      - COMPANY_NAME.csv
+  - type_name: COMPANY_TYPE
+    inputs:
+      - COMPANY_TYPE.csv
+  - type_name: INFO_TYPE
+    inputs:
+      - INFO_TYPE.csv
+  - type_name: KEYWORD
+    inputs:
+      - KEYWORD.csv
+  - type_name: KIND_TYPE
+    inputs:
+      - KIND_TYPE.csv
+  - type_name: LINK_TYPE
+    inputs:
+      - LINK_TYPE.csv
+  - type_name: NAME
+    inputs:
+      - NAME.csv
+  - type_name: ROLE_TYPE
+    inputs:
+      - ROLE_TYPE.csv
+  - type_name: CAST_INFO
+    inputs:
+      - CAST_INFO.csv
+  - type_name: COMPLETE_CAST
+    inputs:
+      - COMPLETE_CAST.csv
+  - type_name: MOVIE_COMPANIES
+    inputs:
+      - MOVIE_COMPANIES.csv
+  - type_name: MOVIE_LINK
+    inputs:
+      - MOVIE_LINK.csv
+edge_mappings:
+  - type_triplet:
+      edge: ALSO_KNOWN_AS_NAME
+      source_vertex:  AKA_NAME
+      destination_vertex:  NAME
+    inputs:
+      - ALSO_KNOWN_AS_NAME.csv
+  - type_triplet:
+      edge: ALSO_KNOWN_AS_TITLE
+      source_vertex:  AKA_TITLE
+      destination_vertex:  TITLE
+    inputs:
+      - ALSO_KNOWN_AS_TITLE.csv
+  - type_triplet:
+      edge: KIND_TYPE_TITLE
+      source_vertex:  KIND_TYPE
+      destination_vertex:  TITLE
+    inputs:
+      - KIND_TYPE_TITLE.csv
+  - type_triplet:
+      edge: MOVIE_INFO
+      source_vertex:  TITLE
+      destination_vertex:  INFO_TYPE
+    inputs:
+      - MOVIE_INFO.csv
+  - type_triplet:
+      edge: MOVIE_INFO_IDX
+      source_vertex:  TITLE
+      destination_vertex:  INFO_TYPE
+    inputs:
+      - MOVIE_INFO_IDX.csv
+  - type_triplet:
+      edge: PERSON_INFO
+      source_vertex:  NAME
+      destination_vertex:  INFO_TYPE
+    inputs:
+      - PERSON_INFO.csv
+  - type_triplet:
+      edge: MOVIE_KEYWORD
+      source_vertex:  TITLE
+      destination_vertex:  KEYWORD
+    inputs:
+      - MOVIE_KEYWORD.csv
+  - type_triplet:
+      edge: CAST_INFO_NAME
+      source_vertex:  CAST_INFO
+      destination_vertex:  NAME
+    inputs:
+      - CAST_INFO_NAME.csv
+  - type_triplet:
+      edge: CAST_INFO_TITLE
+      source_vertex:  CAST_INFO
+      destination_vertex:  TITLE
+    inputs:
+      - CAST_INFO_TITLE.csv
+  - type_triplet:
+      edge: CAST_INFO_CHAR
+      source_vertex:  CAST_INFO
+      destination_vertex:  CHAR_NAME
+    inputs:
+      - CAST_INFO_CHAR.csv
+  - type_triplet:
+      edge: CAST_INFO_ROLE
+      source_vertex:  CAST_INFO
+      destination_vertex:  ROLE_TYPE
+    inputs:
+      - CAST_INFO_ROLE.csv
+  - type_triplet:
+      edge: COMPLETE_CAST_TITLE
+      source_vertex:  COMPLETE_CAST
+      destination_vertex:  TITLE
+    inputs:
+      - COMPLETE_CAST_TITLE.csv
+  - type_triplet:
+      edge: COMPLETE_CAST_SUBJECT
+      source_vertex:  COMPLETE_CAST
+      destination_vertex:  COMP_CAST_TYPE
+    inputs:
+      - COMPLETE_CAST_SUBJECT.csv
+  - type_triplet:
+      edge: COMPLETE_CAST_STATUS
+      source_vertex:  COMPLETE_CAST
+      destination_vertex:  COMP_CAST_TYPE
+    inputs:
+      - COMPLETE_CAST_STATUS.csv
+  - type_triplet:
+      edge: MOVIE_COMPANIES_TITLE
+      source_vertex:  MOVIE_COMPANIES
+      destination_vertex:  TITLE
+    inputs:
+      - MOVIE_COMPANIES_TITLE.csv
+  - type_triplet:
+      edge: MOVIE_COMPANIES_COMPANY_NAME
+      source_vertex:  MOVIE_COMPANIES
+      destination_vertex:  COMPANY_NAME
+    inputs:
+      - MOVIE_COMPANIES_COMPANY_NAME.csv
+  - type_triplet:
+      edge: MOVIE_COMPANIES_TYPE
+      source_vertex:  MOVIE_COMPANIES
+      destination_vertex:  COMPANY_TYPE
+    inputs:
+      - MOVIE_COMPANIES_TYPE.csv
+  - type_triplet:
+      edge: MOVIE_LINK_LINKED_TITLE
+      source_vertex:  MOVIE_LINK
+      destination_vertex:  TITLE
+    inputs:
+      - MOVIE_LINK_LINKED_TITLE.csv
+  - type_triplet:
+      edge: MOVIE_LINK_TITLE
+      source_vertex:  MOVIE_LINK
+      destination_vertex:  TITLE
+    inputs:
+      - MOVIE_LINK_TITLE.csv
+  - type_triplet:
+      edge: MOVIE_LINK_LINKED_TYPE
+      source_vertex:  MOVIE_LINK
+      destination_vertex:  LINK_TYPE
+    inputs:
+      - MOVIE_LINK_LINKED_TYPE.csv
+
