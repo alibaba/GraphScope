@@ -16,113 +16,122 @@
 
 namespace gs {
 
-
-bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input,
-                            Encoder& output) {
-  // First get the read transaction.
+bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
   auto txn = sess.GetReadTransaction();
-  // We expect one param of type string from decoder.
   if (input.empty()) {
+    output.put_string_view(
+        "Arguments required(vertex_label, edge_label, damping_factor_, max_iterations_, epsilon_)\n \
+    for example:(\"person\", \"knows\", 0.85, 100, 0.000001)");
     return false;
   }
+
   std::string vertex_label{input.get_string()};
   std::string edge_label{input.get_string()};
 
-  if(!input.empty()) {
-    damping_factor_ = input.get_double();
-    max_iterations_ = input.get_int();
-    epsilon_ = input.get_double();
+  damping_factor_ = input.get_double();
+  max_iterations_ = input.get_int();
+  epsilon_ = input.get_double();
+
+  if (!sess.schema().has_vertex_label(vertex_label)) {
+    output.put_string_view("The requested vertex label doesn't exits.");
+    return false;
+  }
+  if (!sess.schema().has_edge_label(vertex_label, vertex_label, edge_label)) {
+    output.put_string_view("The requested edge label doesn't exits.");
+    return false;
+  }
+  if (damping_factor_ < 0 || damping_factor_ >= 1) {
+    output.put_string_view(
+        "The value of the damping_factor_ is between 0 and 1.");
+    return false;
+  }
+  if (max_iterations_ <= 0) {
+    output.put_string_view("max_iterations_ must be greater than 0.");
+    return false;
+  }
+  if (epsilon_ < 0 || epsilon_ >= 1) {
+    output.put_string_view("The value of the epsilon_ is between 0 and 1.");
+    return false;
   }
 
   vertex_label_id_ = sess.schema().get_vertex_label_id(vertex_label);
   edge_label_id_ = sess.schema().get_edge_label_id(edge_label);
 
-  // 统计顶点数量
   auto num_vertices = txn.GetVertexNum(vertex_label_id_);
 
-  // 初始化每个顶点的PageRank值为 1.0 / num_vertices
   std::unordered_map<vid_t, double> pagerank;
   std::unordered_map<vid_t, double> new_pagerank;
 
   auto vertex_iter = txn.GetVertexIterator(vertex_label_id_);
 
   while (vertex_iter.IsValid()) {
-      vid_t vid = vertex_iter.GetIndex();
-      pagerank[vid] = 1.0 / num_vertices;
-      new_pagerank[vid] = 0.0;
-      vertex_iter.Next();
+    vid_t vid = vertex_iter.GetIndex();
+    pagerank[vid] = 1.0 / num_vertices;
+    new_pagerank[vid] = 0.0;
+    vertex_iter.Next();
   }
 
-  // 获取点的出度
   std::unordered_map<vid_t, double> outdegree;
 
-  // 开始迭代计算PageRank值
   for (int iter = 0; iter < max_iterations_; ++iter) {
-      // 初始化新的PageRank值
-      for (auto& kv : new_pagerank) {
-          kv.second = 0.0;
-      }
+    for (auto& kv : new_pagerank) {
+      kv.second = 0.0;
+    }
 
-      // 遍历所有顶点
-      auto vertex_iter = txn.GetVertexIterator(vertex_label_id_);
-      while (vertex_iter.IsValid()) {
+    auto vertex_iter = txn.GetVertexIterator(vertex_label_id_);
+    while (vertex_iter.IsValid()) {
       vid_t v = vertex_iter.GetIndex();
-      
-      // 遍历所有出边并累加其PageRank贡献值
+
       double sum = 0.0;
-      auto edges = txn.GetInEdgeIterator(vertex_label_id_, v, vertex_label_id_, edge_label_id_);
-      while(edges.IsValid()){
-          auto neighbor = edges.GetNeighbor();
-          if(outdegree[neighbor] == 0){
-              auto out_edges = txn.GetOutEdgeIterator(vertex_label_id_, neighbor, vertex_label_id_, edge_label_id_);
-              while(out_edges.IsValid()){
-                  outdegree[neighbor]++;
-                  out_edges.Next();
-              }
+      auto edges = txn.GetInEdgeIterator(vertex_label_id_, v, vertex_label_id_,
+                                         edge_label_id_);
+      while (edges.IsValid()) {
+        auto neighbor = edges.GetNeighbor();
+        if (outdegree[neighbor] == 0) {
+          auto out_edges = txn.GetOutEdgeIterator(
+              vertex_label_id_, neighbor, vertex_label_id_, edge_label_id_);
+          while (out_edges.IsValid()) {
+            outdegree[neighbor]++;
+            out_edges.Next();
           }
-          sum += pagerank[neighbor] / outdegree[neighbor];
-          edges.Next();
+        }
+        sum += pagerank[neighbor] / outdegree[neighbor];
+        edges.Next();
       }
 
-      // 计算新的PageRank值
-      new_pagerank[v] = damping_factor_ * sum + (1.0 - damping_factor_) / num_vertices;
+      new_pagerank[v] =
+          damping_factor_ * sum + (1.0 - damping_factor_) / num_vertices;
       vertex_iter.Next();
-      }
+    }
 
-      // 检查收敛
-      double diff = 0.0;
-      for (const auto& kv : pagerank) {
-          diff += std::abs(new_pagerank[kv.first] - kv.second);
-      }
+    double diff = 0.0;
+    for (const auto& kv : pagerank) {
+      diff += std::abs(new_pagerank[kv.first] - kv.second);
+    }
 
-      // 如果收敛，则停止迭代
-      if (diff < epsilon_) {
-          break;
-      }
+    if (diff < epsilon_) {
+      break;
+    }
 
-      // 交换pagerank与new_pagerank的内容
-      std::swap(pagerank, new_pagerank);
+    std::swap(pagerank, new_pagerank);
   }
 
-  std::ostringstream output_stream;
-  for(auto kv : pagerank) {
-      auto id =txn.GetVertexId(vertex_label_id_, kv.first).AsInt64();
-      // output.put_int(static_cast<int>(id));
-      // output.put_double(kv.second);
-      output_stream << "vertex: " << id << ", pagerank: " << kv.second << "\n";
-  }
-  std::string res_string = output_stream.str();
   results::CollectiveResults results;
-    auto result = results.add_results();
-  
-    result->mutable_record()
-    ->add_columns()
-    ->mutable_entry()
-    ->mutable_element()
-    ->mutable_object()
-    ->set_str(res_string);
-    
-    output.put_string_view(results.SerializeAsString());
+
+  for (auto kv : pagerank) {
+    auto id = txn.GetVertexId(vertex_label_id_, kv.first).to_string();
+    std::string res_string =
+        "vertex: " + id + ", pagerank: " + std::to_string(kv.second);
+    results.add_results()
+        ->mutable_record()
+        ->add_columns()
+        ->mutable_entry()
+        ->mutable_element()
+        ->mutable_object()
+        ->set_str(res_string);
+  }
+
+  output.put_string_view(results.SerializeAsString());
 
   txn.Commit();
   return true;

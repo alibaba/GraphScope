@@ -56,7 +56,6 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
   static std::vector<PluginMeta> builtin_plugins;
   static bool initialized = false;
   if (!initialized) {
-
     // count_vertices
     PluginMeta count_vertices;
     count_vertices.id = "count_vertices";
@@ -69,7 +68,6 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     count_vertices.update_time = GetCurrentTimeStamp();
     count_vertices.params.push_back({"labelName", PropertyType::kString});
     count_vertices.returns.push_back({"count", PropertyType::kInt32});
-    initialized = true;
     builtin_plugins.push_back(count_vertices);
 
     // pagerank
@@ -88,7 +86,6 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     pagerank.params.push_back({"max_iterations_", PropertyType::kInt32});
     pagerank.params.push_back({"epsilon_", PropertyType::kDouble});
     pagerank.returns.push_back({"pagerank", PropertyType::kString});
-    initialized = true;
     builtin_plugins.push_back(pagerank);
 
     // k_neighbors
@@ -101,32 +98,36 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     k_neighbors.type = "cypher";
     k_neighbors.creation_time = GetCurrentTimeStamp();
     k_neighbors.update_time = GetCurrentTimeStamp();
-    k_neighbors.params.push_back({"vid", PropertyType::kInt32});
+    k_neighbors.params.push_back({"vid", PropertyType::kInt64});
     k_neighbors.params.push_back({"label_name", PropertyType::kString});
     k_neighbors.params.push_back({"k", PropertyType::kInt32});
     k_neighbors.returns.push_back({"k_neighbors", PropertyType::kString});
-    initialized = true;
     builtin_plugins.push_back(k_neighbors);
 
-    // TVSP
-    PluginMeta TVSP;
-    TVSP.id = "TVSP";
-    TVSP.name = "TVSP";
-    TVSP.description = "A builtin plugin to calculate TVSP";
-    TVSP.enable = true;
-    TVSP.runnable = true;
-    TVSP.type = "cypher";
-    TVSP.creation_time = GetCurrentTimeStamp();
-    TVSP.update_time = GetCurrentTimeStamp();
-    TVSP.params.push_back({"label_name1", PropertyType::kString});
-    TVSP.params.push_back({"vid1", PropertyType::kInt32});
-    TVSP.params.push_back({"label_name2", PropertyType::kString});
-    TVSP.params.push_back({"vid2", PropertyType::kInt32});
-    TVSP.params.push_back({"label_name3", PropertyType::kString});
-    TVSP.params.push_back({"vid3", PropertyType::kInt32});
-    TVSP.returns.push_back({"TVSP", PropertyType::kString});
+    // shortest_path_among_three
+    PluginMeta shortest_path_among_three;
+    shortest_path_among_three.id = "shortest_path_among_three";
+    shortest_path_among_three.name = "shortest_path_among_three";
+    shortest_path_among_three.description =
+        "A builtin plugin to calculate shortest_path_among_three";
+    shortest_path_among_three.enable = true;
+    shortest_path_among_three.runnable = true;
+    shortest_path_among_three.type = "cypher";
+    shortest_path_among_three.creation_time = GetCurrentTimeStamp();
+    shortest_path_among_three.update_time = GetCurrentTimeStamp();
+    shortest_path_among_three.params.push_back(
+        {"label_name1", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid1", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name2", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid2", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name3", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid3", PropertyType::kInt64});
+    shortest_path_among_three.returns.push_back(
+        {"shortest_path_among_three", PropertyType::kString});
     initialized = true;
-    builtin_plugins.push_back(TVSP);
+    builtin_plugins.push_back(shortest_path_among_three);
 
     initialized = true;
   }

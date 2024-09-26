@@ -13,39 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
-#define ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
+#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_
+#define ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-class PageRank : public CypherInternalPbWriteAppBase {
+class KNeighbors : public CypherInternalPbWriteAppBase {
  public:
-  PageRank()
-      : damping_factor_(0.85),
-        max_iterations_(100),
-        epsilon_(1e-6),
-        vertex_label_id_(0),
-        edge_label_id_(0) {}
+  KNeighbors() {}
   bool DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) override;
-
- private:
-  double damping_factor_;
-  int max_iterations_;
-  double epsilon_;
-
-  label_t vertex_label_id_;
-  label_t edge_label_id_;
 };
 
-class PageRankFactory : public AppFactoryBase {
+class KNeighborsFactory : public AppFactoryBase {
  public:
-  PageRankFactory() = default;
-  ~PageRankFactory() = default;
+  KNeighborsFactory() = default;
+  ~KNeighborsFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };
 
 }  // namespace gs
 
-#endif
+#endif  // ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_
