@@ -38,7 +38,10 @@ and you can use deploy the package to anywhere could connect to the endpoint (wh
 ### Running the benchmark
 
 ```bash
-./bin/bench.sh                        # run the benchmark program with the provided properties
+cd target
+tar -xvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
+cd gaia-benchmark-0.0.1-SNAPSHOT
+./bin/bench.sh                        # run the benchmark program. You can also modify running configurations in config/interactive-benchmark.properties
 ```
 With the example configuration file ``example/job_benchmark.properties``, which compares GraphScope-GIE and KuzuDB while executing the JOB Benchmark, the results are as follows:
 ```
@@ -66,7 +69,7 @@ System: KuzuDB; query count: 35; execute time(ms): xxx qps: xxx
 ```bash
 ./bin/collect.sh                      # run the result collection program to collect the results and generate a performance comparison table
 ```
-Based on the benchmark results, the collected data and the final performance comparison table are as follows:
+Furthermore, based on the benchmark results, the collected data and the final performance comparison table are as follows:
 
 And the comparison result after collection is as follows:
 | QueryName | GIE Avg | GIE P50 | GIE P90 | GIE P95 | GIE P99 | GIE Count | KuzuDb Avg | KuzuDb P50 | KuzuDb P90 | KuzuDb P95 | KuzuDb P99 | KuzuDb Count |

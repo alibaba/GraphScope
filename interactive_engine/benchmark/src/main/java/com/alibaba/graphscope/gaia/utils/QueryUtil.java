@@ -80,7 +80,7 @@ public class QueryUtil {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.QUERY_PARAMETER_DIR, null);
         List<CommonQuery> queryList = new ArrayList<>();
-        String suffix = "." + configuration.getString(Configuration.QUERY_FILE_SUFFIX);
+        String suffix = configuration.getString(Configuration.QUERY_FILE_SUFFIX);
 
         if (configuration.getBoolean(Configuration.QUERY_ALL_ENABLE, false)) {
             // Automatically add all queries in the specified directory
@@ -89,7 +89,7 @@ public class QueryUtil {
                 for (File file : dir.listFiles()) {
                     if (file.isFile() && file.getName().endsWith(suffix)) {
                         // assume the query name is the file name without the suffix
-                        String queryName = file.getName().replace(suffix, "");
+                        String queryName = file.getName().replace("." + suffix, "");
                         String queryFilePath = file.getAbsolutePath();
                         String parameterFilePath = null;
                         if (parameterDir != null && !parameterDir.isEmpty()) {

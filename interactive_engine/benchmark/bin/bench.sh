@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CURR_DIR=$(pwd)
+SCRIPT_DIR=$(dirname $(readlink -f $0))
+CURR_DIR=${SCRIPT_DIR}/../
 CONF_DIR=$CURR_DIR/config/interactive-benchmark.properties
 java -cp $CURR_DIR:lib/* com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark $CONF_DIR
 cd $CURR_DIR

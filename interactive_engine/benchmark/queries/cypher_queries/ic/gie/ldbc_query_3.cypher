@@ -1,5 +1,5 @@
-MATCH (countryX:COUNTRY {name: '$countryXName'})<-[:ISLOCATEDIN]-(messageX)-[:HASCREATOR]->(otherP:PERSON),
-    	(countryY:COUNTRY {name: '$countryYName'})<-[:ISLOCATEDIN]-(messageY)-[:HASCREATOR]->(otherP:PERSON),
+MATCH (countryX:PLACE {name: '$countryXName'})<-[:ISLOCATEDIN]-(messageX)-[:HASCREATOR]->(otherP:PERSON),
+    	(countryY:PLACE {name: '$countryYName'})<-[:ISLOCATEDIN]-(messageY)-[:HASCREATOR]->(otherP:PERSON),
     	(otherP)-[:ISLOCATEDIN]->(city)-[:ISPARTOF]->(countryCity),
     	(person:PERSON {id:$personId})-[:KNOWS*1..3]-(otherP)
 WHERE messageX.creationDate >= $startDate and messageX.creationDate < $endDate
