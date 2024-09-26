@@ -130,8 +130,9 @@ public class SchemaManager {
             Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
             Statistics statistics = aggregateStatistics(statisticsMap);
             this.graphStatistics.set(statistics);
+            logger.info("Fetched statistics from groot store to groot coordinator successfully");
         } catch (Exception e) {
-            logger.error("Fetch statistics failed", e);
+            logger.error("Fetched statistics from groot store to groot coordinator failed", e);
         }
         sendStatisticsToFrontend();
     }
@@ -142,7 +143,7 @@ public class SchemaManager {
             for (int i = 0; i < frontendCount; ++i) {
                 try {
                     frontendSnapshotClients.getClient(i).syncStatistics(statistics);
-                    logger.debug("Sent statistics to frontend#{}", i);
+                    logger.info("Sent statistics from groot coordinator to frontend#{}", i);
                 } catch (Exception e) {
                     logger.error("Failed to sync statistics to frontend", e);
                 }
