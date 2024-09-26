@@ -135,4 +135,7 @@ def test_builtin_procedure(interactive_session,neo4j_session, create_modern_grap
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
     call_procedure(neo4j_session, create_modern_graph, "count_vertices", '"person"')
+    call_procedure(neo4j_session, create_modern_graph, "pagerank", '"person"','"knows"','0.85','100','0000001')
+    call_procedure(neo4j_session, create_modern_graph, "k_neighbors",'1L','"person"','2')
+    call_procedure(neo4j_session, create_modern_graph, "shortest_path_among_three", '"person"','1L','"person"','2L','"person"','4L')
     
