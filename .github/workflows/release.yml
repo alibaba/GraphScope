@@ -85,7 +85,7 @@ jobs:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/interactive:latest ${{ env.INTERACTIVE_IMAGE }}:latest-amd64
         sudo docker push ${{ env.INTERACTIVE_IMAGE }}:latest-amd64
 
