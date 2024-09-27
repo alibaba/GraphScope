@@ -101,7 +101,7 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     k_neighbors.params.push_back({"vid", PropertyType::kInt64});
     k_neighbors.params.push_back({"label_name", PropertyType::kString});
     k_neighbors.params.push_back({"k", PropertyType::kInt32});
-    k_neighbors.returns.push_back({"k_neighbors", PropertyType::kString});
+    k_neighbors.returns.push_back({"k_neighbors", PropertyType::kInt64});
     builtin_plugins.push_back(k_neighbors);
 
     // shortest_path_among_three
