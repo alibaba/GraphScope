@@ -16,10 +16,16 @@
 # limitations under the License.
 #
 
+import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Annotated, Any, Dict, List, Optional, Union
 
+if sys.version_info > (3, 8):
+    from typing import Annotated
+else:
+    from typing_extensions import Annotated
+
+from typing import Any, Dict, List, Optional, Union
 from pydantic import Field, StrictBytes, StrictStr
 
 from pydantic import Field, StrictStr, StrictBytes
