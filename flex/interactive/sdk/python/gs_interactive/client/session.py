@@ -16,19 +16,12 @@
 # limitations under the License.
 #
 
-import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
-if sys.version_info > (3, 8):
-    from typing import Annotated
-else:
-    from typing_extensions import Annotated
-
+from typing_extensions import Annotated
 from typing import Any, Dict, List, Optional, Union
 from pydantic import Field, StrictBytes, StrictStr
-
-from pydantic import Field, StrictStr, StrictBytes
 
 from gs_interactive.client.status import Status, StatusCode
 

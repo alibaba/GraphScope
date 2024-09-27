@@ -1,7 +1,7 @@
 .. _encoder:
 
 Encoder and Deocder
-=======
+===================
 
 Encoder Class
 --------------
