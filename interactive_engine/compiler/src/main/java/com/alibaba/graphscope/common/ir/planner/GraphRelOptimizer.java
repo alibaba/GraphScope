@@ -21,9 +21,6 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
-import com.alibaba.graphscope.common.ir.meta.schema.foreign.ForeignKeyMeta;
-import com.alibaba.graphscope.common.ir.planner.rules.*;
-import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
@@ -36,45 +33,44 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.apache.calcite.plan.*;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.plan.volcano.VolcanoPlanner;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rel.rules.CoreRules;
-import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Optimize graph relational tree which consists of match and other relational operators
  */
 public class GraphRelOptimizer {
-    private static final Logger logger = LoggerFactory.getLogger(GraphRelOptimizer.class);
     private final PlannerConfig config;
     private final RelBuilderFactory relBuilderFactory;
     private final GlogueHolder glogueHolder;
     private final PlannerGroupManager plannerGroupManager;
 
+    public GraphRelOptimizer(Configs graphConfig, Class<? extends PlannerGroupManager> instance) {
+        try {
+            this.config = new PlannerConfig(graphConfig);
+            this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
+            this.glogueHolder = new GlogueHolder(graphConfig);
+            this.plannerGroupManager =
+                    instance.getDeclaredConstructor(PlannerConfig.class, RelBuilderFactory.class)
+                            .newInstance(this.config, this.relBuilderFactory);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public GraphRelOptimizer(Configs graphConfig) {
-        this.config = new PlannerConfig(graphConfig);
-        this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
-        this.glogueHolder = new GlogueHolder(graphConfig);
-        this.plannerGroupManager = new PlannerGroupManager();
+        this(graphConfig, PlannerGroupManager.Dynamic.class);
     }
 
     public GlogueHolder getGlogueHolder() {
@@ -83,7 +79,7 @@ public class GraphRelOptimizer {
 
     public RelOptPlanner getMatchPlanner() {
         PlannerGroup currentGroup = this.plannerGroupManager.getCurrentGroup();
-        return currentGroup.matchPlanner;
+        return currentGroup.getMatchPlanner();
     }
 
     public RelNode optimize(RelNode before, GraphIOProcessor ioProcessor) {
@@ -101,7 +97,7 @@ public class GraphRelOptimizer {
         return null;
     }
 
-    private class MatchOptimizer extends GraphShuttle {
+    public static class MatchOptimizer extends GraphShuttle {
         private final GraphIOProcessor ioProcessor;
         private final RelOptPlanner matchPlanner;
 
@@ -197,200 +193,6 @@ public class GraphRelOptimizer {
                     };
             visitor.go(join);
             return decomposable.get();
-        }
-    }
-
-    private class PlannerGroup {
-        private final RelOptPlanner relPlanner;
-        private final RelOptPlanner matchPlanner;
-        private final RelOptPlanner physicalPlanner;
-
-        public PlannerGroup() {
-            this.relPlanner = createRelPlanner();
-            this.matchPlanner = createMatchPlanner();
-            this.physicalPlanner = createPhysicalPlanner();
-        }
-
-        public synchronized RelNode optimize(RelNode before, GraphIOProcessor ioProcessor) {
-            if (config.isOn()) {
-                // apply rules of 'FilterPushDown' before the match optimization
-                relPlanner.setRoot(before);
-                RelNode relOptimized = relPlanner.findBestExp();
-                if (config.getOpt() == PlannerConfig.Opt.CBO) {
-                    relOptimized =
-                            relOptimized.accept(new MatchOptimizer(ioProcessor, matchPlanner));
-                }
-                // apply rules of 'FieldTrim' after the match optimization
-                if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
-                    relOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), relOptimized);
-                }
-                physicalPlanner.setRoot(relOptimized);
-                RelNode physicalOptimized = physicalPlanner.findBestExp();
-                clear();
-                return physicalOptimized;
-            }
-            return before;
-        }
-
-        private RelOptPlanner createRelPlanner() {
-            HepProgramBuilder hepBuilder = HepProgram.builder();
-            if (config.isOn()) {
-                List<RelRule.Config> ruleConfigs = Lists.newArrayList();
-                config.getRules()
-                        .forEach(
-                                k -> {
-                                    if (k.equals(
-                                            FilterJoinRule.FilterIntoJoinRule.class
-                                                    .getSimpleName())) {
-                                        ruleConfigs.add(CoreRules.FILTER_INTO_JOIN.config);
-                                    } else if (k.equals(FilterMatchRule.class.getSimpleName())) {
-                                        ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
-                                    }
-                                });
-                ruleConfigs.forEach(
-                        k -> {
-                            hepBuilder.addRuleInstance(
-                                    k.withRelBuilderFactory(relBuilderFactory).toRule());
-                        });
-            }
-            return new GraphHepPlanner(hepBuilder.build());
-        }
-
-        private RelOptPlanner createMatchPlanner() {
-            if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
-                VolcanoPlanner planner = new VolcanoPlannerX();
-                planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
-                planner.setTopDownOpt(true);
-                planner.setNoneConventionHasInfiniteCost(false);
-                config.getRules()
-                        .forEach(
-                                k -> {
-                                    RelRule.Config ruleConfig = null;
-                                    if (k.equals(ExtendIntersectRule.class.getSimpleName())) {
-                                        ruleConfig =
-                                                ExtendIntersectRule.Config.DEFAULT
-                                                        .withMaxPatternSizeInGlogue(
-                                                                config.getGlogueSize())
-                                                        .withLabelConstraintsEnabled(
-                                                                config.labelConstraintsEnabled());
-                                    } else if (k.equals(
-                                            JoinDecompositionRule.class.getSimpleName())) {
-                                        ruleConfig =
-                                                JoinDecompositionRule.Config.DEFAULT
-                                                        .withMinPatternSize(
-                                                                config.getJoinMinPatternSize())
-                                                        .withJoinQueueCapacity(
-                                                                config.getJoinQueueCapacity())
-                                                        .withJoinByEdgeEnabled(
-                                                                config.isJoinByEdgeEnabled());
-                                        ForeignKeyMeta foreignKeyMeta =
-                                                config.getJoinByForeignKeyUri().isEmpty()
-                                                        ? null
-                                                        : new ForeignKeyMeta(
-                                                                config.getJoinByForeignKeyUri());
-                                        ((JoinDecompositionRule.Config) ruleConfig)
-                                                .withForeignKeyMeta(foreignKeyMeta);
-                                    }
-                                    if (ruleConfig != null) {
-                                        planner.addRule(
-                                                ruleConfig
-                                                        .withRelBuilderFactory(relBuilderFactory)
-                                                        .toRule());
-                                    }
-                                });
-                return planner;
-            }
-            // todo: re-implement heuristic rules in ir core match
-            return new GraphHepPlanner(HepProgram.builder().build());
-        }
-
-        private RelOptPlanner createPhysicalPlanner() {
-            HepProgramBuilder hepBuilder = HepProgram.builder();
-            if (config.isOn()) {
-                List<RelRule.Config> ruleConfigs = Lists.newArrayList();
-                config.getRules()
-                        .forEach(
-                                k -> {
-                                    if (k.equals(ExpandGetVFusionRule.class.getSimpleName())) {
-                                        ruleConfigs.add(
-                                                ExpandGetVFusionRule.BasicExpandGetVFusionRule
-                                                        .Config.DEFAULT);
-                                        ruleConfigs.add(
-                                                ExpandGetVFusionRule.PathBaseExpandGetVFusionRule
-                                                        .Config.DEFAULT);
-                                    }
-                                });
-                ruleConfigs.forEach(
-                        k -> {
-                            hepBuilder.addRuleInstance(
-                                    k.withRelBuilderFactory(relBuilderFactory).toRule());
-                        });
-            }
-            return new GraphHepPlanner(hepBuilder.build());
-        }
-
-        private synchronized void clear() {
-            List<RelOptRule> logicalRBORules = this.relPlanner.getRules();
-            this.relPlanner.clear();
-            for (RelOptRule rule : logicalRBORules) {
-                this.relPlanner.addRule(rule);
-            }
-            List<RelOptRule> logicalCBORules = this.matchPlanner.getRules();
-            this.matchPlanner.clear();
-            for (RelOptRule rule : logicalCBORules) {
-                this.matchPlanner.addRule(rule);
-            }
-            List<RelOptRule> physicalRBORules = this.physicalPlanner.getRules();
-            this.physicalPlanner.clear();
-            for (RelOptRule rule : physicalRBORules) {
-                this.physicalPlanner.addRule(rule);
-            }
-        }
-    }
-
-    private class PlannerGroupManager {
-        private final List<PlannerGroup> plannerGroups;
-        private final ScheduledExecutorService clearScheduler;
-
-        public PlannerGroupManager() {
-            Preconditions.checkArgument(
-                    config.getPlannerGroupSize() > 0,
-                    "planner group size should be greater than 0");
-            this.plannerGroups = new ArrayList(config.getPlannerGroupSize());
-            for (int i = 0; i < config.getPlannerGroupSize(); ++i) {
-                this.plannerGroups.add(new PlannerGroup());
-            }
-            this.clearScheduler = new ScheduledThreadPoolExecutor(1);
-            int clearInterval = config.getPlannerGroupClearIntervalMinutes();
-            this.clearScheduler.scheduleAtFixedRate(
-                    () -> {
-                        try {
-                            long freeMemBytes = Runtime.getRuntime().freeMemory();
-                            long totalMemBytes = Runtime.getRuntime().totalMemory();
-                            Preconditions.checkArgument(
-                                    totalMemBytes > 0, "total memory should be greater than 0");
-                            if (freeMemBytes / (double) totalMemBytes < 0.2d) {
-                                logger.warn(
-                                        "start to clear planner groups. There are no enough memory"
-                                                + " in JVM, with free memory: {}, total memory: {}",
-                                        freeMemBytes,
-                                        totalMemBytes);
-                                plannerGroups.forEach(PlannerGroup::clear);
-                            }
-                        } catch (Throwable t) {
-                            logger.error("failed to clear planner group.", t);
-                        }
-                    },
-                    clearInterval,
-                    clearInterval,
-                    TimeUnit.MINUTES);
-        }
-
-        public PlannerGroup getCurrentGroup() {
-            Preconditions.checkArgument(
-                    !plannerGroups.isEmpty(), "planner groups should not be empty");
-            int groupId = (int) Thread.currentThread().getId() % plannerGroups.size();
-            return plannerGroups.get(groupId);
         }
     }
 }
