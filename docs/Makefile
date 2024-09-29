@@ -65,7 +65,7 @@ interactive-sdk:
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && ./generate_sdk.sh -g java \
 		&& ./generate_sdk.sh -g python
 
-	@cd ${WORKING_DIR}/../flex/interactive/sdk/python && pip3 install -r requirements.txt && pip3 install .
+	@cd ${WORKING_DIR}/../flex/interactive/sdk/python && pip3 install -r requirements.txt && python3 setup.py build_proto && pip3 install .
 	
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && bash generate_sdk_doc.sh -o ${WORKING_DIR}/flex/interactive/development/
 

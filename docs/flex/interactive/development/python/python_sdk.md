@@ -4,7 +4,7 @@ The Interactive Python SDK Reference is a comprehensive guide designed to assist
 
 ## Requirements.
 
-Python 3.7+
+Python >= 3.8
 
 ## Installation & Usage
 
