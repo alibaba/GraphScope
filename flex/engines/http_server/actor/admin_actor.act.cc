@@ -1049,7 +1049,7 @@ seastar::future<admin_query_result> admin_actor::stop_service(
       LOG(INFO) << "Stop service with graph: " << graph_id;
     }
   } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to Start service: ";
+    LOG(ERROR) << "Fail to stop service: ";
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::BAD_REQUEST,
