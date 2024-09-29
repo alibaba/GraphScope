@@ -94,6 +94,7 @@ jobs:
     - name: Groot with GOpt Integration Test
       run: |
         . ${HOME}/.graphscope_env
+        rm -rf /tmp/gstest || true
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
         mv /tmp/gstest/flex/ldbc-sf01-long-date /tmp/gstest/ldbc
         cp -r flex/interactive/examples/movies /tmp/gstest/
