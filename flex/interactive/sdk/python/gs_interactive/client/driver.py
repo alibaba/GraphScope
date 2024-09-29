@@ -53,7 +53,6 @@ class Driver:
             admin_endpoint: the endpoint for the admin service.
             stored_proc_endpoint (str, optional): the endpoint for the stored procedure service.
             cypher_endpoint (str, optional): the endpoint for the cypher service.
-            gremlin_endpoint (str, optional): the endpoint for the gremlin service.        
         """
         if admin_endpoint is None:
             self.read_endpoints_from_env()
@@ -93,7 +92,6 @@ class Driver:
         INTERACTIVE_ADMIN_ENDPOINT: http://host:port
         INTERACTIVE_STORED_PROC_ENDPOINT: http://host:port
         INTERACTIVE_CYPHER_ENDPOINT: neo4j://host:port or bolt://host:port
-        INTERACTIVE_GREMLIN_ENDPOINT: ws://host:port/gremlin
         """
         self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         assert (
@@ -178,10 +176,6 @@ class Driver:
         return Client(graph_url, "g")
 
     def getGremlinEndpoint(self):
-        """
-        Get the gremlin endpoint from the service status endpoint.
-        Only works if the sdk was running in the same pod as the service.
-        """
         service_status = self.getDefaultSession().get_service_status()
         if service_status.is_ok():
             gremlin_port = service_status.get_value().gremlin_port
