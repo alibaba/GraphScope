@@ -13,7 +13,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 
 # **CreateProcedure**
-> Result[CreateProcedureResponse] create_procedure(graph_id, create_procedure_request)
+> [Result](./result.rst)[CreateProcedureResponse] create_procedure(graph_id, create_procedure_request)
 
 
 
@@ -105,7 +105,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**CreateProcedureResponse**](CreateProcedureResponse.md)
+[Result](./result.rst)[[**CreateProcedureResponse**](CreateProcedureResponse.md)]
 
 ### Authorization
 
@@ -128,7 +128,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **DeleteProcedure**
-> Result[str] delete_procedure(graph_id, procedure_id)
+> [Result](./result.rst)[str] delete_procedure(graph_id, procedure_id)
 
 
 
@@ -155,7 +155,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -176,7 +176,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **GetProcedure**
-> Result[GetProcedureResponse] get_procedure(graph_id, procedure_id)
+> [Result](./result.rst)[GetProcedureResponse] get_procedure(graph_id, procedure_id)
 
 
 
@@ -203,7 +203,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetProcedureResponse**](GetProcedureResponse.md)
+[Result](./result.rst)[[**GetProcedureResponse**](GetProcedureResponse.md)]
 
 ### Authorization
 
@@ -224,7 +224,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **ListProcedures**
-> Result[List[GetProcedureResponse]] list_procedures(graph_id)
+> [Result](./result.rst)[List[GetProcedureResponse]] list_procedures(graph_id)
 
 
 
@@ -250,7 +250,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[GetProcedureResponse]**](GetProcedureResponse.md)
+[Result](./result.rst)[[**List[GetProcedureResponse]**](GetProcedureResponse.md)]
 
 ### Authorization
 
@@ -271,7 +271,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **UpdateProcedure**
-> Result[str] update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
+> [Result](./result.rst)[str] update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
 
 
 
@@ -300,7 +300,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 

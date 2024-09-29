@@ -1,4 +1,4 @@
-# GraphManagementApi
+# GraphManagementApI
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
@@ -15,7 +15,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 
 # **CreateGraph**
-> Result[CreateGraphResponse] create_graph(create_graph_request)
+> [Result](./result.rst)[CreateGraphResponse] create_graph(create_graph_request)
 
 
 
@@ -94,7 +94,8 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**CreateGraphResponse**](CreateGraphResponse.md)
+[Reesult](./result.rst)[[**CreateGraphResponse**](CreateGraphResponse.md)]
+
 
 ### Authorization
 
@@ -118,7 +119,7 @@ No authorization required
 
 
 # **DeleteGraph**
-> Result[str] delete_graph(graph_id)
+> [Result](./result.rst)[str] delete_graph(graph_id)
 
 
 
@@ -144,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -192,7 +193,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetGraphResponse**](GetGraphResponse.md)
+[Result](./result.rst)[[**GetGraphResponse**](GetGraphResponse.md)]
 
 ### Authorization
 
@@ -239,7 +240,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetGraphStatisticsResponse**](GetGraphStatisticsResponse.md)
+[Result](./result.rst)[[**GetGraphStatisticsResponse**](GetGraphStatisticsResponse.md)]
 
 ### Authorization
 
@@ -262,7 +263,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **GetGraphSchema**
-> Result[GetGraphSchemaResponse] get_graph_schema(graph_id)
+> [Result](./result.rst)[GetGraphSchemaResponse] get_graph_schema(graph_id)
 
 
 
@@ -288,7 +289,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetGraphSchemaResponse**](GetGraphSchemaResponse.md)
+[Result](./result.rst)[[**GetGraphSchemaResponse**](GetGraphSchemaResponse.md)]
 
 ### Authorization
 
@@ -308,7 +309,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **ListGraphs**
-> Result[List[GetGraphResponse]] list_graphs()
+> [Result](./result.rst)[List[GetGraphResponse]] list_graphs()
 
 
 
@@ -331,7 +332,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[GetGraphResponse]**](GetGraphResponse.md)
+[Result](./result.rst)[[**List[GetGraphResponse]**](GetGraphResponse.md)]
 
 ### Authorization
 
@@ -352,7 +353,7 @@ No authorization required
 
 
 # **BulkLoading**
-> Result[JobResponse] bulk_loading(graph_id, schema_mapping)
+> [Result](./result.rst)[JobResponse] bulk_loading(graph_id, schema_mapping)
 
 
 
@@ -415,7 +416,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**JobResponse**](JobResponse.md)
+[Result](./result.rst)[[**JobResponse**](JobResponse.md)]
 
 ### Authorization
 

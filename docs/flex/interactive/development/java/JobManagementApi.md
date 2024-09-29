@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # JobManagementApi
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -11,7 +13,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="CancelJob"></a>
 # **CancelJob**
-> Result&lt;String&gt; cancelJob(jobId)
+> [Result][Result-doc]&lt;String&gt; cancelJob(jobId)
 
 See [bulkLoading](GraphManagementApi.md#bulkloading) about how to submit a bulk loading job.
 
@@ -47,7 +49,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -65,7 +67,7 @@ No authorization required
 
 <a id="GetJobById"></a>
 # **GetJobById**
-> Result&lt;JobStatus&gt; getJobById(jobId)
+> [Result][Result-doc]&lt;JobStatus&gt; getJobById(jobId)
 
 
 
@@ -100,7 +102,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;JobStatus&gt;**](JobStatus.md)
+[Result][Result-doc]&lt;[JobStatus](JobStatus.md)&gt;
 
 ### Authorization
 
@@ -149,7 +151,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**Result&lt;List&lt;JobStatus&gt;&gt;**](JobStatus.md)
+[Result][Result-doc]&lt;List&lt;[JobStatus](JobStatus.md)&gt;&gt;
 
 ### Authorization
 
