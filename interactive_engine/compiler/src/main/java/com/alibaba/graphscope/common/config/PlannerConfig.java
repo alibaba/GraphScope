@@ -34,6 +34,10 @@ public class PlannerConfig {
     // in Neo4j
     public static final Config<Boolean> JOIN_BY_EDGE_ENABLED =
             Config.boolConfig("graph.planner.join.by.edge.enabled", false);
+    public static final Config<Integer> GRAPH_PLANNER_GROUP_SIZE =
+            Config.intConfig("graph.planner.group.size", 8);
+    public static final Config<Integer> GRAPH_PLANNER_GROUP_CLEAR_INTERVAL_MINUTES =
+            Config.intConfig("graph.planner.group.clear.interval.minutes", 30);
 
     private final Configs configs;
     private final List<String> rules;
@@ -94,6 +98,14 @@ public class PlannerConfig {
 
     public String getJoinByForeignKeyUri() {
         return GraphConfig.GRAPH_FOREIGN_KEY_URI.get(configs);
+    }
+
+    public int getPlannerGroupSize() {
+        return GRAPH_PLANNER_GROUP_SIZE.get(configs);
+    }
+
+    public int getPlannerGroupClearIntervalMinutes() {
+        return GRAPH_PLANNER_GROUP_CLEAR_INTERVAL_MINUTES.get(configs);
     }
 
     @Override
