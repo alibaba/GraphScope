@@ -4,7 +4,7 @@ The Interactive Python SDK Reference is a comprehensive guide designed to assist
 
 ## Requirements.
 
-Python 3.7+
+Python >= 3.8
 
 ## Installation & Usage
 
@@ -370,11 +370,11 @@ assert resp.is_ok()
 print("delete graph res: ", resp)
 ```
 
-For the full example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/java/interactive-example)
+For the full example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/python/basic_example.py)
 
 ## Documentation for Service APIs
 
-The APIs in interactive SDK are divided into five categories.
+The Service APIs in interactive SDK are divided into five categories.
 - GraphManagementApi
 - ProcedureManagementApi
 - JobManagementApi
@@ -415,6 +415,13 @@ Class | Method | HTTP request | Description
 *EdgeApi* | [**getEdge**](./EdgeApi.md#getEdge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
 *EdgeApi* | [**updateEdge**](./EdgeApi.md#updateEdge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property
 
+## Documentation for Utilities APIs
+
+- [Driver](./driver.rst)
+- [Session](./session.rst)
+- [Result](./result.rst)
+- [Status](./status.rst)
+- [Encoder&Decoder](./encoder.rst)
 
 ## Documentation for Data Structures
 

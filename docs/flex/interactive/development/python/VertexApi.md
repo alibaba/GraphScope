@@ -10,7 +10,7 @@ Method | HTTP request | Description
 
 
 # **add_vertex**
-> Result[str] add_vertex(graph_id, vertex_edge_request)
+> [Result](./result.rst)[str] add_vertex(graph_id, vertex_edge_request)
 
 Add the provided vertex to the specified graph. 
 
@@ -57,7 +57,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -82,7 +82,7 @@ No authorization required
 
 
 # **get_vertex**
-> Result[VertexData] get_vertex(graph_id, label, primary_key_value)
+> [Result](./result.rst)[VertexData] get_vertex(graph_id, label, primary_key_value)
 
 Get the vertex's properties with vertex primary key.
 
@@ -126,7 +126,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**VertexData**](VertexData.md)
+[Result](./result.rst)[[**VertexData**](VertexData.md)]
 
 ### Authorization
 
@@ -149,7 +149,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **update_vertex**
-> Result[str] update_vertex(graph_id, vertex_request=vertex_request)
+> [Result](./result.rst)[str] update_vertex(graph_id, vertex_request=vertex_request)
 
 Update vertex's property
 
@@ -194,7 +194,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 

@@ -574,8 +574,14 @@ install_patchelf() {
 
 # libgrape-lite
 install_libgrape_lite() {
-  if [[ -f "${install_prefix}/include/grape/grape.h" ]]; then
-    return 0
+  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    if [[ -f "${HOMEBREW_PREFIX}/include/grape/grape.h" ]]; then
+      return 0
+    fi
+  else
+    if [[ -f "${install_prefix}/include/grape/grape.h" ]]; then
+      return 0
+    fi
   fi
   local branch=$1
   pushd "${tempdir}" || exit
@@ -599,7 +605,13 @@ install_vineyard() {
   python3 -m pip --no-cache-dir install pip -U --user
   python3 -m pip --no-cache-dir install libclang wheel auditwheel --user
   auditwheel_path=$(python3 -c "import auditwheel; print(auditwheel.__path__[0] + '/main_repair.py')")
-  sed -i 's/p.error/logger.warning/g' ${auditwheel_path}
+  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    BUILD_VINEYARD_GRAPH_WITH_GAR="OFF"
+    sed -i '' 's/p.error/logger.warning/g' ${auditwheel_path}
+  else
+    BUILD_VINEYARD_GRAPH_WITH_GAR="ON"
+    sed -i 's/p.error/logger.warning/g' ${auditwheel_path}
+  fi
   if [[ "${v6d_version}" != "v"* ]]; then
     directory="v6d"
     file="${directory}-${v6d_version}.tar.gz"
@@ -619,10 +631,14 @@ install_vineyard() {
         -DBUILD_VINEYARD_TESTS=OFF \
         -DBUILD_SHARED_LIBS=ON \
         -DBUILD_VINEYARD_PYTHON_BINDINGS=ON  \
-        -DBUILD_VINEYARD_GRAPH_WITH_GAR=ON
+        -DBUILD_VINEYARD_GRAPH_WITH_GAR=${BUILD_VINEYARD_GRAPH_WITH_GAR}
   make -j$(nproc)
   make install
-  strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
+  if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    strip "${V6D_PREFIX}"/bin/vineyard*
+  else
+    strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
+  fi
   pip3 install --no-cache -i https://pypi.org/simple -U "vineyard" "vineyard-io"
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
   set +e
@@ -807,11 +823,12 @@ install_analytical_dependencies() {
   install_java_and_maven
   # install vineyard
   if [[ "${no_v6d}" != true ]]; then
-    if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-      brew install vineyard
-    else
-      install_vineyard
-    fi
+    install_vineyard
+    # if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+    #   brew install vineyard
+    # else
+    #   install_vineyard
+    # fi
   fi
 }
 
@@ -819,12 +836,17 @@ install_analytical_java_dependencies() {
   # llvm
   if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
     brew install llvm || true # prevent the `brew link` failure
+    export CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang
+    export CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++
+    export CPPFLAGS="${CPPFLAGS} -I${HOMEBREW_PREFIX}/opt/llvm/include"
+    export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}
   elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
     ${SUDO} apt-get install -y llvm-11-dev lld-11 clang-11
   else
     if [[ "${OS_VERSION}" -eq "7" ]]; then
       ${SUDO} yum install -y llvm-toolset-7.0-clang-devel
       source /opt/rh/llvm-toolset-7.0/enable
+      export LIBCLANG_PATH=/opt/rh/llvm-toolset-7.0/root/usr/lib64/
     else
       ${SUDO} yum install -y llvm-devel clang-devel lld
     fi
@@ -865,7 +887,9 @@ install_interactive_dependencies() {
     rustc --version
   fi
   # opentelemetry
-  install_opentelemetry
+  if [[ "${OS_PLATFORM}" != *"Darwin"* ]]; then
+    install_opentelemetry
+  fi
 }
 
 install_learning_dependencies() {
@@ -884,9 +908,9 @@ write_env_config() {
   } >> "${OUTPUT_ENV_FILE}"
   {
     if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-      echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
-      echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
-      echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
+      echo "export OPENSSL_ROOT_DIR=${HOMEBREW_PREFIX}/opt/openssl"
+      echo "export OPENSSL_LIBRARIES=${HOMEBREW_PREFIX}/opt/openssl/lib"
+      echo "export OPENSSL_SSL_LIBRARY=${HOMEBREW_PREFIX}/opt/openssl/lib/libssl.dylib"
     elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
       if [[ "${OS_VERSION}" -eq "7" ]]; then
         echo "source /opt/rh/devtoolset-8/enable"
@@ -916,11 +940,11 @@ write_env_config() {
   {
     if [[ "${for_analytical_java}" == true ]]; then
       if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-        echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
-        echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
+        echo "export CC=${HOMEBREW_PREFIX}/opt/llvm/bin/clang"
+        echo "export CXX=${HOMEBREW_PREFIX}/opt/llvm/bin/clang++"
         echo "export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}"
-        echo "export LDFLAGS=\"-L${homebrew_prefix}/opt/llvm/lib\""
-        echo "export CPPFLAGS=\"-I${homebrew_prefix}/opt/llvm/include\""
+        echo "export LDFLAGS=\"-L${HOMEBREW_PREFIX}/opt/llvm/lib\""
+        echo "export CPPFLAGS=\"-I${HOMEBREW_PREFIX}/opt/llvm/include\""
       elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
         echo "source /opt/rh/llvm-toolset-7.0/enable || true"
         echo "export LIBCLANG_PATH=/opt/rh/llvm-toolset-7.0/root/usr/lib64/"
