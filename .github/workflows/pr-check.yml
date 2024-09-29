@@ -138,9 +138,10 @@ jobs:
             exit -1
         fi
 
-        push flex/interactive
-        find ./bin ./codegen ./engines ./grin ./storages ./engines ./tests ./utils ./otel -name "*.h" | xargs clang-format -i --style=file
-        find ./bin ./codegen ./engines ./grin ./storages ./engines ./tests ./utils ./otel -name "*.cc" | xargs clang-format -i --style=file
+        push flex
+        # except for files end with act.h 
+        find ./bin ./codegen ./engines ./storages ./engines ./tests ./utils ./otel -name "*.h" ! -name "*act.h" ! -name "*actg.h" | xargs clang-format -i --style=file
+        find ./bin ./codegen ./engines ./storages ./engines ./tests ./utils ./otel -name "*.cc" ! -name "*act.cc" | xargs clang-format -i --style=file
         popd
 
         GIT_DIFF=$(git diff --ignore-submodules)
