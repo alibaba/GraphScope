@@ -1033,8 +1033,31 @@ seastar::future<admin_query_result> admin_actor::start_service(
 // The port is still connectable.
 seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
+  // Try to get the json content from query_param
+  std::string graph_id = "";
+  try {
+    auto& content = query_param.content;
+    if (!content.empty()) {
+      rapidjson::Document json;
+      if (json.Parse(content.c_str()).HasParseError()) {
+        throw std::runtime_error("Fail to parse json: " +
+                                 std::to_string(json.GetParseError()));
+      }
+      if (json.HasMember("graph_id")) {
+        graph_id = json["graph_id"].GetString();
+      }
+      LOG(INFO) << "Stop service with graph: " << graph_id;
+    }
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Fail to Start service: ";
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::BAD_REQUEST,
+                       "Fail to parse json: " + std::string(e.what()))));
+  }
+
   auto& graph_db_service = GraphDBService::get();
-  return graph_db_service.stop_query_actors().then([this] {
+  return graph_db_service.stop_query_actors().then([this, graph_id] {
     LOG(INFO) << "Successfully stopped query handler";
     // Add also remove current running graph
     {
@@ -1042,6 +1065,15 @@ seastar::future<admin_query_result> admin_actor::stop_service(
       // unlock the graph
       auto cur_running_graph_res = metadata_store_->GetRunningGraph();
       if (cur_running_graph_res.ok()) {
+        if (!graph_id.empty() && graph_id != cur_running_graph_res.value()) {
+          LOG(ERROR) << "The specified graph is not running: "
+                     << cur_running_graph_res.value();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::Status(gs::StatusCode::NOT_FOUND,
+                             "The graph is not running: " +
+                                 cur_running_graph_res.value())));
+        }
         auto unlock_res =
             metadata_store_->UnlockGraphIndices(cur_running_graph_res.value());
         if (!unlock_res.ok()) {

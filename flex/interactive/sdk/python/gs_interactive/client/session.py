@@ -236,7 +236,7 @@ class QueryServiceInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def stop_service(self) -> Result[str]:
+    def stop_service(self, graph_id: str) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -656,9 +656,9 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def stop_service(self) -> Result[str]:
+    def stop_service(self, graph_id : str = None) -> Result[str]:
         try:
-            response = self._service_api.stop_service_with_http_info()
+            response = self._service_api.stop_service_with_http_info(StopServiceRequest(graph_id = graph_id))
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)

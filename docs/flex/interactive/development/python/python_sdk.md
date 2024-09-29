@@ -361,7 +361,7 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
 
 ```python
 # stop the service first
-resp = sess.stop_service()
+resp = sess.stop_service(graph_id)
 assert resp.is_ok()
 print("successfully stopped the service")
 

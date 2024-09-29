@@ -135,4 +135,10 @@ def test_builtin_procedure(interactive_session,neo4j_session, create_modern_grap
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
     call_procedure(neo4j_session, create_modern_graph, "count_vertices", '"person"')
-    
+
+def test_stop_service(interactive_session, create_modern_graph):
+    print("[Test stop service]")
+    start_service_on_graph(interactive_session, create_modern_graph)
+    # stop the service
+    stop_res = interactive_session.stop_service(graph_id = "A Invalid graph id")
+    assert not stop_res.is_ok()
