@@ -18,18 +18,25 @@
 
 from gs_interactive.api_response import ApiResponse
 from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
-from gs_interactive.exceptions import (
-    ApiException,
-    BadRequestException,
-    ForbiddenException,
-    NotFoundException,
-    ServiceException,
-)
+from gs_interactive.exceptions import (ApiException, BadRequestException,
+                                       ForbiddenException, NotFoundException,
+                                       ServiceException)
 from gs_interactive.models.api_response_with_code import APIResponseWithCode
 
 
 class Status:
+    """
+    This class represents the status of an operation. It contains the status code and the message.
+    """
+
     def __init__(self, status: StatusCode, message: str):
+        """
+        Construct a new Status object with the specified status code and message.
+
+        Args:
+            status (StatusCode): the returnd code of the operation.
+            message (str): the message returned by the operation.
+        """
         self.status = status
         self.message = message
 
@@ -40,25 +47,48 @@ class Status:
         return f"Status: {self.status}, message: {self.message}"
 
     def is_ok(self) -> bool:
+        """
+        Whether the operation is successful.
+        """
+
         return self.status == StatusCode.OK
 
     def is_error(self) -> bool:
+        """
+        Whether the operation is failed.
+        """
         return self.status != StatusCode.OK
 
     def get_code(self):
+        """
+        Get the status code returned by the operation.
+        """
+
         return self.status
 
     @property
     def get_message(self):
+        """
+        Get the message returned by the operation.
+        """
+
         return self.message
 
     # static method create a server internal error object
     @staticmethod
     def server_internal_error(message: str):
+        """
+        Create a server internal error object with the specified message.
+        """
+
         return Status(StatusCode.INTERNAL_ERROR, message)
 
     @staticmethod
     def from_exception(exception: ApiException):
+        """
+        Create a Status object from an ApiException.
+        """
+
         # mapping from ApiException to StatusCode
         print("exception: ", exception)
         if isinstance(exception, BadRequestException):
@@ -78,6 +108,10 @@ class Status:
 
     @staticmethod
     def from_response(response: ApiResponse):
+        """
+        Create a Status object from an ApiResponse.
+        """
+
         # mapping from ApiResponse to StatusCode
         if response.status_code == 200:
             return Status(StatusCode.OK, "OK")
@@ -92,4 +126,8 @@ class Status:
 
     @staticmethod
     def ok():
+        """
+        Create a successful status object.
+        """
+
         return Status(StatusCode.OK, "OK")

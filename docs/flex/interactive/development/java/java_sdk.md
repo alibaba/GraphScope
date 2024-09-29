@@ -461,6 +461,18 @@ Class | Method | HTTP request | Description
 Delete Vertex/Edge is currently not supported by Interactive.
 ```
 
+## Documentation for Utilities APIs
+
+In addition to the documentation for service APIs, we also offer documentation for [Utility APIs](./reference/index.rst).
+
+- [Driver](./reference/com/alibaba/graphscope/interactive/client/Driver.rst)
+- [Session](./reference/com/alibaba/graphscope/interactive/client/Session.rst)
+- [DefaultSession](./reference/com/alibaba/graphscope/interactive/client/impl/DefaultSession.rst)
+- [Status](./reference/com/alibaba/graphscope/interactive/client/common/Status.rst)
+- [Result](./reference/com/alibaba/graphscope/interactive/client/common/Result.rst)
+- [Encoder](./reference/com/alibaba/graphscope/interactive/client/utils/Encoder.rst)
+- [Decoder](./reference/com/alibaba/graphscope/interactive/client/utils/Encoder.rst)
+
 
 ## Documentation for Data Structures
 

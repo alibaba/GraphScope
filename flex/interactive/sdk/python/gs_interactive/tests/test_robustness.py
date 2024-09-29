@@ -24,16 +24,10 @@ import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
 from gs_interactive.tests.conftest import (  # noqa: E402
-    call_procedure,
-    create_procedure,
-    delete_procedure,
-    import_data_to_full_modern_graph,
-    import_data_to_partial_modern_graph,
-    import_data_to_vertex_only_modern_graph,
-    run_cypher_test_suite,
-    start_service_on_graph,
-    update_procedure,
-)
+    call_procedure, create_procedure, delete_procedure,
+    import_data_to_full_modern_graph, import_data_to_partial_modern_graph,
+    import_data_to_vertex_only_modern_graph, run_cypher_test_suite,
+    start_service_on_graph, update_procedure)
 
 vertex_only_cypher_queries = [
     "MATCH(n) return count(n)",

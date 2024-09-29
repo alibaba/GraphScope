@@ -27,34 +27,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 from gs_interactive.client.driver import Driver  # noqa: E402
 from gs_interactive.client.status import StatusCode  # noqa: E402
 from gs_interactive.models import (  # noqa: E402
-    BaseEdgeTypeVertexTypePairRelationsInner,
-    CreateEdgeType,
-    CreateGraphRequest,
-    CreateGraphSchemaRequest,
-    CreateProcedureRequest,
-    CreatePropertyMeta,
-    CreateVertexType,
-    EdgeMapping,
-    EdgeMappingTypeTriplet,
-    EdgeRequest,
-    GSDataType,
-    LongText,
-    ModelProperty,
-    PrimitiveType,
-    QueryRequest,
-    SchemaMapping,
-    SchemaMappingLoadingConfig,
-    SchemaMappingLoadingConfigDataSource,
-    SchemaMappingLoadingConfigFormat,
-    SchemaMappingLoadingConfigXCsrParams,
-    StartServiceRequest,
-    StringType,
-    StringTypeString,
-    TypedValue,
-    VertexEdgeRequest,
-    VertexMapping,
-    VertexRequest,
-)
+    BaseEdgeTypeVertexTypePairRelationsInner, CreateEdgeType,
+    CreateGraphRequest, CreateGraphSchemaRequest, CreateProcedureRequest,
+    CreatePropertyMeta, CreateVertexType, EdgeMapping, EdgeMappingTypeTriplet,
+    EdgeRequest, GSDataType, LongText, ModelProperty, PrimitiveType,
+    QueryRequest, SchemaMapping, SchemaMappingLoadingConfig,
+    SchemaMappingLoadingConfigDataSource, SchemaMappingLoadingConfigFormat,
+    SchemaMappingLoadingConfigXCsrParams, StartServiceRequest, StringType,
+    StringTypeString, TypedValue, VertexEdgeRequest, VertexMapping,
+    VertexRequest)
 
 test_graph_def = {
     "name": "modern_graph",
