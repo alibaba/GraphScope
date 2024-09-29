@@ -658,7 +658,10 @@ class DefaultSession(Session):
 
     def stop_service(self, graph_id : str = None) -> Result[str]:
         try:
-            response = self._service_api.stop_service_with_http_info(StopServiceRequest(graph_id = graph_id))
+            req = StopServiceRequest()
+            if graph_id:
+                req.graph_id = graph_id
+            response = self._service_api.stop_service_with_http_info(req)
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
