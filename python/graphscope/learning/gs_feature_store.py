@@ -25,6 +25,7 @@ from graphscope.learning.graphlearn_torch.typing import NodeType
 
 KeyType = Tuple[str, ...]
 
+
 @dataclass
 class GsTensorAttr(TensorAttr):
     group_name: Optional[Union[NodeType, EdgeType]] = _FieldStatus.UNSET
@@ -37,7 +38,9 @@ class GsFeatureStore(FeatureStore):
         self.handle = handle
         self.config = config
         self.attr2index: Dict[KeyType, Dict[str, int]] = {}
-        self.tensor_attrs: Dict[Tuple[Union[NodeType, EdgeType], str], GsTensorAttr] = {}
+        self.tensor_attrs: Dict[Tuple[Union[NodeType, EdgeType], str], GsTensorAttr] = (
+            {}
+        )
         if handle is not None:
             handle = json.loads(
                 base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
@@ -59,19 +62,25 @@ class GsFeatureStore(FeatureStore):
                 for node_type, node_features in self.node_features.items():
                     node_attr2index = {}
                     for idx, node_feature in enumerate(node_features):
-                        self.tensor_attrs[(node_type, node_feature)] = GsTensorAttr(node_type, node_feature)
+                        self.tensor_attrs[(node_type, node_feature)] = GsTensorAttr(
+                            node_type, node_feature
+                        )
                         node_attr2index[node_feature] = idx
                     self.attr2index[node_type] = node_attr2index
             if self.edge_features is not None:
                 for edge_type, edge_features in self.edge_features.items():
                     edge_attr2index = {}
                     for idx, edge_feature in enumerate(edge_features):
-                        self.tensor_attrs[(edge_type, edge_feature)] = GsTensorAttr(edge_type, edge_feature)
+                        self.tensor_attrs[(edge_type, edge_feature)] = GsTensorAttr(
+                            edge_type, edge_feature
+                        )
                         edge_attr2index[edge_feature] = idx
                     self.attr2index[edge_type] = edge_attr2index
             if self.node_labels is not None:
                 for node_type, node_label in self.node_labels.items():
-                    self.tensor_attrs[(node_type, node_label)] = GsTensorAttr(node_type, node_label, is_label=True)
+                    self.tensor_attrs[(node_type, node_label)] = GsTensorAttr(
+                        node_type, node_label, is_label=True
+                    )
                     if node_type in self.attr2index:
                         _attr2index = self.attr2index[node_type]
                         _attr2index[node_label] = 0
@@ -94,7 +103,9 @@ class GsFeatureStore(FeatureStore):
     def _get_tensor(self, attr: GsTensorAttr) -> Optional[Tensor]:
         group_name, attr_name, index, is_label = self.key(attr)
         if not self._check_attr(attr):
-            raise ValueError(f"Attribute {group_name}-{attr_name} not found in feature store.")
+            raise ValueError(
+                f"Attribute {group_name}-{attr_name} not found in feature store."
+            )
         result = None
         server_id = self._get_partition_id(attr)
         index = self.index_to_tensor(index)
@@ -133,9 +144,11 @@ class GsFeatureStore(FeatureStore):
     def _remove_tensor(self, attr: GsTensorAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
-    
+
     def _check_attr(self, attr: GsTensorAttr) -> bool:
         group_name, attr_name, _, _ = self.key(attr)
+        if not attr.is_set("attr_name"):
+            return any(group_name in key for key in self.tensor_attrs.keys())
         return (group_name, attr_name) in self.tensor_attrs
 
     def _get_tensor_size(self, attr: GsTensorAttr) -> Optional[torch.Size]:

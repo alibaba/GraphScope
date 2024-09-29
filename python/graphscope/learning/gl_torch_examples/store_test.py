@@ -62,10 +62,10 @@ print(feature_result)
 feature_result = feature_store.get_all_tensor_attrs()
 print(feature_result)
 
-edge_result = graph_store.get_edge_index(EdgeAttr(('paper', 'citation', 'paper'), "csr"))
-r1, r2 = edge_result
-print(r1)
-print(r2)
+edge_result = graph_store.get_edge_index(
+    EdgeAttr(("paper", "citation", "paper"), "csr")
+)
+print(edge_result)
 edge_result = graph_store.get_all_edge_attrs()
 print(edge_result)
 

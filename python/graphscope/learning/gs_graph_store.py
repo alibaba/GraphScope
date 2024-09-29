@@ -19,7 +19,7 @@ class GsGraphStore(GraphStore):
         super().__init__()
         self.handle = handle
         self.config = config
-        self.edge_attrs: Dict[Tuple[Tuple[str,str,str], str, bool], EdgeAttr] = {}
+        self.edge_attrs: Dict[Tuple[Tuple[str, str, str], str, bool], EdgeAttr] = {}
 
         if config is not None:
             config = json.loads(
@@ -37,10 +37,14 @@ class GsGraphStore(GraphStore):
                     if self.edge_dir is not None:
                         layout = "csr" if self.edge_dir == "out" else "csc"
                         is_sorted = False if layout == "csr" else True
-                        self.edge_attrs[(edge, layout, is_sorted)] = EdgeAttr(edge, layout, is_sorted)
+                        self.edge_attrs[(edge, layout, is_sorted)] = EdgeAttr(
+                            edge, layout, is_sorted
+                        )
                     else:
                         layout = "coo"
-                        self.edge_attrs[(edge, layout, False)] = EdgeAttr(edge, layout, is_sorted)
+                        self.edge_attrs[(edge, layout, False)] = EdgeAttr(
+                            edge, layout, is_sorted
+                        )
 
         assert len(endpoints) == 4
         self.endpoints = endpoints
@@ -111,12 +115,12 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def _get_edge_index(self, edge_attr: EdgeAttr) -> Optional[EdgeTensorType]:
-        r""" Get edge index from remote server with edge_attr.
-        
+        r"""Get edge index from remote server with edge_attr.
+
         Returns:
 
-            (row indice tensor, column indice tensor)(COO) | 
-            (row ptr tensor, column indice tensor)(CSR) | 
+            (row indice tensor, column indice tensor)(COO) |
+            (row ptr tensor, column indice tensor)(CSR) |
             (column ptr tensor, row indice tensor)(CSC).
         """
         group_name, layout, is_sorted, _ = self.key(edge_attr)
