@@ -1092,6 +1092,10 @@ impl GraphStore {
         let edge_labels_statistics = self.get_edge_statistics(si)?;
         let vertex_count = vertex_labels_statistics.values().sum();
         let edge_count = edge_labels_statistics.values().sum();
+        info!(
+            "get_statistics in groot store partition, vertex_count {}, edge_count {}",
+            vertex_count, edge_count
+        );
         Ok(GraphPartitionStatistics::new(
             si,
             vertex_count,
