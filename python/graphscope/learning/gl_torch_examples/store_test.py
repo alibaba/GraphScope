@@ -1,10 +1,10 @@
 import torch
-from graphscope.learning.gs_feature_store import GsTensorAttr
 from torch_geometric.data import EdgeAttr
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
 from graphscope.dataset import load_ogbn_arxiv
+from graphscope.learning.gs_feature_store import GsTensorAttr
 
 NUM_EPOCHS = 10
 LOADER_BATCH_SIZE = 512

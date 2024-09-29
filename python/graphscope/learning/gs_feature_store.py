@@ -1,7 +1,7 @@
 import base64
+import json
 from dataclasses import dataclass
 from enum import Enum
-import json
 from multiprocessing.reduction import ForkingPickler
 from typing import Dict
 from typing import List
@@ -9,15 +9,19 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from graphscope.learning.graphlearn_torch.typing import NodeType, EdgeType
 import numpy as np
 import torch
 from torch import Tensor
-from torch_geometric.data.feature_store import FeatureStore, _FieldStatus, TensorAttr, IndexType
+from torch_geometric.data.feature_store import FeatureStore
+from torch_geometric.data.feature_store import IndexType
+from torch_geometric.data.feature_store import TensorAttr
+from torch_geometric.data.feature_store import _FieldStatus
 from torch_geometric.typing import FeatureTensorType
 
 from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
 from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
+from graphscope.learning.graphlearn_torch.typing import EdgeType
+from graphscope.learning.graphlearn_torch.typing import NodeType
 
 KeyType = Tuple[str, ...]
 

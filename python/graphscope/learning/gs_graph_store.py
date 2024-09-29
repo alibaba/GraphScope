@@ -6,10 +6,12 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+from torch_geometric.data.graph_store import EdgeAttr
+from torch_geometric.data.graph_store import GraphStore
+from torch_geometric.typing import EdgeTensorType
+
 from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
 from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
-from torch_geometric.data.graph_store import EdgeAttr, GraphStore
-from torch_geometric.typing import EdgeTensorType
 
 
 class GsGraphStore(GraphStore):
