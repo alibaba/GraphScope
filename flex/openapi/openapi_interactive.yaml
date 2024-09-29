@@ -531,7 +531,7 @@ paths:
       description: Stop current service
       operationId: stop_service
       requestBody:
-        description: Start service on a specified graph
+        description: Stop service on a specified graph
         content:
           application/json:
             schema:
