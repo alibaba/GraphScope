@@ -6,8 +6,9 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from torch_geometric.data import EdgeAttr
-from torch_geometric.data import GraphStore
+from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
+from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
+from torch_geometric.data.graph_store import EdgeAttr, GraphStore
 from torch_geometric.typing import EdgeTensorType
 
 
@@ -16,7 +17,7 @@ class GsGraphStore(GraphStore):
         super().__init__()
         self.handle = handle
         self.config = config
-        self.edge_attr_list: list[EdgeAttr] = []
+        self.edge_attrs: Dict[Tuple[Tuple[str,str,str], str, bool], EdgeAttr] = {}
 
         if config is not None:
             config = json.loads(
@@ -30,12 +31,14 @@ class GsGraphStore(GraphStore):
             self.random_node_split = config["random_node_split"]
             if self.edges is not None:
                 for edge in self.edges:
+                    edge = tuple(edge)
                     if self.edge_dir is not None:
                         layout = "csr" if self.edge_dir == "out" else "csc"
                         is_sorted = False if layout == "csr" else True
+                        self.edge_attrs[(edge, layout, is_sorted)] = EdgeAttr(edge, layout, is_sorted)
                     else:
                         layout = "coo"
-                    self.edge_attr_list.append(EdgeAttr(edge, layout, is_sorted))
+                        self.edge_attrs[(edge, layout, False)] = EdgeAttr(edge, layout, is_sorted)
 
         assert len(endpoints) == 4
         self.endpoints = endpoints
@@ -106,15 +109,30 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def _get_edge_index(self, edge_attr: EdgeAttr) -> Optional[EdgeTensorType]:
-        r"""To be implemented by :class:`GsFeatureStore`."""
-        raise NotImplementedError
+        r""" Get edge index from remote server with edge_attr.
+        
+        Returns:
+
+            (row indice tensor, column indice tensor)(COO) | 
+            (row ptr tensor, column indice tensor)(CSR) | 
+            (column ptr tensor, row indice tensor)(CSC).
+        """
+        group_name, layout, is_sorted, _ = self.key(edge_attr)
+        edge_index = None
+        edge_index, size = request_server(
+            0, DistServer.get_edge_index, group_name, layout
+        )
+        if edge_index is not None:
+            new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
+            self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
+        return edge_index
 
     def _remove_edge_index(self, edge_attr: EdgeAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
-        return self.edge_attr_list
+        return [attr for attr in self.edge_attrs.values()]
 
     @classmethod
     def from_ipc_handle(cls, ipc_handle):

@@ -1,5 +1,6 @@
 import torch
-from torch_geometric.data import TensorAttr
+from graphscope.learning.gs_feature_store import GsTensorAttr
+from torch_geometric.data import EdgeAttr
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
@@ -52,30 +53,21 @@ glt.distributed.init_client(
     is_dynamic=True,
 )
 
-result = feature_store.get_tensor(TensorAttr("paper", "feat_0", 0))
-print(result)
-result = feature_store.get_tensor_size(TensorAttr("paper"))
-print(result)
-result = feature_store._get_partition_id(TensorAttr("paper", "feat_0", 0))
-print(result)
-result = feature_store.get_all_tensor_attrs()
-print(result)
+feature_result = feature_store.get_tensor(GsTensorAttr("paper", "feat_0", 0))
+print(feature_result)
+feature_result = feature_store.get_tensor(GsTensorAttr("paper", "label", 0, True))
+print(feature_result)
+feature_result = feature_store.get_tensor_size(GsTensorAttr("paper"))
+print(feature_result)
+feature_result = feature_store.get_all_tensor_attrs()
+print(feature_result)
 
-# from torch_geometric.data import EdgeAttr
-# edge_index = graph_store._get_edge_index(EdgeAttr(('paper', 'citation', 'paper'), 'csr'))
-# print(edge_index)
-# graph_store.get_all_edge_attrs()
-
-# from torch_geometric.data import TensorAttr
-# feature_tensor = feature_store._get_tensor(TensorAttr('paper', 'feat_0'))
-# print(feature_tensor)
-# print(feature_tensor.shape)
-
-# tensor_attr_list = feature_store.get_all_tensor_attrs()
-# print(tensor_attr_list[0].index.shape)
-
-# tensor_list = feature_store._multi_get_tensor([TensorAttr('paper', 'feat_0'), TensorAttr('paper', 'feat_10')])
-# print(tensor_list)
+edge_result = graph_store.get_edge_index(EdgeAttr(('paper', 'citation', 'paper'), "csr"))
+r1, r2 = edge_result
+print(r1)
+print(r2)
+edge_result = graph_store.get_all_edge_attrs()
+print(edge_result)
 
 
 print("-- Shutdowning ...")
