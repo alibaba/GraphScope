@@ -16,19 +16,15 @@
 # limitations under the License.
 #
 
-
-from enum import Enum
-
 from gs_interactive.api_response import ApiResponse
+from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
 from gs_interactive.exceptions import (
     ApiException,
     BadRequestException,
     ForbiddenException,
     NotFoundException,
     ServiceException,
-    UnauthorizedException,
 )
-from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
 from gs_interactive.models.api_response_with_code import APIResponseWithCode
 
 
@@ -48,7 +44,7 @@ class Status:
 
     def is_error(self) -> bool:
         return self.status != StatusCode.OK
-    
+
     def get_code(self):
         return self.status
 
@@ -72,7 +68,7 @@ class Status:
         elif isinstance(exception, NotFoundException):
             return Status(StatusCode.NOT_FOUND, exception.body)
         elif isinstance(exception, ServiceException):
-            if (exception.status == 503):
+            if exception.status == 503:
                 return Status(StatusCode.SERVICE_UNAVAILABLE, exception.body)
             else:
                 return Status(StatusCode.INTERNAL_ERROR, exception.body)
@@ -89,7 +85,9 @@ class Status:
             # If the status_code is not 200, we expect APIReponseWithCode returned from server
             api_response_with_code = response.data
             if isinstance(api_response_with_code, APIResponseWithCode):
-                return Status(api_response_with_code.code, api_response_with_code.message)
+                return Status(
+                    api_response_with_code.code, api_response_with_code.message
+                )
             return Status(StatusCode.UNKNOWN, "Unknown Error")
 
     @staticmethod

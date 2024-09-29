@@ -18,8 +18,6 @@
 
 from typing import Generic, TypeVar
 
-from pydantic import Field
-
 from gs_interactive.api_response import ApiResponse
 from gs_interactive.client.status import Status
 from gs_interactive.exceptions import ApiException
@@ -28,7 +26,6 @@ from gs_interactive.exceptions import ApiException
 T = TypeVar("T")
 
 
-# Generate a python class Result<T>, which has two field status and value. This class can be used to wrap the execution result for interface where exception may happen
 class Result(Generic[T]):
     def __init__(self, status: Status, value: T):
         self.status = status
@@ -54,9 +51,6 @@ class Result(Generic[T]):
 
     def get_status_message(self):
         return self.status.message
-    
-    def get_status(self):
-        return self.status
 
     @staticmethod
     def ok(value):

@@ -17,14 +17,8 @@
 #
 
 import os
-import sys
 
-from gremlin_python import statics
 from gremlin_python.driver.client import Client
-from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-from gremlin_python.process.graph_traversal import __
-from gremlin_python.process.strategies import *
-from gremlin_python.structure.graph import Graph
 from neo4j import GraphDatabase
 from neo4j import Session as Neo4jSession
 
@@ -56,7 +50,7 @@ class Driver:
     def close(self):
         if self._neo4j_driver is not None:
             self._neo4j_driver.close()
-    
+
     def __del(self):
         self.close()
 
@@ -82,21 +76,26 @@ class Driver:
         self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         assert (
             self._admin_endpoint is not None
-        ), "INTERACTIVE_ADMIN_ENDPOINT is not set, did you forget to export the environment variable after deploying Interactive? see https://graphscope.io/docs/latest/flex/interactive/installation"
+        ), "INTERACTIVE_ADMIN_ENDPOINT is not set, "
+        "did you forget to export the environment variable after deploying Interactive?"
+        " see https://graphscope.io/docs/latest/flex/interactive/installation"
         self._stored_proc_endpoint = os.environ.get("INTERACTIVE_STORED_PROC_ENDPOINT")
         if self._stored_proc_endpoint is None:
             print(
-                "INTERACTIVE_STORED_PROC_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_STORED_PROC_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
         self._cypher_endpoint = os.environ.get("INTERACTIVE_CYPHER_ENDPOINT")
         if self._cypher_endpoint is None:
             print(
-                "INTERACTIVE_CYPHER_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_CYPHER_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
         self._gremlin_endpoint = os.environ.get("INTERACTIVE_GREMLIN_ENDPOINT")
         if self._gremlin_endpoint is None:
             print(
-                "INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_GREMLIN_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
 
     def session(self) -> Session:

@@ -18,16 +18,43 @@
 
 
 import os
+import sys
 import time
 import unittest
 
-import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
-from gs_interactive.client.driver import Driver
-from gs_interactive.models import *
-from gs_interactive.client.status import StatusCode
-
+from gs_interactive.client.driver import Driver  # noqa: E402
+from gs_interactive.client.status import StatusCode  # noqa: E402
+from gs_interactive.models import (  # noqa: E402
+    BaseEdgeTypeVertexTypePairRelationsInner,
+    CreateEdgeType,
+    CreateGraphRequest,
+    CreateGraphSchemaRequest,
+    CreateProcedureRequest,
+    CreatePropertyMeta,
+    CreateVertexType,
+    EdgeMapping,
+    EdgeMappingTypeTriplet,
+    EdgeRequest,
+    GSDataType,
+    LongText,
+    ModelProperty,
+    PrimitiveType,
+    QueryRequest,
+    SchemaMapping,
+    SchemaMappingLoadingConfig,
+    SchemaMappingLoadingConfigDataSource,
+    SchemaMappingLoadingConfigFormat,
+    SchemaMappingLoadingConfigXCsrParams,
+    StartServiceRequest,
+    StringType,
+    StringTypeString,
+    TypedValue,
+    VertexEdgeRequest,
+    VertexMapping,
+    VertexRequest,
+)
 
 test_graph_def = {
     "name": "modern_graph",
@@ -43,7 +70,7 @@ test_graph_def = {
                     },
                     {
                         "property_name": "name",
-                        "property_type": {"string": {"var_char": {"max_length" : 16}}},
+                        "property_type": {"string": {"var_char": {"max_length": 16}}},
                     },
                     {
                         "property_name": "age",
@@ -74,6 +101,7 @@ test_graph_def = {
         ],
     },
 }
+
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -130,7 +158,7 @@ class TestDriver(unittest.TestCase):
         # test stop the service, and submit queries
         self.queryWithServiceStop()
         self.createDriver()
-    
+
     def createGraphFromDict(self):
         create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
         resp = self._sess.create_graph(create_graph_request)
@@ -306,13 +334,13 @@ class TestDriver(unittest.TestCase):
         assert resp.is_ok()
         job_id = resp.get_value().job_id
         # Expect to fail
-        assert self.waitJobFinish(job_id) == False
+        assert not self.waitJobFinish(job_id)
 
     def list_graph(self):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
-    
+
     def get_graph_meta(self):
         resp = self._sess.get_graph_meta(self._graph_id)
         assert resp.is_ok()
@@ -321,9 +349,8 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.get_graph_meta(1)
         assert resp.is_ok()
         # Now test calling with a invalid value, will raise exception
-        with self.assertRaises(Exception) as context:
-            resp = self._sess.get_graph_meta([1,2,3])
-
+        with self.assertRaises(Exception):
+            resp = self._sess.get_graph_meta([1, 2, 3])
 
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
@@ -485,7 +512,7 @@ class TestDriver(unittest.TestCase):
         with self._driver.getNeo4jSession() as session:
             result = session.run("CALL test_procedure();")
             print("call procedure result: ", result)
-    
+
     def callPrcedureWithServiceStop(self):
         # stop service
         print("stop service: ")
@@ -493,9 +520,9 @@ class TestDriver(unittest.TestCase):
         assert stop_res.is_ok()
         # call procedure on stopped service should raise exception
         with self._driver.getNeo4jSession() as session:
-            with self.assertRaises(Exception) as context:
+            with self.assertRaises(Exception):
                 result = session.run("CALL test_procedure();")
-        # start service
+                print("call procedure result: ", result)
         print("start service: ")
         start_res = self._sess.start_service(
             start_service_request=StartServiceRequest(graph_id=self._graph_id)

@@ -19,80 +19,96 @@ from enum import Enum
 
 
 class Encoder:
-    def __init__(self, endian = 'little') -> None:
+    def __init__(self, endian="little") -> None:
         self.byte_array = bytearray()
         self.endian = endian
-        
+
     def put_int(self, value: int):
         # put the value in big endian, 4 bytes
         self.byte_array.extend(value.to_bytes(4, byteorder=self.endian))
-        
+
     def put_long(self, value: int):
         self.byte_array.extend(value.to_bytes(8, byteorder=self.endian))
-        
+
     def put_string(self, value: str):
         self.put_int(len(value))
-        self.byte_array.extend(value.encode('utf-8'))
-        
+        self.byte_array.extend(value.encode("utf-8"))
+
     def put_byte(self, value: int):
         self.byte_array.extend(value.to_bytes(1, byteorder=self.endian))
-        
+
     def put_bytes(self, value: bytes):
         self.byte_array.extend(value)
-        
+
     def put_double(self, value: float):
         self.byte_array.extend(value.to_bytes(8, byteorder=self.endian))
-        
+
     def get_bytes(self):
         # return bytes not bytearray
         return bytes(self.byte_array)
 
+
 class Decoder:
-    def __init__(self, byte_array: bytearray,endian = 'little') -> None:
+    def __init__(self, byte_array: bytearray, endian="little") -> None:
         self.byte_array = byte_array
         self.index = 0
         self.endian = endian
-        
+
     def get_int(self) -> int:
-        value = int.from_bytes(self.byte_array[self.index:self.index+4], byteorder=self.endian)
+        value = int.from_bytes(
+            self.byte_array[self.index : self.index + 4],  # noqa E203
+            byteorder=self.endian,
+        )
         self.index += 4
         return value
-    
+
     def get_long(self) -> int:
-        value = int.from_bytes(self.byte_array[self.index:self.index+8], byteorder=self.endian)
+        value = int.from_bytes(
+            self.byte_array[self.index : self.index + 8],  # noqa E203
+            byteorder=self.endian,
+        )
         self.index += 8
         return value
-    
+
     def get_double(self) -> float:
-        value = float.from_bytes(self.byte_array[self.index:self.index+8], byteorder=self.endian)
+        value = float.from_bytes(
+            self.byte_array[self.index : self.index + 8],  # noqa E203
+            byteorder=self.endian,
+        )
         self.index += 8
         return value
-    
+
     def get_byte(self) -> int:
-        value = int.from_bytes(self.byte_array[self.index:self.index+1], byteorder=self.endian)
+        value = int.from_bytes(
+            self.byte_array[self.index : self.index + 1],  # noqa E203
+            byteorder=self.endian,
+        )
         self.index += 1
         return value
-    
+
     def get_bytes(self, length: int) -> bytes:
-        value = self.byte_array[self.index:self.index+length]
+        value = self.byte_array[self.index : self.index + length]  # noqa E203
         self.index += length
         return value
-    
+
     def get_string(self) -> str:
         length = self.get_int()
-        value = self.byte_array[self.index:self.index+length].decode('utf-8')
+        value = self.byte_array[self.index : self.index + length].decode(  # noqa E203
+            "utf-8"
+        )
         self.index += length
         return value
-    
+
     def is_empty(self) -> bool:
         return self.index == len(self.byte_array)
-    
+
 
 class InputFormat(Enum):
-    CPP_ENCODER = 0 # raw bytes encoded by encoder/decoder
-    CYPHER_JSON = 1 # json format string
-    CYPHER_PROTO_ADHOC = 2 # protobuf adhoc bytes
-    CYPHER_PROTO_PROCEDURE = 3 # protobuf procedure bytes
+    CPP_ENCODER = 0  # raw bytes encoded by encoder/decoder
+    CYPHER_JSON = 1  # json format string
+    CYPHER_PROTO_ADHOC = 2  # protobuf adhoc bytes
+    CYPHER_PROTO_PROCEDURE = 3  # protobuf procedure bytes
+
 
 def append_format_byte(input: bytes, input_format: InputFormat):
     """
@@ -100,4 +116,3 @@ def append_format_byte(input: bytes, input_format: InputFormat):
     """
     new_bytes = input + bytes([input_format.value])
     return new_bytes
-    
