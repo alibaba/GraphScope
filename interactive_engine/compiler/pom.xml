@@ -166,6 +166,10 @@
             <groupId>com.alibaba.graphscope</groupId>
             <artifactId>interactive</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>
