@@ -23,5 +23,6 @@ import com.alibaba.graphscope.common.ConcurrentProcessRunner;
 import org.junit.runner.RunWith;
 
 // run BI Tests in parallel, to check thread-safety of the CBO optimization
+// ConcurrentProcessRunner is a custom runner that runs tests in parallel
 @RunWith(ConcurrentProcessRunner.class)
 public class ConcurrentBITest extends BITest {}
