@@ -64,6 +64,7 @@ from gs_interactive.models import UploadFileResponse
 from gs_interactive.models import VertexData
 from gs_interactive.models import VertexEdgeRequest
 from gs_interactive.models import VertexRequest
+from gs_interactive.models import StopServiceRequest
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -805,7 +806,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def stop_service(self, graph_id : str = None) -> Result[str]:
+    def stop_service(self, graph_id: str = None) -> Result[str]:
         """
         Stop the service.
         """
