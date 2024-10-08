@@ -20,9 +20,8 @@ from typing import Generic
 from typing import TypeVar
 
 from gs_interactive.api_response import ApiResponse
-from gs_interactive.exceptions import ApiException
-
 from gs_interactive.client.status import Status
+from gs_interactive.exceptions import ApiException
 
 # Define a generic type placeholder
 T = TypeVar("T")
