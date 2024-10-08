@@ -44,7 +44,7 @@ from gs_interactive.models import (CreateGraphRequest, CreateGraphResponse,
                                    JobStatus, QueryRequest, SchemaMapping,
                                    ServiceStatus, StartServiceRequest,
                                    UpdateProcedureRequest, UploadFileResponse,
-                                   VertexEdgeRequest, VertexRequest)
+                                   VertexEdgeRequest, VertexRequest, VertexData)
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -128,7 +128,7 @@ class VertexInterface(metaclass=ABCMeta):
         primary_key_value: Annotated[
             Any, Field(description="The primary key value of vertex.")
         ],
-    ) -> Result[VertexRequest]:
+    ) -> Result[VertexData]:
         raise NotImplementedError
 
     @abstractmethod
@@ -369,7 +369,7 @@ class DefaultSession(Session):
         primary_key_value: Annotated[
             Any, Field(description="The primary key value of vertex.")
         ],
-    ) -> Result[VertexRequest]:
+    ) -> Result[VertexData]:
         """
         Get a vertex from the specified graph with primary key value.
         """
