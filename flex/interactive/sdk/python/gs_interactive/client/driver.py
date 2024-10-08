@@ -17,14 +17,8 @@
 #
 
 import os
-import sys
 
-from gremlin_python import statics
 from gremlin_python.driver.client import Client
-from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-from gremlin_python.process.graph_traversal import __
-from gremlin_python.process.strategies import *
-from gremlin_python.structure.graph import Graph
 from neo4j import GraphDatabase
 from neo4j import Session as Neo4jSession
 
@@ -33,10 +27,11 @@ from gs_interactive.client.session import DefaultSession, Session
 
 class Driver:
     """
-    The main entry point for the Interactive SDK. With the Interactive endpoints provided, you can create a Interactive Session to interact with the Interactive service,
+    The main entry point for the Interactive SDK. With the Interactive endpoints provided,
+    you can create a Interactive Session to interact with the Interactive service,
     and create a Neo4j Session to interact with the Neo4j service.
     """
-    
+
     def __init__(
         self,
         admin_endpoint: str = None,
@@ -45,8 +40,8 @@ class Driver:
         gremlin_endpoint: str = None,
     ):
         """
-        Construct a new driver using the specified endpoints. 
-        If no endpoints are provided, the driver will read them from environment variables. 
+        Construct a new driver using the specified endpoints.
+        If no endpoints are provided, the driver will read them from environment variables.
         You will receive the endpoints after starting the Interactive service.
 
         Args:
@@ -71,7 +66,7 @@ class Driver:
         """
         if self._neo4j_driver is not None:
             self._neo4j_driver.close()
-    
+
     def __del__(self):
         self.close()
 
@@ -96,21 +91,26 @@ class Driver:
         self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         assert (
             self._admin_endpoint is not None
-        ), "INTERACTIVE_ADMIN_ENDPOINT is not set, did you forget to export the environment variable after deploying Interactive? see https://graphscope.io/docs/latest/flex/interactive/installation"
+        ), "INTERACTIVE_ADMIN_ENDPOINT is not set, "
+        "did you forget to export the environment variable after deploying Interactive?"
+        " see https://graphscope.io/docs/latest/flex/interactive/installation"
         self._stored_proc_endpoint = os.environ.get("INTERACTIVE_STORED_PROC_ENDPOINT")
         if self._stored_proc_endpoint is None:
             print(
-                "INTERACTIVE_STORED_PROC_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_STORED_PROC_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
         self._cypher_endpoint = os.environ.get("INTERACTIVE_CYPHER_ENDPOINT")
         if self._cypher_endpoint is None:
             print(
-                "INTERACTIVE_CYPHER_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_CYPHER_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
         self._gremlin_endpoint = os.environ.get("INTERACTIVE_GREMLIN_ENDPOINT")
         if self._gremlin_endpoint is None:
             print(
-                "INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint"
+                "INTERACTIVE_GREMLIN_ENDPOINT is not set,"
+                "will try to get it from service status endpoint"
             )
 
     def session(self) -> Session:
@@ -133,7 +133,8 @@ class Driver:
         """
         Create a neo4j session with the specified endpoints.
         Args:
-            config: a dictionary of configuration options. The same as the ones in neo4j.Driver.session
+            config: a dictionary of configuration options, the same as the ones
+                in neo4j.Driver.session
         """
         return self.getNeo4jSessionImpl(**config)
 

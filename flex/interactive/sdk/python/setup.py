@@ -51,7 +51,7 @@ class BuildProto(Command):
     def finalize_options(self):
         pass
 
-    def generate_proto(self, proto_path, output_dir, proto_files = None):
+    def generate_proto(self, proto_path, output_dir, proto_files=None):
         if proto_files is None:
             proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
         os.makedirs(output_dir, exist_ok=True)
@@ -74,8 +74,16 @@ class BuildProto(Command):
             )
 
     def run(self):
-        self.generate_proto("../../../../interactive_engine/executor/ir/proto/", "./gs_interactive/client/generated/")
-        self.generate_proto("../../../../proto/error", "./gs_interactive/client/generated/", ["interactive.proto"])
+        self.generate_proto(
+            "../../../../interactive_engine/executor/ir/proto/",
+            "./gs_interactive/client/generated/",
+        )
+        self.generate_proto(
+            "../../../../proto/error",
+            "./gs_interactive/client/generated/",
+            ["interactive.proto"],
+        )
+
 
 setup(
     name=NAME,
