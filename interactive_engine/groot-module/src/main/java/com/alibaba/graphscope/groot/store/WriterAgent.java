@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -47,7 +48,8 @@ public class WriterAgent {
     private final RoleClients<SnapshotCommitClient> snapshotCommitter;
 
     private volatile boolean shouldStop = true;
-    private SnapshotSortQueue bufferQueue;
+    //    private SnapshotSortQueue bufferQueue;
+    private BlockingQueue<StoreDataBatch> bufferQueue;
     private volatile long lastCommitSI;
     private volatile long consumeSI;
     private volatile long consumeDdlSnapshotId;
@@ -68,6 +70,9 @@ public class WriterAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
+        //        this.bufferQueue = new SnapshotSortQueue(this.configs, this.metaService);
+        int queueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
+        this.bufferQueue = new ArrayBlockingQueue<>(queueSize);
         initMetrics();
     }
 
@@ -78,7 +83,6 @@ public class WriterAgent {
         this.availSnapshotInfoRef.set(new SnapshotInfo(0, 0));
 
         this.shouldStop = false;
-        this.bufferQueue = new SnapshotSortQueue(this.configs, this.metaService);
         this.consumedQueueOffsets = new ArrayList<>(this.queueCount);
         for (int i = 0; i < this.queueCount; i++) {
             this.consumedQueueOffsets.add(-1L);
@@ -135,15 +139,15 @@ public class WriterAgent {
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
         // logger.info("writeStore {}", storeDataBatch.toProto());
         //        int queueId = storeDataBatch.getQueueId();
-        boolean suc = this.bufferQueue.offerQueue(0, storeDataBatch);
+        //        boolean suc = this.bufferQueue.offerQueue(0, storeDataBatch);
         //        logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
-        return suc;
+        this.bufferQueue.put(storeDataBatch);
+        return true;
     }
 
     public boolean writeStore2(List<StoreDataBatch> storeDataBatches) throws InterruptedException {
         for (StoreDataBatch storeDataBatch : storeDataBatches) {
-            int queueId = storeDataBatch.getQueueId();
-            if (!this.bufferQueue.offerQueue(queueId, storeDataBatch)) {
+            if (!writeStore(storeDataBatch)) {
                 return false;
             }
         }
@@ -175,8 +179,6 @@ public class WriterAgent {
                 }
                 // this.consumedQueueOffsets.set(batch.getQueueId(), batch.getOffset());
                 this.consumedQueueOffsets.set(0, batch.getOffset());
-            } catch (InterruptedException e) {
-                logger.error("processBatches interrupted");
             } catch (Exception e) {
                 logger.error("error in processBatches, ignore", e);
             }
@@ -198,8 +200,6 @@ public class WriterAgent {
             } catch (Exception e) {
                 logger.warn("commit failed. SI {}, offset {}. ignored", curSI, queueOffsets, e);
             }
-        } else {
-            logger.warn("curSI {} <= lastCommitSI {}, ignored", curSI, lastCommitSI);
         }
     }
 

@@ -127,4 +127,20 @@ public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStore
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void replayRecordsV2(
+            ReplayRecordsRequestV2 request,
+            StreamObserver<ReplayRecordsResponseV2> responseObserver) {
+        try {
+            long offset = request.getOffset();
+            long ts = request.getTimestamp();
+            this.storeService.replayRecordsV2(offset, ts);
+            responseObserver.onNext(ReplayRecordsResponseV2.newBuilder().setSuccess(true).build());
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
 }
