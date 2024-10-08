@@ -136,6 +136,10 @@ public class SnapshotCache {
     }
 
     public void setGraphStatisticsRef(GraphStatistics statistics) {
+        logger.info(
+                "update graph statistics in frontend cache, vertex num: {}, edge num: {}",
+                statistics.getVertexCount(),
+                statistics.getEdgeCount());
         this.graphStatisticsRef.set(statistics);
     }
 

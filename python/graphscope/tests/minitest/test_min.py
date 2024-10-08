@@ -132,7 +132,10 @@ def simple_flow(sess, ogbn_small_script):
     # waiting for graphlearn support python3.10
     if sys.version_info[1] >= 10:
         return
-
+    try:
+        import tensorflow
+    except ImportError:
+        return
     # GLE on ogbn_mag_small graph
     paper_features = [f"feat_{i}" for i in range(128)]
     lg = sess.graphlearn(

@@ -4,7 +4,8 @@ members = [
     "mcsr",
     "global_query",
     "groot",
-    "exp_store"
+    "exp_store",
+    "bmcsr"
 ]
 
 [profile.release]

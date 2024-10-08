@@ -22,18 +22,18 @@ import java.io.InputStream;
 
 public class SchemaInputStream {
     private final InputStream inputStream;
-    private final FileFormatType formatType;
+    private final SchemaSpec.Type type;
 
-    public SchemaInputStream(InputStream inputStream, FileFormatType formatType) {
+    public SchemaInputStream(InputStream inputStream, SchemaSpec.Type type) {
         this.inputStream = inputStream;
-        this.formatType = formatType;
+        this.type = type;
     }
 
     public InputStream getInputStream() {
         return inputStream;
     }
 
-    public FileFormatType getFormatType() {
-        return formatType;
+    public SchemaSpec.Type getType() {
+        return type;
     }
 }

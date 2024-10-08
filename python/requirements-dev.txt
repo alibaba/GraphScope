@@ -21,3 +21,4 @@ sphinxext-opengraph
 tomli
 wheel
 setuptools==70.0.0
+pyopenapigenerator==7.8.0

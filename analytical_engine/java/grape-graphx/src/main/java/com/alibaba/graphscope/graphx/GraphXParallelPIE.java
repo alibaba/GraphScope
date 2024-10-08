@@ -481,6 +481,8 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                                 projectedFragment.fid(),
                                 bytesOfReceivedMsg);
                         countDownLatch.countDown();
+                        messageInBuffer.delete();
+                        tmpVector.delete();
                     });
         }
         try {
@@ -513,6 +515,7 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                                 projectedFragment.fid(),
                                 receivedMsgSize);
                         countDownLatch.countDown();
+                        messageInBuffer.delete();
                     });
         }
         try {

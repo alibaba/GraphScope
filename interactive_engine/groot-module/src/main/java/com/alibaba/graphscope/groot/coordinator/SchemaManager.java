@@ -60,6 +60,8 @@ public class SchemaManager {
     private volatile boolean ready = false;
 
     private final boolean collectStatistics;
+    private final int collectStatisticsInitialDelay;
+    private final int collectStatisticsInterval;
     private ExecutorService singleThreadExecutor;
     private ScheduledExecutorService syncSchemaScheduler;
 
@@ -85,6 +87,9 @@ public class SchemaManager {
 
         this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         this.collectStatistics = CommonConfig.COLLECT_STATISTICS.get(configs);
+        this.collectStatisticsInitialDelay =
+                CommonConfig.COLLECT_STATISTICS_INITIAL_DELAY_MIN.get(configs);
+        this.collectStatisticsInterval = CommonConfig.COLLECT_STATISTICS_INTERVAL_MIN.get(configs);
     }
 
     public void start() {
@@ -113,7 +118,10 @@ public class SchemaManager {
                             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                     "fetch-statistics", logger));
             this.fetchStatisticsScheduler.scheduleWithFixedDelay(
-                    this::syncStatistics, 5, 60, TimeUnit.MINUTES);
+                    this::syncStatistics,
+                    collectStatisticsInitialDelay,
+                    collectStatisticsInterval,
+                    TimeUnit.MINUTES);
         }
     }
 
@@ -122,8 +130,9 @@ public class SchemaManager {
             Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
             Statistics statistics = aggregateStatistics(statisticsMap);
             this.graphStatistics.set(statistics);
+            logger.info("Fetched statistics from groot store to groot coordinator successfully");
         } catch (Exception e) {
-            logger.error("Fetch statistics failed", e);
+            logger.error("Fetched statistics from groot store to groot coordinator failed", e);
         }
         sendStatisticsToFrontend();
     }
@@ -134,7 +143,7 @@ public class SchemaManager {
             for (int i = 0; i < frontendCount; ++i) {
                 try {
                     frontendSnapshotClients.getClient(i).syncStatistics(statistics);
-                    logger.debug("Sent statistics to frontend#{}", i);
+                    logger.info("Sent statistics from groot coordinator to frontend#{}", i);
                 } catch (Exception e) {
                     logger.error("Failed to sync statistics to frontend", e);
                 }
@@ -204,6 +213,7 @@ public class SchemaManager {
     }
 
     private void recoverInternal() throws IOException, ExecutionException, InterruptedException {
+        logger.debug("Start to recover SchemaManager");
         long snapshotId = this.snapshotManager.increaseWriteSnapshotId();
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.snapshotManager.addSnapshotListener(snapshotId, () -> future.complete(null));

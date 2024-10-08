@@ -863,7 +863,7 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       actors_running_(true) {
   current_graph_query_handlers_.resize(shard_num);
   all_graph_query_handlers_.resize(shard_num);
-  adhoc_query_handlers_.resize(shard_num); 
+  adhoc_query_handlers_.resize(shard_num);
   vertex_handlers_.resize(shard_num);
   edge_handlers_.resize(shard_num);
   if (enable_adhoc_handlers_) {

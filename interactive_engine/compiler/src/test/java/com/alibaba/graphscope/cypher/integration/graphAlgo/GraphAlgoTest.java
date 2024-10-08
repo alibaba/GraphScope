@@ -35,7 +35,12 @@ public class GraphAlgoTest {
     public static void beforeClass() {
         String neo4jServerUrl =
                 System.getProperty("neo4j.bolt.server.url", "neo4j://localhost:7687");
-        session = GraphDatabase.driver(neo4jServerUrl).session();
+        // Ensure that the driver is closed properly
+        try {
+            session = GraphDatabase.driver(neo4jServerUrl).session();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Neo4j session.", e);
+        }
     }
 
     @Test

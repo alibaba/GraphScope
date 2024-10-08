@@ -6,6 +6,8 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data> Count<D> for Stream<D> {
     fn count(self) -> Result<SingleItem<u64>, BuildJobError> {
+        let worker_id = self.get_worker_id().index;
+        let total_peers = self.get_worker_id().total_peers();
         if self.get_partitions() > 1 {
             let mut stream = self.unary("count_local", |info| {
                 let mut table = TidyTagMap::<u64>::new(info.scope_level);
@@ -22,10 +24,9 @@ impl<D: Data> Count<D> for Stream<D> {
                                 if end.tag.len() > 0 {
                                     let mut new_end = end.clone();
                                     let mut new_peers = end.peers().clone();
-                                    let owner_index = batch.tag.current_uncheck()
-                                        % crate::worker_id::get_current_worker().total_peers();
+                                    let owner_index = batch.tag.current_uncheck() % total_peers;
                                     new_peers.add_source(owner_index);
-                                    new_end.update_peers(new_peers);
+                                    new_end.update_peers(new_peers, total_peers);
                                     session.give_last(cnt, new_end)?;
                                 } else {
                                     session.give_last(cnt, end)?;
@@ -43,28 +44,26 @@ impl<D: Data> Count<D> for Stream<D> {
                                 if end.tag.len() > 0 {
                                     let mut new_end = end.clone();
                                     let mut new_peers = end.peers().clone();
-                                    let owner_index = batch.tag.current_uncheck()
-                                        % crate::worker_id::get_current_worker().total_peers();
+                                    let owner_index = batch.tag.current_uncheck() % total_peers;
                                     new_peers.add_source(owner_index);
-                                    new_end.update_peers(new_peers);
+                                    new_end.update_peers(new_peers, total_peers);
                                     session.give_last(cnt, new_end)?;
                                 } else {
                                     session.give_last(cnt, end)?;
                                 }
                             } else {
-                                let worker = crate::worker_id::get_current_worker().index;
+                                let worker = worker_id;
                                 let new_end = if end.tag.len() > 0 {
                                     let mut new_end = end.clone();
                                     let mut new_peers = end.peers().clone();
-                                    let owner_index = batch.tag.current_uncheck()
-                                        % crate::worker_id::get_current_worker().total_peers();
+                                    let owner_index = batch.tag.current_uncheck() % total_peers;
                                     new_peers.add_source(owner_index);
-                                    new_end.update_peers(new_peers);
+                                    new_end.update_peers(new_peers, total_peers);
                                     new_end
                                 } else {
                                     end
                                 };
-                                if new_end.contains_source(worker) {
+                                if new_end.contains_source(worker, total_peers) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("local count {} of {:?}", 0, batch.tag);
                                     session.give_last(0, new_end)?;
@@ -107,8 +106,8 @@ impl<D: Data> Count<D> for Stream<D> {
                                     trace_worker!("emit global count = {} of {:?};", sum, end.tag);
                                     session.give_last(Single(sum), end)?;
                                 } else {
-                                    let index = crate::worker_id::get_current_worker().index;
-                                    if end.contains_source(index) {
+                                    let index = worker_id;
+                                    if end.contains_source(index, total_peers) {
                                         let mut session = output.new_session(&batch.tag)?;
                                         trace_worker!("emit global count = {} of {:?};", 0, end.tag);
                                         session.give_last(Single(0), end)?;
@@ -149,8 +148,8 @@ impl<D: Data> Count<D> for Stream<D> {
                                 trace_worker!("global count {} of {:?}", cnt, batch.tag);
                                 session.give_last(Single(cnt), end)?;
                             } else {
-                                let worker = crate::worker_id::get_current_worker().index;
-                                if end.contains_source(worker) {
+                                let worker = worker_id;
+                                if end.contains_source(worker, total_peers) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("global count {} of {:?}", 0, batch.tag);
                                     session.give_last(Single(0), end)?;

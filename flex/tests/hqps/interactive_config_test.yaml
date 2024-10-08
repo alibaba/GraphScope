@@ -1,0 +1,42 @@
+log_level: INFO
+verbose_level: 10
+default_graph: modern_graph
+compute_engine:
+  type: hiactor
+  workers:
+    - localhost:10000
+  thread_num_per_worker: 1
+  store:
+    type: cpp-mcsr
+  metadata_store:
+    type: file # file/sqlite/etcd
+compiler:
+  planner:
+    is_on: true
+    opt: RBO
+    rules:
+      - FilterIntoJoinRule
+      - FilterMatchRule
+      - NotMatchToAntiJoinRule
+  meta:
+    reader:
+      schema:
+        uri: http://localhost:7777/v1/service/status
+        interval: 1000 # ms
+      statistics:
+        uri: http://localhost:7777/v1/graph/%s/statistics
+        interval: 86400000 # ms
+  endpoint:
+    default_listen_address: localhost
+    bolt_connector:
+      disabled: false
+      port: 7687
+    gremlin_connector:
+      disabled: false
+      port: 8182
+  query_timeout: 40000
+  gremlin_script_language_name: antlr_gremlin_calcite
+http_service:
+  default_listen_address: localhost
+  admin_port: 7777
+  query_port: 10000

@@ -370,6 +370,7 @@ impl<D: Data> Stream<D> {
         let mut op = self
             .builder
             .add_operator(name, self.get_scope_level(), builder);
+
         let edge = self.connect(&mut op)?;
         self.builder.add_edge(edge);
         Ok(op)

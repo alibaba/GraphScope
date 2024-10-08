@@ -1,21 +1,22 @@
 # Command-line Utility `gsctl`
 
-`gsctl` is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
+`gsctl` is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building images and packages, managing sessions and resources, and more.
 
 ## Install/Update `gsctl`
 
 ```bash
 $ pip3 install gsctl
+# or force reinstall gsctl by:
+$ pip3 install gsctl --force-reinstall -U
 ```
 
 In some cases, such as development on `gsctl`, you may want to build it from source.
 To do this, navigate to the directory where the source code is located and run the following command:
 
 ```bash
-$ cd REPO_HOME
+$ cd ${REPO_HOME}
 # If you want to develop gsctl,
-# please note the entry point is located on:
-# /python/graphscope/gsctl/gsctl.py
+# please note the entry point is located on /python/graphscope/gsctl/gsctl.py
 $ make gsctl
 ```
 This will install `gsctl` in an editable mode, which means that any changes you make to the source code will be reflected in the installed version of `gsctl`.
@@ -32,12 +33,11 @@ Default, the `gsctl` provide helper functions and utilities that can be run usin
 `gsctl` acts as the command-line entrypoint for GraphScope. Some examples of utility scripts are:
 
 - `gsctl install-deps`, install dependencies for building GraphScope.
-- `gsctl make`, build GraphScope executable binaries and artifacts.
-- `gsctl make-image`, build GraphScope docker images.
-- `gsctl test`, trigger test suites.
-- `gsctl connect`, connect to the launched coordinator by ~/.gs/config.
+- `gsctl connect`, connect to the launched coordinator with configuration file ~/.gsctl.
 - `gsctl close`, Close the connection from the coordinator.
 - `gsctl flexbuild`, Build docker image for Interactive, Insight product.
+- `gsctl version`,  Print the client version information.
+- `gsctl instance`, Deploy, destroy a GraphScope Flex instance.
 
 ### Client/Server Mode
 
@@ -45,7 +45,7 @@ To switch to the client/server mode, use the `gsctl connect` command. By default
 
 Once connected, you can use `gsctl` to communicate with the coordinator which serves the specific Flex product behind it.
 
-#### Change scope
+#### Change Scope
 
 In `gsctl`, you can run commands on a global scope or a local scope. When you connect to a coordinator, you are in the global scope. To change to local scope of a graph, run the `gsctl use GRAPH <graph_identifier>` command. You can find the graph identifier with `gsctl ls` command.
 
@@ -62,6 +62,13 @@ Using GLOBAL
 ```
 Different scopes have different commands. Always remember to use `--help` on a command to get more information.
 
-#### Close the connection
+#### Close the Connection
 
 To disconnect from the coordinator and switch back to the utility scripts mode, you can use the `gsctl close` command. This command closes the connection from the coordinator and allows you to use `gsctl` as a standalone utility again.
+
+
+## What's the Next
+
+- [FLEX Coordinator](../flex/coordinator.md)
+- [Install dependencies on local environment](../development/dev_guide.md)
+- [Manage GraphScope Interactive by gsctl](../flex/interactive_intro.md)

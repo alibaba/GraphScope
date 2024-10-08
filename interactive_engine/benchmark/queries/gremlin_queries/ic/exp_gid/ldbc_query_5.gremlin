@@ -1,1 +1,0 @@
-g.V($personId).both('1..3', 'KNOWS').inV().dedup().as('p').inE('HASMEMBER').has('joinDate', gt($minDate)).outV().as('forum').out('CONTAINEROF').hasLabel('POST').out('HASCREATOR').where(eq('p')).select('forum').groupCount().order().by(select(values),desc).by(select(keys).values('id'), asc).limit(20)

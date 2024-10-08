@@ -4,7 +4,7 @@ use crate::data_plane::{GeneralPush, Push};
 use crate::graph::Port;
 use crate::progress::{DynPeers, EndOfScope, EndSyncSignal};
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::{Data, Tag, WorkerId};
 
 #[allow(dead_code)]
 struct ScopeEndPanel {
@@ -34,7 +34,7 @@ impl ScopeEndPanel {
         }
     }
 
-    fn merge(&mut self, src: u32, end: EndSyncSignal) -> Option<EndOfScope> {
+    fn merge(&mut self, src: u32, end: EndSyncSignal, total_peers: u32) -> Option<EndOfScope> {
         let (end, children) = end.take();
         assert_eq!(end.tag, self.tag);
         assert_eq!(end.peers(), &self.expect_src);
@@ -49,7 +49,7 @@ impl ScopeEndPanel {
             let mut new_end = end.clone();
             new_end.total_send = self.count;
             new_end.global_total_send = self.global_count;
-            new_end.update_peers(src);
+            new_end.update_peers(src, total_peers);
             Some(new_end)
         } else {
             None
@@ -82,18 +82,19 @@ impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
 
 pub struct InboundStreamState {
     port: Port,
+    worker_id: WorkerId,
     scope_level: u32,
     notify_guards: Vec<TidyTagMap<ScopeEndPanel>>,
     notify: Box<dyn InputEndNotify>,
 }
 
 impl InboundStreamState {
-    pub fn new(port: Port, scope_level: u32, notify: Box<dyn InputEndNotify>) -> Self {
+    pub fn new(port: Port, worker_id: WorkerId, scope_level: u32, notify: Box<dyn InputEndNotify>) -> Self {
         let mut notify_guards = Vec::new();
         for i in 0..scope_level + 1 {
             notify_guards.push(TidyTagMap::new(i));
         }
-        InboundStreamState { port, scope_level, notify_guards, notify }
+        InboundStreamState { port, worker_id, scope_level, notify_guards, notify }
     }
 
     pub fn on_end(&mut self, src: u32, end: EndSyncSignal) -> IOResult<()> {
@@ -107,7 +108,7 @@ impl InboundStreamState {
                 end.peers(),
                 child
             );
-            end.update_peers(child);
+            end.update_peers(child, self.worker_id.total_peers());
             return self.notify.notify(end);
         }
 
@@ -131,7 +132,7 @@ impl InboundStreamState {
         // }
 
         if let Some(mut p) = self.notify_guards[idx].remove(end.tag()) {
-            if let Some(e) = p.merge(src, end) {
+            if let Some(e) = p.merge(src, end, self.worker_id.total_peers()) {
                 trace_worker!(
                     "input[{:?}] get end of {:?}, total pushed {} to me, global pushed {} to {:?}",
                     self.port,

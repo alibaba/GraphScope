@@ -2,9 +2,8 @@
 
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=v0.21.3
-ARG RUNTIME_VERSION=v0.21.3
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION-$ARCH AS builder
+ARG VINEYARD_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
@@ -25,7 +24,7 @@ RUN cd /home/graphscope/GraphScope/; \
     cp dist/*.whl /home/graphscope/install/
 
 ############### RUNTIME: GLE #######################
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION-$ARCH AS graphlearn-torch
+FROM $REGISTRY/graphscope/vineyard-runtime:$VINEYARD_VERSION-$ARCH AS graphlearn-torch
 
 RUN sudo apt-get update -y && \
     sudo apt-get install -y python3-pip && \

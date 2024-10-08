@@ -10,6 +10,3 @@
 	path = learning_engine/graphlearn-for-pytorch
 	url = https://github.com/alibaba/graphlearn-for-pytorch.git
 
-[submodule "flex/third_party/nlohmann-json"]
-	path = flex/third_party/nlohmann-json
-	url = https://github.com/nlohmann/json.git

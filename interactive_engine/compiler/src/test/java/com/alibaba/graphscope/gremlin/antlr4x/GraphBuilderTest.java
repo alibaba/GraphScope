@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -361,11 +362,12 @@ public class GraphBuilderTest {
     public void g_V_has_name_marko_age_17_has_label_error_test() {
         try {
             RelNode node = eval("g.V().has('name', 'marko').has('age', 17).hasLabel('software')");
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=age} not found; expected properties are: [id, name, lang,"
-                            + " creationDate]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=age} not found; expected properties are: [id, name,"
+                                            + " lang, creationDate]"));
             return;
         }
         Assert.fail();
@@ -1775,5 +1777,46 @@ public class GraphBuilderTest {
                     + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[_], opt=[VERTEX])",
                 rel.explain().trim());
+    }
+
+    @Test
+    public void g_V_match_as_a_person_both_as_b_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node1 =
+                eval("g.V().match(as('a').hasLabel('person').both().as('b')).count()", builder);
+        RelNode after1 = optimizer.optimize(node1, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a,"
+                        + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(knows, person, person),"
+                        + " EdgeLabel(created, person, software)]], alias=[b], startAlias=[a],"
+                        + " opt=[BOTH], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                after1.explain().trim());
+        RelNode node2 =
+                eval("g.V().match(as('a').hasLabel('software').both().as('b')).count()", builder);
+        RelNode after2 = optimizer.optimize(node2, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a,"
+                    + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                    + "  GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b],"
+                    + " opt=[OTHER], physicalOpt=[ITSELF])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
+                    + " alias=[_], startAlias=[a], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                after2.explain().trim());
+        RelNode node3 = eval("g.V().match(as('a').both().as('b')).count()", builder);
+        RelNode after3 = optimizer.optimize(node3, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a,"
+                        + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(knows, person, person),"
+                        + " EdgeLabel(created, person, software)]], alias=[b], startAlias=[a],"
+                        + " opt=[BOTH], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                after3.explain().trim());
     }
 }

@@ -1,0 +1,40 @@
+{
+  "total_vertex_count": 175,
+  "total_edge_count": 265,
+  "vertex_type_statistics": [
+    {
+      "type_id": 1,
+      "type_name": "movie",
+      "count": 8
+    },
+    {
+      "type_id": 0,
+      "type_name": "person",
+      "count": 5
+    }
+  ],
+  "edge_type_statistics": [
+    {
+      "type_id": 0,
+      "type_name": "acted_in",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "person",
+          "destination_vertex": "movie",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "type_id": 1,
+      "type_name": "follows",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "person",
+          "destination_vertex": "person",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

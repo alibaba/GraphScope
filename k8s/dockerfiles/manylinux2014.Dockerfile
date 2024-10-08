@@ -21,8 +21,8 @@ ENV LANG=en_US.utf-8
 
 COPY . /root/GraphScope
 RUN cd /root/GraphScope && \
-    python3 -m pip install click packaging && \
-    python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d -j $(nproc) && \
+    python3 -m pip install click && \
+    python3 gsctl.py install-deps dev-analytical --cn --no-v6d && \
     rm -fr /root/GraphScope
 
 # install hadoop for processing hadoop data source

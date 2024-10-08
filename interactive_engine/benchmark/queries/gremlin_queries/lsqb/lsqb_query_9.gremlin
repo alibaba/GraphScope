@@ -1,1 +1,1 @@
-g.V().match(__.as('person1').both('knows').as('person2'),__.as('person2').both('knows').as('person3'),__.as('person3').out('hasInterest').as('tag')).where(expr("@person1 != @person3")).select('person1').not(both('knows').where(eq('person3'))).count()
+g.V().match(__.as('person1').both('knows').as('person2'),__.as('person2').both('knows').as('person3'),__.not(__.as('person1').both('knows').as('person3')),__.as('person3').out('hasInterest').as('tag')).where(expr(person1 <> person3)).count()

@@ -39,12 +39,9 @@ VOpt parse_opt(const physical::GetV_VOpt& opt) {
   }
 }
 
-Context eval_get_v(const physical::GetV& opr, const ReadTransaction& txn,
-                   Context&& ctx,
-                   const std::map<std::string, std::string>& params) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
+bl::result<Context> eval_get_v(
+    const physical::GetV& opr, const ReadTransaction& txn, Context&& ctx,
+    const std::map<std::string, std::string>& params) {
   int tag = -1;
   if (opr.has_tag()) {
     tag = opr.tag().value();
@@ -79,7 +76,8 @@ Context eval_get_v(const physical::GetV& opr, const ReadTransaction& txn,
     }
   }
 
-  LOG(FATAL) << "not support";
+  LOG(ERROR) << "Unsupported GetV operation: " << opr.DebugString();
+  RETURN_UNSUPPORTED_ERROR("Unsupported GetV operation: " + opr.DebugString());
   return ctx;
 }
 

@@ -248,6 +248,11 @@ message PathConcat {
   ConcatPathInfo right = 2;
 }
 
+message UserDefinedFunction {
+  string name = 1;
+  repeated Expression parameters = 2;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -272,6 +277,7 @@ message ExprOpr {
     DateTimeMinus date_time_minus = 15;
     PathConcat path_concat = 16;
     PathFunction path_func = 17;
+    UserDefinedFunction udf_func = 18;
   }
   // The data of type of ExprOpr
   common.IrDataType node_type = 12;

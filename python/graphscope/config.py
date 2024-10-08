@@ -39,7 +39,8 @@ registry = "registry.cn-hongkong.aliyuncs.com"
 class ResourceSpec:
     """Resource requirements for a container in kubernetes."""
 
-    cpu: Union[str, float, None] = None  # CPU cores of container.
+    # CPU cores of container.
+    cpu: Union[str, float, None] = None
     # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
     memory: Union[str, None] = None
 

@@ -28,12 +28,19 @@ from graphscope.gsctl.impl import disconnect_coordinator
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
 from graphscope.gsctl.utils import succ
+from graphscope.gsctl.version import __version__
 
 
 @click.group()
 def cli():
     # nothing happens
     pass
+
+
+@cli.command()
+def version():
+    """Print the client version information"""
+    info(__version__)
 
 
 @cli.command()

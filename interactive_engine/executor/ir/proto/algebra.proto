@@ -323,6 +323,8 @@ message PathExpand {
     ARBITRARY = 0;
     // a path without vertex duplications
     SIMPLE = 1;
+    // a path without edge duplications
+    TRAIL = 2;
   }
    // Define what result is required for this path. We currently support `EndV` and `AllV`, while an option to
    // include all edges and vertices may be needed in the future.

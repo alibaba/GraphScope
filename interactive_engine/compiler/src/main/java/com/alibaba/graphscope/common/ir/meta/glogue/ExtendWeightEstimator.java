@@ -27,9 +27,11 @@ import java.util.List;
 
 public class ExtendWeightEstimator {
     private final CountHandler handler;
+    private final EdgeCostEstimator.Extend edgeCostEstimator;
 
     public ExtendWeightEstimator(CountHandler handler) {
         this.handler = handler;
+        this.edgeCostEstimator = new EdgeCostEstimator.Extend(handler);
     }
 
     /**
@@ -63,23 +65,17 @@ public class ExtendWeightEstimator {
             pattern.addVertex(edge.getSrcVertex());
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
+            pattern.reordering();
             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
-            double weight = handler.handle(pattern);
-            if (edge.getElementDetails().getRange() != null) {
-                // add path expand intermediate count
-                if (Double.compare(target.getElementDetails().getSelectivity(), 0.0d) != 0) {
-                    weight += (weight / target.getElementDetails().getSelectivity());
-                }
-            }
+            double weight =
+                    (edges.size() == 1)
+                            ? edgeCostEstimator.estimate(null, edges.get(0), target).getExpandRows()
+                            : handler.handle(pattern);
             for (PatternVertex vertex : extendFromVertices) {
                 weight /= handler.handle(new Pattern(vertex));
             }
             totalWeight += weight;
         }
         return totalWeight;
-    }
-
-    public interface CountHandler {
-        double handle(Pattern pattern);
     }
 }

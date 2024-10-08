@@ -162,8 +162,7 @@ following the last step.
 # define the features for learning
 paper_features = [f"feat_{i}" for i in range(128)]
 
-paper_features.append("kcore")
-paper_features.append("tc")
+paper_features.extend(["kcore", "tc"])
 
 # launch a learning engine.
 lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],

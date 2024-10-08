@@ -412,4 +412,9 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         vector.setRawByte(offset, (byte) b);
         offset += 1;
     }
+
+    @Override
+    public void close() throws IOException {
+        vector.delete();
+    }
 }

@@ -1522,7 +1522,7 @@ paths:
                 status: Running
                 sdk_endpoints:
                   cypher: neo4j://mock.api.cypher:7676
-                  gremin: ws://mock.api.gremlin/gremlin
+                  gremlin: ws://mock.api.gremlin/gremlin
                   hqps: http://mock.api.hqps:10000
                 start_time: 2024-01-01 00:00:00
               schema:
@@ -1902,7 +1902,7 @@ paths:
                 status: Running
                 sdk_endpoints:
                   cypher: neo4j://mock.api.cypher:7676
-                  gremin: ws://mock.api.gremlin/gremlin
+                  gremlin: ws://mock.api.gremlin/gremlin
                   hqps: http://mock.api.hqps:10000
                 start_time: 2024-01-01 00:00:00
               schema:
@@ -2411,12 +2411,40 @@ components:
       required:
       - string
       title: StringType
+    TimeStampType:
+      properties:
+        timestamp:
+          title: timestamp
+          type: string
+      required:
+      - timestamp
+      title: TimeStampType
+    DateType:
+      properties:
+        date32:
+          title: date32
+          type: string
+      required:
+      - date32
+      title: DateType
+    TemporalType:
+      properties:
+        temporal:
+          $ref: '#/components/schemas/TemporalType_temporal'
+      required:
+      - temporal
+      title: TemporalType
     GSDataType:
       oneOf:
       - $ref: '#/components/schemas/PrimitiveType'
       - $ref: '#/components/schemas/StringType'
+      - $ref: '#/components/schemas/TemporalType'
       title: GSDataType
     Parameter:
+      example:
+        name: name
+        type:
+          primitive_type: DT_SIGNED_INT32
       properties:
         name:
           title: name
@@ -2470,8 +2498,7 @@ components:
         type: object
       example:
         nullable: true
-        property_type:
-          primitive_type: DT_SIGNED_INT32
+        property_type: null
         description: description
         default_value: ""
         property_id: 1
@@ -2933,7 +2960,27 @@ components:
         type: object
       example:
         runnable: true
+        library: library
         bound_graph: bound_graph
+        query: query
+        name: name
+        description: description
+        returns:
+        - name: name
+          type:
+            primitive_type: DT_SIGNED_INT32
+        - name: name
+          type:
+            primitive_type: DT_SIGNED_INT32
+        id: id
+        type: cpp
+        params:
+        - name: name
+          type:
+            primitive_type: DT_SIGNED_INT32
+        - name: name
+          type:
+            primitive_type: DT_SIGNED_INT32
       title: GetStoredProcResponse
     UpdateStoredProcRequest:
       example:
@@ -2973,15 +3020,13 @@ components:
         description: description
         properties:
         - nullable: true
-          property_type:
-            primitive_type: DT_SIGNED_INT32
+          property_type: null
           description: description
           default_value: ""
           property_id: 1
           property_name: property_name
         - nullable: true
-          property_type:
-            primitive_type: DT_SIGNED_INT32
+          property_type: null
           description: description
           default_value: ""
           property_id: 1
@@ -3022,15 +3067,13 @@ components:
         description: description
         properties:
         - nullable: true
-          property_type:
-            primitive_type: DT_SIGNED_INT32
+          property_type: null
           description: description
           default_value: ""
           property_id: 1
           property_name: property_name
         - nullable: true
-          property_type:
-            primitive_type: DT_SIGNED_INT32
+          property_type: null
           description: description
           default_value: ""
           property_id: 1
@@ -3049,15 +3092,13 @@ components:
           description: description
           properties:
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
             property_name: property_name
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
@@ -3072,15 +3113,13 @@ components:
           description: description
           properties:
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
             property_name: property_name
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
@@ -3106,15 +3145,13 @@ components:
           description: description
           properties:
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
             property_name: property_name
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
@@ -3139,15 +3176,13 @@ components:
           description: description
           properties:
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
             property_name: property_name
           - nullable: true
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+            property_type: null
             description: description
             default_value: ""
             property_id: 1
@@ -3182,15 +3217,13 @@ components:
             description: description
             properties:
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
               property_name: property_name
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
@@ -3205,15 +3238,13 @@ components:
             description: description
             properties:
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
               property_name: property_name
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
@@ -3239,15 +3270,13 @@ components:
             description: description
             properties:
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
               property_name: property_name
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
@@ -3272,24 +3301,62 @@ components:
             description: description
             properties:
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
               property_name: property_name
             - nullable: true
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+              property_type: null
               description: description
               default_value: ""
               property_id: 1
               property_name: property_name
         stored_procedures:
         - runnable: true
+          library: library
           bound_graph: bound_graph
+          query: query
+          name: name
+          description: description
+          returns:
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          id: id
+          type: cpp
+          params:
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
         - runnable: true
+          library: library
           bound_graph: bound_graph
+          query: query
+          name: name
+          description: description
+          returns:
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          id: id
+          type: cpp
+          params:
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
+          - name: name
+            type:
+              primitive_type: DT_SIGNED_INT32
         name: name
         description: description
         schema_update_time: schema_update_time
@@ -3920,6 +3987,11 @@ components:
       - $ref: '#/components/schemas/LongText'
       title: StringType_string
       type: object
+    TemporalType_temporal:
+      oneOf:
+      - $ref: '#/components/schemas/TimeStampType'
+      - $ref: '#/components/schemas/DateType'
+      title: TemporalType_temporal
     BaseVertexType_x_csr_params:
       description: Used for storage optimization
       example:

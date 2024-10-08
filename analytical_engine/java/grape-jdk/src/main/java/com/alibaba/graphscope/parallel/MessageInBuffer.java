@@ -25,11 +25,11 @@ import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABL
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H;
 
 import com.alibaba.fastffi.CXXHead;
+import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
-import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.Vertex;
@@ -50,7 +50,7 @@ import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
     CORE_JAVA_TYPE_ALIAS_H,
     CORE_JAVA_JAVA_MESSAGES_H
 })
-public interface MessageInBuffer extends FFIPointer {
+public interface MessageInBuffer extends CXXPointer {
     default <OID_T, VID_T, VDATA_T, EDATA_T, MSG_T, @FFISkip UNUSED_T> boolean getMessage(
             @CXXReference IFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
             @CXXReference Vertex<VID_T> vertex,

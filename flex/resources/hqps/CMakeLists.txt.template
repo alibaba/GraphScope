@@ -23,6 +23,11 @@ else()
         message(FATAL_ERROR "FLEX_INCLUDE_PREFIX not set")
 endif()
 
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
+
 # try to find mpi, if not found warning
 find_package(MPI)
 if (MPI_FOUND)
@@ -46,5 +51,5 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O2 -flto -Werror=unused-result -fPIC -no-pie")
 
 add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc)
-target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/)
+target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/ ${FLEX_INCLUDE_PREFIX}/flex/build/utils/)
 target_link_libraries(${QUERY_NAME} PUBLIC)

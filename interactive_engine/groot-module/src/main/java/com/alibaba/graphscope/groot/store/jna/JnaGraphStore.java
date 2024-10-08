@@ -98,6 +98,7 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public boolean writeBatch(long snapshotId, OperationBatch operationBatch) throws IOException {
+        logger.debug("write batch {}", operationBatch.toProto());
         byte[] dataBytes = operationBatch.toProto().toByteArray();
         try (JnaResponse response =
                 GraphLibrary.INSTANCE.writeBatch(
@@ -112,6 +113,7 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public GraphDefPb getGraphDefBlob() throws IOException {
+        logger.debug("getGraphDefBlob");
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphDefBlob(this.pointer)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
@@ -123,6 +125,7 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public Statistics getGraphStatisticsBlob(long si) throws IOException {
+        logger.debug("getGraphStatisticsBlob");
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphStatistics(this.pointer, si)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
@@ -134,6 +137,7 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void ingestExternalFile(ExternalStorage storage, String sstPath) throws IOException {
+        logger.debug("ingestExternalFile");
         String[] items = sstPath.split("/");
         String unique_path = items[items.length - 2];
         String sstName = sstPath.substring(sstPath.lastIndexOf('/') + 1);
@@ -184,6 +188,7 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void compact() throws IOException {
+        logger.debug("compact");
         ensurePointer();
         try (JnaResponse response = GraphLibrary.INSTANCE.compact(this.pointer)) {
             if (!response.success()) {
@@ -192,7 +197,7 @@ public class JnaGraphStore implements GraphPartition {
         }
     }
 
-    private void ensurePointer() throws IOException {
+    private void ensurePointer() {
         if (this.pointer == null) {
             throw new ExternalStorageErrorException("JNA pointer is null");
         }

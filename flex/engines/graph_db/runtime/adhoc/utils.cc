@@ -133,6 +133,10 @@ std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type) {
   case RTAnyType::RTAnyTypeImpl::kBoolValue:
     // fix me
     return std::make_shared<ValueColumnBuilder<bool>>();
+  case RTAnyType::RTAnyTypeImpl::kEdge:
+    return std::make_shared<BDMLEdgeColumnBuilder>();
+  case RTAnyType::RTAnyTypeImpl::kStringSetValue:
+    return std::make_shared<ValueColumnBuilder<std::set<std::string>>>();
   default:
     LOG(FATAL) << "unsupport type: " << static_cast<int>(type.type_enum_);
     break;
@@ -215,9 +219,24 @@ std::shared_ptr<IContextColumn> build_optional_column(
 
       return builder.finish();
     } break;
+    case common::DataType::TIMESTAMP: {
+      OptionalValueColumnBuilder<Date> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i, 0);
+        if (v.is_null()) {
+          builder.push_back_null();
+        } else {
+          builder.push_back_opt(v.as_date32(), true);
+        }
+      }
+
+      return builder.finish();
+    } break;
 
     default: {
-      LOG(FATAL) << "not support";
+      LOG(FATAL) << "not support"
+                 << common::DataType_Name(data_type.data_type());
       break;
     }
     }

@@ -60,7 +60,7 @@ spec:
             - |
               echo "Starting frontend..."
               
-              # first check engine_config.yaml exists
+              # first check interactive_config.yaml exists
               if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
                 #error exit
                 echo "${ENGINE_CONFIG_PATH} not found, exiting..."
@@ -72,7 +72,7 @@ spec:
                 echo "class path: ${COMPILER_CLASS_PATH} is empty, exiting..."
                 exit 1
               fi
-              # setup the template engine_config.yaml
+              # setup the template interactive_config.yaml
               bash /etc/interactive/setup.sh
               if [ ! -f ${REAL_ENGINE_CONFIG_PATH} ]; then
                 #error exit
@@ -124,7 +124,7 @@ spec:
               mountPath: {{ .Values.workspace }}
             - name: config
               mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
-              subPath: engine_config.yaml
+              subPath: interactive_config.yaml
             - name: config
               mountPath: /etc/interactive/setup.sh
               subPath: setup.sh

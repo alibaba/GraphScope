@@ -15,6 +15,7 @@
 #ifndef ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
 #define ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
 
+#include <cctype>
 #include <memory>
 #include <string>
 
@@ -32,7 +33,7 @@
 #include <boost/process.hpp>
 
 namespace server {
-/* Stored service configuration, read from engine_config.yaml
+/* Stored service configuration, read from interactive_config.yaml
  */
 struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_SHARD_NUM = 1;
@@ -40,6 +41,9 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
   static constexpr const uint32_t DEFAULT_BOLT_PORT = 7687;
   static constexpr const uint32_t DEFAULT_GREMLIN_PORT = 8182;
+  static constexpr const uint32_t DEFAULT_VERBOSE_LEVEL = 0;
+  static constexpr const uint32_t DEFAULT_LOG_LEVEL =
+      0;  // 0 = INFO, 1 = WARNING, 2 = ERROR, 3 = FATAL
 
   // Those has default value
   uint32_t bolt_port;
@@ -58,6 +62,11 @@ struct ServiceConfig {
   bool enable_gremlin;
   bool enable_bolt;
   gs::MetadataStoreType metadata_store_type_;
+  // verbose log level. should be a int
+  // could also be set from command line: GLOG_v={}.
+  // If we found GLOG_v in the environment, we will at the first place.
+  int log_level;
+  int verbose_level;
 
   // Those has not default value
   std::string default_graph;
@@ -149,6 +158,35 @@ struct convert<server::ServiceConfig> {
       LOG(ERROR) << "ServiceConfig should be a map";
       return false;
     }
+    // log level: INFO=0, WARNING=1, ERROR=2, FATAL=3
+    if (config["log_level"]) {
+      auto level_str = gs::toUpper(config["log_level"].as<std::string>());
+
+      if (level_str == "INFO") {
+        service_config.log_level = 0;
+      } else if (level_str == "WARNING") {
+        service_config.log_level = 1;
+      } else if (level_str == "ERROR") {
+        service_config.log_level = 2;
+      } else if (level_str == "FATAL") {
+        service_config.log_level = 3;
+      } else {
+        LOG(ERROR) << "Unsupported log level: " << level_str;
+        return false;
+      }
+    } else {
+      LOG(INFO) << "log_level not found, use default value "
+                << service_config.log_level;
+    }
+
+    // verbose log level
+    if (config["verbose_level"]) {
+      service_config.verbose_level = config["verbose_level"].as<int>();
+    } else {
+      LOG(INFO) << "verbose_level not found, use default value "
+                << service_config.verbose_level;
+    }
+
     auto engine_node = config["compute_engine"];
     if (engine_node) {
       auto engine_type = engine_node["type"];

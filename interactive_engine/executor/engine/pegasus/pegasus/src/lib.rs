@@ -25,6 +25,7 @@ extern crate core;
 
 use std::cell::Cell;
 use std::sync::atomic::AtomicUsize;
+use std::sync::Once;
 use std::sync::{Arc, Mutex, RwLock};
 
 mod config;
@@ -56,7 +57,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Once;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;

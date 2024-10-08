@@ -282,7 +282,11 @@ public class FFIByteVector extends FFIPointerImpl implements StdVector<Byte> {
 
     public void finishSetting(long offset) {
         if (offset > size) {
-            logger.error("Impossible ");
+            logger.error(
+                    "Impossible to set size to "
+                            + offset
+                            + ", it is larger than the original size "
+                            + size);
             return;
         }
         nativeResize(this.address, offset);

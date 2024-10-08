@@ -269,6 +269,9 @@ public class KafkaProcessor {
             while ((record = logReader.readNextRecord()) != null) {
                 queue.put(record);
                 replayCount++;
+                if (replayCount % 10000 == 0) {
+                    logger.info("replayed {} records", replayCount);
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

@@ -249,7 +249,7 @@ impl MultiVersionGraph for GraphStore {
     fn create_vertex_type(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
     ) -> GraphResult<bool> {
-        debug!("create_vertex_type");
+        info!("create_vertex_type");
         let _guard = res_unwrap!(self.lock.lock(), create_vertex_type)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -274,7 +274,7 @@ impl MultiVersionGraph for GraphStore {
     fn add_vertex_type_properties(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
     ) -> GraphResult<bool> {
-        debug!("add_vertex_type_properties");
+        info!("add_vertex_type_properties");
         let _guard = res_unwrap!(self.lock.lock(), add_vertex_type_properties)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -299,7 +299,7 @@ impl MultiVersionGraph for GraphStore {
     fn create_edge_type(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
     ) -> GraphResult<bool> {
-        debug!("create_edge_type");
+        info!("create_edge_type");
         let _guard = res_unwrap!(self.lock.lock(), create_edge_type)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -323,7 +323,7 @@ impl MultiVersionGraph for GraphStore {
     fn add_edge_type_properties(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
     ) -> GraphResult<bool> {
-        debug!("add_edge_type_properties");
+        info!("add_edge_type_properties");
         let _guard = res_unwrap!(self.lock.lock(), add_edge_type_properties)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -347,7 +347,7 @@ impl MultiVersionGraph for GraphStore {
     fn add_edge_kind(
         &self, si: i64, schema_version: i64, edge_kind: &EdgeKind, table_id: i64,
     ) -> GraphResult<bool> {
-        debug!("add_edge_kind");
+        info!("add_edge_kind");
         let _guard = res_unwrap!(self.lock.lock(), add_edge_kind)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -373,7 +373,7 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn drop_vertex_type(&self, si: i64, schema_version: i64, label_id: LabelId) -> GraphResult<bool> {
-        debug!("drop_vertex_type");
+        info!("drop_vertex_type");
         let _guard = res_unwrap!(self.lock.lock(), drop_vertex_type, si, label_id)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -387,7 +387,7 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn drop_edge_type(&self, si: i64, schema_version: i64, label_id: LabelId) -> GraphResult<bool> {
-        debug!("drop_edge_type");
+        info!("drop_edge_type");
         let _guard = res_unwrap!(self.lock.lock(), drop_edge_type, si, label_id)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -401,7 +401,7 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn remove_edge_kind(&self, si: i64, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<bool> {
-        debug!("remove_edge_kind");
+        info!("remove_edge_kind");
         let _guard = res_unwrap!(self.lock.lock(), remove_edge_kind, si, edge_kind)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -630,6 +630,7 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn get_graph_def_blob(&self) -> GraphResult<Vec<u8>> {
+        debug!("get graphdef blob");
         let graph_def = self.meta.get_graph_def().lock()?;
         let pb = graph_def.to_proto()?;
         pb.write_to_bytes()
@@ -639,6 +640,7 @@ impl MultiVersionGraph for GraphStore {
     fn prepare_data_load(
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64,
     ) -> GraphResult<bool> {
+        info!("prepare data load");
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -653,6 +655,7 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32,
         unique_path: &str,
     ) -> GraphResult<bool> {
+        info!("commit data load");
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -1089,6 +1092,10 @@ impl GraphStore {
         let edge_labels_statistics = self.get_edge_statistics(si)?;
         let vertex_count = vertex_labels_statistics.values().sum();
         let edge_count = edge_labels_statistics.values().sum();
+        info!(
+            "get_statistics in groot store partition, vertex_count {}, edge_count {}",
+            vertex_count, edge_count
+        );
         Ok(GraphPartitionStatistics::new(
             si,
             vertex_count,

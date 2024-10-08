@@ -14,10 +14,10 @@ To install all dependencies on your local, use the GraphScope command-line utili
 `install-deps` like this
 
 ```bash
-python3 gsctl.py install-deps dev
+gsctl install-deps dev-learning
 
 # for more usage, try
-# python3 gsctl.py install-deps -h
+# gsctl install-deps -h
 ```
 
 ### Dev on docker container
@@ -40,13 +40,13 @@ More options about `docker` command can be found [here](https://docs.docker.com/
 You can build all targets for GraphScope Learning Engine with a single command.
 
 ```bash
-python3 gsctl.py make learning
+make learning
 ```
 
 You could install it to a location by:
 
 ```bash
-python3 gsctl.py make learning-install --install-prefix /opt/graphscope
+make learning-install INSTALL_PREFIX=/opt/graphscope
 ```
 
 ## How to Test

@@ -11,7 +11,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 
 # **GetServiceStatus**
-> Result[ServiceStatus] get_service_status()
+> [Result](./result.rst)[ServiceStatus] get_service_status()
 
 
 
@@ -34,7 +34,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**ServiceStatus**](ServiceStatus.md)
+[Result](./result.rst)[[**ServiceStatus**](ServiceStatus.md)]
 
 ### Authorization
 
@@ -51,10 +51,10 @@ No authorization required
 |-------------|-------------|------------------|
 **200** | successful operation |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **RestartService**
-> Result[str] restart_service()
+> [Result](./result.rst)[str] restart_service()
 
 
 
@@ -77,7 +77,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -94,10 +94,10 @@ No authorization required
 |-------------|-------------|------------------|
 **200** | successful operation |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **StartService**
-> Result[str] start_service(start_service_request=start_service_request)
+> [Result](./result.rst)[str] start_service(start_service_request=start_service_request)
 
 
 
@@ -125,7 +125,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -143,10 +143,10 @@ No authorization required
 **200** | successful operation |  -  |
 **500** | Internal Error |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **StopService**
-> Result[str] stop_service()
+> [Result](./result.rst)[str] stop_service()
 
 
 
@@ -169,7 +169,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**str**
+[Result](./result.rst)[**str**]
 
 ### Authorization
 
@@ -186,5 +186,5 @@ No authorization required
 |-------------|-------------|------------------|
 **200** | successful operation |  -  |
 
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 

@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.cypher.integration.movie;
 
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
@@ -154,7 +155,7 @@ public class MovieTest {
 
     @Test
     public void run_movie_query20_test() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query20_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());

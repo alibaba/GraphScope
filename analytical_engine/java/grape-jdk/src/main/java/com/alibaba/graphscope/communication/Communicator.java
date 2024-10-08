@@ -58,8 +58,13 @@ public class Communicator {
         for (Constructor constructor : constructors) {
             if (constructor.getParameterCount() == 1
                     && constructor.getParameterTypes()[0].getName().equals("long")) {
-                communicatorImpl = communicatorClass.cast(constructor.newInstance(appAddr));
-                logger.info("Init communicator:" + communicatorImpl);
+                try {
+                    communicatorImpl = communicatorClass.cast(constructor.newInstance(appAddr));
+                    logger.info("Init communicator:" + communicatorImpl);
+                } catch (Exception e) {
+                    logger.error("Failed to initialize communicator", e);
+                    throw e;
+                }
             }
         }
     }

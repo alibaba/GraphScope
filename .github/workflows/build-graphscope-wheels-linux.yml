@@ -32,7 +32,7 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build Wheel Package
       run: |
@@ -104,7 +104,7 @@ jobs:
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build Wheel Package
       run: |

@@ -42,8 +42,8 @@ struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
     IdentityMapper<in_col_id, PropertySelector<T>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<
-      decltype(std::declval<context_t>().template GetNode<in_col_id>())>;
+  using ctx_node_t = std::remove_reference_t<decltype(
+      std::declval<context_t>().template GetNode<in_col_id>())>;
   using result_t = Collection<T>;
 };
 
@@ -54,8 +54,8 @@ struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
     IdentityMapper<in_col_id, PropertySelector<grape::EmptyType>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<
-      decltype(std::declval<context_t>().template GetNode<in_col_id>())>;
+  using ctx_node_t = std::remove_reference_t<decltype(
+      std::declval<context_t>().template GetNode<in_col_id>())>;
   using result_t = ctx_node_t;
 };
 
@@ -266,8 +266,8 @@ class ProjectOp {
       const GRAPH_INTERFACE& graph, CTX_T& ctx,
       IdentityMapper<in_col_id, PropertySelector<SelectorValueType>>& mapper) {
     auto& node = ctx.template GetNode<in_col_id>();
-    static_assert(std::remove_reference_t<
-                  decltype(node)>::is_vertex_set);  // edge_set not supported
+    static_assert(std::remove_reference_t<decltype(
+                      node)>::is_vertex_set);  // edge_set not supported
     // Create a empty copy.
     auto offset_array = ctx.ObtainOffsetFromTag(in_col_id);
     auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));

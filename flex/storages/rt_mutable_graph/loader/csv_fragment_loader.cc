@@ -738,7 +738,7 @@ Result<bool> CSVFragmentLoader::LoadFragment() {
     auto work_dir = basic_fragment_loader_.work_dir();
     printDiskRemaining(work_dir);
     LOG(ERROR) << "Load fragment failed: " << e.what();
-    return Result<bool>(StatusCode::InternalError,
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
                         "Load fragment failed: " + std::string(e.what()),
                         false);
   }

@@ -643,4 +643,9 @@ public class FFIByteVectorInputStream extends InputStream implements DataInput {
     public long longAvailable() {
         return readableLimit - offset;
     }
+
+    @Override
+    public void close() throws IOException {
+        vector.delete();
+    }
 }

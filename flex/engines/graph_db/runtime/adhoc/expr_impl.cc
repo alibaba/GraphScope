@@ -450,6 +450,9 @@ static RTAny parse_param(const common::DynamicParam& param,
     } else if (dt == common::DataType::INT32) {
       int val = std::stoi(input.at(name));
       return RTAny::from_int32(val);
+    } else if (dt == common::DataType::INT64) {
+      int64_t val = std::stoll(input.at(name));
+      return RTAny::from_int64(val);
     }
 
     LOG(FATAL) << "not support type: " << common::DataType_Name(dt);

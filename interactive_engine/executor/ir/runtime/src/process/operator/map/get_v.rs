@@ -15,6 +15,7 @@
 
 use std::convert::TryInto;
 
+use dyn_type::Object;
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
 use graph_proxy::utils::expr::eval_pred::EvalPred;
@@ -116,6 +117,16 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     }
                 } else {
                     Err(FnExecError::unexpected_data_error("unreachable path end entry in GetV"))?
+                }
+            } else if let Some(obj) = entry.as_object() {
+                if Object::None.eq(obj) {
+                    input.append(Object::None, self.alias);
+                    Ok(Some(input))
+                } else {
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "Can only apply `GetV` on an object that is not None. The entry is {:?}",
+                        entry
+                    )))?
                 }
             } else {
                 Err(FnExecError::unexpected_data_error( &format!(
@@ -239,6 +250,28 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     return Ok(Some(input));
                 } else {
                     return Ok(None);
+                }
+            } else if let Some(obj) = entry.as_object() {
+                if Object::None.eq(obj) {
+                    if let Some(predicate) = &self.query_params.filter {
+                        let res = predicate
+                            .eval_bool(Some(&input))
+                            .map_err(|e| FnExecError::from(e))?;
+                        if res {
+                            input.append(Object::None, self.alias);
+                            return Ok(Some(input));
+                        } else {
+                            return Ok(None);
+                        }
+                    } else {
+                        input.append(Object::None, self.alias);
+                        return Ok(Some(input));
+                    }
+                } else {
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                        entry
+                    )))?
                 }
             } else {
                 Err(FnExecError::unexpected_data_error(&format!(

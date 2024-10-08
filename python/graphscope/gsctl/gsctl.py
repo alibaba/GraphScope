@@ -21,11 +21,6 @@ import sys
 
 import click
 
-if "site-packages" not in os.path.dirname(os.path.realpath(__file__)):
-    sys.path.insert(
-        0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..")
-    )
-
 try:
     import graphscope
     from graphscope.gsctl.commands import get_command_collection

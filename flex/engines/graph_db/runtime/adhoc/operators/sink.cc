@@ -36,7 +36,7 @@ void eval_sink(const Context& ctx, const ReadTransaction& txn,
       val.sink(txn, j, column);
     }
   }
-  LOG(INFO) << "sink: " << results.DebugString();
+  // LOG(INFO) << "sink: " << results.DebugString();
   auto res = results.SerializeAsString();
   output.put_bytes(res.data(), res.size());
 }

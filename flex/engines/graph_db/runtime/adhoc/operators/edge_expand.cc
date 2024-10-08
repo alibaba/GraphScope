@@ -23,13 +23,10 @@ namespace gs {
 
 namespace runtime {
 
-Context eval_edge_expand(const physical::EdgeExpand& opr,
-                         const ReadTransaction& txn, Context&& ctx,
-                         const std::map<std::string, std::string>& params,
-                         const physical::PhysicalOpr_MetaData& meta) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
+bl::result<Context> eval_edge_expand(
+    const physical::EdgeExpand& opr, const ReadTransaction& txn, Context&& ctx,
+    const std::map<std::string, std::string>& params,
+    const physical::PhysicalOpr_MetaData& meta) {
   int v_tag;
   if (!opr.has_v_tag()) {
     v_tag = -1;
@@ -52,7 +49,9 @@ Context eval_edge_expand(const physical::EdgeExpand& opr,
   if (opr.expand_opt() ==
       physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
     if (query_params.has_predicate()) {
-      LOG(FATAL) << "not support";
+      LOG(ERROR) << "edge expand vertex with predicate is not supported";
+      RETURN_UNSUPPORTED_ERROR(
+          "edge expand vertex with predicate is not supported");
     } else {
       EdgeExpandParams eep;
       eep.v_tag = v_tag;
@@ -85,7 +84,12 @@ Context eval_edge_expand(const physical::EdgeExpand& opr,
                                                        eep);
     }
   } else {
-    LOG(FATAL) << "not support";
+    LOG(ERROR) << "EdgeExpand with expand_opt: " << opr.expand_opt()
+               << " is "
+                  "not supported";
+    RETURN_UNSUPPORTED_ERROR(
+        "EdgeExpand with expand_opt is not supported: " +
+        std::to_string(static_cast<int>(opr.expand_opt())));
   }
   return ctx;
 }

@@ -46,7 +46,7 @@ static std::vector<LabelTriplet> get_expand_label_set(
   return label_triplets;
 }
 
-Context EdgeExpand::expand_edge_without_predicate(
+bl::result<Context> EdgeExpand::expand_edge_without_predicate(
     const ReadTransaction& txn, Context&& ctx, const EdgeExpandParams& params) {
   std::vector<size_t> shuffle_offset;
 
@@ -350,11 +350,12 @@ Context EdgeExpand::expand_edge_without_predicate(
     }
   }
 
-  LOG(FATAL) << "not support";
-  return ctx;
+  LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+  RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                           std::to_string(params.dir));
 }
 
-Context EdgeExpand::expand_vertex_without_predicate(
+bl::result<Context> EdgeExpand::expand_vertex_without_predicate(
     const ReadTransaction& txn, Context&& ctx, const EdgeExpandParams& params) {
   std::shared_ptr<IVertexColumn> input_vertex_list =
       std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
@@ -504,7 +505,8 @@ Context EdgeExpand::expand_vertex_without_predicate(
           ctx.set_with_reshuffle(params.alias, builder.finish(),
                                  shuffle_offset);
         } else {
-          LOG(FATAL) << "xxx";
+          LOG(ERROR) << "Unsupported edge expand direction";
+          RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction");
         }
       } else {
         MLVertexColumnBuilder builder;
@@ -552,7 +554,8 @@ Context EdgeExpand::expand_vertex_without_predicate(
       auto casted_input_vertex_list =
           std::dynamic_pointer_cast<MLVertexColumn>(input_vertex_list);
       if (params.dir == Direction::kBoth) {
-        LOG(FATAL) << "AAAAAAAAA";
+        LOG(ERROR) << "Unsupported edge expand direction";
+        RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction");
       } else if (params.dir == Direction::kIn) {
         casted_input_vertex_list->foreach_vertex(
             [&](size_t index, label_t label, vid_t v) {
@@ -588,13 +591,17 @@ Context EdgeExpand::expand_vertex_without_predicate(
             });
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       } else {
-        LOG(FATAL) << "xxx";
+        LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                                 std::to_string(params.dir));
       }
     } else if (input_vertex_list_type == VertexColumnType::kMultiSegment) {
       auto casted_input_vertex_list =
           std::dynamic_pointer_cast<MSVertexColumn>(input_vertex_list);
       if (params.dir == Direction::kBoth) {
-        LOG(FATAL) << "AAAAAAAAA";
+        LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                                 std::to_string(params.dir));
       } else if (params.dir == Direction::kIn) {
         casted_input_vertex_list->foreach_vertex(
             [&](size_t index, label_t label, vid_t v) {
@@ -630,10 +637,13 @@ Context EdgeExpand::expand_vertex_without_predicate(
             });
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       } else {
-        LOG(FATAL) << "xxx";
+        LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                                 std::to_string(params.dir));
       }
     } else {
-      LOG(FATAL) << "unexpected input vertex list type";
+      LOG(ERROR) << "unexpected input vertex list type";
+      RETURN_UNSUPPORTED_ERROR("unexpected input vertex list type");
     }
   } else {
     if (input_vertex_list_type == VertexColumnType::kSingle) {
@@ -672,7 +682,9 @@ Context EdgeExpand::expand_vertex_without_predicate(
       for (label_t output_vertex_label : output_vertex_set) {
         builder.start_label(output_vertex_label);
         if (params.dir == Direction::kBoth) {
-          LOG(FATAL) << "AAAAA";
+          LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+          RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                                   std::to_string(params.dir));
         } else if (params.dir == Direction::kIn) {
           for (auto& triplet : params.labels) {
             if (triplet.dst_label == input_vertex_label &&
@@ -691,7 +703,9 @@ Context EdgeExpand::expand_vertex_without_predicate(
             }
           }
         } else if (params.dir == Direction::kOut) {
-          LOG(FATAL) << "AAAAA";
+          LOG(ERROR) << "Unsupported edge expand direction: " << params.dir;
+          RETURN_UNSUPPORTED_ERROR("Unsupported edge expand direction" +
+                                   std::to_string(params.dir));
         }
       }
 #endif
@@ -754,16 +768,19 @@ Context EdgeExpand::expand_vertex_without_predicate(
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(FATAL) << "not support";
+        LOG(ERROR) << "Unsupported edge expand direction: "
+                   << static_cast<int>(params.dir);
       }
-      LOG(FATAL) << "edge expand vertex input multiple vertex label";
+      LOG(ERROR) << "edge expand vertex input multiple vertex label";
+      RETURN_UNSUPPORTED_ERROR(
+          "edge expand vertex input multiple vertex label");
     }
   }
 
   return ctx;
 }
 
-Context EdgeExpand::expand_2d_vertex_without_predicate(
+bl::result<Context> EdgeExpand::expand_2d_vertex_without_predicate(
     const ReadTransaction& txn, Context&& ctx, const EdgeExpandParams& params1,
     const EdgeExpandParams& params2) {
   std::shared_ptr<IVertexColumn> input_vertex_list =
@@ -824,9 +841,13 @@ Context EdgeExpand::expand_2d_vertex_without_predicate(
       }
     }
   }
-  LOG(FATAL) << "XXXX";
-
-  return ctx;
+  LOG(ERROR) << "Unsupported edge expand 2d vertex without predicate, "
+             << "params1.dir: " << static_cast<int>(params1.dir)
+             << ", params2.dir: " << static_cast<int>(params2.dir)
+             << ", params1.labels.size: " << params1.labels.size()
+             << ", params2.labels.size: " << params2.labels.size();
+  RETURN_UNSUPPORTED_ERROR(
+      "Unsupported params for edge expand 2d vertex without predicate");
 }
 
 }  // namespace runtime

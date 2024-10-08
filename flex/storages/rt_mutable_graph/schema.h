@@ -31,10 +31,10 @@ class Schema {
   // How many built-in plugins are there.
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
-  static constexpr uint8_t MAX_PLUGIN_ID = 252;
+  static constexpr uint8_t MAX_PLUGIN_ID = 251;
+  static constexpr uint8_t ADHOC_READ_PLUGIN_ID = 253;
   static constexpr uint8_t HQPS_ADHOC_READ_PLUGIN_ID = 254;
   static constexpr uint8_t HQPS_ADHOC_WRITE_PLUGIN_ID = 255;
-  static constexpr uint8_t ADHOC_READ_PLUGIN_ID = 253;
   static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
   static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
   static constexpr const char* ADHOC_READ_PLUGIN_ID_STR = "\xFD";
@@ -43,9 +43,21 @@ class Schema {
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
   static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
 
+  // The builtin plugins are reserved for the system.
+  static constexpr uint8_t BUILTIN_PLUGIN_NUM = 1;
+  static constexpr uint8_t BUILTIN_COUNT_VERTICES_PLUGIN_ID = 252;
+  static constexpr const char* BUILTIN_COUNT_VERTICES_PLUGIN_NAME =
+      "count_vertices";
+  static constexpr const char* BUILTIN_PLUGIN_NAMES[BUILTIN_PLUGIN_NUM] = {
+      BUILTIN_COUNT_VERTICES_PLUGIN_NAME};
+  static constexpr uint8_t BUILTIN_PLUGIN_IDS[BUILTIN_PLUGIN_NUM] = {
+      BUILTIN_COUNT_VERTICES_PLUGIN_ID};
+
   // An array containing all compatible versions of schema.
   static const std::vector<std::string> COMPATIBLE_VERSIONS;
   static constexpr const char* DEFAULT_SCHEMA_VERSION = "v0.0";
+
+  static bool IsBuiltinPlugin(const std::string& plugin_name);
 
   using label_type = label_t;
   Schema();
