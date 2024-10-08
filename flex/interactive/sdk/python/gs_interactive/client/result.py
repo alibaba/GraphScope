@@ -16,7 +16,8 @@
 # limitations under the License.
 #
 
-from typing import Generic, TypeVar
+from typing import Generic
+from typing import TypeVar
 
 from gs_interactive.api_response import ApiResponse
 from gs_interactive.client.status import Status
