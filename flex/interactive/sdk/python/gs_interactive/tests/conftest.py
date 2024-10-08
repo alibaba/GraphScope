@@ -389,7 +389,7 @@ def run_cypher_test_suite(neo4j_sess: Neo4jSession, graph_id: str, queries: list
     for query in queries:
         submit_query_via_neo4j_endpoint(neo4j_sess, graph_id, query)
 
-def call_procedure(neo4j_sess : Neo4jSession, graph_id: str, proc_name: str, *args):
+def call_procedure(neo4j_sess: Neo4jSession, graph_id: str, proc_name: str, *args):
     query = "CALL " + proc_name + "(" + ",".join([str(item) for item in args]) + ")"
     result = neo4j_sess.run(query)
     for record in result:
