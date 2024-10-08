@@ -15,14 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import time
 import argparse
 import os
+import time
+
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
 
-MODERN_GRAPH_CSV_DIR=os.path.join(os.path.dirname(__file__), "../../../../interactive/examples/modern_graph")
+MODERN_GRAPH_CSV_DIR = os.path.join(
+    os.path.dirname(__file__), "../../../../interactive/examples/modern_graph"
+)
 # get current dir
 
 test_graph_def = {
@@ -72,12 +75,7 @@ test_graph_def = {
 }
 
 test_graph_datasource = {
-    "loading_config": {
-        "data_source" : {
-            "scheme": "file"
-        },
-        "import_option" : "init"
-    },
+    "loading_config": {"data_source": {"scheme": "file"}, "import_option": "init"},
     "vertex_mappings": [
         {
             "type_name": "person",
@@ -96,9 +94,7 @@ test_graph_datasource = {
                 "source_vertex": "person",
                 "destination_vertex": "person",
             },
-            "inputs": [
-                f"@{MODERN_GRAPH_CSV_DIR}/person_knows_person.csv"
-            ],
+            "inputs": [f"@{MODERN_GRAPH_CSV_DIR}/person_knows_person.csv"],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "person.id"}, "property": "id"}
             ],
@@ -111,6 +107,7 @@ test_graph_datasource = {
         }
     ],
 }
+
 
 def createGraph(sess: Session):
     create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
@@ -169,7 +166,9 @@ def addVertex(sess: Session, graph_id: str):
     if api_response.is_ok():
         print("The response of add_vertex:\n", api_response)
     else:
-        raise Exception("add_vertex failed with error: %s" % api_response.get_status_message())
+        raise Exception(
+            "add_vertex failed with error: %s" % api_response.get_status_message()
+        )
 
 
 def updateVertex(sess: Session, graph_id: str):
@@ -182,7 +181,9 @@ def updateVertex(sess: Session, graph_id: str):
     if api_response.is_ok():
         print("The response of update_vertex", api_response)
     else:
-        raise Exception("update_vertex failed with error: %s" % api_response.get_status_message())
+        raise Exception(
+            "update_vertex failed with error: %s" % api_response.get_status_message()
+        )
 
 
 def getVertex(sess: Session, graph_id: str):
@@ -192,7 +193,9 @@ def getVertex(sess: Session, graph_id: str):
     if api_response.is_ok():
         print("The response of get_vertex", api_response)
     else:
-        raise Exception("get_vertex failed with error: %s" % api_response.get_status_message())
+        raise Exception(
+            "get_vertex failed with error: %s" % api_response.get_status_message()
+        )
 
 
 def updateEdge(sess: Session, graph_id: str):
@@ -230,8 +233,9 @@ def getEdge(sess: Session, graph_id: str):
     if api_response.is_ok():
         print("The response of get_edge", api_response)
     else:
-        raise Exception("get_edge failed with error: %s" % api_response.get_status_message())
-    
+        raise Exception(
+            "get_edge failed with error: %s" % api_response.get_status_message()
+        )
 
 
 def addEdge(sess: Session, graph_id: str):
@@ -257,8 +261,9 @@ def addEdge(sess: Session, graph_id: str):
     if api_response.is_ok():
         print("The response of add_edge", api_response)
     else:
-        raise Exception("add_edge failed with error: %s" % api_response.get_status_message())
-    
+        raise Exception(
+            "add_edge failed with error: %s" % api_response.get_status_message()
+        )
 
 
 if __name__ == "__main__":
@@ -299,7 +304,7 @@ if __name__ == "__main__":
         )
         resp = sess.create_procedure(graph_id, create_proc_request)
         assert resp.is_ok()
-        
+
         get_proc_res = sess.get_procedure(graph_id, "test_procedure")
         assert get_proc_res.is_ok()
         # Check the description of the procedure
@@ -316,11 +321,11 @@ if __name__ == "__main__":
             result = session.run("CALL test_procedure();")
             for record in result:
                 print(record)
-                
+
         addVertex(sess, graph_id)
         getVertex(sess, graph_id)
         updateVertex(sess, graph_id)
-        
+
         addEdge(sess, graph_id)
         getEdge(sess, graph_id)
         updateEdge(sess, graph_id)

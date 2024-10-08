@@ -19,7 +19,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "utils/result.h"

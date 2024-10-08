@@ -18,8 +18,6 @@
 
 from typing import Generic, TypeVar
 
-from pydantic import Field
-
 from gs_interactive.api_response import ApiResponse
 from gs_interactive.client.status import Status
 from gs_interactive.exceptions import ApiException
@@ -30,12 +28,14 @@ T = TypeVar("T")
 
 class Result(Generic[T]):
     """
-    This is a generic class that wraps the result of an operation. It contains the status of the operation and the value returned by the operation.
+    This is a generic class that wraps the result of an operation,
+    It contains the status of the operation and the value returned by the operation.
     """
+
     def __init__(self, status: Status, value: T):
         """
         Construct a new Result object with the specified status and value.
-        
+
         Args:
             status: the status of the operation.
             value: the value returned by the operation.
