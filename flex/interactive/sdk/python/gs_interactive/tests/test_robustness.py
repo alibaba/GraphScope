@@ -236,4 +236,3 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         '"person"',
         "4L",
     )
-    
