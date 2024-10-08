@@ -23,7 +23,7 @@ import unittest
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
 from gs_interactive.client.utils import InputFormat  # noqa: E402
-from gs_interactive.client.utils import append_format_byte
+from gs_interactive.client.utils import append_format_byte  # noqa: E402
 
 
 class TestUtils(unittest.TestCase):

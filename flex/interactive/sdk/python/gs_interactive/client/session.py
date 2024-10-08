@@ -16,35 +16,54 @@
 # limitations under the License.
 #
 
-from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, Union
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Union
 
-from pydantic import Field, StrictBytes, StrictStr
+from gs_interactive.api import AdminServiceGraphManagementApi
+from gs_interactive.api import AdminServiceJobManagementApi
+from gs_interactive.api import AdminServiceProcedureManagementApi
+from gs_interactive.api import AdminServiceServiceManagementApi
+from gs_interactive.api import GraphServiceEdgeManagementApi
+from gs_interactive.api import GraphServiceVertexManagementApi
+from gs_interactive.api import QueryServiceApi
+from gs_interactive.api import UtilsApi
+from gs_interactive.api_client import ApiClient
+from gs_interactive.configuration import Configuration
+from pydantic import Field
+from pydantic import StrictBytes
+from pydantic import StrictStr
 from typing_extensions import Annotated
 
-from gs_interactive.api import (AdminServiceGraphManagementApi,
-                                AdminServiceJobManagementApi,
-                                AdminServiceProcedureManagementApi,
-                                AdminServiceServiceManagementApi,
-                                GraphServiceEdgeManagementApi,
-                                GraphServiceVertexManagementApi,
-                                QueryServiceApi, UtilsApi)
-from gs_interactive.api_client import ApiClient
 from gs_interactive.client.generated.results_pb2 import CollectiveResults
 from gs_interactive.client.result import Result
-from gs_interactive.client.status import Status, StatusCode
-from gs_interactive.client.utils import InputFormat, append_format_byte
-from gs_interactive.configuration import Configuration
-from gs_interactive.models import (CreateGraphRequest, CreateGraphResponse,
-                                   CreateProcedureRequest,
-                                   CreateProcedureResponse, EdgeRequest,
-                                   GetGraphResponse, GetGraphSchemaResponse,
-                                   GetGraphStatisticsResponse,
-                                   GetProcedureResponse, JobResponse,
-                                   JobStatus, QueryRequest, SchemaMapping,
-                                   ServiceStatus, StartServiceRequest,
-                                   UpdateProcedureRequest, UploadFileResponse,
-                                   VertexEdgeRequest, VertexRequest)
+from gs_interactive.client.status import Status
+from gs_interactive.client.status import StatusCode
+from gs_interactive.client.utils import InputFormat
+from gs_interactive.client.utils import append_format_byte
+from gs_interactive.models import CreateGraphRequest
+from gs_interactive.models import CreateGraphResponse
+from gs_interactive.models import CreateProcedureRequest
+from gs_interactive.models import CreateProcedureResponse
+from gs_interactive.models import EdgeRequest
+from gs_interactive.models import GetGraphResponse
+from gs_interactive.models import GetGraphSchemaResponse
+from gs_interactive.models import GetGraphStatisticsResponse
+from gs_interactive.models import GetProcedureResponse
+from gs_interactive.models import JobResponse
+from gs_interactive.models import JobStatus
+from gs_interactive.models import QueryRequest
+from gs_interactive.models import SchemaMapping
+from gs_interactive.models import ServiceStatus
+from gs_interactive.models import StartServiceRequest
+from gs_interactive.models import UpdateProcedureRequest
+from gs_interactive.models import UploadFileResponse
+from gs_interactive.models import VertexData
+from gs_interactive.models import VertexEdgeRequest
+from gs_interactive.models import VertexRequest
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -128,7 +147,7 @@ class VertexInterface(metaclass=ABCMeta):
         primary_key_value: Annotated[
             Any, Field(description="The primary key value of vertex.")
         ],
-    ) -> Result[VertexRequest]:
+    ) -> Result[VertexData]:
         raise NotImplementedError
 
     @abstractmethod
@@ -369,7 +388,7 @@ class DefaultSession(Session):
         primary_key_value: Annotated[
             Any, Field(description="The primary key value of vertex.")
         ],
-    ) -> Result[VertexRequest]:
+    ) -> Result[VertexData]:
         """
         Get a vertex from the specified graph with primary key value.
         """
