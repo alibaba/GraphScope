@@ -42,7 +42,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 
 RUN apt-get update -y && \
     apt-get install -y sudo default-jdk dnsutils tzdata lsof \
-        libjemalloc-dev libunwind-dev binutils less && \
+        libjemalloc-dev libunwind-dev binutils less vim && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

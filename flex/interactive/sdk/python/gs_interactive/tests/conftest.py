@@ -16,20 +16,23 @@
 # limitations under the License.
 #
 
-import time
-from gs_interactive.client.driver import Driver
-from gs_interactive.models import *
-from gs_interactive.client.status import StatusCode
-from gs_interactive.client.session import Session
-from neo4j import Session as Neo4jSession
-import pytest
-
 # get the directory of the current file
 import os
-import sys
+import time
 
-cur_dir=os.path.dirname(os.path.abspath(__file__))
-MODERN_GRAPH_DATA_DIR=os.path.abspath(os.path.join(cur_dir, "../../../../examples/modern_graph"))
+import pytest
+from neo4j import Session as Neo4jSession
+
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import (CreateGraphRequest, CreateProcedureRequest,
+                                   SchemaMapping, StartServiceRequest,
+                                   UpdateProcedureRequest)
+
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+MODERN_GRAPH_DATA_DIR = os.path.abspath(
+    os.path.join(cur_dir, "../../../../examples/modern_graph")
+)
 print("MODERN_GRAPH_DATA_DIR: ", MODERN_GRAPH_DATA_DIR)
 
 
@@ -73,7 +76,7 @@ modern_graph_full = {
                     },
                 ],
                 "primary_keys": ["id"],
-            }
+            },
         ],
         "edge_types": [
             {
@@ -109,7 +112,7 @@ modern_graph_full = {
                     }
                 ],
                 "primary_keys": [],
-            }
+            },
         ],
     },
 }
@@ -191,77 +194,61 @@ modern_graph_partial = {
 
 modern_graph_full_import_config = {
     "loading_config": {
-        "data_source": {
-            "scheme": "file",
-            "location": "@" + MODERN_GRAPH_DATA_DIR
-        },
+        "data_source": {"scheme": "file", "location": "@" + MODERN_GRAPH_DATA_DIR},
         "import_option": "init",
         "format": {
             "type": "csv",
             "metadata": {
                 "delimiter": "|",
-            }
-        }
+            },
+        },
     },
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": [
-                "person.csv"
-            ],
+            "inputs": ["person.csv"],
         },
         {
             "type_name": "software",
-            "inputs": [
-                "software.csv"
-            ],
-        }
+            "inputs": ["software.csv"],
+        },
     ],
     "edge_mappings": [
         {
             "type_triplet": {
                 "edge": "knows",
                 "source_vertex": "person",
-                "destination_vertex": "person"
+                "destination_vertex": "person",
             },
-            "inputs": [
-                "person_knows_person.csv"
-            ],
+            "inputs": ["person_knows_person.csv"],
         },
         {
             "type_triplet": {
                 "edge": "created",
                 "source_vertex": "person",
-                "destination_vertex": "software"
+                "destination_vertex": "software",
             },
-            "inputs": [
-                "person_created_software.csv"
-            ],
-        }
-    ]
+            "inputs": ["person_created_software.csv"],
+        },
+    ],
 }
 
 
 modern_graph_partial_import_config = {
     "loading_config": {
-        "data_source": {
-            "scheme": "file",
-            "location": "@" + MODERN_GRAPH_DATA_DIR
-        },
+        "data_source": {"scheme": "file", "location": "@" + MODERN_GRAPH_DATA_DIR},
         "import_option": "init",
         "format": {
             "type": "csv",
             "metadata": {
                 "delimiter": "|",
-            }
-        }
+            },
+        },
     },
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": [
-                "person.csv"
-            ],
+            "inputs": ["person.csv"],
         },
     ],
     "edge_mappings": [
@@ -269,41 +256,36 @@ modern_graph_partial_import_config = {
             "type_triplet": {
                 "edge": "knows",
                 "source_vertex": "person",
-                "destination_vertex": "person"
+                "destination_vertex": "person",
             },
-            "inputs": [
-                "person_knows_person.csv"
-            ],
+            "inputs": ["person_knows_person.csv"],
         }
-    ]
+    ],
 }
 
 modern_graph_vertex_only_import_config = {
     "loading_config": {
-        "data_source": {
-            "scheme": "file",
-            "location": "@" + MODERN_GRAPH_DATA_DIR
-        },
+        "data_source": {"scheme": "file", "location": "@" + MODERN_GRAPH_DATA_DIR},
         "import_option": "init",
         "format": {
             "type": "csv",
             "metadata": {
                 "delimiter": "|",
-            }
-        }
+            },
+        },
     },
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": [
-                "person.csv"
-            ],
+            "inputs": ["person.csv"],
         }
-    ]
+    ],
 }
+
+
 @pytest.fixture(scope="module")
 def interactive_driver():
-    driver =  Driver()
+    driver = Driver()
     yield driver
     driver.close()
 
@@ -312,11 +294,13 @@ def interactive_driver():
 def interactive_session(interactive_driver):
     yield interactive_driver.session()
 
+
 @pytest.fixture(scope="module")
 def neo4j_session(interactive_driver):
-    _neo4j_sess =  interactive_driver.getNeo4jSession()
+    _neo4j_sess = interactive_driver.getNeo4jSession()
     yield _neo4j_sess
     _neo4j_sess.close()
+
 
 @pytest.fixture(scope="module")
 def create_modern_graph(interactive_session):
@@ -337,6 +321,7 @@ def create_vertex_only_modern_graph(interactive_session):
     yield graph_id
     delete_running_graph(interactive_session, graph_id)
 
+
 @pytest.fixture(scope="module")
 def create_partial_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_partial)
@@ -346,7 +331,8 @@ def create_partial_modern_graph(interactive_session):
     yield graph_id
     delete_running_graph(interactive_session, graph_id)
 
-def wait_job_finish(sess : Session, job_id: str):
+
+def wait_job_finish(sess: Session, job_id: str):
     assert job_id is not None
     while True:
         resp = sess.get_job(job_id)
@@ -360,12 +346,14 @@ def wait_job_finish(sess : Session, job_id: str):
         else:
             time.sleep(1)
 
+
 def import_data_to_vertex_only_modern_graph(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
     assert resp.is_ok()
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
+
 
 def import_data_to_partial_modern_graph(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(modern_graph_partial_import_config)
@@ -374,6 +362,7 @@ def import_data_to_partial_modern_graph(sess: Session, graph_id: str):
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
 
+
 def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(modern_graph_full_import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
@@ -381,17 +370,20 @@ def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
 
-def submit_query_via_neo4j_endpoint(neo4j_sess : Neo4jSession, graph_id: str, query: str):
+
+def submit_query_via_neo4j_endpoint(
+    neo4j_sess: Neo4jSession, graph_id: str, query: str
+):
     result = neo4j_sess.run(query)
-    #check have 1 records, result 0
+    # check have 1 records, result 0
     result_cnt = 0
     for record in result:
         print("record: ", record)
         result_cnt += 1
-    print("result count: ", result_cnt , " for query ", query)
-    
+    print("result count: ", result_cnt, " for query ", query)
 
-def run_cypher_test_suite(neo4j_sess : Neo4jSession, graph_id: str, queries: list[str]):
+
+def run_cypher_test_suite(neo4j_sess: Neo4jSession, graph_id: str, queries: list[str]):
     for query in queries:
         submit_query_via_neo4j_endpoint(neo4j_sess, graph_id, query)
 
@@ -421,35 +413,44 @@ def delete_running_graph(sess: Session, graph_id: str):
     resp = sess.delete_graph(graph_id)
     assert resp.is_ok()
 
-def create_procedure(sess: Session, graph_id: str, name: str, query: str, description = "test proc"):
+
+def create_procedure(
+    sess: Session, graph_id: str, name: str, query: str, description="test proc"
+):
     request = CreateProcedureRequest(
-        name=name,
-        description=description,
-        type="cypher",
-        query=query)
+        name=name, description=description, type="cypher", query=query
+    )
 
     resp = sess.create_procedure(graph_id, request)
     if not resp.is_ok():
         print("Failed to create procedure: ", resp.get_status_message())
-        raise Exception("Failed to create procedure, status: ", resp.get_status_message())
+        raise Exception(
+            "Failed to create procedure, status: ", resp.get_status_message()
+        )
     proc_id = resp.get_value().procedure_id
     return proc_id
+
 
 def delete_procedure(sess: Session, graph_id: str, proc_id: str):
     resp = sess.delete_procedure(graph_id, proc_id)
     if not resp.is_ok():
         print("Failed to delete procedure: ", resp.get_status_message())
-        raise Exception("Failed to delete procedure, status: ", resp.get_status_message())
+        raise Exception(
+            "Failed to delete procedure, status: ", resp.get_status_message()
+        )
 
-def update_procedure(sess: Session, graph_id: str, proc_id: str, desc : str):
-    request = UpdateProcedureRequest(
-        description=desc)
+
+def update_procedure(sess: Session, graph_id: str, proc_id: str, desc: str):
+    request = UpdateProcedureRequest(description=desc)
     resp = sess.update_procedure(graph_id, proc_id, request)
     if not resp.is_ok():
         print("Failed to update procedure: ", resp.get_status_message())
-        raise Exception("Failed to update procedure, status: ", resp.get_status_message())
+        raise Exception(
+            "Failed to update procedure, status: ", resp.get_status_message()
+        )
 
-def start_service_on_graph(interactive_session, graph_id : str):
+
+def start_service_on_graph(interactive_session, graph_id: str):
     resp = interactive_session.start_service(StartServiceRequest(graph_id=graph_id))
     assert resp.is_ok()
     # wait one second to let compiler get the new graph

@@ -1,1 +1,0 @@
-g.V($personId).union(both('KNOWS'), both('KNOWS').both('KNOWS')).dedup().in('HASCREATOR').hasLabel('POST').as('_t').out('HASTAG').has('name', eq('$tagName')).select('_t').dedup().out('HASTAG').has('name', neq('$tagName')).groupCount().order().by(select(values), desc).by(select(keys).values('name'), asc).limit(10)

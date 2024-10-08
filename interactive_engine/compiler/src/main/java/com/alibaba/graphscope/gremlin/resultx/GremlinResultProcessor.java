@@ -27,7 +27,6 @@ import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -149,7 +148,7 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
     }
 
     protected void finishRecord() {
-        statusCallback.onSuccessEnd(ImmutableList.of());
+        statusCallback.onSuccessEnd();
         List<Object> results = Lists.newArrayList();
         if (resultSchema.isGroupBy) {
             results.add(reducer);

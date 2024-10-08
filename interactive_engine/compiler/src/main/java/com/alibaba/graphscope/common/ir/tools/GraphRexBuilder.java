@@ -81,8 +81,15 @@ public class GraphRexBuilder extends RexBuilder {
                         makeSearchArgumentLiteral(sarg, sargType));
             }
         }
-        if (ranges.size() == 1 && ranges.get(0).getKind() == SqlKind.DYNAMIC_PARAM) {
-            return makeCall(GraphStdOperatorTable.IN, arg, ranges.get(0));
+        if (ranges.size() == 1) {
+            RexNode range = ranges.get(0);
+            switch (range.getKind()) {
+                    // right operand is a dynamic parameter ( name in $names ), or a variable ( name
+                    // in names )
+                case DYNAMIC_PARAM:
+                case INPUT_REF:
+                    return makeCall(GraphStdOperatorTable.IN, arg, ranges.get(0));
+            }
         }
         return RexUtil.composeDisjunction(
                 this,

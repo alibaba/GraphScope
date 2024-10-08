@@ -734,7 +734,7 @@
           <artifactId>maven-deploy-plugin</artifactId>
           <version>${maven.deploy.version}</version>
         </plugin>
-        <plugin>
+        <!-- <plugin>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${maven.shade.version}</version>
           <executions>
@@ -763,7 +763,7 @@
                   </configuration>
               </execution>
           </executions>
-        </plugin>
+        </plugin> -->
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven.assembly.version}</version>

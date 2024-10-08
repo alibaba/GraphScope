@@ -79,7 +79,7 @@ jobs:
             - 'python/graphscope/framework/**'
             - 'python/graphscope/tests/unittest/**'
             - 'coordinator/gscoordinator/**'
-            - '.github/workflows/ci.yml'
+            - '.github/workflows/local-ci.yml'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
@@ -329,8 +329,8 @@ jobs:
 
   python-unittest:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
+    needs: [build-wheels, changes]
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -385,17 +385,17 @@ jobs:
 
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
-                          --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
+                          --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
                           $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
+        files: ./coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
   networkx-basic-test:
     runs-on: ubuntu-20.04

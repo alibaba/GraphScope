@@ -249,6 +249,8 @@ install(EXPORT flex-targets
 file(GLOB_RECURSE FILES_NEED_LINT
         "engines/*.cc"
         "engines/*.h"
+        "codegen/*.cc"
+        "codegen/*.h"
         "bin/*.cc"
         "storages/*.h"
         "storages/*.cc"
@@ -256,6 +258,8 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "otel/*.cc"
         "test/*.h"
         "test/*.cc"
+        "utils/*.h"
+        "utils/*.cc"
         EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat

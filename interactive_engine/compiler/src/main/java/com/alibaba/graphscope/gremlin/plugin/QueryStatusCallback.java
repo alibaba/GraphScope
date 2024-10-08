@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin.plugin;
 
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
-import com.alibaba.graphscope.groot.common.util.JSON;
 import com.google.gson.JsonObject;
 
 import io.opentelemetry.api.common.Attributes;
@@ -25,8 +24,6 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.trace.Span;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.List;
 
 public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
@@ -65,7 +62,7 @@ public class QueryStatusCallback {
             errorMsg = t.getMessage();
         }
         JsonObject logJson = buildSimpleLog(false, metricsCollector.getElapsedMillis());
-        fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis(), null);
+        fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis());
         queryLogger.print(logJson.toString(), false, t);
 
         Attributes attrs =
@@ -81,10 +78,11 @@ public class QueryStatusCallback {
         queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
     }
 
-    public void onSuccessEnd(List<Object> results) {
+    public void onSuccessEnd() {
         this.metricsCollector.stop();
+        queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
         JsonObject logJson = buildSimpleLog(true, metricsCollector.getElapsedMillis());
-        fillLogDetail(logJson, null, results);
+        fillLogDetail(logJson, null);
         queryLogger.print(logJson.toString(), true, null);
 
         Attributes attrs =
@@ -113,24 +111,24 @@ public class QueryStatusCallback {
         return simpleJson;
     }
 
-    private void fillLogDetail(JsonObject logJson, String errorMsg, List<Object> results) {
+    private void fillLogDetail(JsonObject logJson, String errorMsg) {
         try {
             if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
                 // todo(siyuan): the invocation of the function can cause Exception when serializing
                 // a gremlin vertex to json format
-                fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis(), results);
+                fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis());
             }
         } catch (Throwable t) {
             queryLogger.warn("fill log detail error", t);
         }
     }
 
-    private void fillLogDetail(
-            JsonObject logJson, String errorMessage, long startMillis, List<Object> results) {
+    private void fillLogDetail(JsonObject logJson, String errorMessage, long startMillis) {
         logJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
-        if (results != null) {
-            logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
-        }
+        // do not serialize result.
+        //        if (results != null) {
+        //            logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
+        //        }
         if (errorMessage != null) {
             logJson.addProperty(LogConstant.ERROR_MESSAGE, errorMessage);
         }

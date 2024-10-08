@@ -367,4 +367,3 @@ print(f"vertices num: {num}")
 To create an efficient procedure that meets your needs, it's essential to understand the programming interface and the Interactive storage interface. We recommend reading the [source code](https://github.com/alibaba/GraphScope/tree/main/flex) of Interactive, and you can also access the generated API documentation [here](https://graphscope.io/docs/reference/flex/).
 
 
-

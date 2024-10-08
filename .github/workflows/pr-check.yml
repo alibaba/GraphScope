@@ -109,9 +109,10 @@ jobs:
         sudo chmod +x /usr/bin/clang-format
 
         # run format
-        cd analytical_engine/
+        pushd analytical_engine/
         find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
         find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
+        popd
 
         # validate format
         function prepend() { while read line; do echo "${1}${line}"; done; }
@@ -126,6 +127,33 @@ jobs:
             echo "| Run: "
             echo "|"
             echo "|    make gsa_clformat"
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with clang-format-8, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+        pushd flex
+        # except for files end with act.h 
+        find ./bin ./codegen ./engines ./storages ./engines ./tests ./utils ./otel -name "*.h" ! -name "*act.h" ! -name "*actg.h" | xargs clang-format -i --style=file
+        find ./bin ./codegen ./engines ./storages ./engines ./tests ./utils ./otel -name "*.cc" ! -name "*act.cc" | xargs clang-format -i --style=file
+        popd
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| clang-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo "|    cd flex && make flex_clformat"
             echo "|"
             echo "| to fix this error."
             echo "|"
@@ -184,6 +212,14 @@ jobs:
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
         python3 -m flake8 .
+        popd
+        pushd flex/interactive/sdk/python/gs_interactive
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        # only check client and tests, to avoid checking generated code under api, client/generated, etc.
+        python3 -m flake8 ./client 
+        python3 -m flake8 ./tests 
+        popd
 
     - name: Generate Docs
       shell: bash

@@ -62,7 +62,7 @@ jobs:
         python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
-                          --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
+                          --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
 
@@ -88,8 +88,9 @@ jobs:
         gsctl instance destroy --type interactive -y
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
+        files: ./coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

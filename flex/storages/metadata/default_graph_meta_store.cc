@@ -20,7 +20,6 @@ DefaultGraphMetaStore::DefaultGraphMetaStore(
     std::unique_ptr<IMetaStore> base_store)
     : base_store_(std::move(base_store)) {
   // Clear previous context, in case of dirty data.
-  ClearRunningGraph();
   clear_locks();
 }
 
@@ -29,7 +28,6 @@ DefaultGraphMetaStore::~DefaultGraphMetaStore() { Close(); }
 Result<bool> DefaultGraphMetaStore::Open() { return base_store_->Open(); }
 
 Result<bool> DefaultGraphMetaStore::Close() {
-  RETURN_IF_NOT_OK(ClearRunningGraph());
   RETURN_IF_NOT_OK(clear_locks());
   return base_store_->Close();
 }

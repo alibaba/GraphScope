@@ -19,10 +19,10 @@ concurrency:
 jobs:
   build-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
-        python-version: ['3.11']
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v4
@@ -30,28 +30,9 @@ jobs:
         submodules: true
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Install Dependencies
-      run: |
-        brew update || true
-        brew install bash coreutils
-
-        alias bash=$(brew --prefix)/bin/bash
-
-        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
-
-        sudo mkdir /opt/graphscope
-        sudo chown -R $(id -u):$(id -g) /opt/graphscope
-
-        # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
-        # However the second trial would success.
-        python3 -m pip install click
-        python3 gsctl.py install-deps dev || true
-        python3 gsctl.py install-deps dev
-        echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Install JDK 11
       uses: actions/setup-java@v4
@@ -59,47 +40,20 @@ jobs:
         distribution: 'zulu' # See 'Supported distributions' for available options
         java-version: '11'
 
-    - name: Reinstall glog
+    - name: Install Dependencies
       run: |
-        # Essential cause glog installed by brew is broken and produce corrupted messages
-        brew uninstall --ignore-dependencies glog
-        . ~/.graphscope_env
-        git clone https://github.com/google/glog.git -b v0.6.0
-        cd glog
+        python3 -c 'import sys; print(sys.version_info[:])'
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
-        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF -DWITH_GTEST=OFF -DBUILD_TESTING=OFF
-        make -j
-        sudo make install
+        brew update || true
+        brew install bash coreutils
+        alias bash=$(brew --prefix)/bin/bash
 
-        # make delocate-wheel happy
-        sudo mkdir -p /usr/local/opt/glog/lib
-        sudo ln -s /usr/local/lib/libglog*.dylib /usr/local/opt/glog/lib/
-
-    - name: Install latest libgrape-lite
-      if: false
-      run: |
-        . ~/.graphscope_env
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        cd /tmp/libgrape-lite
-        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
-        make -j4
-        sudo make install
-
-    - name: Install latest vineyard
-      if: false
-      run: |
-        source ~/.graphscope_env
-        python3 -m pip install libclang
-        git clone --single-branch -b v0.13.4 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
-                 -DCMAKE_PREFIX_PATH=/usr/local \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j4
-        sudo make install
+        python3 -m pip install click
+        # install the specific vineyard version:
+        # python3 gsctl.py install-deps dev --v6d-version <branch or tag>
+        python3 gsctl.py install-deps dev
+        echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Build Server Wheel
       run: |
@@ -115,8 +69,7 @@ jobs:
         # e.g. 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]];
-        then
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
           echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
         fi
 
@@ -143,10 +96,10 @@ jobs:
 
   build-client-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v4
@@ -154,47 +107,22 @@ jobs:
         submodules: true
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install Dependencies
       run: |
+        python3 -c 'import sys; print(sys.version_info[:])'
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+
         brew update || true
         brew install bash coreutils
         alias bash=$(brew --prefix)/bin/bash
-        sudo mkdir /opt/graphscope
-        sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
         python3 -m pip install click
-        python3 gsctl.py install-deps dev || true
         python3 gsctl.py install-deps dev
-
-    - name: Install latest libgrape-lite
-      if: false
-      run: |
-        . ~/.graphscope_env
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        cd /tmp/libgrape-lite
-        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
-        make -j4
-        sudo make install
-
-    - name: Install latest vineyard
-      if: false
-      run: |
-        . ~/.graphscope_env
-        python3 -m pip install libclang
-        git clone --single-branch -b v0.23.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
-                 -DCMAKE_PREFIX_PATH=/usr/local \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j4
-        sudo make install
+        echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Build Client Wheels
       run: |
@@ -234,7 +162,7 @@ jobs:
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/download-artifact@v4
@@ -252,7 +180,7 @@ jobs:
         tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
         mv ${GITHUB_WORKSPACE}/artifacts/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
-        if [ "$PYTHON" == "3.8" ]; then
+        if [ "$PYTHON" == "3.9" ]; then
           tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
           mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         fi
@@ -277,12 +205,12 @@ jobs:
 
   python-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: macos-12
+    runs-on: macos-13
     needs: [build-wheels, build-client-wheels]
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/download-artifact@v4

@@ -35,6 +35,7 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     @Override
     public void fetchSchema(
             FetchSchemaRequest request, StreamObserver<FetchSchemaResponse> responseObserver) {
+        logger.debug("received fetch schema request");
         try {
             GraphDefPb graphDefBlob = this.storeService.getGraphDefBlob();
             responseObserver.onNext(
@@ -50,6 +51,7 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     public void fetchStatistics(
             FetchStatisticsRequest request,
             StreamObserver<FetchStatisticsResponse> responseObserver) {
+        logger.debug("received fetch statistics request");
         try {
             Map<Integer, Statistics> map =
                     this.storeService.getGraphStatisticsBlob(request.getSnapshotId());

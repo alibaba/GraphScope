@@ -23,9 +23,10 @@
     </appender>
     <appender name="Metric" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/metric.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log_dir}/metric.log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_dir}/metric.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
             <maxHistory>7</maxHistory>
+            <maxFileSize>100MB</maxFileSize>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
@@ -36,6 +37,7 @@
     <logger name="org.apache.zookeeper" level="ERROR" />
     <logger name="org.apache.kafka" level="ERROR" />
     <logger name="kafka" level="ERROR" />
+    <logger name="io.grpc.netty" level="ERROR" />
     <Logger name="MetricLog" level="INFO" additivity="false">
         <appender-ref ref="Metric"/>
     </Logger>

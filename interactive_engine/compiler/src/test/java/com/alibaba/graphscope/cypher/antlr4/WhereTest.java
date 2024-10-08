@@ -21,7 +21,6 @@ import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.CoreRules;
-import org.apache.calcite.runtime.CalciteException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -261,14 +260,13 @@ public class WhereTest {
                                             + " creationDate.month > 1990 and creationDate.day = 12"
                                             + " Return creationDate")
                             .build();
-        } catch (CalciteException e) {
+        } catch (Exception e) {
             Assert.assertTrue(
                     e.getMessage()
                             .contains(
-                                    "Cannot apply EXTRACT to arguments of type 'EXTRACT(<INTERVAL"
-                                        + " MONTH>, <CHAR(1)>)'. Supported form(s):"
-                                        + " 'EXTRACT(<DATETIME_INTERVAL>, <DATETIME_INTERVAL>)'\n"
-                                        + "'EXTRACT(<DATETIME_INTERVAL>, <DATETIME>)'"));
+                                    "invalid property lookup operation, cannot get property or"
+                                            + " extract interval from expr=[creationDate,"
+                                            + " type=CHAR(1)]"));
             return;
         }
         Assert.fail("should have thrown exceptions for property 'name' is not a date type");

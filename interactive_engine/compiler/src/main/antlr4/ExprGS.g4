@@ -106,7 +106,7 @@ oC_Atom
 
 // todo: support user defined function
 oC_FunctionInvocation
-    :  oC_AggregateFunctionInvocation | oC_ScalarFunctionInvocation;
+    :  oC_AggregateFunctionInvocation | oC_ScalarFunctionInvocation | oC_UserDefinedFunctionInvocation;
 
 oC_AggregateFunctionInvocation
     :  ( COUNT | SUM | MIN | MAX | COLLECT | AVG | FOLD | MEAN ) SP? '(' SP? ( DISTINCT SP? )? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
@@ -144,8 +144,12 @@ HEAD : ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'D' | 'd' );
 
 DURATION: ( 'D' | 'd' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' );
 
-oC_FunctionName
-    :  oC_Namespace oC_SymbolicName ;
+// user defined function should start with a namespace 'gs.function.'
+oC_UserDefinedFunctionInvocation
+    : oC_UserDefinedFunctionName SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+
+oC_UserDefinedFunctionName
+    : 'gs.function.' oC_Namespace oC_SymbolicName ;
 
 oC_Namespace
      :  ( oC_SymbolicName '.' )* ;
