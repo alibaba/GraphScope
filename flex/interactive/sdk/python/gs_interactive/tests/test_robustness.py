@@ -199,10 +199,10 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
     call_procedure(
-    neo4j_session,
-    create_modern_graph,
-    "count_vertices",
-    '"person"',
+        neo4j_session,
+        create_modern_graph,
+        "count_vertices",
+        '"person"',
     )
 
     call_procedure(
