@@ -146,8 +146,8 @@ def addVertex(sess: Session, graph_id: str):
             label="person",
             primary_key_value=8,
             properties=[
-                ModelProperty(name="name", type="string", value="mike"),
-                ModelProperty(name="age", type="integer", value=1),
+                ModelProperty(name="name", value="mike"),
+                ModelProperty(name="age", value=1),
             ],
         ),
     ]
@@ -172,8 +172,8 @@ def addVertex(sess: Session, graph_id: str):
 
 
 def updateVertex(sess: Session, graph_id: str):
-    name_property = ModelProperty(name="name", type="string", value="Cindy")
-    age_property = ModelProperty(name="age", type="integer", value=24)
+    name_property = ModelProperty(name="name", value="Cindy")
+    age_property = ModelProperty(name="age", value=24)
     vertex_request = VertexRequest(
         label="person", primary_key_value=1, properties=[name_property, age_property]
     )

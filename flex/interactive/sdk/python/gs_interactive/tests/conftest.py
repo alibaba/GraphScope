@@ -25,9 +25,11 @@ from neo4j import Session as Neo4jSession
 
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
-from gs_interactive.models import (CreateGraphRequest, CreateProcedureRequest,
-                                   SchemaMapping, StartServiceRequest,
-                                   UpdateProcedureRequest)
+from gs_interactive.models import CreateGraphRequest
+from gs_interactive.models import CreateProcedureRequest
+from gs_interactive.models import SchemaMapping
+from gs_interactive.models import StartServiceRequest
+from gs_interactive.models import UpdateProcedureRequest
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 MODERN_GRAPH_DATA_DIR = os.path.abspath(

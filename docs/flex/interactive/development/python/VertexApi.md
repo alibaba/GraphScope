@@ -32,8 +32,8 @@ vertex_request = [
         label="person",
         primary_key_value=8,
         properties=[
-            ModelProperty(name="name", type="string", value="mike"),
-            ModelProperty(name="age", type="integer", value=12),
+            ModelProperty(name="name",value="mike"),
+            ModelProperty(name="age", value=12),
         ],
     ),
 ]
@@ -172,8 +172,8 @@ vertex_request = VertexRequest(
     label="person",
     primary_key_value=1,
     properties=[
-        ModelProperty(name="name", type="string", value="Cindy"),
-        ModelProperty(name="age", type="integer", value=24),
+        ModelProperty(name="name", value="Cindy"),
+        ModelProperty(name="age", value=24),
     ],
 )
 # update vertex
