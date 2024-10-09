@@ -119,16 +119,26 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
   results::CollectiveResults results;
 
   for (auto kv : pagerank) {
-    auto id = txn.GetVertexId(vertex_label_id_, kv.first).to_string();
-    std::string res_string =
-        "vertex: " + id + ", pagerank: " + std::to_string(kv.second);
-    results.add_results()
-        ->mutable_record()
+    int64_t oid_ = txn.GetVertexId(vertex_label_id_, kv.first).AsInt64();
+    auto result = results.add_results();
+    result->mutable_record()
         ->add_columns()
         ->mutable_entry()
         ->mutable_element()
         ->mutable_object()
-        ->set_str(res_string);
+        ->set_str(vertex_label);
+    result->mutable_record()
+        ->add_columns()
+        ->mutable_entry()
+        ->mutable_element()
+        ->mutable_object()
+        ->set_i64(oid_);
+    result->mutable_record()
+        ->add_columns()
+        ->mutable_entry()
+        ->mutable_element()
+        ->mutable_object()
+        ->set_f64(kv.second);
   }
 
   output.put_string_view(results.SerializeAsString());

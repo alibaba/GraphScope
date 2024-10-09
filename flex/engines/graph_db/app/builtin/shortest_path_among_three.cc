@@ -48,10 +48,10 @@ bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
     output.put_string_view("get index fail.");
     return false;
   }
-
-  std::vector<int64_t> v1v2result_;
-  std::vector<int64_t> v2v3result_;
-  std::vector<int64_t> v1v3result_;
+  // get the three shortest paths
+  std::vector<std::pair<label_t, vid_t>> v1v2result_;
+  std::vector<std::pair<label_t, vid_t>> v2v3result_;
+  std::vector<std::pair<label_t, vid_t>> v1v3result_;
 
   bool find_flag = true;
   if (!ShortestPath(txn, label_v1, index_v1, label_v2, index_v2, v1v2result_)) {
@@ -67,14 +67,22 @@ bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
   }
   std::string result_path = "";
   if (find_flag) {
-    // connect two shortest paths
-    std::vector<int64_t> TSP =
+    // connect the two shortest paths among three
+    std::vector<std::pair<label_t, vid_t>> TSP =
         ConnectPath(v1v2result_, v2v3result_, v1v3result_);
+
+    // construct return result
     for (auto it = TSP.begin(); it != TSP.end(); ++it) {
       if (std::next(it) != TSP.end()) {
-        result_path += std::to_string(*it) + "--";
+        result_path +=
+            "(" + schema_.get_vertex_label_name(it->first) + "," +
+            std::to_string(txn.GetVertexId(it->first, it->second).AsInt64()) +
+            ")" + "--";
       } else {
-        result_path += std::to_string(*it);
+        result_path +=
+            "(" + schema_.get_vertex_label_name(it->first) + "," +
+            std::to_string(txn.GetVertexId(it->first, it->second).AsInt64()) +
+            ")";
       }
     }
   } else {
@@ -96,33 +104,40 @@ bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
   return true;
 }
 
-bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
-                                          label_t v1_l, vid_t v1_index,
-                                          label_t v2_l, vid_t v2_index,
-                                          std::vector<int64_t>& result_) {
+bool ShortestPathAmongThree::ShortestPath(
+    const gs::ReadTransaction& txn, label_t v1_l, vid_t v1_index, label_t v2_l,
+    vid_t v2_index, std::vector<std::pair<label_t, vid_t>>& result_) {
   Schema schema_ = txn.schema();
-  int vertex_size_ = (int) schema_.vertex_label_num();
-  int edge_size_ = (int) schema_.edge_label_num();
+  label_t vertex_size_ = (int) schema_.vertex_label_num();
+  label_t edge_size_ = (int) schema_.edge_label_num();
+  struct pair_hash {
+    std::size_t operator()(const std::pair<label_t, vid_t>& p) const {
+      auto hash1 = std::hash<label_t>{}(p.first);
+      auto hash2 = std::hash<vid_t>{}(p.second);
+      return hash1 ^ (hash2 << 1);
+    }
+  };
 
-  std::unordered_map<int64_t, int64_t> parent;
+  std::unordered_map<std::pair<label_t, vid_t>, std::pair<label_t, vid_t>,
+                     pair_hash>
+      parent;
   std::vector<label_t> nei_label_;
   std::vector<vid_t> nei_index_;
-  int64_t v1_id = txn.GetVertexId(v1_l, v1_index).AsInt64();
-  int64_t v2_id = txn.GetVertexId(v2_l, v2_index).AsInt64();
 
-  parent[v1_id] = -1;
+  parent[std::make_pair(v1_l, v1_index)] =
+      std::make_pair((label_t) UINT8_MAX, (vid_t) UINT32_MAX);
   nei_label_.push_back(v1_l);
   nei_index_.push_back(v1_index);
-  std::unordered_set<int64_t> visit;
-  visit.insert(v1_id);
+  std::unordered_set<std::pair<label_t, vid_t>, pair_hash> visit;
+  visit.insert(std::make_pair(v1_l, v1_index));
 
   std::vector<label_t> next_nei_labels_;
   std::vector<vid_t> next_nei_indexs_;
   bool find = false;
   while (!nei_label_.empty() && !find) {
     for (long unsigned int i = 0; i < nei_index_.size(); i++) {
-      for (int j = 0; j < vertex_size_; j++) {
-        for (int k = 0; k < edge_size_; k++) {
+      for (label_t j = 0; j < vertex_size_; j++) {
+        for (label_t k = 0; k < edge_size_; k++) {
           if (schema_.has_edge_label(label_t(nei_label_[i]), label_t(j),
                                      label_t(k))) {
             auto outedges = txn.GetOutEdgeIterator(
@@ -130,14 +145,14 @@ bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
                 k);  // 1.self_label 2.self_index 3.edge_label 4.nei_label
             while (outedges.IsValid()) {
               auto neighbor = outedges.GetNeighbor();
-              int64_t v_id = txn.GetVertexId(j, neighbor).AsInt64();
-              if (visit.find(v_id) == visit.end()) {
+              if (visit.find(std::make_pair(j, neighbor)) == visit.end()) {
                 next_nei_labels_.push_back(j);
                 next_nei_indexs_.push_back(neighbor);
-                visit.insert(v_id);
-                parent[v_id] =
-                    txn.GetVertexId(nei_label_[i], nei_index_[i]).AsInt64();
-                if (v_id == v2_id) {
+                visit.insert(std::make_pair(j, neighbor));
+                parent[std::make_pair(j, neighbor)] =
+                    std::make_pair(nei_label_[i], nei_index_[i]);
+                if (std::make_pair(j, neighbor) ==
+                    std::make_pair(v2_l, v2_index)) {
                   find = true;
                   break;
                 }
@@ -152,14 +167,14 @@ bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
                 k);  // 1.self_label 2.self_index 3.edge_label 4.nei_label
             while (inedges.IsValid()) {
               auto neighbor = inedges.GetNeighbor();
-              int64_t v_id = txn.GetVertexId(j, neighbor).AsInt64();
-              if (visit.find(v_id) == visit.end()) {
+              if (visit.find(std::make_pair(j, neighbor)) == visit.end()) {
                 next_nei_labels_.push_back(j);
                 next_nei_indexs_.push_back(neighbor);
-                visit.insert(v_id);
-                parent[v_id] =
-                    txn.GetVertexId(nei_label_[i], nei_index_[i]).AsInt64();
-                if (v_id == v2_id) {
+                visit.insert(std::make_pair(j, neighbor));
+                parent[std::make_pair(j, neighbor)] =
+                    std::make_pair(nei_label_[i], nei_index_[i]);
+                if (std::make_pair(j, neighbor) ==
+                    std::make_pair(v2_l, v2_index)) {
                   find = true;
                   break;
                 }
@@ -182,10 +197,11 @@ bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
     next_nei_indexs_.clear();
   }
   if (find) {
-    int64_t v = v2_id;
-    while (v != -1) {
-      result_.push_back(v);
-      v = parent[v];
+    std::pair<label_t, vid_t> vertex_v = std::make_pair(v2_l, v2_index);
+    while (vertex_v !=
+           std::make_pair((label_t) UINT8_MAX, (vid_t) UINT32_MAX)) {
+      result_.push_back(vertex_v);
+      vertex_v = parent[vertex_v];
     }
     std::reverse(result_.begin(), result_.end());
     return true;
@@ -194,10 +210,11 @@ bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
   }
 }
 
-std::vector<int64_t> ShortestPathAmongThree::ConnectPath(
-    const std::vector<int64_t>& path1, const std::vector<int64_t>& path2,
-    const std::vector<int64_t>& path3) {
-  std::vector<int64_t> TSP;
+std::vector<std::pair<label_t, vid_t>> ShortestPathAmongThree::ConnectPath(
+    const std::vector<std::pair<label_t, vid_t>>& path1,
+    const std::vector<std::pair<label_t, vid_t>>& path2,
+    const std::vector<std::pair<label_t, vid_t>>& path3) {
+  std::vector<std::pair<label_t, vid_t>> TSP;
   size_t v1v2size = path1.size();
   size_t v2v3size = path2.size();
   size_t v1v3size = path3.size();

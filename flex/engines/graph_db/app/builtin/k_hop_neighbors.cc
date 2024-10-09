@@ -36,8 +36,14 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
     return false;  // The requested label doesn't exits.
   }
   label_t vertex_label_ = schema_.get_vertex_label_id(label_name);
-
-  std::unordered_set<int64_t> k_neighbors;
+  struct pair_hash {
+    std::size_t operator()(const std::pair<label_t, vid_t>& p) const {
+      auto hash1 = std::hash<label_t>{}(p.first);
+      auto hash2 = std::hash<vid_t>{}(p.second);
+      return hash1 ^ (hash2 << 1);
+    }
+  };
+  std::unordered_set<std::pair<label_t, vid_t>, pair_hash> k_neighbors;
 
   int vertex_size_ = (int) schema_.vertex_label_num();
   int edge_size_ = (int) schema_.edge_label_num();
@@ -66,11 +72,11 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
                 k);  // 1.self_label 2.self_index 3.edge_label 4.nei_label
             while (outedges.IsValid()) {
               auto neighbor = outedges.GetNeighbor();
-              int64_t vid = txn.GetVertexId(j, neighbor).AsInt64();
-              if (k_neighbors.find(vid) == k_neighbors.end()) {
+              if (k_neighbors.find(std::make_pair(j, neighbor)) ==
+                  k_neighbors.end()) {
                 next_nei_label_.push_back(j);
                 next_nei_indexs_.push_back(neighbor);
-                k_neighbors.insert(vid);
+                k_neighbors.insert(std::make_pair(j, neighbor));
               }
               outedges.Next();
             }
@@ -82,11 +88,11 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
                 k);  // 1.self_label 2.self_index 3.edge_label 4.nei_label
             while (inedges.IsValid()) {
               auto neighbor = inedges.GetNeighbor();
-              int64_t vid = txn.GetVertexId(j, neighbor).AsInt64();
-              if (k_neighbors.find(vid) == k_neighbors.end()) {
+              if (k_neighbors.find(std::make_pair(j, neighbor)) ==
+                  k_neighbors.end()) {
                 next_nei_label_.push_back(j);
                 next_nei_indexs_.push_back(neighbor);
-                k_neighbors.insert(vid);
+                k_neighbors.insert(std::make_pair(j, neighbor));
               }
               inedges.Next();
             }
@@ -101,16 +107,24 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
     k--;
   }
   results::CollectiveResults results;
-  for (auto vid : k_neighbors) {
+  for (auto vertex_ : k_neighbors) {
+    std::string label_name_ = schema_.get_vertex_label_name(vertex_.first);
     auto result = results.add_results();
     result->mutable_record()
         ->add_columns()
         ->mutable_entry()
         ->mutable_element()
         ->mutable_object()
-        ->set_i64(vid);
+        ->set_str(label_name_);
+    result->mutable_record()
+        ->add_columns()
+        ->mutable_entry()
+        ->mutable_element()
+        ->mutable_object()
+        ->set_i64(txn.GetVertexId(vertex_.first, vertex_.second).AsInt64());
   }
   output.put_string_view(results.SerializeAsString());
+
   txn.Commit();
   return true;
 }
