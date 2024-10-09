@@ -118,7 +118,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                                     summary.getLogicalPlan(),
                                                     summary.getPhysicalPlan()),
                                             listener,
-                                            timeoutConfig);
+                                            timeoutConfig,
+                                            statusCallback.getQueryLogger());
                                 }
                                 // request results from remote engine in a blocking way
                                 listener.request();
