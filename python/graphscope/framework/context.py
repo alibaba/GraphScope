@@ -146,7 +146,7 @@ class BaseContextDAGNode(DAGNode):
                 identical with vertices' oid type.
                 Omitting the first index starts the slice at the beginning of the vertices,
                 and omitting the second index extends the slice to the end of the vertices.
-                Note the comparision is not based on numeric order, but on alphabetic order.
+                Note the comparison is not based on numeric order, but on alphabetic order.
             axis (int): optional, default to 0.
 
         Returns:
@@ -170,7 +170,7 @@ class BaseContextDAGNode(DAGNode):
                 of vertices from `m` to, but not including `n`. Type of `m`, `n` must be
                 identical with vertices' oid type.
                 Only the sub-ranges of vertices data will be retrieved.
-                Note the comparision is not based on numeric order, but on alphabetic order.
+                Note the comparison is not based on numeric order, but on alphabetic order.
 
         Returns:
             :class:`graphscope.framework.context.ResultDAGNode`:
