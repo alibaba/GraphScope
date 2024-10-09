@@ -59,6 +59,7 @@ from gs_interactive.models import QueryRequest
 from gs_interactive.models import SchemaMapping
 from gs_interactive.models import ServiceStatus
 from gs_interactive.models import StartServiceRequest
+from gs_interactive.models import StopServiceRequest
 from gs_interactive.models import UpdateProcedureRequest
 from gs_interactive.models import UploadFileResponse
 from gs_interactive.models import VertexData
@@ -265,7 +266,7 @@ class QueryServiceInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def stop_service(self) -> Result[str]:
+    def stop_service(self, graph_id: str) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -805,13 +806,16 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def stop_service(self) -> Result[str]:
+    def stop_service(self, graph_id: str = None) -> Result[str]:
         """
         Stop the service.
         """
 
         try:
-            response = self._service_api.stop_service_with_http_info()
+            req = StopServiceRequest()
+            if graph_id:
+                req.graph_id = graph_id
+            response = self._service_api.stop_service_with_http_info(req)
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
