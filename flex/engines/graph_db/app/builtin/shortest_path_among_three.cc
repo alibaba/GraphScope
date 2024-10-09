@@ -195,32 +195,32 @@ bool ShortestPathAmongThree::ShortestPath(const gs::ReadTransaction& txn,
 }
 
 std::vector<int64_t> ShortestPathAmongThree::ConnectPath(
-    std::vector<int64_t>& path1, std::vector<int64_t>& path2,
-    std::vector<int64_t>& path3) {
+    const std::vector<int64_t>& path1, const std::vector<int64_t>& path2,
+    const std::vector<int64_t>& path3) {
   std::vector<int64_t> TSP;
-  int v1v2size = (int) path1.size();
-  int v2v3size = (int) path2.size();
-  int v1v3size = (int) path3.size();
+  size_t v1v2size = path1.size();
+  size_t v2v3size = path2.size();
+  size_t v1v3size = path3.size();
   if (v1v2size <= v2v3size && v1v3size <= v2v3size) {
-    for (int i = v1v2size - 1; i >= 0; i--) {
-      TSP.push_back(path1[i]);
+    for (size_t i = v1v2size; i > 0; i--) {
+      TSP.push_back(path1[i-1]);
     }
-    for (int i = 1; i < v1v3size; i++) {
+    for (size_t i = 1; i < v1v3size; i++) {
       TSP.push_back(path3[i]);
     }
   } else if (v1v2size <= v1v3size && v2v3size <= v1v3size) {
-    for (int i = 0; i < v1v2size; i++) {
+    for (size_t i = 0; i < v1v2size; i++) {
       TSP.push_back(path1[i]);
     }
-    for (int i = 1; i < v2v3size; i++) {
+    for (size_t i = 1; i < v2v3size; i++) {
       TSP.push_back(path2[i]);
     }
   } else if (v2v3size <= v1v2size && v1v3size <= v1v2size) {
-    for (int i = 0; i < v2v3size; i++) {
+    for (size_t i = 0; i < v2v3size; i++) {
       TSP.push_back(path2[i]);
     }
-    for (int i = v1v3size - 2; i >= 0; i--) {
-      TSP.push_back(path3[i]);
+    for (size_t i = v1v3size - 1; i > 0; i--) {
+      TSP.push_back(path3[i-1]);
     }
   }
   return TSP;
