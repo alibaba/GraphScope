@@ -73,9 +73,8 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
                                 .orElse(settings.resultIterationBatchSize);
         this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
-        this.responseStreamIterator =
-                new StreamIterator<>(
-                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
+        int capacity = FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs);
+        this.responseStreamIterator = new StreamIterator<>(capacity);
     }
 
     @Override

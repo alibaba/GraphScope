@@ -185,7 +185,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                                                 jobName,
                                                 summary.getLogicalPlan(),
                                                 summary.getPhysicalPlan());
-                                client.submit(request, listener, timeoutConfig);
+                                client.submit(request, listener, timeoutConfig, statusCallback.getQueryLogger());
                             }
                         };
             }
