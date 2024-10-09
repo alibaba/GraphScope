@@ -257,5 +257,5 @@ message ReplayRecordsRequestV2 {
 }
 
 message ReplayRecordsResponseV2 {
-  bool success = 1;
+  repeated int64 snapshot_id = 1;
 }

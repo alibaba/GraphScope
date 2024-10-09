@@ -220,7 +220,7 @@ class Connection:
         response = self._client_service_stub.replayRecordsV2(
             request, metadata=self._metadata
         )
-        return response.success
+        return response.snapshot_id
 
     def _encode_metadata(self, username, password):
         if not (username and password):

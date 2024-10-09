@@ -591,6 +591,4 @@ public class StoreService {
         long usable = file.getUsableSpace();
         return new long[] {total, usable};
     }
-
-    public void replayRecordsV2(long offset, long timestamp) throws IOException {}
 }

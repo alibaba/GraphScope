@@ -20,14 +20,17 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStoreServiceImplBase {
 
     private final StoreService storeService;
+    private final KafkaProcessor processor;
 
-    public FrontendStoreService(StoreService storeService) {
+    public FrontendStoreService(StoreService storeService, KafkaProcessor processor) {
         this.storeService = storeService;
+        this.processor = processor;
     }
 
     @Override
@@ -135,8 +138,9 @@ public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStore
         try {
             long offset = request.getOffset();
             long ts = request.getTimestamp();
-            this.storeService.replayRecordsV2(offset, ts);
-            responseObserver.onNext(ReplayRecordsResponseV2.newBuilder().setSuccess(true).build());
+            List<Long> si = this.processor.replayDMLRecordsFrom(offset, ts);
+            responseObserver.onNext(
+                    ReplayRecordsResponseV2.newBuilder().addAllSnapshotId(si).build());
             responseObserver.onCompleted();
         } catch (IOException e) {
             responseObserver.onError(

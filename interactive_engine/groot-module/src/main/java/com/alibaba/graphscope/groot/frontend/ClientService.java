@@ -540,7 +540,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void replayRecordsV2(
             ReplayRecordsRequestV2 request,
             StreamObserver<ReplayRecordsResponseV2> responseObserver) {
-        ReplayRecordsResponseV2.Builder response = ReplayRecordsResponseV2.newBuilder().setSuccess(true);
+        ReplayRecordsResponseV2.Builder response = ReplayRecordsResponseV2.newBuilder();
         logger.info("replay records v2");
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
@@ -563,7 +563,6 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                 @Override
                                 public void onError(Throwable t) {
                                     logger.error("failed to replay records", t);
-                                    response.setSuccess(false);
                                     finish(t);
                                 }
 

@@ -136,7 +136,8 @@ public class FrontendStoreClient extends RpcClient {
                         });
     }
 
-    public void replayRecordsV2(ReplayRecordsRequestV2 request, CompletionCallback<ReplayRecordsResponseV2> callback) {
+    public void replayRecordsV2(
+            ReplayRecordsRequestV2 request, CompletionCallback<ReplayRecordsResponseV2> callback) {
         getStub()
                 .replayRecordsV2(
                         request,

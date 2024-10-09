@@ -101,7 +101,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 syncStats(statsEnabled);
             }
         } catch (Throwable e) {
-            logger.warn("failed to read meta data, error is {}", e);
+            logger.warn("failed to read meta data", e);
         }
     }
 

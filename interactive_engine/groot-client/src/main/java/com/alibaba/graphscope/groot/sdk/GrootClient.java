@@ -101,14 +101,14 @@ public class GrootClient implements Writer {
         return resp.getSnapshotIdList();
     }
 
-    public boolean replayRecordsV2(long offset, long timestamp) {
+    public List<Long> replayRecordsV2(long offset, long timestamp) {
         ReplayRecordsRequestV2 req =
                 ReplayRecordsRequestV2.newBuilder()
                         .setOffset(offset)
                         .setTimestamp(timestamp)
                         .build();
         ReplayRecordsResponseV2 resp = this.clientStub.replayRecordsV2(req);
-        return resp.getSuccess();
+        return resp.getSnapshotIdList();
     }
 
     private long modifyVertex(Vertex vertex, WriteTypePb writeType) {
