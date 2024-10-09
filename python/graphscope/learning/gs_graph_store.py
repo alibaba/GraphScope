@@ -138,7 +138,16 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
-        return [attr for attr in self.edge_attrs.values()]
+        result = []
+        for attr in self.edge_attrs.values():
+            if attr.size is None:
+                self._get_edge_index(attr)
+                result.append(
+                    self.edge_attrs[(attr.edge_type, attr.layout.value, attr.is_sorted)]
+                )
+            else:
+                result.append(attr)
+        return result
 
     @classmethod
     def from_ipc_handle(cls, ipc_handle):

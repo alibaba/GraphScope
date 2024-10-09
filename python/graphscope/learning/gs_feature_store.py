@@ -31,6 +31,15 @@ class GsTensorAttr(TensorAttr):
     group_name: Optional[Union[NodeType, EdgeType]] = _FieldStatus.UNSET
     is_label: Optional[bool] = False
 
+    def is_fully_specified(self) -> bool:
+        r"""Whether the :obj:`TensorAttr` has no unset fields."""
+        result = True
+        for key in self.__dataclass_fields__:
+            if not self.is_set(key) and key != "attr_name":
+                result = False
+                break
+        return result
+
 
 class GsFeatureStore(FeatureStore):
     def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
