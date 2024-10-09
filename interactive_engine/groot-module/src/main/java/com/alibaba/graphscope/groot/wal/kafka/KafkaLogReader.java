@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
+import com.alibaba.graphscope.groot.common.exception.InternalException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
@@ -63,7 +65,7 @@ public class KafkaLogReader implements LogReader {
             offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
         }
         if (earliest > offset || offset > latest) {
-            throw new IllegalArgumentException(
+            throw new InvalidArgumentException(
                     "invalid offset " + offset + ", hint: [" + earliest + ", " + latest + ")");
         }
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
@@ -78,15 +80,14 @@ public class KafkaLogReader implements LogReader {
                 latest);
     }
 
-    private long getOffset(AdminClient client, TopicPartition partition, OffsetSpec spec)
-            throws IOException {
+    private long getOffset(AdminClient client, TopicPartition partition, OffsetSpec spec) {
         try {
             return client.listOffsets(Collections.singletonMap(partition, spec))
                     .partitionResult(partition)
                     .get()
                     .offset();
         } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.common.schema.unified;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,7 +39,7 @@ public class Graph implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(String label) throws GraphElementNotFoundException {
+    public GraphElement getElement(String label) throws TypeNotFoundException {
         for (Type type : schema.vertexTypes) {
             if (Objects.equals(type.getLabel(), label)) {
                 return type;
@@ -54,7 +54,7 @@ public class Graph implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(int labelId) throws GraphElementNotFoundException {
+    public GraphElement getElement(int labelId) throws TypeNotFoundException {
         for (Type type : schema.vertexTypes) {
             if (type.getLabelId() == labelId) {
                 return type;
@@ -81,7 +81,7 @@ public class Graph implements GraphSchema {
     }
 
     @Override
-    public Integer getPropertyId(String propName) throws GraphPropertyNotFoundException {
+    public Integer getPropertyId(String propName) throws PropertyNotFoundException {
         for (Type type : schema.vertexTypes) {
             for (GraphProperty property : type.getPropertyList()) {
                 if (Objects.equals(property.getName(), propName)) {
@@ -100,7 +100,7 @@ public class Graph implements GraphSchema {
     }
 
     @Override
-    public String getPropertyName(int propId) throws GraphPropertyNotFoundException {
+    public String getPropertyName(int propId) throws PropertyNotFoundException {
         for (Type type : schema.vertexTypes) {
             for (GraphProperty property : type.getPropertyList()) {
                 if (Objects.equals(property.getId(), propId)) {

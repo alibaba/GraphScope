@@ -21,8 +21,6 @@ package com.alibaba.graphscope.common.ir.meta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.util.Objects;
 
 /**
@@ -33,10 +31,10 @@ public class IrMeta {
     protected final GraphId graphId;
     protected final SnapshotId snapshotId;
     protected final IrGraphSchema schema;
-    protected final @Nullable GraphStoredProcedures storedProcedures;
+    protected final GraphStoredProcedures storedProcedures;
 
     public IrMeta(IrGraphSchema schema) {
-        this(SnapshotId.createEmpty(), schema);
+        this(GraphId.DEFAULT, SnapshotId.createEmpty(), schema, new GraphStoredProcedures());
     }
 
     public IrMeta(IrGraphSchema schema, GraphStoredProcedures storedProcedures) {
@@ -44,7 +42,7 @@ public class IrMeta {
     }
 
     public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) {
-        this(GraphId.DEFAULT, snapshotId, schema, null);
+        this(GraphId.DEFAULT, snapshotId, schema, new GraphStoredProcedures());
     }
 
     public IrMeta(
@@ -55,7 +53,7 @@ public class IrMeta {
         this.graphId = graphId;
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
-        this.storedProcedures = storedProcedures;
+        this.storedProcedures = Objects.requireNonNull(storedProcedures);
     }
 
     public IrGraphSchema getSchema() {
@@ -66,7 +64,7 @@ public class IrMeta {
         return snapshotId;
     }
 
-    public @Nullable GraphStoredProcedures getStoredProcedures() {
+    public GraphStoredProcedures getStoredProcedures() {
         return storedProcedures;
     }
 

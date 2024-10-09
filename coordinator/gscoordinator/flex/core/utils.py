@@ -24,9 +24,128 @@ import random
 import re
 import socket
 import string
+import time
 from typing import Union
 
 import requests
+from kubernetes import client as kube_client
+from kubernetes import config as kube_config
+
+logger = logging.getLogger("graphscope")
+
+
+def resolve_api_client(k8s_config_file=None):
+    """Get ApiClient from predefined locations.
+
+    Args:
+        k8s_config_file(str): Path to kubernetes config file.
+
+    Raises:
+        RuntimeError: K8s api client resolve failed.
+
+    Returns:
+        An kubernetes ApiClient object, initialized with the client args.
+
+    The order of resolution as follows:
+        1. load from kubernetes config file or,
+        2. load from incluster configuration
+
+    RuntimeError will be raised if resolution failed.
+    """
+    try:
+        # load from kubernetes config file
+        kube_config.load_kube_config(k8s_config_file)
+    except:  # noqa: E722
+        try:
+            # load from incluster configuration
+            kube_config.load_incluster_config()
+        except:  # noqa: E722
+            raise RuntimeError("Resolve kube api client failed.")
+    return kube_client.ApiClient()
+
+
+def get_service_endpoints(  # noqa: C901
+    api_client,
+    namespace,
+    name,
+    service_type,
+    timeout_seconds=60,
+    query_port=None,
+):
+    """Get service endpoint by service name and service type.
+
+    Args:
+        api_client: ApiClient
+            An kubernetes ApiClient object, initialized with the client args.
+        namespace: str
+            Namespace of the service belongs to.
+        name: str
+            Service name.
+        service_type: str
+            Service type. Valid options are NodePort, LoadBalancer and ClusterIP.
+        timeout_seconds: int
+            Raise TimeoutError after the duration, only used in LoadBalancer type.
+
+    Raises:
+        TimeoutError: If the underlying cloud-provider doesn't support the LoadBalancer
+            service type.
+        K8sError: The service type is not one of (NodePort, LoadBalancer, ClusterIP). Or
+            the service has no endpoint.
+
+    Returns: A list of endpoint.
+        If service type is LoadBalancer, format with <load_balancer_ip>:<port>. And
+        if service type is NodePort, format with <host_ip>:<node_port>, And
+        if service type is ClusterIP, format with <cluster_ip>:<port>
+    """
+    start_time = time.time()
+
+    core_api = kube_client.CoreV1Api(api_client)
+    svc = core_api.read_namespaced_service(name=name, namespace=namespace)
+
+    # get pods
+    selector = ",".join([f"{k}={v}" for k, v in svc.spec.selector.items()])
+    pods = core_api.list_namespaced_pod(namespace=namespace, label_selector=selector)
+
+    ips = []
+    ports = []
+    if service_type == "NodePort":
+        for pod in pods.items:
+            ips.append(pod.status.host_ip)
+        for port in svc.spec.ports:
+            if query_port is None or port.port == query_port:
+                ports.append(port.node_port)
+    elif service_type == "LoadBalancer":
+        while True:
+            svc = core_api.read_namespaced_service(name=name, namespace=namespace)
+            if svc.status.load_balancer.ingress is None:
+                if time.time() - start_time > timeout_seconds:
+                    raise TimeoutError(
+                        "LoadBalancer service type is not supported yet."
+                    )
+                time.sleep(1)
+                continue
+            for ingress in svc.status.load_balancer.ingress:
+                if ingress.hostname is not None:
+                    ips.append(ingress.hostname)
+                else:
+                    ips.append(ingress.ip)
+            for port in svc.spec.ports:
+                if query_port is None or port.port == query_port:
+                    ports.append(port.port)
+            break
+    elif service_type == "ClusterIP":
+        ips.append(svc.spec.cluster_ip)
+        for port in svc.spec.ports:
+            if query_port is None or port.port == query_port:
+                ports.append(port.port)
+    else:
+        raise RuntimeError("Service type {0} is not supported yet".format(service_type))
+
+    if not ips or not ports:
+        raise RuntimeError(f"Get {service_type} service {name} failed.")
+
+    endpoints = [f"{ip}:{port}" for ip in ips for port in ports]
+    return endpoints
 
 
 def handle_api_exception():
@@ -38,7 +157,7 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logging.info(str(e))
+                logger.info(str(e))
                 return str(e), 500
 
         return wrapper
@@ -52,6 +171,7 @@ def decode_datetimestr(datetime_str):
         "%Y-%m-%d %H:%M:%S.%f",
         "%Y-%m-%d",
         "%Y-%m-%d-%H-%M-%S",
+        "%Y-%m-%d-%H-%M-%S-%f",
     ]
     for f in formats:
         try:
@@ -116,65 +236,20 @@ def get_public_ip() -> Union[str, None]:
         else:
             return None
     except requests.exceptions.RequestException as e:
-        logging.warn("Failed to get public ip: %s", str(e))
+        logger.warn("Failed to get public ip: %s", str(e))
         return None
 
 
-def data_type_to_groot(t):
-    if t == "DT_DOUBLE":
-        return "long"
-    elif t == "DT_STRING":
+def data_type_to_groot(property_type):
+    if property_type["primitive_type"] is not None:
+        t = property_type["primitive_type"]
+        if t == "DT_DOUBLE":
+            return "double"
+        elif t == "DT_SIGNED_INT32" or t == "DT_SIGNED_INT64":
+            return "long"
+        else:
+            raise RuntimeError(f"Data type {t} is not supported yet.")
+    elif property_type["string"] is not None:
         return "str"
-    elif t == "DT_SIGNED_INT32":
-        return "long"
-    elif t == "DT_SIGNED_INT64":
-        return "long"
     else:
-        raise RuntimeError(f"Data type {t} is not supported yet.")
-
-
-class GraphInfo(object):
-    def __init__(
-        self, name, creation_time, update_time=None, last_dataloading_time=None
-    ):
-        self._name = name
-        self._creation_time = creation_time
-        self._update_time = update_time
-        if self._update_time is None:
-            self._update_time = self._creation_time
-        self._last_dataloading_time = last_dataloading_time
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def creation_time(self):
-        return self._creation_time
-
-    @property
-    def update_time(self):
-        return self._update_time
-
-    @property
-    def last_dataloading_time(self):
-        return self._last_dataloading_time
-
-    @update_time.setter
-    def update_time(self, new_time):
-        self._update_time = new_time
-
-    @last_dataloading_time.setter
-    def last_dataloading_time(self, new_time):
-        if self._last_dataloading_time is None:
-            self._last_dataloading_time = new_time
-        elif new_time > self._last_dataloading_time:
-            self._last_dataloading_time = new_time
-
-    def to_dict(self):
-        return {
-            "name": self._name,
-            "creation_time": encode_datetime(self._creation_time),
-            "update_time": encode_datetime(self._update_time),
-            "last_dataloading_time": encode_datetime(self._last_dataloading_time),
-        }
+        raise RuntimeError(f"Data type {str(property_type)} is not supported yet.")

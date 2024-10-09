@@ -1,9 +1,9 @@
 # Learning engine
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=latest
-ARG RUNTIME_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+ARG VINEYARD_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 
 ARG CI=false
 
@@ -29,7 +29,7 @@ RUN cd /home/graphscope/GraphScope/ && \
     fi
 
 ############### RUNTIME: GLE #######################
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS learning
+FROM $REGISTRY/graphscope/vineyard-runtime:$VINEYARD_VERSION-$ARCH AS learning
 
 RUN sudo apt-get update -y && \
     sudo apt-get install -y python3-pip && \

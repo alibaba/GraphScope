@@ -435,7 +435,7 @@ class GraphSchema:
                         prop["property_name"],
                         unified_type_to_data_type(prop["property_type"]),
                         is_primary_key,
-                        prop["description"],
+                        prop.get("description", ""),
                     )
                 self._vertex_labels_to_add.append(label)
             for edge in edges:
@@ -448,7 +448,7 @@ class GraphSchema:
                         prop["property_name"],
                         unified_type_to_data_type(prop["property_type"]),
                         is_primary_key,
-                        prop["description"],
+                        prop.get("description", ""),
                     )
                 for rel in edge["vertex_type_pair_relations"]:
                     label = label.source(rel["source_vertex"]).destination(

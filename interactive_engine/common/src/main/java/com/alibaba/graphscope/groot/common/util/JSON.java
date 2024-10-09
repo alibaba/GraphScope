@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.common.util;
 
-import com.alibaba.graphscope.groot.common.exception.JSONException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
@@ -25,9 +25,6 @@ import com.fasterxml.jackson.module.paranamer.ParanamerModule;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Created by wubincen on 2018/5/3
- */
 public class JSON {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -43,7 +40,7 @@ public class JSON {
         try {
             return OBJECT_MAPPER.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            throw new JSONException("JsonProcessingException : ", e);
+            throw new InvalidArgumentException("JsonProcessingException : ", e);
         }
     }
 
@@ -51,7 +48,7 @@ public class JSON {
         try {
             return (json == null || json.isEmpty()) ? null : OBJECT_MAPPER.readValue(json, typeRef);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 
@@ -59,7 +56,7 @@ public class JSON {
         try {
             return OBJECT_MAPPER.readValue(json, valueType);
         } catch (IOException e) {
-            throw new JSONException("IOException : ", e);
+            throw new InvalidArgumentException("IOException : ", e);
         }
     }
 
@@ -67,7 +64,7 @@ public class JSON {
         try {
             return OBJECT_MAPPER.readTree(json);
         } catch (IOException e) {
-            throw new JSONException("IOException : ", e);
+            throw new InvalidArgumentException("IOException : ", e);
         }
     }
 

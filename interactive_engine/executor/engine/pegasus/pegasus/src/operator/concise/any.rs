@@ -39,6 +39,7 @@ fn has_any<T: Data>(mut stream: Stream<T>) -> Result<SingleItem<bool>, BuildJobE
     stream
         .set_upstream_batch_capacity(1)
         .set_upstream_batch_size(1);
+    let worker = stream.get_worker_id().index;
     let x = stream.unary("any_global", |info| {
         let mut any_map = TidyTagMap::<()>::new(info.scope_level);
         move |input, output| {
@@ -60,7 +61,6 @@ fn has_any<T: Data>(mut stream: Stream<T>) -> Result<SingleItem<bool>, BuildJobE
 
                 if let Some(end) = batch.take_end() {
                     if any_map.remove(batch.tag()).is_none() {
-                        let worker = crate::worker_id::get_current_worker().index;
                         if end.peers_contains(worker) {
                             output
                                 .new_session(batch.tag())?

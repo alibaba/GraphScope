@@ -1,29 +1,32 @@
-<configuration scan="true" scanPeriod="30 seconds">
-    <property name="log_dir" value="${log.dir:-/var/log/graphscope}"/>
-    <property name="log_name" value="${log.name:-groot}"/>
+<configuration scan="true" scanPeriod="60 seconds">
+    <property name="log_dir" value="${LOG_DIR:-/var/log/graphscope}"/>
+    <property name="log_name" value="${LOG_NAME:-graphscope-store}"/>
+    <property name="log_max_file_size" value="${LOG_MAX_FILE_SIZE:-100MB}"/>
+    <property name="log_max_history" value="${LOG_MAX_HISTORY:-10}"/>
+    <property name="log_total_size_cap" value="${LOG_TOTAL_SIZE_CAP:-1GB}"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/${log_name}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log_dir}/${log_name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>100MB</maxFileSize>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
+            <fileNamePattern>${log_dir}/${log_name}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${log_max_file_size}</maxFileSize>
+            <maxHistory>${log_max_history}</maxHistory>
+            <totalSizeCap>${log_total_size_cap}</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c{3}] %m%n %X</pattern>
         </encoder>
     </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c{3}] %m%n %X</pattern>
         </encoder>
     </appender>
     <appender name="Metric" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/metric.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log_dir}/metric.log.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${log_dir}/metric.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>5</maxHistory>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
@@ -34,6 +37,7 @@
     <logger name="org.apache.zookeeper" level="ERROR" />
     <logger name="org.apache.kafka" level="ERROR" />
     <logger name="kafka" level="ERROR" />
+    <logger name="io.grpc.netty" level="ERROR" />
     <Logger name="MetricLog" level="INFO" additivity="false">
         <appender-ref ref="Metric"/>
     </Logger>

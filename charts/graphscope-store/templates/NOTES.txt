@@ -25,3 +25,34 @@
   export GREMLIN_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ $serviceName }} -o jsonpath="{.spec.ports[1].nodePort}")
   echo "GRPC endpoint is: ${NODE_IP}:${GRPC_PORT}"
   echo "GREMLIN endpoint is: ${NODE_IP}:${GREMLIN_PORT}"
+
+{{ if .Values.portal.enabled }}
+{{- $portalServiceName := include "graphscope-store.portal.fullname" . }}
+
+2. Get flex coordinator endpoint by running these commands:
+
+{{- if contains "NodePort" .Values.portal.service.type }}
+
+    export COORDINATOR_NODE_IP=$(kubectl -n {{ .Release.Namespace }} get pod {{ $portalServiceName }}-0 -o jsonpath="{.status.hostIP}")
+
+{{- else if contains "LoadBalancer" .Values.portal.service.type }}
+
+  It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status by executing:
+
+    kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ $portalServiceName }}
+
+  After the EXTERNAL_IP is available, executing these commands:
+
+    export COORDINATOR_NODE_IP=$(kubectl -n {{ .Release.Namespace }} get svc {{ $portalServiceName }} -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+
+{{- end }}
+
+    export HTTP_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ $portalServiceName }} -o jsonpath="{.spec.ports[0].nodePort}")
+    echo "Coordinator service endpoint is: ${COORDINATOR_NODE_IP}:${HTTP_PORT}"
+
+  It may take a few minutes for service to be available, you can connect to the coordinator service multiple times by:
+
+    gsctl connect --coordinator-endpoint http://${COORDINATOR_NODE_IP}:${HTTP_PORT}
+
+{{- end }}

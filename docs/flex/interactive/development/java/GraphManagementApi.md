@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # GraphManagementApi
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -15,7 +17,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="ListGraphs"></a>
 # **ListGraphs**
-> Result&lt;List&lt;GetGraphResponse&gt;&gt; getAllGraphs()
+> [Result][Result-doc]&lt;List&lt;GetGraphResponse&gt;&gt; getAllGraphs()
 
 
 
@@ -51,7 +53,7 @@ None.
 
 ### Return type
 
-[**Result&lt;List&lt;GetGraphResponse&gt;&gt;**](GetGraphResponse.md)
+[Result][Result-doc]&lt;List&lt;[GetGraphResponse](GetGraphResponse.md)&gt;&gt;
 
 ### Authorization
 
@@ -70,7 +72,7 @@ No authorization required
 
 <a id="CreateGraph"></a>
 # **CreateGraph**
-> Result&lt;CreateGraphResponse&gt; createGraph(createGraphRequest)
+> [Result][Result-doc]&lt;CreateGraphResponse&gt; createGraph(createGraphRequest)
 
 
 
@@ -159,7 +161,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;CreateGraphResponse&gt;**](CreateGraphResponse.md)
+[Result][Result-doc]&lt;[CreateGraphResponse](CreateGraphResponse.md)&gt;
 
 ### Authorization
 
@@ -180,7 +182,7 @@ No authorization required
 
 <a id="BulkLoading"></a>
 # **BulkLoading**
-> Result&lt;JobResponse&gt; bulkLoading(graphId, schemaMapping)
+> [Result][Result-doc]&lt;JobResponse&gt; bulkLoading(graphId, schemaMapping)
 
 
 
@@ -313,7 +315,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;JobResponse&gt;**](JobResponse.md)
+[Result][Result-doc]&lt;[JobResponse](JobResponse.md)&gt;
 
 ### Authorization
 
@@ -331,7 +333,7 @@ No authorization required
 
 <a id="DeleteGraph"></a>
 # **DeleteGraph**
-> Result&lt;String&gt; deleteGraph(graphId)
+> [Result][Result-doc]&lt;String&gt; deleteGraph(graphId)
 
 
 
@@ -370,7 +372,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -390,7 +392,7 @@ No authorization required
 
 <a id="GetGraphMeta"></a>
 # **GetGraphMeta**
-> Result&lt;GetGraphResponse&gt; getGraphMeta(graphId)
+> [Result][Result-doc]&lt;GetGraphResponse&gt; getGraphMeta(graphId)
 
 
 
@@ -428,7 +430,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;GetGraphResponse&gt;**](GetGraphResponse.md)
+[Result][Result-doc]&lt;[GetGraphResponse](GetGraphResponse.md)&gt;
 
 ### Authorization
 
@@ -542,7 +544,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;GetGraphSchemaResponse&gt;**](GetGraphSchemaResponse.md)
+[Result][Result-doc]&lt;[GetGraphSchemaResponse](GetGraphSchemaResponse.md)&gt;
 
 ### Authorization
 

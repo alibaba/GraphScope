@@ -97,17 +97,17 @@ public class CBOTest {
                     + " projFields=[[ALL, ALL]])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
                     + " alias=[message], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "      CommonTableScan(table=[[common#-1649429364]])\n"
+                    + "      CommonTableScan(table=[[common#1999380205]])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[message], startAlias=[person2], opt=[IN], physicalOpt=[VERTEX])\n"
-                    + "      CommonTableScan(table=[[common#-1649429364]])\n"
-                    + "common#-1649429364:\n"
+                    + "      CommonTableScan(table=[[common#1999380205]])\n"
+                    + "common#1999380205:\n"
                     + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMODERATOR]}],"
-                    + " alias=[person1], startAlias=[place], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + " alias=[person2], startAlias=[place], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMODERATOR]}],"
-                    + " alias=[place], startAlias=[person2], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + " alias=[place], startAlias=[person1], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person2], opt=[VERTEX])",
+                    + " alias=[person1], opt=[VERTEX])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 

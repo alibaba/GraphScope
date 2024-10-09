@@ -19,35 +19,32 @@
 import itertools
 import logging
 import os
-import socket
 import threading
 from typing import List
 
-import psutil
-
 from gscoordinator.flex.core.config import CLUSTER_TYPE
-from gscoordinator.flex.core.config import CREATION_TIME
 from gscoordinator.flex.core.config import DATASET_WORKSPACE
-from gscoordinator.flex.core.config import ENGINE_TYPE
-from gscoordinator.flex.core.config import FRONTEND_TYPE
-from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import SOLUTION
-from gscoordinator.flex.core.config import STORAGE_TYPE
 from gscoordinator.flex.core.datasource import DataSourceManager
+from gscoordinator.flex.core.deployment import initialize_deployemnt
 from gscoordinator.flex.core.insight import init_groot_client
 from gscoordinator.flex.core.interactive import init_hqps_client
-from gscoordinator.flex.core.utils import encode_datetime
 from gscoordinator.flex.core.utils import parse_file_metadata
 from gscoordinator.flex.models import CreateDataloadingJobResponse
 from gscoordinator.flex.models import CreateEdgeType
 from gscoordinator.flex.models import CreateGraphRequest
 from gscoordinator.flex.models import CreateGraphResponse
+from gscoordinator.flex.models import CreateGraphSchemaRequest
 from gscoordinator.flex.models import CreateStoredProcRequest
 from gscoordinator.flex.models import CreateStoredProcResponse
 from gscoordinator.flex.models import CreateVertexType
 from gscoordinator.flex.models import DataloadingJobConfig
+from gscoordinator.flex.models import DataloadingMRJobConfig
 from gscoordinator.flex.models import GetGraphResponse
 from gscoordinator.flex.models import GetGraphSchemaResponse
+from gscoordinator.flex.models import GetPodLogResponse
+from gscoordinator.flex.models import GetResourceUsageResponse
+from gscoordinator.flex.models import GetStorageUsageResponse
 from gscoordinator.flex.models import GetStoredProcResponse
 from gscoordinator.flex.models import JobStatus
 from gscoordinator.flex.models import RunningDeploymentInfo
@@ -57,7 +54,8 @@ from gscoordinator.flex.models import ServiceStatus
 from gscoordinator.flex.models import StartServiceRequest
 from gscoordinator.flex.models import UpdateStoredProcRequest
 from gscoordinator.flex.models import UploadFileResponse
-from gscoordinator.version import __version__
+
+logger = logging.getLogger("graphscope")
 
 
 class ClientWrapper(object):
@@ -70,6 +68,8 @@ class ClientWrapper(object):
         self._client = self._initialize_client()
         # data source management
         self._datasource_manager = DataSourceManager()
+        # deployment
+        self._deployment = initialize_deployemnt()
 
     def _initialize_client(self):
         service_initializer = {
@@ -78,7 +78,7 @@ class ClientWrapper(object):
         }
         initializer = service_initializer.get(SOLUTION)
         if initializer is None:
-            logging.warn(f"Client initializer of {SOLUTION} not found.")
+            logger.warn(f"Client initializer of {SOLUTION} not found.")
             return None
         return initializer()
 
@@ -130,15 +130,13 @@ class ClientWrapper(object):
         response = self._client.create_graph(graph_dict)
         return CreateGraphResponse.from_dict(response)
 
+    def import_schema(self, graph_id: str, schema: CreateGraphSchemaRequest) -> str:
+        self._client.import_schema(graph_id, schema.to_dict())
+        return "Import schema successfully"
+
     def create_vertex_type(self, graph_id: str, vtype: CreateVertexType) -> str:
         self._client.create_vertex_type(graph_id, vtype.to_dict())
         return "Create vertex type successfully"
-        # if SOLUTION == "GRAPHSCOPE_INSIGHT":
-        # graph_name = INSTANCE_NAME
-        # vtype_dict = vtype.to_dict()
-        # rlt = self._client.create_vertex_type(graph_name, vtype_dict)
-        # # self._graphs_info[graph_name].update_time = get_current_time()
-        # return rlt
 
     def create_edge_type(self, graph_id: str, etype: CreateEdgeType) -> str:
         self._client.create_edge_type(graph_id, etype.to_dict())
@@ -206,10 +204,7 @@ class ClientWrapper(object):
         stored_procedures = self._client.list_stored_procedures(graph_id)
         for sp in stored_procedures:
             for item in itertools.chain(sp["params"], sp["returns"]):
-                if (
-                    "string" in item["type"]
-                    and "long_text" in item["type"]["string"]
-                ):
+                if "string" in item["type"] and "long_text" in item["type"]["string"]:
                     item["type"]["string"]["long_text"] = ""
         # transfer
         rlt = [GetStoredProcResponse.from_dict(p) for p in stored_procedures]
@@ -236,40 +231,27 @@ class ClientWrapper(object):
     ) -> GetStoredProcResponse:
         sp = self._client.get_stored_procedure_by_id(graph_id, stored_procedure_id)
         for item in itertools.chain(sp["params"], sp["returns"]):
-            if (
-                "string" in item["type"]
-                and "long_text" in item["type"]["string"]
-            ):
+            if "string" in item["type"] and "long_text" in item["type"]["string"]:
                 item["type"]["string"]["long_text"] = ""
         return GetStoredProcResponse.from_dict(sp)
 
     def get_deployment_info(self) -> RunningDeploymentInfo:
-        info = {
-            "instance_name": INSTANCE_NAME,
-            "cluster_type": CLUSTER_TYPE,
-            "version": __version__,
-            "frontend": FRONTEND_TYPE,
-            "engine": ENGINE_TYPE,
-            "storage": STORAGE_TYPE,
-            "creation_time": encode_datetime(CREATION_TIME),
-        }
-        return RunningDeploymentInfo.from_dict(info)
+        return RunningDeploymentInfo.from_dict(self._deployment.get_deployment_info())
 
     def get_deployment_status(self) -> RunningDeploymentStatus:
-        status = {"cluster_type": CLUSTER_TYPE, "nodes": []}
-        if CLUSTER_TYPE == "HOSTS":
-            disk_info = psutil.disk_usage("/")
-            status["nodes"].append(
-                {
-                    "name": socket.gethostname(),
-                    "cpu_usage": psutil.cpu_percent(),
-                    "memory_usage": psutil.virtual_memory().percent,
-                    "disk_usage": float(
-                        f"{disk_info.used / disk_info.total * 100:.2f}"
-                    ),
-                }
-            )
-        return RunningDeploymentStatus.from_dict(status)
+        return RunningDeploymentStatus.from_dict(
+            self._deployment.get_deployment_status()
+        )
+
+    def get_deployment_resource_usage(self) -> GetResourceUsageResponse:
+        return GetResourceUsageResponse.from_dict(self._deployment.get_resource_usage())
+
+    def get_deployment_pod_log(
+        self, pod_name: str, component: str, from_cache: bool
+    ) -> GetPodLogResponse:
+        return GetPodLogResponse.from_dict(
+            {"log": self._deployment.fetch_pod_log(component, pod_name, from_cache)}
+        )
 
     def get_service_status_by_id(self, graph_id: str) -> ServiceStatus:
         status = self._client.list_service_status()
@@ -297,8 +279,8 @@ class ClientWrapper(object):
     def get_job_by_id(self, job_id: str) -> JobStatus:
         return JobStatus.from_dict(self._client.get_job_by_id(job_id))
 
-    def delete_job_by_id(self, job_id: str) -> str:
-        return self._client.delete_job_by_id(job_id)
+    def delete_job_by_id(self, job_id: str, delete_scheduler: bool) -> str:
+        return self._client.delete_job_by_id(job_id, delete_scheduler)
 
     def submit_dataloading_job(
         self, graph_id: str, dataloading_job_config: DataloadingJobConfig
@@ -309,17 +291,23 @@ class ClientWrapper(object):
         )
         return CreateDataloadingJobResponse.from_dict({"job_id": job_id})
 
-    def get_dataloading_job_config(self, graph_id: str) -> DataloadingJobConfig:
-        return DataloadingJobConfig.from_dict(
-            self._client.get_dataloading_job_config(graph_id)
+    def get_dataloading_job_config(
+        self, graph_id: str, dataloading_job_config: DataloadingJobConfig
+    ) -> DataloadingMRJobConfig:
+        config = dataloading_job_config.to_dict()
+        return DataloadingMRJobConfig.from_dict(
+            self._client.get_dataloading_job_config(
+                graph_id, config, self._datasource_manager
+            )
         )
 
     def upload_file(self, filestorage) -> str:
-        if CLUSTER_TYPE == "HOSTS":
-            filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
-            filestorage.save(filepath)
-            metadata = parse_file_metadata(filepath)
-            return UploadFileResponse.from_dict({"file_path": filepath, "metadata": metadata})
+        filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
+        filestorage.save(filepath)
+        metadata = parse_file_metadata(filepath)
+        return UploadFileResponse.from_dict(
+            {"file_path": filepath, "metadata": metadata}
+        )
 
     def bind_datasource_in_batch(
         self, graph_id: str, schema_mapping: SchemaMapping
@@ -370,6 +358,14 @@ class ClientWrapper(object):
             graph_id, edge_type, source_vertex_type, destination_vertex_type
         )
         return "Unbind edge data source successfully"
+
+    def get_storage_usage(self) -> GetStorageUsageResponse:
+        return GetStorageUsageResponse.from_dict(
+            {"storage_usage": self._client.get_storage_usage()}
+        )
+
+    def gremlin_service_available(self) -> bool:
+        return self._client.gremlin_service_available()
 
 
 client_wrapper = ClientWrapper()

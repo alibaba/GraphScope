@@ -153,8 +153,6 @@ class GetVertexType(Model):
         :param type_id: The type_id of this GetVertexType.
         :type type_id: int
         """
-        if type_id is None:
-            raise ValueError("Invalid value for `type_id`, must not be `None`")  # noqa: E501
 
         self._type_id = type_id
 

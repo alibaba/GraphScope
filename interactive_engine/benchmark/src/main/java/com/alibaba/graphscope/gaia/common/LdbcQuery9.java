@@ -23,8 +23,7 @@ public class LdbcQuery9 extends CommonQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         singleParameter.put("maxDate", transformDate(singleParameter.get("maxDate")));
         for (String parameter : singleParameter.keySet()) {
             gremlinQueryPattern =

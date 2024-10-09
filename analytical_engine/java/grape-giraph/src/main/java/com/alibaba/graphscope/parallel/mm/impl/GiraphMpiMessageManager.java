@@ -117,6 +117,7 @@ public class GiraphMpiMessageManager<
                 "Frag [{}] totally Received [{}] bytes from others starting deserialization",
                 fragId,
                 bytesOfReceivedMsg);
+        tmpVector.delete();
     }
 
     /**

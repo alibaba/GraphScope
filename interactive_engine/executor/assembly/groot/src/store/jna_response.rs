@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::os::raw::{c_char, c_void};
 
-use groot_store::db::api::{GraphError, GraphErrorCode, GraphResult};
+use groot_store::db::api::{ErrorCode, GraphError, GraphResult};
 
 #[repr(C)]
 #[allow(non_snake_case)]
@@ -52,7 +52,7 @@ impl JnaResponse {
     pub fn data(&mut self, data: Vec<u8>) -> GraphResult<()> {
         if data.len() != data.capacity() {
             let msg = format!("data len {} must eq capacity {}", data.len(), data.capacity());
-            return Err(GraphError::new(GraphErrorCode::InvalidData, msg));
+            return Err(GraphError::new(ErrorCode::INVALID_DATA, msg));
         }
         self.data = data.as_ptr() as *const c_void;
         self.len = data.len() as i32;

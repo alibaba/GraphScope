@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.common.schema.unified;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidDataTypeException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 
 public class PropertyType {
@@ -39,6 +40,6 @@ public class PropertyType {
                     return DataType.DOUBLE;
             }
         }
-        throw new RuntimeException("Cannot parse propertyType " + this);
+        throw new InvalidDataTypeException("Cannot parse propertyType " + this);
     }
 }

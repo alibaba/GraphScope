@@ -17,7 +17,7 @@ syntax = "proto3";
 
 package gs.rpc;
 
-import "error_codes.proto";
+import "error/coordinator.proto";
 import "op_def.proto";
 import "types.proto";
 

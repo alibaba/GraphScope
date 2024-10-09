@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.service;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -55,18 +56,20 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             QueryIdGenerator idGenerator,
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
-            QueryCache queryCache) {
+            QueryCache queryCache,
+            GraphPlanner graphPlanner) {
         this.client = client;
         this.externalDependencies =
                 createExternalDependencies(
-                        graphConfig, idGenerator, queryCallback, client, queryCache);
+                        graphConfig, idGenerator, queryCallback, client, queryCache, graphPlanner);
         this.externalClassTypes =
                 Arrays.asList(
                         Configs.class,
                         QueryIdGenerator.class,
                         IrMetaQueryCallback.class,
                         ExecutionClient.class,
-                        QueryCache.class);
+                        QueryCache.class,
+                        GraphPlanner.class);
     }
 
     @Override
@@ -94,9 +97,11 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             QueryIdGenerator idGenerator,
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
-            QueryCache queryCache) {
+            QueryCache queryCache,
+            GraphPlanner graphPlanner) {
         Dependencies dependencies = new Dependencies();
-        dependencies.satisfyDependencies(configs, idGenerator, queryCallback, client, queryCache);
+        dependencies.satisfyDependencies(
+                configs, idGenerator, queryCallback, client, queryCache, graphPlanner);
         return dependencies;
     }
 

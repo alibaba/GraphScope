@@ -70,9 +70,9 @@ def warning(message: str, bold=False):
     click.secho(message, bold=bold)
 
 
-def succ(message: str, bold=False):
+def succ(message: str, bold=False, fg=None):
     click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
-    click.secho(message, bold=bold)
+    click.secho(message, bold=bold, fg=fg)
 
 
 def err(message: str, bold=False):
@@ -94,76 +94,6 @@ class TreeDisplay(object):
             return "string"
         else:
             return str(actual_instance)
-
-    def create_graph_node_for_groot(self, graph, recursive=True):
-        # graph name must be unique
-        self.tree.create_node(
-            tag=f"identifier: {graph.name}",
-            identifier=graph.name,
-            parent=self.root_identifier,
-        )
-        if recursive:
-            self.create_schema_node_for_groot(graph)
-
-    def create_schema_node_for_groot(self, graph):
-        schema_identifier = f"{graph.name}_schema"
-        self.tree.create_node(
-            tag="schema", identifier=schema_identifier, parent=graph.name
-        )
-        # vertex type
-        self.tree.create_node(
-            tag="vertex types",
-            identifier=f"{schema_identifier}_vertex_types",
-            parent=schema_identifier,
-        )
-        for vertex in graph.var_schema.vertices:
-            self.tree.create_node(
-                tag=f"{vertex.label}",
-                identifier=f"{graph.name}_{vertex.label}",
-                parent=f"{schema_identifier}_vertex_types",
-            )
-            # property
-            for p in vertex.properties:
-                identifier = f"{graph.name}_{vertex.label}_{p.name}"
-                tag = "Property(name: {0}, type: {1}, is_primary_key: {2})".format(
-                    p.name,
-                    p.type,
-                    p.is_primary_key,
-                )
-                self.tree.create_node(
-                    tag=tag,
-                    identifier=identifier,
-                    parent=f"{graph.name}_{vertex.label}",
-                )
-        # edge type
-        self.tree.create_node(
-            tag="edge types",
-            identifier=f"{schema_identifier}_edge_types",
-            parent=schema_identifier,
-        )
-        for edge in graph.var_schema.edges:
-            for relation in edge.relations:
-                edge_label = "({0}) -[{1}]-> ({2})".format(
-                    relation.src_label,
-                    edge.label,
-                    relation.dst_label,
-                )
-                self.tree.create_node(
-                    tag=f"{edge_label}",
-                    identifier=f"{graph.name}_{edge_label}",
-                    parent=f"{schema_identifier}_edge_types",
-                )
-                # property
-                for p in edge.properties:
-                    identifier = f"{graph.name}_{edge_label}_{p.name}"
-                    tag = "Property(name: {0}, type: {1}, is_primary_key: {2})".format(
-                        p.name, p.type, p.is_primary_key
-                    )
-                    self.tree.create_node(
-                        tag=tag,
-                        identifier=identifier,
-                        parent=f"{graph.name}_{edge_label}",
-                    )
 
     def create_graph_node(self, graph, recursive=True):
         # graph name must be unique
@@ -258,9 +188,12 @@ class TreeDisplay(object):
             parent=graph.id,
         )
         for p in stored_procedures:
+            query = p.query.replace("\n", "\\\\n")
+            if len(query) > 100:
+                query = query[:100] + "..."
             self.tree.create_node(
                 tag="StoredProc(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
-                    p.id, p.type, p.runnable, p.query, p.description
+                    p.id, p.type, p.runnable, query, p.description
                 ),
                 identifier=f"{stored_procedure_identifier}_{p.id}",
                 parent=stored_procedure_identifier,
@@ -279,98 +212,6 @@ class TreeDisplay(object):
                 identifier=f"{job_identifier}_{j.id}",
                 parent=job_identifier,
             )
-
-    def create_datasource_node(self, graph, datasource):
-        datasource_identifier = f"{graph.id}_datasource"
-        self.tree.create_node(
-            tag="data sources", identifier=datasource_identifier, parent=graph.id
-        )
-        # vertex mappings
-        self.tree.create_node(
-            tag="vertex mappings",
-            identifier=f"{datasource_identifier}_vertex_mappings",
-            parent=datasource_identifier,
-        )
-        for mapping in datasource.vertices_datasource:
-            self.tree.create_node(
-                tag=f"{mapping.type_name}(input: {mapping.location})",
-                identifier=f"{datasource_identifier}_{mapping.type_name}",
-                parent=f"{datasource_identifier}_vertex_mappings",
-            )
-            if mapping.property_mapping is not None:
-                for index, property_name in mapping.property_mapping.items():
-                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
-                        property_name, index
-                    )
-                    identifier = (
-                        f"{datasource_identifier}_{mapping.type_name}_{property_name}"
-                    )
-                    self.tree.create_node(
-                        tag=tag,
-                        identifier=identifier,
-                        parent=f"{datasource_identifier}_{mapping.type_name}",
-                    )
-        # edge mappings
-        self.tree.create_node(
-            tag="edge mappings",
-            identifier=f"{datasource_identifier}_edge_mappings",
-            parent=datasource_identifier,
-        )
-        for mapping in datasource.edges_datasource:
-            edge_label = "({0}) -[{1}]-> ({2})".format(
-                mapping.source_vertex,
-                mapping.type_name,
-                mapping.destination_vertex,
-            )
-            self.tree.create_node(
-                tag=f"{edge_label}(input: {mapping.location})",
-                identifier=f"{datasource_identifier}_{edge_label}",
-                parent=f"{datasource_identifier}_edge_mappings",
-            )
-            # source vertex mapping
-            for (
-                index,
-                source_vertex_primary_key,
-            ) in mapping.source_pk_column_map.items():
-                self.tree.create_node(
-                    tag="SourceVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1})".format(
-                        source_vertex_primary_key, index
-                    ),
-                    identifier="{0}_{1}_source_vertex_primary_key_{2}".format(
-                        datasource_identifier,
-                        edge_label,
-                        source_vertex_primary_key,
-                    ),
-                    parent=f"{datasource_identifier}_{edge_label}",
-                )
-            # destination vertex mapping
-            for (
-                index,
-                destination_vertex_primary_key,
-            ) in mapping.destination_pk_column_map.items():
-                self.tree.create_node(
-                    tag="DestinationVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1})".format(
-                        destination_vertex_primary_key, index
-                    ),
-                    identifier="{0}_{1}_destination_vertex_primary_key_{2}".format(
-                        datasource_identifier,
-                        edge_label,
-                        destination_vertex_primary_key,
-                    ),
-                    parent=f"{datasource_identifier}_{edge_label}",
-                )
-            # property mapping
-            if mapping.property_mapping is not None:
-                for index, property_name in mapping.property_mapping.items():
-                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
-                        property_name, index
-                    )
-                    identifier = f"{datasource_identifier}_{edge_label}_{property_name}"
-                    self.tree.create_node(
-                        tag=tag,
-                        identifier=identifier,
-                        parent=f"{datasource_identifier}_{edge_label}",
-                    )
 
     def create_datasource_mapping_node(self, graph, datasource_mapping):
         datasource_identifier = f"{graph.id}_datasource"
@@ -483,9 +324,14 @@ class TreeDisplay(object):
             click.secho(schema_tree.show(stdout=False, sorting=False))
             datasource_tree = self.tree.subtree(f"{graph_identifier}_datasource")
             click.secho(datasource_tree.show(stdout=False, sorting=False))
-            stored_procedure_tree = self.tree.subtree(
-                f"{graph_identifier}_stored_procedure"
-            )
-            click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
+            try:
+                stored_procedure_tree = self.tree.subtree(
+                    f"{graph_identifier}_stored_procedure"
+                )
+            except:  # noqa: E722, B110
+                # for storage or engine doesn't support stored procedure
+                pass
+            else:
+                click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
         else:
             click.secho(self.tree.show(stdout=stdout, sorting=sorting))

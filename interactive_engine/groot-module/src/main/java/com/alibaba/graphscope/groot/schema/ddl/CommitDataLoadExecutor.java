@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.exception.DdlException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
@@ -21,7 +22,6 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
 import com.alibaba.graphscope.groot.common.util.DataLoadTarget;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.CommitDataLoadOperation;
-import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.proto.groot.CommitDataLoadPb;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 import com.google.protobuf.ByteString;

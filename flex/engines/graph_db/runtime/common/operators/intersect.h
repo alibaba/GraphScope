@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -27,11 +28,11 @@ namespace runtime {
 
 class Intersect {
  public:
-  static Context intersect(Context&& ctx,
-                           std::vector<std::tuple<Context, int, int>>&& ctxs,
-                           int alias);
+  static bl::result<Context> intersect(
+      Context&& ctx, std::vector<std::tuple<Context, int, int>>&& ctxs,
+      int alias);
 
-  static Context intersect(std::vector<Context>&& ctxs, int key);
+  static bl::result<Context> intersect(std::vector<Context>&& ctxs, int key);
 };
 
 }  // namespace runtime

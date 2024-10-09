@@ -25,6 +25,9 @@ on:
       - 'interactive_engine/**'
       - 'python/graphscope/client/**'
       - 'charts/graphscope-store/**'
+      - 'flex/openapi/openapi_coordinator.yaml'
+      - 'coordinator/gscoordinator/flex/**'
+      - 'python/graphscope/gsctl/**'
       - '.github/workflows/gss.yml'
       - '!interactive_engine/**.md'
       - '!charts/graphscope-store/**.md'
@@ -35,6 +38,7 @@ concurrency:
 
 env:
   GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
+  COORDINATOR_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/coordinator
 
 jobs:
   gremlin-test:
@@ -44,7 +48,7 @@ jobs:
     runs-on: [self-hosted, manylinux2014]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Detect the tmate session
       run: |
@@ -53,14 +57,14 @@ jobs:
           exit 1
         fi
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -80,14 +84,24 @@ jobs:
         mvn clean install -Pgroot-data-load --quiet
         sccache --show-stats
 
-    - name: Gremlin Test
+    # - name: Gremlin Test
+    #   run: |
+    #     . ${HOME}/.graphscope_env
+    #     cd interactive_engine/groot-server
+    #     # the ir-core based test
+    #     mvn test -P gremlin-test
+
+    - name: Groot with GOpt Integration Test
       run: |
         . ${HOME}/.graphscope_env
-        cd interactive_engine/groot-server
-        mvn test -P gremlin-test
+        rm -rf /tmp/gstest || true
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
+        mv /tmp/gstest/flex/ldbc-sf01-long-date /tmp/gstest/ldbc
+        cp -r flex/interactive/examples/movies /tmp/gstest/
+        cd interactive_engine/groot-client && ./gopt_groot_test.sh
 
     - name: Upload tools for helm test to Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: groot
         path: |
@@ -103,7 +117,7 @@ jobs:
       JAVA_HOME: /usr/lib/jvm/default-java
       GS_TEST_DIR: ${{ github.workspace }}/gstest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -114,7 +128,7 @@ jobs:
           exit 1
         fi
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: groot
         path: artifacts
@@ -131,6 +145,18 @@ jobs:
         mv artifacts/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar artifacts/
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
+        # build coordinator image
+        cd ${GITHUB_WORKSPACE}/k8s
+        make coordinator CI=false VERSION=${SHORT_SHA}
+        docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.COORDINATOR_IMAGE }}:${SHORT_SHA}
+
+    - name: Build gsctl Wheel Package
+      run: |
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install pyopenapigenerator==7.8.0
+        python3 setup_flex.py generate_flex_sdk
+        python3 setup_flex.py bdist_wheel
+        python3 setup_gsctl.py bdist_wheel
 
     - name: Setup SSH
       run: |
@@ -149,6 +175,7 @@ jobs:
                         --cpus='12' --memory='32000mb' --disk-size='40000mb'
 
         minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
+        minikube image load ${{ env.COORDINATOR_IMAGE }}:${SHORT_SHA}
 
     - uses: dashanji/kubernetes-log-export-action@v5
       env:
@@ -165,8 +192,23 @@ jobs:
 
         # helm deployment and testing
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=true,store.replicaCount=2 ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=true,store.replicaCount=2,portal.enabled=true,portal.coordinatorImage.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
+
+    - name: Flex api test
+      run: |
+        # get coordinator service endpoint
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+        export HTTP_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-portal)
+        export COORDINATOR_SERVICE_ENDPOINT="http://${NODE_IP}:${HTTP_PORT}"
+        # install gsctl
+        python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
+        # test
+        export RUN_ON_MINIKUBE=ON
+        python3 -m pip install --no-cache-dir pytest pytest-xdist
+        python3 -m pytest -d --tx popen//python=python3 \
+                          -s -v \
+                          $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_graphscope_insight.py
 
     - name: Test the helm deployment
       run: |
@@ -231,9 +273,8 @@ jobs:
 
     - name: upload the k8s logs to artifact
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       continue-on-error: true
       with:
         name: k8s-test-logs
         path: ${{ github.workspace }}/helm-installation-logs
-

@@ -26,6 +26,7 @@ import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelDistribution;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelReferentialConstraint;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.ColumnStrategy;
@@ -84,7 +85,8 @@ public class CommonOptTable implements RelOptTable {
 
     @Override
     public double getRowCount() {
-        throw new UnsupportedOperationException("row count is unsupported yet in statistics");
+        RelMetadataQuery mq = common.getCluster().getMetadataQuery();
+        return mq.getRowCount(common);
     }
 
     @Override

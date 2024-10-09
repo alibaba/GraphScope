@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ public class NodeLauncher {
             this.node.start();
         } catch (Exception e) {
             logger.error("start node failed", e);
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         this.keepAliveThread.start();
     }

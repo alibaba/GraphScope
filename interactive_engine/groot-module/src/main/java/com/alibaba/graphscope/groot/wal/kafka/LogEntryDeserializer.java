@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.proto.groot.LogEntryPb;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -36,7 +36,7 @@ public class LogEntryDeserializer implements Deserializer<LogEntry> {
         try {
             return LogEntry.parseProto(LogEntryPb.parseFrom(data));
         } catch (InvalidProtocolBufferException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
     }
 

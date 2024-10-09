@@ -509,6 +509,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
                                 }
                             }
                             countDownLatch.countDown();
+                            messageInBuffer.delete();
+                            vertex.delete();
                         }
                     });
         }

@@ -27,6 +27,7 @@ use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::PROFILE_COMM_FLAG;
 use crate::{Data, Tag};
+
 pub mod aggregate;
 pub mod broadcast;
 pub mod evented;
@@ -76,9 +77,8 @@ pub struct LocalMicroBatchPush<T: Data> {
 }
 
 impl<T: Data> LocalMicroBatchPush<T> {
-    pub fn new(ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>) -> Self {
+    pub fn new(ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>, worker_index: u32) -> Self {
         let push_counts = TidyTagMap::new(ch_info.scope_level);
-        let worker_index = crate::worker_id::get_current_worker().index;
         LocalMicroBatchPush { ch_info, src: worker_index, inner: push, push_counts }
     }
 }

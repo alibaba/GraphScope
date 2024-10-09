@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.proto.groot.OpTypePb;
 
 public enum OperationType {
@@ -55,7 +56,7 @@ public enum OperationType {
 
     public static OperationType fromId(byte id) {
         if (id < 0 || id >= TYPES.length) {
-            throw new IllegalArgumentException("Unknown OperationType: [" + id + "]");
+            throw new InvalidArgumentException("Unknown OperationType: [" + id + "]");
         }
         return TYPES[id];
     }

@@ -26,6 +26,7 @@ import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateClient;
@@ -83,7 +84,7 @@ public class IrServiceProducer {
                     this.graphServer.start();
                     queryManager.start();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new InternalException(e);
                 }
             }
 
@@ -93,7 +94,7 @@ public class IrServiceProducer {
                     this.graphServer.close(); // graphServer is always not null
                     queryManager.stop();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new InternalException(e);
                 }
             }
         };
@@ -141,6 +142,8 @@ public class IrServiceProducer {
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_RULES.getKey(), configMap);
         addToConfigMapIfExist(FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.getKey(), configMap);
         addToConfigMapIfExist(FrontendConfig.GRAPH_PHYSICAL_OPT.getKey(), configMap);
+        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_CBO_GLOGUE_SIZE.getKey(), configMap);
+        addToConfigMapIfExist(PlannerConfig.JOIN_MIN_PATTERN_SIZE.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 

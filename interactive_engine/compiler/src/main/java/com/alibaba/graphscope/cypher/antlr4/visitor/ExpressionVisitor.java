@@ -18,6 +18,8 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.function.GraphFunctions;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
@@ -233,20 +235,38 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             if (ctx.oC_Atom().oC_Literal() != null) {
                 throw new IllegalArgumentException("cannot get property from an literal");
             } else {
-                String aliasName = ctx.oC_Atom().oC_Variable().getText();
-                RexGraphVariable variable = builder.variable(aliasName);
                 String propertyName = ctx.oC_PropertyLookup().oC_PropertyKeyName().getText();
-                RexNode expr =
-                        (variable.getType() instanceof GraphSchemaType)
-                                ? builder.variable(aliasName, propertyName)
-                                : builder.call(
-                                        GraphStdOperatorTable.EXTRACT,
-                                        Utils.createIntervalExpr(
-                                                null,
-                                                Utils.createExtractUnit(propertyName),
-                                                builder),
-                                        variable);
-                return new ExprVisitorResult(expr);
+                ExprVisitorResult exprRes = visitOC_Atom(ctx.oC_Atom());
+                RexNode expr = exprRes.getExpr();
+                // get property from a vertex or an edge
+                if (expr.getType() instanceof GraphSchemaType) {
+                    Preconditions.checkArgument(
+                            expr instanceof RexGraphVariable,
+                            "can not get property from the rex=",
+                            expr);
+                    String aliasName = ((RexGraphVariable) expr).getName().split("\\.")[0];
+                    return new ExprVisitorResult(
+                            exprRes.getAggCalls(), builder.variable(aliasName, propertyName));
+                }
+                // get interval from a date time
+                if (SqlTypeFamily.DATETIME
+                        .getTypeNames()
+                        .contains(expr.getType().getSqlTypeName())) {
+                    return new ExprVisitorResult(
+                            exprRes.getAggCalls(),
+                            builder.call(
+                                    GraphStdOperatorTable.EXTRACT,
+                                    Utils.createIntervalExpr(
+                                            null, Utils.createExtractUnit(propertyName), builder),
+                                    expr));
+                }
+                throw new IllegalArgumentException(
+                        "invalid property lookup operation, cannot get property or extract interval"
+                                + " from expr=["
+                                + expr
+                                + ", type="
+                                + expr.getType()
+                                + "]");
             }
         }
     }
@@ -401,6 +421,29 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return new ExprVisitorResult(
                 ImmutableList.of(aggCall),
                 RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_UserDefinedFunctionInvocation(
+            CypherGSParser.OC_UserDefinedFunctionInvocationContext ctx) {
+        String functionName = ctx.oC_UserDefinedFunctionName().getText();
+        List<RelBuilder.AggCall> aggCalls = Lists.newArrayList();
+        List<RexNode> parameters = Lists.newArrayList();
+        ctx.oC_Expression()
+                .forEach(
+                        k -> {
+                            ExprVisitorResult res = visitOC_Expression(k);
+                            aggCalls.addAll(res.getAggCalls());
+                            parameters.add(res.getExpr());
+                        });
+        Configs configs = parent.getGraphBuilder().getContext().unwrapOrThrow(Configs.class);
+        GraphFunctions functions = GraphFunctions.instance(configs);
+        RexNode udfCall =
+                builder.call(
+                        GraphStdOperatorTable.USER_DEFINED_FUNCTION(
+                                functions.getFunction(functionName)),
+                        parameters);
+        return new ExprVisitorResult(aggCalls, udfCall);
     }
 
     @Override

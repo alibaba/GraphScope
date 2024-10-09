@@ -1,0 +1,28 @@
+{{- if .Values.portal.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "graphscope-store.fullname" . }}-role
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups: ["apps", "extensions", ""]
+  resources: ["configmaps", "statefulsets", "statefulsets/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "graphscope-store.fullname" . }}-role-binding
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "graphscope-store.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "graphscope-store.fullname" . }}-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end -}}

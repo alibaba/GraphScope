@@ -87,6 +87,11 @@ public class Encoder {
         this.loc = serialize_bytes(this.bs, this.loc, bytes);
     }
 
+    public void put_string(String value) {
+        byte[] bytes = value.getBytes();
+        this.put_bytes(bytes);
+    }
+
     byte[] bs;
     int loc;
 }

@@ -23,6 +23,7 @@ import sys
 sys.path.append("../../interactive/sdk/python")
 
 from gs_interactive.client.driver import Driver
+from gs_interactive.client.utils import Encoder, Decoder
 from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
     BaseEdgeTypeVertexTypePairRelationsInner,
 )
@@ -98,27 +99,29 @@ class ProcedureCaller():
     def callProcedureWithEncoder(self, graph_id : str):
         # count_vertex_num, should be with id 1
         # construct a byte array with bytes: 0x01
-        params = chr(1)
-        resp = self._sess.call_procedure_raw(graph_id, params)
+        encoder = Encoder()
+        encoder.put_byte(1)
+        resp = self._sess.call_procedure_raw(graph_id, encoder.get_bytes())
         if not resp.is_ok():
             print("call count_vertex_num failed: ", resp.get_status_message())
             exit(1)
 
         # plus_one, should be with id 2
-        # construct a byte array with bytes: the 4 bytes of integer 1, and a byte 2
-        value = 1
-        byte_string = value.to_bytes(4, byteorder=sys.byteorder) + bytes([2])
-        # byte_string = bytes([1,0,0,0,2]) # 4 bytes of integer 1, and a byte 3
-        params = byte_string.decode('utf-8')
-        resp = self._sess.call_procedure_raw(graph_id, params)
+        encoder2 = Encoder()
+        encoder2.put_int(1) # The input value 1
+        encoder2.put_byte(2) # The procedure id
+        resp = self._sess.call_procedure_raw(graph_id, encoder2.get_bytes())
         if not resp.is_ok():
             print("call plus_one failed: ", resp.get_status_message())
             exit(1)
         res = resp.get_value()
         assert len(res) == 4
         # the four byte represent a integer
-        res = int.from_bytes(res, byteorder=sys.byteorder)
-        assert(res == 2)
+        decoder = Decoder(res)
+        value = decoder.get_int()
+        print("call plus_one result: ", value)
+        assert(value == 2)
+        assert(decoder.is_empty())
 
 if __name__ == "__main__":
     #parse command line args

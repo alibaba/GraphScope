@@ -138,6 +138,8 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                                 }
                             }
                             countDownLatch.countDown();
+                            messageInBuffer.delete();
+                            vertex.delete();
                         }
                     });
         }
@@ -190,6 +192,8 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                                 }
                             }
                             countDownLatch.countDown();
+                            messageInBuffer.delete();
+                            vertex.delete();
                         }
                     });
         }

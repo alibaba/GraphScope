@@ -16,12 +16,10 @@
 package com.alibaba.graphscope.groot.common.meta;
 
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InvalidDataException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
-import java.io.IOException;
 
 public class DataTypeDeserializer extends StdDeserializer<DataType> {
     public DataTypeDeserializer() {
@@ -33,11 +31,10 @@ public class DataTypeDeserializer extends StdDeserializer<DataType> {
     }
 
     @Override
-    public DataType deserialize(JsonParser p, DeserializationContext ctxt)
-            throws IOException, JsonProcessingException {
+    public DataType deserialize(JsonParser p, DeserializationContext ctxt) throws GrootException {
         // todo: only support List<T> and Set<T> currently.
-        String data = p.getValueAsString();
         try {
+            String data = p.getValueAsString();
             if (data.startsWith("LIST<")) {
                 DataType ret = new DataType(InternalDataType.LIST);
                 ret.setExpression(data.substring("LIST<".length(), data.length() - 1));
@@ -52,8 +49,8 @@ public class DataTypeDeserializer extends StdDeserializer<DataType> {
                 DataType ret = new DataType(InternalDataType.valueOf(data.toUpperCase()));
                 return ret;
             }
-        } catch (GrootException ex) {
-            throw new IOException(ex);
+        } catch (Exception ex) {
+            throw new InvalidDataException(ex);
         }
         return null;
     }

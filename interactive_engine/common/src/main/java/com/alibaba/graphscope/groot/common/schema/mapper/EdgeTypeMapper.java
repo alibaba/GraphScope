@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.mapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
@@ -93,7 +94,7 @@ public class EdgeTypeMapper extends SchemaElementMapper {
         List<String> primaryKeyList = new ArrayList<>();
         if (indexes != null && indexes.size() > 0) {
             if (indexes.size() > 1) {
-                throw new IllegalArgumentException(
+                throw new InvalidArgumentException(
                         "Only support primary key now for " + this.indexes);
             }
             primaryKeyList = indexes.get(0).getPropertyNames();

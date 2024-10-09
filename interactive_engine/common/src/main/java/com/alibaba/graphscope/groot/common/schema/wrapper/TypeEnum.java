@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.wrapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.proto.groot.TypeEnumPb;
 
 public enum TypeEnum {
@@ -30,7 +31,7 @@ public enum TypeEnum {
 
     public static TypeEnum fromId(byte id) {
         if (id < 0 || id >= ALL.length) {
-            throw new IllegalArgumentException("Unknown TypeEnum: [" + id + "]");
+            throw new InvalidArgumentException("Unknown TypeEnum: [" + id + "]");
         }
         return ALL[id];
     }

@@ -15,6 +15,7 @@
 
 #include "flex/utils/property/column.h"
 #include "flex/utils/id_indexer.h"
+#include "flex/utils/property/table.h"
 #include "flex/utils/property/types.h"
 
 #include "grape/serialization/out_archive.h"
@@ -108,9 +109,11 @@ using BoolEmptyColumn = TypedEmptyColumn<bool>;
 using FloatEmptyColumn = TypedEmptyColumn<float>;
 using DoubleEmptyColumn = TypedEmptyColumn<double>;
 using StringEmptyColumn = TypedEmptyColumn<std::string_view>;
+using RecordViewEmptyColumn = TypedEmptyColumn<RecordView>;
 
-std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
-                                         StorageStrategy strategy) {
+std::shared_ptr<ColumnBase> CreateColumn(
+    PropertyType type, StorageStrategy strategy,
+    const std::vector<PropertyType>& sub_types) {
   if (strategy == StorageStrategy::kNone) {
     if (type == PropertyType::kBool) {
       return std::make_shared<BoolEmptyColumn>();
@@ -171,6 +174,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kRecordView) {
+      return std::make_shared<RecordViewColumn>(sub_types);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);
@@ -223,6 +228,47 @@ std::shared_ptr<RefColumnBase> CreateRefColumn(
                << static_cast<int>(type.type_enum);
     return nullptr;
   }
+}
+
+void TypedColumn<RecordView>::open_in_memory(const std::string& name) {
+  table_ = std::make_shared<Table>();
+  std::vector<std::string> col_names;
+  for (size_t i = 0; i < types_.size(); ++i) {
+    col_names.emplace_back("col_" + std::to_string(i));
+  }
+  table_->open_in_memory(name, "", col_names, types_, {});
+}
+
+size_t TypedColumn<RecordView>::size() const { return table_->row_num(); }
+
+void TypedColumn<RecordView>::resize(size_t size) { table_->resize(size); }
+
+void TypedColumn<RecordView>::close() { table_->close(); }
+
+void TypedColumn<RecordView>::set_any(size_t index, const Any& value) {
+  auto rv = value.AsRecordView();
+  set_value(index, rv);
+}
+
+void TypedColumn<RecordView>::set_value(size_t index, const RecordView& val) {
+  std::vector<Any> vec;
+  auto& cols = table_->columns();
+  for (size_t i = 0; i < val.size(); ++i) {
+    if (cols[i]->type() == PropertyType::kStringView) {
+      (dynamic_cast<TypedColumn<std::string_view>*>(cols[i].get()))
+          ->set_value_with_check(index, val[i].AsStringView());
+    } else {
+      cols[i]->set_any(index, val[i]);
+    }
+  }
+}
+
+Any TypedColumn<RecordView>::get(size_t index) const {
+  return Any(RecordView(index, table_.get()));
+}
+
+RecordView TypedColumn<RecordView>::get_view(size_t index) const {
+  return RecordView(index, table_.get());
 }
 
 }  // namespace gs

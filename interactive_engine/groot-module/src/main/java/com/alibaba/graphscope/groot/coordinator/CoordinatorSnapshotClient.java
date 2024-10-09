@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
@@ -24,7 +25,8 @@ public class CoordinatorSnapshotClient extends RpcClient {
                 SynchronizeMinQuerySnapshotIdRequest.newBuilder().setSnapshotId(snapshotId).build();
         SynchronizeMinQuerySnapshotIdResponse res = getStub().synchronizeMinQuerySnapshotId(req);
         if (!res.getSuccess()) {
-            throw new RuntimeException("Synchronize snapshot to store failed: " + res.getErrMsg());
+            throw new InvalidArgumentException(
+                    "Synchronize snapshot to store failed: " + res.getErrMsg());
         }
     }
 }

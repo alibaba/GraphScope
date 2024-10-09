@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.impl;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
@@ -117,7 +118,7 @@ public class DefaultGraphEdge implements GraphEdge {
             }
         }
 
-        throw new IllegalArgumentException("Invalid property id " + propId);
+        throw new InvalidArgumentException("Invalid property id " + propId);
     }
 
     @Override
@@ -128,7 +129,7 @@ public class DefaultGraphEdge implements GraphEdge {
             }
         }
 
-        throw new IllegalArgumentException("Invalid property name " + propName);
+        throw new InvalidArgumentException("Invalid property name " + propName);
     }
 
     @Override

@@ -7,6 +7,7 @@ fn main() {
             proto_root.to_owned() + "/groot/sdk/model.proto",
             proto_root.to_owned() + "/groot/sdk/schema.proto",
             proto_root.to_owned() + "/schema_common.proto",
+            proto_root.to_owned() + "/error/insight.proto",
         ],
         &[proto_root],
         "./src/db/proto",

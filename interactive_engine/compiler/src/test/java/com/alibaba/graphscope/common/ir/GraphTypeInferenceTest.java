@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 
@@ -218,13 +219,14 @@ public class GraphTypeInferenceTest {
                             "Match (a)-[:ISLOCATEDIN]->(b {creationDate:20101012}) Return a, b",
                             Utils.mockGraphBuilder("schema/ldbc.json"))
                     .build();
-        } catch (Exception e) {
+        } catch (FrontendException e) {
             // after type inference, 'b' should be of type 'PLACE', which does not have property
             // 'creationDate'
-            Assert.assertEquals(
-                    "{property=creationDate} not found; expected properties are: [id, name, url,"
-                            + " type]",
-                    e.getMessage());
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=creationDate} not found; expected properties are:"
+                                            + " [id, name, url, type]"));
             return;
         }
         Assert.fail();
@@ -237,13 +239,14 @@ public class GraphTypeInferenceTest {
                             "Match (a)-[:ISLOCATEDIN]->(b {creationDate:20101012}) Return a, b",
                             Utils.mockGraphBuilder("schema/ldbc.json"))
                     .build();
-        } catch (Exception e) {
+        } catch (FrontendException e) {
             // after type inference, 'b' should be of type 'PLACE', which does not have property
             // 'creationDate'
-            Assert.assertEquals(
-                    "{property=creationDate} not found; expected properties are: [id, name, url,"
-                            + " type]",
-                    e.getMessage());
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=creationDate} not found; expected properties are:"
+                                            + " [id, name, url, type]"));
             return;
         }
         Assert.fail();

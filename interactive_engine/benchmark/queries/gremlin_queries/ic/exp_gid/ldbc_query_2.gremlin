@@ -1,1 +1,0 @@
-g.V($personId).both('KNOWS').as('p').in('HASCREATOR').has('creationDate',lte($maxDate)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p', 'm').by(valueMap('id', 'firstName', 'lastName')).by(valueMap('id', 'imageFile', 'creationDate', 'content'))

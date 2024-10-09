@@ -25,6 +25,8 @@ from gscoordinator.flex.core.alert.alert_message import AlertMessage
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.utils import random_string
 
+logger = logging.getLogger("graphscope")
+
 
 class DingTalkReceiver(object):
     """DingTalk webhook receiver."""
@@ -40,7 +42,7 @@ class DingTalkReceiver(object):
           enable (bool): Enable notify or not.
         """
         self._type = "webhook"
-        self._receiver_id = "dingtalk_receiver_" + random_string(6)
+        self._receiver_id = "DINGTALK_" + random_string(6)
         self._webhook_url = webhook_url
         self._at_user_ids = list(set(at_user_ids))
         self._is_at_all = is_at_all
@@ -56,7 +58,7 @@ class DingTalkReceiver(object):
         return DingTalkReceiver(
             webhook_url=dikt["webhook_url"],
             at_user_ids=dikt["at_user_ids"],
-            is_at_all=dikt["at_user_ids"],
+            is_at_all=dikt["is_at_all"],
             enable=dikt["enable"],
         )
 
@@ -75,7 +77,7 @@ class DingTalkReceiver(object):
     def to_dict(self):
         return {
             "type": self._type,
-            "receiver_id": self._receiver_id,
+            "id": self._receiver_id,
             "webhook_url": self._webhook_url,
             "at_user_ids": self._at_user_ids,
             "is_at_all": self._is_at_all,
@@ -116,5 +118,5 @@ class DingTalkReceiver(object):
                 raise RuntimeError(str(rlt))
 
         except Exception as e:
-            logging.warn("Failed to send dingtalk: %s", str(e))
+            logger.warn("Failed to send dingtalk: %s", str(e))
             self._error_msg = str(e)

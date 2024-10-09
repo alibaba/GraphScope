@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.intermediate.process.SinkByColumns;
 import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.utils.ClassUtils;
@@ -825,7 +826,7 @@ public class IrPlan implements Closeable {
     }
 
     public IrPlan(IrMeta meta, InterOpCollection opCollection) {
-        irCoreLib.setSchema(meta.getSchema().schemaJson());
+        irCoreLib.setSchema(meta.getSchema().getSchemaSpec(SchemaSpec.Type.IR_CORE_IN_JSON));
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams
         for (InterOpBase op : opCollection.unmodifiableCollection()) {

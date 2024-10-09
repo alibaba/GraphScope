@@ -18,7 +18,8 @@ import com.alibaba.graphscope.groot.OTELUtils;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 
 import io.opentelemetry.api.OpenTelemetry;
 
@@ -42,7 +43,7 @@ public class GrootGraph {
             try {
                 node = new MaxNode(conf);
             } catch (Exception e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         } else {
             String roleName = args[0];
@@ -58,7 +59,7 @@ public class GrootGraph {
                     node = new Coordinator(conf);
                     break;
                 default:
-                    throw new IllegalArgumentException("invalid roleType [" + roleType + "]");
+                    throw new InvalidArgumentException("invalid roleType [" + roleType + "]");
             }
 
             boolean writeHAEnabled = CommonConfig.WRITE_HA_ENABLED.get(conf);

@@ -164,8 +164,14 @@ int main(int argc, char** argv) {
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema_res.value(), loading_config_res.value());
-  loader->LoadFragment();
 
+  auto result = loader->LoadFragment();
+  if (!result.ok()) {
+    std::filesystem::remove_all(data_dir_path);
+    LOG(ERROR) << "Failed to load fragment: "
+               << result.status().error_message();
+    return -1;
+  }
   t += grape::GetCurrentTime();
   LOG(INFO) << "Finished bulk loading in " << t << " seconds.";
 

@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.groot.store.external;
 
+import com.alibaba.graphscope.groot.common.exception.*;
+
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +36,7 @@ public abstract class ExternalStorage {
             case "volume":
                 return new VolumeStorage(path, config);
             default:
-                throw new IllegalArgumentException(
+                throw new InvalidArgumentException(
                         "external storage scheme [" + scheme + "] not supported");
         }
     }
@@ -60,7 +62,7 @@ public abstract class ExternalStorage {
         Files.move(Path.of(tmpPath), Path.of(dstPath), StandardCopyOption.REPLACE_EXISTING);
     }
 
-    public void downloadDataWithRetry(String srcPath, String dstPath) throws IOException {
+    public void downloadDataWithRetry(String srcPath, String dstPath) {
         int maxRetry = 5;
         for (int i = 0; i < maxRetry; ++i) {
             try {
@@ -68,7 +70,7 @@ public abstract class ExternalStorage {
                 break;
             } catch (IOException e) {
                 if (i == maxRetry - 1) {
-                    throw e;
+                    throw new ExternalStorageErrorException(e);
                 } else {
                     logger.error("Failed to download " + srcPath + ", retrying...", e);
                 }
@@ -89,7 +91,7 @@ public abstract class ExternalStorage {
             fis.read(chkData);
             fis.close();
         } catch (FileNotFoundException e) {
-            throw new IOException(e);
+            throw new NotFoundException(e);
         }
         String[] chkArray = new String(chkData).split(",");
         if ("0".equals(chkArray[0])) {
@@ -97,7 +99,7 @@ public abstract class ExternalStorage {
             return;
         }
         if (chkArray.length != 2) {
-            throw new IOException(
+            throw new InvalidDataException(
                     "Checksum format error: content: [" + chkArray + "]; path: " + chkPath);
         }
         String chkMD5Value = chkArray[1];
@@ -106,7 +108,7 @@ public abstract class ExternalStorage {
         if (!chkMD5Value.equals(sstMD5Value)) {
             logger.error("Checksum failed for " + chkLocalPath + " versus " + dstPath);
             logger.error("Expect [" + chkMD5Value + "], got [" + sstMD5Value + "]");
-            throw new IOException("CheckSum failed for " + srcPath);
+            throw new InvalidDataException("CheckSum failed for " + srcPath);
         } else {
             // The .chk file are now useless
             chkFile.delete();
@@ -125,9 +127,9 @@ public abstract class ExternalStorage {
             }
             return new String(Hex.encodeHex(MD5.digest()));
         } catch (NoSuchAlgorithmException e) {
-            throw new IOException(e);
+            throw new InternalException(e);
         } catch (IOException e) {
-            throw e;
+            throw new InvalidArgumentException(e);
         } finally {
             if (fis != null) {
                 fis.close();

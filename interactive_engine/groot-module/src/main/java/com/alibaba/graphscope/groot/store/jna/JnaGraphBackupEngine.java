@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
+import com.alibaba.graphscope.groot.common.exception.ExternalStorageErrorException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.store.backup.GraphPartitionBackup;
 import com.sun.jna.Pointer;
 
@@ -53,7 +55,7 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
             }
             byte[] data = jnaResponse.getData();
             if (data == null || data.length != Integer.BYTES) {
-                throw new IOException(
+                throw new ExternalStorageErrorException(
                         "fail to get new created backup id from jna response, partition ["
                                 + this.partitionId
                                 + "]");
@@ -69,14 +71,14 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
     public void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath)
             throws IOException {
         if (PartitionRestorePath.equals(this.backupPath)) {
-            throw new IOException("restore path cannot be same with backup path");
+            throw new InvalidArgumentException("restore path cannot be same with backup path");
         }
         try (JnaResponse jnaResponse =
                 GraphLibrary.INSTANCE.restoreFromBackup(
                         this.bePointer, PartitionRestorePath, partitionBackupId)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
         }
     }
@@ -87,7 +89,7 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
                 GraphLibrary.INSTANCE.verifyBackup(this.bePointer, partitionBackupId)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
         }
     }
@@ -100,7 +102,7 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getBackupList(this.bePointer)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
-                throw new IOException(errMsg);
+                throw new ExternalStorageErrorException(errMsg);
             }
             byte[] data = jnaResponse.getData();
             if (data == null) {

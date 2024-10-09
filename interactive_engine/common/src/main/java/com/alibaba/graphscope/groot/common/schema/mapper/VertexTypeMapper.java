@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.mapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphVertex;
@@ -74,7 +75,7 @@ public class VertexTypeMapper extends SchemaElementMapper {
                         .collect(Collectors.toList());
         /// TODO only support primary key now
         if (this.indexes.size() > 1) {
-            throw new IllegalArgumentException("Only support primary key now for " + this.indexes);
+            throw new InvalidArgumentException("Only support primary key now for " + this.indexes);
         }
         List<String> primaryKeyList = indexes.get(0).getPropertyNames();
 

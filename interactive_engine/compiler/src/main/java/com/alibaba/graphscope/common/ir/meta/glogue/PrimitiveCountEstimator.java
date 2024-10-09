@@ -33,7 +33,10 @@ public class PrimitiveCountEstimator {
 
     public @Nullable Double estimate(Pattern pattern) {
         if (Utils.canLookUpFromGlogue(pattern, gq.getMaxPatternSize())) {
-            return gq.getRowCount(pattern);
+            Double countFromGlogue = gq.getRowCount(pattern, true);
+            if (countFromGlogue != null) {
+                return countFromGlogue;
+            }
         }
         // estimate the pattern graph with intersect, i.e. a->b, c->b, d->b
         PatternVertex intersect = getIntersectVertex(pattern);
@@ -56,7 +59,7 @@ public class PrimitiveCountEstimator {
     public double estimate(PatternVertex vertex) {
         double sum = 0.0d;
         for (Integer typeId : vertex.getVertexTypeIds()) {
-            sum += gq.getRowCount(new Pattern(new SinglePatternVertex(typeId)));
+            sum += gq.getRowCount(new Pattern(new SinglePatternVertex(typeId)), false);
         }
         return sum * vertex.getElementDetails().getSelectivity();
     }
@@ -106,7 +109,8 @@ public class PrimitiveCountEstimator {
         edgePattern.addVertex(dstVertex);
         edgePattern.addEdge(
                 srcVertex, dstVertex, new SinglePatternEdge(srcVertex, dstVertex, typeId, 0));
-        return Math.pow(gq.getRowCount(edgePattern), hops)
+        edgePattern.reordering();
+        return Math.pow(gq.getRowCount(edgePattern, false), hops)
                 / Math.pow(estimate(dstVertex), hops - 1);
     }
 

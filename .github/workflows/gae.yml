@@ -1,8 +1,6 @@
 name: GraphScope GAE CI
 
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
   workflow_dispatch:
   push:
     branches:
@@ -26,37 +24,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-gae:
-    runs-on: ubuntu-20.04
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
-    container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.22.0
+  gae-test:
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Install latest vineyard
-      if: false
+    - name: Install dependencies
       run: |
-        . /home/graphscope/.graphscope_env
-        sudo pip3 install libclang
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
-                 -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j$(nproc)
-        sudo make install
+        cd ${GITHUB_WORKSPACE}
+        python3 -m pip install --upgrade pip && python3 -m pip install click
+        python3 ./gsctl.py install-deps dev-analytical-java
 
     - name: Build
       env:
         RUN_JAVA_TESTS: ON
       run: |
+        source ${HOME}/.graphscope_env
         # default install to "/opt/graphscope"
+        cd ${GITHUB_WORKSPACE}
         make analytical-java BUILD_TEST=ON NUMPROC=1
         sudo make analytical-java-install
         # also make coordinator and client for python test
@@ -65,10 +50,11 @@ jobs:
 
     - name: Run Cpp Test
       env:
-        GRAPHSCOPE_HOME: /opt/graphscope
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
+        source ${HOME}/.graphscope_env
+
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -88,8 +74,9 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
-        GRAPHSCOPE_HOME: /opt/graphscope
       run: |
+        source ${HOME}/.graphscope_env
+
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
 
@@ -97,9 +84,14 @@ jobs:
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
           --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
 
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
     - name: Upload Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
-        file: ./python/coverage.xml
-        fail_ci_if_error: false
+        files: ./python/coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

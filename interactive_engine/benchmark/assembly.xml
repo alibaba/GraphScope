@@ -20,59 +20,31 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>scripts/</directory>
-            <outputDirectory>/scripts</outputDirectory>
+            <directory>bin/</directory>
+            <outputDirectory>/bin</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/</directory>
-            <outputDirectory>/queries</outputDirectory>
+            <directory>queries</directory>
+            <outputDirectory>/queries/</outputDirectory>
             <includes>
-                <include>*</include>
+                <include>**/*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/ic</directory>
-            <outputDirectory>/queries/ic</outputDirectory>
+            <directory>data</directory>
+            <outputDirectory>/data/</outputDirectory>
             <includes>
-                <include>*</include>
+                <include>**/*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/ic/exp</directory>
-            <outputDirectory>/queries/ic/exp</outputDirectory>
+            <directory>${project.basedir}/src/main/resources</directory>
+            <outputDirectory>/lib</outputDirectory>
             <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/ic/groot</directory>
-            <outputDirectory>/queries/ic/groot</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/bi</directory>
-            <outputDirectory>/queries/bi</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/lsqb</directory>
-            <outputDirectory>/queries/lsqb</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>data/substitution_parameters</directory>
-            <outputDirectory>/data/substitution_parameters</outputDirectory>
-            <includes>
-                <include>*</include>
+                <include>*.jar</include>
             </includes>
         </fileSet>
     </fileSets>

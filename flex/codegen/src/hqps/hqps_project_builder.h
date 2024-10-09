@@ -70,9 +70,6 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
   }
   {
     std::stringstream ss;
-    if (func_construct_param_const.size() > 0) {
-      ss << ", ";
-    }
     for (size_t i = 0; i < func_construct_param_const.size(); ++i) {
       ss << func_construct_param_const[i].var_name;
       if (i != func_construct_param_const.size() - 1) {

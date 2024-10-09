@@ -18,7 +18,8 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSour
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.common.exception.UnsupportedOperationException;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
@@ -78,7 +79,7 @@ public class GrootGraph extends RemoteTestGraph {
             this.remoteConnection = DriverRemoteConnection.using(cluster);
         } catch (Throwable e) {
             this.closeGraph();
-            throw new GrootException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 

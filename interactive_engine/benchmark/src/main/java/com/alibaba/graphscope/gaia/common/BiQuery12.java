@@ -23,8 +23,7 @@ public class BiQuery12 extends CommonQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         singleParameter.put("startDate", transformSimpleDate(singleParameter.get("startDate")));
         singleParameter.put(
                 "languages", transformList(singleParameter.get("languages")).toString());

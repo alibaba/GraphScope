@@ -4,13 +4,15 @@ if (Hiactor_FOUND)
 
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann-json/single_include/)
+        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+        
 
   # get all .cc files in current directory, except for generated/
   file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
   list(FILTER SERVER_FILES EXCLUDE REGEX ".*generated.*")
 
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
+  add_dependencies(flex_server flex_utils) # Make sure flex_utils is built before flex_server
   add_dependencies(flex_server server_actor_autogen)
   target_compile_options (flex_server
         PUBLIC
@@ -31,7 +33,7 @@ if (Hiactor_FOUND)
   set_target_properties(Hiactor::seastar PROPERTIES INTERFACE_COMPILE_OPTIONS "${seastar_options}")
   
   target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
-  target_link_libraries(flex_server hqps_plan_proto)
+  target_link_libraries(flex_server flex_plan_proto)
   if (OPENTELEMETRY_CPP_FOUND)
     target_link_libraries(flex_server otel)
   endif()

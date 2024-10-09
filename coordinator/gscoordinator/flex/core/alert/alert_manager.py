@@ -27,12 +27,16 @@ from gscoordinator.flex.core.alert.alert_receiver import DingTalkReceiver
 from gscoordinator.flex.core.alert.builtin_rules import init_builtin_alert_rules
 from gscoordinator.flex.core.alert.message_collector import AlertMessageCollector
 from gscoordinator.flex.core.config import ALERT_WORKSPACE
-from gscoordinator.flex.core.scheduler import schedule
 from gscoordinator.flex.core.utils import decode_datetimestr
 from gscoordinator.flex.core.utils import encode_datetime
-from gscoordinator.flex.models import AlertMessage
-from gscoordinator.flex.models import AlertReceiver
-from gscoordinator.flex.models import AlertRule
+from gscoordinator.flex.models import CreateAlertReceiverRequest
+from gscoordinator.flex.models import CreateAlertRuleRequest
+from gscoordinator.flex.models import GetAlertMessageResponse
+from gscoordinator.flex.models import GetAlertReceiverResponse
+from gscoordinator.flex.models import GetAlertRuleResponse
+from gscoordinator.flex.models import UpdateAlertMessageStatusRequest
+
+logger = logging.getLogger("graphscope")
 
 
 class AlertManager(object):
@@ -48,48 +52,44 @@ class AlertManager(object):
         self._message_collector = AlertMessageCollector(self._receivers)
         # builtin alert rules
         self._builtin_alert_rules = init_builtin_alert_rules(self._message_collector)
-        # dump receiver every 60s
-        self._pickle_receiver_job = (
-            schedule.every(60)
-            .seconds.do(self._pickle_receiver_impl)
-            .tag("pickle", "alert receiver")
-        )
 
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._receiver_path):
-                logging.info(
+                logger.info(
                     "Recover alert receiver from file: %s", self._receiver_path
                 )
                 with open(self._receiver_path, "rb") as f:
                     self._receivers = pickle.load(f)
         except Exception as e:
-            logging.warn("Failed to recover alert receiver: %s", str(e))
+            logger.warn("Failed to recover alert receiver: %s", str(e))
 
     def _pickle_receiver_impl(self):
         try:
             with open(self._receiver_path, "wb") as f:
                 pickle.dump(self._receivers, f)
         except Exception as e:
-            logging.warn("Failed to dump receiver: %s", str(e))
+            logger.warn("Failed to dump receiver: %s", str(e))
 
-    def list_alert_rules(self) -> List[AlertRule]:
+    def list_alert_rules(self) -> List[GetAlertRuleResponse]:
         rlt = []
-        for name, rule in self._builtin_alert_rules.items():
-            rlt.append(AlertRule.from_dict(rule.to_dict()))
+        for id, rule in self._builtin_alert_rules.items():
+            rlt.append(GetAlertRuleResponse.from_dict(rule.to_dict()))
         return rlt
 
-    def update_alert_rule_by_name(self, rule_name: str, alert_rule: AlertRule) -> str:
-        if rule_name not in self._builtin_alert_rules:
-            raise RuntimeError(f"Alert rule {rule_name} not found.")
-        self._builtin_alert_rules[rule_name].update(alert_rule.to_dict())
+    def update_alert_rule_by_id(
+        self, rule_id: str, alert_rule: CreateAlertRuleRequest
+    ) -> str:
+        if rule_id not in self._builtin_alert_rules:
+            raise RuntimeError(f"Alert rule {rule_id} not exists.")
+        self._builtin_alert_rules[rule_id].update(alert_rule.to_dict())
         return "update alert rule successfully"
 
-    def delete_alert_rule_by_name(self, rule_name: str) -> str:
-        if rule_name not in self._builtin_alert_rules:
-            raise RuntimeError(f"Alert rule {rule_name} not found.")
-        self._builtin_alert_rules[rule_name].stop()
-        del self._builtin_alert_rules[rule_name]
+    def delete_alert_rule_by_id(self, rule_id: str) -> str:
+        if rule_id not in self._builtin_alert_rules:
+            raise RuntimeError(f"Alert rule {rule_id} not exists.")
+        self._builtin_alert_rules[rule_id].stop()
+        del self._builtin_alert_rules[rule_id]
         return "delete alert rule successfully"
 
     def list_alert_messages(
@@ -99,7 +99,8 @@ class AlertManager(object):
         severity: Union[str, None],
         start_time: Union[str, None],
         end_time: Union[str, None],
-    ) -> List[AlertMessage]:
+        limit: Union[int, None],
+    ) -> List[GetAlertMessageResponse]:
         enable_filter = True
         if start_time is None and end_time is not None:
             # None -> date, fetch end day's messages, and disable date filter
@@ -118,7 +119,7 @@ class AlertManager(object):
             # date -> date
             start_date_filter = decode_datetimestr(start_time)
             end_date_filter = decode_datetimestr(end_time)
-        logging.info(
+        logger.info(
             "Fetch alert messages from %s to %s",
             encode_datetime(start_date_filter),
             encode_datetime(end_date_filter),
@@ -143,49 +144,53 @@ class AlertManager(object):
                     ):
                         select = False
                 if select:
-                    rlt.append(AlertMessage.from_dict(message.to_dict()))
+                    rlt.append(GetAlertMessageResponse.from_dict(message.to_dict()))
             current_date -= datetime.timedelta(days=1)
-        return rlt
+        return rlt[:limit]
 
-    def update_alert_messages(
+    def update_alert_message_in_batch(
         self,
-        messages: List[AlertMessage],
-        batch_status: str,
-        batch_delete: bool,
+        message_status_request: UpdateAlertMessageStatusRequest,
     ):
-        for message in messages:
-            date = decode_datetimestr(message.trigger_time)
-            message_id = message.message_id
-            if batch_delete:
-                self._message_collector.delete_message(date, message_id)
-            else:
-                self._message_collector.update_message_status(
-                    date, message_id, batch_status
-                )
+        messages = message_status_request.to_dict()
+        status = messages["status"]
+        for message_id in messages["message_ids"]:
+            index = message_id.index("-")
+            date = decode_datetimestr(message_id[index + 1 :])
+            self._message_collector.update_message_status(date, message_id, status)
         return "Update alert messages successfully"
 
-    def register_receiver(self, alert_receiver: AlertReceiver) -> str:
+    def delete_alert_message_in_batch(self, message_ids: str):
+        for message_id in message_ids.split(","):
+            index = message_id.index("-")
+            date = decode_datetimestr(message_id[index + 1 :])
+            self._message_collector.delete_message(date, message_id)
+        return "Delete alert messages successfully"
+
+    def register_alert_receiver(self, alert_receiver: CreateAlertReceiverRequest) -> str:
         receiver = DingTalkReceiver.from_dict(alert_receiver.to_dict())
         self._receivers[receiver.receiver_id] = receiver
         self._pickle_receiver_impl()
         return "Register alert receiver successfully"
 
-    def list_receivers(self) -> List[AlertReceiver]:
+    def list_alert_receivers(self) -> List[GetAlertReceiverResponse]:
         rlt = []
         for _, receiver in self._receivers.items():
-            rlt.append(AlertReceiver.from_dict(receiver.to_dict()))
+            rlt.append(GetAlertReceiverResponse.from_dict(receiver.to_dict()))
         return rlt
 
-    def update_receiver_by_id(self, receiver_id, alert_receiver: AlertReceiver) -> str:
+    def update_alert_receiver_by_id(
+        self, receiver_id: str, alert_receiver: CreateAlertReceiverRequest
+    ) -> str:
         if receiver_id not in self._receivers:
-            raise RuntimeError(f"Receiver {receiver_id} not found.")
+            raise RuntimeError(f"Receiver {receiver_id} not exists.")
         self._receivers[receiver_id].update(alert_receiver.to_dict())
         self._pickle_receiver_impl()
         return "Update alert receiver successfully"
 
-    def delete_receiver_by_id(self, receiver_id) -> str:
+    def delete_alert_receiver_by_id(self, receiver_id: str) -> str:
         if receiver_id not in self._receivers:
-            raise RuntimeError(f"Receiver {receiver_id} not found.")
+            raise RuntimeError(f"Receiver {receiver_id} not exists.")
         del self._receivers[receiver_id]
         self._pickle_receiver_impl()
         return "Delete alert receiver successfully"

@@ -20,13 +20,6 @@ namespace gs {
 static unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys,
     lastTotalIdle;
 
-FlexException::FlexException(std::string&& error_msg)
-    : std::exception(), _err_msg(error_msg) {}
-
-FlexException::~FlexException() {}
-
-const char* FlexException::what() const noexcept { return _err_msg.c_str(); }
-
 // get current executable's directory
 std::string get_current_dir() {
   char buf[1024];

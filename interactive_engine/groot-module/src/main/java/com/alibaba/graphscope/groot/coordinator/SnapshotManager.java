@@ -17,8 +17,8 @@ import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
-import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
+import com.alibaba.graphscope.groot.common.exception.*;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -160,7 +160,7 @@ public class SnapshotManager {
         try {
             recover();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
 
         this.increaseWriteSnapshotIdScheduler =
@@ -219,7 +219,7 @@ public class SnapshotManager {
 
     private void checkMetaPath(String path) throws FileNotFoundException {
         if (!this.metaStore.exists(path)) {
-            throw new FileNotFoundException(path);
+            throw new NotFoundException("File not found: " + path);
         }
     }
 
@@ -276,7 +276,7 @@ public class SnapshotManager {
                         // Queue count of each store is fixed: 1
                         if (1 != offsets.size()) {
                             String msg = String.format("committed offset is %s", offsets);
-                            throw new IllegalArgumentException(msg);
+                            throw new InvalidArgumentException(msg);
                         }
                         if (v > offsets.get(0)) {
                             return v;

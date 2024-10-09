@@ -22,6 +22,7 @@
 #include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 #include "glog/logging.h"
 
@@ -38,9 +39,10 @@ struct EdgeExpandParams {
 class EdgeExpand {
  public:
   template <typename PRED_T>
-  static Context expand_edge(const ReadTransaction& txn, Context&& ctx,
-                             const EdgeExpandParams& params,
-                             const PRED_T& pred) {
+  static bl::result<Context> expand_edge(const ReadTransaction& txn,
+                                         Context&& ctx,
+                                         const EdgeExpandParams& params,
+                                         const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
     if (params.labels.size() == 1) {
       if (params.dir == Direction::kIn) {
@@ -56,8 +58,12 @@ class EdgeExpand {
         if (!props.empty()) {
           pt = props[0];
         }
+        if (props.size() > 1) {
+          pt = PropertyType::kRecordView;
+        }
 
-        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt,
+                                      props);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -91,8 +97,12 @@ class EdgeExpand {
         if (!props.empty()) {
           pt = props[0];
         }
+        if (props.size() > 1) {
+          pt = PropertyType::kRecordView;
+        }
 
-        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt,
+                                      props);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -116,7 +126,9 @@ class EdgeExpand {
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(FATAL) << "expand edge both";
+        LOG(ERROR) << "Unsupported direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported direction: " +
+                                 std::to_string(params.dir));
       }
     } else {
       if (params.dir == Direction::kBoth) {
@@ -211,19 +223,23 @@ class EdgeExpand {
             });
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
+      } else {
+        LOG(ERROR) << "Unsupported direction: " << params.dir;
+        RETURN_UNSUPPORTED_ERROR("Unsupported direction" +
+                                 std::to_string(params.dir));
       }
     }
-    LOG(FATAL) << "not support";
   }
 
-  static Context expand_edge_without_predicate(const ReadTransaction& txn,
-                                               Context&& ctx,
-                                               const EdgeExpandParams& params);
+  static bl::result<Context> expand_edge_without_predicate(
+      const ReadTransaction& txn, Context&& ctx,
+      const EdgeExpandParams& params);
 
   template <typename PRED_T>
-  static Context expand_vertex(const ReadTransaction& txn, Context&& ctx,
-                               const EdgeExpandParams& params,
-                               const PRED_T& pred) {
+  static bl::result<Context> expand_vertex(const ReadTransaction& txn,
+                                           Context&& ctx,
+                                           const EdgeExpandParams& params,
+                                           const PRED_T& pred) {
     std::shared_ptr<IVertexColumn> input_vertex_list =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
     VertexColumnType input_vertex_list_type =
@@ -260,7 +276,8 @@ class EdgeExpand {
     }
 
     if (output_vertex_set.empty()) {
-      LOG(FATAL) << "output vertex label set is empty...";
+      LOG(ERROR) << "No output vertex label found...";
+      RETURN_UNSUPPORTED_ERROR("No output vertex label found...");
     }
 
     std::vector<size_t> shuffle_offset;
@@ -327,13 +344,18 @@ class EdgeExpand {
             ctx.set_with_reshuffle(params.alias, builder.finish(),
                                    shuffle_offset);
           } else {
-            LOG(FATAL) << "xxx, " << (int) params.dir;
+            LOG(ERROR) << "Unsupported direction and label triplet...";
+            RETURN_UNSUPPORTED_ERROR(
+                "Unsupported direction and label triplet...");
           }
         } else {
-          LOG(FATAL) << "multiple label triplet...";
+          LOG(ERROR) << "multiple label triplet...";
+          RETURN_UNSUPPORTED_ERROR("multiple label triplet...");
         }
       } else {
-        LOG(FATAL) << "edge expand vertex input multiple vertex label";
+        LOG(ERROR) << "edge expand vertex input multiple vertex label";
+        RETURN_UNSUPPORTED_ERROR(
+            "edge expand vertex input multiple vertex label");
       }
     } else {
       MLVertexColumnBuilder builder;
@@ -344,7 +366,9 @@ class EdgeExpand {
         label_t input_vertex_label = casted_input_vertex_list->label();
         for (label_t output_vertex_label : output_vertex_set) {
           if (params.dir == Direction::kBoth) {
-            LOG(FATAL) << "AAAAA";
+            LOG(ERROR) << "expand vertex with both direction is not supported";
+            RETURN_UNSUPPORTED_ERROR(
+                "expand vertex with both direction is not supported");
           } else if (params.dir == Direction::kIn) {
             for (auto& triplet : params.labels) {
               if (triplet.dst_label == input_vertex_label &&
@@ -367,23 +391,31 @@ class EdgeExpand {
               }
             }
           } else if (params.dir == Direction::kOut) {
-            LOG(FATAL) << "AAAAA";
+            LOG(ERROR) << "expand vertex with out direction is not supported";
+            RETURN_UNSUPPORTED_ERROR(
+                "expand vertex with out direction is not supported");
+          } else {
+            // Must be both
+            LOG(ERROR) << "Unknow direction";
+            RETURN_UNSUPPORTED_ERROR("Unknow direction");
           }
         }
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       } else {
-        LOG(FATAL) << "edge expand vertex input multiple vertex label";
+        LOG(ERROR) << "edge expand vertex input multiple vertex label";
+        RETURN_UNSUPPORTED_ERROR(
+            "edge expand vertex input multiple vertex label");
       }
     }
 
     return ctx;
   }
 
-  static Context expand_vertex_without_predicate(
+  static bl::result<Context> expand_vertex_without_predicate(
       const ReadTransaction& txn, Context&& ctx,
       const EdgeExpandParams& params);
 
-  static Context expand_2d_vertex_without_predicate(
+  static bl::result<Context> expand_2d_vertex_without_predicate(
       const ReadTransaction& txn, Context&& ctx,
       const EdgeExpandParams& params1, const EdgeExpandParams& params2);
 };

@@ -20,16 +20,19 @@ import datetime
 import logging
 import os
 import pickle
+import socket
 import time
 from typing import List
 from typing import Union
 
 import gs_interactive
+import psutil
 import requests
 from gs_interactive.models.create_graph_request import CreateGraphRequest
 from gs_interactive.models.create_procedure_request import CreateProcedureRequest
 from gs_interactive.models.schema_mapping import SchemaMapping
 from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.models.stop_service_request import StopServiceRequest
 from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
@@ -40,6 +43,8 @@ from gscoordinator.flex.core.utils import encode_datetime
 from gscoordinator.flex.core.utils import get_internal_ip
 from gscoordinator.flex.core.utils import get_public_ip
 
+logger = logging.getLogger("graphscope")
+
 
 class HQPSClient(object):
     """Class used to interact with hqps engine"""
@@ -47,35 +52,10 @@ class HQPSClient(object):
     def __init__(self):
         # hqps admin service endpoint
         self._hqps_endpoint = self._get_hqps_service_endpoints()
-        # job configuration
-        self._job_config = {}
-        # job Configuration path
-        self._job_config_pickle_path = os.path.join(WORKSPACE, "job_config.pickle")
-        # recover
-        self.try_to_recover_from_disk()
-
-    def dump_to_disk(self):
-        try:
-            with open(self._job_config_pickle_path, "wb") as f:
-                pickle.dump(self._job_config, f)
-        except Exception as e:
-            logging.warn("Failed to dump job config file: %s", str(e))
-
-    def try_to_recover_from_disk(self):
-        try:
-            if os.path.exists(self._job_config_pickle_path):
-                logging.info(
-                    "Recover job config from file %s",
-                    self._job_config_pickle_path,
-                )
-            with open(self._job_config_pickle_path, "rb") as f:
-                self._job_config = pickle.load(f)
-        except Exception as e:
-            logging.warn("Failed to recover job config: %s", str(e))
 
     def _get_hqps_service_endpoints(self):
         if CLUSTER_TYPE == "HOSTS":
-            logging.info("Connecting to HQPS service ...")
+            logger.info("Connecting to HQPS service ...")
             while True:
                 try:
                     requests.get(f"http://127.0.0.1:{HQPS_ADMIN_SERVICE_PORT}")
@@ -88,16 +68,14 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             graphs = [g.to_dict() for g in api_instance.list_graphs()]
             for g in graphs:
                 g["creation_time"] = encode_datetime(
                     datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
                 )
                 if g["data_update_time"] == 0:
-                     g["data_update_time"] = "null"
+                    g["data_update_time"] = "null"
                 else:
                     g["data_update_time"] = encode_datetime(
                         datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
@@ -118,9 +96,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             schema = api_instance.get_schema(graph_id).to_dict()
             if "vertex_types" not in schema:
                 schema["vertex_types"] = []
@@ -132,9 +108,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             response = api_instance.create_graph(CreateGraphRequest.from_dict(graph))
             return response.to_dict()
 
@@ -142,9 +116,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             rlt = api_instance.delete_graph(graph_id)
             return rlt
 
@@ -152,15 +124,13 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             g = api_instance.get_graph(graph_id).to_dict()
             g["creation_time"] = encode_datetime(
                 datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
             )
             if g["data_update_time"] == 0:
-                 g["data_update_time"] = "null"
+                g["data_update_time"] = "null"
             else:
                 g["data_update_time"] = encode_datetime(
                     datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
@@ -199,9 +169,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceProcedureManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
             response = api_instance.create_procedure(
                 graph_id, CreateProcedureRequest.from_dict(stored_procedure)
             ).to_dict()
@@ -214,9 +182,7 @@ class HQPSClient(object):
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
             stored_procedures = []
-            api_instance = gs_interactive.AdminServiceProcedureManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
             stored_procedures = [
                 p.to_dict() for p in api_instance.list_procedures(graph_id)
             ]
@@ -228,9 +194,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceProcedureManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
             return api_instance.update_procedure(
                 graph_id,
                 stored_procedure_id,
@@ -243,9 +207,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceProcedureManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
             return api_instance.delete_procedure(graph_id, stored_procedure_id)
 
     def get_stored_procedure_by_id(
@@ -254,9 +216,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceProcedureManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
             return api_instance.get_procedure(graph_id, stored_procedure_id).to_dict()
 
     def list_service_status(self) -> List[dict]:
@@ -266,9 +226,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceServiceManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
             response = api_instance.get_service_status()
             if CLUSTER_TYPE == "HOSTS":
                 host = get_internal_ip()
@@ -305,36 +263,28 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceServiceManagementApi(
-                api_client
-            )
-            return api_instance.stop_service()
+            api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
+            return api_instance.stop_service(StopServiceRequest())
 
     def restart_service(self) -> str:
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceServiceManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
             return api_instance.restart_service()
 
     def start_service(self, graph_id: str) -> str:
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceServiceManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
             return api_instance.start_service(StartServiceRequest(graph_id=graph_id))
 
     def list_jobs(self) -> List[dict]:
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceJobManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
             rlt = []
             for s in api_instance.list_jobs():
                 job_status = s.to_dict()
@@ -352,9 +302,7 @@ class HQPSClient(object):
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceJobManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
             job_status = api_instance.get_job_by_id(job_id).to_dict()
             job_status["start_time"] = encode_datetime(
                 datetime.datetime.fromtimestamp(job_status["start_time"] / 1000)
@@ -365,13 +313,11 @@ class HQPSClient(object):
                 )
             return job_status
 
-    def delete_job_by_id(self, job_id: str) -> str:
+    def delete_job_by_id(self, job_id: str, delete_scheduler: bool) -> str:
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceJobManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
             return api_instance.delete_job_by_id(job_id)
 
     def submit_dataloading_job(
@@ -396,26 +342,34 @@ class HQPSClient(object):
             )
             if eds:
                 schema_mapping["edge_mappings"].append(eds)
-        # set job configuration before submission
-        self._job_config[graph_id] = config
-        self.dump_to_disk()
         # submit
         with gs_interactive.ApiClient(
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = gs_interactive.AdminServiceGraphManagementApi(
-                api_client
-            )
+            api_instance = gs_interactive.AdminServiceGraphManagementApi(api_client)
             response = api_instance.create_dataloading_job(
                 graph_id, SchemaMapping.from_dict(schema_mapping)
             )
             return response.job_id
 
-    def get_dataloading_job_config(self, graph_id: str) -> dict:
-        config = {}
-        if graph_id in self._job_config:
-            config = self._job_config[graph_id]
-        return config
+    def get_dataloading_job_config(
+        self, graph_id: str, config: dict, ds_manager: DataSourceManager
+    ) -> dict:
+        raise RuntimeError("Method is not supported.")
+
+    def get_storage_usage(self) -> dict:
+        if CLUSTER_TYPE == "KUBERNETES":
+            raise RuntimeError("Method is not supported.")
+        hostname = socket.gethostname()
+        disk_info = psutil.disk_usage("/")
+        disk_usage = float(f"{disk_info.used / disk_info.total * 100:.2f}")
+        return {hostname: disk_usage}
+
+    def gremlin_service_available(self) -> bool:
+        raise RuntimeError("Method is not supported.")
+
+    def import_schema(self, graph_id, schema: dict):
+        raise RuntimeError("Method is not supported.")
 
 
 def init_hqps_client():

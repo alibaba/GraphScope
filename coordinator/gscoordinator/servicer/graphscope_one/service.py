@@ -47,9 +47,9 @@ from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
 from graphscope.proto import coordinator_service_pb2_grpc
-from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
+from graphscope.proto.error import coordinator_pb2
 
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
@@ -235,29 +235,29 @@ class GraphScopeOneServiceServicer(
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
-            error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+            error_code = coordinator_pb2.COORDINATOR_INTERNAL_ERROR
             head, bodies = None, None
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
                     # need dag_bodies to load graph from pandas/numpy
-                    error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_analytical_engine(
                         dag, dag_bodies, loader_op_bodies
                     )
                 # run on interactive engine
                 elif run_dag_on == GSEngine.interactive_engine:
-                    error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_interactive_engine(
                         dag
                     )
                 # run on learning engine
                 elif run_dag_on == GSEngine.learning_engine:
-                    error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
+                    error_code = coordinator_pb2.LEARNING_ENGINE_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_learning_engine(dag)
                 # run on coordinator
                 elif run_dag_on == GSEngine.coordinator:
-                    error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+                    error_code = coordinator_pb2.COORDINATOR_INTERNAL_ERROR
                     head, bodies = self._operation_executor.run_on_coordinator(
                         dag, dag_bodies, loader_op_bodies
                     )

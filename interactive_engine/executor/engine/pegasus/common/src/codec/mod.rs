@@ -344,6 +344,7 @@ impl<T: Decode> Decode for Option<T> {
 
 mod shade;
 mod third_party;
+
 pub use shade::ShadeCodec;
 #[cfg(feature = "serde")]
 pub use third_party::serde_bin as serde;

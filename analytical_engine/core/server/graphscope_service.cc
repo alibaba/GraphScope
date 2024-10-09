@@ -27,7 +27,7 @@
 
 #include "core/server/rpc_utils.h"
 #include "proto/attr_value.pb.h"
-#include "proto/error_codes.pb.h"
+#include "proto/error/coordinator.pb.h"
 #include "proto/graph_def.pb.h"
 #include "proto/message.pb.h"
 #include "proto/op_def.pb.h"

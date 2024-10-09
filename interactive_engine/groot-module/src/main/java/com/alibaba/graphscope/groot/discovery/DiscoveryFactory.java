@@ -16,6 +16,7 @@ package com.alibaba.graphscope.groot.discovery;
 import com.alibaba.graphscope.groot.CuratorUtils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -45,7 +46,7 @@ public class DiscoveryFactory {
             case "ZOOKEEPER":
                 return new ZkDiscovery(this.configs, localNodeProvider, getCurator());
             default:
-                throw new IllegalArgumentException(
+                throw new InvalidArgumentException(
                         "invalid discovery mode [" + discoveryMode + "]");
         }
     }

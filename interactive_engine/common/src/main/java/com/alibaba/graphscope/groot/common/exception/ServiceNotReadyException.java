@@ -15,8 +15,22 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
+import com.alibaba.graphscope.proto.Code;
+
 public class ServiceNotReadyException extends GrootException {
     public ServiceNotReadyException(String msg) {
-        super(msg);
+        super(Code.SERVICE_NOT_READY, msg);
+    }
+
+    public ServiceNotReadyException(String msg, Throwable t) {
+        super(Code.SERVICE_NOT_READY, msg, t);
+    }
+
+    public ServiceNotReadyException() {
+        super(Code.SERVICE_NOT_READY);
+    }
+
+    public ServiceNotReadyException(Throwable t) {
+        super(Code.SERVICE_NOT_READY, t);
     }
 }

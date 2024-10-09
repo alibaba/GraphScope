@@ -31,7 +31,7 @@ use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::{Data, Tag, WorkerId};
 
 pub struct InputBlockGuard {
     pub tag: Tag,
@@ -55,11 +55,13 @@ pub struct InputHandle<D: Data> {
     // scope skip manager:
     cancel: TidyTagMap<()>,
     parent_cancel: AHashSet<Tag>,
+    worker_id: WorkerId,
 }
 
 impl<D: Data> InputHandle<D> {
     pub fn new(
         ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: EventEmitter,
+        worker_id: WorkerId,
     ) -> Self {
         let scope_level = ch_info.scope_level;
         InputHandle {
@@ -72,6 +74,7 @@ impl<D: Data> InputHandle<D> {
             event_emitter,
             cancel: TidyTagMap::new(scope_level),
             parent_cancel: AHashSet::new(),
+            worker_id,
         }
     }
 
@@ -410,7 +413,7 @@ impl<D: Data> InputHandle<D> {
     }
 
     pub fn propagate_cancel(&mut self, tag: &Tag) {
-        let source = crate::worker_id::get_current_worker().index;
+        let source = self.worker_id.index;
         let ch = self.ch_info.id.index;
         let event = Event::new(source, self.ch_info.source_port, EventKind::Cancel((ch, tag.clone())));
         let result = if self.ch_info.source_peers > 1 {

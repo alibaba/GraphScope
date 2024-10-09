@@ -85,18 +85,46 @@ public abstract class Utils {
             Map<String, GraphEdge> edgeMap,
             Map<String, Integer> propNameToIdMap,
             GSDataTypeConvertor<DataType> typeConvertor) {
+        int curVertexTypeId = 0;
+        int curEdgeTypeId = 0;
         for (Object element : elementList) {
             if (element instanceof Map) {
                 Map<String, Object> elementMap = (Map<String, Object>) element;
                 String label = (String) elementMap.get("type_name");
-                int labelId =
-                        (int)
-                                Objects.requireNonNull(
-                                        elementMap.get("type_id"),
-                                        "type_id not exist in yaml config");
+                int labelId = 0;
+                if (elementMap.get("type_id") != null) {
+                    labelId = (int) elementMap.get("type_id");
+                    // Expect the id is continuous
+                    if (type.equals("VERTEX")) {
+                        if (labelId != curVertexTypeId) {
+                            throw new IllegalArgumentException(
+                                    "vertex type id is not continuous, expect "
+                                            + curVertexTypeId
+                                            + " but get "
+                                            + labelId);
+                        }
+                        curVertexTypeId++;
+                    } else {
+                        if (labelId != curEdgeTypeId) {
+                            throw new IllegalArgumentException(
+                                    "edge type id is not continuous, expect "
+                                            + curEdgeTypeId
+                                            + " but get "
+                                            + labelId);
+                        }
+                        curEdgeTypeId++;
+                    }
+                } else {
+                    if (type.equals("VERTEX")) {
+                        labelId = curVertexTypeId++;
+                    } else {
+                        labelId = curEdgeTypeId++;
+                    }
+                }
                 List<GraphProperty> propertyList = Lists.newArrayList();
                 List propertyNodes = (List) elementMap.get("properties");
                 if (propertyNodes != null) {
+                    int propertyId = 0;
                     for (Object property : propertyNodes) {
                         if (property instanceof Map) {
                             Map<String, Object> propertyMap = (Map<String, Object>) property;
@@ -105,15 +133,22 @@ public abstract class Utils {
                                             Objects.requireNonNull(
                                                     propertyMap.get("property_name"),
                                                     "property_name not exist in yaml config");
-                            int propertyId =
-                                    (int)
-                                            Objects.requireNonNull(
-                                                    propertyMap.get("property_id"),
-                                                    "property_id not exist in yaml config");
-                            propNameToIdMap.put(propertyName, propertyId);
+                            int curPropertyId = 0;
+                            if (propertyMap.get("property_id") != null) {
+                                int tmpId = (int) propertyMap.get("property_id");
+                                if (tmpId != propertyId) {
+                                    throw new IllegalArgumentException(
+                                            "property id is not continuous, expect "
+                                                    + propertyId
+                                                    + " but get "
+                                                    + tmpId);
+                                }
+                            }
+                            curPropertyId = propertyId++;
+                            propNameToIdMap.put(propertyName, curPropertyId);
                             propertyList.add(
                                     new DefaultGraphProperty(
-                                            propertyId,
+                                            curPropertyId,
                                             propertyName,
                                             toDataType(
                                                     propertyMap.get("property_type"),

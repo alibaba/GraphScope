@@ -13,6 +13,9 @@
  */
 package com.alibaba.graphscope.groot.common.schema.wrapper;
 
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -73,7 +76,7 @@ public class SerdeUtils {
                                 try {
                                     dos.writeInt(e);
                                 } catch (IOException ex) {
-                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                    throw new InvalidArgumentException("write to bytes failed", ex);
                                 }
                                 return null;
                             });
@@ -89,7 +92,7 @@ public class SerdeUtils {
                                 try {
                                     dos.writeLong(e);
                                 } catch (IOException ex) {
-                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                    throw new InvalidArgumentException("write to bytes failed", ex);
                                 }
                                 return null;
                             });
@@ -105,7 +108,7 @@ public class SerdeUtils {
                                 try {
                                     dos.writeFloat(e);
                                 } catch (IOException ex) {
-                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                    throw new InvalidArgumentException("write to bytes failed", ex);
                                 }
                                 return null;
                             });
@@ -121,7 +124,7 @@ public class SerdeUtils {
                                 try {
                                     dos.writeDouble(e);
                                 } catch (IOException ex) {
-                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                    throw new InvalidArgumentException("write to bytes failed", ex);
                                 }
                                 return null;
                             });
@@ -149,7 +152,7 @@ public class SerdeUtils {
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException(
+            throw new InvalidArgumentException(
                     "unable to parse object to bytes. DataType ["
                             + dataType
                             + "], Object ["
@@ -200,7 +203,7 @@ public class SerdeUtils {
                                         try {
                                             return dis.readInt();
                                         } catch (IOException e) {
-                                            throw new IllegalArgumentException(
+                                            throw new InvalidArgumentException(
                                                     "parse val failed", e);
                                         }
                                     });
@@ -213,7 +216,7 @@ public class SerdeUtils {
                                         try {
                                             return dis.readLong();
                                         } catch (IOException e) {
-                                            throw new IllegalArgumentException(
+                                            throw new InvalidArgumentException(
                                                     "parse val failed", e);
                                         }
                                     });
@@ -226,7 +229,7 @@ public class SerdeUtils {
                                         try {
                                             return dis.readFloat();
                                         } catch (IOException e) {
-                                            throw new IllegalArgumentException(
+                                            throw new InvalidArgumentException(
                                                     "parse val failed", e);
                                         }
                                     });
@@ -239,7 +242,7 @@ public class SerdeUtils {
                                         try {
                                             return dis.readDouble();
                                         } catch (IOException e) {
-                                            throw new IllegalArgumentException(
+                                            throw new InvalidArgumentException(
                                                     "parse val failed", e);
                                         }
                                     });
@@ -267,7 +270,7 @@ public class SerdeUtils {
             }
             return valObject;
         } catch (IOException e) {
-            throw new IllegalArgumentException("parse val failed", e);
+            throw new InvalidArgumentException("parse val failed", e);
         }
     }
 

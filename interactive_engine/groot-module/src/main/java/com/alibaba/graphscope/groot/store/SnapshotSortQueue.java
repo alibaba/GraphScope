@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 
@@ -65,7 +66,7 @@ public class SnapshotSortQueue {
     public boolean offerQueue(int queueId, StoreDataBatch entry) throws InterruptedException {
         BlockingQueue<StoreDataBatch> innerQueue = this.innerQueues.get(queueId);
         if (innerQueue == null) {
-            throw new IllegalArgumentException("invalid queueId [" + queueId + "]");
+            throw new InvalidArgumentException("invalid queueId [" + queueId + "]");
         }
         boolean res = innerQueue.offer(entry, this.queueWaitMs, TimeUnit.MILLISECONDS);
         if (res) {

@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.rpc;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
+import com.alibaba.graphscope.groot.common.exception.NetworkFailureException;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -120,7 +120,7 @@ public class ChannelManager {
     public ManagedChannel getChannel(RoleType role, int idx) {
         Map<Integer, ManagedChannel> idToChannel = this.roleToChannels.get(role);
         if (idToChannel == null) {
-            throw new NodeConnectException("invalid role [" + role + "]");
+            throw new NetworkFailureException("invalid role [" + role + "]");
         }
         // to avoid thread competition
         if (idToChannel.get(idx) == null) {

@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.groot.common.config;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+
 import java.util.function.Function;
 
 public class Config<T> {
@@ -35,7 +37,7 @@ public class Config<T> {
             T val = parseFunc.apply(valStr);
             return val;
         } catch (Exception e) {
-            throw new IllegalArgumentException(
+            throw new InvalidArgumentException(
                     "key [" + key + "] val [" + valStr + "] parse failed", e);
         }
     }

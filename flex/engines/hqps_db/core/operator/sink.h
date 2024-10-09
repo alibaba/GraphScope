@@ -114,9 +114,8 @@ void template_set_value(common::Value* value, T v) {
 }
 
 template <typename T,
-          typename std::enable_if<
-              (std::is_same_v<T, uint64_t>) &&
-              (!std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
+          typename std::enable_if<(std::is_same_v<T, uint64_t>) &&(
+              !std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
   value->set_i64(v);
 }
@@ -429,8 +428,12 @@ class SinkOp {
     // get all property for two labels vertex
     auto& schema = graph.schema();
     std::array<std::vector<std::string>, 2> prop_names;
-    prop_names[0] = schema.get_vertex_property_names(labels[0]);
-    prop_names[1] = schema.get_vertex_property_names(labels[1]);
+    if (labels[0] < schema.vertex_label_num()) {
+      prop_names[0] = schema.get_vertex_property_names(labels[0]);
+    }
+    if (labels[1] < schema.vertex_label_num()) {
+      prop_names[1] = schema.get_vertex_property_names(labels[1]);
+    }
     // get all properties
     std::array<std::vector<std::shared_ptr<RefColumnBase>>, 2> column_ptrs;
     for (size_t i = 0; i < prop_names[0].size(); ++i) {
@@ -479,7 +482,7 @@ class SinkOp {
         for (size_t i : repeat_offsets) {
           num_rows += i;
         }
-        CHECK(num_rows == results_vec.results_size())
+        CHECK((int32_t) num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
@@ -526,7 +529,9 @@ class SinkOp {
       results::CollectiveResults& results_vec,
       const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
     auto& schema = graph.schema();
-    auto prop_names = schema.get_vertex_property_names(label);
+    auto prop_names = label < schema.vertex_label_num()
+                          ? schema.get_vertex_property_names(label)
+                          : std::vector<std::string>();
     // get all properties
     std::vector<std::shared_ptr<RefColumnBase>> column_ptrs;
     for (size_t i = 0; i < prop_names.size(); ++i) {

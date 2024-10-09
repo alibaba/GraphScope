@@ -34,6 +34,8 @@
 
 #include "boost/leaf/error.hpp"
 #include "boost/leaf/result.hpp"
+#include "grape/fragment/immutable_edgecut_fragment.h"
+// #include "grape/fragment/immutable_vertexcut_fragment.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/client/client.h"
@@ -1021,6 +1023,145 @@ class FragmentWrapper<
   rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
+
+/**
+ * @brief A specialized FragmentWrapper for ImmutableEdgecutFragment.
+ * @tparam OID_T OID type
+ * @tparam VID_T VID type
+ */
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class FragmentWrapper<
+    grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+    : public IFragmentWrapper {
+  using fragment_t =
+      grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+
+ public:
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
+                  std::shared_ptr<fragment_t> fragment)
+      : IFragmentWrapper(id),
+        graph_def_(std::move(graph_def)),
+        fragment_(std::move(fragment)) {
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::IMMUTABLE_EDGECUT);
+  }
+
+  std::shared_ptr<void> fragment() const override {
+    return std::static_pointer_cast<void>(fragment_);
+  }
+
+  const rpc::graph::GraphDefPb& graph_def() const override {
+    return graph_def_;
+  }
+
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot copy the ArrowProjectedFragment");
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
+      const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the directed DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot convert to the undirected DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot generate a view over the ArrowProjectedFragment");
+  }
+
+ private:
+  rpc::graph::GraphDefPb graph_def_;
+  std::shared_ptr<fragment_t> fragment_;
+};
+
+/*
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class FragmentWrapper<
+    grape::ImmutableVertexcutFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+    : public IFragmentWrapper {
+  using fragment_t =
+      grape::ImmutableVertexcutFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+
+ public:
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
+                  std::shared_ptr<fragment_t> fragment)
+      : IFragmentWrapper(id),
+        graph_def_(std::move(graph_def)),
+        fragment_(std::move(fragment)) {
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::IMMUTABLE_EDGECUT);
+  }
+
+  std::shared_ptr<void> fragment() const override {
+    return std::static_pointer_cast<void>(fragment_);
+  }
+
+  const rpc::graph::GraphDefPb& graph_def() const override {
+    return graph_def_;
+  }
+
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot copy the ArrowProjectedFragment");
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
+      const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the directed DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot convert to the undirected DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot generate a view over the ArrowProjectedFragment");
+  }
+
+ private:
+  rpc::graph::GraphDefPb graph_def_;
+  std::shared_ptr<fragment_t> fragment_;
+};
+*/
 
 #ifdef NETWORKX
 /**

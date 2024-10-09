@@ -280,7 +280,9 @@ class QueryGenerator {
       for (size_t i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate
-          CHECK(param_vars[i] == param_vars[i - 1]);
+          CHECK(param_vars[i].var_name == param_vars[i - 1].var_name)
+              << " " << param_vars[i].var_name << " "
+              << param_vars[i - 1].var_name;
           continue;
         } else {
           ss << data_type_2_string(param_vars[i].type) << " "
@@ -308,7 +310,9 @@ class QueryGenerator {
 
     for (size_t i = 0; i < param_vars.size(); ++i) {
       if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
-        CHECK(param_vars[i] == param_vars[i - 1]);
+        CHECK(param_vars[i].var_name == param_vars[i - 1].var_name)
+            << " " << i << " " << param_vars[i].var_name << " "
+            << param_vars[i - 1].var_name;
         continue;
       } else {
         auto& cur_param_var = param_vars[i];

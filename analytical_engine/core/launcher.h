@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "boost/process/detail/child_decl.hpp"
+#include "boost/process.hpp"
 #include "core/flags.h"
 #include "grape/worker/comm_spec.h"
 

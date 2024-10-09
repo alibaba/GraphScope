@@ -26,13 +26,13 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build Wheel Package
       run: |
@@ -66,7 +66,7 @@ jobs:
         # mv ${GITHUB_WORKSPACE}/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-arm64-${{ github.sha }}
         path: |
@@ -98,13 +98,13 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build Wheel Package
       run: |
@@ -146,7 +146,7 @@ jobs:
         mv ${GITHUB_WORKSPACE}/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-${{ github.sha }}
         path: |
@@ -179,11 +179,11 @@ jobs:
     needs: [build-wheels]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
 
@@ -250,7 +250,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
 
@@ -306,7 +306,7 @@ jobs:
         --shm-size 4096m
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
 

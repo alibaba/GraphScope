@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.schema.mapper;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
@@ -70,7 +71,7 @@ public class GraphSchemaMapper {
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("convert graph schema to json failed", e);
+            throw new InvalidArgumentException("convert graph schema to json failed", e);
         }
     }
 
@@ -113,7 +114,7 @@ public class GraphSchemaMapper {
             }
             return graphSchema;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 

@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.config.*;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
 import com.alibaba.graphscope.groot.meta.MetaStore;
@@ -52,7 +52,7 @@ public class GraphInitializer {
             initializeZkIfNeeded();
             initializeMetaIfNeeded();
         } catch (Exception e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
     }
 

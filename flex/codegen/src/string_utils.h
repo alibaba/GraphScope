@@ -82,7 +82,6 @@ std::string res_alias_to_append_opt(int res_alias, int in_alias) {
   }
 }
 
-
 template <typename LabelIdT>
 std::string ensure_label_id(LabelIdT label_id) {
   return std::string(LABEL_ID_T_CASTER) + std::string(" ") +

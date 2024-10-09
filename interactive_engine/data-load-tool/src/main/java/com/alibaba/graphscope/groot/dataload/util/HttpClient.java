@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -81,14 +83,14 @@ public class HttpClient {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 resultMsg = EntityUtils.toString(response.getEntity(), "UTF-8");
             } else {
-                throw new Exception(
-                        "调用http-get方法返回失败code="
+                throw new InvalidArgumentException(
+                        "HTTP GET failed. code="
                                 + response.getStatusLine().getStatusCode()
-                                + ",msg="
+                                + ", msg="
                                 + response.getStatusLine().getReasonPhrase());
             }
         } catch (Exception e) {
-            throw new Exception("调用http-get方法异常", e);
+            throw new InvalidArgumentException("HTTP GET failed", e);
         } finally {
             try {
                 if (response != null) {
@@ -96,7 +98,7 @@ public class HttpClient {
                 }
                 httpClient.close();
             } catch (IOException e) {
-                throw new Exception("httpClient close异常", e);
+                throw new InvalidArgumentException("httpClient close failed", e);
             }
         }
         return resultMsg;

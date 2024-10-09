@@ -61,7 +61,7 @@ class AlertMessage(object):
 
     def to_dict(self):
         return {
-            "message_id": self.message_id,
+            "id": self.message_id,
             "alert_name": self.alert_name,
             "severity": self.severity,
             "metric_type": self.metric_type,

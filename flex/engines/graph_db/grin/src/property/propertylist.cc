@@ -122,7 +122,7 @@ GRIN_EDGE_PROPERTY grin_get_edge_property_from_list(GRIN_GRAPH g,
                                                     size_t idx) {
   auto _epl = static_cast<GRIN_EDGE_PROPERTY_LIST_T*>(epl);
   if (_epl->size() <= idx) {
-    return GRIN_NULL_EDGE_PROPERTY;
+    return static_cast<GRIN_EDGE_PROPERTY>(GRIN_NULL_EDGE_PROPERTY);
   }
   return (*_epl)[idx];
 }

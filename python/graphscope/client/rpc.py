@@ -30,8 +30,8 @@ from graphscope.client.utils import GRPCUtils
 from graphscope.client.utils import handle_grpc_error
 from graphscope.client.utils import suppress_grpc_error
 from graphscope.proto import coordinator_service_pb2_grpc
-from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
+from graphscope.proto.error import coordinator_pb2
 from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -184,10 +184,11 @@ class GRPCClient(object):
         response = self._grpc_utils.parse_runstep_responses(
             self._stub.RunStep(runstep_requests)
         )
-        if response.code != error_codes_pb2.OK:
+
+        if response.code != coordinator_pb2.OK:
             logger.error(
                 "Runstep failed with code: %s, message: %s",
-                error_codes_pb2.Code.Name(response.code),
+                coordinator_pb2.Code.Name(response.code),
                 response.error_msg,
             )
             if response.full_exception:

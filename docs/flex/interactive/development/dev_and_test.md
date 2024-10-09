@@ -57,6 +57,21 @@ The Interactive Query Engine code is organized in the `flex` folder as follows:
 
 
 
+### Dependency Graph
+
+Interactive follows the lego-like building concept of GraphScope Flex, comprising multiple modules. A dependency graph illustrates the relationships among these modules, although only a subset of third-party dependencies is included for clarity.
+
+
+:::{figure-md}
+
+<img src="../../../images/flex_interactive_dep_graph.png"
+     alt="Dependency Graph between modules"
+     width="80%">
+
+Dependency Graph between modules
+:::
+
+
 ### Compiler
 
 The Compiler is crucial in Interactive as it converts graph queries written in graph query languages (Cypher/Gremlin) into physical query plans using GAIA IR.
@@ -82,6 +97,14 @@ Then, build the Compiler.
 cd interactive_engine
 mvn clean package -DskipTests -Pexperimental
 ```
+
+### CMake options
+
+- `BUILD_TEST`: Indicates whether to build tests.  
+- `BUILD_DOC`: Indicates whether to build Flex documentation.  
+- `BUILD_ODPS_FRAGMENT_LOADER`: Enables support for loading graphs from ODPS tables.  
+- `USE_PTHASH`: Indicates whether to use a perfect hash when building the vertex map.  
+- `OPTIMIZE_FOR_HOST`: Determines if Flex should be optimized for performance on the current machine. Note that enabling this option may result in a binary that does not run on different platforms or CPU architectures.
 
 ## Testing
 
@@ -135,10 +158,10 @@ Subsequently, execute the `hqps_admin_test.sh` script to test the of the interac
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
 # Change the default_graph field to 
-bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
 ```
 
-The `engine_config_test.yaml` specifies the configuration for interactive services. 
+The `interactive_config_test.yaml` specifies the configuration for interactive services. 
 
 ```yaml 
 directories:
@@ -206,27 +229,25 @@ The Compiler service could be started as a subprocess of the AdminService. This 
 ```
 
 
-### Mapping of Internal Code to Http Error Code
+### Error Code
 
+Runtime errors are categorized, assigned an error code, and included in the HTTP response body (only for non-200 HTTP responses). 
+The mapping between status codes and HTTP codes is shown in the table below.
 
-Internally we use [`StatusCode`](https://github.com/alibaba/GraphScope/blob/main/flex/utils/result.h) to record the runtime errors.
-The mapping between statusCode and http code is shown in the following table.
 
 | Code                                | HTTP Code   |
 | ----------------------------------- | ----------- |
-| gs::StatusCode::OK                  | 200         |
-| gs::StatusCode::InValidArgument     | 400         |
-| gs::StatusCode::UnsupportedOperator | 400         |
-| gs::StatusCode::AlreadyExists       | 409         |
-| gs::StatusCode::NotExists           | 404         |
-| gs::StatusCode::CodegenError        | 500         |
-| gs::StatusCode::UninitializedStatus | 500         |
-| gs::StatusCode::InvalidSchema       | 400         |
-| gs::StatusCode::PermissionError     | 403         |
-| gs::StatusCode::IllegalOperation    | 400         |
-| gs::StatusCode::InternalError       | 500         |
-| gs::StatusCode::InvalidImportFile   | 400         |
-| gs::StatusCode::IOError             | 500         |
-| gs::StatusCode::NotFound            | 404         |
-| gs::StatusCode::QueryFailed         | 500         |
+| OK(0)                  | 200         |
+| INVALID_ARGUMENT(2)     | 400         |
+| UNSUPPORTED_OPERATION(11) | 400         |
+| NOT_FOUND(4)           | 404         |
+| ALREADY_EXISTS(5)       | 409         |
+| PERMISSION_DENIED(8)     | 403         |
+| CODEGEN_ERROR(100)        | 500         |
+| INVALID_SCHEMA(101)       | 400         |
+| ILLEGAL_OPERATION(102)    | 400         |
+| INTERNAL_ERROR(103)       | 500         |
+| INVALID_IMPORT_FILE(104)   | 400         |
+| IO_ERROR(105)             | 500         |
+| QUERY_FAILED(106)         | 500         |
 | default                             | 500         |

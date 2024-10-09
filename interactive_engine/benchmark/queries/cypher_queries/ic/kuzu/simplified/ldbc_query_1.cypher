@@ -1,0 +1,2 @@
+MATCH  (p1:PERSON {id:$personId})-[:PERSON_KNOWS_PERSON]-(p2:PERSON {firstName:'$firstName'})-[:PERSON_ISLOCATEDIN_PLACE]-(pl:PLACE) 
+RETURN p2.id, p2.lastName, p2.birthday, p2.creationDate, p2.gender, p2.browserUsed, p2.locationIP, pl.name;

@@ -3,8 +3,7 @@ use std::marker::PhantomData;
 
 use protobuf::Message;
 
-use crate::db::api::GraphErrorCode::InvalidData;
-use crate::db::api::{GraphError, GraphResult};
+use crate::db::api::{ErrorCode, GraphError, GraphResult};
 
 /// define the size that a length field takes in encoding an array
 pub const LEN_SIZE: usize = ::std::mem::size_of::<u32>();
@@ -114,7 +113,7 @@ impl UnsafeBytesWriter {
 }
 
 pub fn parse_pb<M: Message>(buf: &[u8]) -> GraphResult<M> {
-    Message::parse_from_bytes(buf).map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+    Message::parse_from_bytes(buf).map_err(|e| GraphError::new(ErrorCode::INVALID_DATA, format!("{:?}", e)))
 }
 
 #[cfg(test)]

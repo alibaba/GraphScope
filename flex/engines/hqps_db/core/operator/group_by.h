@@ -36,8 +36,8 @@ struct CommonBuilderT;
 
 template <typename CTX_T, int col_id>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<
-      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
+      std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = typename set_t::builder_t;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -45,8 +45,8 @@ struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
 
 template <typename CTX_T, int col_id, typename T>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<
-      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
+      std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = CollectionBuilder<T>;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -57,8 +57,8 @@ struct GroupKeyResT;
 
 template <typename CTX_T, int col_id, typename T>
 struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<
-      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
+      std::declval<CTX_T>().template GetNode<col_id>())>>;
   using result_t = typename KeyedT<set_t, PropertySelector<T>>::keyed_set_t;
 };
 
@@ -75,9 +75,8 @@ struct GroupValueResT<CTX_T,
                       AggregateProp<agg_func, std::tuple<SELECTOR...>,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) == 1)>::type> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<
-      decltype(std::declval<CTX_T>()
-                   .template GetNode<FirstElement<Is...>::value>())>>;
+  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
+      std::declval<CTX_T>().template GetNode<FirstElement<Is...>::value>())>>;
   using result_t =
       typename GroupValueResTImpl<old_set_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -90,8 +89,8 @@ struct GroupValueResT<CTX_T,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) > 1)>::type> {
   using old_set_tuple_t =
-      std::tuple<std::remove_const_t<std::remove_reference_t<
-          decltype(std::declval<CTX_T>().template GetNode<Is>())>>...>;
+      std::tuple<std::remove_const_t<std::remove_reference_t<decltype(
+          std::declval<CTX_T>().template GetNode<Is>())>>...>;
   using result_t =
       typename GroupValueResTImpl<old_set_tuple_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -489,7 +488,6 @@ class GroupByOp {
         }
         auto data_ele = gs::get_from_tuple<GROUP_KEY::col_id>(data_tuple);
         int32_t ind = insert_to_keyed_set(keyed_set_builder, key_ele, data_ele);
-        // CHECK(ind != -1);
         if (ind != -1) {
           insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
                                       data_tuple, ind);

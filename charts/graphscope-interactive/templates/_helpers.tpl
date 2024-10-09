@@ -156,14 +156,14 @@ Return the configmap with the graphscope configuration
 Return the engineConfigPath with the graphscope configuration
 */}}
 {{- define "graphscope-interactive.engineConfigPath" -}}
-/etc/interactive/engine_config.yaml
+/etc/interactive/interactive_config.yaml
 {{- end -}}
 
 {{/*
 Return the realEngineConfigPath with the graphscope configuration, templated by frontend
 */}}
 {{- define "graphscope-interactive.realEngineConfigPath" -}}
-/etc/interactive/real_engine_config.yaml
+/etc/interactive/real_interactive_config.yaml
 {{- end -}}
 
 {{/*

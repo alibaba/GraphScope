@@ -1,0 +1,77 @@
+/**
+ *
+ * The file proto/attr_value.proto is referred and derived from project
+ * tensorflow,
+ *
+ *    https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/attr_value.proto
+ *
+ * which has the following license:
+ *
+ *
+ Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ ==============================================================================
+ */
+syntax = "proto3";
+
+package gs.flex.interactive;
+
+option java_package = "com.alibaba.graphscope.interactive.proto";
+option java_multiple_files = true;
+
+
+// component-05: GraphScope Interactive (flex)
+enum Code {
+    // Not an error; returned on success.
+    OK = 0;
+    CANCELLED = 1;
+    // Arguments of operations is invalid / in a wrong format.
+    INVALID_ARGUMENT = 2;
+    // Timeout, used when an operation fail to return result in an specific time.
+    TIMEOUT = 3;
+    // Required resources cannot be found.
+    NOT_FOUND = 4;
+    // File or resources already existed.
+    ALREADY_EXISTS = 5;
+    RESOURCE_EXHAUSTED = 6;
+    // Functionality not implemented yet
+    UNIMPLEMENTED = 7;
+    // Client doesn't have the permission.
+    PERMISSION_DENIED = 8;
+    // Compile graph frame or app frame failed.
+    COMPILATION_FAILURE = 9;
+    PORT_IN_USE = 10;
+    UNSUPPORTED_OPERATION = 11;
+    ILLEGAL_STATE = 12;
+    // Network is unreachable
+    NETWORK_FAILURE = 13;
+    BAD_REQUEST = 14;
+    SERVICE_UNAVAILABLE = 15;
+
+
+    CODEGEN_ERROR = 100;
+    INVALID_SCHEMA = 101;
+    ILLEGAL_OPERATION = 102;
+    INTERNAL_ERROR = 103;
+    INVALID_IMPORT_FILE = 104;
+    IO_ERROR = 105;
+    QUERY_FAILED = 106;
+    REOPEN_ERROR = 107;
+    ERROR_OPEN_META = 108;
+    SQL_EXECUTION_ERROR = 109;
+    SQL_BINDING_ERROR = 110;
+    ALREADY_LOCKED = 111;
+
+    UNKNOWN = 999;
+}

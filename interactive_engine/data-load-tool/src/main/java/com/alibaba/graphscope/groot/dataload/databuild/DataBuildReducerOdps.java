@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.dataload.util.AbstractFileSystem;
 import com.alibaba.graphscope.groot.dataload.util.FSFactory;
 import com.aliyun.odps.data.Record;
@@ -130,7 +131,7 @@ public class DataBuildReducerOdps extends ReducerBase {
             }
             return new String(Hex.encodeHex(MD5.digest()));
         } catch (NoSuchAlgorithmException | IOException e) {
-            throw new IOException(e);
+            throw new InvalidArgumentException(e);
         } finally {
             if (fis != null) {
                 fis.close();

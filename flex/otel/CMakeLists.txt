@@ -1,6 +1,5 @@
 # OpenTelemetry
 if (OPENTELEMETRY_CPP_FOUND)
-    find_package(Protobuf REQUIRED)
     find_package(CURL REQUIRED)
 
     include_directories("${OPENTELEMETRY_CPP_INCLUDE_DIRS}")

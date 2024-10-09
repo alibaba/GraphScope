@@ -23,8 +23,7 @@ public class SubtaskQuery extends CommonQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
 
         for (String parameter : singleParameter.keySet()) {
             gremlinQueryPattern =

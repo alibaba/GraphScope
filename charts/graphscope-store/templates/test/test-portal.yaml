@@ -1,0 +1,34 @@
+{{- if .Values.portal.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "graphscope-store.portal.fullname" . }}-test-http-service
+  labels:
+    {{- if .Values.podLabels }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 4 }}
+    {{- end }}
+  annotations:
+    "helm.sh/hook": test
+    {{- if .Values.podAnnotations }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.tolerations }}
+  tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.schedulerName }}
+  schedulerName: {{ .Values.schedulerName | quote }}
+  {{- end }}
+  {{- if .Values.dnsPolicy }}
+  dnsPolicy: {{ .Values.dnsPolicy | quote }}
+  {{- end }}
+  {{- if .Values.dnsConfig }}
+  dnsConfig: {{- include "common.tplvalues.render" (dict "value" .Values.dnsConfig "context" $) | nindent 8 }}
+  {{- end }}
+  containers:
+    - name: test
+      image: curlimages/curl:7.65.3
+      command: ['sh']
+      args: ['-c', 'while ! curl {{ include "graphscope-store.portal.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.portal.service.servicePort }} --output -; do sleep 1 && echo -n .; done']
+  restartPolicy: Never
+{{- end }}

@@ -23,8 +23,11 @@ limitations under the License.
 #include "apps/flash/api.h"
 #include "apps/flash/flash_app_base.h"
 #include "apps/flash/flash_context.h"
+#include "apps/flash/flash_utils.h"
+#include "apps/flash/flash_ware.h"
 #include "apps/flash/flash_worker.h"
 #include "apps/flash/value_type.h"
+#include "apps/flash/vertex_subset.h"
 
 namespace gs {
 
@@ -48,7 +51,7 @@ class CCBlockFlash : public FlashAppBase<FRAG_T, CC_TYPE> {
 
     VertexMapSeq(All, CTrueV, local, false);
 
-    Block(Reduce(f, cc, for_i(union_f(cc, f[i], i)), true));
+    FLASH_Block(Reduce(f, cc, for_i(union_f(cc, f[i], i)), true));
 
     for (int i = 0; i < n_vertex; ++i) {
       int fi = get_f(cc, i);

@@ -30,6 +30,7 @@ import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlExplainLevel;
@@ -198,7 +199,27 @@ public class GraphPhysicalExpand extends SingleRel {
         return shuttle.visit(this);
     }
 
+    @Override
+    public GraphPhysicalExpand copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        GraphPhysicalExpand copy =
+                new GraphPhysicalExpand(
+                        getCluster(),
+                        fusedGetV.getHints(),
+                        inputs.get(0),
+                        fusedExpand,
+                        fusedGetV,
+                        getPhysicalOpt(),
+                        aliasName,
+                        optional);
+        return copy;
+    }
+
     public GraphLogicalGetV getFusedGetV() {
         return fusedGetV;
+    }
+
+    @Override
+    public double estimateRowCount(RelMetadataQuery mq) {
+        return fusedExpand != null ? fusedExpand.estimateRowCount(mq) : super.estimateRowCount(mq);
     }
 }

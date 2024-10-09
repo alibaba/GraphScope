@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.groot.common.exception.InvalidSchemaException;
+import com.alibaba.graphscope.groot.common.exception.IllegalSchemaException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import java.util.HashMap;
@@ -104,7 +104,7 @@ public class FileColumnMapping {
                             propertiesMap);
                 }
             }
-            throw new InvalidSchemaException(
+            throw new IllegalSchemaException(
                     "invalid mapping for label ["
                             + this.label
                             + "] srcLabel ["

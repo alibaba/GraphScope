@@ -82,10 +82,15 @@ fn add_remote_register(local: u64, remote: u64, register: InboxRegister) {
     lock.insert((local, remote), register);
 }
 
-fn remove_remote_register(local: u64, remote: u64) -> Option<InboxRegister> {
+fn remove_remote_register(local: u64, remote: u64, other: InboxRegister) -> Option<InboxRegister> {
     let mut lock = REMOTE_RECV_REGISTER
         .write()
         .expect("failure to lock REMOTE_RECV_REGISTER");
+    if let Some(register) = lock.get(&(local, remote)) {
+        if !register.from_same_receiver(&other) {
+            return None;
+        }
+    }
     lock.remove(&(local, remote))
 }
 
@@ -135,7 +140,7 @@ pub fn start_net_receiver(
                     break;
                 }
             }
-            remove_remote_register(local, remote.id);
+            remove_remote_register(local, remote.id, net_recv.get_inbox_register());
             info!("IPC receiver recv from {:?} exit;", remote);
         })
         .expect("start net recv thread failure;");

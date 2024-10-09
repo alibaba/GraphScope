@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.groot.common.meta;
 
+import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InvalidDataTypeException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -29,7 +31,7 @@ public class DataTypeSerializer extends StdSerializer<DataType> {
 
     @Override
     public void serialize(DataType value, JsonGenerator gen, SerializerProvider provider)
-            throws IOException {
+            throws GrootException, IOException {
         if (value.isPrimitiveType()) {
             gen.writeString(value.name());
         } else {
@@ -41,7 +43,8 @@ public class DataTypeSerializer extends StdSerializer<DataType> {
             } else if (value.getType().equals(InternalDataType.MAP)) {
                 prefix = "M";
             } else {
-                throw new IOException(String.format("unknown data type: %s", value.toString()));
+                throw new InvalidDataTypeException(
+                        String.format("unknown data type: %s", value.toString()));
             }
             gen.writeString(String.format("%s<%s>", prefix, value.getExpression()));
         }

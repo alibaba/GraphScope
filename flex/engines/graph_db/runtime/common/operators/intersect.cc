@@ -31,9 +31,9 @@ static void ensure_sorted(std::shared_ptr<ValueColumn<size_t>> idx_col,
   }
 }
 
-Context Intersect::intersect(Context&& ctx,
-                             std::vector<std::tuple<Context, int, int>>&& ctxs,
-                             int alias) {
+bl::result<Context> Intersect::intersect(
+    Context&& ctx, std::vector<std::tuple<Context, int, int>>&& ctxs,
+    int alias) {
   std::vector<std::pair<std::shared_ptr<ValueColumn<size_t>>,
                         std::shared_ptr<IContextColumn>>>
       cols;
@@ -99,11 +99,13 @@ Context Intersect::intersect(Context&& ctx,
       }
     }
   }
-
-  LOG(FATAL) << "not support";
+  LOG(ERROR) << "Currently we only support intersect on two columns";
+  RETURN_NOT_IMPLEMENTED_ERROR(
+      "Currently we only support intersect on two columns");
 }
 
-static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
+static bl::result<Context> intersect_impl(std::vector<Context>&& ctxs,
+                                          int key) {
   if (ctxs[0].get(key)->column_type() == ContextColumnType::kVertex) {
     if (ctxs.size() == 2) {
       auto& vlist0 =
@@ -134,6 +136,7 @@ static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
                   return idx_col1.get_value(a) < idx_col1.get_value(b);
                 });
       std::vector<size_t> shuffle_offsets;
+      std::vector<size_t> shuffle_offsets_1;
       size_t idx0 = 0, idx1 = 0;
       while (idx0 < idx_col0.size() && idx1 < idx_col1.size()) {
         if (idx_col0.get_value(offsets0[idx0]) <
@@ -151,6 +154,7 @@ static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
             auto v1 = vlist1.get_vertex(offsets1[idx1]);
             if (v0 == v1) {
               shuffle_offsets.push_back(offsets0[idx0]);
+              shuffle_offsets_1.push_back(offsets1[idx1]);
             } else if (v0 < v1) {
               break;
             } else {
@@ -164,15 +168,23 @@ static Context intersect_impl(std::vector<Context>&& ctxs, int key) {
       }
 
       ctxs[0].reshuffle(shuffle_offsets);
+      ctxs[1].reshuffle(shuffle_offsets_1);
       ctxs[0].pop_idx_col();
+      for (size_t i = 0; i < ctxs[1].col_num(); ++i) {
+        if (i >= ctxs[0].col_num() || ctxs[0].get(i) == nullptr) {
+          ctxs[0].set(i, ctxs[1].get(i));
+        }
+      }
       return ctxs[0];
     }
   }
-  LOG(FATAL) << "not support";
-  return Context();
+  LOG(ERROR) << "Currently we only support intersect on vertex columns";
+  RETURN_NOT_IMPLEMENTED_ERROR(
+      "Currently we only support intersect on vertex "
+      "columns");
 }
 
-Context Intersect::intersect(std::vector<Context>&& ctxs, int key) {
+bl::result<Context> Intersect::intersect(std::vector<Context>&& ctxs, int key) {
   return intersect_impl(std::move(ctxs), key);
 }
 

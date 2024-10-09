@@ -1,0 +1,1 @@
+Match (p1)<-[:IS_LOCATED_IN]-(p2:Comment)-[]->(:Tag) Return count(p1);

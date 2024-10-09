@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.OdpsException;
@@ -80,7 +81,7 @@ public class VolumeFS extends AbstractFileSystem {
         AliyunAccount aliyunAccount =
                 account instanceof AliyunAccount ? ((AliyunAccount) account) : null;
         if (aliyunAccount == null) {
-            throw new IOException("Not an AliyunAccount");
+            throw new InvalidArgumentException("Not an AliyunAccount");
         }
         HashMap<String, String> config = new HashMap<>();
         config.put(DataLoadConfig.ODPS_ACCESS_ID, aliyunAccount.getAccessId());
@@ -175,7 +176,7 @@ public class VolumeFS extends AbstractFileSystem {
                             + e.getErrorCode()
                             + "]: "
                             + e.getMessage());
-            throw new IOException(e.getMessage());
+            throw new InvalidArgumentException(e.getMessage());
         }
     }
 

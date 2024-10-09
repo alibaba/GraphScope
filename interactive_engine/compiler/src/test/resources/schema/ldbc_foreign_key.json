@@ -1,0 +1,46 @@
+[
+  {
+    "label": {
+      "id": 0,
+      "name": "HASCREATOR",
+      "src_id": 2,
+      "src_name": "COMMENT",
+      "dst_id": 1,
+      "dst_name": "PERSON"
+    },
+    "foreign_keys": [
+      {
+        "id": 2,
+        "name": "COMMENT",
+        "key": "creator_id"
+      },
+      {
+        "id": 1,
+        "name": "PERSON",
+        "key": "id"
+      }
+    ]
+  },
+  {
+    "label": {
+      "id": 0,
+      "name": "HASCREATOR",
+      "src_id": 3,
+      "src_name": "POST",
+      "dst_id": 1,
+      "dst_name": "PERSON"
+    },
+    "foreign_keys": [
+      {
+        "id": 3,
+        "name": "POST",
+        "key": "creator_id"
+      },
+      {
+        "id": 1,
+        "name": "PERSON",
+        "key": "id"
+      }
+    ]
+  }
+]

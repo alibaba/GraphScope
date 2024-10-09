@@ -20,7 +20,11 @@ import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaAppender.class);
 
     private final KafkaAppender kafkaAppender;
 

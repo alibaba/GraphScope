@@ -38,6 +38,8 @@ def create_path(path):
 
 def cpp_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
+    error_files = gather_all_proto(os.path.join(relative_dir, "error"), suffix="coordinator.proto")
+    files.extend(error_files)
     for proto_file in files:
         cmd = [
             shutil.which("protoc"),
@@ -54,7 +56,9 @@ def cpp_out(relative_dir, output_dir):
 def python_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
     groot_files = gather_all_proto(os.path.join(relative_dir, "groot", "sdk"))
+    error_files = gather_all_proto(os.path.join(relative_dir, "error"))
     files.extend(groot_files)
+    files.extend(error_files)
     for proto_file in files:
         cmd = [
             sys.executable,

@@ -359,7 +359,7 @@ class UnTypedEdgeSet {
   std::vector<Direction> get_directions() const {
     std::vector<Direction> res;
     auto edge_triplet = get_edge_triplets();
-    for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
+    for (size_t src_label_ind = 0; src_label_ind < src_labels_.size();
          ++src_label_ind) {
       auto src_label = src_labels_[src_label_ind];
       std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>> tmp;
@@ -627,14 +627,13 @@ class UnTypedEdgeSet {
       auto src_vid = src_vertices_[i];
       auto& cur_edge_iters = edge_iters[i];
       auto src_label_ind = label_indices_[i];
-      auto src_label = src_labels_[src_label_ind];
 
       for (size_t j = 0; j < cur_edge_iters.size(); ++j) {
         auto& cur_iter = cur_edge_iters[j];
         while (cur_iter.IsValid()) {
           auto dst_vid = cur_iter.GetDstId();
           auto data = cur_iter.GetData();
-          for (auto k = 0; k < repeat_array[cur_ind]; ++k) {
+          for (size_t k = 0; k < repeat_array[cur_ind]; ++k) {
             dst_eles.emplace_back(std::make_tuple(src_vid, dst_vid, data));
             label_triplet_indices.emplace_back(sizes[src_label_ind] + j);
           }
@@ -716,7 +715,7 @@ class UnTypedEdgeSet {
   std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>>
   get_edge_triplets() const {
     std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>> ret;
-    for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
+    for (size_t src_label_ind = 0; src_label_ind < src_labels_.size();
          ++src_label_ind) {
       auto src_label = src_labels_[src_label_ind];
       std::vector<std::tuple<LabelT, LabelT, LabelT>> tmp;

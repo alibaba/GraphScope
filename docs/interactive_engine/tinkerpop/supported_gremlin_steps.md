@@ -586,6 +586,18 @@ lengthRange - the lower and the upper bounds of the path length, </br> edgeLabel
 
 Usages of the with()-step: </br>
 keyValuePair - the options to configure the corresponding behaviors of the `PathExpand`-step.
+
+Below are the supported values and descriptions for `PATH_OPT` and `RESULT_OPT` options.
+
+ Parameter | Supported Values  | Description                                    
+-----------|-------------------|------------------------------------------------
+ PATH_OPT  | ARBITRARY         | Allow vertices or edges to be duplicated.     
+ PATH_OPT  | SIMPLE            | No duplicated nodes.            
+ PATH_OPT  | TRAIL             | No duplicated edges.            
+ RESULT_OPT| END_V             | Only keep the end vertex.                      
+ RESULT_OPT| ALL_V             | Keep all vertices along the path.              
+ RESULT_OPT| ALL_V_E           | Keep all vertices and edges along the path.    
+
 ```bash
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices can be duplicated and only the end vertex should be kept
@@ -593,6 +605,9 @@ g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices and edges can be duplicated, and all vertices and edges along the path should be kept
 g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V_E')
+# expand hops within the range of [1, 10) along the outgoing edges,
+# edges cannot be duplicated, and all vertices and edges along the path should be kept
+g.V().out("1..10").with('PATH_OPT', 'TRAIL').with('RESULT_OPT', 'ALL_V_E')
 # expand hops within the range of [1, 10) along the outgoing edges,
 # vertices cannot be duplicated and all vertices should be kept
 g.V().out("1..10").with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'ALL_V')

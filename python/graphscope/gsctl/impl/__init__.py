@@ -16,16 +16,36 @@
 # limitations under the License.
 #
 
+from graphscope.gsctl.impl.alert import create_alert_receiver
+from graphscope.gsctl.impl.alert import delete_alert_message_in_batch
+from graphscope.gsctl.impl.alert import delete_alert_receiver_by_id
+from graphscope.gsctl.impl.alert import delete_alert_rule_by_id
+from graphscope.gsctl.impl.alert import list_alert_messages
+from graphscope.gsctl.impl.alert import list_alert_receivers
+from graphscope.gsctl.impl.alert import list_alert_rules
+from graphscope.gsctl.impl.alert import update_alert_message_in_batch
+from graphscope.gsctl.impl.alert import update_alert_receiver_by_id
+from graphscope.gsctl.impl.alert import update_alert_rule_by_id
 from graphscope.gsctl.impl.common import connect_coordinator
 from graphscope.gsctl.impl.common import disconnect_coordinator
 from graphscope.gsctl.impl.datasource import bind_datasource_in_batch
 from graphscope.gsctl.impl.datasource import get_datasource_by_id
 from graphscope.gsctl.impl.datasource import unbind_edge_datasource
 from graphscope.gsctl.impl.datasource import unbind_vertex_datasource
+from graphscope.gsctl.impl.deployment import get_deployment_pod_log
+from graphscope.gsctl.impl.deployment import get_deployment_resource_usage
+from graphscope.gsctl.impl.deployment import get_deployment_status
+from graphscope.gsctl.impl.deployment import get_storage_usage
+from graphscope.gsctl.impl.graph import create_edge_type
 from graphscope.gsctl.impl.graph import create_graph
+from graphscope.gsctl.impl.graph import create_vertex_type
+from graphscope.gsctl.impl.graph import delete_edge_type_by_name
 from graphscope.gsctl.impl.graph import delete_graph_by_id
+from graphscope.gsctl.impl.graph import delete_vertex_type_by_name
+from graphscope.gsctl.impl.graph import get_graph_by_id
 from graphscope.gsctl.impl.graph import get_graph_id_by_name
 from graphscope.gsctl.impl.graph import get_graph_name_by_id
+from graphscope.gsctl.impl.graph import import_schema
 from graphscope.gsctl.impl.graph import list_graphs
 from graphscope.gsctl.impl.job import delete_job_by_id
 from graphscope.gsctl.impl.job import get_job_by_id

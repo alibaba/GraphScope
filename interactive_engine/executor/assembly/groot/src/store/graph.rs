@@ -40,7 +40,7 @@ static INIT: Once = Once::new();
 
 #[no_mangle]
 pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
-    trace!("openGraphStore");
+    debug!("openGraphStore");
     let buf = unsafe { ::std::slice::from_raw_parts(config_bytes, len) };
     let proto = parse_pb::<ConfigPb>(buf).expect("parse config pb failed");
     let mut config_builder = GraphConfigBuilder::new();
@@ -77,7 +77,7 @@ pub extern "C" fn closeGraphStore(handle: GraphHandle) -> bool {
 
 #[no_mangle]
 pub extern "C" fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
-    trace!("getGraphDefBlob");
+    debug!("getGraphDefBlob");
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.get_graph_def_blob() {
@@ -100,7 +100,7 @@ pub extern "C" fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
 
 #[no_mangle]
 pub extern "C" fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaResponse> {
-    trace!("ingestData");
+    debug!("ingestData");
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         let slice = CStr::from_ptr(path).to_bytes();
@@ -119,7 +119,7 @@ pub extern "C" fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaRe
 pub extern "C" fn writeBatch(
     ptr: GraphHandle, snapshot_id: i64, data: *const u8, len: usize,
 ) -> Box<JnaResponse> {
-    trace!("writeBatch");
+    debug!("writeBatch");
 
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
     let buf = unsafe { ::std::slice::from_raw_parts(data, len) };
@@ -139,7 +139,7 @@ pub extern "C" fn writeBatch(
 
 #[no_mangle]
 pub extern "C" fn getGraphStatistics(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
-    trace!("getGraphStatistics");
+    debug!("getGraphStatistics");
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.get_graph_statistics_blob(snapshot_id) {
@@ -163,7 +163,7 @@ pub extern "C" fn getGraphStatistics(ptr: GraphHandle, snapshot_id: i64) -> Box<
 fn do_write_batch<G: MultiVersionGraph>(
     graph: &G, snapshot_id: SnapshotId, buf: &[u8],
 ) -> GraphResult<bool> {
-    trace!("do_write_batch");
+    debug!("do_write_batch");
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
     let operations = proto.get_operations();
@@ -241,7 +241,7 @@ fn do_write_batch<G: MultiVersionGraph>(
 fn commit_data_load<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("commit_data_load");
+    info!("commit_data_load");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let commit_data_load_pb = parse_pb::<CommitDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -256,7 +256,7 @@ fn commit_data_load<G: MultiVersionGraph>(
 fn prepare_data_load<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("prepare_data_load");
+    info!("prepare_data_load");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let prepare_data_load_pb = parse_pb::<PrepareDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -269,7 +269,7 @@ fn prepare_data_load<G: MultiVersionGraph>(
 fn create_vertex_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("create_vertex_type");
+    info!("create_vertex_type");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let create_vertex_type_pb = parse_pb::<CreateVertexTypePb>(ddl_operation_pb.get_ddlBlob())?;
@@ -283,7 +283,7 @@ fn create_vertex_type<G: MultiVersionGraph>(
 fn add_vertex_type_properties<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("add_vertex_type_properties");
+    info!("add_vertex_type_properties");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let add_vertex_type_properties_pb =
@@ -298,7 +298,7 @@ fn add_vertex_type_properties<G: MultiVersionGraph>(
 fn drop_vertex_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("drop_vertex_type");
+    info!("drop_vertex_type");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -309,7 +309,7 @@ fn drop_vertex_type<G: MultiVersionGraph>(
 fn create_edge_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("create_edge_type");
+    info!("create_edge_type");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -321,7 +321,7 @@ fn create_edge_type<G: MultiVersionGraph>(
 fn add_edge_type_properties<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("add_edge_type_properties");
+    info!("add_edge_type_properties");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -333,7 +333,7 @@ fn add_edge_type_properties<G: MultiVersionGraph>(
 fn drop_edge_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("drop_edge_type");
+    info!("drop_edge_type");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -342,7 +342,7 @@ fn drop_edge_type<G: MultiVersionGraph>(
 }
 
 fn add_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
-    trace!("add_edge_kind");
+    info!("add_edge_kind");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let add_edge_kind_pb = parse_pb::<AddEdgeKindPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -355,7 +355,7 @@ fn add_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
 fn remove_edge_kind<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
-    trace!("remove_edge_kind");
+    info!("remove_edge_kind");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let edge_kind_pb = parse_pb::<EdgeKindPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -366,7 +366,7 @@ fn remove_edge_kind<G: MultiVersionGraph>(
 fn overwrite_vertex<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<()> {
-    trace!("overwrite_vertex");
+    debug!("overwrite_vertex");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -380,7 +380,7 @@ fn overwrite_vertex<G: MultiVersionGraph>(
 }
 
 fn update_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
-    trace!("update_vertex");
+    debug!("update_vertex");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -396,7 +396,7 @@ fn update_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
 fn clear_vertex_properties<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<()> {
-    trace!("clear vertex properties");
+    debug!("clear vertex properties");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -409,7 +409,7 @@ fn clear_vertex_properties<G: MultiVersionGraph>(
 }
 
 fn delete_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
-    trace!("delete_vertex");
+    debug!("delete_vertex");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -528,11 +528,11 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
             // sleep 2 min for the underlying storage catch latest changes.
             match graph_store_ptr.reopen(120) {
                 Ok(_) => {
-                    info!("Reopened store");
+                    info!("Reopened store after try catchup with primary");
                     JnaResponse::new_success()
                 }
                 Err(e) => {
-                    let msg = format!("Reopen failed: {:?}", e);
+                    let msg = format!("Reopen failed after try catchup with primary: {:?}", e);
                     error!("{}", msg);
                     JnaResponse::new_error(&msg)
                 }

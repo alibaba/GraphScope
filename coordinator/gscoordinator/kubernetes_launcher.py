@@ -1519,9 +1519,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 pod_name_list, pod_host_ip_list, object_id, handle, config
             )
         elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
-            pod_name_list, pod_ip_list, pod_host_ip_list = (
-                self._allocate_graphlearn_torch_engine(object_id)
-            )
+            (
+                pod_name_list,
+                pod_ip_list,
+                pod_host_ip_list,
+            ) = self._allocate_graphlearn_torch_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
                 raise RuntimeError("Failed to allocate learning engine")
             return self._distribute_graphlearn_torch_process(

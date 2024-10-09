@@ -154,6 +154,14 @@ public class SimpleMatchTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_simple_match_17_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_17_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {

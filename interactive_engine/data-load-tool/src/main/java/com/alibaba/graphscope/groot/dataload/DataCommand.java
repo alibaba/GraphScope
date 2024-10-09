@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
@@ -54,7 +55,7 @@ public abstract class DataCommand {
             }
             dataRootPath = outputPath;
         } else if (dataSinkType.equalsIgnoreCase("VOLUME")) {
-            throw new IOException(
+            throw new InvalidArgumentException(
                     "Volume only supports load.after.build mode, which is running build, ingest and"
                             + " commit at the same driver.");
         } else if (dataSinkType.equalsIgnoreCase("OSS")) {
@@ -64,7 +65,7 @@ public abstract class DataCommand {
                 ingestConfig = fs.getConfig();
             }
         } else {
-            throw new IOException("Unsupported data sink: " + dataSinkType);
+            throw new InvalidArgumentException("Unsupported data sink: " + dataSinkType);
         }
 
         ObjectMapper objectMapper = new ObjectMapper();

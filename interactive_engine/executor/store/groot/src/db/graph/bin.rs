@@ -17,7 +17,7 @@ pub fn vertex_key(table_id: TableId, id: VertexId, ts: SnapshotId) -> [u8; 24] {
 pub fn parse_vertex_key(key: &[u8]) -> GraphResult<(VertexId, SnapshotId)> {
     if key.len() != 24 {
         let msg = format!("invalid key, key len is {}", key.len());
-        let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, parse_vertex_key);
+        let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, parse_vertex_key);
         error!("parse_vertex_key failed. error: {:?}", err);
         return Err(err);
     }

@@ -112,3 +112,7 @@ learning_engine/graph-learn/graphlearn/python/lib
 # Core dump
 core.*
 *.core
+
+# Dockerfile
+
+**/*.Dockerfile

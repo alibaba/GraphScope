@@ -21,32 +21,13 @@
 #include <string>
 #include <vector>
 
+#include "flex/utils/error_pb/interactive.pb.h"
+
 #include "glog/logging.h"
 
 namespace gs {
-enum class StatusCode {
-  OK = 0,
-  InValidArgument = 1,
-  UnsupportedOperator = 2,
-  AlreadyExists = 3,
-  NotExists = 4,
-  CodegenError = 5,
-  UninitializedStatus = 6,
-  InvalidSchema = 7,
-  PermissionError = 8,
-  IllegalOperation = 9,
-  InternalError = 10,
-  InvalidImportFile = 11,
-  IOError = 12,
-  NotFound = 13,
-  QueryFailed = 14,
-  ReopenError = 15,
-  ErrorOpenMeta = 16,
-  SQlExecutionError = 17,
-  SqlBindingError = 18,
-  Unimplemented = 19,
-  AlreadyLocked = 20,
-};
+
+using StatusCode = gs::flex::interactive::Code;
 
 class Status {
  public:
@@ -59,6 +40,8 @@ class Status {
   StatusCode error_code() const;
 
   static Status OK();
+
+  std::string ToString() const;
 
  private:
   StatusCode error_code_;
@@ -79,7 +62,7 @@ template <typename T>
 class Result {
  public:
   using ValueType = T;
-  Result() : status_(StatusCode::UninitializedStatus) {}
+  Result() : status_(StatusCode::OK) {}
   Result(const ValueType& value) : status_(StatusCode::OK), value_(value) {}
   Result(ValueType&& value)
       : status_(StatusCode::OK), value_(std::move(value)) {}
@@ -139,25 +122,31 @@ struct is_gs_status_type<Status> : std::true_type {};
 // function, the function name, and the variable name.
 // reference:
 // https://github.com/boostorg/leaf/blob/develop/include/boost/leaf/error.hpp
-#define ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(var, expr)                          \
-  auto&& FLEX_TMP_VAR = expr;                                                  \
-  static_assert(::gs::is_gs_result_type<                                       \
-                    typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value, \
-                "The expression must return a Result type");                   \
-  if (!FLEX_TMP_VAR.ok()) {                                                    \
-    return FLEX_TMP_VAR;                                                       \
-  }                                                                            \
-  var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR).move_value()
+#define ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(var, expr)                      \
+  {                                                                        \
+    auto&& FLEX_TMP_VAR = expr;                                            \
+    static_assert(                                                         \
+        ::gs::is_gs_result_type<                                           \
+            typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value,     \
+        "The expression must return a Result type");                       \
+    if (!FLEX_TMP_VAR.ok()) {                                              \
+      return FLEX_TMP_VAR;                                                 \
+    }                                                                      \
+    var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR).move_value(); \
+  }
 
-#define ASSIGN_AND_RETURN_IF_STATUS_NOT_OK(var, expr)                          \
-  auto&& FLEX_TMP_VAR = expr;                                                  \
-  static_assert(::gs::is_gs_status_type<                                       \
-                    typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value, \
-                "The expression must return a Status type");                   \
-  if (!FLEX_TMP_VAR.ok()) {                                                    \
-    return FLEX_TMP_VAR;                                                       \
-  }                                                                            \
-  var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR)
+#define ASSIGN_AND_RETURN_IF_STATUS_NOT_OK(var, expr)                      \
+  {                                                                        \
+    auto&& FLEX_TMP_VAR = expr;                                            \
+    static_assert(                                                         \
+        ::gs::is_gs_status_type<                                           \
+            typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value,     \
+        "The expression must return a Status type");                       \
+    if (!FLEX_TMP_VAR.ok()) {                                              \
+      return FLEX_TMP_VAR;                                                 \
+    }                                                                      \
+    var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR).move_value(); \
+  }
 
 // A Marco automatically use a auto variable to store the return value of a
 // function, which returns result, and check the status of the result, if ok,
@@ -165,6 +154,22 @@ struct is_gs_status_type<Status> : std::true_type {};
 // calling code of a function, the function name, and the variable name.
 #define FLEX_AUTO(var, expr) ASSIGN_AND_RETURN_IF_NOT_OK(auto var, expr)
 
+// Return boost::leaf::error object with error code and error message,
+
+#define RETURN_FLEX_LEAF_ERROR(code, msg) \
+  return ::boost::leaf::new_error(        \
+      gs::Status(::gs::flex::interactive::Code::code, msg))
+
 }  // namespace gs
+
+namespace std {
+inline std::string to_string(const gs::flex::interactive::Code& status) {
+  // format the code into 0x-xxxx, where multiple zeros are prepend to the code
+  std::stringstream ss;
+  ss << "05-" << std::setw(4) << std::setfill('0')
+     << static_cast<int32_t>(status);
+  return ss.str();
+}
+}  // namespace std
 
 #endif  // UTILS_RESULT_H_

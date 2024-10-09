@@ -1,9 +1,10 @@
 # The vineyard-runtime image including all vineyard-related
 # dependencies that could graphscope interactive engine.
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/vineyard-dev:$BUILDER_VERSION AS builder
+ARG VINEYARD_VERSION=latest
+FROM $REGISTRY/graphscope/vineyard-dev:$VINEYARD_VERSION-$ARCH AS builder
 
 FROM ubuntu:22.04 AS runtime
 
@@ -32,7 +33,7 @@ RUN apt-get update -y && \
         -P /tmp/ --no-check-certificate && \
     sudo apt-get install -y -V /tmp/apache-arrow-apt-source-latest-jammy.deb && \
     sudo apt-get update -y && \
-    sudo apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev && \
+    sudo apt-get install -y libarrow-dev=15.0.2-1 libarrow-dataset-dev=15.0.2-1 libarrow-acero-dev=15.0.2-1 libparquet-dev=15.0.2-1 && \
     rm /tmp/apache-arrow-apt-source-latest-*.deb && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*

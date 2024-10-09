@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.common;
 
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +48,7 @@ public enum RoleType {
     public static RoleType fromName(String roleName) {
         RoleType roleType = lookup.get(roleName);
         if (roleType == null || roleType == RoleType.UNKNOWN) {
-            throw new IllegalArgumentException("Unknown RoleType: [" + roleName + "]");
+            throw new InvalidArgumentException("Unknown RoleType: [" + roleName + "]");
         }
         return roleType;
     }

@@ -1,0 +1,56 @@
+{
+  "vertex": [
+    {
+      "label": "person",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "age",
+          "data_type": "Int32"
+        }
+      ]
+    },
+    {
+      "label": "software",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "lang",
+          "data_type": "String"
+        }
+      ]
+    }
+  ],
+  "edge": [
+    {
+      "src_label": "person",
+      "dst_label": "person",
+      "label": "knows",
+      "properties": [
+        {
+          "name": "weight",
+          "data_type": "Double"
+        }
+      ]
+    },
+    {
+      "src_label": "person",
+      "dst_label": "software",
+      "label": "created",
+      "properties": [
+        {
+          "name": "weight",
+          "data_type": "Double"
+        }
+      ]
+    }
+  ]
+}

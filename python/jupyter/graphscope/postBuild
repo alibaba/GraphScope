@@ -1,1 +1,0 @@
-jupyter labextension install @jupyter-widgets/jupyterlab-manager graphscope-jupyter@0.0.1

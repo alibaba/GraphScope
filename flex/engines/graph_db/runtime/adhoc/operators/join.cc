@@ -18,19 +18,22 @@
 
 namespace gs {
 namespace runtime {
-Context eval_join(const physical::Join& opr, Context&& ctx, Context&& ctx2) {
+bl::result<Context> eval_join(const physical::Join& opr, Context&& ctx,
+                              Context&& ctx2) {
   JoinParams p;
   auto left_keys = opr.left_keys();
   for (int i = 0; i < left_keys.size(); i++) {
     if (!left_keys.Get(i).has_tag()) {
-      LOG(FATAL) << "left_keys should have tag";
+      LOG(ERROR) << "left_keys should have tag";
+      RETURN_BAD_REQUEST_ERROR("left_keys should have tag");
     }
     p.left_columns.push_back(left_keys.Get(i).tag().id());
   }
   auto right_keys = opr.right_keys();
   for (int i = 0; i < right_keys.size(); i++) {
     if (!right_keys.Get(i).has_tag()) {
-      LOG(FATAL) << "right_keys should have tag";
+      LOG(ERROR) << "right_keys should have tag";
+      RETURN_BAD_REQUEST_ERROR("right_keys should have tag");
     }
     p.right_columns.push_back(right_keys.Get(i).tag().id());
   }
@@ -48,7 +51,8 @@ Context eval_join(const physical::Join& opr, Context&& ctx, Context&& ctx2) {
     p.join_type = JoinKind::kLeftOuterJoin;
     break;
   default:
-    LOG(FATAL) << "unsupported join kind" << opr.join_kind();
+    RETURN_UNSUPPORTED_ERROR("Unsupported join kind: " +
+                             std::to_string(static_cast<int>(opr.join_kind())));
   }
   return Join::join(std::move(ctx), std::move(ctx2), p);
 }

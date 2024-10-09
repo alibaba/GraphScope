@@ -407,7 +407,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     fn check_and_update_si(&mut self, si: SnapshotId) -> GraphResult<()> {
         if si < self.cur_si {
             let msg = format!("si#{} is less than cur_si#{}", si, self.cur_si);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, check_and_update_si, si);
+            let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg, check_and_update_si, si);
             return Err(err);
         }
         self.cur_si = si;

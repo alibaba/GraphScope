@@ -136,7 +136,7 @@ public class WriterAgent {
         // logger.info("writeStore {}", storeDataBatch.toProto());
         //        int queueId = storeDataBatch.getQueueId();
         boolean suc = this.bufferQueue.offerQueue(0, storeDataBatch);
-        logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
+        //        logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
         return suc;
     }
 

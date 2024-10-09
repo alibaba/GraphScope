@@ -19,8 +19,9 @@ namespace gs {
 
 namespace runtime {
 
-Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
-                                  const PathExpandParams& params) {
+bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
+                                              Context&& ctx,
+                                              const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
   if (params.labels.size() == 1) {
     if (params.dir == Direction::kOut) {
@@ -85,10 +86,10 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       CHECK_GE(params.hop_lower, 0);
       CHECK_GE(params.hop_upper, params.hop_lower);
       if (params.hop_lower == 0) {
-        LOG(FATAL) << "xxx";
+        RETURN_BAD_REQUEST_ERROR("hop_lower should be greater than 0");
       } else {
         if (params.hop_upper == 1) {
-          LOG(FATAL) << "xxx";
+          RETURN_BAD_REQUEST_ERROR("hop_upper should be greater than 1");
         } else {
           input_vertex_list.foreach_vertex(
               [&](size_t index, label_t label, vid_t v) {
@@ -146,7 +147,7 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
   } else {
     if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
-          *std::dynamic_pointer_cast<MLVertexColumn>(ctx.get(params.start_tag));
+          *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
       std::set<label_t> labels;
       for (auto& label : params.labels) {
         labels.emplace(label.dst_label);
@@ -155,10 +156,10 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       MLVertexColumnBuilder builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
-      input_vertex_list.foreach_vertex(
-          [&](size_t index, label_t label, vid_t v) {
-            output.emplace_back(label, v, index);
-          });
+      foreach_vertex(input_vertex_list,
+                     [&](size_t index, label_t label, vid_t v) {
+                       output.emplace_back(label, v, index);
+                     });
       int depth = 0;
       while (depth < params.hop_upper) {
         input.clear();
@@ -262,14 +263,17 @@ Context PathExpand::edge_expand_v(const ReadTransaction& txn, Context&& ctx,
       ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
                                   shuffle_offset, params.keep_cols);
       return ctx;
+    } else {
+      LOG(ERROR) << "Not implemented yet";
+      RETURN_NOT_IMPLEMENTED_ERROR("Not implemented yet for direction in");
     }
   }
-  LOG(FATAL) << "not support...";
   return ctx;
 }
 
-Context PathExpand::edge_expand_p(const ReadTransaction& txn, Context&& ctx,
-                                  const PathExpandParams& params) {
+bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
+                                              Context&& ctx,
+                                              const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
   auto& input_vertex_list =
       *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
@@ -383,8 +387,10 @@ Context PathExpand::edge_expand_p(const ReadTransaction& txn, Context&& ctx,
     ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
                                 params.keep_cols);
     return ctx;
+  } else {
+    LOG(ERROR) << "Not implemented yet";
+    RETURN_NOT_IMPLEMENTED_ERROR("Not implemented yet for direction in");
   }
-  LOG(FATAL) << "not support...";
   return ctx;
 }
 

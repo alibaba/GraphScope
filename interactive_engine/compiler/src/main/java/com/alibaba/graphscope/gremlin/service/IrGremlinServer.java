@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -49,6 +50,7 @@ import java.util.concurrent.*;
 public class IrGremlinServer implements AutoCloseable {
     private final Configs configs;
     private final QueryCache queryCache;
+    private final GraphPlanner graphPlanner;
     private final ExecutionClient executionClient;
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
@@ -65,6 +67,7 @@ public class IrGremlinServer implements AutoCloseable {
             Configs configs,
             QueryIdGenerator idGenerator,
             QueryCache queryCache,
+            GraphPlanner graphPlanner,
             ExecutionClient executionClient,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -72,6 +75,7 @@ public class IrGremlinServer implements AutoCloseable {
         this.configs = configs;
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
+        this.graphPlanner = graphPlanner;
         this.executionClient = executionClient;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
@@ -95,6 +99,7 @@ public class IrGremlinServer implements AutoCloseable {
                         configs,
                         idGenerator,
                         queryCache,
+                        graphPlanner,
                         executionClient,
                         channelFetcher,
                         metaQueryCallback,
@@ -106,6 +111,7 @@ public class IrGremlinServer implements AutoCloseable {
                         configs,
                         idGenerator,
                         queryCache,
+                        graphPlanner,
                         executionClient,
                         channelFetcher,
                         metaQueryCallback,

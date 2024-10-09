@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.common.exception.NotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.dataload.unified.*;
@@ -201,12 +202,12 @@ public class Utils {
                     String msg = "Label [" + label + "]: ";
                     if (prop == null) {
                         msg += "propertyId [" + propertyId + "] not found";
-                        throw new PropertyDefNotFoundException(msg);
+                        throw new NotFoundException(msg);
                     }
                     if (colIdx >= items.length) {
                         msg += "Invalid mapping [" + colIdx + "]->[" + propertyId + "]";
                         msg += "Data: " + Arrays.toString(items);
-                        throw new IllegalArgumentException(msg);
+                        throw new InvalidArgumentException(msg);
                     }
                     PropertyValue propertyValue = null;
                     if (items[colIdx] != null) {
@@ -266,7 +267,7 @@ public class Utils {
         try {
             return DST_FMT.format(SRC_FMT.parse(input));
         } catch (ParseException e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 

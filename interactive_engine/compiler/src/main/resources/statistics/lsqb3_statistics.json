@@ -1,0 +1,338 @@
+{
+    "total_vertex_count": 2997360,
+    "total_edge_count": 17196799,
+    "vertex_type_statistics": [
+        {
+            "type_id": 3,
+            "type_name": "post",
+            "count": 3182834
+        },
+        {
+            "type_id": 2,
+            "type_name": "comment",
+            "count": 7751913
+        },
+        {
+            "type_id": 7,
+            "type_name": "tag",
+            "count": 16080
+        },
+        {
+            "type_id": 9,
+            "type_name": "city",
+            "count": 1343
+        },
+        {
+            "type_id": 8,
+            "type_name": "country",
+            "count": 111
+        },
+        {
+            "type_id": 10,
+            "type_name": "continent",
+            "count": 6
+        },
+        {
+            "type_id": 4,
+            "type_name": "forum",
+            "count": 270602
+        },
+        {
+            "type_id": 6,
+            "type_name": "tagclass",
+            "count": 71
+        },
+        {
+            "type_id": 1,
+            "type_name": "person",
+            "count": 27001
+        },
+        {
+            "type_id": 11,
+            "type_name": "company",
+            "count": 1575
+        },
+        {
+            "type_id": 12,
+            "type_name": "university",
+            "count": 6380
+        }
+    ],
+    "edge_type_statistics": [
+        {
+            "type_id": 15,
+            "type_name": "studyat",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "university",
+                    "count": 21665
+                }
+            ]
+        },
+        {
+            "type_id": 16,
+            "type_name": "workat",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "company",
+                    "count": 58302
+                }
+            ]
+        },
+        {
+            "type_id": 17,
+            "type_name": "ispartof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "city",
+                    "destination_vertex": "country",
+                    "count": 1343
+                }
+            ]
+        },
+        {
+            "type_id": 17,
+            "type_name": "ispartof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "country",
+                    "destination_vertex": "continent",
+                    "count": 111
+                }
+            ]
+        },
+        {
+            "type_id": 22,
+            "type_name": "issubclassof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "tagclass",
+                    "destination_vertex": "tagclass",
+                    "count": 70
+                }
+            ]
+        },
+        {
+            "type_id": 6,
+            "type_name": "hasmember",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "forum",
+                    "destination_vertex": "person",
+                    "count": 10477317
+                }
+            ]
+        },
+        {
+            "type_id": 3,
+            "type_name": "replyof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "comment",
+                    "destination_vertex": "comment",
+                    "count": 3916872
+                }
+            ]
+        },
+        {
+            "type_id": 3,
+            "type_name": "replyof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "comment",
+                    "destination_vertex": "post",
+                    "count": 3835041
+                }
+            ]
+        },
+        {
+            "type_id": 13,
+            "type_name": "likes",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "comment",
+                    "count": 5658124
+                }
+            ]
+        },
+        {
+            "type_id": 13,
+            "type_name": "likes",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "post",
+                    "count": 2773992
+                }
+            ]
+        },
+        {
+            "type_id": 10,
+            "type_name": "hasinterest",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "tag",
+                    "count": 634081
+                }
+            ]
+        },
+        {
+            "type_id": 21,
+            "type_name": "hastype",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "tag",
+                    "destination_vertex": "tagclass",
+                    "count": 16080
+                }
+            ]
+        },
+        {
+            "type_id": 12,
+            "type_name": "knows",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "person",
+                    "count": 698627
+                }
+            ]
+        },
+        {
+            "type_id": 0,
+            "type_name": "hascreator",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "comment",
+                    "destination_vertex": "person",
+                    "count": 7751913
+                }
+            ]
+        },
+        {
+            "type_id": 0,
+            "type_name": "hascreator",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "post",
+                    "destination_vertex": "person",
+                    "count": 3182834
+                }
+            ]
+        },
+        {
+            "type_id": 5,
+            "type_name": "containerof",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "forum",
+                    "destination_vertex": "post",
+                    "count": 3182834
+                }
+            ]
+        },
+        {
+            "type_id": 7,
+            "type_name": "hasmoderator",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "forum",
+                    "destination_vertex": "person",
+                    "count": 270602
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "islocatedin",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "city",
+                    "count": 27000
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "islocatedin",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "company",
+                    "destination_vertex": "country",
+                    "count": 1575
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "islocatedin",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "university",
+                    "destination_vertex": "city",
+                    "count": 6380
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "islocatedin",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "comment",
+                    "destination_vertex": "country",
+                    "count": 7751913
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "islocatedin",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "post",
+                    "destination_vertex": "country",
+                    "count": 3182834
+                }
+            ]
+        },
+        {
+            "type_id": 1,
+            "type_name": "hastag",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "forum",
+                    "destination_vertex": "tag",
+                    "count": 877683
+                }
+            ]
+        },
+        {
+            "type_id": 1,
+            "type_name": "hastag",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "post",
+                    "destination_vertex": "tag",
+                    "count": 2474826
+                }
+            ]
+        },
+        {
+            "type_id": 1,
+            "type_name": "hastag",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "comment",
+                    "destination_vertex": "tag",
+                    "count": 9465901
+                }
+            ]
+        }
+    ]
+}

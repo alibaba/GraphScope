@@ -22,13 +22,12 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlExplainLevel;
@@ -58,6 +57,8 @@ public abstract class AbstractBindableTableScan extends TableScan {
     protected final int aliasId;
 
     protected final AliasNameWithId startAlias;
+
+    protected @Nullable RelOptCost cachedCost = null;
 
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
@@ -213,5 +214,26 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     public AliasNameWithId getStartAlias() {
         return startAlias;
+    }
+
+    public void setCachedCost(RelOptCost cost) {
+        this.cachedCost = cost;
+    }
+
+    public @Nullable RelOptCost getCachedCost() {
+        return this.cachedCost;
+    }
+
+    @Override
+    public double estimateRowCount(RelMetadataQuery mq) {
+        return cachedCost != null ? cachedCost.getRows() : mq.getRowCount(this);
+    }
+
+    @Override
+    public @Nullable RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        double dRows = estimateRowCount(mq);
+        double dCpu = dRows + 1.0;
+        double dIo = 0.0;
+        return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
     }
 }

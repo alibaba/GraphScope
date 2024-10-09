@@ -4,7 +4,7 @@
 {
 	"name": "GraphScope",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest",
+	"image": "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
     "features": {

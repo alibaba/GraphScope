@@ -51,7 +51,7 @@ impl GraphDef {
     pub fn add_type(&mut self, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
         if self.label_to_types.contains_key(&label) {
             let msg = format!("labelId {}", label);
-            return Err(GraphError::new(GraphErrorCode::TypeAlreadyExists, msg));
+            return Err(GraphError::new(ErrorCode::ALREADY_EXISTS, msg));
         }
         for property in type_def.get_prop_defs() {
             if property.id > self.property_idx {
@@ -67,7 +67,7 @@ impl GraphDef {
     pub fn update_type(&mut self, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
         if !self.label_to_types.contains_key(&label) {
             let msg = format!("labelId {}", label);
-            return Err(GraphError::new(GraphErrorCode::TypeNotFound, msg));
+            return Err(GraphError::new(ErrorCode::TYPE_NOT_FOUND, msg));
         }
         for property in type_def.get_prop_defs() {
             if property.id > self.property_idx {
@@ -250,7 +250,7 @@ impl TypeDef {
             Ok(b) => Ok(b),
             Err(e) => {
                 let msg = format!("{:?}", e);
-                Err(gen_graph_err!(GraphErrorCode::InvalidData, msg, to_bytes))
+                Err(gen_graph_err!(ErrorCode::INVALID_DATA, msg, to_bytes))
             }
         }
     }

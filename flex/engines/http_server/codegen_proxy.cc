@@ -127,7 +127,7 @@ seastar::future<gs::Result<bool>> CodegenProxy::call_codegen_cmd(
   if (plan_path.empty()) {
     insert_or_update(next_job_id, CodegenStatus::FAILED, "");
     return seastar::make_ready_future<gs::Result<bool>>(gs::Result<bool>(
-        gs::Status(gs::StatusCode::InternalError,
+        gs::Status(gs::StatusCode::INTERNAL_ERROR,
                    "Fail to prepare next job dir for " + query_name +
                        ", job id: " + std::to_string(next_job_id) +
                        ", plan path: " + plan_path),
@@ -209,12 +209,16 @@ seastar::future<gs::Result<bool>> CodegenProxy::CallCodegenCmd(
                     " -o=" + output_dir + " --procedure_name=" + query_name +
                     " -w=" + work_dir + " --ir_conf=" + engine_config +
                     " --graph_schema_path=" + graph_schema_path;
+  std::string desc_file = work_dir + "/" + query_name + ".desc";
   if (!procedure_desc.empty()) {
-    cmd += " --procedure_desc=\'" + procedure_desc + "\'";
+    std::ofstream ofs(desc_file);
+    ofs << procedure_desc;
+    ofs.close();
+    cmd += " --procedure_desc=" + desc_file;
   }
   LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
 
-  return hiactor::thread_resource_pool::submit_work([cmd] {
+  return hiactor::thread_resource_pool::submit_work([cmd, desc_file] {
     //  auto res = std::system(cmd.c_str());
     boost::process::ipstream stdout_pipe;
     boost::process::ipstream stderr_pipe;
@@ -231,10 +235,14 @@ seastar::future<gs::Result<bool>> CodegenProxy::CallCodegenCmd(
     codegen_process.wait();
     stderr_pipe.close();
     stdout_pipe.close();
+    // remove the desc file if exists
+    if (std::filesystem::exists(desc_file)) {
+      std::filesystem::remove(desc_file);
+    }
     int res = codegen_process.exit_code();
     if (res != 0) {
       return gs::Result<bool>(
-          gs::Status(gs::StatusCode::CodegenError, ss.str()), false);
+          gs::Status(gs::StatusCode::CODEGEN_ERROR, ss.str()), false);
     }
 
     LOG(INFO) << "Codegen cmd: [" << cmd << "] success! ";
