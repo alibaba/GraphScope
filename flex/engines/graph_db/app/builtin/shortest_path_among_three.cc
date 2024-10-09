@@ -203,7 +203,7 @@ std::vector<int64_t> ShortestPathAmongThree::ConnectPath(
   size_t v1v3size = path3.size();
   if (v1v2size <= v2v3size && v1v3size <= v2v3size) {
     for (size_t i = v1v2size; i > 0; i--) {
-      TSP.push_back(path1[i-1]);
+      TSP.push_back(path1[i - 1]);
     }
     for (size_t i = 1; i < v1v3size; i++) {
       TSP.push_back(path3[i]);
@@ -220,7 +220,7 @@ std::vector<int64_t> ShortestPathAmongThree::ConnectPath(
       TSP.push_back(path2[i]);
     }
     for (size_t i = v1v3size - 1; i > 0; i--) {
-      TSP.push_back(path3[i-1]);
+      TSP.push_back(path3[i - 1]);
     }
   }
   return TSP;
