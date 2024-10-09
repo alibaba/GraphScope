@@ -119,7 +119,7 @@ class GsGraphStore(GraphStore):
 
         Args:
             edge_attr(`EdgeAttr`): Uniquely corresponds to a topology of subgraph .
-        
+
         Returns:
             edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
             (row indice tensor, column indice tensor)(COO)\
