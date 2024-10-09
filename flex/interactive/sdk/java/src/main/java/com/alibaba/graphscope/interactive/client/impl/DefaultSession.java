@@ -801,9 +801,9 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> stopService() {
+    public Result<String> stopService(StopServiceRequest request) {
         try {
-            ApiResponse<String> response = serviceApi.stopServiceWithHttpInfo();
+            ApiResponse<String> response = serviceApi.stopServiceWithHttpInfo(request);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();

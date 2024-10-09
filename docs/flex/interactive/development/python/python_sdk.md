@@ -360,8 +360,8 @@ Finally, we can delete the graph. The graph data and stored procedure bound to t
 Currently Interactive forbid deleting a graph which is currently serving in the service, so to delete graph, stop the service first.
 
 ```python
-# stop the service first
-resp = sess.stop_service()
+# stop the service first, note that graph_id is optional.
+resp = sess.stop_service(graph_id)
 assert resp.is_ok()
 print("successfully stopped the service")
 
