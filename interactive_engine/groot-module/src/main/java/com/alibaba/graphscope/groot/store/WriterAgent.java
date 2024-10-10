@@ -162,7 +162,7 @@ public class WriterAgent {
                     continue;
                 }
                 long batchSI = batch.getSnapshotId();
-                logger.debug("polled one batch [" + batchSI + "]");
+//                logger.debug("polled one batch [" + batchSI + "]");
                 boolean hasDdl = writeEngineWithRetry(batch);
                 if (this.consumeSI < batchSI) {
                     SnapshotInfo availSInfo = this.availSnapshotInfoRef.get();
@@ -171,9 +171,10 @@ public class WriterAgent {
                     this.consumeSI = batchSI;
                     this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
                     this.commitExecutor.execute(this::asyncCommit);
-                } else { // a flurry of batches with same snapshot ID
-                    logger.debug("consumedSI {} >= batchSI {}, ignored", consumeSI, batchSI);
                 }
+                // else { // a flurry of batches with same snapshot ID
+                  //  logger.debug("consumedSI {} >= batchSI {}, ignored", consumeSI, batchSI);
+                //}
                 if (hasDdl) {
                     this.consumeDdlSnapshotId = batchSI;
                 }
@@ -204,13 +205,13 @@ public class WriterAgent {
     }
 
     private boolean writeEngineWithRetry(StoreDataBatch storeDataBatch) {
-        while (!shouldStop) {
+//        while (!shouldStop) {
             try {
                 return this.storeService.batchWrite(storeDataBatch);
             } catch (Exception e) {
                 logger.error("writeEngine failed: batch {}.", storeDataBatch.toProto(), e);
             }
-        }
+//        }
         return false;
     }
 

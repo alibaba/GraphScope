@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -58,7 +59,7 @@ public class KafkaProcessor {
     BlockingQueue<ConsumerRecord<LogEntry, LogEntry>> writeQueue;
     BlockingQueue<ReadLogEntry> replayQueue;
 
-    boolean replayInProgress = false;
+    private AtomicBoolean replayInProgress;
     private AtomicLong latestSnapshotId;
 
     public KafkaProcessor(
@@ -82,6 +83,8 @@ public class KafkaProcessor {
         writeQueue = new ArrayBlockingQueue<>(queueSize);
         replayQueue = new ArrayBlockingQueue<>(queueSize);
         latestSnapshotId = new AtomicLong(-1);
+        replayInProgress = new AtomicBoolean(false);
+
     }
 
     public void start() {
@@ -275,10 +278,11 @@ public class KafkaProcessor {
 
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, replayFrom)) {
-            replayInProgress = true;
+//            replayInProgress.set(true);
             ConsumerRecord<LogEntry, LogEntry> record;
             while ((record = logReader.readNextRecord()) != null) {
-                replayQueue.put(new ReadLogEntry(record.offset(), record.value()));
+//                writeQueue.put(new ReadLogEntry(record.offset(), record.value()));
+                writeQueue.put(record);
                 replayCount++;
                 if (replayCount % 10000 == 0) {
                     logger.info("replayed {} records", replayCount);
@@ -286,9 +290,11 @@ public class KafkaProcessor {
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            replayInProgress = false;
         }
+
+//        } finally {
+//            replayInProgress.set(false);
+//        }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
     }
 
@@ -297,15 +303,24 @@ public class KafkaProcessor {
             while (true) {
                 long offset;
                 LogEntry logEntry;
-                if (!replayQueue.isEmpty()) {
+                if (replayInProgress.get() || !replayQueue.isEmpty()) {
+                    if (replayQueue.isEmpty()) {
+                        Thread.sleep(10);
+                        continue;
+                    }
                     ReadLogEntry readLogEntry = replayQueue.take();
                     offset = readLogEntry.getOffset();
                     logEntry = readLogEntry.getLogEntry();
+                    logEntry.setSnapshotId(latestSnapshotId.get());
+//                    logger.info("polled from replay queue, offset {}, id {}", offset, logEntry.getSnapshotId());
+
                 } else {
                     ConsumerRecord<LogEntry, LogEntry> record = writeQueue.take();
                     offset = record.offset();
                     logEntry = record.value();
                     latestSnapshotId.set(logEntry.getSnapshotId());
+//                    logger.info("polled from write queue, offset {}, id {}", offset, latestSnapshotId.get());
+
                 }
                 processRecord(offset, logEntry);
             }
@@ -349,14 +364,13 @@ public class KafkaProcessor {
     public List<Long> replayDMLRecordsFrom(long offset, long timestamp) throws IOException {
         List<OperationType> types = prepareDMLTypes();
         logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
-
+        // Note this clear is necessary, as those records would be a subset of record range in
+        // new reader
+        replayInProgress.set(true);
+        writeQueue.clear();
         long batchSnapshotId;
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, offset, timestamp)) {
-            replayInProgress = true;
-            // Note this clear is necessary, as those records would be a subset of record range in
-            // new reader
-            writeQueue.clear();
             ReadLogEntry readLogEntry;
             batchSnapshotId = latestSnapshotId.get();
             while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
@@ -376,7 +390,7 @@ public class KafkaProcessor {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
-            replayInProgress = false;
+            replayInProgress.set(false);
         }
         logger.info("replay DML records finished. total replayed [{}] records", replayCount);
         return List.of(batchSnapshotId);
