@@ -530,6 +530,12 @@ paths:
         - AdminService/ServiceManagement
       description: Stop current service
       operationId: stop_service
+      requestBody:
+        description: Stop service on a specified graph
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopServiceRequest'
       responses:
         '200':
           description: successful operation
@@ -2015,6 +2021,13 @@ components:
       properties:
         graph_id:
           type: string
+    StopServiceRequest:
+      x-body-name: stop_service_request
+      properties:
+        graph_id:
+          type: string
+          nullable: true
+      additionalProperties: false
     ServiceStatus:
       x-body-name: service_status
       type: object

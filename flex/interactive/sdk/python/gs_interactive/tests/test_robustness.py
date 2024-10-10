@@ -176,6 +176,7 @@ def test_procedure_creation(interactive_session, neo4j_session, create_modern_gr
 
 def test_builtin_procedure(interactive_session, neo4j_session, create_modern_graph):
     print("[Test builtin procedure]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
     # Delete the builtin procedure should fail
     with pytest.raises(Exception):
         delete_procedure(interactive_session, create_modern_graph, "count_vertices")
@@ -197,4 +198,41 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         )
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
-    call_procedure(neo4j_session, create_modern_graph, "count_vertices", '"person"')
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "count_vertices",
+        '"person"',
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "pagerank",
+        '"person"',
+        '"knows"',
+        "0.85",
+        "100",
+        "0.000001",
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "k_neighbors",
+        "1L",
+        '"person"',
+        "2",
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "shortest_path_among_three",
+        '"person"',
+        "1L",
+        '"person"',
+        "2L",
+        '"person"',
+        "4L",
+    )

@@ -146,17 +146,16 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **StopService**
-> [Result](./result.rst)[str] stop_service()
+> [Result](./result.rst)[str] stop_service(graph_id : str = None)
 
+Stop the current query service while the admin service continues to operate. You can specify a `graph_id` to indicate which graph's service to stop. Since only one graph can run at a time, the `graph_id` will verify if the query service is active on that graph. If no `graph_id` is provided, the query service will be stopped without this verification.
 
-
-Stop current query service. The admin service will still be serving.
 
 ### Example
 
 
 ```python
-stop_res = sess.stop_service()
+stop_res = sess.stop_service(graph_id = '1')
 assert stop_res.is_ok()
 print("stop service result", stop_res)
 ```

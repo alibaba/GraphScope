@@ -28,7 +28,7 @@ PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [
     "urllib3 >= 1.25.3, < 2.1.0",
     "python-dateutil",
-    "pydantic >= 2",
+    "pydantic >= 2, <= 2.8.2",
     "typing-extensions >= 4.7.1",
     "neo4j >= 4.4.19",
     "gremlinpython >= 3.4.10",

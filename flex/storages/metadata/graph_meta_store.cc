@@ -56,6 +56,7 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
   static std::vector<PluginMeta> builtin_plugins;
   static bool initialized = false;
   if (!initialized) {
+    // count_vertices
     PluginMeta count_vertices;
     count_vertices.id = "count_vertices";
     count_vertices.name = "count_vertices";
@@ -67,8 +68,72 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     count_vertices.update_time = GetCurrentTimeStamp();
     count_vertices.params.push_back({"labelName", PropertyType::kString});
     count_vertices.returns.push_back({"count", PropertyType::kInt32});
-    initialized = true;
     builtin_plugins.push_back(count_vertices);
+
+    // pagerank
+    PluginMeta pagerank;
+    pagerank.id = "pagerank";
+    pagerank.name = "pagerank";
+    pagerank.description = "A builtin plugin to calculate pagerank";
+    pagerank.enable = true;
+    pagerank.runnable = true;
+    pagerank.type = "cypher";
+    pagerank.creation_time = GetCurrentTimeStamp();
+    pagerank.update_time = GetCurrentTimeStamp();
+    pagerank.params.push_back({"vertex_label", PropertyType::kString});
+    pagerank.params.push_back({"edge_label", PropertyType::kString});
+    pagerank.params.push_back({"damping_factor_", PropertyType::kDouble});
+    pagerank.params.push_back({"max_iterations_", PropertyType::kInt32});
+    pagerank.params.push_back({"epsilon_", PropertyType::kDouble});
+    pagerank.returns.push_back({"label name", PropertyType::kString});
+    pagerank.returns.push_back({"vertex oid", PropertyType::kInt64});
+    pagerank.returns.push_back({"pagerank", PropertyType::kDouble});
+    builtin_plugins.push_back(pagerank);
+
+    // k_neighbors
+    PluginMeta k_neighbors;
+    k_neighbors.id = "k_neighbors";
+    k_neighbors.name = "k_neighbors";
+    k_neighbors.description = "A builtin plugin to calculate k_neighbors";
+    k_neighbors.enable = true;
+    k_neighbors.runnable = true;
+    k_neighbors.type = "cypher";
+    k_neighbors.creation_time = GetCurrentTimeStamp();
+    k_neighbors.update_time = GetCurrentTimeStamp();
+    k_neighbors.params.push_back({"vid", PropertyType::kInt64});
+    k_neighbors.params.push_back({"label_name", PropertyType::kString});
+    k_neighbors.params.push_back({"k", PropertyType::kInt32});
+    k_neighbors.returns.push_back({"label name", PropertyType::kString});
+    k_neighbors.returns.push_back({"vertex oid", PropertyType::kInt64});
+    builtin_plugins.push_back(k_neighbors);
+
+    // shortest_path_among_three
+    PluginMeta shortest_path_among_three;
+    shortest_path_among_three.id = "shortest_path_among_three";
+    shortest_path_among_three.name = "shortest_path_among_three";
+    shortest_path_among_three.description =
+        "A builtin plugin to calculate shortest_path_among_three";
+    shortest_path_among_three.enable = true;
+    shortest_path_among_three.runnable = true;
+    shortest_path_among_three.type = "cypher";
+    shortest_path_among_three.creation_time = GetCurrentTimeStamp();
+    shortest_path_among_three.update_time = GetCurrentTimeStamp();
+    shortest_path_among_three.params.push_back(
+        {"label_name1", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid1", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name2", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid2", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name3", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"vid3", PropertyType::kInt64});
+    shortest_path_among_three.returns.push_back(
+        {"shortest_path_among_three (label name, vertex oid)",
+         PropertyType::kString});
+    initialized = true;
+    builtin_plugins.push_back(shortest_path_among_three);
+
+    initialized = true;
   }
   return builtin_plugins;
 }
