@@ -25,13 +25,14 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public abstract class PlannerGroupManager {
+public abstract class PlannerGroupManager implements Closeable {
     protected final PlannerConfig config;
     protected final RelBuilderFactory relBuilderFactory;
 
@@ -39,6 +40,9 @@ public abstract class PlannerGroupManager {
         this.config = config;
         this.relBuilderFactory = relBuilderFactory;
     }
+
+    @Override
+    public void close() {}
 
     public abstract PlannerGroup getCurrentGroup();
 
@@ -102,6 +106,18 @@ public abstract class PlannerGroupManager {
                     !plannerGroups.isEmpty(), "planner groups should not be empty");
             int groupId = (int) Thread.currentThread().getId() % plannerGroups.size();
             return plannerGroups.get(groupId);
+        }
+
+        @Override
+        public void close() {
+            try {
+                if (this.clearScheduler != null) {
+                    this.clearScheduler.shutdown();
+                    this.clearScheduler.awaitTermination(10 * 1000, TimeUnit.MILLISECONDS);
+                }
+            } catch (Exception e) {
+                logger.error("failed to close planner group manager.", e);
+            }
         }
     }
 }

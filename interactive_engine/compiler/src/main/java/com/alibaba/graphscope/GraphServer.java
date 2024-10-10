@@ -159,6 +159,9 @@ public class GraphServer {
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs) && this.gremlinServer != null) {
             this.gremlinServer.close();
         }
+        if (this.optimizer != null) {
+            this.optimizer.close();
+        }
     }
 
     public static void main(String[] args) throws Exception {
