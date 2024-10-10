@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/dedup.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/var.h"
+#include "flex/engines/graph_db/runtime/common/operators/dedup.h"
 
 namespace gs {
 
