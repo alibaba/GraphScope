@@ -60,7 +60,7 @@ jobs:
         make install
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v3
 
     - name: Build
