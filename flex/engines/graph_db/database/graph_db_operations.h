@@ -111,9 +111,10 @@ class GraphDBOperations {
   static Result<rapidjson::Value> getEdge(std::vector<EdgeData>&& edge_data,
                                           const std::string& property_name,
                                           GraphDBSession& session);
-  static Result<rapidjson::Value> getVertex(
+  static Result<rapidjson::Document> getVertex(
       std::vector<VertexData>&& vertex_data,
-      const std::vector<std::string>& property_names, GraphDBSession& session);
+      const std::vector<std::string>& property_names, GraphDBSession& session,
+      rapidjson::Document::AllocatorType& allocator);
 };
 
 }  // namespace gs
