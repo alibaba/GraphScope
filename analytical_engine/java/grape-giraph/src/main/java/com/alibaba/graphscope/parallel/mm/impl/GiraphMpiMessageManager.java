@@ -113,6 +113,7 @@ public class GiraphMpiMessageManager<
             ///////////////////////////////////////////
             bytesOfReceivedMsg += tmpVector.size();
         }
+        tmpVector.delete();
         logger.info(
                 "Frag [{}] totally Received [{}] bytes from others starting deserialization",
                 fragId,
@@ -256,5 +257,9 @@ public class GiraphMpiMessageManager<
     }
 
     @Override
-    public void postApplication() {}
+    public void postApplication() {
+        for (int i = 0; i < fragNum; ++i) {
+            cacheOut[i].close();
+        }
+    }
 }
