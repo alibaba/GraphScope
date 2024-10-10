@@ -176,7 +176,11 @@ static codegen::ParamConst param_const_pb_to_param_const(
   }
 }
 
-static std::string data_type_2_string(const codegen::DataType& data_type) {
+// The second params only control the ret value when type is string.In some
+// cases, we need to use std::string_view, but in some cases, we need to use
+// std::string.
+static std::string data_type_2_string(const codegen::DataType& data_type,
+                                      bool string_view = true) {
   switch (data_type) {
   case codegen::DataType::kInt32:
     return "int32_t";
@@ -185,7 +189,11 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
   case codegen::DataType::kDouble:
     return "double";
   case codegen::DataType::kString:
-    return "std::string_view";
+    if (string_view) {
+      return "std::string_view";
+    } else {
+      return "std::string";
+    }
   case codegen::DataType::kInt64Array:
     return "std::vector<int64_t>";
   case codegen::DataType::kInt32Array:

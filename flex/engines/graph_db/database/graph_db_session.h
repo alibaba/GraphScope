@@ -158,15 +158,17 @@ class GraphDBSession {
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
-      std::string_view str_view(input.data(), len - 1);
+      // We don't discard the last byte, since we need it to determine the input
+      // format when deserializing the input arguments in deserialize() function
+      std::string_view str_view(input.data(), len);
       return parse_query_type_from_cypher_json(str_view);
     } else if (input_tag ==
                static_cast<uint8_t>(InputFormat::kCypherProtoProcedure)) {
       // For cypher internal procedure, the query_name is
       // provided in the protobuf message.
-      std::string_view str_view(input.data(), len - 1);
+      // Same as cypherJson, we don't discard the last byte.
+      std::string_view str_view(input.data(), len);
       return parse_query_type_from_cypher_internal(str_view);
-
     } else {
       return Result<std::pair<uint8_t, std::string_view>>(
           gs::Status(StatusCode::INVALID_ARGUMENT,

@@ -16,19 +16,15 @@
 
 namespace gs {
 
-bool CountVertices::DoQuery(GraphDBSession& sess, Decoder& input,
-                            Encoder& output) {
+results::CollectiveResults CountVertices::Query(const GraphDBSession& sess,
+                                                std::string label_name) {
   // First get the read transaction.
   auto txn = sess.GetReadTransaction();
   // We expect one param of type string from decoder.
-  if (input.empty()) {
-    return false;
-  }
-  std::string label_name{input.get_string()};
   const auto& schema = txn.schema();
   if (!schema.has_vertex_label(label_name)) {
-    output.put_string_view("The requested label doesn't exits.");
-    return false;  // The requested label doesn't exits.
+    LOG(ERROR) << "Label " << label_name << " not found in schema.";
+    return results::CollectiveResults();
   }
   auto label_id = schema.get_vertex_label_id(label_name);
   // The vertices are labeled internally from 0 ~ vertex_label_num, accumulate
@@ -42,10 +38,7 @@ bool CountVertices::DoQuery(GraphDBSession& sess, Decoder& input,
       ->mutable_element()
       ->mutable_object()
       ->set_i32(vertex_num);
-
-  output.put_string_view(results.SerializeAsString());
-  txn.Commit();
-  return true;
+  return results;
 }
 
 AppWrapper CountVerticesFactory::CreateApp(const GraphDB& db) {

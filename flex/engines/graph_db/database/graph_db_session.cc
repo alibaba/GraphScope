@@ -247,7 +247,8 @@ GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
   VLOG(10) << "string view: " << str_view;
   rapidjson::Document j;
-  if (j.Parse(std::string(str_view.data(), str_view.size())).HasParseError()) {
+  if (j.Parse(std::string(str_view.data(), str_view.size() - 1))
+          .HasParseError()) {
     LOG(ERROR) << "Fail to parse json from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
         StatusCode::INTERNAL_ERROR, "Fail to parse json from input content"));
@@ -272,7 +273,7 @@ Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_internal(
     const std::string_view& str_view) {
   procedure::Query cur_query;
-  if (!cur_query.ParseFromArray(str_view.data(), str_view.size())) {
+  if (!cur_query.ParseFromArray(str_view.data(), str_view.size() - 1)) {
     LOG(ERROR) << "Fail to parse query from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
         StatusCode::INTERNAL_ERROR, "Fail to parse query from input content"));

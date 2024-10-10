@@ -747,7 +747,7 @@ class adhoc_query_handler : public StoppableHandler {
         // TODO(zhanglei): choose read or write based on the request, after the
         //  read/write info is supported in physical plan
         // The content contains the path to dynamic library
-          param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
+          param.content.append(gs::Schema::HQPS_ADHOC_READ_PLUGIN_ID_STR, 1);
           param.content.append(gs::GraphDBSession::kCypherProtoAdhocStr, 1);
           return get_executors()[StoppableHandler::shard_id()][dst_executor]
               .run_graph_db_query(query_param{std::move(param.content)})

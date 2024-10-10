@@ -20,10 +20,11 @@
 
 namespace gs {
 // A simple app to count the number of vertices of a given label.
-class CountVertices : public CypherInternalPbWriteAppBase {
+class CountVertices : public CypherReadAppBase<std::string> {
  public:
   CountVertices() {}
-  bool DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) override;
+  results::CollectiveResults Query(const GraphDBSession& sess,
+                                   std::string param) override;
 };
 
 class CountVerticesFactory : public AppFactoryBase {

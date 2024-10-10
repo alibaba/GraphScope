@@ -26,6 +26,8 @@ namespace gs {
 static constexpr const char* time_stamp = "time_stamp";
 static constexpr const char* graph_var = "graph";
 static constexpr const char* GRAPE_INTERFACE_CLASS = "gs::MutableCSRInterface";
+static constexpr const char* SESSION_VAR = "sess";
+static constexpr const char* SESSION_CLASS_NAME = "GraphDBSession";
 static constexpr const char* GRAPE_INTERFACE_HEADER =
     "flex/engines/hqps_db/database/mutable_csr_interface.h";
 static constexpr const char* EDGE_EXPAND_OPT_NAME = "edge_expand_opt";
@@ -302,6 +304,10 @@ class BuildingContext {
   std::string TimeStampVar() const { return time_stamp; }
 
   std::string GraphVar() const { return graph_var; }
+
+  std::string SessionVar() const { return SESSION_VAR; }
+
+  std::string GetSessionTypeName() const { return SESSION_CLASS_NAME; }
 
   void AddParameterVar(const codegen::ParamConst& var) {
     parameter_vars_.emplace_back(var);
