@@ -200,11 +200,12 @@ Result<std::string> GraphDBOperations::GetEdge(
   result.AddMember("dst_primary_key_value", dst_pk_value,
                    result.GetAllocator());
   if (property_name.empty()) {
-    result.AddMember("properties", rapidjson::Value(rapidjson::kArrayType),
-                     result.GetAllocator());
+    rapidjson::Value properties(rapidjson::kObjectType);
+    result.AddMember("properties", properties, result.GetAllocator());
     return Result<std::string>(rapidjson_stringify(result));
   }
-  auto get_result = getEdge(std::move(edge_data), property_name, session);
+  auto get_result = getEdge(std::move(edge_data), property_name, session,
+                            result.GetAllocator());
   if (get_result.ok()) {
     result.AddMember("properties", get_result.value(), result.GetAllocator());
     return Result<std::string>(rapidjson_stringify(result));
@@ -604,7 +605,7 @@ Status GraphDBOperations::updateEdge(std::vector<EdgeData>&& edge_data,
   return Status::OK();
 }
 
-Result<rapidjson::Document> GraphDBOperations::getVertex(
+Result<rapidjson::Value> GraphDBOperations::getVertex(
     std::vector<VertexData>&& vertex_data,
     const std::vector<std::string>& property_names, GraphDBSession& session,
     rapidjson::Document::AllocatorType& allocator) {
@@ -624,16 +625,16 @@ Result<rapidjson::Document> GraphDBOperations::getVertex(
       result.PushBack(values, allocator);
     }
     txn.Commit();
-    return Result<rapidjson::Document>(std::move(result));
+    return Result<rapidjson::Value>(std::move(result));
   } catch (std::exception& e) {
-    return Result<rapidjson::Document>(
+    return Result<rapidjson::Value>(
         Status(StatusCode::INVALID_SCHEMA, e.what()));
   }
 }
 
 Result<rapidjson::Value> GraphDBOperations::getEdge(
     std::vector<EdgeData>&& edge_data, const std::string& property_name,
-    GraphDBSession& session) {
+    GraphDBSession& session, rapidjson::Document::AllocatorType& allocator) {
   try {
     const auto& edge = edge_data[0];
     rapidjson::Document result(rapidjson::kArrayType);
@@ -651,11 +652,10 @@ Result<rapidjson::Value> GraphDBOperations::getEdge(
          edgeIt.IsValid(); edgeIt.Next()) {
       if (edgeIt.GetNeighbor() != dst_vid)
         continue;
-      rapidjson::Value push_json(rapidjson::kObjectType);
-      push_json.AddMember("name", property_name, result.GetAllocator());
-      push_json.AddMember("value", edgeIt.GetData().to_string(),
-                          result.GetAllocator());
-      result.PushBack(push_json, result.GetAllocator());
+      rapidjson::Document push_json(rapidjson::kObjectType, &allocator);
+      push_json.AddMember("name", property_name, allocator);
+      push_json.AddMember("value", edgeIt.GetData().to_string(), allocator);
+      result.PushBack(push_json, allocator);
       break;
     }
     if (result.Empty()) {
