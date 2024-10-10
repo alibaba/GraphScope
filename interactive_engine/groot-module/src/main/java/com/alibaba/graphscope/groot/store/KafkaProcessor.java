@@ -393,6 +393,6 @@ public class KafkaProcessor {
             replayInProgress.set(false);
         }
         logger.info("replay DML records finished. total replayed [{}] records", replayCount);
-        return List.of(batchSnapshotId);
+        return List.of(batchSnapshotId + 1);
     }
 }

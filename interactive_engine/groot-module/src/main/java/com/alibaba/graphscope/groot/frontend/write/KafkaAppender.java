@@ -259,7 +259,7 @@ public class KafkaAppender {
                         logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
                         replayCount++;
                     }
-                    ids.add(batchSnapshotId);
+                    ids.add(batchSnapshotId + 1);
                 }
             }
         }
