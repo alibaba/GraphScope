@@ -844,6 +844,23 @@ ul.nav-tabs {
   <script>
     // Script section to load models into a JS Var
     var defs = {}
+    defs["APIResponseWithCode"] = {
+  "type" : "object",
+  "properties" : {
+    "code" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "message" : {
+      "type" : "string"
+    }
+  },
+  "example" : {
+    "code" : 500,
+    "message" : "Internal Error"
+  },
+  "x-body-name" : "api_response_with_code"
+};
     defs["BaseEdgeType"] = {
   "type" : "object",
   "properties" : {
@@ -1300,6 +1317,9 @@ ul.nav-tabs {
     defs["GetGraphResponse"] = {
   "type" : "object",
   "properties" : {
+    "version" : {
+      "type" : "string"
+    },
     "id" : {
       "type" : "string"
     },
@@ -1629,6 +1649,9 @@ ul.nav-tabs {
     defs["ServiceStatus"] = {
   "type" : "object",
   "properties" : {
+    "statistics_enabled" : {
+      "type" : "boolean"
+    },
     "status" : {
       "type" : "string"
     },
@@ -1662,6 +1685,17 @@ ul.nav-tabs {
   },
   "x-body-name" : "start_service_request"
 };
+    defs["StopServiceRequest"] = {
+  "type" : "object",
+  "properties" : {
+    "graph_id" : {
+      "type" : "string",
+      "nullable" : true
+    }
+  },
+  "additionalProperties" : false,
+  "x-body-name" : "stop_service_request"
+};
     defs["StoredProcedureMeta"] = {
   "allOf" : [ {
     "$ref" : "#/components/schemas/CreateProcedureRequest"
@@ -1691,6 +1725,10 @@ ul.nav-tabs {
       "enable" : {
         "type" : "boolean",
         "example" : true
+      },
+      "option" : {
+        "type" : "object",
+        "additionalProperties" : true
       }
     }
   } ],
@@ -3694,9 +3732,12 @@ The id of graph to delete
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Graph not found"
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found"
+      }
     }
   }
 };
@@ -3771,9 +3812,12 @@ The id of graph to delete
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Internal Error: "
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
     }
   }
 };
@@ -4657,9 +4701,12 @@ The id of graph to get statistics
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Internal error"
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
     }
   }
 };
@@ -4734,9 +4781,12 @@ The id of graph to get statistics
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Graph not running or graph not exists"
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found"
+      }
     }
   }
 };
@@ -4811,9 +4861,12 @@ The id of graph to get statistics
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Service unavailable, try again later"
+      "example" : {
+        "code" : 15,
+        "message" : "Service Unavailable"
+      }
     }
   }
 };
@@ -7075,9 +7128,12 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Bad request"
+      "example" : {
+        "code" : 14,
+        "message" : "Bad request"
+      }
     }
   }
 };
@@ -7152,9 +7208,12 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Graph not found"
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found"
+      }
     }
   }
 };
@@ -7229,9 +7288,12 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
       },
-      "example" : "Internal error"
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
     }
   }
 };
@@ -7700,8 +7762,11 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "type" : "string",
-        "example" : "Graph Not found/Procedure Not found"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found/Procedure not found"
       }
     }
   }
@@ -9149,8 +9214,11 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "type" : "string",
-        "example" : "bad request"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 14,
+        "message" : "Bad request"
       }
     }
   }
@@ -9226,8 +9294,11 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "type" : "string",
-        "example" : "Graph Not found/Procedure Not found"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found/Procedure not found"
       }
     }
   }
@@ -9303,8 +9374,11 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "type" : "string",
-        "example" : "bad request"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
       }
     }
   }
@@ -10423,8 +10497,11 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "type" : "string",
-        "example" : "Internal Error"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
       }
     }
   }
@@ -10504,7 +10581,11 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-AdminServiceServiceManagement-stopService-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/stop"
+ -H "Content-Type: application/json" \
+ "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/stop" \
+ -d '{
+  &quot;graph_id&quot; : &quot;graph_id&quot;
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceServiceManagement-stopService-0-java">
@@ -10521,9 +10602,10 @@ public class AdminServiceServiceManagementApiExample {
 
         // Create an instance of the API class
         AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi();
+        StopServiceRequest stopServiceRequest = ; // StopServiceRequest | 
 
         try {
-            'String' result = apiInstance.stopService();
+            'String' result = apiInstance.stopService(stopServiceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AdminServiceServiceManagementApi#stopService");
@@ -10539,9 +10621,10 @@ public class AdminServiceServiceManagementApiExample {
 
 final api_instance = DefaultApi();
 
+final StopServiceRequest stopServiceRequest = new StopServiceRequest(); // StopServiceRequest | 
 
 try {
-    final result = await api_instance.stopService();
+    final result = await api_instance.stopService(stopServiceRequest);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->stopService: $e\n');
@@ -10556,9 +10639,10 @@ try {
 public class AdminServiceServiceManagementApiExample {
     public static void main(String[] args) {
         AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi();
+        StopServiceRequest stopServiceRequest = ; // StopServiceRequest | 
 
         try {
-            'String' result = apiInstance.stopService();
+            'String' result = apiInstance.stopService(stopServiceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AdminServiceServiceManagementApi#stopService");
@@ -10576,9 +10660,10 @@ public class AdminServiceServiceManagementApiExample {
 
 // Create an instance of the API class
 AdminServiceServiceManagementApi *apiInstance = [[AdminServiceServiceManagementApi alloc] init];
+StopServiceRequest *stopServiceRequest = ; //  (optional)
 
-[apiInstance stopServiceWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+[apiInstance stopServiceWith:stopServiceRequest
+              completionHandler: ^('String' output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -10594,6 +10679,10 @@ AdminServiceServiceManagementApi *apiInstance = [[AdminServiceServiceManagementA
 
 // Create an instance of the API class
 var api = new GraphScopeInteractiveApiV03.AdminServiceServiceManagementApi()
+var opts = {
+  'stopServiceRequest':  // {StopServiceRequest} 
+};
+
 var callback = function(error, data, response) {
   if (error) {
     console.error(error);
@@ -10601,7 +10690,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.stopService(callback);
+api.stopService(opts, callback);
 </code></pre>
                             </div>
 
@@ -10624,9 +10713,10 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new AdminServiceServiceManagementApi();
+            var stopServiceRequest = new StopServiceRequest(); // StopServiceRequest |  (optional) 
 
             try {
-                'String' result = apiInstance.stopService();
+                'String' result = apiInstance.stopService(stopServiceRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling AdminServiceServiceManagementApi.stopService: " + e.Message );
@@ -10643,9 +10733,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\AdminServiceServiceManagementApi();
+$stopServiceRequest = ; // StopServiceRequest | 
 
 try {
-    $result = $api_instance->stopService();
+    $result = $api_instance->stopService($stopServiceRequest);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling AdminServiceServiceManagementApi->stopService: ', $e->getMessage(), PHP_EOL;
@@ -10660,9 +10751,10 @@ use WWW::OPenAPIClient::AdminServiceServiceManagementApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::AdminServiceServiceManagementApi->new();
+my $stopServiceRequest = WWW::OPenAPIClient::Object::StopServiceRequest->new(); # StopServiceRequest | 
 
 eval {
-    my $result = $api_instance->stopService();
+    my $result = $api_instance->stopService(stopServiceRequest => $stopServiceRequest);
     print Dumper($result);
 };
 if ($@) {
@@ -10679,9 +10771,10 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.AdminServiceServiceManagementApi()
+stopServiceRequest =  # StopServiceRequest |  (optional)
 
 try:
-    api_response = api_instance.stop_service()
+    api_response = api_instance.stop_service(stopServiceRequest=stopServiceRequest)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling AdminServiceServiceManagementApi->stopService: %s\n" % e)</code></pre>
@@ -10691,9 +10784,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate AdminServiceServiceManagementApi;
 
 pub fn main() {
+    let stopServiceRequest = ; // StopServiceRequest
 
     let mut context = AdminServiceServiceManagementApi::Context::default();
-    let result = client.stopService(&context).wait();
+    let result = client.stopService(stopServiceRequest, &context).wait();
 
     println!("{:?}", result);
 }
@@ -10710,6 +10804,54 @@ pub fn main() {
 
 
 
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">stopServiceRequest </td>
+<td>
+<p class="marked">Stop service on a specified graph</p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "description" : "Stop service on a specified graph",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/StopServiceRequest"
+      }
+    }
+  }
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_stopService_stopServiceRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_stopService_stopServiceRequest"></div>
+</td>
+</tr>
+
+                            </table>
 
 
 
@@ -11268,6 +11410,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-addEdge-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-addEdge-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -11279,7 +11426,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input edge"
+  "description" : "Invalid input edge",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input edge schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -11332,6 +11490,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-addEdge-409" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-addEdge-409-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -11343,7 +11506,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "edge already exists"
+  "description" : "edge already exists",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 102,
+        "message" : "Edge already exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -11396,6 +11570,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-addEdge-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-addEdge-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -11407,7 +11586,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -11973,6 +12163,11 @@ The primary key value of dst vertex.
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-deleteEdge-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-deleteEdge-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -11984,7 +12179,18 @@ The primary key value of dst vertex.
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input edge"
+  "description" : "Invalid input edge",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input edge schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -12037,6 +12243,11 @@ The primary key value of dst vertex.
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-deleteEdge-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-deleteEdge-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -12048,7 +12259,18 @@ The primary key value of dst vertex.
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Edge not exists or Graph not exits"
+  "description" : "Edge not exists or Graph not exits",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Edge not exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -12101,6 +12323,11 @@ The primary key value of dst vertex.
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-deleteEdge-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-deleteEdge-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -12112,7 +12339,18 @@ The primary key value of dst vertex.
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -12720,6 +12958,11 @@ The value of dst vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-getEdge-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-getEdge-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -12731,7 +12974,18 @@ The value of dst vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Bad input parameter"
+  "description" : "Bad input parameter",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input edge schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -12784,6 +13038,11 @@ The value of dst vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-getEdge-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-getEdge-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -12795,7 +13054,18 @@ The value of dst vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Edge not found or Graph not found"
+  "description" : "Edge not found or Graph not found",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Edge not found"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -12848,6 +13118,11 @@ The value of dst vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-getEdge-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-getEdge-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -12859,7 +13134,18 @@ The value of dst vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -13358,7 +13644,7 @@ $(document).ready(function() {
                             <h3 id="examples-GraphServiceEdgeManagement-updateEdge-title-400"></h3>
                             <p id="examples-GraphServiceEdgeManagement-updateEdge-description-400" class="marked"></p>
                             <script>
-                              var responseGraphServiceEdgeManagement400_description = `Invalid input paramters`;
+                              var responseGraphServiceEdgeManagement400_description = `Invalid input parameters`;
                               var responseGraphServiceEdgeManagement400_description_break = responseGraphServiceEdgeManagement400_description.indexOf('\n');
                               if (responseGraphServiceEdgeManagement400_description_break == -1) {
                                 $("#examples-GraphServiceEdgeManagement-updateEdge-title-400").text("Status: 400 - " + responseGraphServiceEdgeManagement400_description);
@@ -13370,6 +13656,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-updateEdge-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-updateEdge-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -13381,7 +13672,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input paramters"
+  "description" : "Invalid input parameters",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input edge schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -13434,6 +13736,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-updateEdge-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-updateEdge-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -13445,7 +13752,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Edge not exists"
+  "description" : "Edge not exists",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Edge not exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -13498,6 +13816,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceEdgeManagement-updateEdge-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceEdgeManagement-updateEdge-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -13509,7 +13832,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14068,6 +14402,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-addVertex-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-addVertex-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14079,7 +14418,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input vertex"
+  "description" : "Invalid input vertex",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input vertex schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14132,6 +14482,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-addVertex-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-addVertex-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14143,7 +14498,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Graph not found"
+  "description" : "Graph not found",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Graph not found"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14196,6 +14562,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-addVertex-409" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-addVertex-409-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14207,7 +14578,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Vertex already exists"
+  "description" : "Vertex already exists",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 102,
+        "message" : "Vertex already exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14260,6 +14642,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-addVertex-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-addVertex-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14271,7 +14658,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14769,6 +15167,11 @@ The value of the querying vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-deleteVertex-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-deleteVertex-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14780,7 +15183,18 @@ The value of the querying vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input vertex"
+  "description" : "Invalid input vertex",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input vertex schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14833,6 +15247,11 @@ The value of the querying vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-deleteVertex-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-deleteVertex-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14844,7 +15263,18 @@ The value of the querying vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Vertex not exists or Graph not exits."
+  "description" : "Vertex not exists or Graph not exits.",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Vertex not exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -14897,6 +15327,11 @@ The value of the querying vertex&#39;s primary key
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-deleteVertex-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-deleteVertex-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -14908,7 +15343,18 @@ The value of the querying vertex&#39;s primary key
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -16054,7 +16500,7 @@ $(document).ready(function() {
                             <h3 id="examples-GraphServiceVertexManagement-updateVertex-title-400"></h3>
                             <p id="examples-GraphServiceVertexManagement-updateVertex-description-400" class="marked"></p>
                             <script>
-                              var responseGraphServiceVertexManagement400_description = `Invalid input paramters`;
+                              var responseGraphServiceVertexManagement400_description = `Invalid input parameters`;
                               var responseGraphServiceVertexManagement400_description_break = responseGraphServiceVertexManagement400_description.indexOf('\n');
                               if (responseGraphServiceVertexManagement400_description_break == -1) {
                                 $("#examples-GraphServiceVertexManagement-updateVertex-title-400").text("Status: 400 - " + responseGraphServiceVertexManagement400_description);
@@ -16066,6 +16512,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-updateVertex-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-updateVertex-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -16077,7 +16528,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Invalid input paramters"
+  "description" : "Invalid input parameters",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 101,
+        "message" : "Invalid input vertex schema"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -16130,6 +16592,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-updateVertex-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-updateVertex-404-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -16141,7 +16608,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Vertex not exists"
+  "description" : "Vertex not exists",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 4,
+        "message" : "Vertex not exists"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -16194,6 +16672,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-GraphServiceVertexManagement-updateVertex-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-GraphServiceVertexManagement-updateVertex-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -16205,7 +16688,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -16285,7 +16779,7 @@ $(document).ready(function() {
                         <div class="tab-content">
                           <div class="tab-pane active" id="examples-QueryService-callProc-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
- -H "Accept: text/plain" \
+ -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
  "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/query" \
  -d 'Custom MIME type example not yet supported: text/plain'
@@ -16692,6 +17186,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-QueryService-callProc-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-callProc-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -16703,7 +17202,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -16780,7 +17290,7 @@ $(document).ready(function() {
                         <div class="tab-content">
                           <div class="tab-pane active" id="examples-QueryService-callProcCurrent-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
- -H "Accept: text/plain" \
+ -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
  "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/current/query" \
  -d 'Custom MIME type example not yet supported: text/plain'
@@ -17149,6 +17659,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-QueryService-callProcCurrent-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-callProcCurrent-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -17160,7 +17675,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -17238,7 +17764,7 @@ https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/p
                         <div class="tab-content">
                           <div class="tab-pane active" id="examples-QueryService-runAdhoc-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
- -H "Accept: text/plain" \
+ -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
  "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/adhoc_query" \
  -d 'Custom MIME type example not yet supported: text/plain'
@@ -17645,6 +18171,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-QueryService-runAdhoc-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-runAdhoc-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -17656,7 +18187,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -17734,7 +18276,7 @@ https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/p
                         <div class="tab-content">
                           <div class="tab-pane active" id="examples-QueryService-runAdhocCurrent-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
- -H "Accept: text/plain" \
+ -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
  "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/current/adhoc_query" \
  -d 'Custom MIME type example not yet supported: text/plain'
@@ -18103,6 +18645,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-QueryService-runAdhocCurrent-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-runAdhocCurrent-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -18114,7 +18661,18 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Server internal error"
+  "description" : "Server internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -18559,7 +19117,11 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/APIResponse"
+        "$ref" : "#/components/schemas/APIResponseWithCode"
+      },
+      "example" : {
+        "code" : 103,
+        "message" : "Internal error"
       }
     }
   }

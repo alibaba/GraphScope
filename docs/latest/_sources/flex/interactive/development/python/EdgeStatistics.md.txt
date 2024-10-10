@@ -26,6 +26,6 @@ edge_statistics_dict = edge_statistics_instance.to_dict()
 # create an instance of EdgeStatistics from a dict
 edge_statistics_from_dict = EdgeStatistics.from_dict(edge_statistics_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

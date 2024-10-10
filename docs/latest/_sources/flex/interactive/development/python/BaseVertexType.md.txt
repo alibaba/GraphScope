@@ -26,6 +26,6 @@ base_vertex_type_dict = base_vertex_type_instance.to_dict()
 # create an instance of BaseVertexType from a dict
 base_vertex_type_from_dict = BaseVertexType.from_dict(base_vertex_type_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

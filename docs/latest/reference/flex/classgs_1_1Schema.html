@@ -213,9 +213,13 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a695e9e40d6346e6f866ecd8688a4dc37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14c74a4c50f35fdec6f39a9b06c3b309"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a14c74a4c50f35fdec6f39a9b06c3b309">GetVersion</a> () const</td></tr>
 <tr class="separator:a14c74a4c50f35fdec6f39a9b06c3b309"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a864df80e90b62f3c867fd0e5fb1b82ae"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a864df80e90b62f3c867fd0e5fb1b82ae">has_multi_props_edge</a> () const</td></tr>
+<tr class="separator:a864df80e90b62f3c867fd0e5fb1b82ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:acc60b17f8043be5abe12aabfe18db136"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#acc60b17f8043be5abe12aabfe18db136">IsBuiltinPlugin</a> (const std::string &amp;plugin_name)</td></tr>
+<tr class="separator:acc60b17f8043be5abe12aabfe18db136"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9152b50607fea5836a3c99eb151ad27b"><td class="memItemLeft" align="right" valign="top">static const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a9152b50607fea5836a3c99eb151ad27b">GetCompatibleVersions</a> ()</td></tr>
 <tr class="separator:a9152b50607fea5836a3c99eb151ad27b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94fbf70f5cb55f6633f8480340d7ebb9"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a94fbf70f5cb55f6633f8480340d7ebb9">LoadFromYaml</a> (const std::string &amp;schema_config)</td></tr>
@@ -227,8 +231,10 @@ Static Public Member Functions</h2></td></tr>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a931f5d511e6b089ecf55439e569147b4"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a931f5d511e6b089ecf55439e569147b4">RESERVED_PLUGIN_NUM</a> = 1</td></tr>
 <tr class="separator:a931f5d511e6b089ecf55439e569147b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f08fd057e200d391ea132722908dbb3"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a6f08fd057e200d391ea132722908dbb3">MAX_PLUGIN_ID</a> = 253</td></tr>
+<tr class="memitem:a6f08fd057e200d391ea132722908dbb3"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a6f08fd057e200d391ea132722908dbb3">MAX_PLUGIN_ID</a> = 248</td></tr>
 <tr class="separator:a6f08fd057e200d391ea132722908dbb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a565d20cb83331b8ff892d088a3c22d15"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a565d20cb83331b8ff892d088a3c22d15">ADHOC_READ_PLUGIN_ID</a> = 253</td></tr>
+<tr class="separator:a565d20cb83331b8ff892d088a3c22d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeaf9c3fb2f99f9768cc525f9f0653133"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#aeaf9c3fb2f99f9768cc525f9f0653133">HQPS_ADHOC_READ_PLUGIN_ID</a> = 254</td></tr>
 <tr class="separator:aeaf9c3fb2f99f9768cc525f9f0653133"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf9d4a9bf7bbfeeeadbdfad0294d2825"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#aaf9d4a9bf7bbfeeeadbdfad0294d2825">HQPS_ADHOC_WRITE_PLUGIN_ID</a> = 255</td></tr>
@@ -237,6 +243,8 @@ Static Public Attributes</h2></td></tr>
 <tr class="separator:adccc25212dcd380e77a83a5fed3884eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ec29dfde7c18c7b1b07d454d5bf782d"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a3ec29dfde7c18c7b1b07d454d5bf782d">HQPS_ADHOC_WRITE_PLUGIN_ID_STR</a> = &quot;\xFF&quot;</td></tr>
 <tr class="separator:a3ec29dfde7c18c7b1b07d454d5bf782d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a866e738f5e30864957a47a3298a36043"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a866e738f5e30864957a47a3298a36043">ADHOC_READ_PLUGIN_ID_STR</a> = &quot;\xFD&quot;</td></tr>
+<tr class="separator:a866e738f5e30864957a47a3298a36043"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7f423ed2a0514a31f6352c9e609e251"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ad7f423ed2a0514a31f6352c9e609e251">PRIMITIVE_TYPE_KEY</a> = &quot;primitive_type&quot;</td></tr>
 <tr class="separator:ad7f423ed2a0514a31f6352c9e609e251"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a967219772444469173900ca4faf1d273"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a967219772444469173900ca4faf1d273">VARCHAR_KEY</a> = &quot;varchar&quot;</td></tr>
@@ -245,6 +253,28 @@ Static Public Attributes</h2></td></tr>
 <tr class="separator:a0a6e0c3d53b3665d703442f53c1a671e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0aaf99b327839e883a9e2ac8a4f7302c"><td class="memItemLeft" align="right" valign="top">static constexpr const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a0aaf99b327839e883a9e2ac8a4f7302c">STRING_DEFAULT_MAX_LENGTH</a> = 256</td></tr>
 <tr class="separator:a0aaf99b327839e883a9e2ac8a4f7302c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42cc4c06bbc0f04b5ffb32a071ae0de8"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a42cc4c06bbc0f04b5ffb32a071ae0de8">BUILTIN_PLUGIN_NUM</a> = 4</td></tr>
+<tr class="separator:a42cc4c06bbc0f04b5ffb32a071ae0de8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a163db9c7b578fb8caafe60b25befa971"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a163db9c7b578fb8caafe60b25befa971">BUILTIN_COUNT_VERTICES_PLUGIN_ID</a> = 252</td></tr>
+<tr class="separator:a163db9c7b578fb8caafe60b25befa971"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af17bea27debd0233b1960ced84f01acd"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af17bea27debd0233b1960ced84f01acd">BUILTIN_COUNT_VERTICES_PLUGIN_NAME</a></td></tr>
+<tr class="separator:af17bea27debd0233b1960ced84f01acd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af130cd0cda1f1799cb107c7deba19b0d"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af130cd0cda1f1799cb107c7deba19b0d">BUILTIN_PAGERANK_PLUGIN_ID</a> = 251</td></tr>
+<tr class="separator:af130cd0cda1f1799cb107c7deba19b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30f8040bbce5d764a1c6cc6678bd319f"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a30f8040bbce5d764a1c6cc6678bd319f">BUILTIN_PAGERANK_PLUGIN_NAME</a> = &quot;pagerank&quot;</td></tr>
+<tr class="separator:a30f8040bbce5d764a1c6cc6678bd319f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd90fa0c3df5544c4747fc7ce5373b4a"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#afd90fa0c3df5544c4747fc7ce5373b4a">BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID</a> = 250</td></tr>
+<tr class="separator:afd90fa0c3df5544c4747fc7ce5373b4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91e0260190da7e79e68972c508472961"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a91e0260190da7e79e68972c508472961">BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</a></td></tr>
+<tr class="separator:a91e0260190da7e79e68972c508472961"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a413d397f4fb593e98e7b2445a379bee6"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a413d397f4fb593e98e7b2445a379bee6">BUILTIN_TVSP_PLUGIN_ID</a> = 249</td></tr>
+<tr class="separator:a413d397f4fb593e98e7b2445a379bee6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74ddbaa33c2ba1a83e7044c3a2222805"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a74ddbaa33c2ba1a83e7044c3a2222805">BUILTIN_TVSP_PLUGIN_NAME</a></td></tr>
+<tr class="separator:a74ddbaa33c2ba1a83e7044c3a2222805"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a942dc7c842d5230863985518347d9b9e"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a942dc7c842d5230863985518347d9b9e">BUILTIN_PLUGIN_NAMES</a> [<a class="el" href="classgs_1_1Schema.html#a42cc4c06bbc0f04b5ffb32a071ae0de8">BUILTIN_PLUGIN_NUM</a>]</td></tr>
+<tr class="separator:a942dc7c842d5230863985518347d9b9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee91e933880d9c59f03ec35d9a747ce3"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#aee91e933880d9c59f03ec35d9a747ce3">BUILTIN_PLUGIN_IDS</a> [<a class="el" href="classgs_1_1Schema.html#a42cc4c06bbc0f04b5ffb32a071ae0de8">BUILTIN_PLUGIN_NUM</a>]</td></tr>
+<tr class="separator:aee91e933880d9c59f03ec35d9a747ce3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2affc43b555d57bf8486fd6278896209"><td class="memItemLeft" align="right" valign="top">static const std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a2affc43b555d57bf8486fd6278896209">COMPATIBLE_VERSIONS</a></td></tr>
 <tr class="separator:a2affc43b555d57bf8486fd6278896209"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace4bc55ddb0988d157f74e3c0ddb1fa1"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ace4bc55ddb0988d157f74e3c0ddb1fa1">DEFAULT_SCHEMA_VERSION</a> = &quot;v0.0&quot;</td></tr>
@@ -301,6 +331,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:ac73cf2f54dc24993f7df91e7b8b0edeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a99fc9e550883fe5ab6196ee710facd"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a4a99fc9e550883fe5ab6196ee710facd">version_</a></td></tr>
 <tr class="separator:a4a99fc9e550883fe5ab6196ee710facd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8ce918d513ebe57d87d1921d38cbf3a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af8ce918d513ebe57d87d1921d38cbf3a">has_multi_props_edge_</a></td></tr>
+<tr class="separator:af8ce918d513ebe57d87d1921d38cbf3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a8bdcf6f3bfde202a9d38464861237b05"></a>
@@ -323,9 +355,6 @@ Private Attributes</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">gs::Schema::Schema </td>
@@ -334,11 +363,6 @@ Private Attributes</h2></td></tr>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">default</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 </div>
@@ -1562,6 +1586,23 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a864df80e90b62f3c867fd0e5fb1b82ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a864df80e90b62f3c867fd0e5fb1b82ae">&#9670;&nbsp;</a></span>has_multi_props_edge()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::Schema::has_multi_props_edge </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a7fbd0b550f660673796f21d26bb1d47f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7fbd0b550f660673796f21d26bb1d47f">&#9670;&nbsp;</a></span>has_vertex_label()</h2>
 
@@ -1610,6 +1651,32 @@ Private Attributes</h2></td></tr>
           <td></td><td> const</td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acc60b17f8043be5abe12aabfe18db136"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc60b17f8043be5abe12aabfe18db136">&#9670;&nbsp;</a></span>IsBuiltinPlugin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::Schema::IsBuiltinPlugin </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>plugin_name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -1958,6 +2025,304 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a565d20cb83331b8ff892d088a3c22d15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a565d20cb83331b8ff892d088a3c22d15">&#9670;&nbsp;</a></span>ADHOC_READ_PLUGIN_ID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::ADHOC_READ_PLUGIN_ID = 253</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a866e738f5e30864957a47a3298a36043"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a866e738f5e30864957a47a3298a36043">&#9670;&nbsp;</a></span>ADHOC_READ_PLUGIN_ID_STR</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::ADHOC_READ_PLUGIN_ID_STR = &quot;\xFD&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a163db9c7b578fb8caafe60b25befa971"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a163db9c7b578fb8caafe60b25befa971">&#9670;&nbsp;</a></span>BUILTIN_COUNT_VERTICES_PLUGIN_ID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_COUNT_VERTICES_PLUGIN_ID = 252</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af17bea27debd0233b1960ced84f01acd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af17bea27debd0233b1960ced84f01acd">&#9670;&nbsp;</a></span>BUILTIN_COUNT_VERTICES_PLUGIN_NAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::BUILTIN_COUNT_VERTICES_PLUGIN_NAME</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">      <span class="stringliteral">&quot;count_vertices&quot;</span></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="afd90fa0c3df5544c4747fc7ce5373b4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd90fa0c3df5544c4747fc7ce5373b4a">&#9670;&nbsp;</a></span>BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID = 250</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a91e0260190da7e79e68972c508472961"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91e0260190da7e79e68972c508472961">&#9670;&nbsp;</a></span>BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">      <span class="stringliteral">&quot;k_neighbors&quot;</span></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="af130cd0cda1f1799cb107c7deba19b0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af130cd0cda1f1799cb107c7deba19b0d">&#9670;&nbsp;</a></span>BUILTIN_PAGERANK_PLUGIN_ID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_PAGERANK_PLUGIN_ID = 251</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a30f8040bbce5d764a1c6cc6678bd319f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30f8040bbce5d764a1c6cc6678bd319f">&#9670;&nbsp;</a></span>BUILTIN_PAGERANK_PLUGIN_NAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::BUILTIN_PAGERANK_PLUGIN_NAME = &quot;pagerank&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aee91e933880d9c59f03ec35d9a747ce3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee91e933880d9c59f03ec35d9a747ce3">&#9670;&nbsp;</a></span>BUILTIN_PLUGIN_IDS</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_PLUGIN_IDS[<a class="el" href="classgs_1_1Schema.html#a42cc4c06bbc0f04b5ffb32a071ae0de8">BUILTIN_PLUGIN_NUM</a>]</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">      <a class="code" href="classgs_1_1Schema.html#a163db9c7b578fb8caafe60b25befa971">BUILTIN_COUNT_VERTICES_PLUGIN_ID</a>, <a class="code" href="classgs_1_1Schema.html#af130cd0cda1f1799cb107c7deba19b0d">BUILTIN_PAGERANK_PLUGIN_ID</a>,</div>
+<div class="line">      <a class="code" href="classgs_1_1Schema.html#afd90fa0c3df5544c4747fc7ce5373b4a">BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID</a>, <a class="code" href="classgs_1_1Schema.html#a413d397f4fb593e98e7b2445a379bee6">BUILTIN_TVSP_PLUGIN_ID</a>}</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a942dc7c842d5230863985518347d9b9e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a942dc7c842d5230863985518347d9b9e">&#9670;&nbsp;</a></span>BUILTIN_PLUGIN_NAMES</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::BUILTIN_PLUGIN_NAMES[<a class="el" href="classgs_1_1Schema.html#a42cc4c06bbc0f04b5ffb32a071ae0de8">BUILTIN_PLUGIN_NUM</a>]</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">      <a class="code" href="classgs_1_1Schema.html#af17bea27debd0233b1960ced84f01acd">BUILTIN_COUNT_VERTICES_PLUGIN_NAME</a>, <a class="code" href="classgs_1_1Schema.html#a30f8040bbce5d764a1c6cc6678bd319f">BUILTIN_PAGERANK_PLUGIN_NAME</a>,</div>
+<div class="line">      <a class="code" href="classgs_1_1Schema.html#a91e0260190da7e79e68972c508472961">BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</a>, <a class="code" href="classgs_1_1Schema.html#a74ddbaa33c2ba1a83e7044c3a2222805">BUILTIN_TVSP_PLUGIN_NAME</a>}</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a42cc4c06bbc0f04b5ffb32a071ae0de8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42cc4c06bbc0f04b5ffb32a071ae0de8">&#9670;&nbsp;</a></span>BUILTIN_PLUGIN_NUM</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_PLUGIN_NUM = 4</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a413d397f4fb593e98e7b2445a379bee6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a413d397f4fb593e98e7b2445a379bee6">&#9670;&nbsp;</a></span>BUILTIN_TVSP_PLUGIN_ID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::BUILTIN_TVSP_PLUGIN_ID = 249</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a74ddbaa33c2ba1a83e7044c3a2222805"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74ddbaa33c2ba1a83e7044c3a2222805">&#9670;&nbsp;</a></span>BUILTIN_TVSP_PLUGIN_NAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::Schema::BUILTIN_TVSP_PLUGIN_NAME</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">      <span class="stringliteral">&quot;shortest_path_among_three&quot;</span></div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="a2affc43b555d57bf8486fd6278896209"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2affc43b555d57bf8486fd6278896209">&#9670;&nbsp;</a></span>COMPATIBLE_VERSIONS</h2>
 
@@ -2106,6 +2471,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">std::map&lt;uint32_t, std::vector&lt;<a class="el" href="structgs_1_1PropertyType.html">PropertyType</a>&gt; &gt; gs::Schema::eproperties_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af8ce918d513ebe57d87d1921d38cbf3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8ce918d513ebe57d87d1921d38cbf3a">&#9670;&nbsp;</a></span>has_multi_props_edge_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::Schema::has_multi_props_edge_</td>
         </tr>
       </table>
   </td>
@@ -2281,7 +2668,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr uint8_t gs::Schema::MAX_PLUGIN_ID = 253</td>
+          <td class="memname">constexpr uint8_t gs::Schema::MAX_PLUGIN_ID = 248</td>
         </tr>
       </table>
   </td>
@@ -2672,6 +3059,14 @@ Private Attributes</h2></td></tr>
 <li>/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/<a class="el" href="schema_8cc.html">schema.cc</a></li>
 </ul>
 </div><!-- contents -->
+<div class="ttc" id="aclassgs_1_1Schema_html_a163db9c7b578fb8caafe60b25befa971"><div class="ttname"><a href="classgs_1_1Schema.html#a163db9c7b578fb8caafe60b25befa971">gs::Schema::BUILTIN_COUNT_VERTICES_PLUGIN_ID</a></div><div class="ttdeci">static constexpr uint8_t BUILTIN_COUNT_VERTICES_PLUGIN_ID</div><div class="ttdef"><b>Definition:</b> schema.h:49</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_a413d397f4fb593e98e7b2445a379bee6"><div class="ttname"><a href="classgs_1_1Schema.html#a413d397f4fb593e98e7b2445a379bee6">gs::Schema::BUILTIN_TVSP_PLUGIN_ID</a></div><div class="ttdeci">static constexpr uint8_t BUILTIN_TVSP_PLUGIN_ID</div><div class="ttdef"><b>Definition:</b> schema.h:57</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_a74ddbaa33c2ba1a83e7044c3a2222805"><div class="ttname"><a href="classgs_1_1Schema.html#a74ddbaa33c2ba1a83e7044c3a2222805">gs::Schema::BUILTIN_TVSP_PLUGIN_NAME</a></div><div class="ttdeci">static constexpr const char * BUILTIN_TVSP_PLUGIN_NAME</div><div class="ttdef"><b>Definition:</b> schema.h:58</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_af17bea27debd0233b1960ced84f01acd"><div class="ttname"><a href="classgs_1_1Schema.html#af17bea27debd0233b1960ced84f01acd">gs::Schema::BUILTIN_COUNT_VERTICES_PLUGIN_NAME</a></div><div class="ttdeci">static constexpr const char * BUILTIN_COUNT_VERTICES_PLUGIN_NAME</div><div class="ttdef"><b>Definition:</b> schema.h:50</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_af130cd0cda1f1799cb107c7deba19b0d"><div class="ttname"><a href="classgs_1_1Schema.html#af130cd0cda1f1799cb107c7deba19b0d">gs::Schema::BUILTIN_PAGERANK_PLUGIN_ID</a></div><div class="ttdeci">static constexpr uint8_t BUILTIN_PAGERANK_PLUGIN_ID</div><div class="ttdef"><b>Definition:</b> schema.h:52</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_afd90fa0c3df5544c4747fc7ce5373b4a"><div class="ttname"><a href="classgs_1_1Schema.html#afd90fa0c3df5544c4747fc7ce5373b4a">gs::Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID</a></div><div class="ttdeci">static constexpr uint8_t BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID</div><div class="ttdef"><b>Definition:</b> schema.h:54</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_a30f8040bbce5d764a1c6cc6678bd319f"><div class="ttname"><a href="classgs_1_1Schema.html#a30f8040bbce5d764a1c6cc6678bd319f">gs::Schema::BUILTIN_PAGERANK_PLUGIN_NAME</a></div><div class="ttdeci">static constexpr const char * BUILTIN_PAGERANK_PLUGIN_NAME</div><div class="ttdef"><b>Definition:</b> schema.h:53</div></div>
+<div class="ttc" id="aclassgs_1_1Schema_html_a91e0260190da7e79e68972c508472961"><div class="ttname"><a href="classgs_1_1Schema.html#a91e0260190da7e79e68972c508472961">gs::Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</a></div><div class="ttdeci">static constexpr const char * BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME</div><div class="ttdef"><b>Definition:</b> schema.h:55</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

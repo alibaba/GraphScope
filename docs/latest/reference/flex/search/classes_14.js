@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['versionmanager_1705',['VersionManager',['../classgs_1_1VersionManager.html',1,'gs']]],
-  ['vertex_5fiterator_1706',['vertex_iterator',['../classgs_1_1ReadTransaction_1_1vertex__iterator.html',1,'gs::ReadTransaction::vertex_iterator'],['../classgs_1_1UpdateTransaction_1_1vertex__iterator.html',1,'gs::UpdateTransaction::vertex_iterator']]],
-  ['vertex_5frange_1707',['vertex_range',['../structgs_1_1ServerApp_1_1vertex__range.html',1,'gs::ServerApp']]],
-  ['vertexdata_1708',['VertexData',['../structgs_1_1VertexData.html',1,'gs']]]
+  ['walcontentunit_1763',['WalContentUnit',['../structgs_1_1WalContentUnit.html',1,'gs']]],
+  ['walheader_1764',['WalHeader',['../structgs_1_1WalHeader.html',1,'gs']]],
+  ['walsparser_1765',['WalsParser',['../classgs_1_1WalsParser.html',1,'gs']]],
+  ['walwriter_1766',['WalWriter',['../classgs_1_1WalWriter.html',1,'gs']]],
+  ['writeappbase_1767',['WriteAppBase',['../classgs_1_1WriteAppBase.html',1,'gs']]]
 ];

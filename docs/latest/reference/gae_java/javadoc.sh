@@ -1,1 +1,1 @@
-/opt/hostedtoolcache/Java_Zulu_jdk/11.0.24-8/x64/bin/javadoc @options @argfile
+/usr/lib/jvm/temurin-11-jdk-amd64/bin/javadoc @options @argfile

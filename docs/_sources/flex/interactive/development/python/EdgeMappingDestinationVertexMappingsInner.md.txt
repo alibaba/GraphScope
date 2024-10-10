@@ -26,6 +26,6 @@ edge_mapping_destination_vertex_mappings_inner_dict = edge_mapping_destination_v
 # create an instance of EdgeMappingDestinationVertexMappingsInner from a dict
 edge_mapping_destination_vertex_mappings_inner_from_dict = EdgeMappingDestinationVertexMappingsInner.from_dict(edge_mapping_destination_vertex_mappings_inner_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 
