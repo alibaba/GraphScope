@@ -25,7 +25,6 @@ import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.proto.frontend.Code;
 import com.alibaba.pegasus.common.StreamIterator;
-import com.google.common.collect.ImmutableList;
 
 import org.neo4j.fabric.stream.summary.EmptySummary;
 import org.neo4j.fabric.stream.summary.Summary;
@@ -137,7 +136,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     public void onCompleted() {
         try {
             this.recordIterator.finish();
-            this.statusCallback.onSuccessEnd(ImmutableList.of());
+            this.statusCallback.onSuccessEnd();
         } catch (InterruptedException e) {
             onError(e);
         }

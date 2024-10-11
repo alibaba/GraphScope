@@ -16,21 +16,32 @@
 # limitations under the License.
 #
 
-from typing import Generic, TypeVar
-
-from pydantic import Field
+from typing import Generic
+from typing import TypeVar
 
 from gs_interactive.api_response import ApiResponse
-from gs_interactive.client.status import Status
 from gs_interactive.exceptions import ApiException
+
+from gs_interactive.client.status import Status
 
 # Define a generic type placeholder
 T = TypeVar("T")
 
 
-# Generate a python class Result<T>, which has two field status and value. This class can be used to wrap the execution result for interface where exception may happen
 class Result(Generic[T]):
+    """
+    This is a generic class that wraps the result of an operation,
+    It contains the status of the operation and the value returned by the operation.
+    """
+
     def __init__(self, status: Status, value: T):
+        """
+        Construct a new Result object with the specified status and value.
+
+        Args:
+            status: the status of the operation.
+            value: the value returned by the operation.
+        """
         self.status = status
         self.value = value
 
@@ -41,35 +52,59 @@ class Result(Generic[T]):
         return f"Result: {self.status}, value: {self.value}"
 
     def is_ok(self):
+        """
+        Whether the operation is successful.
+        """
         return self.status.is_ok()
 
     def is_error(self):
+        """
+        Whether the operation is failed.
+        """
         return self.status.is_error()
 
     def get_value(self):
+        """
+        Get the value returned by the operation.
+        """
         return self.value
 
     def get_status(self):
+        """
+        Get the status of the operation.
+        """
         return self.status
 
     def get_status_message(self):
+        """
+        Get the detail message of the status.
+        """
         return self.status.message
-    
-    def get_status(self):
-        return self.status
 
     @staticmethod
     def ok(value):
+        """
+        A static method to create a successful result.
+        """
         return Result(Status.ok(), value)
 
     @staticmethod
     def error(status: Status, msg: str):
+        """
+        A static method to create a failed result.
+        """
         return Result(status, msg)
 
     @staticmethod
     def from_exception(exception: ApiException):
+        """
+        A static method create a Result object from an ApiException.
+        """
         return Result(Status.from_exception(exception), None)
 
     @staticmethod
     def from_response(response: ApiResponse):
+        """
+        A static method create a Result object from an successful ApiResponse.
+        """
         return Result(Status.from_response(response), response.data)

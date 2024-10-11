@@ -418,7 +418,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 if (probePattern.getVertexNumber() > buildPattern.getVertexNumber()) continue;
                 PatternVertex src = edge.getSrcVertex();
                 PatternVertex dst = edge.getDstVertex();
-                if (maxHop >= config.getMinPatternSize() - 1 && maxHop == minHop) {
+                if (maxHop >= config.getMinPatternSize() - 1) {
                     for (int i = 0; i <= minHop; ++i) {
                         for (int j = 1; j <= maxHop - 1; ++j) {
                             if (i <= j && (minHop - i) <= (maxHop - j)) {

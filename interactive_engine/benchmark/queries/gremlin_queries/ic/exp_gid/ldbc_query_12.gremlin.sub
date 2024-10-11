@@ -1,1 +1,0 @@
-g.V($personId).both('KNOWS').as('friend').in('HASCREATOR').hasLabel('COMMENT').where(out('REPLYOF').hasLabel('POST').out('HASTAG').out('HASTYPE').has('name',eq('$tagClassName'))).select('friend').groupCount().order().by(select(values), desc).by(select(keys).values('id'), asc).limit(20)

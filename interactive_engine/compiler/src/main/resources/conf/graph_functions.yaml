@@ -1,0 +1,22 @@
+graph_functions:
+  - name: gs.function.datetime
+    description: ""
+    params:
+      - name: value
+        type:
+          primitive_type: DT_SIGNED_INT32
+    returns:
+      - name: timestamp
+        type:
+          temporal:
+            timestamp:
+  - name: gs.function.toFloat
+    description: ""
+    params:
+      - name: integer
+        type:
+          primitive_type: DT_SIGNED_INT32
+    returns:
+      - name: float
+        type:
+          primitive_type: DT_FLOAT

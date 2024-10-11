@@ -133,7 +133,7 @@ public class SimpleMatchQueries {
 
     public static QueryContext get_simple_match_query_10_test() {
         String query =
-                "MATCH( a {id:933})-[b]-(c {id: 2199023256077}) return labels(a) AS"
+                "MATCH( a {id:933l})-[b]-(c {id: 2199023256077l}) return labels(a) AS"
                         + " vertexLabelName, type(b) AS edgeLabelName;";
         List<String> expected =
                 Arrays.asList("Record<{vertexLabelName: \"PERSON\", edgeLabelName: \"KNOWS\"}>");
@@ -141,14 +141,14 @@ public class SimpleMatchQueries {
     }
 
     public static QueryContext get_simple_match_query_11_test() {
-        String query = "Match( p: PLACE) return p ORDER BY p.id LIMIT 5;";
+        String query = "Match( p: PLACE) return p.id as pid ORDER BY pid LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{p: node<0>}>",
-                        "Record<{p: node<1>}>",
-                        "Record<{p: node<2>}>",
-                        "Record<{p: node<3>}>",
-                        "Record<{p: node<4>}>");
+                        "Record<{pid: 0}>",
+                        "Record<{pid: 1}>",
+                        "Record<{pid: 2}>",
+                        "Record<{pid: 3}>",
+                        "Record<{pid: 4}>");
         return new QueryContext(query, expected);
     }
 
@@ -187,7 +187,7 @@ public class SimpleMatchQueries {
         List<String> expected =
                 Arrays.asList(
                         "Record<{aId: 94, c:"
-                                + " path[[(72057594037928030)-[771484:KNOWS]->(72057594037928923)],"
+                                + " path[(72057594037928030)-[771484:KNOWS]->(72057594037928923)],"
                                 + " bId: 987}>",
                         "Record<{aId: 94, c:"
                             + " path[(72057594037928030)-[771485:KNOWS]->(72059793061184090)], bId:"
@@ -199,7 +199,7 @@ public class SimpleMatchQueries {
                             + " path[(72057594037928030)-[771487:KNOWS]->(72064191107695368)], bId:"
                             + " 6597069767432}>",
                         "Record<{aId: 94, c:"
-                                + " path[(72057594037928030)-[771488:KNOWS]->(72066390130950305)]],"
+                                + " path[(72057594037928030)-[771488:KNOWS]->(72066390130950305)],"
                                 + " bId: 8796093022369}>");
         return new QueryContext(query, expected);
     }

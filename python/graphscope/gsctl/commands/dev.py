@@ -272,7 +272,7 @@ Coordinator is listening on {coordinator_port} port, you can connect to coordina
 
 Interactive service is ready, you can connect to the interactive service with interactive sdk:
 Interactive Admin service is listening at
-    http://127.0.0.1{admin_port},
+    http://127.0.0.1:{admin_port},
 You can connect to admin service with Interactive SDK, with following environment variables declared.
 
 ############################################################################################

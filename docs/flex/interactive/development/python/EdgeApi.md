@@ -10,7 +10,7 @@ Method | HTTP request | Description
 
 
 # **add_edge**
-> Result[str] add_edge(graph_id, edge_request)
+> [Result](./result.rst)[str] add_edge(graph_id, edge_request)
 
 Add a edge to the graph.
 
@@ -62,7 +62,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[str]
 
 ### Authorization
 
@@ -86,7 +86,7 @@ No authorization required
 
 
 # **get_edge**
-> Result[EdgeData] get_edge(graph_id, edge_label, src_label, src_primary_key_value, dst_label, dst_primary_key_value)
+> [Result](./result.rst)[EdgeData] get_edge(graph_id, edge_label, src_label, src_primary_key_value, dst_label, dst_primary_key_value)
 
 Get the edge's properties with src and dst vertex primary keys.
 
@@ -130,7 +130,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**EdgeData**](EdgeData.md)
+[Result](./result.rst)[[EdgeData](EdgeData.md)]
 
 ### Authorization
 
@@ -153,7 +153,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **update_edge**
-> Result[str] update_edge(graph_id, edge_request=edge_request)
+> [Result](./result.rst)[str] update_edge(graph_id, edge_request=edge_request)
 
 Update edge's property
 
@@ -198,7 +198,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[Result](./result.rst)[str]
 
 ### Authorization
 
