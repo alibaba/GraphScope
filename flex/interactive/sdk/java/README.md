@@ -36,7 +36,6 @@ Add this dependency to your project's POM:
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>interactive</artifactId>
   <version>0.3</version>
-  <scope>compile</scope>
 </dependency>
 ```
 
@@ -92,5 +91,25 @@ public class GettingStarted {
 ```
 
 For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/java/interactive-example/)
+
+### Advanced building
+
+In some cases, you may want to exclude the proto-generated gaia-related files from the jar. You could use the jar with classifier `no-gaia-ir`.
+
+```xml
+<dependency>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>interactive</artifactId>
+  <version>0.3</version>
+  <classifier>no-gaia-ir</classifier>
+</dependency>
+```
+
+To release the jar to a remote repository, you can use the following command:
+
+```bash
+mvn clean deploy -Psign-artifacts
+```
+
 
 

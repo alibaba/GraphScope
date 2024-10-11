@@ -253,7 +253,8 @@
 
     <neo4j.version>4.4.0</neo4j.version>
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
-    <interactive.sdk.version>0.4</interactive.sdk.version>
+    <interactive.sdk.version>0.4.2</interactive.sdk.version>
+    <interactive.sdk.classifier>no-gaia-ir</interactive.sdk.classifier>
   </properties>
 
   <dependencyManagement>
@@ -695,6 +696,7 @@
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>interactive</artifactId>
         <version>${interactive.sdk.version}</version>
+        <classifier>${interactive.sdk.classifier}</classifier>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -734,36 +736,6 @@
           <artifactId>maven-deploy-plugin</artifactId>
           <version>${maven.deploy.version}</version>
         </plugin>
-        <!-- <plugin>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>${maven.shade.version}</version>
-          <executions>
-              <execution>
-                  <phase>package</phase>
-                  <goals>
-                      <goal>shade</goal>
-                  </goals>
-                  <configuration>
-                      <filters>
-                          <filter>
-                              <artifact>com.alibaba.graphscope:interactive</artifact>
-                              <excludes>
-                                  <exclude>com.alibaba.graphscope.gaia.proto.*</exclude>
-                              </excludes>
-                          </filter>
-                          <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*.SF</exclude>
-                                <exclude>META-INF/*.DSA</exclude>
-                                <exclude>META-INF/*.RSA</exclude>
-                            </excludes>
-                        </filter>
-                      </filters>
-                  </configuration>
-              </execution>
-          </executions>
-        </plugin> -->
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven.assembly.version}</version>
