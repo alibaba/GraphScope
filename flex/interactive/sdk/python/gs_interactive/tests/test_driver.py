@@ -508,7 +508,7 @@ class TestDriver(unittest.TestCase):
 
     def callProcedure(self):
         with self._driver.getNeo4jSession() as session:
-            result = session.run("CALL test_procedure(\"marko\");")
+            result = session.run('CALL test_procedure("marko");')
             print("call procedure result: ", result)
 
     def callPrcedureWithServiceStop(self):
