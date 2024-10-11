@@ -5,7 +5,7 @@
     <artifactId>interactive</artifactId>
     <packaging>jar</packaging>
     <name>interactive</name>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.4</version>
     <url>https://github.com/alibaba/GraphScope/tree/main/flex/interactive</url>
     <description>GraphScope Interactive Java SDK</description>
     <organization>
@@ -148,13 +148,18 @@
                 <version>3.3.0</version>
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
-                            <goal>test-jar</goal>
+                            <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/alibaba/graphscope/gaia/**</exclude>
+                            </excludes>
+                            <classifier>${no-gaia-ir-classifier}</classifier>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -377,27 +382,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>no-gaia-ir</id>  
-            <activation>  
-                <activeByDefault>false</activeByDefault>  
-            </activation>  
-            <build>  
-                <plugins>  
-                    <plugin>  
-                        <groupId>org.apache.maven.plugins</groupId>  
-                        <artifactId>maven-jar-plugin</artifactId>  
-                        <configuration>  
-                            <excludes>  
-                                <exclude>com/alibaba/graphscope/gaia/**</exclude>  
-                                <exlucde>
-                            </excludes>  
-                            <classifier>${no-gaia-ir-classifier}</classifier>
-                        </configuration>  
-                    </plugin>  
-                </plugins>  
-            </build>  
         </profile>
     </profiles>
 
