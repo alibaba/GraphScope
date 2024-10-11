@@ -16,53 +16,43 @@
 
 namespace gs {
 
-bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
+results::CollectiveResults PageRank::Query(const GraphDBSession& sess,
+                                           std::string vertex_label,
+                                           std::string edge_label,
+                                           double damping_factor,
+                                           int max_iterations, double epsilon) {
   auto txn = sess.GetReadTransaction();
-  if (input.empty()) {
-    output.put_string_view(
-        "Arguments required(vertex_label, edge_label, damping_factor_, max_iterations_, epsilon_)\n \
-    for example:(\"person\", \"knows\", 0.85, 100, 0.000001)");
-    return false;
-  }
-
-  std::string vertex_label{input.get_string()};
-  std::string edge_label{input.get_string()};
-
-  damping_factor_ = input.get_double();
-  max_iterations_ = input.get_int();
-  epsilon_ = input.get_double();
 
   if (!sess.schema().has_vertex_label(vertex_label)) {
-    output.put_string_view("The requested vertex label doesn't exits.");
-    return false;
+    LOG(ERROR) << "The requested vertex label doesn't exits.";
+    return {};
   }
   if (!sess.schema().has_edge_label(vertex_label, vertex_label, edge_label)) {
-    output.put_string_view("The requested edge label doesn't exits.");
-    return false;
+    LOG(ERROR) << "The requested edge label doesn't exits.";
+    return {};
   }
-  if (damping_factor_ < 0 || damping_factor_ >= 1) {
-    output.put_string_view(
-        "The value of the damping_factor_ is between 0 and 1.");
-    return false;
+  if (damping_factor < 0 || damping_factor >= 1) {
+    LOG(ERROR) << "The value of the damping factor is between 0 and 1.";
+    return {};
   }
-  if (max_iterations_ <= 0) {
-    output.put_string_view("max_iterations_ must be greater than 0.");
-    return false;
+  if (max_iterations <= 0) {
+    LOG(ERROR) << "The value of the max iterations must be greater than 0.";
+    return {};
   }
-  if (epsilon_ < 0 || epsilon_ >= 1) {
-    output.put_string_view("The value of the epsilon_ is between 0 and 1.");
-    return false;
+  if (epsilon < 0 || epsilon >= 1) {
+    LOG(ERROR) << "The value of the epsilon is between 0 and 1.";
+    return {};
   }
 
-  vertex_label_id_ = sess.schema().get_vertex_label_id(vertex_label);
-  edge_label_id_ = sess.schema().get_edge_label_id(edge_label);
+  auto vertex_label_id = sess.schema().get_vertex_label_id(vertex_label);
+  auto edge_label_id = sess.schema().get_edge_label_id(edge_label);
 
-  auto num_vertices = txn.GetVertexNum(vertex_label_id_);
+  auto num_vertices = txn.GetVertexNum(vertex_label_id);
 
   std::unordered_map<vid_t, double> pagerank;
   std::unordered_map<vid_t, double> new_pagerank;
 
-  auto vertex_iter = txn.GetVertexIterator(vertex_label_id_);
+  auto vertex_iter = txn.GetVertexIterator(vertex_label_id);
 
   while (vertex_iter.IsValid()) {
     vid_t vid = vertex_iter.GetIndex();
@@ -73,23 +63,23 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
 
   std::unordered_map<vid_t, double> outdegree;
 
-  for (int iter = 0; iter < max_iterations_; ++iter) {
+  for (int iter = 0; iter < max_iterations; ++iter) {
     for (auto& kv : new_pagerank) {
       kv.second = 0.0;
     }
 
-    auto vertex_iter = txn.GetVertexIterator(vertex_label_id_);
+    auto vertex_iter = txn.GetVertexIterator(vertex_label_id);
     while (vertex_iter.IsValid()) {
       vid_t v = vertex_iter.GetIndex();
 
       double sum = 0.0;
-      auto edges = txn.GetInEdgeIterator(vertex_label_id_, v, vertex_label_id_,
-                                         edge_label_id_);
+      auto edges = txn.GetInEdgeIterator(vertex_label_id, v, vertex_label_id,
+                                         edge_label_id);
       while (edges.IsValid()) {
         auto neighbor = edges.GetNeighbor();
         if (outdegree[neighbor] == 0) {
           auto out_edges = txn.GetOutEdgeIterator(
-              vertex_label_id_, neighbor, vertex_label_id_, edge_label_id_);
+              vertex_label_id, neighbor, vertex_label_id, edge_label_id);
           while (out_edges.IsValid()) {
             outdegree[neighbor]++;
             out_edges.Next();
@@ -100,7 +90,7 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
       }
 
       new_pagerank[v] =
-          damping_factor_ * sum + (1.0 - damping_factor_) / num_vertices;
+          damping_factor * sum + (1.0 - damping_factor) / num_vertices;
       vertex_iter.Next();
     }
 
@@ -109,7 +99,7 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
       diff += std::abs(new_pagerank[kv.first] - kv.second);
     }
 
-    if (diff < epsilon_) {
+    if (diff < epsilon) {
       break;
     }
 
@@ -119,7 +109,7 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
   results::CollectiveResults results;
 
   for (auto kv : pagerank) {
-    int64_t oid_ = txn.GetVertexId(vertex_label_id_, kv.first).AsInt64();
+    int64_t oid_ = txn.GetVertexId(vertex_label_id, kv.first).AsInt64();
     auto result = results.add_results();
     result->mutable_record()
         ->add_columns()
@@ -141,10 +131,8 @@ bool PageRank::DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) {
         ->set_f64(kv.second);
   }
 
-  output.put_string_view(results.SerializeAsString());
-
   txn.Commit();
-  return true;
+  return results;
 }
 
 AppWrapper PageRankFactory::CreateApp(const GraphDB& db) {

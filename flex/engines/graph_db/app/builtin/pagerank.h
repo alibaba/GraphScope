@@ -19,15 +19,15 @@
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-class PageRank : public CypherInternalPbWriteAppBase {
+class PageRank
+    : public CypherReadAppBase<std::string, std::string, double, int, double> {
  public:
-  PageRank()
-      : damping_factor_(0.85),
-        max_iterations_(100),
-        epsilon_(1e-6),
-        vertex_label_id_(0),
-        edge_label_id_(0) {}
-  bool DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) override;
+  PageRank() {}
+  results::CollectiveResults Query(const GraphDBSession& sess,
+                                   std::string vertex_label,
+                                   std::string edge_label,
+                                   double damping_factor, int max_iterations,
+                                   double epsilon);
 
  private:
   double damping_factor_;

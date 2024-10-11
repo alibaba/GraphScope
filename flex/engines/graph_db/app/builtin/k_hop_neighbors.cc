@@ -16,24 +16,20 @@
 
 namespace gs {
 
-bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
-                         Encoder& output) {
+results::CollectiveResults KNeighbors::Query(const GraphDBSession& sess,
+                                             std::string label_name,
+                                             int64_t vertex_id, int32_t k) {
   auto txn = sess.GetReadTransaction();
-  Schema schema_ = txn.schema();
-  if (input.empty()) {
-    return false;
-  }
-  int64_t vertex_id_ = input.get_long();
-  std::string label_name{input.get_string()};
-  int k = input.get_int();
+  const Schema& schema_ = txn.schema();
 
   if (k <= 0) {
-    output.put_string_view("k must be greater than 0.");
-    return false;
+    LOG(ERROR) << "k must be greater than 0.";
+    return {};
   }
   if (!schema_.has_vertex_label(label_name)) {
-    output.put_string_view("The requested label doesn't exits.");
-    return false;  // The requested label doesn't exits.
+    // output.put_string_view("The requested label doesn't exits.");
+    LOG(ERROR) << "The requested label doesn't exits.";
+    return {};
   }
   label_t vertex_label_ = schema_.get_vertex_label_id(label_name);
   struct pair_hash {
@@ -55,9 +51,9 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
 
   nei_label_.push_back(vertex_label_);
   vid_t vertex_index{};
-  if (!txn.GetVertexIndex(vertex_label_, (int64_t) vertex_id_, vertex_index)) {
-    output.put_string_view("get index fail.");
-    return false;
+  if (!txn.GetVertexIndex(vertex_label_, vertex_id, vertex_index)) {
+    LOG(ERROR) << "Vertex not found.";
+    return {};
   }
   nei_index_.push_back(vertex_index);
   // get k hop neighbors
@@ -123,10 +119,9 @@ bool KNeighbors::DoQuery(GraphDBSession& sess, Decoder& input,
         ->mutable_object()
         ->set_i64(txn.GetVertexId(vertex_.first, vertex_.second).AsInt64());
   }
-  output.put_string_view(results.SerializeAsString());
 
   txn.Commit();
-  return true;
+  return results;
 }
 
 AppWrapper KNeighborsFactory::CreateApp(const GraphDB& db) {

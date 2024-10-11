@@ -16,25 +16,18 @@
 
 namespace gs {
 
-bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
-                                     Encoder& output) {
+results::CollectiveResults ShortestPathAmongThree::Query(
+    const GraphDBSession& sess, std::string label_name1, int64_t oid1,
+    std::string label_name2, int64_t oid2, std::string label_name3,
+    int64_t oid3) {
   ReadTransaction txn = sess.GetReadTransaction();
-  if (input.empty()) {
-    return false;
-  }
-  Schema schema_ = txn.schema();
-  std::string label_name1{input.get_string()};
-  int64_t vid1 = input.get_long();
-  std::string label_name2{input.get_string()};
-  int64_t vid2 = input.get_long();
-  std::string label_name3{input.get_string()};
-  int64_t vid3 = input.get_long();
+  const Schema& schema_ = txn.schema();
 
   if (!schema_.has_vertex_label(label_name1) ||
       !schema_.has_vertex_label(label_name2) ||
       !schema_.has_vertex_label(label_name3)) {
-    output.put_string_view("The requested label doesn't exits.");
-    return false;
+    LOG(ERROR) << "The requested label doesn't exits.";
+    return {};
   }
   label_t label_v1 = schema_.get_vertex_label_id(label_name1);
   label_t label_v2 = schema_.get_vertex_label_id(label_name2);
@@ -42,11 +35,11 @@ bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
   vid_t index_v1{};
   vid_t index_v2{};
   vid_t index_v3{};
-  if (!txn.GetVertexIndex(label_v1, (int64_t) vid1, index_v1) ||
-      !txn.GetVertexIndex(label_v2, (int64_t) vid2, index_v2) ||
-      !txn.GetVertexIndex(label_v3, (int64_t) vid3, index_v3)) {
-    output.put_string_view("get index fail.");
-    return false;
+  if (!txn.GetVertexIndex(label_v1, oid1, index_v1) ||
+      !txn.GetVertexIndex(label_v2, oid2, index_v2) ||
+      !txn.GetVertexIndex(label_v3, oid3, index_v3)) {
+    LOG(ERROR) << "Vertex not found.";
+    return {};
   }
   // get the three shortest paths
   std::vector<std::pair<label_t, vid_t>> v1v2result_;
@@ -99,9 +92,8 @@ bool ShortestPathAmongThree::DoQuery(GraphDBSession& sess, Decoder& input,
       ->mutable_object()
       ->set_str(result_path);
 
-  output.put_string_view(results.SerializeAsString());
   txn.Commit();
-  return true;
+  return results;
 }
 
 bool ShortestPathAmongThree::ShortestPath(

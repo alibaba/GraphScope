@@ -19,10 +19,15 @@
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-class ShortestPathAmongThree : public CypherInternalPbWriteAppBase {
+class ShortestPathAmongThree
+    : public CypherReadAppBase<std::string, int64_t, std::string, int64_t,
+                               std::string, int64_t> {
  public:
   ShortestPathAmongThree() {}
-  bool DoQuery(GraphDBSession& sess, Decoder& input, Encoder& output) override;
+  results::CollectiveResults Query(const GraphDBSession& sess,
+                                   std::string label_name1, int64_t oid1,
+                                   std::string label_name2, int64_t oid2,
+                                   std::string label_name3, int64_t oid3);
 
  private:
   bool ShortestPath(const gs::ReadTransaction& txn, label_t v1_l,
