@@ -36,7 +36,6 @@ Add this dependency to your project's POM:
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>interactive</artifactId>
   <version>0.3</version>
-  <scope>compile</scope>
 </dependency>
 ```
 
@@ -95,11 +94,15 @@ For more a more detailed example, please refer to [Java SDK Example](https://git
 
 ### Advanced building
 
-In some cases, you may want to exclude the proto-generated gaia-related files from the jar. 
-To build the jar without the gaia-related files, you can use the following command:
+In some cases, you may want to exclude the proto-generated gaia-related files from the jar. You could use the jar with classifier `no-gaia-ir`.
 
-```bash
-mvn clean package -Pno-gaia-ir
+```xml
+<dependency>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>interactive</artifactId>
+  <version>0.3</version>
+  <classifier>no-gaia-ir</classifier>
+</dependency>
 ```
 
 To release the jar to a remote repository, you can use the following command:
@@ -108,10 +111,5 @@ To release the jar to a remote repository, you can use the following command:
 mvn clean deploy -Psign-artifacts
 ```
 
-To release the jar without the gaia-related files to a remote repository, you can use the following command:
-
-```bash
-mvn clean deploy -Psign-artifacts,no-gaia-ir
-```
 
 
