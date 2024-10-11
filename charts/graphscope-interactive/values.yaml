@@ -6,6 +6,45 @@ nameOverride: ""
 
 fullnameOverride: ""
 
+logLevel : "INFO"
+
+## GraphScope Interactive container's resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources:
+  primary:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 2000m
+      memory: 1Gi
+  secondary:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 2000m
+      memory: 1Gi
+  frontend:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 2000m
+      memory: 1Gi
+
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
 ## Cluster domain
 ##
 clusterDomain: cluster.local
@@ -97,36 +136,23 @@ ingress:
   paths:
     - path: /
 
-cronjob:
-  enabled: true
-  schedule: "* * * * *"
-  image:
-    registry: reg.docker.alibaba-inc.com
-    repository: "7brs/busybox"
-    tag: "latest"
-    pullPolicy: IfNotPresent
-  command: |
-    echo "Current date: $(date +%Y-%m-%d)" > /tmp/current_date.sh
-    /bin/sh /tmp/current_date.sh
-  tolerations: []
-  podAnnotations: {}
-  podLabels: {}
-
 nginx:
   image:
-    registry: reg.docker.alibaba-inc.com
-    repository: "7brs/interactive"
-    tag: "nginx-debug"
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/interactive
+    #fabiocicerchia/nginx-lua
+    # tag: "nginx-debug"
+    tag: "openresty"
     pullPolicy: IfNotPresent
 
 ## GraphScope Interactive parameters
 ##
 primary:
   image:
-    #registry: registry.cn-hongkong.aliyuncs.com
-    registry: reg.docker.alibaba-inc.com
-    #repository: graphscope/interactive
-    repository: 7brs/interactive
+    registry: registry.cn-hongkong.aliyuncs.com
+    #registry: reg.docker.alibaba-inc.com
+    repository: graphscope/interactive
+    #repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
     ## Specify a imagePullPolicy
@@ -146,10 +172,8 @@ primary:
 
   hangUntilSuccess: false
 
-  logLevel: INFO
-
   # Number of thread each worker will use
-  threadNumPerWorker: 64
+  threadNumPerWorker: 1
 
   ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
@@ -215,27 +239,6 @@ primary:
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
-
-  ## GraphScope Interactive container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: 
-    limits:
-      cpu: 64000m
-      memory: 32Gi
-    requests:
-      cpu: 64000m
-      memory: 32Gi
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
 
   ## GraphScope Interactive container's liveness and readiness probes
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -300,7 +303,7 @@ primary:
   service:
     ## Service type
     ##
-    type: NodePort
+    type: ClusterIP
     ## Service port
     ##
     ports:
@@ -364,10 +367,10 @@ primary:
 ##
 secondary:
   image:
-    #registry: registry.cn-hongkong.aliyuncs.com
-    registry: reg.docker.alibaba-inc.com
-    #repository: graphscope/interactive
-    repository: 7brs/interactive
+    registry: registry.cn-hongkong.aliyuncs.com
+    #registry: reg.docker.alibaba-inc.com
+    repository: graphscope/interactive
+    #repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
     ## Specify a imagePullPolicy
@@ -385,10 +388,8 @@ secondary:
 
   replicaCount: 2
 
-  logLevel: INFO
-
   # Number of thread each worker will use
-  threadNumPerWorker: 64
+  threadNumPerWorker: 1
 
   ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
@@ -455,26 +456,6 @@ secondary:
     enabled: false
     runAsUser: 1001
 
-  ## GraphScope Interactive container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: 
-    limits:
-      cpu: 640000m
-      memory: 400Gi
-    requests:
-      cpu: 64000m
-      memory: 300Gi
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
 
   ## GraphScope Interactive container's liveness and readiness probes
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -524,7 +505,7 @@ secondary:
       - ReadWriteOnce # read and write by a single node.
     ## Persistent Volume size
     ##
-    size: 300Gi
+    size: 3Gi
     ## selector can be used to match an existing PersistentVolume
     ## selector:
     ##   matchLabels:
@@ -604,10 +585,10 @@ secondary:
 ##
 frontend:
   image:
-    #registry: registry.cn-hongkong.aliyuncs.com
-    registry: reg.docker.alibaba-inc.com
-    #repository: graphscope/interactive
-    repository: 7brs/interactive
+    registry: registry.cn-hongkong.aliyuncs.com
+    #registry: reg.docker.alibaba-inc.com
+    repository: graphscope/interactive
+    #repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
     ## Specify a imagePullPolicy
@@ -676,27 +657,6 @@ frontend:
   ##
   # tolerations: []
 
-  ## GraphScope Interactive container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: 
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 1000m
-      memory: 1Gi
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
   ## GraphScope Interactive container's liveness and readiness probes
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
@@ -722,7 +682,7 @@ frontend:
   service:
     ## Service type
     ##
-    type: ClusterIP
+    type: NodePort
 
     ## Gremlin console port
     ##
@@ -731,6 +691,10 @@ frontend:
     ## Cypher server port
     cypherPort: 7687
 
+    adminPort: 7778
+
+    queryPort: 10001
+
     ## query timeout
     queryTimeout: 30000
 
@@ -738,9 +702,10 @@ frontend:
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
     ##
     nodePorts:
-      service: ""
-      gremlin: ""
-      cypher: ""
+      admin: 30001
+      query: 30002
+      gremlin: 30003
+      cypher: 30004
     ## Service clusterIP
     ##
     # clusterIP: None

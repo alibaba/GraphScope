@@ -132,23 +132,6 @@ Return the proper graphscope-interactive secondary image name
 {{- end -}}
 {{- end -}}
 
-{{/*
-Return the proper graphscope-interactive cron job image name
-*/}}
-{{- define "graphscope-interactive.cronjob.image" -}}
-{{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.cronjob.image -}}
-{{- if .tag -}}
-{{- $tag = .tag | toString -}}
-{{- end -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository $tag -}}
-{{- else -}}
-{{- printf "%s:%s" .repository $tag -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
 
 {{/*
 Create the name of the service account to use
@@ -213,6 +196,21 @@ Return the engineConfigPath with the graphscope configuration
 */}}
 {{- define "graphscope-interactive.engineConfigPath" -}}
 /etc/interactive/interactive_config.yaml
+{{- end -}}
+
+
+{{/*
+Primary service name.
+*/}}
+{{- define "graphscope-interactive.primary.serviceName" -}}
+{{- printf "%s.%s.svc.%s" (include "graphscope-interactive.primary.fullname" .) .Release.Namespace .Values.clusterDomain }} 
+{{- end -}}
+
+{{/*
+From where a http client could fetch the schema uri
+*/}}
+{{- define "graphscope-interactive.graphSchemaUri" -}}
+{{- printf "http://%s-0.%s:%d" (include "graphscope-interactive.fullname" .) (include "graphscope-interactive.primary.serviceName" .)  .Values.primary.service.adminPort | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

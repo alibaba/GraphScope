@@ -1,0 +1,159 @@
+apiVersion: v1  
+kind: ConfigMap  
+metadata:  
+  name: {{ .Release.Name }}-admin-nginx-config  
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configmap
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:  
+  nginx.conf: |  
+    events {}
+    http {
+        resolver local=on valid=5s;
+        server {  
+            {{- $adminPort := .Values.primary.service.adminPort | int }}
+            listen {{ $adminPort }};  
+            client_body_buffer_size     10M;
+            client_max_body_size        10M;
+            location / {  
+                {{- $primaryBaseName := include "graphscope-interactive.primary.fullname" . }}  
+                {{- $secondaryBaseName := include "graphscope-interactive.secondary.fullname" . }}  
+                {{- $replicaCount := .Values.secondary.replicaCount | int }}  
+                {{- $primaryServiceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.primary.fullname" .) .Release.Namespace .Values.clusterDomain }}
+                {{- $secondaryServiceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
+                {{- $port := .Values.secondary.service.adminPort | int }}
+                proxy_pass {{ printf "http://%s-0.%s:%d" $primaryBaseName $primaryServiceName $port | quote }};
+                content_by_lua_block {  
+                    function arrayToString(arr, separator)  
+                        separator = separator or ", " -- Default separator if not provided  
+                        return table.concat(arr, separator)  
+                    end 
+                    function send_request(http, full_uri, method, body_data, headers)  
+                        local httpc = http.new()  
+                        if method == "GET" or method == "DELETE" then  
+                            return httpc:request_uri(full_uri, {  
+                                method = method,  
+                            })  
+                        elseif method == "POST" or method == "PUT" then
+                            return httpc:request_uri(full_uri, {  
+                                method = method,  
+                                body = body_data,  
+                                headers = headers
+                            }) 
+                        else
+                            ngx.log(ngx.ERR, " not recognized method ", method)
+                        end  
+                    end  
+                    local http = require "resty.http" 
+                    local res = {}
+                    local status_codes = {} 
+                    local error_message = nil  -- Initialize a variable to capture error messages
+
+                    local urls = {  
+                        {{ printf "http://%s-0.%s:%d" $primaryBaseName $primaryServiceName $port | quote }};
+                        {{- if eq $replicaCount 1 }}
+                        {{ printf "http://%s-0.%s:%d" $secondaryBaseName $secondaryServiceName $port | quote }}
+                        {{- else }}
+                        {{- range $i := until (sub $replicaCount 1 | int )  }}  
+                        {{ printf "\"http://%s-%d.%s:%d\"," $secondaryBaseName $i $secondaryServiceName $port  }}
+                        {{- end }}
+                        {{ printf "http://%s-%d.%s:%d" $secondaryBaseName (sub $replicaCount 1) $secondaryServiceName $port | quote }}
+                        {{- end }}
+                    }
+
+                    local original_headers = ngx.req.get_headers()  
+                    local request_uri=ngx.var.request_uri
+                    local method = ngx.req.get_method()
+
+                    -- Create a table for modified headers  
+                    local backend_headers = {}  
+
+                    -- Copy the relevant headers, if needed, or modify them  
+                    for key, value in pairs(original_headers) do  
+                        -- You can filter headers if needed (e.g., skip "host" or "authorization")  
+                        if key ~= "Host" and key ~= "User-Agent" and key ~= "Content-Length" then  
+                            backend_headers[key] = value  
+                        end
+                    end
+
+                    
+                    ngx.req.read_body()  -- Read the request body 
+                    
+                    -- resize status_codes to the number of replicas
+                    for i = 1, #urls do
+                        status_codes[i] = 0
+                        res[i] = ""
+                    end
+                    
+                    local threads = {}
+                    local body_data = ngx.req.get_body_data() 
+                    for index, backend in ipairs(urls) do 
+                        -- full_uri is backend + request_uri
+                        local full_uri = backend .. request_uri 
+                        threads[index] = ngx.thread.spawn(function() 
+                            local response, err = send_request(http, full_uri, method, body_data, backend_headers)  
+                            local status_code = 0
+                            if response ~= nil then
+                                status_code = response.status
+                                res[index] = response.body
+                                if response.status < 200 or response.status >= 300 then
+                                    if not error_message then  -- Capture the error message from the first failed request
+                                        error_message = response.body or "Failed request without a body."
+                                    end
+                                end
+                            else
+                                status_code = 500
+                                if err ~= nil then
+                                    ngx.log(ngx.ERR, "Failed to request: ", err)
+                                    if not error_message then  -- Capture error when no response
+                                        error_message = "Error: " .. err
+                                    end
+                                else
+                                    error_message = "Not found"
+                                end
+                            end 
+                            status_codes[index] = status_code
+                        end)
+                    end
+
+                    for _, thread in ipairs(threads) do  
+                        coroutine.resume(thread)  
+                    end
+
+                    for _, thread in ipairs(threads) do
+                        ngx.thread.wait(thread)
+                    end 
+
+                    local success = true
+                    local final_status_code = 200
+                    for i = 1, #urls do
+                        if status_codes[i] < 200 or status_codes[i] >= 300 then
+                            ngx.log(ngx.ERR, "Failed to request: ", urls[i], " with status code: ", status_codes[i], " and response: ", res[i], " index: ", i)
+                            success = false
+                            final_status_code = status_codes[i]
+                            break
+                        end
+                    end
+
+                    ngx.header.content_type = 'application/json'
+                    if success then  
+                        ngx.status = final_status_code
+                        ngx.log(ngx.INFO, "Success: ", arrayToString(res, ", "), " with status code: ", final_status_code)
+                        ngx.say(res[1])
+                        ngx.exit(final_status_code)
+                    else 
+                        ngx.status = final_status_code
+                        ngx.log(ngx.ERR, "Failed to request: ", error_message, " with status code: ", final_status_code)
+                        ngx.say(error_message)
+                        ngx.exit(final_status_code)
+                    end
+                }
+            }  
+        }  
+    }

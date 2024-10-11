@@ -133,3 +133,63 @@ export ADMIN_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojso
 export QUERY_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[1].ports[0].containerPort}')
 ```
 
+```bash
+# to verify the helm char
+helm install lei-test --dry-run
+```
+
+
+## add resty.http to nginx images
+
+A customized nginx image
+
+
+## nginx conf
+<!-- # nginx.conf: |  
+#   events {}
+#   http {
+#       server {  
+#           listen 10000;  
+#           server_name localhost;  
+
+#           location / {  
+#               {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
+#               {{- $replicaCount := .Values.backend.replicas }}  
+#               {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
+#               {{- $port := .Values.secondary.service.queryPort }}
+#               proxy_pass http://{{ printf "%s-0.%s:%d" $baseName $serviceName $port }};  
+#               {{- range $i := until $replicaCount }}  
+#               mirror /mirror{{ $i }} {
+#                   internal;
+#                   proxy_pass http://{{ printf "%s-%d.%s:%d%s" $baseName (add $i 1) $serviceName $port $request_uri }};
+#               }
+#               {{- end }}
+#               location /mirror {{ printf "%s-%d.%s:%d" $baseName (add $i 1) $serviceName $port }};
+#               {{- end }}
+#               proxy_set_header Host $host;  
+#               proxy_set_header X-Real-IP $remote_addr;  
+#               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+#               proxy_set_header X-Forwarded-Proto $scheme;  
+#           }
+#       }
+#   } -->
+
+        # - name: admin-nginx
+        #   image: {{ include "graphscope-interactive.nginx.image" . }} 
+        #   imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
+        #   # command: ["sleep", "infinity"]
+        #   ports:
+        #     - name: admin-port 
+        #       containerPort: {{ .Values.frontend.service.adminPort }}
+        #   {{- if .Values.resources.frontend }}
+        #   resources: {{- toYaml .Values.resources.frontend | nindent 12 }}
+        #   {{- end }}
+        #   volumeMounts:
+        #     - name: workspace
+        #       mountPath: {{ .Values.workspace }}
+        #     - name: config
+        #       mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+        #       subPath: engine_config.yaml
+        #     - name: admin-nginx-config  
+        #       mountPath: /etc/nginx/nginx.conf  
+        #       subPath: nginx.conf

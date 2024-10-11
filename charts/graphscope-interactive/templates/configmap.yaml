@@ -13,7 +13,7 @@ metadata:
   {{- end }}
 data:
   interactive_config.yaml: |-
-    log_level: {{ .Values.engine.logLevel  }}
+    log_level: {{ .Values.logLevel  }}
     default_graph: {{ .Values.defaultGraph }}
     compute_engine:
       type: hiactor
