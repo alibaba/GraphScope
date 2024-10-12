@@ -28,14 +28,6 @@ class PageRank
                                    std::string edge_label,
                                    double damping_factor, int max_iterations,
                                    double epsilon);
-
- private:
-  double damping_factor_;
-  int max_iterations_;
-  double epsilon_;
-
-  label_t vertex_label_id_;
-  label_t edge_label_id_;
 };
 
 class PageRankFactory : public AppFactoryBase {
