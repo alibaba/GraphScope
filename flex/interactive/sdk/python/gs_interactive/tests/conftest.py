@@ -304,7 +304,7 @@ def neo4j_session(interactive_driver):
     _neo4j_sess.close()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_full)
     resp = interactive_session.create_graph(create_graph_request)
@@ -313,8 +313,7 @@ def create_modern_graph(interactive_session):
     yield graph_id
     delete_running_graph(interactive_session, graph_id)
 
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_vertex_only_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_vertex_only)
     resp = interactive_session.create_graph(create_graph_request)
@@ -324,7 +323,7 @@ def create_vertex_only_modern_graph(interactive_session):
     delete_running_graph(interactive_session, graph_id)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_partial_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_partial)
     resp = interactive_session.create_graph(create_graph_request)
