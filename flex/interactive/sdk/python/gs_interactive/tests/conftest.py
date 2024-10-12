@@ -313,6 +313,7 @@ def create_modern_graph(interactive_session):
     yield graph_id
     delete_running_graph(interactive_session, graph_id)
 
+
 @pytest.fixture(scope="function")
 def create_vertex_only_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_vertex_only)
