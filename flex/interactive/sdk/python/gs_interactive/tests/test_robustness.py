@@ -29,6 +29,9 @@ from gs_interactive.tests.conftest import delete_procedure
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
+from gs_interactive.tests.conftest import (
+    import_data_to_vertex_only_modern_graph_no_wait,
+)
 from gs_interactive.tests.conftest import run_cypher_test_suite
 from gs_interactive.tests.conftest import start_service_on_graph
 from gs_interactive.tests.conftest import update_procedure
@@ -236,3 +239,14 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         '"person"',
         "4L",
     )
+
+
+def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
+    print("[Test list jobs]")
+    import_data_to_vertex_only_modern_graph_no_wait(
+        interactive_session, create_vertex_only_modern_graph
+    )
+    resp = interactive_session.delete_graph(create_vertex_only_modern_graph)
+
+    resp = interactive_session.list_jobs()
+    assert resp.is_ok() and len(resp.get_value()) > 0

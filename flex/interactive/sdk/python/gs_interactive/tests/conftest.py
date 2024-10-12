@@ -304,7 +304,7 @@ def neo4j_session(interactive_driver):
     _neo4j_sess.close()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_full)
     resp = interactive_session.create_graph(create_graph_request)
@@ -314,7 +314,7 @@ def create_modern_graph(interactive_session):
     delete_running_graph(interactive_session, graph_id)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_vertex_only_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_vertex_only)
     resp = interactive_session.create_graph(create_graph_request)
@@ -324,7 +324,7 @@ def create_vertex_only_modern_graph(interactive_session):
     delete_running_graph(interactive_session, graph_id)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def create_partial_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_partial)
     resp = interactive_session.create_graph(create_graph_request)
@@ -355,6 +355,14 @@ def import_data_to_vertex_only_modern_graph(sess: Session, graph_id: str):
     assert resp.is_ok()
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
+
+
+def import_data_to_vertex_only_modern_graph_no_wait(sess: Session, graph_id: str):
+    schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    print("job_id: ", job_id)
 
 
 def import_data_to_partial_modern_graph(sess: Session, graph_id: str):
@@ -414,7 +422,6 @@ def delete_running_graph(sess: Session, graph_id: str):
         assert resp.is_ok()
     # drop the graph
     resp = sess.delete_graph(graph_id)
-    assert resp.is_ok()
 
 
 def create_procedure(
