@@ -303,7 +303,7 @@ gs::Result<seastar::sstring> to_json_str(
     const std::vector<gs::JobMeta>& job_metas) {
   rapidjson::Document res(rapidjson::kArrayType);
   for (auto& job_meta : job_metas) {
-    rapidjson::Document job_json;
+    rapidjson::Document job_json(rapidjson::kObjectType, &res.GetAllocator());
     if (job_json.Parse(job_meta.ToJson().c_str()).HasParseError()) {
       LOG(ERROR) << "Fail to parse job meta";
       return gs::Result<seastar::sstring>(gs::Status(
@@ -311,9 +311,7 @@ gs::Result<seastar::sstring> to_json_str(
     }
     res.PushBack(job_json, res.GetAllocator());
   }
-  return res.Empty()
-             ? gs::Result<seastar::sstring>("{}")
-             : gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
+  return gs::Result<seastar::sstring>(gs::rapidjson_stringify(res));
 }
 
 admin_actor::~admin_actor() {
