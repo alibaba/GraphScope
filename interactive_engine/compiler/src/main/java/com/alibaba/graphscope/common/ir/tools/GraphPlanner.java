@@ -38,6 +38,7 @@ import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.Maps;
 
@@ -85,6 +86,11 @@ public class GraphPlanner {
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
+        return instance(query, irMeta, null);
+    }
+
+    public PlannerInstance instance(
+            String query, IrMeta irMeta, @Nullable QueryLogger queryLogger) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
         RelMetadataQuery mq =
@@ -101,7 +107,7 @@ public class GraphPlanner {
                         graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
 
         LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
-        return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta);
+        return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta, queryLogger);
     }
 
     public class PlannerInstance {
@@ -109,13 +115,19 @@ public class GraphPlanner {
         private final LogicalPlan parsedPlan;
         private final GraphBuilder graphBuilder;
         private final IrMeta irMeta;
+        private @Nullable final QueryLogger queryLogger;
 
         public PlannerInstance(
-                String query, LogicalPlan parsedPlan, GraphBuilder graphBuilder, IrMeta irMeta) {
+                String query,
+                LogicalPlan parsedPlan,
+                GraphBuilder graphBuilder,
+                IrMeta irMeta,
+                @Nullable QueryLogger queryLogger) {
             this.query = query;
             this.parsedPlan = parsedPlan;
             this.graphBuilder = graphBuilder;
             this.irMeta = irMeta;
+            this.queryLogger = queryLogger;
         }
 
         public LogicalPlan getParsedPlan() {
@@ -125,10 +137,16 @@ public class GraphPlanner {
         public Summary plan() {
             LogicalPlan logicalPlan =
                     ClassUtils.callException(() -> planLogical(), Code.LOGICAL_PLAN_BUILD_FAILED);
-            return new Summary(
-                    logicalPlan,
+            if (queryLogger != null) {
+                queryLogger.info("[compile]: logical IR compiled");
+            }
+            PhysicalPlan physicalPlan =
                     ClassUtils.callException(
-                            () -> planPhysical(logicalPlan), Code.PHYSICAL_PLAN_BUILD_FAILED));
+                            () -> planPhysical(logicalPlan), Code.PHYSICAL_PLAN_BUILD_FAILED);
+            if (queryLogger != null) {
+                queryLogger.info("[compile]: physical IR compiled");
+            }
+            return new Summary(logicalPlan, physicalPlan);
         }
 
         public LogicalPlan planLogical() {

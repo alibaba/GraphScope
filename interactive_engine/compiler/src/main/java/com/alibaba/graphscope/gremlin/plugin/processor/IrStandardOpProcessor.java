@@ -478,6 +478,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             outgoing.setAttribute("query.plan", irPlanStr.toString());
             this.rpcClient.submit(
                     physicalRequest, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+            queryLogger.info("[compile]: physical IR submitted");
             // request results from remote engine service in blocking way
             resultProcessor.request();
         } catch (Throwable t) {
