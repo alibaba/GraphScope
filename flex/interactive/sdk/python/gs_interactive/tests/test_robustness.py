@@ -220,8 +220,8 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         neo4j_session,
         create_modern_graph,
         "k_neighbors",
-        "1L",
         '"person"',
+        "1L",
         "2",
     )
 
