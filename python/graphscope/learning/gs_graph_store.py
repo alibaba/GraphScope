@@ -115,17 +115,20 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def _get_edge_index(self, edge_attr: EdgeAttr) -> Optional[EdgeTensorType]:
-        r"""Get edge index from remote server with edge_attr.
+        r"""Obtains a :class:`EdgeTensorType` from the remote server with :class:`EdgeAttr`.
+
+        Args:
+            edge_attr(`EdgeAttr`): Uniquely corresponds to a topology of subgraph .
 
         Returns:
-
-            (row indice tensor, column indice tensor)(COO) |
-            (row ptr tensor, column indice tensor)(CSR) |
+            edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
+            (row indice tensor, column indice tensor)(COO)\
+            (row ptr tensor, column indice tensor)(CSR)\
             (column ptr tensor, row indice tensor)(CSC).
         """
         group_name, layout, is_sorted, _ = self.key(edge_attr)
         edge_index = None
-        edge_index, size = request_server(
+        edge_index, size = _request_server(
             0, DistServer.get_edge_index, group_name, layout
         )
         if edge_index is not None:
@@ -138,6 +141,11 @@ class GsGraphStore(GraphStore):
         raise NotImplementedError
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
+        r"""Obtains all the subgraph type stored in remote server.
+
+        Returns:
+            edge_attrs(`List[EdgeAttr]`): All the subgraph type stored in the remote server.
+        """
         result = []
         for attr in self.edge_attrs.values():
             if attr.size is None:
@@ -172,3 +180,7 @@ def reduce_graphstore(GraphStore: GsGraphStore):
 
 
 ForkingPickler.register(GsGraphStore, reduce_graphstore)
+
+
+def _request_server(server_id, method, *args):
+    return request_server(server_id, method, *args)
