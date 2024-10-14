@@ -126,7 +126,9 @@ struct TagIndMapping {
            tag_id_2_tag_inds_[tag_id] != -1;
   }
 
-  int32_t GetMaxTagId() const { return tag_id_2_tag_inds_.size() - 1; }
+  int32_t GetMaxTagId() const {
+    return tag_id_2_tag_inds_.size() - 1;
+  }
 
   // convert tag_ind (us) to tag ids
   std::vector<int32_t> tag_ind_2_tag_ids_;

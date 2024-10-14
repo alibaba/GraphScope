@@ -164,7 +164,7 @@ inline void SHA1::transform() {
 inline void SHA1::add(const uint8_t* data, size_t data_len) {
   unsigned mlen = (unsigned) ((bits >> 3) % SHA1_INPUT_BYTES);
   bits += (uint64_t) data_len << 3;
-  unsigned use = (unsigned) min((size_t) (SHA1_INPUT_BYTES - mlen), data_len);
+  unsigned use = (unsigned) min((size_t)(SHA1_INPUT_BYTES - mlen), data_len);
   memcpy(M + mlen, data, use);
   mlen += use;
 

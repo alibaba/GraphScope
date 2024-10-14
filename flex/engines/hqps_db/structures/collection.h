@@ -434,7 +434,9 @@ class CountBuilder {
     return true;
   }
 
-  Collection<int64_t> Build() { return Collection<int64_t>(std::move(vec_)); }
+  Collection<int64_t> Build() {
+    return Collection<int64_t>(std::move(vec_));
+  }
 
  private:
   std::vector<int64_t> vec_;

@@ -182,32 +182,32 @@ void reduce_vec(std::vector<T>& src, std::vector<T>& rst,
   }
 }
 
-#define ReduceVec3(src, rst, F)                                    \
-  reduce_vec(                                                      \
-      src, rst,                                                    \
-      [](void* la, void* lb, int* lens, MPI_Datatype* dtype) {     \
-        using T = decltype(src.data());                            \
-        int len;                                                   \
-        memcpy(&len, la, sizeof(int));                             \
-        memcpy(lb, &len, sizeof(int));                             \
-        T src = (T) ((reinterpret_cast<char*>(la)) + sizeof(int)); \
-        T rst = (T) ((reinterpret_cast<char*>(lb)) + sizeof(int)); \
-        F;                                                         \
-      },                                                           \
+#define ReduceVec3(src, rst, F)                                   \
+  reduce_vec(                                                     \
+      src, rst,                                                   \
+      [](void* la, void* lb, int* lens, MPI_Datatype* dtype) {    \
+        using T = decltype(src.data());                           \
+        int len;                                                  \
+        memcpy(&len, la, sizeof(int));                            \
+        memcpy(lb, &len, sizeof(int));                            \
+        T src = (T)((reinterpret_cast<char*>(la)) + sizeof(int)); \
+        T rst = (T)((reinterpret_cast<char*>(lb)) + sizeof(int)); \
+        F;                                                        \
+      },                                                          \
       true);
 
-#define ReduceVec4(src, rst, F, bcast)                             \
-  reduce_vec(                                                      \
-      src, rst,                                                    \
-      [](void* la, void* lb, int* lens, MPI_Datatype* dtype) {     \
-        using T = decltype(src.data());                            \
-        int len;                                                   \
-        memcpy(&len, la, sizeof(int));                             \
-        memcpy(lb, &len, sizeof(int));                             \
-        T src = (T) ((reinterpret_cast<char*>(la)) + sizeof(int)); \
-        T rst = (T) ((reinterpret_cast<char*>(lb)) + sizeof(int)); \
-        F;                                                         \
-      },                                                           \
+#define ReduceVec4(src, rst, F, bcast)                            \
+  reduce_vec(                                                     \
+      src, rst,                                                   \
+      [](void* la, void* lb, int* lens, MPI_Datatype* dtype) {    \
+        using T = decltype(src.data());                           \
+        int len;                                                  \
+        memcpy(&len, la, sizeof(int));                            \
+        memcpy(lb, &len, sizeof(int));                            \
+        T src = (T)((reinterpret_cast<char*>(la)) + sizeof(int)); \
+        T rst = (T)((reinterpret_cast<char*>(lb)) + sizeof(int)); \
+        F;                                                        \
+      },                                                          \
       bcast);
 
 #define GetReduceVec(_1, _2, _3, _4, NAME, ...) NAME

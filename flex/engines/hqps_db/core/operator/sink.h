@@ -114,8 +114,9 @@ void template_set_value(common::Value* value, T v) {
 }
 
 template <typename T,
-          typename std::enable_if<(std::is_same_v<T, uint64_t>) &&(
-              !std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
+          typename std::enable_if<
+              (std::is_same_v<T, uint64_t>) &&
+              (!std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
   value->set_i64(v);
 }

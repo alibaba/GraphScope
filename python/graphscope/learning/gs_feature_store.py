@@ -32,7 +32,7 @@ class GsTensorAttr(TensorAttr):
     is_label: Optional[bool] = False
 
     def is_fully_specified(self) -> bool:
-        r"""Whether the :obj:`TensorAttr` has no unset fields(except "attr_name")."""
+        r"""Whether the :obj:`TensorAttr` has no unset fields."""
         result = True
         for key in self.__dataclass_fields__:
             if not self.is_set(key) and key != "attr_name":
@@ -110,18 +110,6 @@ class GsFeatureStore(FeatureStore):
         raise NotImplementedError
 
     def _get_tensor(self, attr: GsTensorAttr) -> Optional[Tensor]:
-        r"""Obtains a :class:`torch.Tensor` from the remote server.
-
-        Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
-
-        Raises:
-            ValueError: If the attr can not be found in the attrlists of feature store.
-
-        Returns:
-            feature(`torch.Tensor`): The node/edge feature tensor.
-        """
-
         group_name, attr_name, index, is_label = self.key(attr)
         if not self._check_attr(attr):
             raise ValueError(
@@ -149,14 +137,6 @@ class GsFeatureStore(FeatureStore):
         return result[0]
 
     def _get_partition_id(self, attr: GsTensorAttr) -> Optional[int]:
-        r"""Obtains the id of the partition where the tensor is stored from remote server.
-
-        Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
-
-        Returns:
-            partition_id(int): The corresponding partition id.
-        """
         result = None
         group_name, _, gid, _ = self.key(attr)
         gid = self.index_to_tensor(gid)
@@ -175,51 +155,21 @@ class GsFeatureStore(FeatureStore):
         raise NotImplementedError
 
     def _check_attr(self, attr: GsTensorAttr) -> bool:
-        r"""Check the given :class:`GsTensorAttr` is stored in remote server or not.
-
-        Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
-
-        Returns:
-            flag(bool): True: :class:`GsTensorAttr` is stored in remote server. \
-                False: :class:`GsTensorAttr` is not stored in remote server
-        """
         group_name, attr_name, _, _ = self.key(attr)
         if not attr.is_set("attr_name"):
             return any(group_name in key for key in self.tensor_attrs.keys())
         return (group_name, attr_name) in self.tensor_attrs
 
     def _get_tensor_size(self, attr: GsTensorAttr) -> Optional[torch.Size]:
-        r"""Obtains the dimension of feature tensor from remote server.
-
-        Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor type .
-
-        Returns:
-            tensor_size(`torch.Size`): The dimension of corresponding tensor type.
-        """
         group_name, attr_name, _, _ = self.key(attr)
         attr = GsTensorAttr(group_name, attr_name, 0)
         tensor = self._get_tensor(attr)
         return tensor.shape
 
     def get_all_tensor_attrs(self) -> List[GsTensorAttr]:
-        r"""Obtains all the tensor type stored in remote server.
-
-        Returns:
-            tensor_attrs(`List[GsTensorAttr]`): All the tensor type stored in the remote server.
-        """
         return [attr for attr in self.tensor_attrs.values()]
 
     def index_to_tensor(self, index: IndexType) -> torch.Tensor:
-        r"""Convert the Index to type :class:`torch.Tensor`.
-
-        Args:
-            index(`IndexType`): The index that needs to be converted.
-
-        Returns:
-            index(`torch.Tensor`): index of type :class:`torch.Tensor`.
-        """
         if isinstance(index, torch.Tensor):
             return index
         elif isinstance(index, np.ndarray):

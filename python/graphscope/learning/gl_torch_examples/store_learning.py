@@ -1,199 +1,182 @@
-import time
+import base64
+import json
+from multiprocessing.reduction import ForkingPickler
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
-import torch
-import torch.nn.functional as F
-from ogb.nodeproppred import Evaluator
-from torch_geometric.data import EdgeAttr
-from torch_geometric.nn import GraphSAGE
+from torch_geometric.data.graph_store import EdgeAttr
+from torch_geometric.data.graph_store import GraphStore
+from torch_geometric.typing import EdgeTensorType
 
-import graphscope as gs
-import graphscope.learning.graphlearn_torch as glt
-from graphscope.dataset import load_ogbn_arxiv
-from graphscope.learning.gs_feature_store import GsTensorAttr
-
-NUM_EPOCHS = 10
-BATCH_SIZE = 4
-NUM_SERVERS = 1
-NUM_NEIGHBORS = [2, 2, 2]
-
-print("Batch size:", BATCH_SIZE)
-print("Number of epochs:", NUM_EPOCHS)
-print("Number of neighbors:", NUM_NEIGHBORS)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
-
-gs.set_option(log_level="DEBUG")
-gs.set_option(show_log=True)
-
-# load the ogbn_arxiv graph.
-sess = gs.session(cluster_type="hosts", num_workers=NUM_SERVERS)
-g = load_ogbn_arxiv(sess=sess)
-
-print("-- Initializing store ...")
-feature_store, graph_store = gs.pyg_remote_backend(
-    g,
-    edges=[
-        ("paper", "citation", "paper"),
-    ],
-    node_features={
-        "paper": [f"feat_{i}" for i in range(128)],
-    },
-    node_labels={
-        "paper": "label",
-    },
-    edge_dir="out",
-    random_node_split={
-        "num_val": 0.1,
-        "num_test": 0.1,
-    },
-)
-
-print("-- Initializing client ...")
-glt.distributed.init_client(
-    num_servers=1,
-    num_clients=1,
-    client_rank=0,
-    master_addr=graph_store.master_addr,
-    master_port=graph_store.server_client_master_port,
-    num_rpc_threads=4,
-    is_dynamic=True,
-)
-
-model = GraphSAGE(
-    in_channels=128,
-    hidden_channels=256,
-    num_layers=3,
-    out_channels=47,
-).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
+from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
 
 
-graph_topo = graph_store.get_edge_index(EdgeAttr(("paper", "citation", "paper"), "csr"))
-DATA_LENGTH = graph_topo[0].size(0) - 1
-TRAIN_DATA_LENGTH = 200
-print("Number of nodes:", DATA_LENGTH)
+class GsGraphStore(GraphStore):
+    def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
+        super().__init__()
+        self.handle = handle
+        self.config = config
+        self.edge_attrs: Dict[Tuple[Tuple[str, str, str], str, bool], EdgeAttr] = {}
 
+        if config is not None:
+            config = json.loads(
+                base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
+                    "utf-8", errors="ignore"
+                )
+            )
+            self.edges = config["edges"]
+            self.edge_weights = config["edge_weights"]
+            self.edge_dir = config["edge_dir"]
+            self.random_node_split = config["random_node_split"]
+            if self.edges is not None:
+                for edge in self.edges:
+                    edge = tuple(edge)
+                    if self.edge_dir is not None:
+                        layout = "csr" if self.edge_dir == "out" else "csc"
+                        is_sorted = False if layout == "csr" else True
+                        self.edge_attrs[(edge, layout, is_sorted)] = EdgeAttr(
+                            edge, layout, is_sorted
+                        )
+                    else:
+                        layout = "coo"
+                        self.edge_attrs[(edge, layout, False)] = EdgeAttr(
+                            edge, layout, is_sorted
+                        )
 
-def get_neighbors(node_id, neighbor_num):
-    indices_start = graph_topo[0][node_id]
-    indices_end = graph_topo[0][node_id + 1]
-    neighbors = graph_topo[1][indices_start:indices_end]
-    random = torch.randperm(neighbors.size(0))
-    neighbors = neighbors[random[:neighbor_num]]
-    return neighbors
-
-
-def get_node_feature(node_id):
-    node_feature = feature_store.get_tensor(
-        GsTensorAttr(group_name="paper", index=node_id)
-    )
-    return node_feature
-
-
-def get_node_label(node_id):
-    node_feature = feature_store.get_tensor(
-        GsTensorAttr(
-            group_name="paper", attr_name="label", index=node_id, is_label=True
+        assert len(endpoints) == 4
+        self.endpoints = endpoints
+        self._master_addr, self._server_client_master_port = endpoints[0].split(":")
+        self._train_master_addr, self._train_loader_master_port = endpoints[1].split(
+            ":"
         )
-    )
-    return node_feature
+        self._val_master_addr, self._val_loader_master_port = endpoints[2].split(":")
+        self._test_master_addr, self._test_loader_master_port = endpoints[3].split(":")
+        assert (
+            self._master_addr
+            == self._train_master_addr
+            == self._val_master_addr
+            == self._test_master_addr
+        )
+
+    @property
+    def master_addr(self):
+        return self._master_addr
+
+    @property
+    def train_master_addr(self):
+        return self._train_master_addr
+
+    @property
+    def val_master_addr(self):
+        return self._val_master_addr
+
+    @property
+    def test_master_addr(self):
+        return self._test_master_addr
+
+    @property
+    def server_client_master_port(self):
+        return self._server_client_master_port
+
+    @property
+    def train_loader_master_port(self):
+        return self._train_loader_master_port
+
+    @property
+    def val_loader_master_port(self):
+        return self._val_loader_master_port
+
+    @property
+    def test_loader_master_port(self):
+        return self._test_loader_master_port
+
+    def get_handle(self):
+        return self.handle
+
+    def get_config(self):
+        return self.config
+
+    def get_endpoints(self):
+        return self.endpoints
+
+    @staticmethod
+    def key(attr: EdgeAttr) -> Tuple:
+        return (attr.edge_type, attr.layout.value, attr.is_sorted, attr.size)
+
+    def _put_edge_index(
+        self,
+        edge_index: EdgeTensorType,
+        edge_attr: EdgeAttr,
+    ) -> bool:
+        r"""To be implemented by :class:`GsFeatureStore`."""
+        raise NotImplementedError
+
+    def _get_edge_index(self, edge_attr: EdgeAttr) -> Optional[EdgeTensorType]:
+        r"""Obtains a :class:`EdgeTensorType` from the remote server with :class:`EdgeAttr`.
+
+        Args:
+            edge_attr(`EdgeAttr`): Uniquely corresponds to a topology of subgraph .
+
+        Returns:
+            edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
+            (row indice tensor, column indice tensor)(COO)\
+            (row ptr tensor, column indice tensor)(CSR)\
+            (column ptr tensor, row indice tensor)(CSC).
+        """
+        group_name, layout, is_sorted, _ = self.key(edge_attr)
+        edge_index = None
+        edge_index, size = request_server(
+            0, DistServer.get_edge_index, group_name, layout
+        )
+        if edge_index is not None:
+            new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
+            self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
+        return edge_index
+
+    def _remove_edge_index(self, edge_attr: EdgeAttr) -> bool:
+        r"""To be implemented by :class:`GsFeatureStore`."""
+        raise NotImplementedError
+
+    def get_all_edge_attrs(self) -> List[EdgeAttr]:
+        r"""Obtains all the subgraph type stored in remote server.
+
+        Returns:
+            edge_attrs(`List[EdgeAttr]`): All the subgraph type stored in the remote server.
+        """
+        result = []
+        for attr in self.edge_attrs.values():
+            if attr.size is None:
+                self._get_edge_index(attr)
+                result.append(
+                    self.edge_attrs[(attr.edge_type, attr.layout.value, attr.is_sorted)]
+                )
+            else:
+                result.append(attr)
+        return result
+
+    @classmethod
+    def from_ipc_handle(cls, ipc_handle):
+        return cls(*ipc_handle)
+
+    def share_ipc(self):
+        ipc_hanlde = (list(self.endpoints), self.handle, self.config)
+        return ipc_hanlde
 
 
-def get_nodes_features(nodes):
-    nodes_features = []
-    for node_id in nodes:
-        node_feature = get_node_feature(node_id)
-        nodes_features.append(node_feature)
-    node_features = torch.stack(nodes_features)
-    return node_features
+# Pickling Registration
 
 
-def get_nodes_labels(nodes):
-    nodes_labels = []
-    for node_id in nodes:
-        node_feature = get_node_label(node_id)
-        nodes_labels.append(node_feature)
-    nodes_labels = torch.cat(nodes_labels)
-    return nodes_labels
+def rebuild_graphstore(ipc_handle):
+    gs = GsGraphStore.from_ipc_handle(ipc_handle)
+    return gs
 
 
-def sample_batch(batch, num_neighbors):
-    nodes = {element: index for index, element in enumerate(batch)}
-    row = []
-    col = []
-    current_sample_layer = batch
-    for num in num_neighbors:
-        # print(f"current_sample_layer({num}):{current_sample_layer}")
-        next_sample_layer = []
-        for node_id in current_sample_layer:
-            neighbors = get_neighbors(node_id, num)
-            for neighbor in neighbors.tolist():
-                if neighbor not in nodes:
-                    nodes[neighbor] = len(nodes)
-                    next_sample_layer.append(neighbor)
-                row.append(nodes[node_id])
-                col.append(nodes[neighbor])
-        # print(f"next_sample_layer:{next_sample_layer}")
-        current_sample_layer = next_sample_layer
-    edge_index = torch.tensor([col, row])
-    x = get_nodes_features(nodes).to(dtype=torch.float32)
-    y = get_nodes_labels(nodes)
-    batch_size = len(batch)
-    return x, edge_index, y, batch_size
+def reduce_graphstore(GraphStore: GsGraphStore):
+    ipc_handle = GraphStore.share_ipc()
+    return (rebuild_graphstore, (ipc_handle,))
 
 
-def test(model, shuffle_node_id):
-    evaluator = Evaluator(name="ogbn-arxiv")
-    model.eval()
-    xs = []
-    y_true = []
-    test_data_length = TRAIN_DATA_LENGTH // 2
-    l = DATA_LENGTH - test_data_length - 1
-    for i in range(DATA_LENGTH - 1, l, -BATCH_SIZE):
-        end = i
-        start = max(i - BATCH_SIZE, 0)
-        batch = shuffle_node_id[start:end]
-        x, edge_index, y, batch_size = sample_batch(batch, NUM_NEIGHBORS)
-        out = model(x, edge_index)[:batch_size]
-        xs.append(out.cpu())
-        y_true.append(y[:batch_size].cpu())
-
-    y_pred = torch.cat(xs, dim=0)
-    y_pred = y_pred.argmax(dim=-1, keepdim=True)
-    y_true = torch.cat(y_true, dim=0).unsqueeze(-1)
-    test_acc = evaluator.eval(
-        {
-            "y_true": y_true,
-            "y_pred": y_pred,
-        }
-    )["acc"]
-    return test_acc
-
-
-for epoch in range(NUM_EPOCHS):
-    shuffle_node_id = torch.randperm(DATA_LENGTH).tolist()
-    model.train()
-    start = time.time()
-    for i in range(0, TRAIN_DATA_LENGTH, BATCH_SIZE):
-        optimizer.zero_grad()
-        start = i
-        end = min(i + BATCH_SIZE, TRAIN_DATA_LENGTH)
-        batch = shuffle_node_id[start:end]
-        x, edge_index, y, batch_size = sample_batch(batch, NUM_NEIGHBORS)
-        out = model(x, edge_index)[:batch_size].log_softmax(dim=-1)
-        loss = F.nll_loss(out, y[:batch_size])
-        loss.backward()
-        optimizer.step()
-
-    end = time.time()
-    print(f"-- Epoch: {epoch:03d}, Loss: {loss:.4f}, Epoch Time: {end - start}")
-    # Test accuracy.
-    if epoch == 0 or epoch > (NUM_EPOCHS // 2):
-        test_acc = test(model, shuffle_node_id)
-        print(f"-- Test Accuracy: {test_acc:.4f}")
-
-print("-- Shutdowning ...")
-glt.distributed.shutdown_client()
-
-print("-- Exited ...")
+ForkingPickler.register(GsGraphStore, reduce_graphstore)

@@ -78,5 +78,5 @@ class mmap_vector {
   mmap_array<T> array_;
   size_t size_;
 };
-};      // namespace gs
+};  // namespace gs
 #endif  // GRAPHSCOPE_UTILS_MMAP_VECTOR_H_

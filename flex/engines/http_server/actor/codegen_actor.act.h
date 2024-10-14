@@ -23,14 +23,12 @@
 
 namespace server {
 
-class ANNOTATION(actor : impl) codegen_actor : public hiactor::actor {
+class ANNOTATION(actor:impl) codegen_actor : public hiactor::actor {
  public:
   codegen_actor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr);
   ~codegen_actor() override;
 
-  seastar::future<query_result> ANNOTATION(actor
-                                           : method)
-      do_codegen(query_param&& param);
+  seastar::future<query_result> ANNOTATION(actor:method) do_codegen(query_param&& param);
 
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
