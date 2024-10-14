@@ -159,7 +159,8 @@ public class FfiLogicalPlanTest {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
                         "Call ldbc_ic2(10l, 20120112l)", "config/modern/graph.yaml");
-        try (PhysicalBuilder ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+        try (PhysicalBuilder ffiBuilder =
+                new ProcedurePhysicalBuilder(Utils.configs, Utils.schemaMeta, logicalPlan)) {
             PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("call_procedure.json"), plan.explain());

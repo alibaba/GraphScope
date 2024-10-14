@@ -52,7 +52,7 @@ CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
-     :  oC_Match ( SP? ( oC_Match | oC_With | oC_Unwind ) )* ( SP oC_Return ) ;
+     :  oC_Match ( SP? ( oC_Match | oC_With | oC_StandaloneCall | oC_Unwind ) )* ( SP oC_Return ) ;
 
 oC_Match
      :  ( OPTIONAL SP )? MATCH SP? oC_Pattern ( SP? oC_Where )? ;
