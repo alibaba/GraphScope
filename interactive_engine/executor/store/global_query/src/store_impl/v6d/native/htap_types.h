@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ using ORIGIN_EID_TYPE = int64_t;
 using PROP_ID_TYPE = int;
 using LABEL_ID_TYPE = int;
 
-using ADJ_LIST_TYPE = std::pair<const EID_TYPE*, const EID_TYPE*>;
+using ADJ_LIST_TYPE = std::pair<const EID_TYPE *, const EID_TYPE *>;
 using VERTEX_RANGE_TYPE = std::pair<VID_TYPE, VID_TYPE>;
 
 using VID_ARRAY = typename ConvertToArrowType<VID_TYPE>::ArrayType;
@@ -65,10 +65,10 @@ union PodProperties {
   double double_value;
 };
 
-}  // namespace htap_types
+} // namespace htap_types
 
-}  // namespace htap
+} // namespace htap
 
-}  // namespace vineyard
+} // namespace vineyard
 
-#endif  // SRC_CLIENT_DS_GRAPH_FRAGMENT_HTAP_TYPES_H_
+#endif // SRC_CLIENT_DS_GRAPH_FRAGMENT_HTAP_TYPES_H_

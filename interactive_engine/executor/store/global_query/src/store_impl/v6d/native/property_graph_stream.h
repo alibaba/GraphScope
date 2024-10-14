@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,8 +29,8 @@
 #include "arrow/record_batch.h"
 #include "arrow/type.h"
 #include "arrow/util/config.h"
-#include "arrow/util/logging.h"
 #include "arrow/util/key_value_metadata.h"
+#include "arrow/util/logging.h"
 
 #include "grape/worker/comm_spec.h"
 
@@ -44,9 +44,9 @@
 #include "vineyard/common/util/json.h"
 #include "vineyard/common/util/status.h"
 
+#include "graph_builder_ffi.h"
 #include "graph_schema.h"
 #include "htap_types.h"
-#include "graph_builder_ffi.h"
 
 namespace vineyard {
 namespace htap {
@@ -54,195 +54,187 @@ namespace htap {
 namespace detail {
 
 std::shared_ptr<arrow::DataType> PropertyTypeToDataType(::PropertyType type);
-::PropertyType PropertyTypeFromDataType(std::shared_ptr<arrow::DataType> const &type);
+::PropertyType
+PropertyTypeFromDataType(std::shared_ptr<arrow::DataType> const &type);
 
-template <typename T>
-struct AppendProperty {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <typename T> struct AppendProperty {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     LOG(FATAL) << "Unimplemented...";
   }
 };
 
-template <>
-struct AppendProperty<bool> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<bool> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::BooleanBuilder*>(builder)->Append(pp.bool_value));
+        dynamic_cast<arrow::BooleanBuilder *>(builder)->Append(pp.bool_value));
   }
 };
 
-template <>
-struct AppendProperty<char> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<char> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::Int8Builder*>(builder)->Append(pp.char_value));
+        dynamic_cast<arrow::Int8Builder *>(builder)->Append(pp.char_value));
   }
 };
 
-template <>
-struct AppendProperty<int16_t> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<int16_t> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::Int16Builder*>(builder)->Append(pp.int16_value));
+        dynamic_cast<arrow::Int16Builder *>(builder)->Append(pp.int16_value));
   }
 };
 
-template <>
-struct AppendProperty<int32_t> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<int32_t> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::Int32Builder*>(builder)->Append(pp.int_value));
+        dynamic_cast<arrow::Int32Builder *>(builder)->Append(pp.int_value));
   }
 };
 
-template <>
-struct AppendProperty<int64_t> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<int64_t> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::Int64Builder*>(builder)->Append(prop->len));
+        dynamic_cast<arrow::Int64Builder *>(builder)->Append(prop->len));
   }
 };
 
-template <>
-struct AppendProperty<float> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<float> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::FloatBuilder*>(builder)->Append(pp.float_value));
+        dynamic_cast<arrow::FloatBuilder *>(builder)->Append(pp.float_value));
   }
 };
 
-template <>
-struct AppendProperty<double> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<double> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::DoubleBuilder*>(builder)->Append(pp.double_value));
+        dynamic_cast<arrow::DoubleBuilder *>(builder)->Append(pp.double_value));
   }
 };
 
-template <>
-struct AppendProperty<std::string> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::LargeStringBuilder*>(builder)->Append(
-        static_cast<uint8_t*>(prop->data), prop->len));
-  }
-};
-
-template <>
-struct AppendProperty<arrow::Date32Type> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap::htap_types::PodProperties pp;
-    pp.long_value = prop->len;
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::Date32Builder*>(builder)->Append(pp.int_value));
-  }
-};
-
-template <>
-struct AppendProperty<arrow::Date64Type> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap::htap_types::PodProperties pp;
-    pp.long_value = prop->len;
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::Date64Builder*>(builder)->Append(pp.long_value));
-  }
-};
-
-template <>
-struct AppendProperty<arrow::Time32Type> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap::htap_types::PodProperties pp;
-    pp.long_value = prop->len;
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::Time32Builder*>(builder)->Append(pp.int_value));
-  }
-};
-
-template <>
-struct AppendProperty<arrow::Time64Type> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap::htap_types::PodProperties pp;
-    pp.long_value = prop->len;
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::Time64Builder*>(builder)->Append(pp.long_value));
-  }
-};
-
-template <>
-struct AppendProperty<arrow::TimestampType> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap::htap_types::PodProperties pp;
-    pp.long_value = prop->len;
-    CHECK_ARROW_ERROR(dynamic_cast<arrow::TimestampBuilder*>(builder)->Append(pp.long_value));
-  }
-};
-
-template <>
-struct AppendProperty<void> {
-  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+template <> struct AppendProperty<std::string> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
     CHECK_ARROW_ERROR(
-        dynamic_cast<arrow::NullBuilder*>(builder)->Append(nullptr));
+        dynamic_cast<arrow::LargeStringBuilder *>(builder)->Append(
+            static_cast<uint8_t *>(prop->data), prop->len));
+  }
+};
+
+template <> struct AppendProperty<arrow::Date32Type> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(
+        dynamic_cast<arrow::Date32Builder *>(builder)->Append(pp.int_value));
+  }
+};
+
+template <> struct AppendProperty<arrow::Date64Type> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(
+        dynamic_cast<arrow::Date64Builder *>(builder)->Append(pp.long_value));
+  }
+};
+
+template <> struct AppendProperty<arrow::Time32Type> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(
+        dynamic_cast<arrow::Time32Builder *>(builder)->Append(pp.int_value));
+  }
+};
+
+template <> struct AppendProperty<arrow::Time64Type> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(
+        dynamic_cast<arrow::Time64Builder *>(builder)->Append(pp.long_value));
+  }
+};
+
+template <> struct AppendProperty<arrow::TimestampType> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::TimestampBuilder *>(builder)->Append(
+        pp.long_value));
+  }
+};
+
+template <> struct AppendProperty<void> {
+  static void append(arrow::ArrayBuilder *builder, Property const *prop) {
+    CHECK_ARROW_ERROR(
+        dynamic_cast<arrow::NullBuilder *>(builder)->Append(nullptr));
   }
 };
 
 template <typename T>
-void generic_appender(arrow::ArrayBuilder* builder, T const& value) {
+void generic_appender(arrow::ArrayBuilder *builder, T const &value) {
   CHECK_ARROW_ERROR(
-      dynamic_cast<typename ConvertToArrowType<T>::BuilderType*>(builder)
+      dynamic_cast<typename ConvertToArrowType<T>::BuilderType *>(builder)
           ->Append(value));
 }
 
-using property_appender_func = void (*)(arrow::ArrayBuilder*,
-                                        Property const* prop);
+using property_appender_func = void (*)(arrow::ArrayBuilder *,
+                                        Property const *prop);
 
 class PropertyTableAppender {
- public:
+public:
   explicit PropertyTableAppender(std::shared_ptr<arrow::Schema> schema);
 
   // apply for vertex values and properties.
-  void Apply(std::unique_ptr<arrow::RecordBatchBuilder>& builder, VertexId id,
-             size_t property_size, Property* properties,
-             std::map<int, int> const& property_id_mapping,
-             std::shared_ptr<arrow::RecordBatch>& batch_out);
+  void Apply(std::unique_ptr<arrow::RecordBatchBuilder> &builder, VertexId id,
+             size_t property_size, Property *properties,
+             std::map<int, int> const &property_id_mapping,
+             std::shared_ptr<arrow::RecordBatch> &batch_out);
 
   // apply for edge values and properties.
-  void Apply(std::unique_ptr<arrow::RecordBatchBuilder>& builder,
-             VertexId src_id, VertexId dst_id,
-             LabelId src_label, LabelId dst_label, size_t property_size,
-             Property* properties,
-             std::map<int, int> const& property_id_mapping,
-             std::shared_ptr<arrow::RecordBatch>& batch_out);
+  void Apply(std::unique_ptr<arrow::RecordBatchBuilder> &builder,
+             VertexId src_id, VertexId dst_id, LabelId src_label,
+             LabelId dst_label, size_t property_size, Property *properties,
+             std::map<int, int> const &property_id_mapping,
+             std::shared_ptr<arrow::RecordBatch> &batch_out);
 
-  void Flush(std::unique_ptr<arrow::RecordBatchBuilder>& builder,
-             std::shared_ptr<arrow::RecordBatch>& batches_out,
+  void Flush(std::unique_ptr<arrow::RecordBatchBuilder> &builder,
+             std::shared_ptr<arrow::RecordBatch> &batches_out,
              const bool allow_empty = false);
 
- private:
+private:
   std::vector<property_appender_func> funcs_;
   size_t col_num_;
 };
 
-}  // namespace detail
+} // namespace detail
 
 class PropertyGraphInStream;
 
 class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
- public:
+public:
   const uint64_t instance_id() const {
     return meta_.GetClient()->instance_id();
   }
 
-  static std::unique_ptr<PropertyGraphOutStream> Create(
-      Client& client, const char* graph_name, MGPropertyGraphSchema* schema,
-      const int index) {
-    auto s = std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream());
+  static std::unique_ptr<PropertyGraphOutStream>
+  Create(Client &client, const char *graph_name, MGPropertyGraphSchema *schema,
+         const int index) {
+    auto s =
+        std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream());
 
     // take ownership of the `MGPropertyGraphSchema` object.
     s->graph_schema_ = std::shared_ptr<MGPropertyGraphSchema>(schema);
@@ -250,25 +242,25 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     // create two streams for vertices and edges
     {
       std::unordered_map<std::string, std::string> params{
-          {"kind", "vertex"}, {"graph_name", graph_name}
-      };
+          {"kind", "vertex"}, {"graph_name", graph_name}};
       auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->vertex_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
       VINEYARD_DISCARD(client.Persist(s->vertex_stream_->id()));
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
-      // VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
+      // VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client,
+      // s->vertex_writer_));
     }
     {
       std::unordered_map<std::string, std::string> params{
-          {"kind", "edge"}, {"graph_name", graph_name}
-      };
+          {"kind", "edge"}, {"graph_name", graph_name}};
       auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->edge_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
       VINEYARD_DISCARD(client.Persist(s->edge_stream_->id()));
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
-      // VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
+      // VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client,
+      // s->edge_writer_));
     }
 
     s->stream_index_ = index;
@@ -290,17 +282,19 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
         std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream()));
   }
 
-  void Construct(const ObjectMeta& meta) override {
+  void Construct(const ObjectMeta &meta) override {
     meta_ = meta;
     this->id_ = ObjectIDFromString(meta.GetKeyValue("id"));
     this->stream_index_ = meta.GetKeyValue<int>("stream_index");
     this->vertex_stream_ =
-      std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("vertex_stream"));
-    this->edge_stream_ =
-      std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("edge_stream"));
+        std::dynamic_pointer_cast<vineyard::RecordBatchStream>(
+            meta.GetMember("vertex_stream"));
+    this->edge_stream_ = std::dynamic_pointer_cast<vineyard::RecordBatchStream>(
+        meta.GetMember("edge_stream"));
 
     this->graph_schema_ = std::make_shared<htap::MGPropertyGraphSchema>();
-    auto graph_schema_json = vineyard::json::parse(meta.GetKeyValue("graph_schema"));
+    auto graph_schema_json =
+        vineyard::json::parse(meta.GetKeyValue("graph_schema"));
     if (graph_schema_json.contains("types")) {
       graph_schema_->FromJSON(graph_schema_json);
       this->initialTables();
@@ -319,19 +313,18 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
   int Initialize(Schema schema);
 
   int AddVertex(VertexId id, LabelId labelid, size_t property_size,
-                 Property* properties);
+                Property *properties);
 
   int AddEdge(VertexId src_id, VertexId dst_id, LabelId label,
-               LabelId src_label, LabelId dst_label, size_t property_size,
-               Property* properties);
+              LabelId src_label, LabelId dst_label, size_t property_size,
+              Property *properties);
 
-  int AddVertices(size_t vertex_size, VertexId* ids, LabelId* labelids,
-                   size_t* property_sizes, Property* properties);
+  int AddVertices(size_t vertex_size, VertexId *ids, LabelId *labelids,
+                  size_t *property_sizes, Property *properties);
 
-  int AddEdges(size_t edge_size, VertexId* src_ids,
-                VertexId* dst_ids, LabelId* labels, LabelId* src_labels,
-                LabelId* dst_labels, size_t* property_sizes,
-                Property* properties);
+  int AddEdges(size_t edge_size, VertexId *src_ids, VertexId *dst_ids,
+               LabelId *labels, LabelId *src_labels, LabelId *dst_labels,
+               size_t *property_sizes, Property *properties);
 
   Status Abort();
 
@@ -341,12 +334,13 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   int stream_index() const { return stream_index_; }
 
- private:
+private:
   void initialTables();
-  void buildTableChunk(std::shared_ptr<arrow::RecordBatch> batch,
-                       std::shared_ptr<vineyard::RecordBatchStream> &output_stream,
-                       int const property_offset,
-                       std::map<int, int> const& property_id_mapping);
+  void
+  buildTableChunk(std::shared_ptr<arrow::RecordBatch> batch,
+                  std::shared_ptr<vineyard::RecordBatchStream> &output_stream,
+                  int const property_offset,
+                  std::map<int, int> const &property_id_mapping);
 
   std::shared_ptr<htap::MGPropertyGraphSchema> graph_schema_;
 
@@ -356,8 +350,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   std::map<LabelId, std::unique_ptr<arrow::RecordBatchBuilder>>
       vertex_builders_;
-  // vertex label id to its primary key column (assuming only single column key) ordinal mapping
-  // -1 means no primary key column
+  // vertex label id to its primary key column (assuming only single column key)
+  // ordinal mapping -1 means no primary key column
   static constexpr size_t kNoPrimaryKeyColumn = static_cast<size_t>(-1);
   std::map<LabelId, size_t> vertex_primary_key_column_;
   std::map<LabelId, std::shared_ptr<detail::PropertyTableAppender>>
@@ -381,11 +375,11 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 };
 
 class PropertyGraphInStream {
- public:
-  explicit PropertyGraphInStream(vineyard::Client &client, PropertyGraphOutStream& stream, bool vertex)
+public:
+  explicit PropertyGraphInStream(vineyard::Client &client,
+                                 PropertyGraphOutStream &stream, bool vertex)
       : vertex_stream_(stream.vertex_stream_),
-        edge_stream_(stream.edge_stream_),
-        graph_schema_(stream.graph_schema_) {
+        edge_stream_(stream.edge_stream_), graph_schema_(stream.graph_schema_) {
     if (vertex) {
       VINEYARD_CHECK_OK(vertex_stream_->OpenReader(&client));
     } else {
@@ -393,13 +387,13 @@ class PropertyGraphInStream {
     }
   }
 
-  Status GetNextVertices(Client& client,
-                         std::shared_ptr<arrow::RecordBatch>& vertices) {
+  Status GetNextVertices(Client &client,
+                         std::shared_ptr<arrow::RecordBatch> &vertices) {
     return vertex_stream_->ReadBatch(vertices, true);
   }
 
-  Status GetNextEdges(Client& client,
-                      std::shared_ptr<arrow::RecordBatch>& edges) {
+  Status GetNextEdges(Client &client,
+                      std::shared_ptr<arrow::RecordBatch> &edges) {
     return edge_stream_->ReadBatch(edges, true);
   }
 
@@ -407,7 +401,7 @@ class PropertyGraphInStream {
     return graph_schema_;
   }
 
- private:
+private:
   std::shared_ptr<vineyard::RecordBatchStream> vertex_stream_;
   std::shared_ptr<vineyard::RecordBatchStream> edge_stream_;
   std::shared_ptr<MGPropertyGraphSchema> graph_schema_;
@@ -416,7 +410,7 @@ class PropertyGraphInStream {
 class GlobalPGStreamBuilder;
 
 class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
- public:
+public:
   static std::unique_ptr<Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<Object>(
         std::unique_ptr<GlobalPGStream>(new GlobalPGStream()));
@@ -426,14 +420,14 @@ class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
     return local_streams_[index % local_stream_chunks_];
   }
 
-  const std::vector<std::shared_ptr<PropertyGraphOutStream>>& AvailableStreams(
-      Client& client) const {
+  const std::vector<std::shared_ptr<PropertyGraphOutStream>> &
+  AvailableStreams(Client &client) const {
     return local_streams_;
   }
 
-  void Construct(const ObjectMeta& meta) override;
+  void Construct(const ObjectMeta &meta) override;
 
- private:
+private:
   size_t local_stream_chunks_;
   size_t total_stream_chunks_;
   std::vector<std::shared_ptr<PropertyGraphOutStream>> local_streams_;
@@ -443,9 +437,8 @@ class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
 };
 
 class GlobalPGStreamBuilder : public ObjectBuilder {
- public:
-  explicit GlobalPGStreamBuilder(Client& client)
-      : total_stream_chunks_(0) {}
+public:
+  explicit GlobalPGStreamBuilder(Client &client) : total_stream_chunks_(0) {}
   ~GlobalPGStreamBuilder() = default;
 
   void AddStream(int const /* index */, ObjectID const stream_id,
@@ -454,18 +447,16 @@ class GlobalPGStreamBuilder : public ObjectBuilder {
     stream_chunks_.push_back(stream_id);
   }
 
-  Status Build(Client& client) {
-    return Status::OK();
-  }
+  Status Build(Client &client) { return Status::OK(); }
 
-  Status _Seal(Client& client, std::shared_ptr<Object>&object);
+  Status _Seal(Client &client, std::shared_ptr<Object> &object);
 
- private:
+private:
   std::vector<ObjectID> stream_chunks_;
   size_t total_stream_chunks_;
 };
 
-}  // namespace htap
-}  // namespace vineyard
+} // namespace htap
+} // namespace vineyard
 
-#endif  // SRC_CLIENT_DS_STREAM_PROPERTY_GRAPH_H_
+#endif // SRC_CLIENT_DS_STREAM_PROPERTY_GRAPH_H_

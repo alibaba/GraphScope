@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,14 +28,14 @@ typedef int64_t EdgeId;
 typedef int32_t LabelId;
 typedef int32_t PartitionId;
 typedef int32_t PropertyId;
-typedef void* GraphHandle;
-typedef void* OutEdgeIterator;
-typedef void* InEdgeIterator;
-typedef void* GetVertexIterator;
-typedef void* GetAllVerticesIterator;
-typedef void* GetAllEdgesIterator;
-typedef void* PropertiesIterator;
-typedef void* Schema;
+typedef void *GraphHandle;
+typedef void *OutEdgeIterator;
+typedef void *InEdgeIterator;
+typedef void *GetVertexIterator;
+typedef void *GetAllVerticesIterator;
+typedef void *GetAllEdgesIterator;
+typedef void *PropertiesIterator;
+typedef void *Schema;
 
 typedef int64_t Vertex;
 struct Edge {
@@ -82,7 +82,7 @@ enum PropertyType {
 struct Property {
   int id;
   enum PropertyType type;
-  void* data;
+  void *data;
   int64_t len;
 };
 
@@ -103,13 +103,13 @@ void v6d_free_graph_handle(GraphHandle handle);
 // limit表示返回的最大结果数
 // 返回值是一个迭代器
 GetVertexIterator v6d_get_vertices(GraphHandle graph, PartitionId partition_id,
-                               LabelId* labels, VertexId* ids, int count);
+                                   LabelId *labels, VertexId *ids, int count);
 
 // 释放由get_vertices返回的迭代器（也可以什么都不做，取决于具体实现）
 void v6d_free_get_vertex_iterator(GetVertexIterator iter);
 
 // 从迭代器取出下一个元素，返回值是一个Vertex
-int v6d_get_vertices_next(GetVertexIterator iter, Vertex* v_out);
+int v6d_get_vertices_next(GetVertexIterator iter, Vertex *v_out);
 
 // 查询某个partition内部的所有相关label的点
 // labels是待查询label的列表
@@ -118,15 +118,15 @@ int v6d_get_vertices_next(GetVertexIterator iter, Vertex* v_out);
 // 返回值是一个迭代器
 // 注意：如果label_count为0或者labels为null，则查询所有label
 GetAllVerticesIterator v6d_get_all_vertices(GraphHandle graph,
-                                        PartitionId partition_id,
-                                        LabelId* labels, int labels_count,
-                                        int64_t limit);
+                                            PartitionId partition_id,
+                                            LabelId *labels, int labels_count,
+                                            int64_t limit);
 
 // 释放由get_all_vertices返回的迭代器（也可以什么都不做，取决于具体实现）
 void v6d_free_get_all_vertices_iterator(GetAllVerticesIterator iter);
 
 // 从迭代器取出下一个元素，返回值是一个Vertex
-int v6d_get_all_vertices_next(GetAllVerticesIterator iter, Vertex* v_out);
+int v6d_get_all_vertices_next(GetAllVerticesIterator iter, Vertex *v_out);
 
 // 获取点id
 VertexId v6d_get_vertex_id(GraphHandle graph, Vertex v);
@@ -134,7 +134,7 @@ VertexId v6d_get_vertex_id(GraphHandle graph, Vertex v);
 OuterId v6d_get_outer_id(GraphHandle graph, Vertex v);
 
 int v6d_get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
-                           OuterId outer_id, Vertex* v);
+                               OuterId outer_id, Vertex *v);
 
 OuterId v6d_get_outer_id_by_vertex_id(GraphHandle graph, VertexId v);
 
@@ -143,7 +143,7 @@ LabelId v6d_get_vertex_label(GraphHandle graph, Vertex v);
 
 // 获取点的某个属性
 int v6d_get_vertex_property(GraphHandle graph, Vertex v, PropertyId id,
-                        struct Property* p_out);
+                            struct Property *p_out);
 
 // 获取点的属性列表，返回一个迭代器
 PropertiesIterator v6d_get_vertex_properties(GraphHandle graph, Vertex v);
@@ -156,14 +156,14 @@ PropertiesIterator v6d_get_vertex_properties(GraphHandle graph, Vertex v);
 // src_ids_count和labels_count分别表示src_id和label列表的长度，limit表示返回的最大结果数，返回值是一个迭代器
 // 注意：如果label_count为0或者labels为null，则查询所有label
 OutEdgeIterator v6d_get_out_edges(GraphHandle graph, PartitionId partition_id,
-                              VertexId src_id, LabelId* labels,
-                              int labels_count, int64_t limit);
+                                  VertexId src_id, LabelId *labels,
+                                  int labels_count, int64_t limit);
 
 // 释放迭代器
 void v6d_free_out_edge_iterator(OutEdgeIterator iter);
 
 // 从迭代器取出下一个元素，返回值是一个Edge
-int v6d_out_edge_next(OutEdgeIterator iter, struct Edge* e_out);
+int v6d_out_edge_next(OutEdgeIterator iter, struct Edge *e_out);
 
 // 查询某个partition内的点的入边
 // src_ids是待查询的点id列表
@@ -172,14 +172,14 @@ int v6d_out_edge_next(OutEdgeIterator iter, struct Edge* e_out);
 // limit表示返回的最大结果数，返回值是一个迭代器
 // 注意：如果label_count为0或者labels为null，则查询所有label
 InEdgeIterator v6d_get_in_edges(GraphHandle graph, PartitionId partition_id,
-                            VertexId dst_id, LabelId* labels, int labels_count,
-                            int64_t limit);
+                                VertexId dst_id, LabelId *labels,
+                                int labels_count, int64_t limit);
 
 // 释放迭代器
 void v6d_free_in_edge_iterator(InEdgeIterator iter);
 
 // 从迭代器取出下一个元素，返回值是一个Edge
-int v6d_in_edge_next(InEdgeIterator iter, struct Edge* e_out);
+int v6d_in_edge_next(InEdgeIterator iter, struct Edge *e_out);
 
 // 查询某个partition内某些label的边数据
 // labels是待查询的label列表
@@ -187,43 +187,43 @@ int v6d_in_edge_next(InEdgeIterator iter, struct Edge* e_out);
 // limit表示返回的最大结果数
 // 返回值是一个迭代器。
 // 注意：如果label_count为0或者labels为null，则查询所有label
-GetAllEdgesIterator v6d_get_all_edges(GraphHandle graph, PartitionId partition_id,
-                                  LabelId* labels, int labels_count,
-                                  int64_t limit);
+GetAllEdgesIterator v6d_get_all_edges(GraphHandle graph,
+                                      PartitionId partition_id, LabelId *labels,
+                                      int labels_count, int64_t limit);
 
 // 释放迭代器
 void v6d_free_get_all_edges_iterator(GetAllEdgesIterator iter);
 
 // 从迭代器取出下一个元素，返回值是一个Edge
-int v6d_get_all_edges_next(GetAllEdgesIterator iter, struct Edge* e_out);
+int v6d_get_all_edges_next(GetAllEdgesIterator iter, struct Edge *e_out);
 
 // 从edge对象获取起点id
-VertexId v6d_get_edge_src_id(GraphHandle graph, struct Edge* e);
+VertexId v6d_get_edge_src_id(GraphHandle graph, struct Edge *e);
 
 // 从edge对象获取终点id
-VertexId v6d_get_edge_dst_id(GraphHandle graph, struct Edge* e);
+VertexId v6d_get_edge_dst_id(GraphHandle graph, struct Edge *e);
 
 // 从edge对象获取边id
-EdgeId v6d_get_edge_id(GraphHandle graph, struct Edge* e);
+EdgeId v6d_get_edge_id(GraphHandle graph, struct Edge *e);
 
 // 从edge对象获取起点label
-LabelId v6d_get_edge_src_label(GraphHandle graph, struct Edge* e);
+LabelId v6d_get_edge_src_label(GraphHandle graph, struct Edge *e);
 
 // 从edge对象获取终点label
-LabelId v6d_get_edge_dst_label(GraphHandle graph, struct Edge* e);
+LabelId v6d_get_edge_dst_label(GraphHandle graph, struct Edge *e);
 
 // 从edge对象获取边label
-LabelId v6d_get_edge_label(GraphHandle graph, struct Edge* e);
+LabelId v6d_get_edge_label(GraphHandle graph, struct Edge *e);
 
 // 获取边的某个属性
-int v6d_get_edge_property(GraphHandle graph, struct Edge*, PropertyId id,
-                      struct Property* p_out);
+int v6d_get_edge_property(GraphHandle graph, struct Edge *, PropertyId id,
+                          struct Property *p_out);
 
 // 获取边的属性列表，返回一个迭代器
-PropertiesIterator v6d_get_edge_properties(GraphHandle graph, struct Edge*);
+PropertiesIterator v6d_get_edge_properties(GraphHandle graph, struct Edge *);
 
 // 从属性列表迭代器中取出一个属性，如果没有新的元素，则将Property对象内部的data置为nullptr
-int v6d_properties_next(PropertiesIterator iter, struct Property* p_out);
+int v6d_properties_next(PropertiesIterator iter, struct Property *p_out);
 
 // 释放迭代器
 void v6d_free_properties_iterator(PropertiesIterator iter);
@@ -232,53 +232,58 @@ void v6d_free_properties_iterator(PropertiesIterator iter);
 
 // 获取属性值，这里需要在c++里判断类型是否正确，比如：对string属性调用get_property_as_int就应该报错，返回-1表示错误，返回0表示正确。
 // 如果类型是正确的，则把值填进out指针
-int v6d_get_property_as_bool(struct Property* property, bool* out);
-int v6d_get_property_as_char(struct Property* property, char* out);
-int v6d_get_property_as_short(struct Property* property, int16_t* out);
-int v6d_get_property_as_int(struct Property* property, int* out);
-int v6d_get_property_as_long(struct Property* property, int64_t* out);
-int v6d_get_property_as_float(struct Property* property, float* out);
-int v6d_get_property_as_double(struct Property* property, double* out);
+int v6d_get_property_as_bool(struct Property *property, bool *out);
+int v6d_get_property_as_char(struct Property *property, char *out);
+int v6d_get_property_as_short(struct Property *property, int16_t *out);
+int v6d_get_property_as_int(struct Property *property, int *out);
+int v6d_get_property_as_long(struct Property *property, int64_t *out);
+int v6d_get_property_as_float(struct Property *property, float *out);
+int v6d_get_property_as_double(struct Property *property, double *out);
 
-int v6d_get_property_as_string(struct Property* property, const char** out,
-                           int* out_len);
-int v6d_get_property_as_bytes(struct Property* property, const char** out,
-                          int* out_len);
-int v6d_get_property_as_int_list(struct Property* property, const int** out,
-                             int* out_len);
-int v6d_get_property_as_long_list(struct Property* property, const int64_t** out,
-                              int* out_len);
-int v6d_get_property_as_float_list(struct Property* property, const float** out,
-                               int* out_len);
-int v6d_get_property_as_double_list(struct Property* property, const double** out,
-                                int* out_len);
-int v6d_get_property_as_string_list(struct Property* property, const char*** out,
-                                const int** out_len, int* out_num);
-int v6d_get_property_as_date32(struct Property* property, int32_t *out);
-int v6d_get_property_as_date64(struct Property* property, int64_t *out);
-int v6d_get_property_as_time32_s(struct Property* property, int32_t *out);
-int v6d_get_property_as_time32_ms(struct Property* property, int32_t *out);
-int v6d_get_property_as_time32_us(struct Property* property, int32_t *out);
-int v6d_get_property_as_time32_ns(struct Property* property, int32_t *out);
-int v6d_get_property_as_time64_s(struct Property* property, int64_t *out);
-int v6d_get_property_as_time64_ms(struct Property* property, int64_t *out);
-int v6d_get_property_as_time64_us(struct Property* property, int64_t *out);
-int v6d_get_property_as_time64_ns(struct Property* property, int64_t *out);
-int v6d_get_property_as_timestamp_s(struct Property* property, int64_t *out,
-                                    const char **out_timezone, int *out_timezone_len);
-int v6d_get_property_as_timestamp_ms(struct Property* property, int64_t *out,
-                                     const char **out_timezone, int *out_timezone_len);
-int v6d_get_property_as_timestamp_us(struct Property* property, int64_t *out,
-                                     const char **out_timezone, int *out_timezone_len);
-int v6d_get_property_as_timestamp_ns(struct Property* property, int64_t *out,
-                                     const char **out_timezone, int *out_timezone_len);
+int v6d_get_property_as_string(struct Property *property, const char **out,
+                               int *out_len);
+int v6d_get_property_as_bytes(struct Property *property, const char **out,
+                              int *out_len);
+int v6d_get_property_as_int_list(struct Property *property, const int **out,
+                                 int *out_len);
+int v6d_get_property_as_long_list(struct Property *property,
+                                  const int64_t **out, int *out_len);
+int v6d_get_property_as_float_list(struct Property *property, const float **out,
+                                   int *out_len);
+int v6d_get_property_as_double_list(struct Property *property,
+                                    const double **out, int *out_len);
+int v6d_get_property_as_string_list(struct Property *property,
+                                    const char ***out, const int **out_len,
+                                    int *out_num);
+int v6d_get_property_as_date32(struct Property *property, int32_t *out);
+int v6d_get_property_as_date64(struct Property *property, int64_t *out);
+int v6d_get_property_as_time32_s(struct Property *property, int32_t *out);
+int v6d_get_property_as_time32_ms(struct Property *property, int32_t *out);
+int v6d_get_property_as_time32_us(struct Property *property, int32_t *out);
+int v6d_get_property_as_time32_ns(struct Property *property, int32_t *out);
+int v6d_get_property_as_time64_s(struct Property *property, int64_t *out);
+int v6d_get_property_as_time64_ms(struct Property *property, int64_t *out);
+int v6d_get_property_as_time64_us(struct Property *property, int64_t *out);
+int v6d_get_property_as_time64_ns(struct Property *property, int64_t *out);
+int v6d_get_property_as_timestamp_s(struct Property *property, int64_t *out,
+                                    const char **out_timezone,
+                                    int *out_timezone_len);
+int v6d_get_property_as_timestamp_ms(struct Property *property, int64_t *out,
+                                     const char **out_timezone,
+                                     int *out_timezone_len);
+int v6d_get_property_as_timestamp_us(struct Property *property, int64_t *out,
+                                     const char **out_timezone,
+                                     int *out_timezone_len);
+int v6d_get_property_as_timestamp_ns(struct Property *property, int64_t *out,
+                                     const char **out_timezone,
+                                     int *out_timezone_len);
 
 // *out_num为string的个数
 // (*out_len)[i]为第i个string的长度
 // (*out)[i]为第i个string的其实地址
 
 // 释放属性对象
-void v6d_free_property(struct Property* property);
+void v6d_free_property(struct Property *property);
 
 // ------------------ get schema ------------- //
 
@@ -294,8 +299,8 @@ PartitionId v6d_get_partition_id(GraphHandle graph, VertexId v);
 // key是\0结束的字符串，如果 key 不存在，返回 -1
 // 否则返回0，结果存在 internal_id 和 partition_id 中
 int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
-                                       const char* key, VertexId* internal_id,
-                                       PartitionId* partition_id);
+                                       const char *key, VertexId *internal_id,
+                                       PartitionId *partition_id);
 
 // 返回本地的partition列表。
 //
@@ -306,14 +311,14 @@ int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
 // partition_id_size: partition_ids的长度
 //
 void v6d_get_process_partition_list(GraphHandle graph,
-                                    PartitionId** partition_ids,
-                                    int* partition_id_size);
+                                    PartitionId **partition_ids,
+                                    int *partition_id_size);
 
 // 释放partition_ids对应的内存
-void v6d_free_partition_list(PartitionId* partition_ids);
+void v6d_free_partition_list(PartitionId *partition_ids);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // ANALYTICAL_ENGINE_HTAP_GLOBAL_STORE_FFI_H_
+#endif // ANALYTICAL_ENGINE_HTAP_GLOBAL_STORE_FFI_H_

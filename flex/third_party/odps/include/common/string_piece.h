@@ -38,7 +38,7 @@ class StringPieceDetail {
   StringPieceDetail(const typename string_type::const_iterator& begin,
                     const typename string_type::const_iterator& end)
       : mStr((end > begin) ? &(*begin) : NULL),
-        mLength((end > begin) ? (size_type)(end - begin) : 0) {}
+        mLength((end > begin) ? (size_type) (end - begin) : 0) {}
 
   bool operator==(const StringPieceDetail& s) const {
     return this == &s || this->compare(s) == 0;

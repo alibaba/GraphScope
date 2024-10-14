@@ -253,7 +253,7 @@ inline void MD5::update(const byte* input, size_t length) {
   _finished = false;
 
   /* Compute number of bytes mod 64 */
-  index = (uint32)((_count[0] >> 3) & 0x3f);
+  index = (uint32) ((_count[0] >> 3) & 0x3f);
 
   /* update number of bits */
   if ((_count[0] += ((uint32) length << 3)) < ((uint32) length << 3)) {
@@ -298,7 +298,7 @@ inline void MD5::final() {
   encode(_count, bits, 8);
 
   /* Pad out to 56 mod 64. */
-  index = (uint32)((_count[0] >> 3) & 0x3f);
+  index = (uint32) ((_count[0] >> 3) & 0x3f);
   padLen = (index < 56) ? (56 - index) : (120 - index);
   update(PADDING, padLen);
 
@@ -402,10 +402,10 @@ a multiple of 4.
 */
 inline void MD5::encode(const uint32* input, byte* output, size_t length) {
   for (size_t i = 0, j = 0; j < length; ++i, j += 4) {
-    output[j] = (byte)(input[i] & 0xff);
-    output[j + 1] = (byte)((input[i] >> 8) & 0xff);
-    output[j + 2] = (byte)((input[i] >> 16) & 0xff);
-    output[j + 3] = (byte)((input[i] >> 24) & 0xff);
+    output[j] = (byte) (input[i] & 0xff);
+    output[j + 1] = (byte) ((input[i] >> 8) & 0xff);
+    output[j + 2] = (byte) ((input[i] >> 16) & 0xff);
+    output[j + 3] = (byte) ((input[i] >> 24) & 0xff);
   }
 }
 

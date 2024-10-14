@@ -283,7 +283,7 @@ inline size_t ExpectedEncodeLength(size_t len) {
 }
 
 inline size_t ExpectedDecodeLength(size_t len) {
-  return (size_t)((len + 3) / 4 * 3);
+  return (size_t) ((len + 3) / 4 * 3);
 }
 
 }  // anonymous namespace

@@ -31,8 +31,8 @@
 #include "boost/leaf.hpp"
 
 #include "vineyard/common/util/json.h"
-#include "vineyard/graph/fragment/property_graph_types.h"
 #include "vineyard/graph/fragment/graph_schema.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
 
 namespace vineyard {
 
@@ -46,24 +46,24 @@ class MGPropertyGraphSchema {
     kAnalytical,
   };
 
- public:
+public:
   using LabelId = int;
   using PropertyId = int;
   using Entry = vineyard::Entry;
 
-  PropertyId GetPropertyId(const std::string& name);
+  PropertyId GetPropertyId(const std::string &name);
   PropertyType GetPropertyType(LabelId label_id, PropertyId prop_id);
   std::string GetPropertyName(PropertyId prop_id);
 
-  LabelId GetLabelId(const std::string& name);
+  LabelId GetLabelId(const std::string &name);
   std::string GetLabelName(LabelId label_id);
 
   void set_fnum(size_t fnum) { fnum_ = fnum; }
 
-  Entry* CreateEntry(const std::string& type, LabelId label_id,
-                     const std::string& name);
+  Entry *CreateEntry(const std::string &type, LabelId label_id,
+                     const std::string &name);
 
-  void AddEntry(const Entry& entry) {
+  void AddEntry(const Entry &entry) {
     if (entry.type == "VERTEX") {
       vertex_entries_.push_back(entry);
     } else {
@@ -71,30 +71,30 @@ class MGPropertyGraphSchema {
     }
   }
 
-  void ToJSON(vineyard::json& root) const;
-  void FromJSON(vineyard::json const& root);
+  void ToJSON(vineyard::json &root) const;
+  void FromJSON(vineyard::json const &root);
 
   std::string ToJSONString() const;
-  void FromJSONString(std::string const& schema);
+  void FromJSONString(std::string const &schema);
 
   size_t fnum() const { return fnum_; }
 
-  void DumpToFile(std::string const& path);
+  void DumpToFile(std::string const &path);
 
   MGPropertyGraphSchema TransformToInteractive();
 
-  const std::vector<Entry>& VertexEntries() const { return vertex_entries_; }
+  const std::vector<Entry> &VertexEntries() const { return vertex_entries_; }
 
-  const std::vector<Entry>& EdgeEntries() const { return edge_entries_; }
+  const std::vector<Entry> &EdgeEntries() const { return edge_entries_; }
 
-  void set_unique_property_names(
-      const std::vector<std::string>& property_names) {
+  void
+  set_unique_property_names(const std::vector<std::string> &property_names) {
     unique_property_names_ = property_names;
   }
 
   void set_schema_type(SchemaType type) { schema_type_ = type; }
 
- private:
+private:
   SchemaType schema_type_ = SchemaType::kAnalytical;
   size_t fnum_;
   std::vector<Entry> vertex_entries_;
@@ -102,14 +102,14 @@ class MGPropertyGraphSchema {
 
   // In Analytical engine, assume label ids of vertex entries are continuous
   // from zero, and property ids of each label is also continuous from zero.
-  // When transform schema to Interactive Engine style, we gather all property names and
-  // unique them, assign each name a id (index of the vector), then preserve a
-  // vector<int> for each label, stores mappings from original id to transformed
-  // id.
+  // When transform schema to Interactive Engine style, we gather all property
+  // names and unique them, assign each name a id (index of the vector), then
+  // preserve a vector<int> for each label, stores mappings from original id to
+  // transformed id.
   std::vector<std::string> unique_property_names_;
 };
 
-}  // namespace htap
-}  // namespace vineyard
+} // namespace htap
+} // namespace vineyard
 
-#endif  // MODULES_GRAPH_FRAGMENT_HTAP_GRAPH_SCHEMA_H_
+#endif // MODULES_GRAPH_FRAGMENT_HTAP_GRAPH_SCHEMA_H_
