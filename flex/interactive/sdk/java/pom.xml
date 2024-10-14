@@ -148,13 +148,18 @@
                 <version>3.3.0</version>
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
-                            <goal>test-jar</goal>
+                            <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/alibaba/graphscope/gaia/**</exclude>
+                            </excludes>
+                            <classifier>${no-gaia-ir-classifier}</classifier>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -534,5 +539,6 @@
         <opentelemetry-bom.version>1.37.0</opentelemetry-bom.version>
         <javadoc.output.destDir>${project.build.directory}/javadoc</javadoc.output.destDir>
         <javadoc.output.destDir>reference</javadoc.output.destDir>
+        <no-gaia-ir-classifier>no-gaia-ir</no-gaia-ir-classifier>
     </properties>
 </project>

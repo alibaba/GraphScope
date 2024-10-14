@@ -165,6 +165,7 @@
         <dependency>
             <groupId>com.alibaba.graphscope</groupId>
             <artifactId>interactive</artifactId>
+            <classifier>${interactive.sdk.classifier}</classifier>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

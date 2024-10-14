@@ -13,28 +13,31 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
-#define ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
+#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
+#define ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-// A simple app to count the number of vertices of a given label.
-class CountVertices : public CypherReadAppBase<std::string> {
+class PageRank
+    : public CypherReadAppBase<std::string, std::string, double, int, double> {
  public:
-  CountVertices() {}
+  PageRank() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
-                                   std::string param) override;
+                                   std::string vertex_label,
+                                   std::string edge_label,
+                                   double damping_factor, int max_iterations,
+                                   double epsilon);
 };
 
-class CountVerticesFactory : public AppFactoryBase {
+class PageRankFactory : public AppFactoryBase {
  public:
-  CountVerticesFactory() = default;
-  ~CountVerticesFactory() = default;
+  PageRankFactory() = default;
+  ~PageRankFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };
 
 }  // namespace gs
 
-#endif  // ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
+#endif

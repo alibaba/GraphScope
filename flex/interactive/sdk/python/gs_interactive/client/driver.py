@@ -22,7 +22,8 @@ from gremlin_python.driver.client import Client
 from neo4j import GraphDatabase
 from neo4j import Session as Neo4jSession
 
-from gs_interactive.client.session import DefaultSession, Session
+from gs_interactive.client.session import DefaultSession
+from gs_interactive.client.session import Session
 
 
 class Driver:

@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
-#define ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
+#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_
+#define ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-// A simple app to count the number of vertices of a given label.
-class CountVertices : public CypherReadAppBase<std::string> {
+class KNeighbors : public CypherReadAppBase<std::string, int64_t, int32_t> {
  public:
-  CountVertices() {}
+  KNeighbors() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
-                                   std::string param) override;
+                                   std::string label_name, int64_t vertex_id,
+                                   int32_t hop_range) override;
 };
 
-class CountVerticesFactory : public AppFactoryBase {
+class KNeighborsFactory : public AppFactoryBase {
  public:
-  CountVerticesFactory() = default;
-  ~CountVerticesFactory() = default;
+  KNeighborsFactory() = default;
+  ~KNeighborsFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };
 
 }  // namespace gs
 
-#endif  // ENGINES_GRAPH_DB_APP_BUILDIN_COUNT_VERTICES_H_
+#endif  // ENGINES_GRAPH_DB_APP_BUILDIN_K_HOP_NEIGHBORS_

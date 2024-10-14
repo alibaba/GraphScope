@@ -32,6 +32,7 @@ from gs_interactive.models.create_graph_request import CreateGraphRequest
 from gs_interactive.models.create_procedure_request import CreateProcedureRequest
 from gs_interactive.models.schema_mapping import SchemaMapping
 from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.models.stop_service_request import StopServiceRequest
 from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
@@ -263,7 +264,7 @@ class HQPSClient(object):
             gs_interactive.Configuration(self._hqps_endpoint)
         ) as api_client:
             api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
-            return api_instance.stop_service()
+            return api_instance.stop_service(StopServiceRequest())
 
     def restart_service(self) -> str:
         with gs_interactive.ApiClient(

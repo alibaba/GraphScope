@@ -26,16 +26,33 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
 from gs_interactive.client.driver import Driver  # noqa: E402
 from gs_interactive.client.status import StatusCode  # noqa: E402
-from gs_interactive.models import (  # noqa: E402
-    BaseEdgeTypeVertexTypePairRelationsInner, CreateEdgeType,
-    CreateGraphRequest, CreateGraphSchemaRequest, CreateProcedureRequest,
-    CreatePropertyMeta, CreateVertexType, EdgeMapping, EdgeMappingTypeTriplet,
-    EdgeRequest, GSDataType, LongText, ModelProperty, PrimitiveType,
-    QueryRequest, SchemaMapping, SchemaMappingLoadingConfig,
-    SchemaMappingLoadingConfigDataSource, SchemaMappingLoadingConfigFormat,
-    SchemaMappingLoadingConfigXCsrParams, StartServiceRequest, StringType,
-    StringTypeString, TypedValue, VertexEdgeRequest, VertexMapping,
-    VertexRequest)
+from gs_interactive.models import BaseEdgeTypeVertexTypePairRelationsInner  # noqa: E402
+from gs_interactive.models import CreateEdgeType
+from gs_interactive.models import CreateGraphRequest
+from gs_interactive.models import CreateGraphSchemaRequest
+from gs_interactive.models import CreateProcedureRequest
+from gs_interactive.models import CreatePropertyMeta
+from gs_interactive.models import CreateVertexType
+from gs_interactive.models import EdgeMapping
+from gs_interactive.models import EdgeMappingTypeTriplet
+from gs_interactive.models import EdgeRequest
+from gs_interactive.models import GSDataType
+from gs_interactive.models import LongText
+from gs_interactive.models import ModelProperty
+from gs_interactive.models import PrimitiveType
+from gs_interactive.models import QueryRequest
+from gs_interactive.models import SchemaMapping
+from gs_interactive.models import SchemaMappingLoadingConfig
+from gs_interactive.models import SchemaMappingLoadingConfigDataSource
+from gs_interactive.models import SchemaMappingLoadingConfigFormat
+from gs_interactive.models import SchemaMappingLoadingConfigXCsrParams
+from gs_interactive.models import StartServiceRequest
+from gs_interactive.models import StringType
+from gs_interactive.models import StringTypeString
+from gs_interactive.models import TypedValue
+from gs_interactive.models import VertexEdgeRequest
+from gs_interactive.models import VertexMapping
+from gs_interactive.models import VertexRequest
 
 test_graph_def = {
     "name": "modern_graph",
@@ -355,7 +372,7 @@ class TestDriver(unittest.TestCase):
         create_proc_request = CreateProcedureRequest(
             name=self._cypher_proc_name,
             description="test procedure",
-            query="MATCH (n) RETURN COUNT(n);",
+            query="MATCH (n: person) where n.name =$personName RETURN COUNT(n);",
             type="cypher",
         )
         resp = self._sess.create_procedure(self._graph_id, create_proc_request)
@@ -491,7 +508,7 @@ class TestDriver(unittest.TestCase):
 
     def callProcedure(self):
         with self._driver.getNeo4jSession() as session:
-            result = session.run("CALL test_procedure();")
+            result = session.run('CALL test_procedure("marko");')
             print("call procedure result: ", result)
 
     def callPrcedureWithServiceStop(self):
@@ -550,8 +567,8 @@ class TestDriver(unittest.TestCase):
                 label="person",
                 primary_key_value=8,
                 properties=[
-                    ModelProperty(name="name", type="string", value="mike"),
-                    ModelProperty(name="age", type="integer", value=12),
+                    ModelProperty(name="name", value="mike"),
+                    ModelProperty(name="age", value=12),
                 ],
             ),
         ]
@@ -590,8 +607,8 @@ class TestDriver(unittest.TestCase):
             label="person",
             primary_key_value=1,
             properties=[
-                ModelProperty(name="name", type="string", value="Cindy"),
-                ModelProperty(name="age", type="integer", value=24),
+                ModelProperty(name="name", value="Cindy"),
+                ModelProperty(name="age", value=24),
             ],
         )
         # update vertex

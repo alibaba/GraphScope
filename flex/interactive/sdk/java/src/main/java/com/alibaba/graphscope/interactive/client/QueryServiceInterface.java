@@ -18,6 +18,7 @@ package com.alibaba.graphscope.interactive.client;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.ServiceStatus;
 import com.alibaba.graphscope.interactive.models.StartServiceRequest;
+import com.alibaba.graphscope.interactive.models.StopServiceRequest;
 
 /**
  * Manage the query interface.
@@ -29,5 +30,5 @@ public interface QueryServiceInterface {
 
     Result<String> startService(StartServiceRequest service);
 
-    Result<String> stopService();
+    Result<String> stopService(StopServiceRequest graphId);
 }

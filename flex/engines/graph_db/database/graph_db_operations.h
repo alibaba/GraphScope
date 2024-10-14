@@ -108,12 +108,13 @@ class GraphDBOperations {
                              GraphDBSession& session);
   static Status updateEdge(std::vector<EdgeData>&& edge_data,
                            GraphDBSession& session);
-  static Result<rapidjson::Value> getEdge(std::vector<EdgeData>&& edge_data,
-                                          const std::string& property_name,
-                                          GraphDBSession& session);
+  static Result<rapidjson::Value> getEdge(
+      std::vector<EdgeData>&& edge_data, const std::string& property_name,
+      GraphDBSession& session, rapidjson::Document::AllocatorType& allocator);
   static Result<rapidjson::Value> getVertex(
       std::vector<VertexData>&& vertex_data,
-      const std::vector<std::string>& property_names, GraphDBSession& session);
+      const std::vector<std::string>& property_names, GraphDBSession& session,
+      rapidjson::Document::AllocatorType& allocator);
 };
 
 }  // namespace gs

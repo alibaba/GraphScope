@@ -18,6 +18,7 @@
 
 #include <rapidjson/document.h>
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
@@ -25,45 +26,78 @@
 
 namespace gs {
 
-inline void put_argument(gs::Encoder& encoder,
-                         const procedure::Argument& argument) {
-  auto& value = argument.value();
-  auto item_case = value.item_case();
-  switch (item_case) {
-  case common::Value::kI32:
-    encoder.put_int(value.i32());
-    break;
-  case common::Value::kI64:
-    encoder.put_long(value.i64());
-    break;
-  case common::Value::kF64:
-    encoder.put_double(value.f64());
-    break;
-  case common::Value::kStr:
-    encoder.put_string(value.str());
-    break;
-  default:
-    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
+template <size_t I, typename TUPLE_T, typename... ARGS>
+inline bool parse_input_argument_from_proto_impl(
+    TUPLE_T& tuple,
+    const google::protobuf::RepeatedPtrField<procedure::Argument>& args) {
+  if constexpr (I == sizeof...(ARGS)) {
+    return true;
+  } else {
+    auto& type = std::get<I>(tuple);
+    auto& argument = args.Get(I);
+    auto& value = argument.value();
+    auto item_case = value.item_case();
+    if (item_case == common::Value::kI32) {
+      if constexpr (std::is_same<int32_t,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
+        type = value.i32();
+      } else {
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
+        return false;
+      }
+    } else if (item_case == common::Value::kI64) {
+      if constexpr (std::is_same<int64_t,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
+        type = value.i64();
+      } else {
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
+        return false;
+      }
+    } else if (item_case == common::Value::kF64) {
+      if constexpr (std::is_same<double,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
+        type = value.f64();
+      } else {
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
+        return false;
+      }
+    } else if (item_case == common::Value::kStr) {
+      if constexpr (std::is_same<std::string,
+                                 std::tuple_element_t<I, TUPLE_T>>::value) {
+        type = value.str();
+      } else {
+        LOG(ERROR) << "Type mismatch: " << item_case << "at " << I;
+        return false;
+      }
+    } else {
+      LOG(ERROR) << "Not recognizable param type" << item_case;
+      return false;
+    }
+    return parse_input_argument_from_proto_impl<I + 1, TUPLE_T, ARGS...>(tuple,
+                                                                         args);
   }
 }
 
-inline bool parse_input_argument(gs::Decoder& raw_input,
-                                 gs::Encoder& argument_encoder) {
-  if (raw_input.size() == 0) {
+template <typename... ARGS>
+inline bool parse_input_argument_from_proto(std::tuple<ARGS...>& tuple,
+                                            std::string_view sv) {
+  if (sv.size() == 0) {
     VLOG(10) << "No arguments found in input";
     return true;
   }
   procedure::Query cur_query;
-  if (!cur_query.ParseFromArray(raw_input.data(), raw_input.size())) {
+  if (!cur_query.ParseFromArray(sv.data(), sv.size())) {
     LOG(ERROR) << "Fail to parse query from input content";
     return false;
   }
   auto& args = cur_query.arguments();
-  for (int32_t i = 0; i < args.size(); ++i) {
-    put_argument(argument_encoder, args[i]);
+  if (args.size() != sizeof...(ARGS)) {
+    LOG(ERROR) << "Arguments size mismatch: " << args.size() << " vs "
+               << sizeof...(ARGS);
+    return false;
   }
-  VLOG(10) << ", num args: " << args.size();
-  return true;
+  return parse_input_argument_from_proto_impl<0, std::tuple<ARGS...>, ARGS...>(
+      tuple, args);
 }
 
 class GraphDBSession;
@@ -110,9 +144,14 @@ bool deserialize_impl(TUPLE_T& tuple, const rapidjson::Value& json) {
 }
 
 template <typename... ARGS>
-bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
+bool parse_input_argument_from_json(std::tuple<ARGS...>& tuple,
+                                    std::string_view sv) {
   rapidjson::Document j;
   VLOG(10) << "parsing string: " << sv << ",size" << sv.size();
+  if (sv.empty()) {
+    LOG(INFO) << "No arguments found in input";
+    return sizeof...(ARGS) == 0;
+  }
   if (j.Parse(std::string(sv)).HasParseError()) {
     LOG(ERROR) << "Fail to parse json from input content";
     return false;
@@ -140,6 +179,27 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   }
 }
 
+template <typename... ARGS>
+bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
+  // Deserialize input argument from the payload. The last byte is the input
+  // format, could only be kCypherJson or kCypherProtoProcedure.
+  if (sv.empty()) {
+    return sizeof...(ARGS) == 0;
+  }
+  auto input_format = static_cast<uint8_t>(sv.back());
+  std::string_view payload(sv.data(), sv.size() - 1);
+  if (input_format ==
+      static_cast<uint8_t>(GraphDBSession::InputFormat::kCypherJson)) {
+    return parse_input_argument_from_json(tuple, payload);
+  } else if (input_format ==
+             static_cast<uint8_t>(
+                 GraphDBSession::InputFormat::kCypherProtoProcedure)) {
+    return parse_input_argument_from_proto(tuple, payload);
+  } else {
+    LOG(ERROR) << "Invalid input format: " << input_format;
+    return false;
+  }
+}
 // for cypher procedure
 template <typename... ARGS>
 class CypherReadAppBase : public ReadAppBase {
@@ -207,26 +267,6 @@ class CypherWriteAppBase : public WriteAppBase {
                                                std::tuple<ARGS...>& tuple) {
     return std::apply([this, &db](ARGS... args) { this->Query(db, args...); },
                       tuple);
-  }
-};
-
-// For internal cypher-gen procedure, with pb input and output
-// Codegen app should inherit from this class
-class CypherInternalPbWriteAppBase : public WriteAppBase {
- public:
-  AppType type() const override { return AppType::kCypherProcedure; }
-
-  virtual bool DoQuery(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
-
-  bool Query(GraphDBSession& db, Decoder& raw_input, Encoder& output) override {
-    std::vector<char> output_buffer;
-    gs::Encoder argument_encoder(output_buffer);
-    if (!parse_input_argument(raw_input, argument_encoder)) {
-      LOG(ERROR) << "Failed to parse input argument!";
-      return false;
-    }
-    gs::Decoder argument_decoder(output_buffer.data(), output_buffer.size());
-    return DoQuery(db, argument_decoder, output);
   }
 };
 

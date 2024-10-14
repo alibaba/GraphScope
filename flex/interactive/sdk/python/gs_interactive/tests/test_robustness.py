@@ -23,11 +23,18 @@ import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
-from gs_interactive.tests.conftest import (  # noqa: E402
-    call_procedure, create_procedure, delete_procedure,
-    import_data_to_full_modern_graph, import_data_to_partial_modern_graph,
-    import_data_to_vertex_only_modern_graph, run_cypher_test_suite,
-    start_service_on_graph, update_procedure)
+from gs_interactive.tests.conftest import call_procedure  # noqa: E402
+from gs_interactive.tests.conftest import create_procedure
+from gs_interactive.tests.conftest import delete_procedure
+from gs_interactive.tests.conftest import import_data_to_full_modern_graph
+from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
+from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
+from gs_interactive.tests.conftest import (
+    import_data_to_vertex_only_modern_graph_no_wait,
+)
+from gs_interactive.tests.conftest import run_cypher_test_suite
+from gs_interactive.tests.conftest import start_service_on_graph
+from gs_interactive.tests.conftest import update_procedure
 
 vertex_only_cypher_queries = [
     "MATCH(n) return count(n)",
@@ -172,6 +179,7 @@ def test_procedure_creation(interactive_session, neo4j_session, create_modern_gr
 
 def test_builtin_procedure(interactive_session, neo4j_session, create_modern_graph):
     print("[Test builtin procedure]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
     # Delete the builtin procedure should fail
     with pytest.raises(Exception):
         delete_procedure(interactive_session, create_modern_graph, "count_vertices")
@@ -193,4 +201,52 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         )
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
-    call_procedure(neo4j_session, create_modern_graph, "count_vertices", '"person"')
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "count_vertices",
+        '"person"',
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "pagerank",
+        '"person"',
+        '"knows"',
+        "0.85",
+        "100",
+        "0.000001",
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "k_neighbors",
+        '"person"',
+        "1L",
+        "2",
+    )
+
+    call_procedure(
+        neo4j_session,
+        create_modern_graph,
+        "shortest_path_among_three",
+        '"person"',
+        "1L",
+        '"person"',
+        "2L",
+        '"person"',
+        "4L",
+    )
+
+
+def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
+    print("[Test list jobs]")
+    import_data_to_vertex_only_modern_graph_no_wait(
+        interactive_session, create_vertex_only_modern_graph
+    )
+    resp = interactive_session.delete_graph(create_vertex_only_modern_graph)
+
+    resp = interactive_session.list_jobs()
+    assert resp.is_ok() and len(resp.get_value()) > 0
