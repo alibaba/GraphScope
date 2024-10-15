@@ -245,7 +245,6 @@ RTAny RTAny::from_string(const std::string& str) {
 
 RTAny RTAny::from_string(const std::string_view& str) {
   RTAny ret;
-  LOG(INFO) << "from_string: " << str;
   ret.type_ = RTAnyType::kStringValue;
   ret.value_.str_val = str;
   return ret;

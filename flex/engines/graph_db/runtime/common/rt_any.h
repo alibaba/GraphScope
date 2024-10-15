@@ -157,7 +157,6 @@ class RTAnyType {
     kF64Value,
     kBoolValue,
     kStringValue,
-    kStdStringValue,
     kVertexSetValue,
     kStringSetValue,
     kUnknown,
@@ -176,7 +175,6 @@ class RTAnyType {
   static const RTAnyType kF64Value;
   static const RTAnyType kBoolValue;
   static const RTAnyType kStringValue;
-  static const RTAnyType kStdStringValue;
   static const RTAnyType kVertexSetValue;
   static const RTAnyType kStringSetValue;
   static const RTAnyType kUnknown;
