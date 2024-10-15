@@ -13,6 +13,9 @@ $ kubectl describe svc {your-release-name} -graphscope-interactive-frontend | gr
 #192.168.0.44:7687
 # the first is the gremlin endpoint(currently not supported)
 # the second is the cypher endpoint
+$ kubectl describe svc {your-release-name} -graphscope-interactive-engine | grep "Endpoints:" | awk -F' ' '{print $2}'
+# the first is the admin port
+# the second is the query port
 ```
 
 Delete the deployment via 
@@ -105,3 +108,88 @@ hiactorWorkerNum: 1 # currently only support 1.
 hiactorTimeout: 240000
 
 ```
+
+
+## TODO
+
+- TODO: Support cypher/gremlin queries.
+
+## Installtion
+
+```bash
+helm install lei-test -f settings.yaml . --set odps.access.id="",odps.access.key="",odps.endpoint=""
+export NODE_IP=$(ktl -n kubetask get pod lei-test-graphscope-interactive-primary-0 -o jsonpath="{.status.podIP}")
+export ADMIN_PORT=$(ktl get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[0].ports[0].containerPort}')
+export QUERY_PORT=$(ktl get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[1].ports[0].containerPort}')
+export ADMIN_ENDPOINT=${NODE_IP}:${ADMIN_PORT}
+export QUERY_ENDPOINT=${NODE_IP}:${QUERY_PORT}
+echo "ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}"
+echo "QUERY_ENDPOINT: ${QUERY_ENDPOINT}"
+```
+
+```bash
+export NODE_IP=$(118f -n kubetask get pod lei-test-graphscope-interactive-primary-0 -o jsonpath="{.status.podIP}")
+export ADMIN_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[0].ports[0].containerPort}')
+export QUERY_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[1].ports[0].containerPort}')
+```
+
+```bash
+# to verify the helm char
+helm install lei-test --dry-run
+```
+
+
+## add resty.http to nginx images
+
+A customized nginx image
+
+
+## nginx conf
+<!-- # nginx.conf: |  
+#   events {}
+#   http {
+#       server {  
+#           listen 10000;  
+#           server_name localhost;  
+
+#           location / {  
+#               {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
+#               {{- $replicaCount := .Values.backend.replicas }}  
+#               {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
+#               {{- $port := .Values.secondary.service.queryPort }}
+#               proxy_pass http://{{ printf "%s-0.%s:%d" $baseName $serviceName $port }};  
+#               {{- range $i := until $replicaCount }}  
+#               mirror /mirror{{ $i }} {
+#                   internal;
+#                   proxy_pass http://{{ printf "%s-%d.%s:%d%s" $baseName (add $i 1) $serviceName $port $request_uri }};
+#               }
+#               {{- end }}
+#               location /mirror {{ printf "%s-%d.%s:%d" $baseName (add $i 1) $serviceName $port }};
+#               {{- end }}
+#               proxy_set_header Host $host;  
+#               proxy_set_header X-Real-IP $remote_addr;  
+#               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+#               proxy_set_header X-Forwarded-Proto $scheme;  
+#           }
+#       }
+#   } -->
+
+        # - name: admin-nginx
+        #   image: {{ include "graphscope-interactive.nginx.image" . }} 
+        #   imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
+        #   # command: ["sleep", "infinity"]
+        #   ports:
+        #     - name: admin-port 
+        #       containerPort: {{ .Values.frontend.service.adminPort }}
+        #   {{- if .Values.resources.frontend }}
+        #   resources: {{- toYaml .Values.resources.frontend | nindent 12 }}
+        #   {{- end }}
+        #   volumeMounts:
+        #     - name: workspace
+        #       mountPath: {{ .Values.workspace }}
+        #     - name: config
+        #       mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+        #       subPath: engine_config.yaml
+        #     - name: admin-nginx-config  
+        #       mountPath: /etc/nginx/nginx.conf  
+        #       subPath: nginx.conf
