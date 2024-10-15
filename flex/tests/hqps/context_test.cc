@@ -152,7 +152,7 @@ int main() {
 
     col1->resize(limit);
     for (size_t i = 0; i < limit; ++i) {
-      col1->set_value(i, (int32_t) (i));
+      col1->set_value(i, (int32_t)(i));
     }
     {
       int32_t res = 0;
@@ -205,7 +205,7 @@ int main() {
     col1->resize(limit);
     col2->resize(limit);
     for (size_t i = 0; i < limit; ++i) {
-      col1->set_value(i, (int32_t) (i));
+      col1->set_value(i, (int32_t)(i));
       col2->set_value(i, (int64_t) i);
     }
     {
@@ -298,10 +298,10 @@ int main() {
       col1->resize(limit);
       col2->resize(limit);
       for (size_t i = 0; i < limit; i += 2) {
-        col1->set_value(i, (int32_t) (i));
+        col1->set_value(i, (int32_t)(i));
       }
       for (size_t i = 1; i < limit; i += 2) {
-        col2->set_value(i, (int32_t) (i));
+        col2->set_value(i, (int32_t)(i));
       }
       // test two label vertex set prop getter.
       auto ref_col1 = std::make_shared<gs::TypedRefColumn<int32_t>>(*col1);
