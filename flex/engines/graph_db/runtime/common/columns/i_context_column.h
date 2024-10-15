@@ -111,30 +111,6 @@ class SigColumn<std::string_view> : public ISigColumn {
 };
 
 template <>
-class SigColumn<std::string> : public ISigColumn {
- public:
-  SigColumn(const std::vector<std::string>& data) {
-    std::unordered_map<std::string, size_t> table;
-    sig_list_.reserve(data.size());
-    for (auto& str : data) {
-      auto iter = table.find(str);
-      if (iter == table.end()) {
-        size_t idx = table.size();
-        table.emplace(str, idx);
-        sig_list_.push_back(idx);
-      } else {
-        sig_list_.push_back(iter->second);
-      }
-    }
-  }
-  ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
-
- private:
-  std::vector<size_t> sig_list_;
-};
-
-template <>
 class SigColumn<std::set<std::string>> : public ISigColumn {
  public:
   SigColumn(const std::vector<std::set<std::string>>& data) {

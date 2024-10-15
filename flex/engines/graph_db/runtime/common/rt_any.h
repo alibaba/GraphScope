@@ -230,7 +230,6 @@ union RTAnyValue {
   const std::vector<vid_t>* vset;
   const std::set<std::string>* str_set;
   std::string_view str_val;
-  StringPtr std_str_val;
   Path p;
   Tuple t;
   List list;
@@ -281,7 +280,6 @@ class RTAny {
   const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& as_edge() const;
   const std::set<std::string>& as_string_set() const;
   std::string_view as_string() const;
-  std::string as_std_string() const;
   const std::vector<vid_t>& as_vertex_list() const;
   Path as_path() const;
   Tuple as_tuple() const;
@@ -363,17 +361,6 @@ struct TypedConverter<std::string_view> {
   static std::string_view typed_from_string(const std::string& str) {
     return std::string_view(str.data(), str.size());
   }
-};
-
-template <>
-struct TypedConverter<std::string> {
-  static RTAnyType type() { return RTAnyType::kStringValue; }
-  static std::string to_typed(const RTAny& val) { return val.as_std_string(); }
-  static RTAny from_typed(const std::string& val) {
-    return RTAny::from_string(val);
-  }
-  static const std::string name() { return "string"; }
-  static std::string typed_from_string(const std::string& str) { return str; }
 };
 
 template <>

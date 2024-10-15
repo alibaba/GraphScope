@@ -14,7 +14,6 @@
  */
 
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
-#include "flex/proto_generated_gie/results.pb.h"
 
 namespace gs {
 

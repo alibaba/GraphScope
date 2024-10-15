@@ -53,15 +53,9 @@ std::shared_ptr<IContextColumn> any_vec_to_column(
     }
     return builder.finish();
   } else if (first == RTAnyType::kStringValue) {
-    ValueColumnBuilder<std::string> builder;
+    ValueColumnBuilder<std::string_view> builder;
     for (auto& any : any_vec) {
-      builder.push_back_opt(std::string(any.as_string()));
-    }
-    return builder.finish();
-  } else if (first == RTAnyType::kStdStringValue) {
-    ValueColumnBuilder<std::string> builder;
-    for (auto& any : any_vec) {
-      builder.push_back_opt(any.as_std_string());
+      builder.push_back_elem(any);
     }
     return builder.finish();
   } else {
