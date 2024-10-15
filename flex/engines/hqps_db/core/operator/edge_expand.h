@@ -465,10 +465,11 @@ class EdgeExpand {
     CHECK(edge_triplets.size() > 0);
     // result_set_t is the type of calling EdgeExpandV with cur_vertex_set
     // and edge_triplets[i]
-    using result_set_t = decltype(
-        EdgeExpandV(graph, cur_vertex_set, direction, edge_triplets[0][2],
-                    edge_triplets[0][1], std::move(edge_filter))
-            .first);
+    using result_set_t =
+        decltype(EdgeExpandV(graph, cur_vertex_set, direction,
+                             edge_triplets[0][2], edge_triplets[0][1],
+                             std::move(edge_filter))
+                     .first);
     using result_pair_t = std::pair<result_set_t, std::vector<offset_t>>;
     std::vector<result_pair_t> result_pairs;
     for (size_t i = 0; i < edge_triplets.size(); ++i) {
