@@ -88,7 +88,7 @@ void grin_destroy_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {}
  */
 GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g,
                                                 GRIN_VERTEX_PROPERTY vp) {
-  return (GRIN_DATATYPE) (vp >> 16);
+  return (GRIN_DATATYPE)(vp >> 16);
 }
 
 int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
