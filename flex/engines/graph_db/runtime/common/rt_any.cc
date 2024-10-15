@@ -35,6 +35,8 @@ const RTAnyType RTAnyType::kBoolValue =
     RTAnyType(RTAnyType::RTAnyTypeImpl::kBoolValue);
 const RTAnyType RTAnyType::kStringValue =
     RTAnyType(RTAnyType::RTAnyTypeImpl::kStringValue);
+const RTAnyType RTAnyType::kStdStringValue =
+    RTAnyType(RTAnyType::RTAnyTypeImpl::kStdStringValue);
 const RTAnyType RTAnyType::kVertexSetValue =
     RTAnyType(RTAnyType::RTAnyTypeImpl::kVertexSetValue);
 const RTAnyType RTAnyType::kStringSetValue =
@@ -140,6 +142,8 @@ RTAny::RTAny(const RTAny& rhs) : type_(rhs.type_) {
     value_.vertex = rhs.value_.vertex;
   } else if (type_ == RTAnyType::kStringValue) {
     value_.str_val = rhs.value_.str_val;
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    value_.std_str_val = rhs.value_.std_str_val;
   } else if (type_ == RTAnyType::kNull) {
     // do nothing
   } else if (type_ == RTAnyType::kTuple) {
@@ -167,6 +171,8 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
     value_.vertex = rhs.value_.vertex;
   } else if (type_ == RTAnyType::kStringValue) {
     value_.str_val = rhs.value_.str_val;
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    value_.std_str_val = rhs.value_.std_str_val;
   } else if (type_ == RTAnyType::kTuple) {
     value_.t = rhs.value_.t.dup();
   } else if (type_ == RTAnyType::kList) {
@@ -238,13 +244,14 @@ RTAny RTAny::from_int32(int v) {
 
 RTAny RTAny::from_string(const std::string& str) {
   RTAny ret;
-  ret.type_ = RTAnyType::kStringValue;
-  ret.value_.str_val = std::string_view(str);
+  ret.type_ = RTAnyType::kStdStringValue;
+  ret.value_.std_str_val = str;
   return ret;
 }
 
 RTAny RTAny::from_string(const std::string_view& str) {
   RTAny ret;
+  LOG(INFO) << "from_string: " << str;
   ret.type_ = RTAnyType::kStringValue;
   ret.value_.str_val = str;
   return ret;
@@ -361,6 +368,17 @@ std::string_view RTAny::as_string() const {
   }
 }
 
+std::string RTAny::as_std_string() const {
+  if (type_ == RTAnyType::kStdStringValue) {
+    return *(value_.std_str_val.ptr);
+  } else if (type_ == RTAnyType::kUnknown) {
+    return std::string();
+  } else {
+    LOG(FATAL) << "unexpected type" << static_cast<int>(type_.type_enum_);
+    return std::string();
+  }
+}
+
 List RTAny::as_list() const {
   CHECK(type_ == RTAnyType::kList);
   return value_.list;
@@ -444,6 +462,8 @@ bool RTAny::operator<(const RTAny& other) const {
 
   } else if (type_ == RTAnyType::kStringValue) {
     return value_.str_val < other.value_.str_val;
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    return *(value_.std_str_val.ptr) < *(other.value_.std_str_val.ptr);
   } else if (type_ == RTAnyType::kDate32) {
     return value_.i64_val < other.value_.i64_val;
   } else if (type_ == RTAnyType::kF64Value) {
@@ -470,6 +490,8 @@ bool RTAny::operator==(const RTAny& other) const {
     return value_.i32_val == other.value_.i32_val;
   } else if (type_ == RTAnyType::kStringValue) {
     return value_.str_val == other.value_.str_val;
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    return *(value_.std_str_val.ptr) == *(other.value_.std_str_val.ptr);
   } else if (type_ == RTAnyType::kVertex) {
     return value_.vertex == other.value_.vertex;
   } else if (type_ == RTAnyType::kDate32) {
@@ -554,6 +576,9 @@ void RTAny::sink_impl(common::Value* value) const {
     value->set_i64(value_.i64_val);
   } else if (type_ == RTAnyType::kStringValue) {
     value->set_str(value_.str_val.data(), value_.str_val.size());
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    value->set_str(value_.std_str_val.ptr->data(),
+                   value_.std_str_val.ptr->size());
   } else if (type_ == RTAnyType::kI32Value) {
     value->set_i32(value_.i32_val);
   } else if (type_ == RTAnyType::kStringSetValue) {
@@ -742,6 +767,8 @@ std::string RTAny::to_string() const {
     return std::to_string(value_.i64_val);
   } else if (type_ == RTAnyType::kStringValue) {
     return std::string(value_.str_val);
+  } else if (type_ == RTAnyType::kStdStringValue) {
+    return std::string(*(value_.std_str_val.ptr));
   } else if (type_ == RTAnyType::kI32Value) {
     return std::to_string(value_.i32_val);
   } else if (type_ == RTAnyType::kVertex) {

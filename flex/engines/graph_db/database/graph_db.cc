@@ -428,9 +428,14 @@ void GraphDB::initApps(
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {
     auto path = path_and_index.second.first;
+    auto name = path_and_index.first;
     auto index = path_and_index.second.second;
-    if (registerApp(path, index)) {
-      ++valid_plugins;
+    if (!Schema::IsBuiltinPlugin(name)) {
+      if (registerApp(path, index)) {
+        ++valid_plugins;
+      }
+    } else {
+      valid_plugins++;
     }
   }
   LOG(INFO) << "Successfully registered stored procedures : " << valid_plugins

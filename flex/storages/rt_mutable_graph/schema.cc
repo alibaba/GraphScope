@@ -1322,6 +1322,19 @@ bool Schema::EmplacePlugins(
     }
   }
 
+  // Emplace the built-in plugins
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_COUNT_VERTICES_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_COUNT_VERTICES_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_PAGERANK_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_PAGERANK_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_TVSP_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_TVSP_PLUGIN_ID));
   LOG(INFO) << "Load " << plugin_name_to_path_and_id_.size() << " plugins";
   return true;
 }

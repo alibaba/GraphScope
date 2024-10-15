@@ -24,6 +24,11 @@ uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid) {
   return global_id.global_id;
 }
 
+std::pair<label_t, vid_t> decode_unique_vertex_id(uint64_t unique_id) {
+  return std::pair{GlobalId::get_label_id(unique_id),
+                   GlobalId::get_vid(unique_id)};
+}
+
 uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id) {
   uint32_t unique_edge_label_id = src_label_id;
