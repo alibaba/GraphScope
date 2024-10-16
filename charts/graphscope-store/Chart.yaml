@@ -24,8 +24,8 @@ version: 0.29.0
 dependencies:
 - condition: kafka.enabled
   name: kafka
-  repository: https://charts.bitnami.com/bitnami
+  repository: oci://registry-1.docker.io/bitnamicharts
   version: "20.0.6"
 - name: common
-  repository: https://charts.bitnami.com/bitnami
+  repository: oci://registry-1.docker.io/bitnamicharts
   version: 2.x.x
