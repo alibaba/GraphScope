@@ -25,6 +25,6 @@ edge_mapping_source_vertex_mappings_inner_column_dict = edge_mapping_source_vert
 # create an instance of EdgeMappingSourceVertexMappingsInnerColumn from a dict
 edge_mapping_source_vertex_mappings_inner_column_from_dict = EdgeMappingSourceVertexMappingsInnerColumn.from_dict(edge_mapping_source_vertex_mappings_inner_column_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

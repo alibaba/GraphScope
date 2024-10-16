@@ -1,8 +1,9 @@
 <map id="gs::AppBase" name="gs::AppBase">
-<area shape="rect" id="node1" title=" " alt="" coords="147,5,249,32"/>
-<area shape="rect" id="node2" href="$classgs_1_1ReadAppBase.html" title=" " alt="" coords="51,80,185,107"/>
-<area shape="rect" id="node4" href="$classgs_1_1WriteAppBase.html" title=" " alt="" coords="232,80,369,107"/>
-<area shape="rect" id="node3" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="5,155,185,181"/>
-<area shape="rect" id="node5" href="$classgs_1_1HQPSAdhocWriteApp.html" title="HQPSAdhocWriteApp is a builtin, proxy app used to evaluate adhoc write query." alt="" coords="209,155,392,181"/>
-<area shape="rect" id="node6" href="$classgs_1_1ServerApp.html" title=" " alt="" coords="417,155,529,181"/>
+<area shape="rect" id="node1" title=" " alt="" coords="313,5,416,32"/>
+<area shape="rect" id="node2" href="$classgs_1_1ReadAppBase.html" title=" " alt="" coords="195,80,329,107"/>
+<area shape="rect" id="node5" href="$classgs_1_1WriteAppBase.html" title=" " alt="" coords="399,80,536,107"/>
+<area shape="rect" id="node3" href="$classgs_1_1AdhocReadApp.html" title=" " alt="" coords="5,155,148,181"/>
+<area shape="rect" id="node4" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="172,155,352,181"/>
+<area shape="rect" id="node6" href="$classgs_1_1HQPSAdhocWriteApp.html" title="HQPSAdhocWriteApp is a builtin, proxy app used to evaluate adhoc write query." alt="" coords="376,155,559,181"/>
+<area shape="rect" id="node7" href="$classgs_1_1ServerApp.html" title=" " alt="" coords="583,155,695,181"/>
 </map>

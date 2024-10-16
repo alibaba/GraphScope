@@ -29,6 +29,6 @@ get_vertex_type_dict = get_vertex_type_instance.to_dict()
 # create an instance of GetVertexType from a dict
 get_vertex_type_from_dict = GetVertexType.from_dict(get_vertex_type_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

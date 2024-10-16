@@ -26,6 +26,6 @@ get_property_meta_dict = get_property_meta_instance.to_dict()
 # create an instance of GetPropertyMeta from a dict
 get_property_meta_from_dict = GetPropertyMeta.from_dict(get_property_meta_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

@@ -10,10 +10,8 @@ Interactive relies solely on Docker and does not have a strong dependency on the
 
 We offer a command line tool called `gsctl`, which allows you to install, start, and manage Interactive services.
 
-The Interactive service is deployed in a docker container, ensuring compatibility across different runtime environments.
-
 ```{note}
-
+The Interactive service is deployed in a docker container, ensuring compatibility across different runtime environments.
 ```
 
 ```bash
@@ -57,23 +55,11 @@ If you have customized the ports when deploying Interactive, remember to replace
 
 Remember to copy the environment exporting commands and execute them, the Interactive SDKs relies on these environment variables to establish connections to Interactive Services.
 
+For more information on deploying Interactive, refer to [Deployment](./deployment.md). If you're looking to customize your deployment, such as deploying directly from source code, see [Deploy From Source Code](./deployment.md#deploy-from-source-code).
+
 To explore the usage of GraphScope Interactive, please follow [getting_started](./getting_started).
 
-## Customizing Ports
 
-By default, Interactive will launch Coordinator Service on `8080`, Interactive Meta Service on `7777`, Interactive Cypher service on `7687` and Stored Procedure Service on `10000`. You can customize these ports.
-
-```bash
-gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 \ 
-                --cypher-port 7688 --storedproc-port 10001
-```
-
-<!-- By default, the gremlin service is disabled. To enable it, add the option `--gremlin-port 8183`.
-
-```bash
-gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 \ 
-                --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
-``` -->
 
 ## Service Accessibility
 

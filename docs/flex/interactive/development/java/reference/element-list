@@ -1,0 +1,4 @@
+com.alibaba.graphscope.interactive.client
+com.alibaba.graphscope.interactive.client.common
+com.alibaba.graphscope.interactive.client.impl
+com.alibaba.graphscope.interactive.client.utils
