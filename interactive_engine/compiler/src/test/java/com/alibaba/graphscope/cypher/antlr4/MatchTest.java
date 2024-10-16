@@ -25,6 +25,8 @@ import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -54,7 +56,7 @@ public class MatchTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
-                        "schema/modern.json",
+                        "config/modern/graph.yaml",
                         "statistics/modern_statistics.json",
                         optimizer.getGlogueHolder());
     }
@@ -606,5 +608,45 @@ public class MatchTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[person], opt=[VERTEX])",
                 after3.explain().trim());
+    }
+
+    @Test
+    public void shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(builder, irMeta);
+        LogicalPlan logicalPlan =
+                logicalPlanVisitor.visit(
+                        new CypherAntlr4Parser()
+                                .parse(
+                                        "MATCH\n"
+                                            + "(person1:person {id:"
+                                            + " $person1Id})-[:knows]->(person2:person {id:"
+                                            + " $person2Id})\n"
+                                            + "CALL shortestPath.dijkstra.stream(\n"
+                                            + "  person1, person2, 'KNOWS', 'BOTH', 'weight', 5)\n"
+                                            + "WITH person1, person2, totalCost\n"
+                                            + "WHERE person1.id <> $person2Id\n"
+                                            + "Return person1.id AS person1Id, totalCost AS"
+                                            + " totalWeight;"));
+        RelNode after =
+                optimizer.optimize(
+                        logicalPlan.getRegularQuery(), new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(person1Id=[person1.id], totalWeight=[totalCost],"
+                    + " isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[<>(person1.id, ?1)])\n"
+                    + "    GraphLogicalProject(person1=[person1], person2=[person2],"
+                    + " totalCost=[totalCost], isAppend=[false])\n"
+                    + "      GraphProcedureCall(procedure=[shortestPath.dijkstra.stream(person1,"
+                    + " person2, _UTF-8'KNOWS', _UTF-8'BOTH', _UTF-8'weight', 5)])\n"
+                    + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], fusedFilter=[[=(_.id, ?1)]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
     }
 }

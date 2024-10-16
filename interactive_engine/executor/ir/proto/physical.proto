@@ -24,6 +24,7 @@ import "expr.proto";
 import "schema.proto";
 import "type.proto";
 import "algebra.proto";
+import "stored_procedure.proto";
 import "google/protobuf/wrappers.proto";
 
 // To project a relation on certain attributes or further their properties
@@ -277,6 +278,10 @@ message Repartition {
 // A dummy node to delegate a source opr for multiple scan cases.
 message Root {}
 
+message ProcedureCall {
+  procedure.Query query = 1; 
+}
+
 message PhysicalOpr {
   message Operator {
     oneof op_kind {
@@ -300,6 +305,7 @@ message PhysicalOpr {
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
+      ProcedureCall procedure_call = 33;
     }
   }
   message MetaData {

@@ -19,6 +19,38 @@ stored_procedures:
     query: "MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate} RETURN n.firstName AS name LIMIT 10;"
     library: libquery_ic2.so
     encoding: string
+  - name: shortestPath.dijkstra.stream
+    description: ""
+    type: x_cypher
+    params:
+      - name: person1
+        type:
+          primitive_type: DT_ANY
+      - name: person2
+        type:
+          primitive_type: DT_ANY
+      - name: label
+        type:
+          string:
+            long_text:
+      - name: direction
+        type:
+          string:
+            long_text:
+      - name: property
+        type:
+          string:
+            long_text:
+      - name: iterations
+        type:
+          primitive_type: DT_SIGNED_INT32
+    returns:
+      - name: totalCost
+        type:
+          primitive_type: DT_FLOAT
+    query: ""
+    library: libquery_shortest_path.so
+    encoding: string
 schema:
   vertex_types:
     - type_name: person

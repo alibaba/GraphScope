@@ -59,7 +59,10 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     @Override
     public LogicalPlan visitOC_Query(CypherGSParser.OC_QueryContext ctx) {
         if (ctx.oC_RegularQuery() != null) {
-            GraphBuilderVisitor builderVisitor = new GraphBuilderVisitor(this.builder);
+            GraphBuilderVisitor builderVisitor =
+                    new GraphBuilderVisitor(
+                            this.builder,
+                            () -> new ProcedureCallVisitor(this.builder, this.irMeta));
             RelNode regularQuery =
                     builderVisitor.visitOC_RegularQuery(ctx.oC_RegularQuery()).build();
             Map<Integer, String> map = builderVisitor.getExpressionVisitor().getDynamicParams();

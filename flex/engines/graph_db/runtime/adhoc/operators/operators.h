@@ -78,6 +78,11 @@ bl::result<Context> eval_join(const physical::Join& opr, Context&& ctx,
 
 bl::result<Context> eval_limit(const algebra::Limit& opr, Context&& ctx);
 
+bl::result<Context> eval_procedure_call(std::vector<int32_t> alias,
+                                        const physical::ProcedureCall& opr,
+                                        const ReadTransaction& txn,
+                                        Context&& ctx);
+
 void eval_sink(const Context& ctx, const ReadTransaction& txn, Encoder& output);
 
 }  // namespace runtime
