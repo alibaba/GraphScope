@@ -214,6 +214,15 @@ double GraphDBSession::eval_duration() const {
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 
+AppBase* GraphDBSession::GetApp(const std::string& app_name) {
+  auto& app_name_to_path_index = db_.schema().GetPlugins();
+  if (app_name_to_path_index.count(app_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << app_name;
+    return nullptr;
+  }
+  return GetApp(app_name_to_path_index.at(app_name).second);
+}
+
 #define likely(x) __builtin_expect(!!(x), 1)
 
 AppBase* GraphDBSession::GetApp(const std::string& app_name) {
