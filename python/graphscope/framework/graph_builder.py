@@ -159,11 +159,11 @@ def load_from(
         generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed
             in third column. This feature is for cooperating with interactive engine.
             If you only need to work with analytical engine, set it to False. Defaults to True.
-        retain_oid (bool, optional): Whether to keep the orignal ID column as the last column of vertex table.
+        retain_oid (bool, optional): Whether to keep the original ID column as the last column of vertex table.
             This feature is for cooperating with interactive engine.
             If you only need to work with analytical engine, set it to False. Defaults to True.
         vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
-        compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.
+        compact_edges (bool, optional): Compact edges (CSR) using variant and delta encoding. Defaults to False.
             Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause
             at most 10%~20% performance degeneration in some algorithms.
         use_perfect_hash (bool, optional): Use perfect hashmap in vertex map to optimize the memory usage.
