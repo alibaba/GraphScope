@@ -160,6 +160,44 @@ class Scan {
                                                  int alias, bool scan_oid);
 };
 
+bl::result<Context> Scan::find_vertex_with_id(const ReadTransaction& txn,
+                                              label_t label, const Any& pk,
+                                              int alias, bool scan_oid) {
+  if (scan_oid) {
+    SLVertexColumnBuilder builder(label);
+    vid_t vid;
+    if (txn.GetVertexIndex(label, pk, vid)) {
+      builder.push_back_opt(vid);
+    }
+    Context ctx;
+    ctx.set(alias, builder.finish());
+    return ctx;
+  } else {
+    SLVertexColumnBuilder builder(label);
+    vid_t vid{};
+    int64_t gid{};
+    if (pk.type == PropertyType::kInt64) {
+      gid = pk.AsInt64();
+    } else if (pk.type == PropertyType::kInt32) {
+      gid = pk.AsInt32();
+    } else {
+      LOG(ERROR) << "Unsupported primary key type " << pk.type;
+      RETURN_UNSUPPORTED_ERROR("Unsupported primary key type" +
+                               pk.type.ToString());
+    }
+    if (GlobalId::get_label_id(gid) == label) {
+      vid = GlobalId::get_vid(gid);
+    } else {
+      LOG(ERROR) << "Global id " << gid << " does not match label " << label;
+      return Context();
+    }
+    builder.push_back_opt(vid);
+    Context ctx;
+    ctx.set(alias, builder.finish());
+    return ctx;
+  }
+}
+
 }  // namespace runtime
 
 }  // namespace gs

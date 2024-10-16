@@ -1,4 +1,3 @@
-add_subdirectory(runtime)
 file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
   	                             "${CMAKE_CURRENT_SOURCE_DIR}/database/*.cc"
                                      "${CMAKE_CURRENT_SOURCE_DIR}/app/builtin/*.cc")
@@ -7,7 +6,7 @@ add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
 
 target_include_directories(flex_graph_db PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 target_link_libraries(flex_graph_db flex_rt_mutable_graph flex_utils ${LIBGRAPELITE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(flex_graph_db flex_plan_proto runtime_adhoc)
+target_link_libraries(flex_graph_db flex_plan_proto)
 install_flex_target(flex_graph_db)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
@@ -30,5 +29,6 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/hqps_app.h
         DESTINATION include/flex/engines/graph_db/app)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/adhoc_app.h
         DESTINATION include/flex/engines/graph_db/app)
+
 
 
