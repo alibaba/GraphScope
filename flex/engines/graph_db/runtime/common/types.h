@@ -80,6 +80,40 @@ struct LabelTriplet {
   label_t edge_label;
 };
 
+uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid) {
+  // encode label_id and vid to a unique vid
+  GlobalId global_id(label_id, vid);
+  return global_id.global_id;
+}
+
+uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
+                                label_t edge_label_id) {
+  uint32_t unique_edge_label_id = src_label_id;
+  static constexpr int num_bits = sizeof(label_t) * 8;
+  unique_edge_label_id = unique_edge_label_id << num_bits;
+  unique_edge_label_id = unique_edge_label_id | dst_label_id;
+  unique_edge_label_id = unique_edge_label_id << num_bits;
+  unique_edge_label_id = unique_edge_label_id | edge_label_id;
+  return unique_edge_label_id;
+}
+
+int64_t encode_unique_edge_id(uint32_t label_id, vid_t src, vid_t dst) {
+  // We assume label_id is only used by 24 bits.
+  int64_t unique_edge_id = label_id;
+  static constexpr int num_bits = sizeof(int64_t) * 8 - sizeof(uint32_t) * 8;
+  unique_edge_id = unique_edge_id << num_bits;
+  // bitmask for top 44 bits set to 1
+  int64_t bitmask = 0xFFFFFFFFFF000000;
+  // 24 bit | 20 bit | 20 bit
+  if (bitmask & (int64_t) src || bitmask & (int64_t) dst) {
+    LOG(ERROR) << "src or dst is too large to be encoded in 20 bits: " << src
+               << " " << dst;
+  }
+  unique_edge_id = unique_edge_id | (src << 20);
+  unique_edge_id = unique_edge_id | dst;
+  return unique_edge_id;
+}
+
 }  // namespace runtime
 
 }  // namespace gs
