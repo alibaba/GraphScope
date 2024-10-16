@@ -975,9 +975,12 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
           // use the previous thread num
           auto thread_num = db.SessionNum();
+          auto kafka_endpoint = db.GetKafkaEndpoint();
           db.Close();
           VLOG(10) << "Closed the previous graph db";
-          if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
+          gs::GraphDBConfig config(schema_value, data_dir_value, thread_num);
+          config.kafka_endpoint = kafka_endpoint;
+          if (!db.Open(config).ok()) {
             LOG(ERROR) << "Fail to load graph from data directory: "
                        << data_dir_value;
             if (!prev_lock) {  // If the graph is not locked before, and we

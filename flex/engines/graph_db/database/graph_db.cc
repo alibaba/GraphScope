@@ -138,7 +138,13 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     allocator_strategy = MemoryStrategy::kHugepagePrefered;
   }
 
-  openWalAndCreateContexts(data_dir, allocator_strategy);
+  if (!config.kafka_endpoint.empty()) {
+    kafka_endpoint_ = config.kafka_endpoint;
+    openWalAndCreateContexts(data_dir, allocator_strategy,
+                             config.kafka_endpoint);
+  } else {
+    openWalAndCreateContexts(data_dir, allocator_strategy);
+  }
 
   if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);
@@ -292,6 +298,8 @@ const GraphDBSession& GraphDB::GetSession(int thread_id) const {
 
 int GraphDB::SessionNum() const { return thread_num_; }
 
+const std::string& GraphDB::GetKafkaEndpoint() const { return kafka_endpoint_; }
+
 void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
   last_compaction_ts_ = ts;
 }
@@ -438,7 +446,8 @@ void GraphDB::initApps(
 }
 
 void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
-                                       MemoryStrategy allocator_strategy) {
+                                       MemoryStrategy allocator_strategy,
+                                       std::string kafka_endpoint) {
   std::string wal_dir_path = wal_dir(data_dir);
   if (!std::filesystem::exists(wal_dir_path)) {
     std::filesystem::create_directory(wal_dir_path);
@@ -459,7 +468,7 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
   ingestWals(wal_files, data_dir, thread_num_);
 
   for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].logger.open(wal_dir_path, i);
+    contexts_[i].logger.open(wal_dir_path, i, kafka_endpoint);
   }
 
   initApps(graph_.schema().GetPlugins());

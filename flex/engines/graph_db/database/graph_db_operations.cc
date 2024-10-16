@@ -453,6 +453,7 @@ Status GraphDBOperations::singleInsertVertex(
             "Fail to create edge; All inserts are rollbacked");
       }
     }
+    LOG(INFO) << "Commit singleInsertVertex";
     txnWrite.Commit();
   } catch (std::exception& e) {
     return Status(StatusCode::INVALID_SCHEMA, e.what());

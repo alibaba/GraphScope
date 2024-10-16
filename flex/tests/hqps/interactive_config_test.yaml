@@ -1,6 +1,6 @@
 log_level: INFO
 verbose_level: 10
-default_graph: modern_graph
+default_graph: 2
 compute_engine:
   type: hiactor
   workers:

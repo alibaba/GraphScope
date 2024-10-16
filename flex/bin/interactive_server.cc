@@ -147,7 +147,8 @@ int main(int argc, char** argv) {
       "memory-level,m", bpo::value<unsigned>()->default_value(1),
       "memory allocation strategy")("enable-adhoc-handler",
                                     bpo::value<bool>()->default_value(false),
-                                    "whether to enable adhoc handler");
+                                    "whether to enable adhoc handler")(
+      "kafka-endpoint", bpo::value<std::string>(), "kafka endpoint");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -240,8 +241,10 @@ int main(int argc, char** argv) {
       gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
     }
     db.Close();
-    auto load_res =
-        db.Open(schema_res.value(), data_path, service_config.shard_num);
+    gs::GraphDBConfig config(schema_res.value(), data_path,
+                             service_config.shard_num);
+    config.kafka_endpoint = vm["kafka-endpoint"].as<std::string>();
+    auto load_res = db.Open(config);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
                  << load_res.status().error_message();

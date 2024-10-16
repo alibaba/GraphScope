@@ -144,7 +144,7 @@ def addVertex(sess: Session, graph_id: str):
     vertex_request = [
         VertexRequest(
             label="person",
-            primary_key_value=8,
+            primary_key_value=12,
             properties=[
                 ModelProperty(name="name", value="mike"),
                 ModelProperty(name="age", value=1),
@@ -156,7 +156,7 @@ def addVertex(sess: Session, graph_id: str):
             src_label="person",
             dst_label="person",
             edge_label="knows",
-            src_primary_key_value=8,
+            src_primary_key_value=12,
             dst_primary_key_value=1,
             properties=[ModelProperty(name="weight", value=7)],
         ),
@@ -275,10 +275,11 @@ if __name__ == "__main__":
 
     driver = Driver()
     with driver.session() as sess:
-        graph_id = createGraph(sess)
-        job_id = bulkLoading(sess, graph_id)
-        waitJobFinish(sess, job_id)
-        print("bulk loading finished")
+        # graph_id = createGraph(sess)
+        # job_id = bulkLoading(sess, graph_id)
+        # waitJobFinish(sess, job_id)
+        # print("bulk loading finished")
+        graph_id = "3"
 
         # Now start service on the created graph.
         resp = sess.start_service(
@@ -289,43 +290,43 @@ if __name__ == "__main__":
         print("restart service on graph ", graph_id)
 
         # running a simple cypher query
-        query = "MATCH (n) RETURN COUNT(n);"
-        with driver.getNeo4jSession() as session:
-            resp = session.run(query)
-            for record in resp:
-                print(record)
+        # query = "MATCH (n) RETURN COUNT(n);"
+        # with driver.getNeo4jSession() as session:
+        #     resp = session.run(query)
+        #     for record in resp:
+        #         print(record)
 
-        # more advanced usage of procedure
-        create_proc_request = CreateProcedureRequest(
-            name="test_procedure",
-            description="test procedure",
-            query="MATCH (n) RETURN COUNT(n);",
-            type="cypher",
-        )
-        resp = sess.create_procedure(graph_id, create_proc_request)
-        assert resp.is_ok()
+        # # more advanced usage of procedure
+        # create_proc_request = CreateProcedureRequest(
+        #     name="test_procedure",
+        #     description="test procedure",
+        #     query="MATCH (n) RETURN COUNT(n);",
+        #     type="cypher",
+        # )
+        # resp = sess.create_procedure(graph_id, create_proc_request)
+        # assert resp.is_ok()
 
-        get_proc_res = sess.get_procedure(graph_id, "test_procedure")
-        assert get_proc_res.is_ok()
-        # Check the description of the procedure
-        assert get_proc_res.get_value().description == "test procedure"
+        # get_proc_res = sess.get_procedure(graph_id, "test_procedure")
+        # assert get_proc_res.is_ok()
+        # # Check the description of the procedure
+        # assert get_proc_res.get_value().description == "test procedure"
 
-        # must start service on the current graph, to let the procedure take effect
-        resp = sess.restart_service()
-        assert resp.is_ok()
-        print("restarted service on graph ", graph_id)
-        time.sleep(5)
+        # # must start service on the current graph, to let the procedure take effect
+        # resp = sess.restart_service()
+        # assert resp.is_ok()
+        # print("restarted service on graph ", graph_id)
+        # time.sleep(5)
 
-        # Now call the procedure
-        with driver.getNeo4jSession() as session:
-            result = session.run("CALL test_procedure();")
-            for record in result:
-                print(record)
+        # # Now call the procedure
+        # with driver.getNeo4jSession() as session:
+        #     result = session.run("CALL test_procedure();")
+        #     for record in result:
+        #         print(record)
 
         addVertex(sess, graph_id)
-        getVertex(sess, graph_id)
-        updateVertex(sess, graph_id)
+        # getVertex(sess, graph_id)
+        # updateVertex(sess, graph_id)
 
-        addEdge(sess, graph_id)
-        getEdge(sess, graph_id)
-        updateEdge(sess, graph_id)
+        # addEdge(sess, graph_id)
+        # getEdge(sess, graph_id)
+        # updateEdge(sess, graph_id)

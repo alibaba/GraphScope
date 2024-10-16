@@ -65,6 +65,7 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
+  std::string kafka_endpoint;
 };
 
 class GraphDB {
@@ -149,6 +150,8 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
+  const std::string& GetKafkaEndpoint() const;
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -160,7 +163,8 @@ class GraphDB {
           plugins);
 
   void openWalAndCreateContexts(const std::string& data_dir_path,
-                                MemoryStrategy allocator_strategy);
+                                MemoryStrategy allocator_strategy,
+                                std::string kafka_endpoint = "");
 
   void showAppMetrics() const;
 
@@ -185,6 +189,8 @@ class GraphDB {
   timestamp_t last_compaction_ts_;
   bool compact_thread_running_ = false;
   std::thread compact_thread_;
+
+  std::string kafka_endpoint_;
 };
 
 }  // namespace gs

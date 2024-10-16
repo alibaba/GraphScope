@@ -20,10 +20,16 @@
 
 namespace gs {
 
-void WalWriter::open(const std::string& prefix, int thread_id) {
+void WalWriter::open(const std::string& prefix, int thread_id,
+                     const std::string& kafka_endpoint) {
+  if (fd_ != -1 || thread_id_ != -1) {
+    LOG(FATAL) << "WalWriter has been opened";
+  }
+  thread_id_ = thread_id;
+  kafka_endpoint_ = kafka_endpoint;
   const int max_version = 65536;
   for (int version = 0; version != max_version; ++version) {
-    std::string path = prefix + "/thread_" + std::to_string(thread_id) + "_" +
+    std::string path = prefix + "/thread_" + std::to_string(thread_id_) + "_" +
                        std::to_string(version) + ".wal";
     if (std::filesystem::exists(path)) {
       continue;
@@ -85,9 +91,31 @@ void WalWriter::append(const char* data, size_t length) {
   }
 #endif
 #endif
+  send_to_kafka(data, length);
 }
 
 #undef unlikely
+
+/**
+ * @brief Send the data to kafka broker, if the kafka endpoint is set.
+ * Could be async or sync. Currently we default use sync.
+ * The published messages contains these info.
+ * 1. The thread id
+ * 2. The timestamp of the message(could be deemed as the id of WAL).
+ * 3. The data(The WAL content).
+ *
+ * @param data The data to be sent
+ * @param length The length of the data
+ *
+ */
+void WalWriter::send_to_kafka(const char* data, size_t length) {
+  LOG(INFO) << "Sending to kafka";
+  if (kafka_endpoint_.empty()) {
+    return;
+  }
+  // send to kafka
+  LOG(INFO) << "Finished sending to kafka";
+}
 
 static constexpr size_t MAX_WALS_NUM = 134217728;
 

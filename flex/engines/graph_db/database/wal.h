@@ -51,19 +51,23 @@ class WalWriter {
   static constexpr size_t TRUNC_SIZE = 1ul << 30;
 
  public:
-  WalWriter() : fd_(-1), file_size_(0), file_used_(0) {}
+  WalWriter() : thread_id_(-1), fd_(-1), file_size_(0), file_used_(0) {}
   ~WalWriter() { close(); }
 
-  void open(const std::string& prefix, int thread_id);
+  void open(const std::string& prefix, int thread_id, const std::string& kafka_endpoint = "");
 
   void close();
 
   void append(const char* data, size_t length);
 
  private:
+  void send_to_kafka(const char* data, size_t length);
+  
+  int thread_id_;
   int fd_;
   size_t file_size_;
   size_t file_used_;
+  std::string kafka_endpoint_;
 };
 
 class WalsParser {
