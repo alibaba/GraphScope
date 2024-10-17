@@ -21,7 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -29,6 +29,7 @@ import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -58,6 +59,23 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
             @Nullable String alias,
             AliasNameWithId startAlias) {
         return new GraphLogicalGetV(cluster, hints, input, opt, tableConfig, alias, startAlias);
+    }
+
+    public static GraphLogicalGetV create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            GraphOpt.GetV opt,
+            TableConfig tableConfig,
+            @Nullable String alias,
+            AliasNameWithId startAlias,
+            ImmutableList<RexNode> filters) {
+        GraphLogicalGetV getV =
+                GraphLogicalGetV.create(cluster, hints, input, opt, tableConfig, alias, startAlias);
+        if (ObjectUtils.isNotEmpty(filters)) {
+            getV.setFilters(filters);
+        }
+        return getV;
     }
 
     public GraphOpt.GetV getOpt() {

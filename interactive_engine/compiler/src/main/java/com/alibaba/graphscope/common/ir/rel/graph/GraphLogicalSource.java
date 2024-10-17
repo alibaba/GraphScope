@@ -19,13 +19,14 @@ package com.alibaba.graphscope.common.ir.rel.graph;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexNode;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -52,6 +53,25 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
             TableConfig tableConfig,
             @Nullable String alias) {
         return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias);
+    }
+
+    public static GraphLogicalSource create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            GraphOpt.Source opt,
+            TableConfig tableConfig,
+            @Nullable String alias,
+            RexNode uniqueKeyFilters,
+            ImmutableList<RexNode> filters) {
+        GraphLogicalSource source =
+                GraphLogicalSource.create(cluster, hints, opt, tableConfig, alias);
+        if (uniqueKeyFilters != null) {
+            source.setUniqueKeyFilters(uniqueKeyFilters);
+        }
+        if (ObjectUtils.isNotEmpty(filters)) {
+            source.setFilters(filters);
+        }
+        return source;
     }
 
     public GraphOpt.Source getOpt() {
