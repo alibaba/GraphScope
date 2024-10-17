@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,6 +55,13 @@ public class BITest {
                         "schema/ldbc_schema_exp_hierarchy.json",
                         "statistics/ldbc30_hierarchy_statistics.json",
                         optimizer.getGlogueHolder());
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        if (optimizer != null) {
+            optimizer.close();
+        }
     }
 
     @Test
