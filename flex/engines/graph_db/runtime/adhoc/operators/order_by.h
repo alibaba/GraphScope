@@ -24,12 +24,13 @@ namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 class GeneralComparer {
  public:
   GeneralComparer() : keys_num_(0) {}
   ~GeneralComparer() {}
 
-  void add_keys(Var&& key, bool asc) {
+  void add_keys(Var<GRAPH_IMPL>&& key, bool asc) {
     keys_.emplace_back(std::move(key));
     order_.push_back(asc);
     ++keys_num_;
@@ -52,13 +53,15 @@ class GeneralComparer {
   }
 
  private:
-  std::vector<Var> keys_;
+  std::vector<Var<GRAPH_IMPL>> keys_;
   std::vector<bool> order_;
   size_t keys_num_;
 };
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
-                                  const ReadTransaction& txn, Context&& ctx) {
+                                  const GraphInterface<GRAPH_IMPL>& txn,
+                                  Context&& ctx) {
   int lower = 0;
   int upper = std::numeric_limits<int>::max();
   if (opr.has_limit()) {
@@ -66,11 +69,11 @@ bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
     upper = std::min(upper, static_cast<int>(opr.limit().upper()));
   }
 
-  GeneralComparer cmp;
+  GeneralComparer<GRAPH_IMPL> cmp;
   int keys_num = opr.pairs_size();
   for (int i = 0; i < keys_num; ++i) {
     const algebra::OrderBy_OrderingPair& pair = opr.pairs(i);
-    Var v(txn, ctx, pair.key(), VarType::kPathVar);
+    Var<GRAPH_IMPL> v(txn, ctx, pair.key(), VarType::kPathVar);
     CHECK(pair.order() == algebra::OrderBy_OrderingPair_Order::
                               OrderBy_OrderingPair_Order_ASC ||
           pair.order() == algebra::OrderBy_OrderingPair_Order::
@@ -81,7 +84,8 @@ bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
     cmp.add_keys(std::move(v), order);
   }
 
-  OrderBy::order_by_with_limit<GeneralComparer>(txn, ctx, cmp, lower, upper);
+  OrderBy::order_by_with_limit<GeneralComparer<GRAPH_IMPL>>(ctx, cmp, lower,
+                                                            upper);
   return ctx;
 }
 

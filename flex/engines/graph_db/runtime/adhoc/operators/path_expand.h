@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/path_expand.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/utils.h"
+#include "flex/engines/graph_db/runtime/common/operators/path_expand.h"
 
 namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_path_expand_v(
-    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
+    const physical::PathExpand& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params,
     const physical::PhysicalOpr_MetaData& meta, int alias) {
   CHECK(opr.has_start_tag());
   int start_tag = opr.start_tag().value();
@@ -67,9 +68,10 @@ bl::result<Context> eval_path_expand_v(
   return ctx;
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_path_expand_p(
-    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
+    const physical::PathExpand& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params,
     const physical::PhysicalOpr_MetaData& meta, int alias) {
   CHECK(opr.has_start_tag());
   int start_tag = opr.start_tag().value();
