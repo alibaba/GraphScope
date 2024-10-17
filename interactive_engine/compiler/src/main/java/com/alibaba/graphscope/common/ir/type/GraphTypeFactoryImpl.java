@@ -22,8 +22,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.charset.Charset;
@@ -95,6 +96,46 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
             return leastRestrictiveForArbitraryMapType(types);
         }
         return super.leastRestrictive(types);
+    }
+
+    /**
+     * reimplement the {@link RelDataTypeFactoryImpl#leastRestrictiveStructuredType(List)} method
+     * to maintain the original alias id in the input types
+     * @param types
+     * @return
+     */
+    @Override
+    protected @Nullable RelDataType leastRestrictiveStructuredType(final List<RelDataType> types) {
+        final RelDataType type0 = types.get(0);
+        if (!type0.isStruct()) {
+            return null;
+        }
+        final int fieldCount = type0.getFieldCount();
+        boolean isNullable = false;
+        for (RelDataType type : types) {
+            if (!type.isStruct()) {
+                return null;
+            }
+            if (type.getFieldList().size() != fieldCount) {
+                return null;
+            }
+            isNullable |= type.isNullable();
+        }
+        List<RelDataTypeField> fields = Lists.newArrayList();
+        for (int j = 0; j < fieldCount; ++j) {
+            final int k = j;
+            RelDataType type =
+                    leastRestrictive(Util.transform(types, t -> t.getFieldList().get(k).getType()));
+            if (type == null) {
+                return null;
+            }
+            fields.add(
+                    new RelDataTypeFieldImpl(
+                            type0.getFieldList().get(j).getName(),
+                            type0.getFieldList().get(j).getIndex(),
+                            type));
+        }
+        return new RelRecordType(StructKind.FULLY_QUALIFIED, fields, isNullable);
     }
 
     // re-implement lease-restrictive type inference for arbitrary map types
