@@ -28,14 +28,18 @@ namespace runtime {
 
 class Dedup {
  public:
-  static void dedup(const ReadTransaction& txn, Context& ctx,
+  template <typename GRAPH_IMPL>
+  static void dedup(const GraphInterface<GRAPH_IMPL>& txn, Context& ctx,
                     const std::vector<size_t>& cols);
-  static void dedup(const ReadTransaction& txn, Context& ctx,
+
+  template <typename GRAPH_IMPL>
+  static void dedup(const GraphInterface<GRAPH_IMPL>& txn, Context& ctx,
                     const std::vector<size_t>& cols,
                     const std::vector<std::function<RTAny(size_t)>>& vars);
 };
 
-void Dedup::dedup(const ReadTransaction& txn, Context& ctx,
+template <typename GRAPH_IMPL>
+void Dedup::dedup(const GraphInterface<GRAPH_IMPL>& txn, Context& ctx,
                   const std::vector<size_t>& cols) {
   size_t row_num = ctx.row_num();
   std::vector<size_t> offsets;
@@ -111,7 +115,8 @@ void Dedup::dedup(const ReadTransaction& txn, Context& ctx,
   ctx.reshuffle(offsets);
 }
 
-void Dedup::dedup(const ReadTransaction& txn, Context& ctx,
+template <typename GRAPH_IMPL>
+void Dedup::dedup(const GraphInterface<GRAPH_IMPL>& txn, Context& ctx,
                   const std::vector<size_t>& cols,
                   const std::vector<std::function<RTAny(size_t)>>& vars) {
   std::set<std::string> set;

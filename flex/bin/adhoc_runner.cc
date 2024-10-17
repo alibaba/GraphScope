@@ -76,13 +76,15 @@ void load_params(const std::string& filename,
 }
 
 gs::runtime::Context eval_plan(
-    const physical::PhysicalPlan& plan, gs::ReadTransaction& txn,
+    const physical::PhysicalPlan& plan,
+    gs::runtime::GraphInterface<gs::ReadTransaction>& graph_interface,
     const std::map<std::string, std::string>& params) {
   gs::runtime::Context ctx;
+
   {
     ctx = bl::try_handle_all(
-        [&plan, &txn, &params]() {
-          return gs::runtime::runtime_eval(plan, txn, params);
+        [&plan, &graph_interface, &params]() {
+          return gs::runtime::runtime_eval(plan, graph_interface, params);
         },
         [&ctx](const gs::Status& err) {
           LOG(FATAL) << "Error in execution: " << err.error_message();
@@ -170,6 +172,7 @@ int main(int argc, char** argv) {
   std::string req_file = vm["query-file"].as<std::string>();
   std::string query = read_pb(req_file);
   auto txn = db.GetReadTransaction();
+  gs::runtime::GraphInterface<gs::ReadTransaction> graph_interface(txn);
   std::vector<std::map<std::string, std::string>> map;
   load_params(vm["params_file"].as<std::string>(), map);
   size_t params_num = map.size();
@@ -185,29 +188,29 @@ int main(int argc, char** argv) {
   double t1 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
+    auto ctx = eval_plan(pb, graph_interface, m);
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx, graph_interface, output);
   }
   t1 += grape::GetCurrentTime();
 
   double t2 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
+    auto ctx = eval_plan(pb, graph_interface, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx, graph_interface, output);
   }
   t2 += grape::GetCurrentTime();
 
   double t3 = -grape::GetCurrentTime();
   for (int i = 0; i < query_num; ++i) {
     auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
+    auto ctx = eval_plan(pb, graph_interface, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::eval_sink(ctx, graph_interface, output);
   }
   t3 += grape::GetCurrentTime();
 

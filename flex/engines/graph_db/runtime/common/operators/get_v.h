@@ -58,11 +58,10 @@ bl::result<std::vector<label_t>> extract_labels(
 }
 class GetV {
  public:
-  template <typename PRED_T>
-  static bl::result<Context> get_vertex_from_edges(const ReadTransaction& txn,
-                                                   Context&& ctx,
-                                                   const GetVParams& params,
-                                                   const PRED_T& pred) {
+  template <typename PRED_T, typename GRAPH_IMPL>
+  static bl::result<Context> get_vertex_from_edges(
+      const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
+      const GetVParams& params, const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
     auto col = ctx.get(params.tag);
     if (col->column_type() == ContextColumnType::kPath) {
@@ -354,8 +353,8 @@ class GetV {
         std::to_string(static_cast<int>(column->edge_column_type())));
   }
 
-  template <typename PRED_T>
-  static Context get_vertex_from_vertices(const ReadTransaction& txn,
+  template <typename PRED_T, typename GRAPH_IMPL>
+  static Context get_vertex_from_vertices(const GraphInterface<GRAPH_IMPL>& txn,
                                           Context&& ctx,
                                           const GetVParams& params,
                                           const PRED_T& pred) {

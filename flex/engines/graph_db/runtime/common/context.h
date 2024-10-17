@@ -55,7 +55,8 @@ class Context {
 
   void desc(const std::string& info = "") const;
 
-  void show(const ReadTransaction& txn) const;
+  template <typename GRAPH_IMPL>
+  void show(const GraphInterface<GRAPH_IMPL>& txn) const;
 
   void generate_idx_col(int idx);
 
@@ -241,7 +242,8 @@ void Context::desc(const std::string& info) const {
   LOG(INFO) << "\thead: " << ((head == nullptr) ? "NULL" : head->column_info());
 }
 
-void Context::show(const ReadTransaction& txn) const {
+template <typename GRAPH_IMPL>
+void Context::show(const GraphInterface<GRAPH_IMPL>& txn) const {
   size_t rn = row_num();
   size_t cn = col_num();
   for (size_t ri = 0; ri < rn; ++ri) {

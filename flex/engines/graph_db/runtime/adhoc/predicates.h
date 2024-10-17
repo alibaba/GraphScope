@@ -25,8 +25,10 @@ namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 struct GeneralPathPredicate {
-  GeneralPathPredicate(const ReadTransaction& txn, const Context& ctx,
+  GeneralPathPredicate(const GraphInterface<GRAPH_IMPL>& txn,
+                       const Context& ctx,
                        const std::map<std::string, std::string>& params,
                        const common::Expression& expr)
       : expr_(txn, ctx, params, expr, VarType::kPathVar) {}
@@ -36,11 +38,13 @@ struct GeneralPathPredicate {
     return val.as_bool();
   }
 
-  Expr expr_;
+  Expr<GRAPH_IMPL> expr_;
 };
 
+template <typename GRAPH_IMPL>
 struct GeneralVertexPredicate {
-  GeneralVertexPredicate(const ReadTransaction& txn, const Context& ctx,
+  GeneralVertexPredicate(const GraphInterface<GRAPH_IMPL>& txn,
+                         const Context& ctx,
                          const std::map<std::string, std::string>& params,
                          const common::Expression& expr)
       : expr_(txn, ctx, params, expr, VarType::kVertexVar) {}
@@ -50,11 +54,12 @@ struct GeneralVertexPredicate {
     return val.as_bool();
   }
 
-  Expr expr_;
+  Expr<GRAPH_IMPL> expr_;
 };
-
+template <typename GRAPH_IMPL>
 struct GeneralEdgePredicate {
-  GeneralEdgePredicate(const ReadTransaction& txn, const Context& ctx,
+  GeneralEdgePredicate(const GraphInterface<GRAPH_IMPL>& txn,
+                       const Context& ctx,
                        const std::map<std::string, std::string>& params,
                        const common::Expression& expr)
       : expr_(txn, ctx, params, expr, VarType::kEdgeVar) {}
@@ -65,7 +70,7 @@ struct GeneralEdgePredicate {
     return val.as_bool();
   }
 
-  Expr expr_;
+  Expr<GRAPH_IMPL> expr_;
 };
 
 struct DummyVertexPredicate {

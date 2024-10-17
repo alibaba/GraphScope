@@ -30,15 +30,15 @@ struct ScanParams {
 };
 class Scan {
  public:
-  template <typename PRED_T>
-  static bl::result<Context> scan_vertex(const ReadTransaction& txn,
+  template <typename PRED_T, typename GRAPH_IMPL>
+  static bl::result<Context> scan_vertex(const GraphInterface<GRAPH_IMPL>& txn,
                                          const ScanParams& params,
                                          const PRED_T& predicate) {
     Context ctx;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
       SLVertexColumnBuilder builder(label);
-      vid_t vnum = txn.GetVertexNum(label);
+      vid_t vnum = txn.VertexNum(label);
       for (vid_t vid = 0; vid != vnum; ++vid) {
         if (predicate(label, vid)) {
           builder.push_back_opt(vid);
@@ -49,7 +49,7 @@ class Scan {
       MLVertexColumnBuilder builder;
 
       for (auto label : params.tables) {
-        vid_t vnum = txn.GetVertexNum(label);
+        vid_t vnum = txn.VertexNum(label);
         for (vid_t vid = 0; vid != vnum; ++vid) {
           if (predicate(label, vid)) {
             builder.push_back_vertex(std::make_pair(label, vid));
@@ -58,14 +58,14 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish());
     } else {
-      LOG(ERROR) << "No vertex labels in scan_vertex";
+      LOG(ERROR) << "No vertex labels in scan_vertex: " << params.tables.size();
       RETURN_BAD_REQUEST_ERROR("No valid vertex labels in scan_vertex");
     }
     return ctx;
   }
 
-  template <typename PRED_T>
-  static Context filter_gids(const ReadTransaction& txn,
+  template <typename PRED_T, typename GRAPH_IMPL>
+  static Context filter_gids(const GraphInterface<GRAPH_IMPL>& txn,
                              const ScanParams& params, const PRED_T& predicate,
                              const std::vector<int64_t>& gids) {
     Context ctx;
@@ -95,8 +95,8 @@ class Scan {
     return ctx;
   }
 
-  template <typename PRED_T, typename KEY_T>
-  static Context filter_oids(const ReadTransaction& txn,
+  template <typename PRED_T, typename KEY_T, typename GRAPH_IMPL>
+  static Context filter_oids(const GraphInterface<GRAPH_IMPL>& txn,
                              const ScanParams& params, const PRED_T& predicate,
                              const std::vector<KEY_T>& oids) {
     Context ctx;
@@ -131,9 +131,10 @@ class Scan {
   }
 
   // EXPR() is a function that returns the oid of the vertex
-  template <typename EXPR>
-  static Context find_vertex(const ReadTransaction& txn, label_t label,
-                             const EXPR& expr, int alias, bool scan_oid) {
+  template <typename EXPR, typename GRAPH_IMPL>
+  static Context find_vertex(const GraphInterface<GRAPH_IMPL>& txn,
+                             label_t label, const EXPR& expr, int alias,
+                             bool scan_oid) {
     Context ctx;
     SLVertexColumnBuilder builder(label);
     if (scan_oid) {
@@ -155,14 +156,16 @@ class Scan {
     return ctx;
   }
 
-  static bl::result<Context> find_vertex_with_id(const ReadTransaction& txn,
-                                                 label_t label, const Any& pk,
-                                                 int alias, bool scan_oid);
+  template <typename GRAPH_IMPL>
+  static bl::result<Context> find_vertex_with_id(
+      const GraphInterface<GRAPH_IMPL>& txn, label_t label, const Any& pk,
+      int alias, bool scan_oid);
 };
 
-bl::result<Context> Scan::find_vertex_with_id(const ReadTransaction& txn,
-                                              label_t label, const Any& pk,
-                                              int alias, bool scan_oid) {
+template <typename GRAPH_IMPL>
+bl::result<Context> Scan::find_vertex_with_id(
+    const GraphInterface<GRAPH_IMPL>& txn, label_t label, const Any& pk,
+    int alias, bool scan_oid) {
   if (scan_oid) {
     SLVertexColumnBuilder builder(label);
     vid_t vid;

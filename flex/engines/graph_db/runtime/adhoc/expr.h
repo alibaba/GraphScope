@@ -24,22 +24,36 @@ namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 class Expr {
  public:
-  Expr(const ReadTransaction& txn, const Context& ctx,
+  Expr(const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
        const std::map<std::string, std::string>& params,
-       const common::Expression& expr, VarType var_type);
+       const common::Expression& expr, VarType var_type) {
+    expr_ = parse_expression(txn, ctx, params, expr, var_type);
+  }
 
-  RTAny eval_path(size_t idx) const;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const;
+  RTAny eval_path(size_t idx) const {
+    RTAny ret = expr_->eval_path(idx);
+    return ret;
+  }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const {
+    return expr_->eval_vertex(label, v, idx);
+  }
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx) const;
-  RTAny eval_path(size_t idx, int) const;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const;
+                  const Any& data, size_t idx) const {
+    return expr_->eval_edge(label, src, dst, data, idx);
+  }
+  RTAny eval_path(size_t idx, int) const { return expr_->eval_path(idx, 0); }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const {
+    return expr_->eval_vertex(label, v, idx, 0);
+  }
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx, int) const;
+                  const Any& data, size_t idx, int) const {
+    return expr_->eval_edge(label, src, dst, data, idx, 0);
+  }
 
-  RTAnyType type() const;
+  RTAnyType type() const { return expr_->type(); }
 
   std::shared_ptr<IContextColumnBuilder> builder() const {
     return expr_->builder();
@@ -50,40 +64,6 @@ class Expr {
  private:
   std::unique_ptr<ExprBase> expr_;
 };
-
-Expr::Expr(const ReadTransaction& txn, const Context& ctx,
-           const std::map<std::string, std::string>& params,
-           const common::Expression& expr, VarType var_type) {
-  expr_ = parse_expression(txn, ctx, params, expr, var_type);
-}
-
-RTAny Expr::eval_path(size_t idx) const {
-  RTAny ret = expr_->eval_path(idx);
-  return ret;
-}
-
-RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  return expr_->eval_vertex(label, v, idx);
-}
-RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                      const Any& data, size_t idx) const {
-  return expr_->eval_edge(label, src, dst, data, idx);
-}
-
-RTAny Expr::eval_path(size_t idx, int) const {
-  return expr_->eval_path(idx, 0);
-}
-
-RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx, int) const {
-  return expr_->eval_vertex(label, v, idx, 0);
-}
-
-RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                      const Any& data, size_t idx, int) const {
-  return expr_->eval_edge(label, src, dst, data, idx, 0);
-}
-
-RTAnyType Expr::type() const { return expr_->type(); }
 
 }  // namespace runtime
 

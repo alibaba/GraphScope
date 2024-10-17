@@ -20,6 +20,7 @@
 #include <stack>
 #include "flex/proto_generated_gie/expr.pb.h"
 
+#include "flex/engines/graph_db/runtime/adhoc/graph_interface.h"
 #include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 
@@ -81,10 +82,10 @@ class ConstFalseExpr : public ExprBase {
   RTAnyType type() const override { return RTAnyType::kBoolValue; }
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class WithInExpr : public ExprBase {
  public:
-  WithInExpr(const ReadTransaction& txn, const Context& ctx,
+  WithInExpr(const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
              std::unique_ptr<ExprBase>&& key, const common::Value& array)
       : key_(std::move(key)) {
     if constexpr (std::is_same_v<T, int64_t>) {
@@ -171,21 +172,32 @@ class WithInExpr : public ExprBase {
   std::vector<T> container_;
 };
 
+template <typename GRAPH_IMPL>
 class VariableExpr : public ExprBase {
  public:
-  VariableExpr(const ReadTransaction& txn, const Context& ctx,
-               const common::Variable& pb, VarType var_type);
+  VariableExpr(const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
+               const common::Variable& pb, VarType var_type)
+      : var_(txn, ctx, pb, var_type) {}
 
-  RTAny eval_path(size_t idx) const override;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override;
+  RTAny eval_path(size_t idx) const override { return var_.get(idx); }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    return var_.get_vertex(label, v, idx);
+  }
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx) const override;
-  RTAnyType type() const override;
+                  const Any& data, size_t idx) const override {
+    return var_.get_edge(label, src, dst, data, idx);
+  }
+  RTAnyType type() const override { return var_.type(); }
 
-  RTAny eval_path(size_t idx, int) const override;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override;
+  RTAny eval_path(size_t idx, int) const override { return var_.get(idx, 0); }
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
+    return var_.get_vertex(label, v, idx, 0);
+  }
+
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx, int) const override;
+                  const Any& data, size_t idx, int) const override {
+    return var_.get_edge(label, src, dst, data, idx, 0);
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return var_.builder();
@@ -194,7 +206,7 @@ class VariableExpr : public ExprBase {
   bool is_optional() const override { return var_.is_optional(); }
 
  private:
-  Var var_;
+  Var<GRAPH_IMPL> var_;
 };
 
 class UnaryLogicalExpr : public ExprBase {
@@ -241,6 +253,7 @@ class LogicalExpr : public ExprBase {
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx, int) const override {
     LOG(FATAL) << "not implemented";
+    return RTAny();
   }
 
   RTAnyType type() const override;
@@ -401,37 +414,6 @@ class MapExpr : public ExprBase {
   std::vector<std::unique_ptr<ExprBase>> value_exprs;
   mutable std::vector<std::vector<RTAny>> values;
 };
-std::unique_ptr<ExprBase> parse_expression(
-    const ReadTransaction& txn, const Context& ctx,
-    const std::map<std::string, std::string>& params,
-    const common::Expression& expr, VarType var_type);
-
-VariableExpr::VariableExpr(const ReadTransaction& txn, const Context& ctx,
-                           const common::Variable& pb, VarType var_type)
-    : var_(txn, ctx, pb, var_type) {}
-RTAny VariableExpr::eval_path(size_t idx) const { return var_.get(idx); }
-RTAny VariableExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  return var_.get_vertex(label, v, idx);
-}
-RTAny VariableExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                              const Any& data, size_t idx) const {
-  return var_.get_edge(label, src, dst, data, idx);
-}
-
-RTAny VariableExpr::eval_path(size_t idx, int) const {
-  return var_.get(idx, 0);
-}
-
-RTAny VariableExpr::eval_vertex(label_t label, vid_t v, size_t idx, int) const {
-  return var_.get_vertex(label, v, idx, 0);
-}
-
-RTAny VariableExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                              const Any& data, size_t idx, int) const {
-  return var_.get_edge(label, src, dst, data, idx, 0);
-}
-
-RTAnyType VariableExpr::type() const { return var_.type(); }
 
 LogicalExpr::LogicalExpr(std::unique_ptr<ExprBase>&& lhs,
                          std::unique_ptr<ExprBase>&& rhs, common::Logical logic)
@@ -897,12 +879,10 @@ static inline int get_proiority(const common::ExprOpr& opr) {
   }
   return 16;
 }
-static std::unique_ptr<ExprBase> parse_expression_impl(
-    const ReadTransaction& txn, const Context& ctx,
-    const std::map<std::string, std::string>& params,
-    const common::Expression& expr, VarType var_type);
+
+template <typename GRAPH_IMPL>
 static std::unique_ptr<ExprBase> build_expr(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     std::stack<common::ExprOpr>& opr_stack, VarType var_type) {
   while (!opr_stack.empty()) {
@@ -920,7 +900,8 @@ static std::unique_ptr<ExprBase> build_expr(
       return std::make_unique<ConstExpr>(parse_param(opr.param(), params));
     }
     case common::ExprOpr::kVar: {
-      return std::make_unique<VariableExpr>(txn, ctx, opr.var(), var_type);
+      return std::make_unique<VariableExpr<GRAPH_IMPL>>(txn, ctx, opr.var(),
+                                                        var_type);
     }
     case common::ExprOpr::kLogical: {
       if (opr.logical() == common::Logical::WITHIN) {
@@ -930,16 +911,16 @@ static std::unique_ptr<ExprBase> build_expr(
         opr_stack.pop();
         CHECK(lhs.has_var());
         CHECK(rhs.has_const_());
-        auto key =
-            std::make_unique<VariableExpr>(txn, ctx, lhs.var(), var_type);
+        auto key = std::make_unique<VariableExpr<GRAPH_IMPL>>(
+            txn, ctx, lhs.var(), var_type);
         if (key->type() == RTAnyType::kI64Value) {
-          return std::make_unique<WithInExpr<int64_t>>(txn, ctx, std::move(key),
-                                                       rhs.const_());
+          return std::make_unique<WithInExpr<int64_t, GRAPH_IMPL>>(
+              txn, ctx, std::move(key), rhs.const_());
         } else if (key->type() == RTAnyType::kI32Value) {
-          return std::make_unique<WithInExpr<int32_t>>(txn, ctx, std::move(key),
-                                                       rhs.const_());
+          return std::make_unique<WithInExpr<int32_t, GRAPH_IMPL>>(
+              txn, ctx, std::move(key), rhs.const_());
         } else if (key->type() == RTAnyType::kStringValue) {
-          return std::make_unique<WithInExpr<std::string>>(
+          return std::make_unique<WithInExpr<std::string, GRAPH_IMPL>>(
               txn, ctx, std::move(key), rhs.const_());
         } else {
           LOG(FATAL) << "not support";
@@ -989,8 +970,8 @@ static std::unique_ptr<ExprBase> build_expr(
       auto op = opr.vars();
       std::vector<std::unique_ptr<ExprBase>> exprs;
       for (int i = 0; i < op.keys_size(); ++i) {
-        exprs.push_back(
-            std::make_unique<VariableExpr>(txn, ctx, op.keys(i), var_type));
+        exprs.push_back(std::make_unique<VariableExpr<GRAPH_IMPL>>(
+            txn, ctx, op.keys(i), var_type));
       }
       return std::make_unique<TupleExpr>(std::move(exprs));
       // LOG(FATAL) << "not support" << opr.DebugString();
@@ -1009,9 +990,9 @@ static std::unique_ptr<ExprBase> build_expr(
           auto str = any.as_string();
           keys_vec.push_back(std::string(str));
         }
-        exprs.emplace_back(
-            std::make_unique<VariableExpr>(txn, ctx, val,
-                                           var_type));  // just for parse
+        exprs.emplace_back(std::make_unique<VariableExpr<GRAPH_IMPL>>(
+            txn, ctx, val,
+            var_type));  // just for parse
       }
       if (exprs.size() > 0) {
         return std::make_unique<MapExpr>(std::move(keys_vec), std::move(exprs));
@@ -1025,8 +1006,9 @@ static std::unique_ptr<ExprBase> build_expr(
   }
   return nullptr;
 }
+template <typename GRAPH_IMPL>
 static std::unique_ptr<ExprBase> parse_expression_impl(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
   std::stack<common::ExprOpr> opr_stack;
@@ -1097,8 +1079,10 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
   }
   return build_expr(txn, ctx, params, opr_stack2, var_type);
 }
+
+template <typename GRAPH_IMPL>
 std::unique_ptr<ExprBase> parse_expression(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
   return parse_expression_impl(txn, ctx, params, expr, var_type);

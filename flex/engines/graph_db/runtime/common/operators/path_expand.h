@@ -44,24 +44,22 @@ class PathExpand {
  public:
   // PathExpand(expandOpt == Vertex && alias == -1 && resultOpt == END_V) +
   // GetV(opt == END)
-  static bl::result<Context> edge_expand_v(const ReadTransaction& txn,
-                                           Context&& ctx,
+  template <typename GRAPH_IMPL>
+  static bl::result<Context> edge_expand_v(const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
                                            const PathExpandParams& params);
-  static bl::result<Context> edge_expand_p(const ReadTransaction& txn,
-                                           Context&& ctx,
+  template <typename GRAPH_IMPL>
+  static bl::result<Context> edge_expand_p(const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
                                            const PathExpandParams& params);
 
-  template <typename PRED_T>
-  static bl::result<Context> edge_expand_v_pred(const ReadTransaction& txn,
-                                                Context&& ctx,
-                                                const PathExpandParams& params,
+  template <typename PRED_T, typename GRAPH_IMPL>
+  static bl::result<Context> edge_expand_v_pred(const GraphInterface<GRAPH_IMPL>& txn,
+                                                Context&& ctx, const PathExpandParams& params,
                                                 const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
-    if (params.labels.size() == 1 &&
-        params.labels[0].src_label == params.labels[0].dst_label) {
+    if (params.labels.size() == 1 && params.labels[0].src_label == params.labels[0].dst_label) {
       if (params.dir == Direction::kOut) {
-        auto& input_vertex_list = *std::dynamic_pointer_cast<SLVertexColumn>(
-            ctx.get(params.start_tag));
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<SLVertexColumn>(ctx.get(params.start_tag));
         label_t output_vertex_label = params.labels[0].dst_label;
         label_t edge_label = params.labels[0].edge_label;
         label_t vertex_label = params.labels[0].src_label;
@@ -85,7 +83,7 @@ class PathExpand {
                     }
 
                     auto oe_iter = txn.GetOutEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
+                        label, output_vertex_label, edge_label, u);
                     while (oe_iter.IsValid()) {
                       output.push_back(oe_iter.GetNeighbor());
                       oe_iter.Next();
@@ -94,7 +92,7 @@ class PathExpand {
                 } else {
                   for (auto u : input) {
                     auto oe_iter = txn.GetOutEdgeIterator(
-                        label, u, output_vertex_label, edge_label);
+                        label,  output_vertex_label, edge_label, u);
                     while (oe_iter.IsValid()) {
                       output.push_back(oe_iter.GetNeighbor());
                       oe_iter.Next();
@@ -110,12 +108,10 @@ class PathExpand {
         std::vector<std::pair<size_t, vid_t>> input;
         std::vector<std::pair<size_t, vid_t>> output;
         input_vertex_list.foreach_vertex(
-            [&](size_t index, label_t label, vid_t v) {
-              output.emplace_back(index, v);
-            });
+            [&](size_t index, label_t label, vid_t v) { output.emplace_back(index, v); });
         int depth = 0;
-        auto oe_csr = txn.GetOutgoingSingleImmutableGraphView<grape::EmptyType>(
-            vertex_label, vertex_label, edge_label);
+        auto oe_csr = txn.template GetOutgoingGraphView<grape::EmptyType>(vertex_label,
+                                                                          vertex_label, edge_label);
         while (depth < params.hop_upper && !output.empty()) {
           input.clear();
           std::swap(input, output);
@@ -132,9 +128,11 @@ class PathExpand {
           for (auto& pair : input) {
             auto index = pair.first;
             auto v = pair.second;
-            if (oe_csr.exist(v)) {
-              output.emplace_back(index, oe_csr.get_edge(v).neighbor);
+            // TODO(lexiao): confirm the correctness of the following code
+            for (auto edge : oe_csr.GetEdges(v)) {
+              output.emplace_back(index, edge.neighbor);
             }
+
             // auto oe_iter = txn.GetOutEdgeIterator(
             //     vertex_label, v, output_vertex_label, edge_label);
             // while (oe_iter.IsValid()) {
@@ -148,20 +146,19 @@ class PathExpand {
         }
 #endif
 
-        ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
-                                    shuffle_offset, params.keep_cols);
+        ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
+                                    params.keep_cols);
         return ctx;
       }
     }
-    RETURN_UNSUPPORTED_ERROR(
-        "Unsupported path expand. Currently only support "
-        "single edge label expand with src_label = dst_label.");
+    RETURN_UNSUPPORTED_ERROR("Unsupported path expand. Currently only support "
+                             "single edge label expand with src_label = dst_label.");
     return ctx;
   }
 };
 
-bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
-                                              Context&& ctx,
+template <typename GRAPH_IMPL>
+bl::result<Context> PathExpand::edge_expand_v(const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
                                               const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
   if (params.labels.size() == 1) {
@@ -174,43 +171,39 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
 
       std::vector<vid_t> input;
       std::vector<vid_t> output;
-      input_vertex_list.foreach_vertex(
-          [&](size_t index, label_t label, vid_t v) {
-            int depth = 0;
-            input.clear();
-            output.clear();
-            input.push_back(v);
-            while (depth < params.hop_upper && !input.empty()) {
-              if (depth >= params.hop_lower) {
-                for (auto u : input) {
-                  builder.push_back_opt(u);
-                  shuffle_offset.push_back(index);
+      input_vertex_list.foreach_vertex([&](size_t index, label_t label, vid_t v) {
+        int depth = 0;
+        input.clear();
+        output.clear();
+        input.push_back(v);
+        while (depth < params.hop_upper && !input.empty()) {
+          if (depth >= params.hop_lower) {
+            for (auto u : input) {
+              builder.push_back_opt(u);
+              shuffle_offset.push_back(index);
 
-                  auto oe_iter = txn.GetOutEdgeIterator(
-                      label, u, output_vertex_label, edge_label);
-                  while (oe_iter.IsValid()) {
-                    output.push_back(oe_iter.GetNeighbor());
-                    oe_iter.Next();
-                  }
-                }
-              } else {
-                for (auto u : input) {
-                  auto oe_iter = txn.GetOutEdgeIterator(
-                      label, u, output_vertex_label, edge_label);
-                  while (oe_iter.IsValid()) {
-                    output.push_back(oe_iter.GetNeighbor());
-                    oe_iter.Next();
-                  }
-                }
+              auto oe_iter = txn.GetOutEdgeIterator(label, output_vertex_label, edge_label, u);
+              while (oe_iter.IsValid()) {
+                output.push_back(oe_iter.GetNeighbor());
+                oe_iter.Next();
               }
-              ++depth;
-              input.clear();
-              std::swap(input, output);
             }
-          });
+          } else {
+            for (auto u : input) {
+              auto oe_iter = txn.GetOutEdgeIterator(label, output_vertex_label, edge_label, u);
+              while (oe_iter.IsValid()) {
+                output.push_back(oe_iter.GetNeighbor());
+                oe_iter.Next();
+              }
+            }
+          }
+          ++depth;
+          input.clear();
+          std::swap(input, output);
+        }
+      });
 
-      ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
-                                  shuffle_offset, params.keep_cols);
+      ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
       return ctx;
     } else if (params.dir == Direction::kBoth &&
                params.labels[0].src_label == params.labels[0].dst_label) {
@@ -233,9 +226,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
           RETURN_BAD_REQUEST_ERROR("hop_upper should be greater than 1");
         } else {
           input_vertex_list.foreach_vertex(
-              [&](size_t index, label_t label, vid_t v) {
-                output.emplace_back(index, v);
-              });
+              [&](size_t index, label_t label, vid_t v) { output.emplace_back(index, v); });
         }
         int depth = 0;
         while (depth < params.hop_upper) {
@@ -257,8 +248,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
           for (auto& pair : input) {
             auto index = pair.first;
             auto v = pair.second;
-            auto oe_iter = txn.GetOutEdgeIterator(label, v, output_vertex_label,
-                                                  edge_label);
+            auto oe_iter = txn.GetOutEdgeIterator(label, output_vertex_label, edge_label, v);
             while (oe_iter.IsValid()) {
               auto nbr = oe_iter.GetNeighbor();
               if (exclude.find(nbr) == exclude.end()) {
@@ -267,8 +257,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
               oe_iter.Next();
             }
 
-            auto ie_iter = txn.GetInEdgeIterator(label, v, output_vertex_label,
-                                                 edge_label);
+            auto ie_iter = txn.GetInEdgeIterator(label, output_vertex_label, edge_label, v);
             while (ie_iter.IsValid()) {
               auto nbr = ie_iter.GetNeighbor();
               if (exclude.find(nbr) == exclude.end()) {
@@ -281,8 +270,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
           ++depth;
         }
       }
-      ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
-                                  shuffle_offset, params.keep_cols);
+      ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
       return ctx;
     }
   } else {
@@ -297,18 +285,16 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
       MLVertexColumnBuilder builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
-      foreach_vertex(input_vertex_list,
-                     [&](size_t index, label_t label, vid_t v) {
-                       output.emplace_back(label, v, index);
-                     });
+      foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+        output.emplace_back(label, v, index);
+      });
       int depth = 0;
       while (depth < params.hop_upper) {
         input.clear();
         std::swap(input, output);
         if (depth >= params.hop_lower) {
           for (auto& tuple : input) {
-            builder.push_back_vertex(
-                std::make_pair(std::get<0>(tuple), std::get<1>(tuple)));
+            builder.push_back_vertex(std::make_pair(std::get<0>(tuple), std::get<1>(tuple)));
             shuffle_offset.push_back(std::get<2>(tuple));
           }
         }
@@ -323,9 +309,8 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
           auto index = std::get<2>(tuple);
           for (auto& label_triplet : params.labels) {
             if (label_triplet.src_label == label) {
-              auto oe_iter = txn.GetOutEdgeIterator(label_triplet.src_label, v,
-                                                    label_triplet.dst_label,
-                                                    label_triplet.edge_label);
+              auto oe_iter = txn.GetOutEdgeIterator(
+                  label_triplet.src_label, label_triplet.dst_label, label_triplet.edge_label, v);
 
               while (oe_iter.IsValid()) {
                 auto nbr = oe_iter.GetNeighbor();
@@ -337,8 +322,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
         }
         ++depth;
       }
-      ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
-                                  shuffle_offset, params.keep_cols);
+      ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
       return ctx;
     } else if (params.dir == Direction::kBoth) {
       auto& input_vertex_list =
@@ -352,17 +336,14 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
       input_vertex_list.foreach_vertex(
-          [&](size_t index, label_t label, vid_t v) {
-            output.emplace_back(label, v, index);
-          });
+          [&](size_t index, label_t label, vid_t v) { output.emplace_back(label, v, index); });
       int depth = 0;
       while (depth < params.hop_upper) {
         input.clear();
         std::swap(input, output);
         if (depth >= params.hop_lower) {
           for (auto& tuple : input) {
-            builder.push_back_vertex(
-                std::make_pair(std::get<0>(tuple), std::get<1>(tuple)));
+            builder.push_back_vertex(std::make_pair(std::get<0>(tuple), std::get<1>(tuple)));
             shuffle_offset.push_back(std::get<2>(tuple));
           }
         }
@@ -377,9 +358,8 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
           auto index = std::get<2>(tuple);
           for (auto& label_triplet : params.labels) {
             if (label_triplet.src_label == label) {
-              auto oe_iter = txn.GetOutEdgeIterator(label_triplet.src_label, v,
-                                                    label_triplet.dst_label,
-                                                    label_triplet.edge_label);
+              auto oe_iter = txn.GetOutEdgeIterator(
+                  label_triplet.src_label, label_triplet.dst_label, label_triplet.edge_label, v);
 
               while (oe_iter.IsValid()) {
                 auto nbr = oe_iter.GetNeighbor();
@@ -388,9 +368,8 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
               }
             }
             if (label_triplet.dst_label == label) {
-              auto ie_iter = txn.GetInEdgeIterator(label_triplet.dst_label, v,
-                                                   label_triplet.src_label,
-                                                   label_triplet.edge_label);
+              auto ie_iter = txn.GetInEdgeIterator(label_triplet.dst_label, label_triplet.src_label,
+                                                   label_triplet.edge_label, v);
               while (ie_iter.IsValid()) {
                 auto nbr = ie_iter.GetNeighbor();
                 output.emplace_back(label_triplet.src_label, nbr, index);
@@ -401,8 +380,7 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
         }
         depth++;
       }
-      ctx.set_with_reshuffle_beta(params.alias, builder.finish(),
-                                  shuffle_offset, params.keep_cols);
+      ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
       return ctx;
     } else {
       LOG(ERROR) << "Not implemented yet";
@@ -412,12 +390,11 @@ bl::result<Context> PathExpand::edge_expand_v(const ReadTransaction& txn,
   return ctx;
 }
 
-bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
-                                              Context&& ctx,
+template <typename GRAPH_IMPL>
+bl::result<Context> PathExpand::edge_expand_p(const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
                                               const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
-  auto& input_vertex_list =
-      *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
+  auto& input_vertex_list = *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
   auto label_sets = input_vertex_list.get_labels_set();
   auto labels = params.labels;
   auto dir = params.dir;
@@ -427,11 +404,10 @@ bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
 
   GeneralPathColumnBuilder builder;
   if (dir == Direction::kOut) {
-    foreach_vertex(input_vertex_list,
-                   [&](size_t index, label_t label, vid_t v) {
-                     auto p = PathImpl::make_path_impl(label, v);
-                     input.emplace_back(p, index);
-                   });
+    foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+      auto p = PathImpl::make_path_impl(label, v);
+      input.emplace_back(p, index);
+    });
     int depth = 0;
     while (depth < params.hop_upper) {
       output.clear();
@@ -450,9 +426,8 @@ bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
         auto end = path->get_end();
         for (auto& label_triplet : labels) {
           if (label_triplet.src_label == end.first) {
-            auto oe_iter = txn.GetOutEdgeIterator(end.first, end.second,
-                                                  label_triplet.dst_label,
-                                                  label_triplet.edge_label);
+            auto oe_iter = txn.GetOutEdgeIterator(end.first, label_triplet.dst_label,
+                                                  label_triplet.edge_label, end.second);
             while (oe_iter.IsValid()) {
               std::shared_ptr<PathImpl> new_path =
                   path->expand(label_triplet.dst_label, oe_iter.GetNeighbor());
@@ -468,16 +443,14 @@ bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
       ++depth;
     }
     builder.set_path_impls(path_impls);
-    ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
-                                params.keep_cols);
+    ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
 
     return ctx;
   } else if (dir == Direction::kBoth) {
-    foreach_vertex(input_vertex_list,
-                   [&](size_t index, label_t label, vid_t v) {
-                     auto p = PathImpl::make_path_impl(label, v);
-                     input.emplace_back(p, index);
-                   });
+    foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+      auto p = PathImpl::make_path_impl(label, v);
+      input.emplace_back(p, index);
+    });
     int depth = 0;
     while (depth < params.hop_upper) {
       output.clear();
@@ -496,23 +469,19 @@ bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
         auto end = path->get_end();
         for (auto& label_triplet : labels) {
           if (label_triplet.src_label == end.first) {
-            auto oe_iter = txn.GetOutEdgeIterator(end.first, end.second,
-                                                  label_triplet.dst_label,
-                                                  label_triplet.edge_label);
+            auto oe_iter = txn.GetOutEdgeIterator(end.first, label_triplet.dst_label,
+                                                  label_triplet.edge_label, end.second);
             while (oe_iter.IsValid()) {
-              auto new_path =
-                  path->expand(label_triplet.dst_label, oe_iter.GetNeighbor());
+              auto new_path = path->expand(label_triplet.dst_label, oe_iter.GetNeighbor());
               output.emplace_back(new_path, index);
               oe_iter.Next();
             }
           }
           if (label_triplet.dst_label == end.first) {
-            auto ie_iter = txn.GetInEdgeIterator(end.first, end.second,
-                                                 label_triplet.src_label,
-                                                 label_triplet.edge_label);
+            auto ie_iter = txn.GetInEdgeIterator(end.first, label_triplet.src_label,
+                                                 label_triplet.edge_label, end.second);
             while (ie_iter.IsValid()) {
-              auto new_path =
-                  path->expand(label_triplet.src_label, ie_iter.GetNeighbor());
+              auto new_path = path->expand(label_triplet.src_label, ie_iter.GetNeighbor());
               output.emplace_back(new_path, index);
               ie_iter.Next();
             }
@@ -525,8 +494,7 @@ bl::result<Context> PathExpand::edge_expand_p(const ReadTransaction& txn,
       ++depth;
     }
     builder.set_path_impls(path_impls);
-    ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset,
-                                params.keep_cols);
+    ctx.set_with_reshuffle_beta(params.alias, builder.finish(), shuffle_offset, params.keep_cols);
     return ctx;
   } else {
     LOG(ERROR) << "Not implemented yet";

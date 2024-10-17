@@ -29,8 +29,9 @@ namespace gs {
 
 namespace runtime {
 
-std::shared_ptr<IContextColumn> build_optional_column_beta(const Expr& expr,
-                                                           size_t row_num) {
+template <typename GRAPH_IMPL>
+std::shared_ptr<IContextColumn> build_optional_column_beta(
+    const Expr<GRAPH_IMPL>& expr, size_t row_num) {
   switch (expr.type().type_enum_) {
   case RTAnyType::RTAnyTypeImpl::kI64Value: {
     OptionalValueColumnBuilder<int64_t> builder;
@@ -89,7 +90,8 @@ std::shared_ptr<IContextColumn> build_optional_column_beta(const Expr& expr,
   return nullptr;
 }
 
-std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
+template <typename GRAPH_IMPL>
+std::shared_ptr<IContextColumn> build_column_beta(const Expr<GRAPH_IMPL>& expr,
                                                   size_t row_num) {
   if (expr.is_optional()) {
     return build_optional_column_beta(expr, row_num);
@@ -320,8 +322,10 @@ std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type) {
   return nullptr;
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> build_optional_column(
-    const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
+    const common::IrDataType& data_type, const Expr<GRAPH_IMPL>& expr,
+    size_t row_num) {
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
     switch (data_type.data_type()) {
@@ -428,8 +432,10 @@ std::shared_ptr<IContextColumn> build_optional_column(
   return nullptr;
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> build_column(
-    const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
+    const common::IrDataType& data_type, const Expr<GRAPH_IMPL>& expr,
+    size_t row_num) {
   if (expr.is_optional()) {
     return build_optional_column(data_type, expr, row_num);
   }

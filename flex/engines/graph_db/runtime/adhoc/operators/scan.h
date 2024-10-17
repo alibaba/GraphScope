@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/scan.h"
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/engines/graph_db/runtime/common/operators/scan.h"
 namespace gs {
 
 namespace runtime {
@@ -98,9 +98,10 @@ static bool is_find_vertex(const physical::Scan& scan_opr,
   return true;
 }
 
+template <typename GRAPH_IMPL>
 static bl::result<Context> scan_vertices_expr_impl(
     bool scan_oid, const std::vector<Any>& input_ids,
-    const ReadTransaction& txn, const ScanParams& scan_params,
+    const GraphInterface<GRAPH_IMPL>& txn, const ScanParams& scan_params,
     std::unique_ptr<ExprBase> expr) {
   if (scan_oid) {
     return Scan::filter_oids(
@@ -126,9 +127,10 @@ static bl::result<Context> scan_vertices_expr_impl(
   }
 }
 
+template <typename GRAPH_IMPL>
 static bl::result<Context> scan_vertices_no_expr_impl(
     bool scan_oid, const std::vector<Any>& input_ids,
-    const ReadTransaction& txn, const ScanParams& scan_params) {
+    const GraphInterface<GRAPH_IMPL>& txn, const ScanParams& scan_params) {
   if (scan_oid) {
     return Scan::filter_oids(
         txn, scan_params, [](label_t label, vid_t vid) { return true; },
@@ -225,8 +227,9 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
   return true;
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_scan(
-    const physical::Scan& scan_opr, const ReadTransaction& txn,
+    const physical::Scan& scan_opr, const GraphInterface<GRAPH_IMPL>& txn,
     const std::map<std::string, std::string>& params) {
   label_t label;
   int64_t vertex_id;
@@ -250,17 +253,16 @@ bl::result<Context> eval_scan(
     const auto& scan_opr_params = scan_opr.params();
     for (const auto& table : scan_opr_params.tables()) {
       // exclude invalid vertex label id
-      if (txn.schema().vertex_label_num() <= table.id()) {
+      if (!txn.ExistVertexLabel(table.id())) {
         continue;
       }
       scan_params.tables.push_back(table.id());
-      const auto& pks = txn.schema().get_vertex_primary_key(table.id());
+      auto pks = txn.GetVertexPrimaryKeys(table.id());
       if (pks.size() > 1) {
         LOG(ERROR) << "only support one primary key";
         RETURN_UNSUPPORTED_ERROR("only support one primary key");
       }
-      auto [type, _, __] = pks[0];
-      if (type != PropertyType::kInt64) {
+      if (std::get<0>(pks[0]) != PropertyType::kInt64) {
         has_other_type_oid = true;
       }
     }

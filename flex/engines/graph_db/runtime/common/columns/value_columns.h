@@ -695,8 +695,7 @@ std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
   return builder.finish();
 }
 
-std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::dup()
-    const {
+std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::dup() const {
   OptionalValueColumnBuilder<std::string_view> builder;
   for (size_t i = 0; i < data_.size(); ++i) {
     builder.push_back_opt(data_[i], valid_[i]);
@@ -713,8 +712,7 @@ std::shared_ptr<IContextColumn> MapValueColumn::dup() const {
   return builder.finish();
 }
 
-std::shared_ptr<IContextColumn> MapValueColumn::shuffle(
-    const std::vector<size_t>& offsets) const {
+std::shared_ptr<IContextColumn> MapValueColumn::shuffle(const std::vector<size_t>& offsets) const {
   MapValueColumnBuilder builder;
   builder.reserve(offsets.size());
   builder.set_keys(keys_);

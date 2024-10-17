@@ -16,7 +16,7 @@
 #ifndef RUNTIME_COMMON_ACCESSORS_H_
 #define RUNTIME_COMMON_ACCESSORS_H_
 
-#include "flex/engines/graph_db/database/read_transaction.h"
+#include "flex/engines/graph_db/runtime/adhoc/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/path_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
@@ -93,11 +93,12 @@ class VertexPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
-template <typename KEY_T>
+template <typename KEY_T, typename GRAPH_IMPL>
 class VertexIdPathAccessor : public IAccessor {
  public:
   using elem_t = KEY_T;
-  VertexIdPathAccessor(const ReadTransaction& txn, const Context& ctx, int tag)
+  VertexIdPathAccessor(const GraphInterface<GRAPH_IMPL>& txn,
+                       const Context& ctx, int tag)
       : txn_(txn),
         vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {}
 
@@ -117,7 +118,7 @@ class VertexIdPathAccessor : public IAccessor {
   }
 
  private:
-  const ReadTransaction& txn_;
+  const GraphInterface<GRAPH_IMPL>& txn_;
   const IVertexColumn& vertex_col_;
 };
 
@@ -146,19 +147,19 @@ class VertexGIdPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class VertexPropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  VertexPropertyPathAccessor(const ReadTransaction& txn, const Context& ctx,
-                             int tag, const std::string& prop_name)
+  VertexPropertyPathAccessor(const GraphInterface<GRAPH_IMPL>& txn,
+                             const Context& ctx, int tag,
+                             const std::string& prop_name)
       : vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {
-    int label_num = txn.schema().vertex_label_num();
-    property_columns_.resize(label_num, nullptr);
+    int label_num = txn.VertexLabelNum();
+    property_columns_.resize(label_num);
     for (int i = 0; i < label_num; ++i) {
-      property_columns_[i] = dynamic_cast<const TypedColumn<elem_t>*>(
-          txn.get_vertex_property_column(static_cast<label_t>(i), prop_name)
-              .get());
+      property_columns_[i] =
+          txn.template GetVertexPropertyGetter<T>(i, prop_name);
     }
   }
 
@@ -168,7 +169,7 @@ class VertexPropertyPathAccessor : public IAccessor {
     }
     auto label_set = vertex_col_.get_labels_set();
     for (auto label : label_set) {
-      if (property_columns_[label] == nullptr) {
+      if (property_columns_[label].EmptyProperty()) {
         return true;
       }
     }
@@ -177,12 +178,7 @@ class VertexPropertyPathAccessor : public IAccessor {
 
   elem_t typed_eval_path(size_t idx) const {
     const auto& v = vertex_col_.get_vertex(idx);
-    auto col_ptr = property_columns_[v.first];
-    if (col_ptr != nullptr) {
-      return property_columns_[v.first]->get_view(v.second);
-    } else {
-      return elem_t();
-    }
+    return property_columns_[v.first].get_view(v.second);
   }
 
   RTAny eval_path(size_t idx) const override {
@@ -196,16 +192,18 @@ class VertexPropertyPathAccessor : public IAccessor {
     }
     const auto& v = vertex_col_.get_vertex(idx);
     auto col_ptr = property_columns_[v.first];
-    if (col_ptr != nullptr) {
-      return TypedConverter<T>::from_typed(col_ptr->get_view(v.second));
-    } else {
-      return RTAny(RTAnyType::kNull);
-    }
+    return col_ptr.get_any(v.second);
+    // if (col_ptr != nullptr) {
+    //   return TypedConverter<T>::from_typed(col_ptr->get_view(v.second));
+    // } else {
+    //   return RTAny(RTAnyType::kNull);
+    // }
   }
 
  private:
   const IVertexColumn& vertex_col_;
-  std::vector<const TypedColumn<elem_t>*> property_columns_;
+  // std::vector<const TypedColumn<elem_t>*> property_columns_;
+  std::vector<impl::PropertyGetter<elem_t, GRAPH_IMPL>> property_columns_;
 };
 
 class VertexLabelPathAccessor : public IAccessor {
@@ -272,11 +270,11 @@ class ContextValueAccessor : public IAccessor {
   const IValueColumn<elem_t>& col_;
 };
 
-template <typename KEY_T>
+template <typename KEY_T, typename GRAPH_IMPL>
 class VertexIdVertexAccessor : public IAccessor {
  public:
   using elem_t = KEY_T;
-  VertexIdVertexAccessor(const ReadTransaction& txn) : txn_(txn) {}
+  VertexIdVertexAccessor(const GraphInterface<GRAPH_IMPL>& txn) : txn_(txn) {}
 
   elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
     return AnyConverter<KEY_T>::from_any(txn_.GetVertexId(label, v));
@@ -292,7 +290,7 @@ class VertexIdVertexAccessor : public IAccessor {
   }
 
  private:
-  const ReadTransaction& txn_;
+  const GraphInterface<GRAPH_IMPL>& txn_;
 };
 
 class VertexGIdVertexAccessor : public IAccessor {
@@ -314,26 +312,22 @@ class VertexGIdVertexAccessor : public IAccessor {
   }
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class VertexPropertyVertexAccessor : public IAccessor {
  public:
   using elem_t = T;
-  VertexPropertyVertexAccessor(const ReadTransaction& txn,
+  VertexPropertyVertexAccessor(const GraphInterface<GRAPH_IMPL>& txn,
                                const std::string& prop_name) {
-    int label_num = txn.schema().vertex_label_num();
-    property_columns_.resize(label_num, nullptr);
+    int label_num = txn.VertexLabelNum();
+    property_columns_.resize(label_num);
     for (int i = 0; i < label_num; ++i) {
-      property_columns_[i] = dynamic_cast<const TypedColumn<elem_t>*>(
-          txn.get_vertex_property_column(static_cast<label_t>(i), prop_name)
-              .get());
+      property_columns_[i] =
+          txn.template GetVertexPropertyGetter<T>(i, prop_name);
     }
   }
 
   elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
-    if (property_columns_[label] == nullptr) {
-      return elem_t();
-    }
-    return property_columns_[label]->get_view(v);
+    return property_columns_[label].get_view(v);
   }
 
   RTAny eval_path(size_t idx) const override {
@@ -342,22 +336,16 @@ class VertexPropertyVertexAccessor : public IAccessor {
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    if (property_columns_[label] == nullptr) {
-      return RTAny();
-    }
-    return TypedConverter<T>::from_typed(property_columns_[label]->get_view(v));
+    return TypedConverter<T>::from_typed(property_columns_[label].get_view(v));
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
-    if (property_columns_[label] == nullptr) {
-      return RTAny(RTAnyType::kNull);
-    }
-    return TypedConverter<T>::from_typed(property_columns_[label]->get_view(v));
+    return TypedConverter<T>::from_typed(property_columns_[label].get_view(v));
   }
 
   bool is_optional() const override {
     for (auto col : property_columns_) {
-      if (col == nullptr) {
+      if (col.EmptyProperty()) {
         return true;
       }
     }
@@ -366,7 +354,8 @@ class VertexPropertyVertexAccessor : public IAccessor {
   }
 
  private:
-  std::vector<const TypedColumn<elem_t>*> property_columns_;
+  // std::vector<const TypedColumn<elem_t>*> property_columns_;
+  std::vector<impl::PropertyGetter<elem_t, GRAPH_IMPL>> property_columns_;
 };
 
 class EdgeIdPathAccessor : public IAccessor {
@@ -398,11 +387,11 @@ class EdgeIdPathAccessor : public IAccessor {
   const IEdgeColumn& edge_col_;
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class EdgePropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyPathAccessor(const ReadTransaction& txn,
+  EdgePropertyPathAccessor(const GraphInterface<GRAPH_IMPL>& txn,
                            const std::string& prop_name, const Context& ctx,
                            int tag)
       : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {}
@@ -436,27 +425,27 @@ class EdgePropertyPathAccessor : public IAccessor {
   const IEdgeColumn& col_;
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class MultiPropsEdgePropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  MultiPropsEdgePropertyPathAccessor(const ReadTransaction& txn,
+  MultiPropsEdgePropertyPathAccessor(const GraphInterface<GRAPH_IMPL>& txn,
                                      const std::string& prop_name,
                                      const Context& ctx, int tag)
       : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
-    const auto& labels = col_.get_labels();
-    vertex_label_num_ = txn.schema().vertex_label_num();
-    edge_label_num_ = txn.schema().edge_label_num();
+    auto labels = col_.get_labels();
+    vertex_label_num_ = txn.VertexLabelNum();
+    edge_label_num_ = txn.EdgeLabelNum();
     prop_index_.resize(
         2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
         std::numeric_limits<size_t>::max());
     for (auto& label : labels) {
       size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
                    label.dst_label * edge_label_num_ + label.edge_label;
-      const auto& names = txn.schema().get_edge_property_names(
+      const auto& edge_property_names = txn.GetEdgePropertyNames(
           label.src_label, label.dst_label, label.edge_label);
-      for (size_t i = 0; i < names.size(); ++i) {
-        if (names[i] == prop_name) {
+      for (size_t i = 0; i < edge_property_names.size(); ++i) {
+        if (edge_property_names[i] == prop_name) {
           prop_index_[idx] = i;
           break;
         }
@@ -569,11 +558,11 @@ class EdgeLabelEdgeAccessor : public IAccessor {
   }
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class EdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyEdgeAccessor(const ReadTransaction& txn,
+  EdgePropertyEdgeAccessor(const GraphInterface<GRAPH_IMPL>& txn,
                            const std::string& name) {}
 
   elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -684,33 +673,32 @@ class EdgeGlobalIdEdgeAccessor : public IAccessor {
   }
 };
 
-template <typename T>
+template <typename T, typename GRAPH_IMPL>
 class MultiPropsEdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
-  MultiPropsEdgePropertyEdgeAccessor(const ReadTransaction& txn,
+  MultiPropsEdgePropertyEdgeAccessor(const GraphInterface<GRAPH_IMPL>& txn,
                                      const std::string& name) {
-    edge_label_num_ = txn.schema().edge_label_num();
-    vertex_label_num_ = txn.schema().vertex_label_num();
+    edge_label_num_ = txn.EdgeLabelNum();
+    vertex_label_num_ = txn.VertexLabelNum();
     indexs.resize(2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
                   std::numeric_limits<size_t>::max());
     for (label_t src_label = 0; src_label < vertex_label_num_; ++src_label) {
-      auto src = txn.schema().get_vertex_label_name(src_label);
+      auto src = txn.GetVertexLabelName(src_label);
       for (label_t dst_label = 0; dst_label < vertex_label_num_; ++dst_label) {
-        auto dst = txn.schema().get_vertex_label_name(dst_label);
+        auto dst = txn.GetVertexLabelName(dst_label);
         for (label_t edge_label = 0; edge_label < edge_label_num_;
              ++edge_label) {
-          auto edge = txn.schema().get_edge_label_name(edge_label);
-          if (!txn.schema().exist(src, dst, edge)) {
+          auto edge = txn.GetEdgeLabelName(edge_label);
+          if (!txn.ExistEdgeTriplet(src_label, dst_label, edge_label)) {
             continue;
           }
           size_t idx = src_label * vertex_label_num_ * edge_label_num_ +
                        dst_label * edge_label_num_ + edge_label;
-          const std::vector<std::string>& names =
-              txn.schema().get_edge_property_names(src_label, dst_label,
-                                                   edge_label);
-          for (size_t i = 0; i < names.size(); ++i) {
-            if (names[i] == name) {
+          const auto& properties =
+              txn.GetEdgePropertyNames(src_label, dst_label, edge_label);
+          for (size_t i = 0; i < properties.size(); ++i) {
+            if (properties[i] == name) {
               indexs[idx] = i;
               break;
             }
@@ -858,19 +846,18 @@ std::shared_ptr<IAccessor> create_context_value_accessor(const Context& ctx,
                                                          int tag,
                                                          RTAnyType type);
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IAccessor> create_vertex_property_path_accessor(
-    const ReadTransaction& txn, const Context& ctx, int tag, RTAnyType type,
-    const std::string& prop_name);
+    const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx, int tag,
+    RTAnyType type, const std::string& prop_name);
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IAccessor> create_vertex_property_vertex_accessor(
-    const ReadTransaction& txn, RTAnyType type, const std::string& prop_name);
+    const GraphInterface<GRAPH_IMPL>& txn, RTAnyType type,
+    const std::string& prop_name);
 
 std::shared_ptr<IAccessor> create_vertex_label_path_accessor(const Context& ctx,
                                                              int tag);
-
-std::shared_ptr<IAccessor> create_edge_property_path_accessor(
-    const ReadTransaction& txn, const std::string& prop_name,
-    const Context& ctx, int tag, RTAnyType type);
 
 std::shared_ptr<IAccessor> create_edge_label_path_accessor(const Context& ctx,
                                                            int tag);
@@ -881,9 +868,6 @@ std::shared_ptr<IAccessor> create_edge_global_id_path_accessor(
     const Context& ctx, int tag);
 
 std::shared_ptr<IAccessor> create_edge_global_id_edge_accessor();
-
-std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
-    const ReadTransaction& txn, const std::string& prop_name, RTAnyType type);
 
 std::shared_ptr<IAccessor> create_context_value_accessor(const Context& ctx,
                                                          int tag,
@@ -916,25 +900,27 @@ std::shared_ptr<IAccessor> create_context_value_accessor(const Context& ctx,
   return nullptr;
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IAccessor> create_vertex_property_path_accessor(
-    const ReadTransaction& txn, const Context& ctx, int tag, RTAnyType type,
-    const std::string& prop_name) {
+    const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx, int tag,
+    RTAnyType type, const std::string& prop_name) {
   switch (type.type_enum_) {
   case RTAnyType::RTAnyTypeImpl::kI64Value:
-    return std::make_shared<VertexPropertyPathAccessor<int64_t>>(txn, ctx, tag,
-                                                                 prop_name);
-  case RTAnyType::RTAnyTypeImpl::kI32Value:
-    return std::make_shared<VertexPropertyPathAccessor<int>>(txn, ctx, tag,
-                                                             prop_name);
-  case RTAnyType::RTAnyTypeImpl::kU64Value:
-    return std::make_shared<VertexPropertyPathAccessor<uint64_t>>(txn, ctx, tag,
-                                                                  prop_name);
-  case RTAnyType::RTAnyTypeImpl::kStringValue:
-    return std::make_shared<VertexPropertyPathAccessor<std::string_view>>(
+    return std::make_shared<VertexPropertyPathAccessor<int64_t, GRAPH_IMPL>>(
         txn, ctx, tag, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kI32Value:
+    return std::make_shared<VertexPropertyPathAccessor<int, GRAPH_IMPL>>(
+        txn, ctx, tag, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kU64Value:
+    return std::make_shared<VertexPropertyPathAccessor<uint64_t, GRAPH_IMPL>>(
+        txn, ctx, tag, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kStringValue:
+    return std::make_shared<
+        VertexPropertyPathAccessor<std::string_view, GRAPH_IMPL>>(txn, ctx, tag,
+                                                                  prop_name);
   case RTAnyType::RTAnyTypeImpl::kDate32:
-    return std::make_shared<VertexPropertyPathAccessor<Date>>(txn, ctx, tag,
-                                                              prop_name);
+    return std::make_shared<VertexPropertyPathAccessor<Date, GRAPH_IMPL>>(
+        txn, ctx, tag, prop_name);
   default:
     LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
   }
@@ -946,88 +932,107 @@ std::shared_ptr<IAccessor> create_vertex_label_path_accessor(const Context& ctx,
   return std::make_shared<VertexLabelPathAccessor>(ctx, tag);
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IAccessor> create_vertex_property_vertex_accessor(
-    const ReadTransaction& txn, RTAnyType type, const std::string& prop_name) {
+    const GraphInterface<GRAPH_IMPL>& txn, RTAnyType type,
+    const std::string& prop_name) {
   switch (type.type_enum_) {
   case RTAnyType::RTAnyTypeImpl::kI64Value:
-    return std::make_shared<VertexPropertyVertexAccessor<int64_t>>(txn,
-                                                                   prop_name);
-  case RTAnyType::RTAnyTypeImpl::kI32Value:
-    return std::make_shared<VertexPropertyVertexAccessor<int>>(txn, prop_name);
-  case RTAnyType::RTAnyTypeImpl::kU64Value:
-    return std::make_shared<VertexPropertyVertexAccessor<uint64_t>>(txn,
-                                                                    prop_name);
-  case RTAnyType::RTAnyTypeImpl::kStringValue:
-    return std::make_shared<VertexPropertyVertexAccessor<std::string_view>>(
+    return std::make_shared<VertexPropertyVertexAccessor<int64_t, GRAPH_IMPL>>(
         txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kI32Value:
+    return std::make_shared<VertexPropertyVertexAccessor<int, GRAPH_IMPL>>(
+        txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kU64Value:
+    return std::make_shared<VertexPropertyVertexAccessor<uint64_t, GRAPH_IMPL>>(
+        txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kStringValue:
+    return std::make_shared<
+        VertexPropertyVertexAccessor<std::string_view, GRAPH_IMPL>>(txn,
+                                                                    prop_name);
   case RTAnyType::RTAnyTypeImpl::kDate32:
-    return std::make_shared<VertexPropertyVertexAccessor<Date>>(txn, prop_name);
+    return std::make_shared<VertexPropertyVertexAccessor<Date, GRAPH_IMPL>>(
+        txn, prop_name);
   default:
     LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
   }
   return nullptr;
 }
 
-std::shared_ptr<IAccessor> create_edge_property_path_accessor(
-    const ReadTransaction& txn, const std::string& name, const Context& ctx,
-    int tag, RTAnyType type) {
-  auto col = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag));
-  const auto& labels = col->get_labels();
-  bool multip_properties = false;
-  if (txn.schema().has_multi_props_edge()) {
-    for (auto label : labels) {
-      auto& properties = txn.schema().get_edge_properties(
-          label.src_label, label.dst_label, label.edge_label);
-      if (properties.size() > 1) {
-        multip_properties = true;
-        break;
-      }
+template <typename GRAPH_IMPL>
+bool check_whether_multiple_properties(
+    const GraphInterface<GRAPH_IMPL>& txn,
+    const std::vector<LabelTriplet>& labels) {
+  bool multiple_properties = false;
+  for (auto label : labels) {
+    const auto& properties = txn.GetEdgePropertyNames(
+        label.src_label, label.dst_label, label.edge_label);
+    if (properties.size() > 1) {
+      multiple_properties = true;
+      break;
     }
   }
-  if (multip_properties) {
+  return multiple_properties;
+}
+
+template <typename GRAPH_IMPL>
+std::shared_ptr<IAccessor> create_edge_property_path_accessor(
+    const GraphInterface<GRAPH_IMPL>& txn, const std::string& name,
+    const Context& ctx, int tag, RTAnyType type) {
+  auto col = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag));
+  auto labels = col->get_labels();
+  auto multiple_properties = check_whether_multiple_properties(txn, labels);
+
+  if (multiple_properties) {
     switch (type.type_enum_) {
     case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return std::make_shared<MultiPropsEdgePropertyPathAccessor<int64_t>>(
-          txn, name, ctx, tag);
+      return std::make_shared<
+          MultiPropsEdgePropertyPathAccessor<int64_t, GRAPH_IMPL>>(txn, name,
+                                                                   ctx, tag);
     case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return std::make_shared<MultiPropsEdgePropertyPathAccessor<int>>(
-          txn, name, ctx, tag);
+      return std::make_shared<
+          MultiPropsEdgePropertyPathAccessor<int, GRAPH_IMPL>>(txn, name, ctx,
+                                                               tag);
     case RTAnyType::RTAnyTypeImpl::kU64Value:
-      return std::make_shared<MultiPropsEdgePropertyPathAccessor<uint64_t>>(
-          txn, name, ctx, tag);
+      return std::make_shared<
+          MultiPropsEdgePropertyPathAccessor<uint64_t, GRAPH_IMPL>>(txn, name,
+                                                                    ctx, tag);
     case RTAnyType::RTAnyTypeImpl::kStringValue:
       return std::make_shared<
-          MultiPropsEdgePropertyPathAccessor<std::string_view>>(txn, name, ctx,
-                                                                tag);
+          MultiPropsEdgePropertyPathAccessor<std::string_view, GRAPH_IMPL>>(
+          txn, name, ctx, tag);
     case RTAnyType::RTAnyTypeImpl::kDate32:
-      return std::make_shared<MultiPropsEdgePropertyPathAccessor<Date>>(
-          txn, name, ctx, tag);
+      return std::make_shared<
+          MultiPropsEdgePropertyPathAccessor<Date, GRAPH_IMPL>>(txn, name, ctx,
+                                                                tag);
     case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return std::make_shared<MultiPropsEdgePropertyPathAccessor<double>>(
-          txn, name, ctx, tag);
+      return std::make_shared<
+          MultiPropsEdgePropertyPathAccessor<double, GRAPH_IMPL>>(txn, name,
+                                                                  ctx, tag);
     default:
       LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
     }
   } else {
     switch (type.type_enum_) {
     case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return std::make_shared<EdgePropertyPathAccessor<int64_t>>(txn, name, ctx,
-                                                                 tag);
-    case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return std::make_shared<EdgePropertyPathAccessor<int>>(txn, name, ctx,
-                                                             tag);
-    case RTAnyType::RTAnyTypeImpl::kU64Value:
-      return std::make_shared<EdgePropertyPathAccessor<uint64_t>>(txn, name,
-                                                                  ctx, tag);
-    case RTAnyType::RTAnyTypeImpl::kStringValue:
-      return std::make_shared<EdgePropertyPathAccessor<std::string_view>>(
+      return std::make_shared<EdgePropertyPathAccessor<int64_t, GRAPH_IMPL>>(
           txn, name, ctx, tag);
+    case RTAnyType::RTAnyTypeImpl::kI32Value:
+      return std::make_shared<EdgePropertyPathAccessor<int, GRAPH_IMPL>>(
+          txn, name, ctx, tag);
+    case RTAnyType::RTAnyTypeImpl::kU64Value:
+      return std::make_shared<EdgePropertyPathAccessor<uint64_t, GRAPH_IMPL>>(
+          txn, name, ctx, tag);
+    case RTAnyType::RTAnyTypeImpl::kStringValue:
+      return std::make_shared<
+          EdgePropertyPathAccessor<std::string_view, GRAPH_IMPL>>(txn, name,
+                                                                  ctx, tag);
     case RTAnyType::RTAnyTypeImpl::kDate32:
-      return std::make_shared<EdgePropertyPathAccessor<Date>>(txn, name, ctx,
-                                                              tag);
+      return std::make_shared<EdgePropertyPathAccessor<Date, GRAPH_IMPL>>(
+          txn, name, ctx, tag);
     case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return std::make_shared<EdgePropertyPathAccessor<double>>(txn, name, ctx,
-                                                                tag);
+      return std::make_shared<EdgePropertyPathAccessor<double, GRAPH_IMPL>>(
+          txn, name, ctx, tag);
     default:
       LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
     }
@@ -1053,54 +1058,38 @@ std::shared_ptr<IAccessor> create_edge_global_id_edge_accessor() {
   return std::make_shared<EdgeGlobalIdEdgeAccessor>();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
-    const ReadTransaction& txn, const std::string& prop_name, RTAnyType type) {
-  bool multip_properties = txn.schema().has_multi_props_edge();
-
-  if (multip_properties) {
-    switch (type.type_enum_) {
-    case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return std::make_shared<MultiPropsEdgePropertyEdgeAccessor<int64_t>>(
-          txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return std::make_shared<MultiPropsEdgePropertyEdgeAccessor<int>>(
-          txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kU64Value:
-      return std::make_shared<MultiPropsEdgePropertyEdgeAccessor<uint64_t>>(
-          txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kStringValue:
-      return std::make_shared<
-          MultiPropsEdgePropertyEdgeAccessor<std::string_view>>(txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kDate32:
-      return std::make_shared<MultiPropsEdgePropertyEdgeAccessor<Date>>(
-          txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return std::make_shared<MultiPropsEdgePropertyEdgeAccessor<double>>(
-          txn, prop_name);
-    default:
-      LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
-    }
-  } else {
-    switch (type.type_enum_) {
-    case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return std::make_shared<EdgePropertyEdgeAccessor<int64_t>>(txn,
+    const GraphInterface<GRAPH_IMPL>& txn, const std::string& prop_name,
+    const Context& ctx, int tag, RTAnyType type) {
+  // TODO(zhanglei,lexiao): Can we just return
+  // MultiPropsEdgePropertyEdgeAccessor here?
+  switch (type.type_enum_) {
+  case RTAnyType::RTAnyTypeImpl::kI64Value:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<int64_t, GRAPH_IMPL>>(txn,
                                                                  prop_name);
-    case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return std::make_shared<EdgePropertyEdgeAccessor<int>>(txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kU64Value:
-      return std::make_shared<EdgePropertyEdgeAccessor<uint64_t>>(txn,
+  case RTAnyType::RTAnyTypeImpl::kI32Value:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<int, GRAPH_IMPL>>(txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kU64Value:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<uint64_t, GRAPH_IMPL>>(txn,
                                                                   prop_name);
-    case RTAnyType::RTAnyTypeImpl::kStringValue:
-      return std::make_shared<EdgePropertyEdgeAccessor<std::string_view>>(
-          txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kDate32:
-      return std::make_shared<EdgePropertyEdgeAccessor<Date>>(txn, prop_name);
-    case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return std::make_shared<EdgePropertyEdgeAccessor<double>>(txn, prop_name);
-    default:
-      LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
-    }
+  case RTAnyType::RTAnyTypeImpl::kStringValue:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<std::string_view, GRAPH_IMPL>>(
+        txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kDate32:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<Date, GRAPH_IMPL>>(txn, prop_name);
+  case RTAnyType::RTAnyTypeImpl::kF64Value:
+    return std::make_shared<
+        MultiPropsEdgePropertyEdgeAccessor<double, GRAPH_IMPL>>(txn, prop_name);
+  default:
+    LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
   }
+
   return nullptr;
 }
 

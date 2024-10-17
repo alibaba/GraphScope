@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/get_v.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/predicates.h"
 #include "flex/engines/graph_db/runtime/adhoc/utils.h"
+#include "flex/engines/graph_db/runtime/common/operators/get_v.h"
 
 namespace gs {
 
@@ -39,9 +39,10 @@ VOpt parse_opt(const physical::GetV_VOpt& opt) {
   }
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_get_v(
-    const physical::GetV& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params) {
+    const physical::GetV& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params) {
   int tag = -1;
   if (opr.has_tag()) {
     tag = opr.tag().value();

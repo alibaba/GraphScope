@@ -29,6 +29,7 @@ class MutablePropertyFragment;
 class VersionManager;
 template <typename EDATA_T>
 class AdjListView {
+ public:
   class nbr_iterator {
     using const_nbr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_t;
     using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
@@ -68,7 +69,6 @@ class AdjListView {
     timestamp_t timestamp_;
   };
 
- public:
   using slice_t = MutableNbrSlice<EDATA_T>;
 
   AdjListView(const slice_t& slice, timestamp_t timestamp)
@@ -276,6 +276,7 @@ class SingleImmutableGraphView<std::string_view> {
 
 class ReadTransaction {
  public:
+  using vertex_index_t = vid_t;
   ReadTransaction(const MutablePropertyFragment& graph, VersionManager& vm,
                   timestamp_t timestamp);
   ~ReadTransaction();

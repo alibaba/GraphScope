@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/app/adhoc_app.h"
+#include "flex/engines/graph_db/runtime/adhoc/graph_interface.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/runtime.h"
 #include "flex/proto_generated_gie/physical.pb.h"
@@ -26,7 +27,8 @@ namespace gs {
 
 bool AdhocReadApp::Query(const GraphDBSession& graph, Decoder& input,
                          Encoder& output) {
-  auto txn = graph.GetReadTransaction();
+  auto read_txn = graph.GetReadTransaction();
+  gs::runtime::GraphInterface<ReadTransaction> txn(read_txn);
 
   std::string_view plan_str = input.get_bytes();
   physical::PhysicalPlan plan;

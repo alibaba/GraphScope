@@ -87,9 +87,10 @@ static std::string get_opr_name(const physical::PhysicalOpr& opr) {
   }
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> runtime_eval_impl(
     const physical::PhysicalPlan& plan, Context&& ctx,
-    const ReadTransaction& txn,
+    const GraphInterface<GRAPH_IMPL>& txn,
     const std::map<std::string, std::string>& params) {
   Context ret = ctx;
 
@@ -250,8 +251,9 @@ bl::result<Context> runtime_eval_impl(
   return ret;
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> runtime_eval(
-    const physical::PhysicalPlan& plan, const ReadTransaction& txn,
+    const physical::PhysicalPlan& plan, const GraphInterface<GRAPH_IMPL>& txn,
     const std::map<std::string, std::string>& params) {
   return runtime_eval_impl(plan, Context(), txn, params);
 }

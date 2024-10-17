@@ -102,8 +102,8 @@ class Project {
     return new_ctx;
   }
 
-  template <typename... Args>
-  static Context map_value(const ReadTransaction& txn, Context&& ctx,
+  template <typename GRAPH_IMPL, typename... Args>
+  static Context map_value(const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
                            const std::tuple<Args...>& exprs, bool is_append) {
     std::vector<std::shared_ptr<IContextColumn>> new_columns;
     map_value_impl(ctx, exprs, ctx.row_num(), new_columns);
@@ -134,9 +134,9 @@ class Project {
     return new_ctx;
   }
 
-  template <typename EXPR_T>
+  template <typename EXPR_T, typename GRAPH_IMPL>
   static bl::result<Context> map_value_general(
-      const ReadTransaction& txn, Context&& ctx,
+      const GraphInterface<GRAPH_IMPL>& txn, Context&& ctx,
       const std::vector<ProjectExpr<EXPR_T>>& expressions, bool is_append) {
     if (!is_append) {
       std::vector<std::shared_ptr<IContextColumn>> new_columns;
