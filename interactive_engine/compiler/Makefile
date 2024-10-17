@@ -53,7 +53,7 @@ gremlin_calcite_test:
 
 run:
 	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/compiler-0.0.1-SNAPSHOT.jar:./target/libs/*" \
+	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
