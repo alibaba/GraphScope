@@ -64,8 +64,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         for (int i = 0; i < ctx.oC_CallSubQuery().size(); ++i) {
             CypherGSParser.OC_CallSubQueryContext callSubQuery = ctx.oC_CallSubQuery(i);
             if (callSubQuery != null) {
-                branches.add(
-                        new CallSubQueryVisitor(this.builder).visit(callSubQuery));
+                branches.add(new CallSubQueryVisitor(this.builder).visit(callSubQuery));
             }
         }
         Preconditions.checkArgument(

@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
