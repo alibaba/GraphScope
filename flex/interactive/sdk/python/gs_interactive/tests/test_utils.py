@@ -17,17 +17,14 @@
 #
 
 import os
-import time
+import sys
 import unittest
 
-import pytest
-
-import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
-from gs_interactive.client.driver import Driver
-from gs_interactive.models import *
-from gs_interactive.client.utils import InputFormat, append_format_byte
+from gs_interactive.client.utils import InputFormat  # noqa: E402
+from gs_interactive.client.utils import append_format_byte  # noqa: E402
+
 
 class TestUtils(unittest.TestCase):
     def setUp(self):
@@ -35,9 +32,11 @@ class TestUtils(unittest.TestCase):
 
     def tearDown(self):
         pass
-    
+
     def test_append_format_byte(self):
         input = "hello"
-        new_bytes = append_format_byte(input.encode(), input_format=InputFormat.CPP_ENCODER)
-        self.assertEqual(new_bytes, b'hello\x00')
+        new_bytes = append_format_byte(
+            input.encode(), input_format=InputFormat.CPP_ENCODER
+        )
+        self.assertEqual(new_bytes, b"hello\x00")
         self.assertEqual(len(new_bytes), len(input) + 1)

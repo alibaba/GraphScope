@@ -16,6 +16,7 @@
 
 package org.apache.calcite.sql.type;
 
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Similar to {@link OperandTypes}, but we rewrite some {@link SqlOperandTypeChecker}
@@ -74,12 +76,15 @@ public abstract class GraphOperandTypes {
     public static final SqlSingleOperandTypeChecker INTERVALINTERVAL_INTERVALDATETIME =
             OperandTypes.or(INTERVAL_SAME_SAME, INTERVAL_DATETIME);
 
+    public static final SqlSingleOperandTypeChecker ANY_ANY =
+            family(SqlTypeFamily.ANY, SqlTypeFamily.ANY);
+
     /**
      * create {@code RexFamilyOperandTypeChecker} to validate type based on {@code RexNode}
      * @param families
      * @return
      */
-    public static FamilyOperandTypeChecker family(SqlTypeFamily... families) {
+    public static FamilyOperandTypeChecker family(RelDataTypeFamily... families) {
         return new GraphFamilyOperandTypeChecker(ImmutableList.copyOf(families), i -> false);
     }
 
@@ -102,5 +107,17 @@ public abstract class GraphOperandTypes {
             IntFunction<String> operandName,
             Predicate<Integer> optional) {
         return new GraphOperandMetaDataImpl(families, typesFactory, operandName, optional);
+    }
+
+    public static SqlOperandTypeChecker metaTypeChecker(StoredProcedureMeta meta) {
+        List<StoredProcedureMeta.Parameter> parameters = meta.getParameters();
+        return GraphOperandTypes.operandMetadata(
+                parameters.stream()
+                        .map(p -> p.getDataType().getSqlTypeName().getFamily())
+                        .collect(Collectors.toList()),
+                typeFactory ->
+                        parameters.stream().map(p -> p.getDataType()).collect(Collectors.toList()),
+                i -> parameters.get(i).getName(),
+                i -> false);
     }
 }

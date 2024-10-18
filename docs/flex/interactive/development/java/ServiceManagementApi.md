@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # ServiceManagementApi
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -12,7 +14,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="GetServiceStatus"></a>
 # **GetServiceStatus**
-> ServiceStatus getServiceStatus()
+> [Result][Result-doc]&lt;ServiceStatus&gt; getServiceStatus()
 
 
 
@@ -47,7 +49,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**Result&lt;ServiceStatus&gt;**](ServiceStatus.md)
+[Result][Result-doc]&lt;[ServiceStatus](./ServiceStatus.md)&gt;
 
 ### Authorization
 
@@ -65,7 +67,7 @@ No authorization required
 
 <a id="RestartService"></a>
 # **RestartService**
-> String restartService()
+> [Result][Result-doc]&lt;String&gt; restartService()
 
 
 
@@ -100,7 +102,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -118,7 +120,7 @@ No authorization required
 
 <a id="StartService"></a>
 # **StartService**
-> Result&lt;String&gt; startService(startServiceRequest)
+> [Result][Result-doc]&lt;String&gt; startService(startServiceRequest)
 
 
 
@@ -155,7 +157,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -174,7 +176,7 @@ No authorization required
 
 <a id="StopService"></a>
 # **StopService**
-> Result&lt;String&gt; stopService()
+> [Result][Result-doc]&lt;String&gt; stopService()
 
 
 
@@ -209,7 +211,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 

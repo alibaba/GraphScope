@@ -20,6 +20,15 @@
 
 namespace gs {
 
+bool Schema::IsBuiltinPlugin(const std::string& plugin_name) {
+  for (uint8_t i = 0; i < BUILTIN_PLUGIN_NUM; i++) {
+    if (plugin_name == BUILTIN_PLUGIN_NAMES[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 Schema::Schema() : has_multi_props_edge_(false){};
 Schema::~Schema() = default;
 
@@ -783,9 +792,9 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
   // check the type_id equals to storage's label_id
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
-    LOG(ERROR) << "type_id is not set properly for type: " << label_name;
-    return Status(StatusCode::INVALID_SCHEMA,
-                  "type_id is not set properly for type: " + label_name);
+    LOG(WARNING) << "type_id is not set properly for type: " << label_name
+                 << ", try to use incremental id";
+    type_id = schema.vertex_label_num() - 1;
   }
   auto label_id = schema.get_vertex_label_id(label_name);
   if (label_id != type_id) {
@@ -1013,9 +1022,9 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
   // check the type_id equals to storage's label_id
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
-    LOG(ERROR) << "type_id is not set properly for type: " << edge_label_name;
-    return Status(StatusCode::INVALID_SCHEMA,
-                  "type_id is not set properly for type: " + edge_label_name);
+    LOG(WARNING) << "type_id is not set properly for type: " << edge_label_name
+                 << ", try to use incremental id";
+    type_id = schema.edge_label_num() - 1;
   }
   auto label_id = schema.get_edge_label_id(edge_label_name);
   if (label_id != type_id) {
@@ -1235,6 +1244,11 @@ bool Schema::EmplacePlugins(
       LOG(ERROR) << "Too many plugins, max plugin id is " << MAX_PLUGIN_ID;
       return false;
     }
+    if (Schema::IsBuiltinPlugin(name_path.first)) {
+      LOG(WARNING) << "Plugin name " << name_path.first
+                   << " is a built-in plugin, skipped";
+      continue;
+    }
     if (name_path.second.empty()) {
       // if the path is empty, try to find from plugin_dir.
       plugin_names.insert(name_path.first);
@@ -1275,6 +1289,11 @@ bool Schema::EmplacePlugins(
     }
     if (root["name"] && root["library"]) {
       std::string name = root["name"].as<std::string>();
+      if (Schema::IsBuiltinPlugin(name)) {
+        LOG(WARNING) << "Plugin name " << name
+                     << " is a built-in plugin, skipped";
+        continue;
+      }
       std::string path = root["library"].as<std::string>();
       if (plugin_names.find(name) != plugin_names.end()) {
         if (plugin_name_to_path_and_id_.find(name) !=
@@ -1302,6 +1321,20 @@ bool Schema::EmplacePlugins(
                  << ", name or library not found.";
     }
   }
+  // Emplace the built-in plugins
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_COUNT_VERTICES_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_COUNT_VERTICES_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_PAGERANK_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_PAGERANK_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_K_DEGREE_NEIGHBORS_PLUGIN_ID));
+  plugin_name_to_path_and_id_.emplace(
+      Schema::BUILTIN_TVSP_PLUGIN_NAME,
+      std::make_pair("", Schema::BUILTIN_TVSP_PLUGIN_ID));
+
   LOG(INFO) << "Load " << plugin_name_to_path_and_id_.size() << " plugins";
   return true;
 }

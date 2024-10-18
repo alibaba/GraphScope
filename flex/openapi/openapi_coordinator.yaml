@@ -533,6 +533,9 @@ components:
               type: array
               items:
                $ref: '#/components/schemas/Parameter'
+            option:
+              type: object
+              additionalProperties: true
 
     GetStoredProcResponse:
       allOf:
@@ -602,6 +605,7 @@ components:
             $ref: '#/components/schemas/GetEdgeType'
 
     GetGraphResponse:
+      additionalProperties: true
       required:
         - id
         - name

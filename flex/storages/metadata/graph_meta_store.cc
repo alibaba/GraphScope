@@ -52,6 +52,96 @@ std::string read_file_to_string(const std::string& file_path) {
     return "";
   }
 }
+const std::vector<PluginMeta>& get_builtin_plugin_metas() {
+  static std::vector<PluginMeta> builtin_plugins;
+  static bool initialized = false;
+  if (!initialized) {
+    // count_vertices
+    PluginMeta count_vertices;
+    count_vertices.id = "count_vertices";
+    count_vertices.name = "count_vertices";
+    count_vertices.description = "A builtin plugin to count vertices";
+    count_vertices.enable = true;
+    count_vertices.runnable = true;
+    count_vertices.type = "cypher";
+    count_vertices.creation_time = GetCurrentTimeStamp();
+    count_vertices.update_time = GetCurrentTimeStamp();
+    count_vertices.params.push_back({"labelName", PropertyType::kString});
+    count_vertices.returns.push_back({"count", PropertyType::kInt32});
+    builtin_plugins.push_back(count_vertices);
+
+    // pagerank
+    PluginMeta pagerank;
+    pagerank.id = "pagerank";
+    pagerank.name = "pagerank";
+    pagerank.description = "A builtin plugin to calculate pagerank";
+    pagerank.enable = true;
+    pagerank.runnable = true;
+    pagerank.type = "cypher";
+    pagerank.creation_time = GetCurrentTimeStamp();
+    pagerank.update_time = GetCurrentTimeStamp();
+    pagerank.params.push_back({"vertex_label", PropertyType::kString});
+    pagerank.params.push_back({"edge_label", PropertyType::kString});
+    pagerank.params.push_back({"damping_factor", PropertyType::kDouble});
+    pagerank.params.push_back({"max_iterations", PropertyType::kInt32});
+    pagerank.params.push_back({"epsilon", PropertyType::kDouble});
+    pagerank.returns.push_back({"label_name", PropertyType::kString});
+    pagerank.returns.push_back({"vertex_oid", PropertyType::kInt64});
+    pagerank.returns.push_back({"pagerank", PropertyType::kDouble});
+    builtin_plugins.push_back(pagerank);
+
+    // k_neighbors
+    PluginMeta k_neighbors;
+    k_neighbors.id = "k_neighbors";
+    k_neighbors.name = "k_neighbors";
+    k_neighbors.description = "A builtin plugin to calculate k_neighbors";
+    k_neighbors.enable = true;
+    k_neighbors.runnable = true;
+    k_neighbors.type = "cypher";
+    k_neighbors.creation_time = GetCurrentTimeStamp();
+    k_neighbors.update_time = GetCurrentTimeStamp();
+    k_neighbors.params.push_back({"label_name", PropertyType::kString});
+    k_neighbors.params.push_back({"oid", PropertyType::kInt64});
+    k_neighbors.params.push_back({"k", PropertyType::kInt32});
+    k_neighbors.returns.push_back({"label_name", PropertyType::kString});
+    k_neighbors.returns.push_back({"vertex_oid", PropertyType::kInt64});
+    builtin_plugins.push_back(k_neighbors);
+
+    // shortest_path_among_three
+    PluginMeta shortest_path_among_three;
+    shortest_path_among_three.id = "shortest_path_among_three";
+    shortest_path_among_three.name = "shortest_path_among_three";
+    shortest_path_among_three.description =
+        "A builtin plugin to calculate shortest_path_among_three";
+    shortest_path_among_three.enable = true;
+    shortest_path_among_three.runnable = true;
+    shortest_path_among_three.type = "cypher";
+    shortest_path_among_three.creation_time = GetCurrentTimeStamp();
+    shortest_path_among_three.update_time = GetCurrentTimeStamp();
+    shortest_path_among_three.params.push_back(
+        {"label_name1", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"oid1", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name2", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"oid2", PropertyType::kInt64});
+    shortest_path_among_three.params.push_back(
+        {"label_name3", PropertyType::kString});
+    shortest_path_among_three.params.push_back({"oid3", PropertyType::kInt64});
+    shortest_path_among_three.returns.push_back(
+        {"shortest_path_among_three (label name, vertex oid)",
+         PropertyType::kString});
+    builtin_plugins.push_back(shortest_path_among_three);
+
+    initialized = true;
+  }
+  return builtin_plugins;
+}
+
+void append_builtin_plugins(std::vector<PluginMeta>& plugin_metas) {
+  auto builtin_plugin_metas = get_builtin_plugin_metas();
+  plugin_metas.insert(plugin_metas.end(), builtin_plugin_metas.begin(),
+                      builtin_plugin_metas.end());
+}
 
 UpdateGraphMetaRequest::UpdateGraphMetaRequest(
     int64_t data_update_time, const std::string& data_import_config)
@@ -68,6 +158,7 @@ std::string Parameter::ToJson() const {
 
 void GraphMeta::ToJson(rapidjson::Value& json,
                        rapidjson::Document::AllocatorType& allocator) const {
+  json.AddMember("version", version, allocator);
   json.AddMember("id", id, allocator);
   json.AddMember("name", name, allocator);
   json.AddMember("description", description, allocator);
@@ -117,6 +208,11 @@ GraphMeta GraphMeta::FromJson(const std::string& json_str) {
 
 GraphMeta GraphMeta::FromJson(const rapidjson::Value& json) {
   GraphMeta meta;
+  if (json.HasMember("version")) {
+    meta.version = json["version"].GetString();
+  } else {
+    meta.version = "v0.1";
+  }
   if (json.HasMember("id")) {
     if (json["id"].IsInt()) {
       meta.id = json["id"].GetInt();
@@ -385,16 +481,148 @@ JobMeta JobMeta::FromJson(const rapidjson::Value& json) {
   return meta;
 }
 
-CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
-    const std::string& json_str) {
-  LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
-  CreateGraphMetaRequest request;
-  rapidjson::Document json(rapidjson::kObjectType);
-  if (json.Parse(json_str.c_str()).HasParseError()) {
-    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << json_str;
-    return request;
+gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
+                                                const std::string& type_name) {
+  // 1. To support open a empty graph, we should check if the x_csr_params is
+  // set for each vertex type, if not set, we set it to a rather small max_vnum,
+  // to avoid to much memory usage.
+  auto types = root[type_name];
+  YAML::Node new_types;
+  for (auto type : types) {
+    if (!type["x_csr_params"]) {
+      type["x_csr_params"]["max_vertex_num"] = 8192;
+    }
+    new_types.push_back(type);
+  }
+  root[type_name] = new_types;
+  return root;
+}
+
+gs::Result<YAML::Node> preprocess_vertex_edge_types(
+    YAML::Node root, const std::string& type_name) {
+  auto types = root[type_name];
+  int32_t cur_type_id = 0;
+  YAML::Node new_types;
+  for (auto type : types) {
+    if (type["type_id"]) {
+      auto type_id = type["type_id"].as<int32_t>();
+      if (type_id != cur_type_id) {
+        return gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                          "Invalid " + type_name +
+                              " type_id: " + std::to_string(type_id) +
+                              ", expect: " + std::to_string(cur_type_id));
+      }
+    } else {
+      type["type_id"] = cur_type_id;
+    }
+    cur_type_id++;
+    int32_t cur_prop_id = 0;
+    if (type["properties"]) {
+      for (auto prop : type["properties"]) {
+        if (prop["property_id"]) {
+          auto prop_id = prop["property_id"].as<int32_t>();
+          if (prop_id != cur_prop_id) {
+            return gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                              "Invalid " + type_name + " property_id: " +
+                                  type["type_name"].as<std::string>() + " : " +
+                                  std::to_string(prop_id) +
+                                  ", expect: " + std::to_string(cur_prop_id));
+          }
+        } else {
+          prop["property_id"] = cur_prop_id;
+        }
+        cur_prop_id++;
+      }
+    }
+    new_types.push_back(type);
+  }
+  root[type_name] = new_types;
+  return root;
+}
+
+// Preprocess the schema to be compatible with the current storage.
+// 1. check if any property_id or type_id is set for each type, If set, then all
+// vertex/edge types should all set.
+// 2. If property_id or type_id is not set, then set them according to the order
+gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
+  if (node["schema"] && node["schema"]["vertex_types"]) {
+    // First check whether property_id or type_id is set in the schema
+    YAML::Node schema_node = node["schema"];
+    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+        schema_node, preprocess_vertex_edge_types(schema_node, "vertex_types"));
+    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+        schema_node, preprocess_vertex_schema(schema_node, "vertex_types"));
+    if (node["schema"]["edge_types"]) {
+      // edge_type could be optional.
+      ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
+          schema_node, preprocess_vertex_edge_types(schema_node, "edge_types"));
+    }
+    node["schema"] = schema_node;
+    return node;
+  } else {
+    return gs::Status(gs::StatusCode::INVALID_SCHEMA, "Invalid graph schema: ");
+  }
+}
+
+Result<std::string> preprocess_and_check_schema_json_string(
+    const std::string& raw_json_str) {
+  YAML::Node yaml;
+  try {
+    rapidjson::Document doc;
+    if (doc.Parse(raw_json_str).HasParseError()) {
+      throw std::runtime_error("Fail to parse json: " +
+                               std::to_string(doc.GetParseError()));
+    }
+    std::stringstream json_ss;
+    json_ss << raw_json_str;
+    yaml = YAML::Load(json_ss);
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Fail to parse json: " << e.what();
+    return gs::Result<std::string>(
+        gs::Status(gs::StatusCode::INVALID_SCHEMA,
+                   "Fail to parse json: " + std::string(e.what())));
+  } catch (...) {
+    LOG(ERROR) << "Fail to parse json: " << raw_json_str;
+    return gs::Result<std::string>(
+        gs::Status(gs::StatusCode::INVALID_SCHEMA, "Fail to parse json: "));
+  }
+  // preprocess the schema yaml,
+  auto res_yaml = preprocess_graph_schema(std::move(yaml));
+  if (!res_yaml.ok()) {
+    return gs::Result<std::string>(res_yaml.status());
+  }
+  auto& yaml_value = res_yaml.value();
+  // set default value
+  if (!yaml_value["store_type"]) {
+    yaml_value["store_type"] = "mutable_csr";
   }
 
+  auto parse_schema_res = gs::Schema::LoadFromYamlNode(yaml_value);
+  if (!parse_schema_res.ok()) {
+    return gs::Result<std::string>(parse_schema_res.status());
+  }
+  return gs::get_json_string_from_yaml(yaml_value);
+}
+
+Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
+    const std::string& json_str) {
+  LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
+
+  Result<std::string> real_json_str =
+      preprocess_and_check_schema_json_string(json_str);
+
+  CreateGraphMetaRequest request;
+  rapidjson::Document json(rapidjson::kObjectType);
+  if (json.Parse(real_json_str.value().c_str()).HasParseError()) {
+    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: "
+               << real_json_str.value();
+    return request;
+  }
+  if (json.HasMember("version")) {
+    request.version = json["version"].GetString();
+  } else {
+    request.version = "v0.1";
+  }
   if (json.HasMember("name")) {
     request.name = json["name"].GetString();
   }
@@ -420,11 +648,14 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
       request.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
   }
+  // Add builtin plugins
+  append_builtin_plugins(request.plugin_metas);
   return request;
 }
 
 std::string CreateGraphMetaRequest::ToString() const {
   rapidjson::Document json(rapidjson::kObjectType);
+  json.AddMember("version", version, json.GetAllocator());
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("description", description, json.GetAllocator());
   {
@@ -671,11 +902,6 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
   if (j.HasMember("enable")) {
     request.enable = j["enable"].GetBool();
   }
-  // } catch (const std::exception& e) {
-  //   LOG(ERROR) << "UpdatePluginMetaRequest::FromJson error: " << e.what() <<
-  //   " "
-  //              << json;
-  // }
   return request;
 }
 

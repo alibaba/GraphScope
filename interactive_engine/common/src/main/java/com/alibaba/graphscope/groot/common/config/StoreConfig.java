@@ -24,7 +24,7 @@ public class StoreConfig {
             Config.intConfig("store.write.thread.count", 1);
 
     public static final Config<Integer> STORE_QUEUE_BUFFER_SIZE =
-            Config.intConfig("store.queue.buffer.size", 1024000);
+            Config.intConfig("store.queue.buffer.size", 102400);
 
     public static final Config<Long> STORE_QUEUE_WAIT_MS =
             Config.longConfig("store.queue.wait.ms", 3000L);

@@ -1,1 +1,0 @@
-g.V($personId).both('1..3', 'KNOWS').inV().dedup().as('friends').in('HASCREATOR').has('creationDate',lt($maxDate)).as('post').order().by('creationDate', desc).by('id', asc).limit(20).select('friends','post').by(valueMap('id', 'firstName', 'lastName')).by(valueMap('id', 'content', 'imageFile', 'creationDate'))

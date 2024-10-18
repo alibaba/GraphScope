@@ -213,6 +213,56 @@ public class BITest {
     }
 
     @Test
+    public void bi4_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (forum:FORUM)\n"
+                                    + "WITH collect(forum) AS topForums\n"
+                                    + "UNWIND topForums AS topForums1\n"
+                                    + "MATCH"
+                                    + " (topForums1:FORUM)-[:CONTAINEROF]->(post:POST)<-[:REPLYOF*0..10]-(message:POST|COMMENT)-[:HASCREATOR]->(person:PERSON)<-[:HASMEMBER]-(topForums2:FORUM)\n"
+                                    + "WHERE topForums2 IN topForums\n"
+                                    + "RETURN\n"
+                                    + "  person.id AS personId\n"
+                                    + "  ORDER BY\n"
+                                    + "  personId ASC\n"
+                                    + "  LIMIT 100;",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalSort(sort0=[personId], dir0=[ASC], fetch=[100])\n"
+                    + "  GraphLogicalProject(personId=[person.id], isAppend=[false])\n"
+                    + "    LogicalJoin(condition=[AND(=(topForums1, topForums1), IN(topForums2,"
+                    + " topForums))], joinType=[inner])\n"
+                    + "      GraphLogicalUnfold(key=[topForums], alias=[topForums1])\n"
+                    + "        GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[forum], aggFunction=COLLECT, alias='topForums',"
+                    + " distinct=false}]])\n"
+                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
+                    + " alias=[forum], opt=[VERTEX])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[topForums2], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[HASCREATOR]}], alias=[person], startAlias=[message], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST,"
+                    + " COMMENT]}], alias=[message], opt=[END])\n"
+                    + "           "
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[REPLYOF]}], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "], fetch=[10], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
+                    + " start_alias=[post])\n"
+                    + "              GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[CONTAINEROF]}], alias=[post], startAlias=[topForums1], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "                GraphLogicalSource(tableConfig=[{isAll=false,"
+                    + " tables=[FORUM]}], alias=[topForums1], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
     public void bi5_test() {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =

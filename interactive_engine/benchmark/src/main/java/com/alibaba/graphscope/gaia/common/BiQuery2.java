@@ -23,8 +23,7 @@ public class BiQuery2 extends CommonQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         String date1 = transformSimpleDate(singleParameter.get("date"));
         String date2 = getEndDate(date1, "100");
         String date3 = getEndDate(date2, "100");

@@ -962,6 +962,37 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return multiJoin;
     }
 
+    @Override
+    public RelNode visit(GraphLogicalUnfold unfold) {
+        visitChildren(unfold);
+        RexNode unfoldKey = unfold.getUnfoldKey();
+        Preconditions.checkArgument(
+                unfoldKey instanceof RexGraphVariable,
+                "unfold key should be a variable, but is [%s]",
+                unfoldKey);
+        int keyAliasId = ((RexGraphVariable) unfoldKey).getAliasId();
+        GraphAlgebraPhysical.Unfold.Builder unfoldBuilder =
+                GraphAlgebraPhysical.Unfold.newBuilder().setTag(Utils.asAliasId(keyAliasId));
+        if (unfold.getAliasId() != AliasInference.DEFAULT_ID) {
+            unfoldBuilder.setAlias(Utils.asAliasId(unfold.getAliasId()));
+        }
+        List<RelDataTypeField> fullFields = unfold.getRowType().getFieldList();
+        Preconditions.checkArgument(!fullFields.isEmpty(), "there is no fields in unfold row type");
+        RelDataType curRowType =
+                new RelRecordType(
+                        StructKind.FULLY_QUALIFIED,
+                        fullFields.subList(fullFields.size() - 1, fullFields.size()));
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setUnfold(unfoldBuilder)
+                                        .build())
+                        .addAllMetaData(Utils.physicalProtoRowType(curRowType, isColumnId))
+                        .build());
+        return unfold;
+    }
+
     private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {
         List<RexGraphVariable> vars = Lists.newArrayList();
         if (condition instanceof RexCall) {

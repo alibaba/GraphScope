@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # QueryServiceApi
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -14,7 +16,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 
 <a id="CallProcedure"></a>
 # **CallProcedure**
-> Result&lt;IrResult.CollectiveResults&gt; callProcedure(graphId, request)
+> [Result][Result-doc]&lt;IrResult.CollectiveResults&gt; callProcedure(graphId, request)
 
 Submit procedure call queries to the specified graph.
 The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
@@ -69,7 +71,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;IrResult.CollectiveResults&gt;**
+[Result][Result-doc]&lt;IrResult.CollectiveResults&gt;
 
 ### Authorization
 
@@ -88,7 +90,7 @@ No authorization required
 
 <a id="CallProcedureOnCurrentGraph"></a>
 # **CallProcedureOnCurrentGraph**
-> Result&lt;IrResult.CollectiveResults&gt; callProcedure(body)
+> [Result][Result-doc]&lt;IrResult.CollectiveResults&gt; callProcedure(body)
 
 Submit a query to the running graph. 
 
@@ -139,7 +141,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;IrResult.CollectiveResults&gt;**
+[Result][Result-doc]&lt;IrResult.CollectiveResults&gt;
 
 ### Authorization
 

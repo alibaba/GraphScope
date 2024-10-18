@@ -142,13 +142,17 @@ if (NOT Arrow_FOUND)
 else ()
     include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
     if (USE_STATIC_ARROW)
-        if (TARGET arrow_static)
+        if (TARGET Arrow::arrow_static)
+            set(ARROW_LIB Arrow::arrow_static)
+        elseif (TARGET arrow_static) # For backward compatibility, see https://arrow.apache.org/docs/cpp/build_system.html#available-variables-and-targets
             set(ARROW_LIB arrow_static)
         else()
             message(FATAL_ERROR "Building with USE_STATIC_ARROW=ON, but arrow_static target not found")
         endif()
     else ()
-        if (TARGET arrow_shared)
+        if (TARGET Arrow::arrow_shared)
+            set(ARROW_LIB Arrow::arrow_shared)
+        elseif (TARGET arrow_shared) # For backward compatibility
             set(ARROW_LIB arrow_shared)
         else()
             message(FATAL_ERROR "Building with USE_STATIC_ARROW=OFF, but arrow_shared target not found")
@@ -249,6 +253,8 @@ install(EXPORT flex-targets
 file(GLOB_RECURSE FILES_NEED_LINT
         "engines/*.cc"
         "engines/*.h"
+        "codegen/*.cc"
+        "codegen/*.h"
         "bin/*.cc"
         "storages/*.h"
         "storages/*.cc"
@@ -256,6 +262,8 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "otel/*.cc"
         "test/*.h"
         "test/*.cc"
+        "utils/*.h"
+        "utils/*.cc"
         EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat

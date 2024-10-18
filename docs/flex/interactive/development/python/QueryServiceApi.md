@@ -13,7 +13,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 
 
 # **CallProcedure**
-> Result[CollectiveResults] call_procedure(graph_id, params)
+> [Result](./result.rst)[CollectiveResults] call_procedure(graph_id, params)
 
 Submit procedure call queries to the specified graph.
 The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
@@ -55,7 +55,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**CollectiveResults**
+[Result](./result.rst)[**CollectiveResults**]
 
 ### Authorization
 
@@ -76,7 +76,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
 # **CallProcedureOnCurrentGraph**
-> Result[CollectiveResults] call_procedure_current(params)
+> [Result](./result.rst)[CollectiveResults] call_procedure_current(params)
 
 run queries on the running graph
 
@@ -116,7 +116,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**CollectiveResults**
+[Result](./result.rst)[**CollectiveResults**]
 
 ### Authorization
 

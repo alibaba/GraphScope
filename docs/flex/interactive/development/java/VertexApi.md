@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # VertexApi
 
 All URIs are relative to  *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -12,7 +14,7 @@ All URIs are relative to  *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="addVertex"></a>
 # **addVertex**
-> Result&lt;String&gt; addVertex(graphId, vertexEdgeRequest)
+> [Result][Result-doc]&lt;String&gt; addVertex(graphId, vertexEdgeRequest)
 
 Add vertex to the graph. 
 
@@ -62,7 +64,7 @@ public class Example {
 
 ### Return type
 
-**String**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -85,7 +87,7 @@ No authorization required
 
 <a id="getVertex"></a>
 # **getVertex**
-> Result&lt;VertexData&gt; getVertex(graphId, label, primaryKeyValue)
+> [Result][Result-doc]&lt;VertexData&gt; getVertex(graphId, label, primaryKeyValue)
 
 Get the vertex&#39;s properties with vertex primary key.
 
@@ -135,7 +137,7 @@ public class Example {
 
 ### Return type
 
-[**VertexData**](VertexData.md)
+[Result][Result-doc]&lt;[VertexData](./VertexData.md)&gt;
 
 ### Authorization
 
@@ -156,7 +158,7 @@ No authorization required
 
 <a id="updateVertex"></a>
 # **updateVertex**
-> Result&lt;String&gt; updateVertex(graphId, vertexRequest)
+> [Result][Result-doc]&lt;String&gt; updateVertex(graphId, vertexRequest)
 
 Update the vertex's properties.
 
@@ -201,7 +203,7 @@ public class Example {
 
 ### Return type
 
-**String**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 

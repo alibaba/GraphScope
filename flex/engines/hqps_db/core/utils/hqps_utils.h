@@ -145,16 +145,14 @@ template <typename KEY_ALIAS_T>
 struct group_key_on_property : public std::true_type {};
 
 template <int in_tag_id, int res_alias_id>
-struct group_key_on_property<
-    AliasTagProp<in_tag_id, res_alias_id, grape::EmptyType>>
+struct group_key_on_property<AliasTagProp<in_tag_id, res_alias_id, grape::EmptyType>>
     : public std::false_type {};
 
 template <int col_id, typename T>
 struct group_key_on_property<GroupKey<col_id, T>> : public std::true_type {};
 
 template <int col_id>
-struct group_key_on_property<GroupKey<col_id, grape::EmptyType>>
-    : public std::false_type {};
+struct group_key_on_property<GroupKey<col_id, grape::EmptyType>> : public std::false_type {};
 
 // check edge_dir and vopt consistency
 inline bool check_edge_dir_consist_vopt(const Direction& dir, VOpt vopt) {
@@ -169,24 +167,18 @@ inline bool check_edge_dir_consist_vopt(const Direction& dir, VOpt vopt) {
   return false;
 }
 
-template <
-    std::size_t nth, std::size_t... Head, std::size_t... Tail,
-    typename... Types,
-    typename std::enable_if<(nth + 1 != sizeof...(Types))>::type* = nullptr>
-constexpr auto remove_nth_element_impl(std::index_sequence<Head...>,
-                                       std::index_sequence<Tail...>,
+template <std::size_t nth, std::size_t... Head, std::size_t... Tail, typename... Types,
+          typename std::enable_if<(nth + 1 != sizeof...(Types))>::type* = nullptr>
+constexpr auto remove_nth_element_impl(std::index_sequence<Head...>, std::index_sequence<Tail...>,
                                        const std::tuple<Types...>& tup) {
   return std::tuple{std::get<Head>(tup)...,
                     // We +1 to refer one element after the one removed
                     std::get<Tail + nth + 1>(tup)...};
 }
 
-template <
-    std::size_t nth, std::size_t... Head, std::size_t... Tail,
-    typename... Types,
-    typename std::enable_if<(nth + 1 == sizeof...(Types))>::type* = nullptr>
-constexpr auto remove_nth_element_impl(std::index_sequence<Head...>,
-                                       std::index_sequence<Tail...>,
+template <std::size_t nth, std::size_t... Head, std::size_t... Tail, typename... Types,
+          typename std::enable_if<(nth + 1 == sizeof...(Types))>::type* = nullptr>
+constexpr auto remove_nth_element_impl(std::index_sequence<Head...>, std::index_sequence<Tail...>,
                                        const std::tuple<Types...>& tup) {
   return std::tuple{std::get<Head>(tup)...};
 }
@@ -194,9 +186,8 @@ constexpr auto remove_nth_element_impl(std::index_sequence<Head...>,
 template <std::size_t nth, typename... Types>
 constexpr auto remove_nth_element(const std::tuple<Types...>& tup) {
   static_assert(nth < sizeof...(Types));
-  return remove_nth_element_impl<nth>(
-      std::make_index_sequence<nth>(),
-      std::make_index_sequence<sizeof...(Types) - nth - 1>(), tup);
+  return remove_nth_element_impl<nth>(std::make_index_sequence<nth>(),
+                                      std::make_index_sequence<sizeof...(Types) - nth - 1>(), tup);
 }
 
 template <size_t ith, size_t jth, typename... Types>
@@ -223,8 +214,7 @@ template <size_t I, typename T, typename... Ts>
 struct remove_ith_type<I, std::tuple<T, Ts...>> {
   typedef decltype(std::tuple_cat(
       std::declval<std::tuple<T>>(),
-      std::declval<typename remove_ith_type<I - 1, std::tuple<Ts...>>::type>()))
-      type;
+      std::declval<typename remove_ith_type<I - 1, std::tuple<Ts...>>::type>())) type;
 };
 
 // I != J
@@ -232,15 +222,13 @@ template <size_t I, size_t J, typename T, typename Void = void>
 struct remove_ith_jth_type {};
 
 template <size_t I, size_t J, typename T, typename... Ts>
-struct remove_ith_jth_type<I, J, std::tuple<T, Ts...>,
-                           typename std::enable_if<(I < J)>::type> {
+struct remove_ith_jth_type<I, J, std::tuple<T, Ts...>, typename std::enable_if<(I < J)>::type> {
   using first_type = typename remove_ith_type<I, std::tuple<T, Ts...>>::type;
   using type = typename remove_ith_type<J - 1, first_type>::type;
 };
 
 template <size_t I, size_t J, typename T, typename... Ts>
-struct remove_ith_jth_type<I, J, std::tuple<T, Ts...>,
-                           typename std::enable_if<(I > J)>::type> {
+struct remove_ith_jth_type<I, J, std::tuple<T, Ts...>, typename std::enable_if<(I > J)>::type> {
   using type = typename remove_ith_jth_type<J, I, std::tuple<T, Ts...>>::type;
 };
 
@@ -249,20 +237,17 @@ struct Edge;
 
 template <
     size_t Is, typename... PROP_T,
-    typename std::enable_if<Is<sizeof...(PROP_T) - 1>::type* = nullptr> void
-        props_to_string_array(
-            std::tuple<PROP_T...>& props,
-            std::array<std::string, std::tuple_size_v<std::tuple<PROP_T...>>>&
-                res) {
+    typename std::enable_if<Is<sizeof...(PROP_T) - 1>::type* = nullptr> void props_to_string_array(
+        std::tuple<PROP_T...>& props,
+        std::array<std::string, std::tuple_size_v<std::tuple<PROP_T...>>>& res) {
   res[Is] = std::get<Is>(props).property_name;
   props_to_string_array<Is + 1>(props, res);
 }
 
 template <size_t Is, typename... PROP_T,
           typename std::enable_if<Is == sizeof...(PROP_T) - 1>::type* = nullptr>
-void props_to_string_array(
-    std::tuple<PROP_T...>& props,
-    std::array<std::string, std::tuple_size_v<std::tuple<PROP_T...>>>& res) {
+void props_to_string_array(std::tuple<PROP_T...>& props,
+                           std::array<std::string, std::tuple_size_v<std::tuple<PROP_T...>>>& res) {
   res[Is] = std::get<Is>(props).property_name;
 }
 template <typename... PROP_T>
@@ -277,8 +262,8 @@ struct tuple_element;
 
 // recursive case
 template <int I, class Head, class... Tail>
-struct tuple_element<I, std::tuple<Head, Tail...>>
-    : gs::tuple_element<I - 1, std::tuple<Tail...>> {};
+struct tuple_element<I, std::tuple<Head, Tail...>> : gs::tuple_element<I - 1, std::tuple<Tail...>> {
+};
 
 // base case
 template <class Head, class... Tail>
@@ -296,8 +281,7 @@ struct tuple_element<-1, std::tuple<Head>> {
 
 template <typename... T>
 auto unwrap_future_tuple(std::tuple<T...>&& tuple) {
-  return unwrap_future_tuple(std::move(tuple),
-                             std::make_index_sequence<sizeof...(T)>());
+  return unwrap_future_tuple(std::move(tuple), std::make_index_sequence<sizeof...(T)>());
 }
 template <typename... T, size_t... Is>
 auto unwrap_future_tuple(std::tuple<T...>&& tuple, std::index_sequence<Is...>) {
@@ -338,9 +322,7 @@ struct FirstElement {
 // Create a tuple of const references to the elements of a tuple.
 template <typename... Args>
 auto make_tuple_of_const_refs(const std::tuple<Args...>& t) {
-  return std::apply(
-      [](const Args&... args) { return std::make_tuple(std::cref(args)...); },
-      t);
+  return std::apply([](const Args&... args) { return std::make_tuple(std::cref(args)...); }, t);
 }
 
 template <typename T>
@@ -358,9 +340,8 @@ struct first_n_impl;
 
 template <int n, typename First, typename... Other, typename... Out>
 struct first_n_impl<n, std::tuple<First, Other...>, Out...> {
-  typedef
-      typename first_n_impl<n - 1, std::tuple<Other...>, Out..., First>::type
-          type;  // move first input to output.
+  typedef typename first_n_impl<n - 1, std::tuple<Other...>, Out..., First>::type
+      type;  // move first input to output.
 };
 
 // need First, Other... here to resolve ambiguity on n = 0
@@ -396,42 +377,34 @@ constexpr auto tuple_slice_impl(T&& t, std::index_sequence<Is...>) {
 template <size_t l, size_t r, typename T>
 constexpr auto tuple_slice(T&& t) {
   static_assert(r >= l, "invalid slice");
-  static_assert(std::tuple_size<std::decay_t<T>>::value >= r,
-                "slice index out of bounds");
-  return tuple_slice_impl<l>(std::forward<T>(t),
-                             std::make_index_sequence<r - l>{});
+  static_assert(std::tuple_size<std::decay_t<T>>::value >= r, "slice index out of bounds");
+  return tuple_slice_impl<l>(std::forward<T>(t), std::make_index_sequence<r - l>{});
 }
 
 // [l, tuple_size - 1]
 template <size_t l, typename T>
 constexpr auto tuple_slice(T&& t) {
-  static_assert(std::tuple_size<std::decay_t<T>>::value > l,
-                "slice index out of bounds");
+  static_assert(std::tuple_size<std::decay_t<T>>::value > l, "slice index out of bounds");
   return tuple_slice_impl<l>(
-      std::forward<T>(t),
-      std::make_index_sequence<std::tuple_size<std::decay_t<T>>::value - l>{});
+      std::forward<T>(t), std::make_index_sequence<std::tuple_size<std::decay_t<T>>::value - l>{});
 }
 
-template <int Is, typename... T,
-          typename std::enable_if<(Is >= 0)>::type* = nullptr>
+template <int Is, typename... T, typename std::enable_if<(Is >= 0)>::type* = nullptr>
 inline auto get_from_tuple(std::tuple<T...>& tuple) {
   return std::get<Is>(tuple);
 }
 
-template <int Is, typename... T,
-          typename std::enable_if<(Is == -1)>::type* = nullptr>
+template <int Is, typename... T, typename std::enable_if<(Is == -1)>::type* = nullptr>
 inline auto get_from_tuple(std::tuple<T...>& tuple) {
   static constexpr size_t num = sizeof...(T);
   return std::get<num - 1>(tuple);
 }
-template <int Is, typename... T,
-          typename std::enable_if<(Is >= 0)>::type* = nullptr>
+template <int Is, typename... T, typename std::enable_if<(Is >= 0)>::type* = nullptr>
 inline const auto& get_from_tuple(const std::tuple<T...>& tuple) {
   return std::get<Is>(tuple);
 }
 
-template <int Is, typename... T,
-          typename std::enable_if<(Is == -1)>::type* = nullptr>
+template <int Is, typename... T, typename std::enable_if<(Is == -1)>::type* = nullptr>
 inline const auto& get_from_tuple(const std::tuple<T...>& tuple) {
   static constexpr size_t num = sizeof...(T);
   return std::get<num - 1>(tuple);
@@ -440,30 +413,26 @@ inline const auto& get_from_tuple(const std::tuple<T...>& tuple) {
 // vertex/edge property associate with type
 template <typename T, size_t N, typename FUNC_T, size_t... Is,
           typename RET_T = typename std::result_of<FUNC_T(T)>::type>
-auto transform_array_impl(std::array<T, N>&& array, FUNC_T&& func,
-                          std::index_sequence<Is...>) {
+auto transform_array_impl(std::array<T, N>&& array, FUNC_T&& func, std::index_sequence<Is...>) {
   return std::array<RET_T, N>{std::move(func(std::move(array[Is])))...};
 }
 
 template <typename T, size_t N, typename FUNC_T>
 auto transform_array(std::array<T, N>&& array, FUNC_T&& func) {
-  return transform_array_impl(std::move(array), std::move(func),
-                              std::make_index_sequence<N>());
+  return transform_array_impl(std::move(array), std::move(func), std::make_index_sequence<N>());
 }
 
 template <typename... T, typename FUNC_T, size_t... Is,
           typename RET_T = typename std::result_of<FUNC_T(T&...)>::type>
 auto transform_tuple_impl(const std::tuple<T...>&& tuple, FUNC_T&& func,
                           std::index_sequence<Is...>) {
-  return std::make_tuple(
-      std::move(func(Is, std::move(std::get<Is>(tuple))))...);
+  return std::make_tuple(std::move(func(Is, std::move(std::get<Is>(tuple))))...);
 }
 
 template <typename... T, typename FUNC_T>
 auto transform_tuple(const std::tuple<T...>&& tuple, FUNC_T&& func) {
   static constexpr size_t N = sizeof...(T);
-  return transform_tuple_impl(std::move(tuple), std::move(func),
-                              std::make_index_sequence<N>());
+  return transform_tuple_impl(std::move(tuple), std::move(func), std::make_index_sequence<N>());
 }
 
 template <typename FUNC, typename... T, size_t... Is>
@@ -474,32 +443,28 @@ bool apply_on_tuple_impl(const FUNC& func, const std::tuple<T...>& tuple,
 
 template <typename FUNC, typename... T>
 bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
-  return apply_on_tuple_impl(func, tuple,
-                             std::make_index_sequence<sizeof...(T)>());
+  return apply_on_tuple_impl(func, tuple, std::make_index_sequence<sizeof...(T)>());
 }
 
 template <typename T, size_t N, typename FUNC_T, size_t... Is,
           typename RET_T = typename std::result_of<FUNC_T(T&)>::type>
-auto apply_array_impl(const std::array<T, N>& array, FUNC_T&& func,
-                      std::index_sequence<Is...>) {
+auto apply_array_impl(const std::array<T, N>& array, FUNC_T&& func, std::index_sequence<Is...>) {
   return std::array<RET_T, N>{std::move(func(array[Is]))...};
 }
 
 template <typename T, size_t N, typename FUNC_T>
 auto apply_array(const std::array<T, N>& array, FUNC_T&& func) {
-  return apply_array_impl(array, std::move(func),
-                          std::make_index_sequence<N>());
+  return apply_array_impl(array, std::move(func), std::make_index_sequence<N>());
 }
 
 template <typename... T, typename FUNC_T, typename... OTHER_ARGS, size_t... Is>
-void apply_tuple_impl(const std::tuple<T...>& tuple, const FUNC_T& func,
-                      std::index_sequence<Is...>, OTHER_ARGS&... other_args) {
+void apply_tuple_impl(const std::tuple<T...>& tuple, const FUNC_T& func, std::index_sequence<Is...>,
+                      OTHER_ARGS&... other_args) {
   ((func(std::get<Is>(tuple), std::forward<OTHER_ARGS>(other_args)...)), ...);
 }
 
 template <typename... T, typename FUNC_T, typename... OTHER_ARGS>
-auto apply_tuple(const std::tuple<T...>& tuple, const FUNC_T& func,
-                 OTHER_ARGS&... other_args) {
+auto apply_tuple(const std::tuple<T...>& tuple, const FUNC_T& func, OTHER_ARGS&... other_args) {
   static constexpr size_t N = sizeof...(T);
   return apply_tuple_impl(tuple, func, std::make_index_sequence<N>(),
                           std::forward<OTHER_ARGS>(other_args)...);
@@ -508,8 +473,8 @@ auto apply_tuple(const std::tuple<T...>& tuple, const FUNC_T& func,
 template <typename Dest = void, typename... Args>
 constexpr auto make_array(Args&&... args) {
   if constexpr (std::is_same<void, Dest>::value) {
-    return std::array<std::common_type_t<std::decay_t<Args>...>,
-                      sizeof...(Args)>{{std::forward<Args>(args)...}};
+    return std::array<std::common_type_t<std::decay_t<Args>...>, sizeof...(Args)>{
+        {std::forward<Args>(args)...}};
   } else {
     return std::array<Dest, sizeof...(Args)>{{std::forward<Args>(args)...}};
   }
@@ -557,13 +522,11 @@ struct NumberLarger {
 };
 
 template <std::size_t Min, std::size_t Max>
-using make_index_range =
-    decltype(add<Min>(std::make_index_sequence<Max - Min>()));
+using make_index_range = decltype(add<Min>(std::make_index_sequence<Max - Min>()));
 
 template <typename T1, typename T2>
 struct TupleCatT {
-  using tuple_cat_t =
-      decltype(std::tuple_cat(std::declval<T1>(), std::declval<T2>()));
+  using tuple_cat_t = decltype(std::tuple_cat(std::declval<T1>(), std::declval<T2>()));
 };
 
 template <typename T2>
@@ -577,8 +540,7 @@ struct TupleCatT<T1, std::tuple<grape::EmptyType>> {
 };
 
 template <typename... ColMetas, size_t... Is>
-auto make_getter_tuple(label_t label, std::tuple<ColMetas...>&& tuple,
-                       std::index_sequence<Is...>) {
+auto make_getter_tuple(label_t label, std::tuple<ColMetas...>&& tuple, std::index_sequence<Is...>) {
   return std::make_tuple(std::get<Is>(tuple).CreateGetter(label)...);
 }
 
@@ -620,9 +582,8 @@ struct ColumnAccessorImpl<i> {};
 
 // Recursive
 template <std::size_t i, typename FIRST, typename... OTHER>
-struct ColumnAccessorImpl<i, FIRST, OTHER...>
-    : public SingleColumn<i, FIRST>,
-      public ColumnAccessorImpl<i + 1, OTHER...> {};
+struct ColumnAccessorImpl<i, FIRST, OTHER...> : public SingleColumn<i, FIRST>,
+                                                public ColumnAccessorImpl<i + 1, OTHER...> {};
 
 // multiple single columns.
 
@@ -680,8 +641,8 @@ std::vector<T> array_to_vec(const std::array<T, N>& array) {
 }
 
 template <typename PRIORITY_QUEUE_T>
-static typename PRIORITY_QUEUE_T::container_type priority_queue_to_vec(
-    PRIORITY_QUEUE_T& pq, bool reversed = false) {
+static typename PRIORITY_QUEUE_T::container_type priority_queue_to_vec(PRIORITY_QUEUE_T& pq,
+                                                                       bool reversed = false) {
   auto pq_size = pq.size();
   typename PRIORITY_QUEUE_T::container_type res;
   res.reserve(pq_size);
@@ -720,8 +681,7 @@ struct to_string_impl<std::unordered_map<K, V>> {
     // map{key:value, ...}
     ss << "map{";
     for (auto& [k, v] : vec) {
-      ss << to_string_impl<K>::to_string(k) << ":"
-         << to_string_impl<V>::to_string(v) << ",";
+      ss << to_string_impl<K>::to_string(k) << ":" << to_string_impl<V>::to_string(v) << ",";
     }
     ss << "}";
     return ss.str();
@@ -741,8 +701,7 @@ struct to_string_impl<std::array<T, N>> {
 
 template <typename T, size_t M, size_t N>
 struct to_string_impl<std::array<std::array<T, N>, M>> {
-  static inline std::string to_string(
-      const std::array<std::array<T, N>, M>& empty) {
+  static inline std::string to_string(const std::array<std::array<T, N>, M>& empty) {
     std::stringstream ss;
     ss << "[";
     for (auto i : empty) {
@@ -770,9 +729,7 @@ struct to_string_impl<AppendOpt> {
 
 template <>
 struct to_string_impl<Dist> {
-  static inline std::string to_string(const Dist& empty) {
-    return std::to_string(empty.dist);
-  }
+  static inline std::string to_string(const Dist& empty) { return std::to_string(empty.dist); }
 };
 
 template <>
@@ -784,16 +741,12 @@ struct to_string_impl<Date> {
 
 template <>
 struct to_string_impl<std::string_view> {
-  static inline std::string to_string(const std::string_view& empty) {
-    return std::string(empty);
-  }
+  static inline std::string to_string(const std::string_view& empty) { return std::string(empty); }
 };
 
 template <>
 struct to_string_impl<grape::EmptyType> {
-  static inline std::string to_string(const grape::EmptyType& empty) {
-    return "";
-  }
+  static inline std::string to_string(const grape::EmptyType& empty) { return ""; }
 };
 
 template <>
@@ -805,51 +758,37 @@ struct to_string_impl<uint8_t> {
 
 template <>
 struct to_string_impl<int64_t> {
-  static inline std::string to_string(const int64_t& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const int64_t& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<bool> {
-  static inline std::string to_string(const bool& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const bool& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<unsigned long> {
-  static inline std::string to_string(const unsigned long& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const unsigned long& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<int32_t> {
-  static inline std::string to_string(const int32_t& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const int32_t& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<uint32_t> {
-  static inline std::string to_string(const uint32_t& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const uint32_t& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<double> {
-  static inline std::string to_string(const double& empty) {
-    return std::to_string(empty);
-  }
+  static inline std::string to_string(const double& empty) { return std::to_string(empty); }
 };
 
 template <>
 struct to_string_impl<std::string> {
-  static inline std::string to_string(const std::string& empty) {
-    return empty;
-  }
+  static inline std::string to_string(const std::string& empty) { return empty; }
 };
 
 template <>
@@ -935,8 +874,8 @@ struct to_string_impl<std::tuple<Args...>> {
     std::apply(
         [&result](const auto&... v) {
           ((result +=
-            (to_string_impl<std::remove_const_t<
-                 std::remove_reference_t<decltype(v)>>>::to_string(v)) +
+            (to_string_impl<std::remove_const_t<std::remove_reference_t<decltype(v)>>>::to_string(
+                v)) +
             ","),
            ...);
         },
@@ -965,11 +904,9 @@ template <typename VID_T, typename... EDATA_T>
 struct Edge {
   VID_T src, dst;
   const std::tuple<EDATA_T...>& edata;
-  Edge(VID_T s, VID_T d, const std::tuple<EDATA_T...>& data)
-      : src(s), dst(d), edata(data) {}
+  Edge(VID_T s, VID_T d, const std::tuple<EDATA_T...>& data) : src(s), dst(d), edata(data) {}
   std::string to_string() const {
-    return std::to_string(src) + "->" + std::to_string(dst) + "(" +
-           gs::to_string(edata) + ")";
+    return std::to_string(src) + "->" + std::to_string(dst) + "(" + gs::to_string(edata) + ")";
   }
 };
 
@@ -987,8 +924,7 @@ template <typename VID_T>
 using DefaultEdge = Edge<VID_T, grape::EmptyType>;
 
 template <typename VID_T>
-inline bool operator==(const DefaultEdge<VID_T>& lhs,
-                       const DefaultEdge<VID_T>& rhs) {
+inline bool operator==(const DefaultEdge<VID_T>& lhs, const DefaultEdge<VID_T>& rhs) {
   return lhs.src == rhs.src && lhs.dst == rhs.dst;
 }
 
@@ -1022,9 +958,9 @@ struct function_traits<ReturnType (ClassType::*)(Args...) const>
 };
 
 template <typename label_id_t>
-static std::tuple<label_id_t, label_id_t> get_graph_label_pair(
-    Direction& direction, label_id_t query_src_label,
-    label_id_t query_dst_label) {
+static std::tuple<label_id_t, label_id_t> get_graph_label_pair(Direction& direction,
+                                                               label_id_t query_src_label,
+                                                               label_id_t query_dst_label) {
   label_id_t src_label, dst_label;
   if (direction == Direction::In) {
     src_label = query_dst_label;
