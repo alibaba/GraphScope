@@ -112,9 +112,7 @@ class Tuple {
       // delete props_;
     }
   }
-  void init(std::vector<RTAny>&& vals) {
-    props_ = new std::vector<RTAny>(vals);
-  }
+  void init(std::vector<RTAny>&& vals) { props_ = new std::vector<RTAny>(vals); }
   // not support for path
   Tuple dup() const {
     Tuple new_tuple;
@@ -186,14 +184,10 @@ class RTAnyType {
   static const RTAnyType kMap;
 
   RTAnyType() : type_enum_(RTAnyTypeImpl::kUnknown) {}
-  RTAnyType(const RTAnyType& other)
-      : type_enum_(other.type_enum_), null_able_(other.null_able_) {}
+  RTAnyType(const RTAnyType& other) : type_enum_(other.type_enum_), null_able_(other.null_able_) {}
   RTAnyType(RTAnyTypeImpl type) : type_enum_(type), null_able_(false) {}
-  RTAnyType(RTAnyTypeImpl type, bool null_able)
-      : type_enum_(type), null_able_(null_able) {}
-  bool operator==(const RTAnyType& other) const {
-    return type_enum_ == other.type_enum_;
-  }
+  RTAnyType(RTAnyTypeImpl type, bool null_able) : type_enum_(type), null_able_(null_able) {}
+  bool operator==(const RTAnyType& other) const { return type_enum_ == other.type_enum_; }
   RTAnyTypeImpl type_enum_;
   bool null_able_;
 };
@@ -205,8 +199,7 @@ class Map {
     m.map_ = impl;
     return m;
   }
-  std::pair<const std::vector<std::string>*, const std::vector<RTAny>*>
-  key_vals() const {
+  std::pair<const std::vector<std::string>*, const std::vector<RTAny>*> key_vals() const {
     return std::make_pair(map_.keys, map_.values);
   }
 
@@ -251,8 +244,7 @@ class RTAny {
 
   static RTAny from_vertex(label_t l, vid_t v);
   static RTAny from_vertex(const std::pair<label_t, vid_t>& v);
-  static RTAny from_edge(
-      const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& v);
+  static RTAny from_edge(const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& v);
   static RTAny from_bool(bool v);
   static RTAny from_int64(int64_t v);
   static RTAny from_uint64(uint64_t v);
@@ -292,8 +284,7 @@ class RTAny {
   RTAny operator-(const RTAny& other) const;
   RTAny operator/(const RTAny& other) const;
 
-  void sink(const gs::ReadTransaction& txn, int id,
-            results::Column* column) const;
+  void sink(const gs::ReadTransaction& txn, int id, results::Column* column) const;
   void encode_sig(RTAnyType type, Encoder& encoder) const;
 
   std::string to_string() const;
@@ -327,24 +318,16 @@ struct TypedConverter<int> {
 template <>
 struct TypedConverter<std::set<std::string>> {
   static RTAnyType type() { return RTAnyType::kStringSetValue; }
-  static const std::set<std::string> to_typed(const RTAny& val) {
-    return val.as_string_set();
-  }
-  static RTAny from_typed(const std::set<std::string>& val) {
-    return RTAny::from_string_set(val);
-  }
+  static const std::set<std::string> to_typed(const RTAny& val) { return val.as_string_set(); }
+  static RTAny from_typed(const std::set<std::string>& val) { return RTAny::from_string_set(val); }
   static const std::string name() { return "set<string>"; }
 };
 
 template <>
 struct TypedConverter<std::vector<vid_t>> {
   static RTAnyType type() { return RTAnyType::kVertexSetValue; }
-  static const std::vector<vid_t>& to_typed(const RTAny& val) {
-    return val.as_vertex_list();
-  }
-  static RTAny from_typed(const std::vector<vid_t>& val) {
-    return RTAny::from_vertex_list(val);
-  }
+  static const std::vector<vid_t>& to_typed(const RTAny& val) { return val.as_vertex_list(); }
+  static RTAny from_typed(const std::vector<vid_t>& val) { return RTAny::from_vertex_list(val); }
   static const std::string name() { return "vector<vid_t>"; }
 };
 
@@ -352,9 +335,7 @@ template <>
 struct TypedConverter<std::string_view> {
   static RTAnyType type() { return RTAnyType::kStringValue; }
   static std::string_view to_typed(const RTAny& val) { return val.as_string(); }
-  static RTAny from_typed(const std::string_view& val) {
-    return RTAny::from_string(val);
-  }
+  static RTAny from_typed(const std::string_view& val) { return RTAny::from_string(val); }
   static const std::string name() { return "string_view"; }
   static std::string_view typed_from_string(const std::string& str) {
     return std::string_view(str.data(), str.size());
@@ -400,9 +381,7 @@ template <>
 struct TypedConverter<Tuple> {
   static RTAnyType type() { return RTAnyType::kTuple; }
   static Tuple to_typed(const RTAny& val) { return val.as_tuple(); }
-  static RTAny from_typed(Tuple val) {
-    return RTAny::from_tuple(std::move(val));
-  }
+  static RTAny from_typed(Tuple val) { return RTAny::from_tuple(std::move(val)); }
   static const std::string name() { return "tuple"; }
 };
 
@@ -423,8 +402,7 @@ class ListImpl : ListImplBase {
     return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
-  static std::shared_ptr<ListImplBase> make_list_impl(
-      const std::vector<RTAny>& vals) {
+  static std::shared_ptr<ListImplBase> make_list_impl(const std::vector<RTAny>& vals) {
     auto new_list = new ListImpl<T>();
     for (auto& val : vals) {
       if (val.is_null()) {
@@ -460,24 +438,21 @@ template <>
 class ListImpl<std::string_view> : public ListImplBase {
  public:
   ListImpl() = default;
-  static std::shared_ptr<ListImplBase> make_list_impl(
-      std::vector<std::string>&& vals) {
+  static std::shared_ptr<ListImplBase> make_list_impl(std::vector<std::string>&& vals) {
     auto new_list = new ListImpl<std::string_view>();
     new_list->list_ = std::move(vals);
     new_list->is_valid_.resize(new_list->list_.size(), true);
     return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
-  static std::shared_ptr<ListImplBase> make_list_impl(
-      const std::vector<RTAny>& vals) {
+  static std::shared_ptr<ListImplBase> make_list_impl(const std::vector<RTAny>& vals) {
     auto new_list = new ListImpl<std::string_view>();
     for (auto& val : vals) {
       if (val.is_null()) {
         new_list->is_valid_.push_back(false);
         new_list->list_.push_back("");
       } else {
-        new_list->list_.push_back(
-            std::string(TypedConverter<std::string_view>::to_typed(val)));
+        new_list->list_.push_back(std::string(TypedConverter<std::string_view>::to_typed(val)));
         new_list->is_valid_.push_back(true);
       }
     }
@@ -504,30 +479,19 @@ class ListImpl<std::string_view> : public ListImplBase {
   std::vector<bool> is_valid_;
 };
 
-const RTAnyType RTAnyType::kVertex =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kVertex);
+const RTAnyType RTAnyType::kVertex = RTAnyType(RTAnyType::RTAnyTypeImpl::kVertex);
 const RTAnyType RTAnyType::kEdge = RTAnyType(RTAnyType::RTAnyTypeImpl::kEdge);
-const RTAnyType RTAnyType::kI64Value =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kI64Value);
-const RTAnyType RTAnyType::kU64Value =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kU64Value);
-const RTAnyType RTAnyType::kI32Value =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kI32Value);
-const RTAnyType RTAnyType::kF64Value =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kF64Value);
+const RTAnyType RTAnyType::kI64Value = RTAnyType(RTAnyType::RTAnyTypeImpl::kI64Value);
+const RTAnyType RTAnyType::kU64Value = RTAnyType(RTAnyType::RTAnyTypeImpl::kU64Value);
+const RTAnyType RTAnyType::kI32Value = RTAnyType(RTAnyType::RTAnyTypeImpl::kI32Value);
+const RTAnyType RTAnyType::kF64Value = RTAnyType(RTAnyType::RTAnyTypeImpl::kF64Value);
 
-const RTAnyType RTAnyType::kBoolValue =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kBoolValue);
-const RTAnyType RTAnyType::kStringValue =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kStringValue);
-const RTAnyType RTAnyType::kVertexSetValue =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kVertexSetValue);
-const RTAnyType RTAnyType::kStringSetValue =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kStringSetValue);
-const RTAnyType RTAnyType::kUnknown =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kUnknown);
-const RTAnyType RTAnyType::kDate32 =
-    RTAnyType(RTAnyType::RTAnyTypeImpl::kDate32);
+const RTAnyType RTAnyType::kBoolValue = RTAnyType(RTAnyType::RTAnyTypeImpl::kBoolValue);
+const RTAnyType RTAnyType::kStringValue = RTAnyType(RTAnyType::RTAnyTypeImpl::kStringValue);
+const RTAnyType RTAnyType::kVertexSetValue = RTAnyType(RTAnyType::RTAnyTypeImpl::kVertexSetValue);
+const RTAnyType RTAnyType::kStringSetValue = RTAnyType(RTAnyType::RTAnyTypeImpl::kStringSetValue);
+const RTAnyType RTAnyType::kUnknown = RTAnyType(RTAnyType::RTAnyTypeImpl::kUnknown);
+const RTAnyType RTAnyType::kDate32 = RTAnyType(RTAnyType::RTAnyTypeImpl::kDate32);
 const RTAnyType RTAnyType::kPath = RTAnyType(RTAnyType::RTAnyTypeImpl::kPath);
 const RTAnyType RTAnyType::kNull = RTAnyType(RTAnyType::RTAnyTypeImpl::kNull);
 const RTAnyType RTAnyType::kTuple = RTAnyType(RTAnyType::RTAnyTypeImpl::kTuple);
@@ -563,11 +527,9 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
   case ::common::IrDataType::TypeCase::kGraphType: {
     const ::common::GraphDataType gdt = dt.graph_type();
     switch (gdt.element_opt()) {
-    case ::common::GraphDataType_GraphElementOpt::
-        GraphDataType_GraphElementOpt_VERTEX:
+    case ::common::GraphDataType_GraphElementOpt::GraphDataType_GraphElementOpt_VERTEX:
       return RTAnyType::kVertex;
-    case ::common::GraphDataType_GraphElementOpt::
-        GraphDataType_GraphElementOpt_EDGE:
+    case ::common::GraphDataType_GraphElementOpt::GraphDataType_GraphElementOpt_EDGE:
       return RTAnyType::kEdge;
     default:
       LOG(FATAL) << "unrecoginized graph data type";
@@ -605,8 +567,7 @@ RTAny::RTAny(const Any& val) {
     type_ = RTAnyType::kBoolValue;
     value_.b_val = val.AsBool();
   } else {
-    LOG(FATAL) << "Any value: " << val.to_string()
-               << ", type = " << val.type.type_enum;
+    LOG(FATAL) << "Any value: " << val.to_string() << ", type = " << val.type.type_enum;
   }
 }
 
@@ -685,8 +646,7 @@ RTAny RTAny::from_vertex(const std::pair<label_t, vid_t>& v) {
   return ret;
 }
 
-RTAny RTAny::from_edge(
-    const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& v) {
+RTAny RTAny::from_edge(const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& v) {
   RTAny ret;
   ret.type_ = RTAnyType::kEdge;
   ret.value_.edge = v;
@@ -795,13 +755,11 @@ bool RTAny::as_bool() const {
   if (type_ == RTAnyType::kNull) {
     return false;
   }
-  CHECK(type_ == RTAnyType::kBoolValue)
-      << "type_ = " << static_cast<int>(type_.type_enum_);
+  CHECK(type_ == RTAnyType::kBoolValue) << "type_ = " << static_cast<int>(type_.type_enum_);
   return value_.b_val;
 }
 int RTAny::as_int32() const {
-  CHECK(type_ == RTAnyType::kI32Value)
-      << "type_ = " << static_cast<int>(type_.type_enum_);
+  CHECK(type_ == RTAnyType::kI32Value) << "type_ = " << static_cast<int>(type_.type_enum_);
   return value_.i32_val;
 }
 int64_t RTAny::as_int64() const {
@@ -826,8 +784,7 @@ const std::pair<label_t, vid_t>& RTAny::as_vertex() const {
   CHECK(type_ == RTAnyType::kVertex);
   return value_.vertex;
 }
-const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& RTAny::as_edge()
-    const {
+const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& RTAny::as_edge() const {
   CHECK(type_ == RTAnyType::kEdge);
   return value_.edge;
 }
@@ -879,8 +836,7 @@ int RTAny::numerical_cmp(const RTAny& other) const {
     case RTAnyType::RTAnyTypeImpl::kF64Value:
       return value_.i64_val - other.value_.f64_val;
     default:
-      LOG(FATAL) << "not support for "
-                 << static_cast<int>(other.type_.type_enum_);
+      LOG(FATAL) << "not support for " << static_cast<int>(other.type_.type_enum_);
     }
     break;
   case RTAnyType::RTAnyTypeImpl::kI32Value:
@@ -890,8 +846,7 @@ int RTAny::numerical_cmp(const RTAny& other) const {
     case RTAnyType::RTAnyTypeImpl::kF64Value:
       return value_.i32_val - other.value_.f64_val;
     default:
-      LOG(FATAL) << "not support for "
-                 << static_cast<int>(other.type_.type_enum_);
+      LOG(FATAL) << "not support for " << static_cast<int>(other.type_.type_enum_);
     }
     break;
   case RTAnyType::RTAnyTypeImpl::kF64Value:
@@ -964,8 +919,7 @@ bool RTAny::operator==(const RTAny& other) const {
 
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return value_.i64_val == other.value_.i32_val;
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
+  } else if (type_ == RTAnyType::kI32Value && other.type_ == RTAnyType::kI64Value) {
     return value_.i32_val == other.value_.i64_val;
   } else if (type_ == RTAnyType::kF64Value) {
     return value_.f64_val == other.value_.f64_val;
@@ -978,8 +932,7 @@ bool RTAny::operator==(const RTAny& other) const {
 RTAny RTAny::operator+(const RTAny& other) const {
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val + other.value_.i32_val);
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
+  } else if (type_ == RTAnyType::kI32Value && other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l + other.value_.i64_val);
   }
   if (type_ == RTAnyType::kF64Value) {
@@ -999,8 +952,7 @@ RTAny RTAny::operator-(const RTAny& other) const {
 
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val - other.value_.i32_val);
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
+  } else if (type_ == RTAnyType::kI32Value && other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l - other.value_.i64_val);
   }
   if (type_ == RTAnyType::kF64Value) {
@@ -1019,8 +971,7 @@ RTAny RTAny::operator/(const RTAny& other) const {
 
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val / other.value_.i32_val);
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
+  } else if (type_ == RTAnyType::kI32Value && other.type_ == RTAnyType::kI64Value) {
     return RTAny::from_int64(value_.i32_val * 1l / other.value_.i64_val);
   }
 
@@ -1080,18 +1031,16 @@ static void sink_any(const Any& any, common::Value* value) {
   } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.AsDouble());
   } else {
-    LOG(FATAL) << "Any value: " << any.to_string()
-               << ", type = " << any.type.type_enum;
+    LOG(FATAL) << "Any value: " << any.to_string() << ", type = " << any.type.type_enum;
   }
 }
 
-void sink_vertex(const gs::ReadTransaction& txn,
-                 const std::pair<label_t, vid_t>& vertex, results::Vertex* v) {
+void sink_vertex(const gs::ReadTransaction& txn, const std::pair<label_t, vid_t>& vertex,
+                 results::Vertex* v) {
   v->mutable_label()->set_id(vertex.first);
   v->set_id(encode_unique_vertex_id(vertex.first, vertex.second));
   //  TODO: add properties
-  const auto& names =
-      txn.graph().schema().get_vertex_property_names(vertex.first);
+  const auto& names = txn.graph().schema().get_vertex_property_names(vertex.first);
   for (size_t i = 0; i < names.size(); ++i) {
     auto prop = v->add_properties();
     prop->mutable_key()->set_name(names[i]);
@@ -1100,14 +1049,12 @@ void sink_vertex(const gs::ReadTransaction& txn,
   }
 }
 
-void RTAny::sink(const gs::ReadTransaction& txn, int id,
-                 results::Column* col) const {
+void RTAny::sink(const gs::ReadTransaction& txn, int id, results::Column* col) const {
   col->mutable_name_or_id()->set_id(id);
   if (type_ == RTAnyType::kList) {
     auto collection = col->mutable_entry()->mutable_collection();
     for (size_t i = 0; i < value_.list.size(); ++i) {
-      value_.list.get(i).sink_impl(
-          collection->add_collection()->mutable_object());
+      value_.list.get(i).sink_impl(collection->add_collection()->mutable_object());
     }
   } else if (type_ == RTAnyType::kStringSetValue) {
     auto collection = col->mutable_entry()->mutable_collection();
@@ -1138,8 +1085,7 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
         auto v = ret->mutable_value()->mutable_element()->mutable_vertex();
         sink_vertex(txn, vals[i].as_vertex(), v);
       } else {
-        vals[i].sink_impl(
-            ret->mutable_value()->mutable_element()->mutable_object());
+        vals[i].sink_impl(ret->mutable_value()->mutable_element()->mutable_object());
       }
     }
 
@@ -1148,14 +1094,13 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
     auto [label, src, dst, prop, dir] = this->as_edge();
     e->mutable_src_label()->set_id(label.src_label);
     e->mutable_dst_label()->set_id(label.dst_label);
-    auto edge_label = generate_edge_label_id(label.src_label, label.dst_label,
-                                             label.edge_label);
+    auto edge_label = generate_edge_label_id(label.src_label, label.dst_label, label.edge_label);
     e->mutable_label()->set_id(label.edge_label);
     e->set_src_id(encode_unique_vertex_id(label.src_label, src));
     e->set_dst_id(encode_unique_vertex_id(label.dst_label, dst));
     e->set_id(encode_unique_edge_id(edge_label, src, dst));
-    auto& prop_names = txn.schema().get_edge_property_names(
-        label.src_label, label.dst_label, label.edge_label);
+    auto& prop_names =
+        txn.schema().get_edge_property_names(label.src_label, label.dst_label, label.edge_label);
     if (prop_names.size() == 1) {
       auto props = e->add_properties();
       props->mutable_key()->set_name(prop_names[0]);

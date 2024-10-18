@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/join.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/engines/graph_db/runtime/common/operators/join.h"
 
 namespace gs {
 namespace runtime {

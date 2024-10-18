@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/get_v.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/predicates.h"
 #include "flex/engines/graph_db/runtime/adhoc/utils.h"
+#include "flex/engines/graph_db/runtime/common/operators/get_v.h"
 
 namespace gs {
 
