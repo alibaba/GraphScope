@@ -76,12 +76,19 @@ oC_PatternPart
        ;
 
 oC_AnonymousPatternPart
-                    :  oC_PatternElement ;
+                    :  oC_ShortestPathOption? oC_PatternElement ;
 
 oC_PatternElement
-              :  ( oC_NodePattern ( SP? oC_PatternElementChain )* )
-                  | ( '(' oC_PatternElement ')' )
-                  ;
+              : ( oC_NodePattern ( SP? oC_PatternElementChain )* )
+              | ( '(' oC_PatternElement ')' )
+              ;
+
+oC_ShortestPathOption
+            : ( ALL SP? )? SHORTESTPATH ;
+
+ALL : ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
+
+SHORTESTPATH : ( 'S' | 's' ) ( 'H' | 'h' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'P' | 'p' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'H' | 'h' );
 
 oC_With
     :  WITH oC_ProjectionBody ( SP? oC_Where )? ;
