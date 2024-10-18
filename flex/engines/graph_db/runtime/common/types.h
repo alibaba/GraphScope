@@ -31,6 +31,9 @@ std::pair<label_t, vid_t> decode_unique_vertex_id(uint64_t unique_id);
 uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id);
 int64_t encode_unique_edge_id(uint32_t label_id, vid_t src, vid_t dst);
+
+std::tuple<label_t, label_t, label_t> decode_edge_label_id(
+    uint32_t edge_label_id);
 enum class Direction {
   kOut,
   kIn,

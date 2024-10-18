@@ -46,6 +46,12 @@ std::shared_ptr<IContextColumn> any_vec_to_column(
       builder.push_back_opt(any.as_int64());
     }
     return builder.finish();
+  } else if (first == RTAnyType::kU64Value) {
+    ValueColumnBuilder<uint64_t> builder;
+    for (auto& any : any_vec) {
+      builder.push_back_opt(any.as_uint64());
+    }
+    return builder.finish();
   } else if (first == RTAnyType::kF64Value) {
     ValueColumnBuilder<double> builder;
     for (auto& any : any_vec) {
@@ -58,22 +64,22 @@ std::shared_ptr<IContextColumn> any_vec_to_column(
       builder.push_back_elem(any);
     }
     return builder.finish();
+  } else if (first == RTAnyType::kStringSetValue) {
+    ValueColumnBuilder<std::set<std::string>> builder;
+    for (auto& any : any_vec) {
+      builder.push_back_opt(any.as_string_set());
+    }
+    return builder.finish();
+  } else if (first == RTAnyType::kDate32) {
+    ValueColumnBuilder<Date> builder;
+    for (auto& any : any_vec) {
+      builder.push_back_opt(any.as_date32());
+    }
+    return builder.finish();
   } else {
     LOG(FATAL) << "Unsupported RTAny type: "
                << static_cast<int>(first.type_enum_);
   }
-}
-
-RTAny vertex_to_rt_any(const results::Vertex& vertex) {
-  auto label_id = vertex.label().id();
-  auto label_id_vid = decode_unique_vertex_id(vertex.id());
-  CHECK(label_id == label_id_vid.first) << "Inconsistent label id.";
-  return RTAny::from_vertex(label_id, label_id_vid.second);
-}
-
-RTAny edge_to_rt_any(const results::Edge& edge) {
-  LOG(FATAL) << "Not implemented.";
-  return RTAny();
 }
 
 RTAny object_to_rt_any(const common::Value& val) {
@@ -92,6 +98,73 @@ RTAny object_to_rt_any(const common::Value& val) {
   }
 }
 
+Any property_to_any(const results::Property& prop) {
+  // We just need the value;
+  const auto& val = prop.value();
+  Any res;
+  if (val.item_case() == common::Value::kBoolean) {
+    res.set_bool(val.boolean());
+  } else if (val.item_case() == common::Value::kI32) {
+    res.set_i32(val.i32());
+  } else if (val.item_case() == common::Value::kI64) {
+    res.set_i64(val.i64());
+  } else if (val.item_case() == common::Value::kF64) {
+    res.set_double(val.f64());
+  } else if (val.item_case() == common::Value::kStr) {
+    res.set_string_view(std::string_view(val.str()));
+  } else {
+    LOG(FATAL) << "Unsupported value type: " << val.item_case();
+  }
+  return res;
+}
+
+RTAny vertex_to_rt_any(const results::Vertex& vertex) {
+  auto label_id = vertex.label().id();
+  auto label_id_vid = decode_unique_vertex_id(vertex.id());
+  CHECK(label_id == label_id_vid.first) << "Inconsistent label id.";
+  return RTAny::from_vertex(label_id, label_id_vid.second);
+}
+
+RTAny edge_to_rt_any(const results::Edge& edge) {
+  LOG(FATAL) << "Not implemented.";
+  label_t src_label_id = (label_t) edge.src_label().id();
+  label_t dst_label_id = (label_t) edge.dst_label().id();
+  auto edge_triplet_tuple = decode_edge_label_id(edge.label().id());
+  CHECK((src_label_id == std::get<0>(edge_triplet_tuple)) &&
+        (dst_label_id == std::get<1>(edge_triplet_tuple)))
+      << "Inconsistent src label id.";
+  auto src_vertex_id = edge.src_id();
+  auto dst_vertex_id = edge.dst_id();
+  auto [_, src_vid] = decode_unique_vertex_id(src_vertex_id);
+  auto [__, dst_vid] = decode_unique_vertex_id(dst_vertex_id);
+  // properties
+  auto properties = edge.properties();
+  LabelTriplet label_triplet{src_label_id, dst_label_id,
+                             std::get<2>(edge_triplet_tuple)};
+  if (properties.size() == 0) {
+    return RTAny::from_edge(
+        std::tuple{label_triplet, src_vid, dst_vid, Any(), Direction::kOut});
+  } else if (properties.size() == 1) {
+    LOG(FATAL) << "Not implemented.";
+    return RTAny::from_edge(std::tuple{label_triplet, src_vid, dst_vid,
+                                       property_to_any(properties[0]),
+                                       Direction::kOut});
+  } else {
+    std::vector<Any> props;
+    for (auto& prop : properties) {
+      props.push_back(property_to_any(prop));
+    }
+    Any any;
+    any.set_record(props);
+    return RTAny::from_edge(
+        std::tuple{label_triplet, src_vid, dst_vid, any, Direction::kOut});
+  }
+}  // namespace runtime
+
+RTAny graph_path_to_rt_any(const results::GraphPath& path) {
+  LOG(FATAL) << "Not implemented.";
+}
+
 RTAny element_to_rt_any(const results::Element& element) {
   if (element.inner_case() == results::Element::kVertex) {
     return vertex_to_rt_any(element.vertex());
@@ -99,6 +172,8 @@ RTAny element_to_rt_any(const results::Element& element) {
     return edge_to_rt_any(element.edge());
   } else if (element.inner_case() == results::Element::kObject) {
     return object_to_rt_any(element.object());
+  } else if (element.inner_case() == results::Element::kGraphPath) {
+    return graph_path_to_rt_any(element.graph_path());
   } else {
     LOG(FATAL) << "Unsupported element type: " << element.inner_case();
   }
@@ -112,10 +187,6 @@ RTAny collection_to_rt_any(const results::Collection& collection) {
   return RTAny::from_tuple(std::move(values));
 }
 
-RTAny map_to_rt_any(const results::KeyValues& map) {
-  LOG(FATAL) << "Not implemented.";
-}
-
 RTAny column_to_rt_any(const results::Column& column) {
   auto& entry = column.entry();
   if (entry.has_element()) {
@@ -123,7 +194,7 @@ RTAny column_to_rt_any(const results::Column& column) {
   } else if (entry.has_collection()) {
     return collection_to_rt_any(entry.collection());
   } else {
-    return map_to_rt_any(entry.map());
+    LOG(FATAL) << "Unsupported column entry type: " << entry.inner_case();
   }
 }
 
@@ -171,8 +242,8 @@ collective_result_vec_to_column(
   return std::make_pair(columns, offsets);
 }
 
-procedure::Query fill_in_query(const procedure::Query& query,
-                               const Context& ctx, size_t idx) {
+bl::result<procedure::Query> fill_in_query(const procedure::Query& query,
+                                           const Context& ctx, size_t idx) {
   procedure::Query real_query;
   real_query.mutable_query_name()->CopyFrom(query.query_name());
   for (auto& param : query.arguments()) {
@@ -188,15 +259,21 @@ procedure::Query fill_in_query(const procedure::Query& query,
       auto val = col->get_elem(idx);
       auto const_value = argument->mutable_const_();
       if (val.type() == gs::runtime::RTAnyType::kVertex) {
-        LOG(FATAL) << "Not implemented yet";
+        RETURN_BAD_REQUEST_ERROR("The input param should not be a vertex");
       } else if (val.type() == gs::runtime::RTAnyType::kEdge) {
-        LOG(FATAL) << "Not implemented yet";
+        RETURN_BAD_REQUEST_ERROR("The input param should not be an edge");
       } else if (val.type() == gs::runtime::RTAnyType::kI64Value) {
         const_value->set_i64(val.as_int64());
       } else if (val.type() == gs::runtime::RTAnyType::kI32Value) {
         const_value->set_i32(val.as_int32());
       } else if (val.type() == gs::runtime::RTAnyType::kStringValue) {
         const_value->set_str(std::string(val.as_string()));
+      } else if (val.type() == gs::runtime::RTAnyType::kF64Value) {
+        const_value->set_f64(val.as_double());
+      } else if (val.type() == gs::runtime::RTAnyType::kBoolValue) {
+        const_value->set_boolean(val.as_bool());
+      } else if (val.type() == gs::runtime::RTAnyType::kDate32) {
+        const_value->set_i64(val.as_date32());
       } else {
         LOG(ERROR) << "Unsupported type: "
                    << static_cast<int32_t>(val.type().type_enum_);
@@ -211,9 +288,9 @@ procedure::Query fill_in_query(const procedure::Query& query,
 /**
  * @brief Evaluate the ProcedureCall operator.
  * The ProcedureCall operator is used to call a stored procedure, which is
- * already registered in the system. The return value of the stored procedure is
- * a result::CollectiveResults object, we need to convert it to a Column, and
- * append to the current context.
+ * already registered in the system. The return value of the stored procedure
+ * is a result::CollectiveResults object, we need to convert it to a Column,
+ * and append to the current context.
  *
  *
  * @param opr The ProcedureCall operator.
@@ -224,7 +301,7 @@ procedure::Query fill_in_query(const procedure::Query& query,
  *
  *
  */
-bl::result<Context> eval_procedure_call(std::vector<int32_t> aliases,
+bl::result<Context> eval_procedure_call(const std::vector<int32_t>& aliases,
                                         const physical::ProcedureCall& opr,
                                         const ReadTransaction& txn,
                                         Context&& ctx) {
@@ -232,13 +309,14 @@ bl::result<Context> eval_procedure_call(std::vector<int32_t> aliases,
   auto& proc_name = query.query_name();
 
   if (proc_name.item_case() == common::NameOrId::kName) {
-    // TODO: avoid calling graphDB here.
-    auto& db = gs::GraphDB::get();
-    //------------------------------------------
-    // FIXME: sess id is hard coded to 0
-    auto& sess = db.GetSession(0);
-
-    AppBase* app = sess.GetApp(proc_name.name());
+    const auto& sess = txn.GetSession();
+    // cast off const, to get the app pointer.
+    // Why do we need to cast off const? Because current GetApp method is not
+    // const.
+    // TODO(zhanglei): Refactor the GetApp method to be const(maybe create the
+    // app once initialize, not on need).
+    GraphDBSession& sess_cast = const_cast<GraphDBSession&>(sess);
+    AppBase* app = const_cast<AppBase*>(sess_cast.GetApp(proc_name.name()));
     if (!app) {
       RETURN_BAD_REQUEST_ERROR("Stored procedure not found: " +
                                proc_name.name());
@@ -255,7 +333,7 @@ bl::result<Context> eval_procedure_call(std::vector<int32_t> aliases,
       // Call the procedure.
       // Use real values from the context to replace the placeholders in the
       // query.
-      auto real_query = fill_in_query(query, ctx, i);
+      BOOST_LEAF_AUTO(real_query, fill_in_query(query, ctx, i));
       // We need to serialize the protobuf-based arguments to the input format
       // that a cypher procedure can accept.
       auto query_str = real_query.SerializeAsString();
@@ -265,7 +343,7 @@ bl::result<Context> eval_procedure_call(std::vector<int32_t> aliases,
       std::vector<char> buffer;
       Encoder encoder(buffer);
       Decoder decoder(query_str.data(), query_str.size());
-      if (!read_app->run(sess, decoder, encoder)) {
+      if (!read_app->Query(sess, decoder, encoder)) {
         RETURN_CALL_PROCEDURE_ERROR("Failed to call procedure: ");
       }
       // Decode the result from the encoder.
