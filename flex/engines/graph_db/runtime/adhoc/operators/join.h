@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/join.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/engines/graph_db/runtime/common/operators/join.h"
 
 namespace gs {
 namespace runtime {
+
 bl::result<Context> eval_join(const physical::Join& opr, Context&& ctx,
                               Context&& ctx2) {
   JoinParams p;

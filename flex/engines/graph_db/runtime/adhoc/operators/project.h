@@ -42,9 +42,10 @@ bool exchange_tag_alias(const physical::Project_ExprAlias& m, int& tag,
   return false;
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_project(
-    const physical::Project& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
+    const physical::Project& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params,
     const std::vector<common::IrDataType>& data_types) {
   bool is_append = opr.is_append();
   Context ret;
@@ -65,7 +66,7 @@ bl::result<Context> eval_project(
           continue;
         }
       }
-      Expr expr(txn, ctx, params, m.expr(), VarType::kPathVar);
+      Expr<GRAPH_IMPL> expr(txn, ctx, params, m.expr(), VarType::kPathVar);
       int alias = -1;
       if (m.has_alias()) {
         alias = m.alias().value();
@@ -86,7 +87,7 @@ bl::result<Context> eval_project(
         }
       }
 
-      Expr expr(txn, ctx, params, m.expr(), VarType::kPathVar);
+      Expr<GRAPH_IMPL> expr(txn, ctx, params, m.expr(), VarType::kPathVar);
       int alias = -1;
       if (m.has_alias()) {
         alias = m.alias().value();

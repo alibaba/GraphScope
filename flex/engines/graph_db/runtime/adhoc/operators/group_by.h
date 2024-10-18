@@ -61,9 +61,10 @@ AggrKind parse_aggregate(physical::GroupBy_AggFunc::Aggregate v) {
   }
 }
 
+template <typename GRAPH_IMPL>
 struct AggFunc {
-  AggFunc(const physical::GroupBy_AggFunc& opr, const ReadTransaction& txn,
-          const Context& ctx)
+  AggFunc(const physical::GroupBy_AggFunc& opr,
+          const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx)
       : aggregate(parse_aggregate(opr.aggregate())), alias(-1) {
     if (opr.has_alias()) {
       alias = opr.alias().value();
@@ -74,28 +75,30 @@ struct AggFunc {
     }
   }
 
-  std::vector<Var> vars;
+  std::vector<Var<GRAPH_IMPL>> vars;
   AggrKind aggregate;
   int alias;
 };
 
+template <typename GRAPH_IMPL>
 struct AggKey {
-  AggKey(const physical::GroupBy_KeyAlias& opr, const ReadTransaction& txn,
-         const Context& ctx)
+  AggKey(const physical::GroupBy_KeyAlias& opr,
+         const GraphInterface<GRAPH_IMPL>& txn, const Context& ctx)
       : key(txn, ctx, opr.key(), VarType::kPathVar), alias(-1) {
     if (opr.has_alias()) {
       alias = opr.alias().value();
     }
   }
 
-  Var key;
+  Var<GRAPH_IMPL> key;
   int alias;
   std::shared_ptr<IContextColumnBuilder> column_builder;
 };
 
+template <typename GRAPH_IMPL>
 std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
-    const std::vector<AggKey>& keys, size_t row_num,
-    const std::vector<AggFunc>& functions) {
+    const std::vector<AggKey<GRAPH_IMPL>>& keys, size_t row_num,
+    const std::vector<AggFunc<GRAPH_IMPL>>& functions) {
   std::unordered_map<std::string_view, size_t> sig_to_root;
   std::vector<std::vector<char>> root_list;
   std::vector<std::vector<size_t>> ret;
@@ -168,9 +171,10 @@ std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
   return std::make_pair(std::move(ret), std::move(ret_ctx));
 }
 
-template <typename NT>
+template <typename NT, typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> numeric_sum(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<NT> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -185,9 +189,10 @@ std::shared_ptr<IContextColumn> numeric_sum(
   return builder.finish();
 }
 
-template <typename NT>
+template <typename NT, typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> numeric_count_distinct(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<int64_t> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -202,8 +207,10 @@ std::shared_ptr<IContextColumn> numeric_count_distinct(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> vertex_count_distinct(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<int64_t> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -218,8 +225,9 @@ std::shared_ptr<IContextColumn> vertex_count_distinct(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> general_count_distinct(
-    const std::vector<Var>& vars,
+    const std::vector<Var<GRAPH_IMPL>>& vars,
     const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<int64_t> builder;
   size_t col_size = to_aggregate.size();
@@ -243,8 +251,9 @@ std::shared_ptr<IContextColumn> general_count_distinct(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> general_count(
-    const std::vector<Var>& vars,
+    const std::vector<Var<GRAPH_IMPL>>& vars,
     const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<int64_t> builder;
   if (vars.size() == 1) {
@@ -274,8 +283,10 @@ std::shared_ptr<IContextColumn> general_count(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> vertex_first(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   MLVertexColumnBuilder builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -289,9 +300,10 @@ std::shared_ptr<IContextColumn> vertex_first(
   return builder.finish();
 }
 
-template <typename NT>
+template <typename NT, typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> general_first(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<NT> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -305,9 +317,10 @@ std::shared_ptr<IContextColumn> general_first(
   return builder.finish();
 }
 
-template <typename NT>
+template <typename NT, typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> general_min(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<NT> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -329,9 +342,10 @@ std::shared_ptr<IContextColumn> general_min(
   return builder.finish();
 }
 
-template <typename NT>
+template <typename NT, typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> general_max(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<NT> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -353,8 +367,10 @@ std::shared_ptr<IContextColumn> general_max(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> string_to_set(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ValueColumnBuilder<std::set<std::string>> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -369,8 +385,10 @@ std::shared_ptr<IContextColumn> string_to_set(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> tuple_to_list(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ListValueColumnBuilder<Tuple> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -391,8 +409,10 @@ std::shared_ptr<IContextColumn> tuple_to_list(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 std::shared_ptr<IContextColumn> string_to_list(
-    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const Var<GRAPH_IMPL>& var,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   ListValueColumnBuilder<std::string> builder;
   size_t col_size = to_aggregate.size();
   builder.reserve(col_size);
@@ -413,13 +433,15 @@ std::shared_ptr<IContextColumn> string_to_list(
   return builder.finish();
 }
 
+template <typename GRAPH_IMPL>
 bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
-    const AggFunc& func, const std::vector<std::vector<size_t>>& to_aggregate) {
+    const AggFunc<GRAPH_IMPL>& func,
+    const std::vector<std::vector<size_t>>& to_aggregate) {
   if (func.aggregate == AggrKind::kSum) {
     if (func.vars.size() != 1) {
       LOG(FATAL) << "only 1 variable to sum is allowed";
     }
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kI32Value) {
       return numeric_sum<int>(var, to_aggregate);
     } else {
@@ -434,7 +456,7 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
     if (func.vars.size() != 1) {
       LOG(FATAL) << "only 1 variable to to_set is allowed";
     }
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kStringValue) {
       return string_to_set(var, to_aggregate);
     } else {
@@ -447,7 +469,7 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
     }
   } else if (func.aggregate == AggrKind::kCountDistinct) {
     if (func.vars.size() == 1 && func.vars[0].type() == RTAnyType::kVertex) {
-      const Var& var = func.vars[0];
+      const auto& var = func.vars[0];
       return vertex_count_distinct(var, to_aggregate);
     } else {
       return general_count_distinct(func.vars, to_aggregate);
@@ -460,7 +482,7 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
       LOG(FATAL) << "only 1 variable to first is allowed";
     }
 
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kVertex) {
       return vertex_first(var, to_aggregate);
     } else if (var.type() == RTAnyType::kI64Value) {
@@ -471,7 +493,7 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
       LOG(FATAL) << "only 1 variable to min is allowed";
     }
 
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kI32Value) {
       return general_min<int>(var, to_aggregate);
     } else if (var.type() == RTAnyType::kStringValue) {
@@ -482,14 +504,14 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
       LOG(FATAL) << "only 1 variable to max is allowed";
     }
 
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kI32Value) {
       return general_max<int>(var, to_aggregate);
     } else if (var.type() == RTAnyType::kStringValue) {
       return general_max<std::string_view>(var, to_aggregate);
     }
   } else if (func.aggregate == AggrKind::kToList) {
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (func.vars.size() != 1) {
       LOG(FATAL) << "only 1 variable to to_list is allowed";
     }
@@ -505,7 +527,7 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
       LOG(FATAL) << "only 1 variable to avg is allowed";
     }
     // LOG(FATAL) << "not support";
-    const Var& var = func.vars[0];
+    const auto& var = func.vars[0];
     if (var.type() == RTAnyType::kI32Value) {
       ValueColumnBuilder<int32_t> builder;
       size_t col_size = to_aggregate.size();
@@ -530,10 +552,12 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
   return nullptr;
 }
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_group_by(const physical::GroupBy& opr,
-                                  const ReadTransaction& txn, Context&& ctx) {
-  std::vector<AggFunc> functions;
-  std::vector<AggKey> mappings;
+                                  const GraphInterface<GRAPH_IMPL>& txn,
+                                  Context&& ctx) {
+  std::vector<AggFunc<GRAPH_IMPL>> functions;
+  std::vector<AggKey<GRAPH_IMPL>> mappings;
   int func_num = opr.functions_size();
   for (int i = 0; i < func_num; ++i) {
     functions.emplace_back(opr.functions(i), txn, ctx);

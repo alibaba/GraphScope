@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/common/operators/edge_expand.h"
-#include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/engines/graph_db/runtime/adhoc/predicates.h"
 #include "flex/engines/graph_db/runtime/adhoc/utils.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/operators/edge_expand.h"
 
 namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_edge_expand(
-    const physical::EdgeExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
+    const physical::EdgeExpand& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params,
     const physical::PhysicalOpr_MetaData& meta) {
   int v_tag;
   if (!opr.has_v_tag()) {

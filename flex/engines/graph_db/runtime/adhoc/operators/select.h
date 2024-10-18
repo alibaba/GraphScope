@@ -20,10 +20,11 @@ namespace gs {
 
 namespace runtime {
 
+template <typename GRAPH_IMPL>
 bl::result<Context> eval_select(
-    const algebra::Select& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params) {
-  Expr expr(txn, ctx, params, opr.predicate(), VarType::kPathVar);
+    const algebra::Select& opr, const GraphInterface<GRAPH_IMPL>& txn,
+    Context&& ctx, const std::map<std::string, std::string>& params) {
+  Expr<GRAPH_IMPL> expr(txn, ctx, params, opr.predicate(), VarType::kPathVar);
   std::vector<size_t> offsets;
   size_t row_num = ctx.row_num();
   if (expr.is_optional()) {

@@ -156,8 +156,7 @@ typename ValueTypeExtractor<std::tuple<Ts...>>::type invokeTuple(
 class OrderBy {
  public:
   template <typename Comparer>
-  static void order_by_with_limit(const ReadTransaction& txn, Context& ctx,
-                                  const Comparer& cmp, size_t low,
+  static void order_by_with_limit(Context& ctx, const Comparer& cmp, size_t low,
                                   size_t high) {
     if (low == 0 && high >= ctx.row_num()) {
       std::vector<size_t> offsets;
@@ -193,7 +192,7 @@ class OrderBy {
   }
 
   template <typename... Args>
-  static void order_by_with_limit_beta(const ReadTransaction& txn, Context& ctx,
+  static void order_by_with_limit_beta(Context& ctx,
                                        const std::tuple<Args...>& keys,
                                        size_t low, size_t high) {
     size_t row_num = ctx.row_num();
