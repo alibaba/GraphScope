@@ -1,5 +1,6 @@
 <map id="gs::ReadAppBase" name="gs::ReadAppBase">
-<area shape="rect" id="node1" title=" " alt="" coords="28,80,163,107"/>
-<area shape="rect" id="node3" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="5,155,185,181"/>
-<area shape="rect" id="node2" href="$classgs_1_1AppBase.html" title=" " alt="" coords="44,5,147,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="101,80,236,107"/>
+<area shape="rect" id="node3" href="$classgs_1_1AdhocReadApp.html" title=" " alt="" coords="5,155,148,181"/>
+<area shape="rect" id="node4" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="172,155,352,181"/>
+<area shape="rect" id="node2" href="$classgs_1_1AppBase.html" title=" " alt="" coords="117,5,220,32"/>
 </map>

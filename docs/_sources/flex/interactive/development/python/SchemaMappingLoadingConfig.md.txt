@@ -27,6 +27,6 @@ schema_mapping_loading_config_dict = schema_mapping_loading_config_instance.to_d
 # create an instance of SchemaMappingLoadingConfig from a dict
 schema_mapping_loading_config_from_dict = SchemaMappingLoadingConfig.from_dict(schema_mapping_loading_config_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

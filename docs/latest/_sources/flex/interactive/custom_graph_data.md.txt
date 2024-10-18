@@ -375,4 +375,6 @@ edges:
 
 ## Try other graphs
 
-In addition to `movies` graph, we have also prepared the `graph_algo` graph. You can find the raw CSV files, graph.yaml, and import.yaml in the `./examples/graph_algo/` directory. You can import the `graph_algo` graph just like importing the `movies` graph. There are also some sample cypher queries, you can find them at [GraphScope/flex/interactive/examples/graph_algo](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/graph_algo).
+In addition to `movies` graph, we have also prepared the `graph_algo` graph. You can find the raw CSV files, `graph.yaml`, and `import.yaml` in the `./examples/graph_algo/` directory. You can import the `graph_algo` graph just like importing the `movies` graph. There are also some sample cypher queries, you can find them at [GraphScope/flex/interactive/examples/graph_algo](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/graph_algo).
+
+If you are seeking for a more complex and larger graph, then you may try `IMDB` graph. The schema definition and import configuration are available in the `./examples/imdb/` directory. 
