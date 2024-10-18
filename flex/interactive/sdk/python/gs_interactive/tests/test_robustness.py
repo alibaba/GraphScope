@@ -250,11 +250,14 @@ def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
 
     resp = interactive_session.list_jobs()
     assert resp.is_ok() and len(resp.get_value()) > 0
-    
+
+
 def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_graph):
     print("[Test call procedure in cypher]")
     import_data_to_full_modern_graph(interactive_session, create_modern_graph)
-    result = neo4j_session.run('MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;')
+    result = neo4j_session.run(
+        'MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;'
+    )
     cnt = 0
     for record in result:
         cnt += 1
