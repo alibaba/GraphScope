@@ -20,11 +20,16 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "StoredProcedure";
 
 import "common.proto";
+import "expr.proto";
 
 message Argument {
   string param_name = 1;   // param name
   int32 param_ind = 2;     // index of param
-  common.Value value = 3;  // real value
+
+  oneof value {
+    common.Value const = 3;  // real value
+    common.Variable var = 4;
+  }
 }
 
 message Query {

@@ -229,6 +229,15 @@ bl::result<Context> runtime_eval_impl(
     case physical::PhysicalOpr_Operator::OpKindCase::kLimit: {
       BOOST_LEAF_ASSIGN(ret, eval_limit(opr.opr().limit(), std::move(ret)));
     } break;
+    case physical::PhysicalOpr_Operator::OpKindCase::kProcedureCall: {
+      std::vector<int32_t> aliases;
+      for (int32_t i = 0; i < opr.meta_data_size(); ++i) {
+        aliases.push_back(opr.meta_data(i).alias());
+      }
+      BOOST_LEAF_ASSIGN(
+          ret, eval_procedure_call(aliases, opr.opr().procedure_call(), txn,
+                                   std::move(ret)));
+    } break;
 
     default:
       LOG(ERROR) << "Unknown operator type: "

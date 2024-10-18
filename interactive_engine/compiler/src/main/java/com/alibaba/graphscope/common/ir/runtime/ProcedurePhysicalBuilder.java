@@ -16,46 +16,28 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.runtime.proto.Utils;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 
-import org.apache.calcite.rex.*;
-import org.apache.calcite.sql.SqlOperator;
-
-import java.util.List;
-
 public class ProcedurePhysicalBuilder extends PhysicalBuilder {
     private final StoredProcedure.Query.Builder builder;
 
-    public ProcedurePhysicalBuilder(LogicalPlan logicalPlan) {
+    public ProcedurePhysicalBuilder(Configs configs, IrMeta irMeta, LogicalPlan logicalPlan) {
         super(logicalPlan);
-        this.builder = StoredProcedure.Query.newBuilder();
-        RexCall procedureCall = (RexCall) logicalPlan.getProcedureCall();
-        setStoredProcedureName(procedureCall, builder);
-        setStoredProcedureArgs(procedureCall, builder);
-    }
-
-    private void setStoredProcedureName(
-            RexCall procedureCall, StoredProcedure.Query.Builder builder) {
-        SqlOperator operator = procedureCall.getOperator();
-        builder.setQueryName(Common.NameOrId.newBuilder().setName(operator.getName()).build());
-    }
-
-    private void setStoredProcedureArgs(
-            RexCall procedureCall, StoredProcedure.Query.Builder builder) {
-        List<RexNode> operands = procedureCall.getOperands();
-        for (int i = 0; i < operands.size(); ++i) {
-            builder.addArguments(
-                    StoredProcedure.Argument.newBuilder()
-                            // param name is omitted
-                            .setParamInd(i)
-                            .setValue(Utils.protoValue((RexLiteral) operands.get(i)))
-                            .build());
-        }
+        this.builder =
+                Utils.protoProcedure(
+                        logicalPlan.getProcedureCall(),
+                        new RexToProtoConverter(
+                                true,
+                                irMeta.getSchema().isColumnId(),
+                                GraphPlanner.rexBuilderFactory.apply(configs)));
     }
 
     @Override
