@@ -949,6 +949,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // this would be processed in assemble, and cannot be reached when install.
                     Err(FnGenError::unsupported_error("unreachable sink in install"))?
                 }
+                OpKind::ProcedureCall(procedure_call) => Err(FnGenError::unsupported_error(&format!(
+                    "ProcedureCall Operator {:?}",
+                    procedure_call
+                )))?,
             }
 
             prev_op_kind = to_op_kind(op)?;
