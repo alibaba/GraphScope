@@ -1,0 +1,95 @@
+name: papers
+version: v0.1
+schema:
+  vertex_types:
+    - type_name: Paper
+      properties:
+        - property_name: title
+          property_type:
+            string:
+              long_text:
+        - property_name: journal
+          property_type:
+            string:
+              long_text:
+        - property_name: journal_logo
+          property_type:
+            string:
+              long_text:
+        - property_name: paper_source
+          property_type:
+            string:
+              var_char:
+                max_length: 16
+        - property_name: subject_categories
+          property_type:
+            string:
+              var_char:
+                max_length: 512
+        - property_name: language
+          property_type:
+            string:
+              var_char:
+                max_length: 16
+        - property_name: resource_link
+          property_type:
+            string:
+              long_text:
+        - property_name: publish_year
+          property_type:
+            string:
+              var_char:
+                max_length: 4
+        - property_name: author
+          property_type:
+            string:
+              long_text:
+        - property_name: full_text_summary
+          property_type:
+            string:
+              long_text:
+        - property_name: abstract
+          property_type:
+            string:
+              long_text:
+        - property_name: keywords
+          property_type:
+            string:
+              long_text:
+        - property_name: ref_count
+          property_type:
+            string:
+              var_char:
+                8
+        - property_name: idp_info
+          property_type:
+            string:
+              var_char:
+                max_length: 512
+        - property_name: publish_date
+          property_type:
+            string:
+              var_char:
+                10
+        - property_name: references_list
+          property_type:
+            string:
+              long_text:
+        - property_name: citation_list
+          property_type:
+            string:
+              long_text:
+        - property_name: organization
+          property_type:
+            string:
+              long_text:
+        - property_name: conference
+          property_type:
+            string:
+              long_text:
+        - property_name: extra
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - title

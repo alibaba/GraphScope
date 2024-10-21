@@ -1,0 +1,23 @@
+graph: papers
+loading_config:
+  import_option: init # append, overwrite, only init is supported now
+  data_source:
+    scheme: odps  # file, odps
+  format:
+    type: arrow
+    metadata:
+      delimiter: ','  # other loading configuration places here
+      header_row: false # whether to use the first row as the header
+      quoting: true
+      quote_char: '"'
+      double_quote: false
+      escape_char: '\'
+      escaping: true
+      block_size: 4MB
+      batch_reader: false
+      null_values: [""]
+vertex_mappings:
+  - type_name: Paper  
+    inputs:
+      - itag..dim_mit_itag_workflow_kb_arxiv
+
