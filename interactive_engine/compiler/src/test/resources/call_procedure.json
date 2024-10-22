@@ -3,12 +3,12 @@
     "name": "ldbc_ic2"
   },
   "arguments": [{
-    "value": {
+    "const": {
       "i64": "10"
     }
   }, {
     "paramInd": 1,
-    "value": {
+    "const": {
       "i64": "20120112"
     }
   }]

@@ -106,6 +106,30 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     }
 
     @Override
+    public RelNode visit(GraphProcedureCall procedureCall) {
+        visitChildren(procedureCall);
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setProcedureCall(
+                                                GraphAlgebraPhysical.ProcedureCall.newBuilder()
+                                                        .setQuery(
+                                                                Utils.protoProcedure(
+                                                                        procedureCall
+                                                                                .getProcedure(),
+                                                                        new RexToProtoConverter(
+                                                                                true,
+                                                                                isColumnId,
+                                                                                this.rexBuilder))))
+                                        .build())
+                        .addAllMetaData(
+                                Utils.physicalProtoRowType(procedureCall.getRowType(), isColumnId))
+                        .build());
+        return procedureCall;
+    }
+
+    @Override
     public RelNode visit(GraphLogicalSource source) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();

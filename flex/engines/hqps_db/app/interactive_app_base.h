@@ -35,7 +35,12 @@ inline bool parse_input_argument_from_proto_impl(
   } else {
     auto& type = std::get<I>(tuple);
     auto& argument = args.Get(I);
-    auto& value = argument.value();
+    if (argument.value_case() != procedure::Argument::kConst) {
+      LOG(ERROR) << "Expect a const value for input param, but got "
+                 << argument.value_case();
+      return false;
+    }
+    auto& value = argument.const_();
     auto item_case = value.item_case();
     if (item_case == common::Value::kI32) {
       if constexpr (std::is_same<int32_t,
