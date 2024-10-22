@@ -223,7 +223,6 @@ collective_result_vec_to_column(
     record_cnt += collective_results_vec[i].results_size();
     offsets.push_back(record_cnt);
   }
-  LOG(INFO) << "record_cnt: " << record_cnt;
   std::vector<std::vector<RTAny>> any_vec(expect_col_num);
   for (size_t i = 0; i < collective_results_vec.size(); ++i) {
     for (int32_t j = 0; j < collective_results_vec[i].results_size(); ++j) {
@@ -370,7 +369,6 @@ bl::result<Context> eval_procedure_call(const std::vector<int32_t>& aliases,
                  << aliases.size();
       RETURN_CALL_PROCEDURE_ERROR("Column size mismatch");
     }
-    LOG(INFO) << "Procedure call returns " << columns.size() << " columns";
     if (columns.size() >= 1) {
       ctx.set_with_reshuffle(aliases[0], columns[0], offsets);
     }
