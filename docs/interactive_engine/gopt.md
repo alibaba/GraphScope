@@ -373,7 +373,7 @@ MATCH (a {name:'Alice'})-[b {creationDate: 20120324}]->(c {name: 'Bob'})
 Return a, b, c;
 ```
 
-The rule can also be combined with other relational optimization techniques, such as Calcite’s `FilterIntoJoinRule`, which optimizes filtering after a join. For example, consider a query with multiple `MATCH` clauses followed by a filtering condition:
+The rule can also be combined with other relational optimization techniques, such as Calcite’s `FilterIntoJoinRule`, which optimizes filtering based on a join operator. For example, consider a query with multiple `MATCH` clauses followed by a filtering condition:
 
 ```cypher
 MATCH (a)-[b]->(c)
