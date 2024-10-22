@@ -20,14 +20,15 @@ ADMIN_PORT=7777
 QUERY_PORT=10000
 CYPHER_PORT=7687
 
-if [ ! $# -eq 2 ]; then
-  echo "only receives: $# args, need 2"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <ENGINE_CONFIG>"
+if [ ! $# -eq 3 ]; then
+  echo "only receives: $# args, need 3"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <ENGINE_CONFIG> <CBO_ENGINE_CONFIG_PATH>"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
 ENGINE_CONFIG_PATH=$2
+CBO_ENGINE_CONFIG_PATH=$3
 
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
@@ -35,6 +36,11 @@ if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
 fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
+  exit 1
+fi
+
+if [ ! -f ${CBO_ENGINE_CONFIG_PATH} ]; then
+  echo "CBO_ENGINE_CONFIG_PATH: ${CBO_ENGINE_CONFIG_PATH} not exists"
   exit 1
 fi
 
@@ -63,13 +69,19 @@ trap kill_service EXIT
 
 # start engine service
 start_engine_service(){
+    # expect one argument
+    if [ ! $# -eq 1 ]; then
+        err "start_engine_service need one argument"
+        exit 1
+    fi
+    local config_path=$1
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
         exit 1
     fi
 
-    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true "
+    cmd="${SERVER_BIN} -c ${config_path} --enable-admin-service true "
     cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} --start-compiler true &"
 
     echo "Start engine service with command: ${cmd}"
@@ -91,13 +103,27 @@ run_robust_test(){
     popd
 }
 
+run_additional_robust_test(){
+    pushd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
+    export RUN_ON_PROTO=ON
+    cmd="python3 -m pytest -s tests/test_robustness.py -k test_call_proc_in_cypher"
+    echo "Run additional robust test with command: ${cmd}"
+    eval ${cmd} || (err "Run additional robust test failed"; exit 1)
+    info "Run additional robust test success"
+    popd
+}
+
 kill_service
-start_engine_service
+start_engine_service $ENGINE_CONFIG_PATH
 export INTERACTIVE_ADMIN_ENDPOINT=http://localhost:${ADMIN_PORT}
 export INTERACTIVE_STORED_PROC_ENDPOINT=http://localhost:${QUERY_PORT}
 export INTERACTIVE_CYPHER_ENDPOINT=neo4j://localhost:${CYPHER_PORT}
 export INTERACTIVE_GREMLIN_ENDPOINT=ws://localhost:${GREMLIN_PORT}/gremlin
 
 run_robust_test
+kill_service 
+sleep 5
+start_engine_service $CBO_ENGINE_CONFIG_PATH
+run_additional_robust_test
 
 kill_service
