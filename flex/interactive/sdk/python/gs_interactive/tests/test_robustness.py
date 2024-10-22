@@ -251,7 +251,10 @@ def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
     resp = interactive_session.list_jobs()
     assert resp.is_ok() and len(resp.get_value()) > 0
 
-@pytest.mark.skipif(os.environ.get("RUN_ON_PROTO", None) != "ON", reason="Only works on proto")
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON", reason="Only works on proto"
+)
 def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_graph):
     print("[Test call procedure in cypher]")
     import_data_to_full_modern_graph(interactive_session, create_modern_graph)
