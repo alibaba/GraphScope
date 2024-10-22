@@ -74,7 +74,6 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
             logger.debug(
                     "schema from remote: {}",
                     (meta == null) ? null : meta.getSchema().getSchemaSpec(Type.IR_CORE_IN_JSON));
-            GraphStatistics curStats;
             // if the graph id or schema version is changed, we need to update the statistics
             if (this.currentState == null
                     || !this.currentState.getGraphId().equals(meta.getGraphId())
@@ -83,17 +82,14 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                             .getVersion()
                             .equals(meta.getSchema().getVersion())) {
                 this.statsState = StatsState.INITIALIZED;
-                curStats = null;
-            } else {
-                curStats = this.currentState.getStatistics();
+                this.currentState =
+                        new IrMetaStats(
+                                meta.getGraphId(),
+                                meta.getSnapshotId(),
+                                meta.getSchema(),
+                                meta.getStoredProcedures(),
+                                null);
             }
-            this.currentState =
-                    new IrMetaStats(
-                            meta.getGraphId(),
-                            meta.getSnapshotId(),
-                            meta.getSchema(),
-                            meta.getStoredProcedures(),
-                            curStats);
             boolean statsEnabled = getStatsEnabled(this.currentState.getGraphId());
             if (statsEnabled && this.statsState != StatsState.SYNCED
                     || (!statsEnabled && this.statsState != StatsState.MOCKED)) {
