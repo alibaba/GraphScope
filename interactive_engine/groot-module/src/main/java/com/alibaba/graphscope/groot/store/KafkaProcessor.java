@@ -84,7 +84,6 @@ public class KafkaProcessor {
         replayQueue = new ArrayBlockingQueue<>(queueSize);
         latestSnapshotId = new AtomicLong(-1);
         replayInProgress = new AtomicBoolean(false);
-
     }
 
     public void start() {
@@ -278,10 +277,10 @@ public class KafkaProcessor {
 
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, replayFrom)) {
-//            replayInProgress.set(true);
+            //            replayInProgress.set(true);
             ConsumerRecord<LogEntry, LogEntry> record;
             while ((record = logReader.readNextRecord()) != null) {
-//                writeQueue.put(new ReadLogEntry(record.offset(), record.value()));
+                //                writeQueue.put(new ReadLogEntry(record.offset(), record.value()));
                 writeQueue.put(record);
                 replayCount++;
                 if (replayCount % 10000 == 0) {
@@ -292,9 +291,9 @@ public class KafkaProcessor {
             throw new RuntimeException(e);
         }
 
-//        } finally {
-//            replayInProgress.set(false);
-//        }
+        //        } finally {
+        //            replayInProgress.set(false);
+        //        }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
     }
 
@@ -312,14 +311,16 @@ public class KafkaProcessor {
                     offset = readLogEntry.getOffset();
                     logEntry = readLogEntry.getLogEntry();
                     logEntry.setSnapshotId(latestSnapshotId.get());
-//                    logger.info("polled from replay queue, offset {}, id {}", offset, logEntry.getSnapshotId());
+                    //                    logger.info("polled from replay queue, offset {}, id {}",
+                    // offset, logEntry.getSnapshotId());
 
                 } else {
                     ConsumerRecord<LogEntry, LogEntry> record = writeQueue.take();
                     offset = record.offset();
                     logEntry = record.value();
                     latestSnapshotId.set(logEntry.getSnapshotId());
-//                    logger.info("polled from write queue, offset {}, id {}", offset, latestSnapshotId.get());
+                    //                    logger.info("polled from write queue, offset {}, id {}",
+                    // offset, latestSnapshotId.get());
 
                 }
                 processRecord(offset, logEntry);

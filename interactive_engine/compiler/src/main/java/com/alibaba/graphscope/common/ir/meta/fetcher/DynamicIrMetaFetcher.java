@@ -56,8 +56,9 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 0,
                 GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
-        this.fetchStats = PlannerConfig.GRAPH_PLANNER_IS_ON.get(configs)
-                && PlannerConfig.GRAPH_PLANNER_OPT.get(configs).equals("CBO");
+        this.fetchStats =
+                PlannerConfig.GRAPH_PLANNER_IS_ON.get(configs)
+                        && PlannerConfig.GRAPH_PLANNER_OPT.get(configs).equals("CBO");
         if (this.fetchStats) {
             logger.info("start to schedule statistics fetch task");
             this.scheduler.scheduleAtFixedRate(
