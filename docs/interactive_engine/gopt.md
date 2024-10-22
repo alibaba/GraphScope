@@ -350,3 +350,132 @@ Design of GOpt
 
 ### Detailed Introduction
 A comprehensive introduction to GOpt will be provided in subsequent sections. Please stay tuned for detailed updates and information.
+
+#### Rules
+Here we give a brief introduction to the rules in GOpt.
+
+##### FilterMatchRule
+
+In graph queries, the `MATCH... WHERE...` syntax pattern is common. The `WHERE` clause filters data after the `MATCH` clause, but these filters can be pushed into the `MATCH` clause to enable earlier filtering. The rule achieves this by identifying filter conditions associated with specific graph operators within the `MATCH` clause and pushing the filters down to those operators.
+
+For Example:
+
+```cypher
+MATCH (a)-[b]->(c)
+WHERE a.name = 'Alice' AND b.creationDate = 20120324 AND c.name = 'Bob'
+Return a, b, c;
+```
+
+After applying the `FilterMatchRule`, the query is equivalent to:
+
+```cypher
+MATCH (a {name:'Alice'})-[b {creationDate: 20120324}]->(c {name: 'Bob'})
+Return a, b, c;
+```
+
+The rule can also be combined with other relational optimization techniques, such as Calcite’s `FilterIntoJoinRule`, which optimizes filtering after a join. For example, consider a query with multiple `MATCH` clauses followed by a filtering condition:
+
+```cypher
+MATCH (a)-[b]->(c)
+MATCH (c)-[d]->(e)
+WHERE a.name = 'Alice' AND e.age = 18
+Return a, b, c, d, e;
+```
+
+In GOpt, the query is first converted into a `Join` of the two `MATCH` clauses, followed by filters on the join results. Then after applying `FilterIntoJoinRule`, the filters are classified based on their association with different `Join` branches and pushed down to the appropriate branch (either left or right). This results in:
+
+```cypher
+// left side of the join
+MATCH (a)-[b]->(c)
+WHERE a.name = 'Alice'
+
+// right side of the join
+MATCH (c)-[d]->(e)
+WHERE e.age = 18
+
+Return a, b, c, d, e;
+```
+
+Finally, the `FilterMatchRule` is applied to push the filters further into the graph operators within the `MATCH` clauses, resulting in:
+
+```cypher
+// left side of the join
+MATCH (a {name: 'Alice'})-[b]->(c)
+
+// right side of the join
+MATCH (c)-[d]->(e {age: 18})
+
+Return a, b, c, d, e;
+```
+
+##### DegreeFusionRule
+
+The rule is an optimization technique used in operator fusion. In most graph databases, statistical information is typically maintained alongside data storage, such as the neighbor count for each vertex. This allows us to leverage such statistics to optimize queries.
+
+For example:
+
+```cypher
+MATCH (p1:Person)-[]->(p2)
+RETURN count(p2);
+```
+
+This query calculates the total number of neighbors for all `Person`-typed nodes. Without precomputed statistics, the query would have to count the neighbors for every `Person` individually. However, if the storage maintains neighbor count statistics (which naturally align with implementation details, such as easily obtaining the size of an adjacent list), we can use those statistics to optimize the query. By applying this rule, we compute the degree of each vertex from the pre-stored statistical information, then aggregate the results across different vertices.
+
+##### ExpandGetVFusionRule
+
+In GOpt, `Expand` and `GetV` are treated as distinct operators with different functionalities. `Expand` retrieves outgoing edges from a given vertex, while `GetV` takes an edge as input and returns the target vertex. However, in graph database implementations, these operations are often combined to directly retrieve outgoing vertices from the given vertices. The `ExpandGetVFusionRule` is designed to optimize this process by fusing the two operators into one when specific conditions are met.
+
+Here are the conditions where fusion can occur:
+
+1. `Unambiguous Type Inference`: If the target vertex type can be inferred from the edge type without ambiguity, fusion is possible. 
+
+   For example:
+
+   ```cypher
+   MATCH (a:Person)-[:KNOWS]->(b:Person)
+   RETURN b;
+   ```
+   In this case, the `KNOWS` relationship only points to `Person` nodes, so there’s no need for additional type filtering. As a result, `Person b` can be fused with `KNOWS`, eliminating the overhead of type checking.
+
+   In contrast:
+
+   ```cypher
+   MATCH (a:Person)<-[:HAS_CREATOR]-(b:Comment)
+   Return b;
+   ```
+
+   The `HAS_CREATOR` edge could point to either a `Post` or a `Comment`. Since `b` is constrained to be a `Comment`, the target type `Comment` cannot be inferred solely from the edge type `HAS_CREATOR`, so we cannot perform the fusion rule in this case.
+
+2. `Predicates on Target Vertices in Distributed Scenarios`: If predicates are applied to the target vertex in a distributed graph scenario, fusion is skipped to allow for more flexible operations, such as data shuffling before filtering.
+
+   For example:
+
+   ```cypher
+   Match (a:Person)-[:KNOWS]->(b:Person)
+   Where b.age > 18
+   Return b;
+   ```
+
+   In this case, the filtering condition on `b` (b.age > 18) may require data to be shuffled across graph partitions to access the `age` property. To preserve this flexibility, the fusion is avoided, allowing for shuffling and filtering operations to be handled separately.
+
+##### FlatJoinToExpandRule
+
+It is common to have multiple `MATCH` clauses in a single Cypher query. The order of these `MATCH` clauses controls the sequence in which partial graph patterns are computed first, with subsequent patterns depending on the results of the earlier ones. Users often manually define this order and expect the graph system to preserve it. However, before applying the rule, `MATCH` clauses in GOpt are converted into join structures to maintain semantic equivalence, which can disrupt the intended order. To resolve this, we apply a rule that flattens the `Join` into `Expand` operations. The `MATCH` clause on the right side of the `Join` is transformed into a sequence of `Expand` and `GetV` operators, starting from the intermediate results of the left side.
+
+For example:
+
+```cypher
+// phase 1
+MATCH (a:Person)-[:KNOWS]->(b:Person)
+WITH a, count(b) as degree
+ORDER BY degree DESC, a.name ASC
+LIMIT 10
+
+// phase 2
+MATCH (a)<-[:HAS_CREATOR]-(c:Comment)
+
+// phase 3
+RETURN c;
+```
+
+Before the rule, phases 1 and 2 would be connected by a `Join` operator, which could result in a large data expansion. After applying the rule, the costly `Join` is eliminated, and the graph operators from phase 2 are converted into {`Expand`([:HAS_CREATOR]), `GetV`((c:Comment))} operations, starting from the intermediate results of phase 1 with the tag `a`. This ensures that the order defined in the user's handwritten query is preserved.
