@@ -39,4 +39,8 @@ namespace bl = boost::leaf;
   return ::boost::leaf::new_error(        \
       ::gs::Status(::gs::StatusCode::UNIMPLEMENTED, PREPEND_LINE_INFO(msg)))
 
+#define RETURN_CALL_PROCEDURE_ERROR(msg) \
+  return ::boost::leaf::new_error(       \
+      ::gs::Status(::gs::StatusCode::QUERY_FAILED, PREPEND_LINE_INFO(msg)))
+
 #endif  // RUNTIME_COMMON_LEAF_UTILS_H_

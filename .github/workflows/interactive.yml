@@ -175,7 +175,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
 
     - name: Sample Query test
       env:

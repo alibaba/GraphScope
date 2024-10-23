@@ -259,9 +259,8 @@ void GraphDB::Close() {
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
-ReadTransaction GraphDB::GetReadTransaction() {
-  uint32_t ts = version_manager_.acquire_read_timestamp();
-  return {graph_, version_manager_, ts};
+ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
+  return contexts_[thread_id].session.GetReadTransaction();
 }
 
 InsertTransaction GraphDB::GetInsertTransaction(int thread_id) {

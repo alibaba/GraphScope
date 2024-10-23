@@ -365,6 +365,10 @@ oC_SymbolicName
                 | oC_ReservedWord
                 ;
 
+ALL : ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
+
+SHORTESTPATH : ( 'S' | 's' ) ( 'H' | 'h' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'P' | 'p' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'H' | 'h' );
+
 oC_ReservedWord
             : LABELS
             | ELEMENTID
@@ -382,6 +386,8 @@ oC_ReservedWord
             | MEAN
             | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
             | 'id' // lexer rule for ID conflicts with parser rule definition in gremlin grammar, include 'id' as reserved word so it can be used to denote a symbolic name
+            | ALL
+            | SHORTESTPATH
             ;
 
 UnescapedSymbolicName
