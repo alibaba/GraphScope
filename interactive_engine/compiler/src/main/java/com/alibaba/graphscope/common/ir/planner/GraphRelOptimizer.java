@@ -47,6 +47,7 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,7 +55,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Optimize graph relational tree which consists of match and other relational operators
  */
-public class GraphRelOptimizer {
+public class GraphRelOptimizer implements Closeable {
     private final PlannerConfig config;
     private final RelBuilderFactory relBuilderFactory;
     private final GlogueHolder glogueHolder;
@@ -99,6 +100,13 @@ public class GraphRelOptimizer {
                     new GraphMetadataHandlerProvider(getMatchPlanner(), gq, this.config));
         }
         return null;
+    }
+
+    @Override
+    public void close() {
+        if (this.plannerGroupManager != null) {
+            this.plannerGroupManager.close();
+        }
     }
 
     public static class MatchOptimizer extends GraphShuttle {

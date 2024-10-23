@@ -619,7 +619,7 @@ public class DriverTest {
                 StoredProcedure.Argument.newBuilder()
                         .setParamInd(0)
                         .setParamName("personName")
-                        .setValue(Common.Value.newBuilder().setStr(personNameValue).build())
+                        .setConst(Common.Value.newBuilder().setStr(personNameValue).build())
                         .build());
         StoredProcedure.Query query = builder.build();
         {

@@ -60,6 +60,7 @@ oC_ReadingClause
     |  oC_Unwind
     |  oC_With
     |  oC_UnionCallSubQuery
+    |  oC_StandaloneCall
     ;
 
 oC_SubQuery
