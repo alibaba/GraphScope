@@ -60,8 +60,7 @@ using admin_query_result = payload<gs::Result<seastar::sstring>>;
 using graph_management_param =
     payload<std::pair<seastar::sstring, seastar::sstring>>;
 using graph_management_query_param =
-    payload<std::pair<seastar::sstring,
-                      std::unordered_map<seastar::sstring, seastar::sstring>>>;
+    payload<std::unordered_map<seastar::sstring, seastar::sstring>>;
 using procedure_query_param =
     payload<std::pair<seastar::sstring, seastar::sstring>>;
 using create_procedure_query_param =
