@@ -232,7 +232,8 @@ class stored_proc_handler : public StoppableHandler {
     } else if (method == "GET") {
       if (path.find("vertex") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
-            .get_vertex(graph_management_query_param{std::move(req->query_parameters)})
+            .get_vertex(
+                graph_management_query_param{std::move(req->query_parameters)})
             .then_wrapped(
                 [rep = std::move(rep)](
                     seastar::future<admin_query_result>&& fut) mutable {
@@ -241,7 +242,8 @@ class stored_proc_handler : public StoppableHandler {
                 });
       } else if (path.find("edge") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
-            .get_edge(graph_management_query_param{std::move(req->query_parameters)})
+            .get_edge(
+                graph_management_query_param{std::move(req->query_parameters)})
             .then_wrapped(
                 [rep = std::move(rep)](
                     seastar::future<admin_query_result>&& fut) mutable {
