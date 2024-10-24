@@ -67,7 +67,6 @@ class Schema {
   // An array containing all compatible versions of schema.
   static const std::vector<std::string> COMPATIBLE_VERSIONS;
   static constexpr const char* DEFAULT_SCHEMA_VERSION = "v0.0";
-  static constexpr const size_t DEFAULT_MAX_VNUM = (1ULL << 32);
 
   static bool IsBuiltinPlugin(const std::string& plugin_name);
 
@@ -85,7 +84,8 @@ class Schema {
       const std::vector<std::tuple<PropertyType, std::string, size_t>>&
           primary_key,
       const std::vector<StorageStrategy>& strategies = {},
-      size_t max_vnum = DEFAULT_MAX_VNUM, const std::string& description = "");
+      size_t max_vnum = static_cast<size_t>(1) << 32,
+      const std::string& description = "");
 
   void add_edge_label(const std::string& src_label,
                       const std::string& dst_label,
