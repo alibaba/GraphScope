@@ -48,6 +48,7 @@ class ANNOTATION(actor:impl) executor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) get_edge(graph_management_query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) ingest_wal(query_param&& param);
 
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.

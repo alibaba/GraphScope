@@ -27,7 +27,7 @@ namespace gs {
 UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
                                      Allocator& alloc,
                                      const std::string& work_dir,
-                                     WalWriter& logger, VersionManager& vm,
+                                     IWalWriter& logger, VersionManager& vm,
                                      timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
@@ -105,7 +105,7 @@ void UpdateTransaction::Commit() {
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 1;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
 
   applyVerticesUpdates();
   applyEdgesUpdates();
@@ -748,7 +748,7 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
     header->length = arc.GetSize() - sizeof(WalHeader);
     header->type = 1;
     header->timestamp = timestamp_;
-    logger_.append(arc.GetBuffer(), arc.GetSize());
+    logger_.append(timestamp_, arc.GetBuffer(), arc.GetSize());
   }
 
   release();

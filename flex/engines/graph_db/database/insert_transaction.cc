@@ -23,7 +23,7 @@
 namespace gs {
 
 InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
-                                     Allocator& alloc, WalWriter& logger,
+                                     Allocator& alloc, IWalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
 
     : graph_(graph),
@@ -149,9 +149,9 @@ void InsertTransaction::Commit() {
   header->type = 0;
   header->timestamp = timestamp_;
 
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
-  IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
-            header->length, alloc_);
+  logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
+  // IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
+  //           header->length, alloc_);
 
   vm_.release_insert_timestamp(timestamp_);
   clear();

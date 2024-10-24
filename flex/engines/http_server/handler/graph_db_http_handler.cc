@@ -219,6 +219,15 @@ class stored_proc_handler : public StoppableHandler {
                     return return_reply_with_result(std::move(rep),
                                                     std::move(fut));
                   });
+        } else if (path.find("wal") != seastar::sstring::npos) {
+          return get_executors()[StoppableHandler::shard_id()][dst_executor]
+              .ingest_wal(query_param{std::move(req->content)})
+              .then_wrapped(
+                  [rep = std::move(rep)](
+                      seastar::future<admin_query_result>&& fut) mutable {
+                    return return_reply_with_result(std::move(rep),
+                                                    std::move(fut));
+                  });
         }
       }
     } else if (method == "GET") {
@@ -346,7 +355,8 @@ class stored_proc_handler : public StoppableHandler {
     auto scope = tracer->WithActiveSpan(outer_span);
     auto start_ts = gs::GetCurrentTimeStamp();
 #endif  // HAVE_OPENTELEMETRY_CPP
-
+    LOG(INFO) << "Eval procedure on shard: " << StoppableHandler::shard_id()
+              << " executor: " << dst_executor;
     return get_executors()[StoppableHandler::shard_id()][dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
         .then([last_byte
@@ -435,6 +445,16 @@ class stored_proc_handler : public StoppableHandler {
   }
 
  private:
+  std::pair<int, seastar::sstring> get_executor_id_from_wal_payload(
+      const seastar::sstring& payload) {
+    if (payload.size() < 4) {
+      LOG(ERROR) << "Invalid payload size: " << payload.size();
+      return std::make_pair(-1, payload);
+    }
+    auto executor_id = *reinterpret_cast<const int*>(payload.data());
+    return std::make_pair(executor_id, payload.substr(4));
+  }
+
   query_dispatcher dispatcher_;
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
@@ -862,7 +882,9 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       running_(false),
       actors_running_(true) {
   current_graph_query_handlers_.resize(shard_num);
+  current_wal_handlers_.resize(shard_num);
   all_graph_query_handlers_.resize(shard_num);
+  all_wal_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
   vertex_handlers_.resize(shard_num);
   edge_handlers_.resize(shard_num);
@@ -899,7 +921,15 @@ seastar::future<> graph_db_http_handler::stop_query_actors(size_t index) {
       ->stop()
       .then([this, index] {
         LOG(INFO) << "Stopped current query actors on shard id: " << index;
+        return current_wal_handlers_[index]->stop();
+      })
+      .then([this, index] {
+        LOG(INFO) << "Stopped current query actors on shard id: " << index;
         return all_graph_query_handlers_[index]->stop();
+      })
+      .then([this, index] {
+        LOG(INFO) << "Stopped all query actors on shard id: " << index;
+        return all_wal_handlers_[index]->stop();
       })
       .then([this, index] {
         LOG(INFO) << "Stopped all query actors on shard id: " << index;
@@ -935,7 +965,9 @@ void graph_db_http_handler::start_query_actors() {
   // to start actors, call method on each handler
   for (size_t i = 0; i < current_graph_query_handlers_.size(); ++i) {
     current_graph_query_handlers_[i]->start();
+    current_wal_handlers_[i]->start();
     all_graph_query_handlers_[i]->start();
+    all_wal_handlers_[i]->start();
     for (size_t j = 0; j < vertex_handlers_[i].size(); ++j) {
       vertex_handlers_[i][j]->start();
       edge_handlers_[i][j]->start();
@@ -980,6 +1012,9 @@ seastar::future<> graph_db_http_handler::set_routes() {
     current_graph_query_handlers_[hiactor::local_shard_id()] =
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
+    current_wal_handlers_[hiactor::local_shard_id()] =
+        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+                                shard_query_concurrency);
     r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",
           current_graph_query_handlers_[hiactor::local_shard_id()]);
 
@@ -987,12 +1022,28 @@ seastar::future<> graph_db_http_handler::set_routes() {
     all_graph_query_handlers_[hiactor::local_shard_id()] =
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
-    auto rule_proc = new seastar::httpd::match_rule(
-        all_graph_query_handlers_[hiactor::local_shard_id()]);
-    rule_proc->add_str("/v1/graph")
-        .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
-        .add_str("/query");
-    r.add(rule_proc, seastar::httpd::operation_type::POST);
+    all_wal_handlers_[hiactor::local_shard_id()] =
+        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+                                shard_query_concurrency);
+    {
+      auto rule_proc = new seastar::httpd::match_rule(
+          all_graph_query_handlers_[hiactor::local_shard_id()]);
+      rule_proc->add_str("/v1/graph")
+          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+          .add_str("/query");
+      r.add(rule_proc, seastar::httpd::operation_type::POST);
+    }
+    {
+      auto rule_wal = new seastar::httpd::match_rule(
+          all_wal_handlers_[hiactor::local_shard_id()]);
+      rule_wal->add_str("/v1/graph")
+          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+          .add_str("/wal");
+      r.add(rule_wal, seastar::httpd::operation_type::POST);
+    }
+
+    // match post /v1/graph/{graph_id}/wal
+
     if (enable_adhoc_handlers_.load()) {
       auto adhoc_query_handler_ =
           new adhoc_query_handler(ic_adhoc_group_id, max_group_id,

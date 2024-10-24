@@ -1,2 +1,5 @@
-add_subdirectory(hqps)
-add_subdirectory(rt_mutable_graph)
+# add_subdirectory(hqps)
+# add_subdirectory(rt_mutable_graph)
+if (ENABLE_KAFKA)
+    add_subdirectory(wal_writer)
+endif()

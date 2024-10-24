@@ -31,7 +31,7 @@
 namespace gs {
 
 class GraphDB;
-class WalWriter;
+class IWalWriter;
 
 class GraphDBSession {
  public:
@@ -48,7 +48,7 @@ class GraphDBSession {
   static constexpr const char* kCypherJsonStr = "\x01";
   static constexpr const char* kCypherProtoAdhocStr = "\x02";
   static constexpr const char* kCypherProtoProcedureStr = "\x03";
-  GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
+  GraphDBSession(GraphDB& db, Allocator& alloc, IWalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
         alloc_(alloc),
@@ -104,6 +104,10 @@ class GraphDBSession {
   int64_t query_num() const;
 
   AppBase* GetApp(int idx);
+
+  // Ingest wals from a string, the input string is a serialized wal.
+  // We will convert it to a transaction and apply it to the graph.
+  Result<std::string> IngestWals(const std::string_view& input);
 
  private:
   Result<std::pair<uint8_t, std::string_view>>
@@ -175,9 +179,28 @@ class GraphDBSession {
                      "Invalid input tag: " + std::to_string(input_tag)));
     }
   }
+
+  /**
+   * @brief Deserialize the wal and apply it to the graph.
+   * @param header The header of the wal.
+   * @param data The start address of the wal unit
+   * @param length The length of the data.
+   */
+  Result<std::string> deserialize_and_apply_wal(const WalHeader* header,
+                                                const char* data,
+                                                size_t length);
+
+  Result<std::string> deserialize_and_apply_insert_wal(const WalHeader* header,
+                                                       const char* data,
+                                                       size_t length);
+
+  Result<std::string> deserialize_and_apply_update_wal(const WalHeader* header,
+                                                       const char* data,
+                                                       size_t length);
+
   GraphDB& db_;
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   std::string work_dir_;
   int thread_id_;
 

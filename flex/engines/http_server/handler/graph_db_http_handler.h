@@ -145,6 +145,8 @@ class graph_db_http_handler {
   std::vector<StoppableHandler*> current_graph_query_handlers_;
   std::vector<StoppableHandler*> all_graph_query_handlers_;
   std::vector<StoppableHandler*> adhoc_query_handlers_;
+  std::vector<StoppableHandler*> current_wal_handlers_;
+  std::vector<StoppableHandler*> all_wal_handlers_;
   // shard_num * operation time(PUT/GET/POST/DELETE)
   std::vector<std::array<StoppableHandler*, NUM_OPERATION>> vertex_handlers_;
   std::vector<std::array<StoppableHandler*, NUM_OPERATION>> edge_handlers_;

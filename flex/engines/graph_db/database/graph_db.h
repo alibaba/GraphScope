@@ -30,6 +30,7 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
+#include "flex/engines/graph_db/database/wal.h"
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -49,7 +50,16 @@ struct GraphDBConfig {
         warmup(false),
         enable_monitoring(false),
         enable_auto_compaction(false),
-        memory_level(1) {}
+        memory_level(1),
+        wal_writer_type(IWalWriter::WalWriterType::kLocal) {}
+
+  void set_wal_writer_type(IWalWriter::WalWriterType type) {
+    wal_writer_type = type;
+  }
+
+  void set_wal_writer_type(const std::string type_str) {
+    wal_writer_type = IWalWriter::parseWalWriterType(type_str);
+  }
 
   Schema schema;
   std::string data_dir;
@@ -65,7 +75,9 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
-  std::string kafka_endpoint;
+  IWalWriter::WalWriterType wal_writer_type;
+  std::string kafka_brokers;  // brokers for wals
+  std::string kafka_topic;    // topic for wals
 };
 
 class GraphDB {
@@ -150,13 +162,16 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
-  const std::string& GetKafkaEndpoint() const;
+  const std::string& GetKafkaBrokers() const;
 
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
-  void ingestWals(const std::vector<std::string>& wals,
-                  const std::string& work_dir, int thread_num);
+  void ingestWalsFromLocalFiles(const std::string& wal_dir,
+                                const std::string& work_dir, int thread_num);
+
+  void ingestWalsFromKafka(const std::string& kafka_topic,
+                           const std::string& work_dir, int thread_num);
 
   void initApps(
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
@@ -164,7 +179,7 @@ class GraphDB {
 
   void openWalAndCreateContexts(const std::string& data_dir_path,
                                 MemoryStrategy allocator_strategy,
-                                std::string kafka_endpoint = "");
+                                const GraphDBConfig& config);
 
   void showAppMetrics() const;
 
@@ -190,7 +205,7 @@ class GraphDB {
   bool compact_thread_running_ = false;
   std::thread compact_thread_;
 
-  std::string kafka_endpoint_;
+  std::string kafka_brokers_;
 };
 
 }  // namespace gs

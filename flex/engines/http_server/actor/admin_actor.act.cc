@@ -975,11 +975,13 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
           // use the previous thread num
           auto thread_num = db.SessionNum();
-          auto kafka_endpoint = db.GetKafkaEndpoint();
           db.Close();
           VLOG(10) << "Closed the previous graph db";
           gs::GraphDBConfig config(schema_value, data_dir_value, thread_num);
-          config.kafka_endpoint = kafka_endpoint;
+          config.kafka_brokers =
+              graph_db_service.get_service_config().kafka_brokers;
+          config.kafka_topic = gs::generate_graph_wal_topic(
+              config.kafka_brokers, graph_name, thread_num);
           if (!db.Open(config).ok()) {
             LOG(ERROR) << "Fail to load graph from data directory: "
                        << data_dir_value;

@@ -71,6 +71,8 @@ struct ServiceConfig {
   // Those has not default value
   std::string default_graph;
   std::string engine_config_path;  // used for codegen.
+  std::string kafka_brokers;       // kafka brokers list
+  gs::IWalWriter::WalWriterType wal_writer_type;
 
   ServiceConfig();
 };

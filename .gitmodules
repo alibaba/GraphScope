@@ -10,3 +10,6 @@
 	path = learning_engine/graphlearn-for-pytorch
 	url = https://github.com/alibaba/graphlearn-for-pytorch.git
 
+[submodule "flex/third_party/cppkafka"]
+	path = flex/third_party/cppkafka
+	url = https://github.com/mfontanini/cppkafka.git

@@ -32,13 +32,13 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
 
 class UpdateTransaction {
  public:
   UpdateTransaction(MutablePropertyFragment& graph, Allocator& alloc,
-                    const std::string& work_dir, WalWriter& logger,
+                    const std::string& work_dir, IWalWriter& logger,
                     VersionManager& vm, timestamp_t timestamp);
 
   ~UpdateTransaction();
@@ -170,7 +170,7 @@ class UpdateTransaction {
 
   MutablePropertyFragment& graph_;
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 

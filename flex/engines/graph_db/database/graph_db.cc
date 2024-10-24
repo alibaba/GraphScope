@@ -31,18 +31,20 @@ namespace gs {
 
 struct SessionLocalContext {
   SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id,
-                      MemoryStrategy allocator_strategy)
+                      MemoryStrategy allocator_strategy,
+                      std::unique_ptr<IWalWriter> logger_ptr)
       : allocator(allocator_strategy,
                   (allocator_strategy != MemoryStrategy::kSyncToFile
                        ? ""
                        : thread_local_allocator_prefix(work_dir, thread_id))),
-        session(db, allocator, logger, work_dir, thread_id) {}
-  ~SessionLocalContext() { logger.close(); }
+        logger(std::move(logger_ptr)),
+        session(db, allocator, *logger, work_dir, thread_id) {}
+  ~SessionLocalContext() { logger->close(); }
   Allocator allocator;
   char _padding0[128 - sizeof(Allocator) % 128];
-  WalWriter logger;
-  char _padding1[4096 - sizeof(WalWriter) - sizeof(Allocator) -
-                 sizeof(_padding0)];
+  std::unique_ptr<IWalWriter> logger;
+  char _padding1[4096 - sizeof(std::unique_ptr<IWalWriter>) -
+                 sizeof(Allocator) - sizeof(_padding0)];
   GraphDBSession session;
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
 };
@@ -138,13 +140,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     allocator_strategy = MemoryStrategy::kHugepagePrefered;
   }
 
-  if (!config.kafka_endpoint.empty()) {
-    kafka_endpoint_ = config.kafka_endpoint;
-    openWalAndCreateContexts(data_dir, allocator_strategy,
-                             config.kafka_endpoint);
-  } else {
-    openWalAndCreateContexts(data_dir, allocator_strategy);
-  }
+  openWalAndCreateContexts(data_dir, allocator_strategy, config);
 
   if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);
@@ -230,8 +226,9 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
           VLOG(10) << "Trigger auto compaction";
           last_compaction_at = query_num_after;
           timestamp_t ts = this->version_manager_.acquire_update_timestamp();
-          auto txn = CompactTransaction(this->graph_, this->contexts_[0].logger,
-                                        this->version_manager_, ts);
+          auto txn =
+              CompactTransaction(this->graph_, *this->contexts_[0].logger,
+                                 this->version_manager_, ts);
           txn.Commit();
           VLOG(10) << "Finish compaction";
         }
@@ -298,7 +295,7 @@ const GraphDBSession& GraphDB::GetSession(int thread_id) const {
 
 int GraphDB::SessionNum() const { return thread_num_; }
 
-const std::string& GraphDB::GetKafkaEndpoint() const { return kafka_endpoint_; }
+const std::string& GraphDB::GetKafkaBrokers() const { return kafka_brokers_; }
 
 void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
   last_compaction_ts_ = ts;
@@ -382,8 +379,16 @@ static void IngestWalRange(SessionLocalContext* contexts,
   }
 }
 
-void GraphDB::ingestWals(const std::vector<std::string>& wals,
-                         const std::string& work_dir, int thread_num) {
+void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
+                                       const std::string& work_dir,
+                                       int thread_num) {
+  if (!std::filesystem::exists(wal_dir_path)) {
+    std::filesystem::create_directory(wal_dir_path);
+  }
+  std::vector<std::string> wals;
+  for (const auto& entry : std::filesystem::directory_iterator(wal_dir_path)) {
+    wals.push_back(entry.path().string());
+  }
   WalsParser parser(wals);
   uint32_t from_ts = 1;
   for (auto& update_wal : parser.update_wals()) {
@@ -405,6 +410,11 @@ void GraphDB::ingestWals(const std::vector<std::string>& wals,
                    thread_num);
   }
   version_manager_.init_ts(parser.last_ts(), thread_num);
+}
+
+void GraphDB::ingestWalsFromKafka(const std::string& kafka_topic,
+                                  const std::string& work_dir, int thread_num) {
+  LOG(WARNING) << "Kafka ingestion is not supported yet";
 }
 
 void GraphDB::initApps(
@@ -447,28 +457,40 @@ void GraphDB::initApps(
 
 void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
                                        MemoryStrategy allocator_strategy,
-                                       std::string kafka_endpoint) {
-  std::string wal_dir_path = wal_dir(data_dir);
-  if (!std::filesystem::exists(wal_dir_path)) {
-    std::filesystem::create_directory(wal_dir_path);
-  }
-
-  std::vector<std::string> wal_files;
-  for (const auto& entry : std::filesystem::directory_iterator(wal_dir_path)) {
-    wal_files.push_back(entry.path().string());
-  }
-
+                                       const GraphDBConfig& config) {
   contexts_ = static_cast<SessionLocalContext*>(
       aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
-  std::filesystem::create_directories(allocator_dir(data_dir));
-  for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i])
-        SessionLocalContext(*this, data_dir, i, allocator_strategy);
-  }
-  ingestWals(wal_files, data_dir, thread_num_);
 
-  for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].logger.open(wal_dir_path, i, kafka_endpoint);
+  LOG(INFO) << "wal writer type: " << static_cast<int>(config.wal_writer_type);
+  if (config.wal_writer_type == IWalWriter::WalWriterType::kLocal) {
+    std::filesystem::create_directories(allocator_dir(data_dir));
+    for (int i = 0; i < thread_num_; ++i) {
+      new (&contexts_[i])
+          SessionLocalContext(*this, data_dir, i, allocator_strategy,
+                              std::make_unique<LocalWalWriter>());
+    }
+    // ingest wals from local files
+    auto wal_dir_path = wal_dir(data_dir);
+    ingestWalsFromLocalFiles(wal_dir_path, data_dir, thread_num_);
+
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].logger->open(wal_dir_path, i);
+    }
+  } else if (config.wal_writer_type == IWalWriter::WalWriterType::kKafka) {
+    for (int i = 0; i < thread_num_; ++i) {
+      new (&contexts_[i]) SessionLocalContext(
+          *this, data_dir, i, allocator_strategy,
+          std::make_unique<KafkaWalWriter>(config.kafka_brokers));
+    }
+    // ingest wals from kafka
+    ingestWalsFromKafka(config.kafka_topic, data_dir, thread_num_);
+
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].logger->open(config.kafka_topic, i);
+    }
+  } else {
+    LOG(FATAL) << "Unsupported wal writer type: "
+               << static_cast<int>(config.wal_writer_type);
   }
 
   initApps(graph_.schema().GetPlugins());

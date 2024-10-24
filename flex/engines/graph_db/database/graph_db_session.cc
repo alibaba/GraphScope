@@ -242,6 +242,78 @@ AppBase* GraphDBSession::GetApp(int type) {
 
 #undef likely  // likely
 
+Result<std::string> GraphDBSession::IngestWals(const std::string_view& input) {
+  if (input.size() < sizeof(WalHeader)) {
+    LOG(ERROR) << "Invalid wal content";
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal content");
+  }
+  const WalHeader* header = reinterpret_cast<const WalHeader*>(input.data());
+  if (header->length + sizeof(WalHeader) != input.size()) {
+    LOG(ERROR) << "Invalid wal content";
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal content");
+  }
+  return deserialize_and_apply_wal(header, input.data(), header->length);
+}
+
+// Quite similar to the InsertTransation::Commit();
+Result<std::string> GraphDBSession::deserialize_and_apply_insert_wal(
+    const WalHeader* header, const char* data, size_t length) {
+  // Expect the incoming wal's timestamp is current timestamp + 1;
+  uint32_t ts = db_.version_manager_.acquire_insert_timestamp();
+  if (ts != header->timestamp) {
+    LOG(ERROR) << "Invalid wal timestamp: " << header->timestamp
+               << ", expect: " << ts;
+    db_.version_manager_.release_insert_timestamp(ts);
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal timestamp");
+  }
+  LOG(INFO) << "Applying insert wal with timestamp: " << ts
+            << ", length: " << length
+            << ", logger type: " << static_cast<int>(logger_.type());
+  logger_.append(ts, data, length);
+
+  InsertTransaction::IngestWal(db_.graph(), ts,
+                               const_cast<char*>(data) + sizeof(WalHeader),
+                               length, alloc_);
+  db_.version_manager_.release_insert_timestamp(ts);
+  return Status::OK();
+}
+
+Result<std::string> GraphDBSession::deserialize_and_apply_update_wal(
+    const WalHeader* header, const char* data, size_t length) {
+  uint32_t ts = db_.version_manager_.acquire_update_timestamp();
+  if (ts != header->timestamp) {
+    LOG(ERROR) << "Invalid wal timestamp: " << header->timestamp
+               << ", expect: " << ts;
+    db_.version_manager_.revert_update_timestamp(ts);
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal timestamp");
+  }
+  logger_.append(ts, data, length);
+  UpdateTransaction::IngestWal(db_.graph(), work_dir_, ts,
+                               const_cast<char*>(data), length, alloc_);
+  db_.version_manager_.release_update_timestamp(ts);
+  return Status::OK();
+}
+
+// We assume only one wal is provided.
+Result<std::string> GraphDBSession::deserialize_and_apply_wal(
+    const WalHeader* header, const char* data, size_t length) {
+  if (header->timestamp == 0) {
+    return Status::OK();
+  }
+  if (header->type == 0) {
+    // insert_transaction
+    // single_edge_insert_transaction
+    // single_vertex_insert_transaction
+    return deserialize_and_apply_insert_wal(header, data, length);
+  } else if (header->type == 1) {
+    // compact_transaction
+    // update_transaction
+    return deserialize_and_apply_update_wal(header, data, length);
+  } else {
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal type");
+  }
+}
+
 Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {

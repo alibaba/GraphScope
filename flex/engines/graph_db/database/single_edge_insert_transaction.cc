@@ -25,7 +25,7 @@
 namespace gs {
 
 SingleEdgeInsertTransaction::SingleEdgeInsertTransaction(
-    MutablePropertyFragment& graph, Allocator& alloc, WalWriter& logger,
+    MutablePropertyFragment& graph, Allocator& alloc, IWalWriter& logger,
     VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
@@ -117,7 +117,7 @@ void SingleEdgeInsertTransaction::Commit() {
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
 
   grape::OutArchive arc;
   {

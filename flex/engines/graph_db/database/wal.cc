@@ -20,13 +20,151 @@
 
 namespace gs {
 
-void WalWriter::open(const std::string& prefix, int thread_id,
-                     const std::string& kafka_endpoint) {
+int tmout_multip(int msecs) {
+  int r;
+  r = (int) (((double) (msecs)) * 1.0);
+  return r;
+}
+
+void test_conf_init(rd_kafka_conf_t** conf, rd_kafka_topic_conf_t** topic_conf,
+                    int timeout) {
+  if (conf) {
+    *conf = rd_kafka_conf_new();
+  }
+
+  if (topic_conf)
+    *topic_conf = rd_kafka_topic_conf_new();
+}
+
+rd_kafka_t* test_create_handle(rd_kafka_type_t mode, rd_kafka_conf_t* conf) {
+  rd_kafka_t* rk;
+  char errstr[512];
+  /* Creat kafka instance */
+  rk = rd_kafka_new(mode, conf, errstr, sizeof(errstr));
+  if (!rk) {
+    LOG(ERROR) << "Failed to create new kafka instance: " << errstr;
+    return NULL;
+  }
+  LOG(INFO) << "Created new kafka instance: " << rk;
+
+  return rk;
+}
+
+rd_kafka_t* test_create_producer(const std::string& brokers) {
+  rd_kafka_conf_t* conf;
+
+  test_conf_init(&conf, NULL, 0);
+  // set metadata.broker.list
+  char errstr[512];
+  if (rd_kafka_conf_set(conf, "metadata.broker.list", brokers.c_str(), errstr,
+                        sizeof(errstr)) != RD_KAFKA_CONF_OK) {
+    LOG(ERROR) << "Failed to set metadata.broker.list: " << errstr;
+    return NULL;
+  }
+
+  return test_create_handle(RD_KAFKA_PRODUCER, conf);
+}
+std::string generate_graph_wal_topic(const std::string& kafka_brokers,
+                                     const std::string& graph_id,
+                                     int partition_num,
+                                     int replication_factor) {
+  auto topic_name = "graph_" + graph_id + "_wal";
+  rd_kafka_t* rk;
+  rd_kafka_NewTopic_t* newt[1];
+  const size_t newt_cnt = 1;
+  rd_kafka_AdminOptions_t* options;
+  rd_kafka_queue_t* rkqu;
+  rd_kafka_event_t* rkev;
+  const rd_kafka_CreateTopics_result_t* res;
+  const rd_kafka_topic_result_t** terr;
+  int timeout_ms = tmout_multip(10000);
+  size_t res_cnt;
+  rd_kafka_resp_err_t err;
+  char errstr[512];
+  auto new_topic_ptr = rd_kafka_NewTopic_new(topic_name.c_str(), partition_num,
+                                             1, errstr, sizeof(errstr));
+  if (!new_topic_ptr) {
+    LOG(FATAL) << "Failed to create new topic: " << errstr;
+  }
+  rk = test_create_producer(kafka_brokers);
+  LOG(INFO) << "Create producer for topic " << topic_name;
+
+  rkqu = rd_kafka_queue_new(rk);
+
+  newt[0] = rd_kafka_NewTopic_new(topic_name.c_str(), partition_num,
+                                  replication_factor, errstr, sizeof(errstr));
+  if (!newt[0]) {
+    LOG(FATAL) << "Failed to create new topic: " << errstr;
+  }
+
+  options = rd_kafka_AdminOptions_new(rk, RD_KAFKA_ADMIN_OP_CREATETOPICS);
+  err = rd_kafka_AdminOptions_set_operation_timeout(options, timeout_ms, errstr,
+                                                    sizeof(errstr));
+  if (err) {
+    LOG(FATAL) << "Failed to set operation timeout: " << errstr;
+  }
+
+  LOG(INFO) << "Creating topic " << topic_name << " with " << partition_num
+            << " partitions and " << replication_factor
+            << " replication factor";
+
+  rd_kafka_CreateTopics(rk, newt, newt_cnt, options, rkqu);
+
+  /* Wait for result */
+  rkev = rd_kafka_queue_poll(rkqu, timeout_ms + 2000);
+  if (!rkev) {
+    LOG(FATAL) << "Failed to create topic " << topic_name
+               << ": Timed out waiting for result";
+  }
+
+  if (rd_kafka_event_error(rkev)) {
+    LOG(FATAL) << "CreateTopics failed: " << rd_kafka_event_error_string(rkev);
+  }
+
+  res = rd_kafka_event_CreateTopics_result(rkev);
+  if (!res) {
+    LOG(FATAL) << "CreateTopics failed: missing result";
+  }
+
+  terr = rd_kafka_CreateTopics_result_topics(res, &res_cnt);
+  if (!terr) {
+    LOG(FATAL) << "CreateTopics failed: missing topics";
+  }
+  if (res_cnt != 1) {
+    LOG(FATAL) << "CreateTopics failed: expected 1 topic, not " << res_cnt;
+  }
+
+  if (rd_kafka_topic_result_error(terr[0]) ==
+      RD_KAFKA_RESP_ERR_TOPIC_ALREADY_EXISTS) {
+    LOG(WARNING) << "Topic " << rd_kafka_topic_result_name(terr[0])
+                 << " already exists";
+  } else if (rd_kafka_topic_result_error(terr[0])) {
+    LOG(FATAL) << "Topic " << rd_kafka_topic_result_name(terr[0])
+               << " creation failed: "
+               << rd_kafka_topic_result_error_string(terr[0]);
+  } else {
+    LOG(INFO) << "Topic " << rd_kafka_topic_result_name(terr[0])
+              << " created successfully";
+  }
+
+  rd_kafka_event_destroy(rkev);
+
+  rd_kafka_queue_destroy(rkqu);
+
+  rd_kafka_AdminOptions_destroy(options);
+
+  rd_kafka_NewTopic_destroy(newt[0]);
+
+  rd_kafka_destroy(rk);
+  LOG(INFO) << "Destroyed producer for topic " << topic_name;
+  return topic_name;
+}
+
+void LocalWalWriter::open(const std::string& prefix, int thread_id) {
   if (fd_ != -1 || thread_id_ != -1) {
-    LOG(FATAL) << "WalWriter has been opened";
+    LOG(FATAL) << "LocalWalWriter has been opened";
   }
   thread_id_ = thread_id;
-  kafka_endpoint_ = kafka_endpoint;
   const int max_version = 65536;
   for (int version = 0; version != max_version; ++version) {
     std::string path = prefix + "/thread_" + std::to_string(thread_id_) + "_" +
@@ -47,7 +185,7 @@ void WalWriter::open(const std::string& prefix, int thread_id,
   file_used_ = 0;
 }
 
-void WalWriter::close() {
+void LocalWalWriter::close() {
   if (fd_ != -1) {
     if (::close(fd_) != 0) {
       LOG(FATAL) << "Failed to close file" << strerror(errno);
@@ -60,9 +198,9 @@ void WalWriter::close() {
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-void WalWriter::append(const char* data, size_t length) {
+bool LocalWalWriter::append(uint32_t ts, const char* data, size_t length) {
   if (unlikely(fd_ == -1)) {
-    return;
+    return false;
   }
   size_t expected_size = file_used_ + length;
   if (expected_size > file_size_) {
@@ -76,46 +214,84 @@ void WalWriter::append(const char* data, size_t length) {
   file_used_ += length;
 
   if (static_cast<size_t>(write(fd_, data, length)) != length) {
-    LOG(FATAL) << "Failed to write wal file " << strerror(errno);
+    LOG(ERROR) << "Failed to write wal file " << strerror(errno);
+    return false;
   }
 
 #if 1
 #ifdef F_FULLFSYNC
   if (fcntl(fd_, F_FULLFSYNC) != 0) {
-    LOG(FATAL) << "Failed to fcntl sync wal file " << strerrno(errno);
+    LOG(ERROR) << "Failed to fcntl sync wal file " << strerrno(errno);
+    return false;
   }
 #else
   // if (fsync(fd_) != 0) {
   if (fdatasync(fd_) != 0) {
-    LOG(FATAL) << "Failed to fsync wal file " << strerror(errno);
+    LOG(ERROR) << "Failed to fsync wal file " << strerror(errno);
+    return false;
   }
+  return true;
 #endif
 #endif
-  send_to_kafka(data, length);
 }
 
 #undef unlikely
 
-/**
- * @brief Send the data to kafka broker, if the kafka endpoint is set.
- * Could be async or sync. Currently we default use sync.
- * The published messages contains these info.
- * 1. The thread id
- * 2. The timestamp of the message(could be deemed as the id of WAL).
- * 3. The data(The WAL content).
- *
- * @param data The data to be sent
- * @param length The length of the data
- *
- */
-void WalWriter::send_to_kafka(const char* data, size_t length) {
-  LOG(INFO) << "Sending to kafka";
-  if (kafka_endpoint_.empty()) {
-    return;
-  }
-  // send to kafka
-  LOG(INFO) << "Finished sending to kafka";
+IWalWriter::WalWriterType LocalWalWriter::type() const {
+  return IWalWriter::WalWriterType::kLocal;
 }
+
+#ifdef ENABLE_KAFKA
+
+void KafkaWalWriter::open(const std::string& topic, int thread_id) {
+  if (thread_id_ != -1 || producer_) {
+    LOG(FATAL) << "KafkaWalWriter has been opened";
+  }
+  thread_id_ = thread_id;
+  if (!kafka_brokers_.empty()) {
+    if (topic.empty()) {
+      LOG(FATAL) << "Kafka topic is empty";
+    }
+    kafka_topic_ = topic;
+    cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers_}};
+    producer_ = std::make_shared<cppkafka::Producer>(config);
+  } else {
+    LOG(FATAL) << "Kafka brokers is empty";
+  }
+}
+
+void KafkaWalWriter::close() {
+  if (producer_) {
+    producer_->flush();
+    producer_.reset();
+    thread_id_ = -1;
+    kafka_topic_.clear();
+  }
+}
+
+bool KafkaWalWriter::append(uint32_t ts, const char* data, size_t length) {
+  // send to kafka
+  std::string message(data, length);
+  try {
+    std::string key = std::to_string(ts);
+    producer_->produce(cppkafka::MessageBuilder(kafka_topic_)
+                           .partition(thread_id_)
+                           .key(key)
+                           .payload(message));
+    producer_->flush();
+  } catch (const cppkafka::HandleException& e) {
+    LOG(ERROR) << "Failed to send to kafka: " << e.what();
+    return false;
+  }
+  VLOG(10) << "Finished sending to kafka with message size: " << length
+           << ", partition: " << thread_id_;
+  return true;
+}
+
+IWalWriter::WalWriterType KafkaWalWriter::type() const {
+  return IWalWriter::WalWriterType::kKafka;
+}
+#endif
 
 static constexpr size_t MAX_WALS_NUM = 134217728;
 

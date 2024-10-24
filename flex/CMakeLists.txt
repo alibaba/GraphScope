@@ -16,6 +16,7 @@ option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
+option(ENABLE_KAFKA "Whether to enable kafka" ON)
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -55,6 +56,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 if(USE_PTHASH)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pthash)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
+endif()
+
+if (ENABLE_KAFKA)
+    find_package(CppKafka)
+    if (CppKafka_FOUND)
+        message(STATUS "cppkafka found, build without third_party/cppkafka")
+    else ()
+        add_subdirectory(third_party/cppkafka)
+        include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/include)
+        set (CppKafka_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/build)
+        list (APPEND CMAKE_PREFIX_PATH ${CppKafka_INSTALL_DIR})
+        find_package (CppKafka CONFIG REQUIRED)
+    endif ()
+    add_definitions(-DENABLE_KAFKA)
 endif()
 
 set(DEFAULT_BUILD_TYPE "Release")

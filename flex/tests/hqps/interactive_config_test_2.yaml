@@ -4,8 +4,8 @@ default_graph: modern_graph
 compute_engine:
   type: hiactor
   workers:
-    - localhost:10000
-  thread_num_per_worker: 4
+    - localhost:10001
+  thread_num_per_worker: 1
   store:
     type: cpp-mcsr
   metadata_store:
@@ -38,5 +38,5 @@ compiler:
   gremlin_script_language_name: antlr_gremlin_calcite
 http_service:
   default_listen_address: localhost
-  admin_port: 7777
-  query_port: 10000
+  admin_port: 7778
+  query_port: 10001

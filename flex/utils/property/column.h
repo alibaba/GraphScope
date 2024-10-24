@@ -189,7 +189,8 @@ class TypedColumn : public ColumnBase {
     } else if (index < basic_size_) {
       basic_buffer_.set(index, val);
     } else {
-      throw std::runtime_error("Index out of range");
+      LOG(FATAL) << "Index out of range: " << index << " vs " << size()
+                 << ": value: " << val;
     }
   }
 

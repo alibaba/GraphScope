@@ -21,7 +21,7 @@
 namespace gs {
 
 CompactTransaction::CompactTransaction(MutablePropertyFragment& graph,
-                                       WalWriter& logger, VersionManager& vm,
+                                       IWalWriter& logger, VersionManager& vm,
                                        timestamp_t timestamp)
     : graph_(graph), logger_(logger), vm_(vm), timestamp_(timestamp) {
   arc_.Resize(sizeof(WalHeader));
@@ -38,7 +38,7 @@ void CompactTransaction::Commit() {
     header->timestamp = timestamp_;
     header->type = 1;
 
-    logger_.append(arc_.GetBuffer(), arc_.GetSize());
+    logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
     arc_.Clear();
 
     LOG(INFO) << "before compact - " << timestamp_;

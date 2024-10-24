@@ -9,6 +9,9 @@ target_include_directories(flex_graph_db PUBLIC $<BUILD_INTERFACE:${CMAKE_CURREN
 target_link_libraries(flex_graph_db flex_rt_mutable_graph flex_utils ${LIBGRAPELITE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(flex_graph_db flex_plan_proto runtime_adhoc)
 install_flex_target(flex_graph_db)
+if (ENABLE_KAFKA)
+target_link_libraries(flex_graph_db CppKafka::cppkafka)
+endif()
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db_session.h

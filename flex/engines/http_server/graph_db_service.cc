@@ -47,7 +47,8 @@ ServiceConfig::ServiceConfig()
       enable_bolt(false),
       metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
-      verbose_level(DEFAULT_VERBOSE_LEVEL) {}
+      verbose_level(DEFAULT_VERBOSE_LEVEL),
+      wal_writer_type(gs::IWalWriter::WalWriterType::kLocal) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
@@ -95,7 +96,13 @@ void openGraph(const gs::GraphId& graph_id,
   db.Close();
   gs::GraphDBConfig config(schema_res.value(), data_dir,
                            service_config.shard_num);
+  config.set_wal_writer_type(service_config.wal_writer_type);
   config.memory_level = service_config.memory_level;
+  if (config.wal_writer_type == gs::IWalWriter::WalWriterType::kKafka) {
+    config.kafka_brokers = service_config.kafka_brokers;
+    config.kafka_topic = gs::generate_graph_wal_topic(
+        service_config.kafka_brokers, graph_id, service_config.shard_num);
+  }
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }

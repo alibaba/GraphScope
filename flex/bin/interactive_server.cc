@@ -148,7 +148,12 @@ int main(int argc, char** argv) {
       "memory allocation strategy")("enable-adhoc-handler",
                                     bpo::value<bool>()->default_value(false),
                                     "whether to enable adhoc handler")(
-      "kafka-endpoint", bpo::value<std::string>(), "kafka endpoint");
+      "kafka-brokers,k", bpo::value<std::string>()->default_value(""),
+      "kafka endpoint")("kafka-topic",
+                        bpo::value<std::string>()->default_value(""),
+                        "kafka topic")(
+      "wal-type,t", bpo::value<std::string>()->default_value("local"),
+      "wal writer type");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -182,6 +187,11 @@ int main(int argc, char** argv) {
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
   service_config.enable_adhoc_handler = vm["enable-adhoc-handler"].as<bool>();
+  service_config.kafka_brokers = vm["kafka-brokers"].as<std::string>();
+  service_config.wal_writer_type =
+      gs::IWalWriter::parseWalWriterType(vm["wal-type"].as<std::string>());
+
+  auto kafka_topic = vm["kafka-topic"].as<std::string>();
 
   // Config log level
   gs::config_log_level(service_config.log_level, service_config.verbose_level);
@@ -205,6 +215,13 @@ int main(int argc, char** argv) {
     if (vm.count("graph-config") || vm.count("data-path")) {
       LOG(FATAL) << "To start admin service, graph-config and "
                     "data-path should NOT be specified";
+    }
+
+    if (!kafka_topic.empty()) {
+      // When starting with admin service, we don't need a kafka topic from the
+      // command line
+      LOG(WARNING) << "kafka-topic is discarded when starting with admin "
+                      "service";
     }
 
     // Suppose the default_graph is already loaded.
@@ -243,7 +260,12 @@ int main(int argc, char** argv) {
     db.Close();
     gs::GraphDBConfig config(schema_res.value(), data_path,
                              service_config.shard_num);
-    config.kafka_endpoint = vm["kafka-endpoint"].as<std::string>();
+    config.set_wal_writer_type(vm["wal-type"].as<std::string>());
+    if (config.wal_writer_type == gs::IWalWriter::WalWriterType::kKafka) {
+      config.kafka_brokers =
+          vm["kafka-brokers"].as<std::string>();  // default empty
+      config.kafka_topic = kafka_topic;
+    }
     auto load_res = db.Open(config);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "

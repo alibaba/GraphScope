@@ -25,7 +25,7 @@
 namespace gs {
 
 SingleVertexInsertTransaction::SingleVertexInsertTransaction(
-    MutablePropertyFragment& graph, Allocator& alloc, WalWriter& logger,
+    MutablePropertyFragment& graph, Allocator& alloc, IWalWriter& logger,
     VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
@@ -164,8 +164,8 @@ void SingleVertexInsertTransaction::Commit() {
   header->type = 0;
   header->timestamp = timestamp_;
 
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
-  ingestWal();
+  logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
+  // ingestWal();
 
   vm_.release_insert_timestamp(timestamp_);
   clear();

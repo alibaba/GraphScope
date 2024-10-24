@@ -52,7 +52,6 @@ Result<std::string> GraphDBOperations::CreateVertex(
     for (auto& edge_insert : input_json["edge_request"].GetArray()) {
       edge_data.push_back(inputEdge(edge_insert, schema, session));
     }
-    LOG(INFO) << "CreateVertex edge_data: " << edge_data.size();
   } catch (std::exception& e) {
     return Result<std::string>(
         gs::Status(StatusCode::INVALID_SCHEMA,
@@ -453,7 +452,7 @@ Status GraphDBOperations::singleInsertVertex(
             "Fail to create edge; All inserts are rollbacked");
       }
     }
-    LOG(INFO) << "Commit singleInsertVertex";
+    // LOG(INFO) << "Commit singleInsertVertex";
     txnWrite.Commit();
   } catch (std::exception& e) {
     return Status(StatusCode::INVALID_SCHEMA, e.what());

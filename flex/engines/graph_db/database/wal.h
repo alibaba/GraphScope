@@ -26,9 +26,22 @@
 #include <string>
 #include <thread>
 
+#include "flex/utils/result.h"
+
+#ifdef ENABLE_KAFKA
+#include <librdkafka/rdkafka.h>
+#include <librdkafka/rdkafkacpp.h>
+#include "cppkafka/cppkafka.h"
+#endif
+
 #include "glog/logging.h"
 
 namespace gs {
+
+std::string generate_graph_wal_topic(const std::string& kafka_brokers,
+                                     const std::string& graph_id,
+                                     int partition_num = 4,
+                                     int replication_factor = 1);
 
 struct WalHeader {
   uint32_t timestamp;
@@ -47,28 +60,85 @@ struct UpdateWalUnit {
   size_t size{0};
 };
 
-class WalWriter {
+class IWalWriter {
+ public:
+  enum class WalWriterType : uint8_t {
+    kLocal = 0,
+    kKafka = 1,
+  };
+  static inline WalWriterType parseWalWriterType(const std::string& type_str) {
+    if (type_str == "local") {
+      return WalWriterType::kLocal;
+    } else if (type_str == "kafka") {
+      return WalWriterType::kKafka;
+    } else {
+      LOG(FATAL) << "Unsupported wal writer type: " << type_str;
+    }
+    return WalWriterType::kLocal;
+  }
+
+  virtual ~IWalWriter() {}
+  virtual void open(const std::string& path, int thread_id) = 0;
+  virtual void close() = 0;
+  virtual IWalWriter::WalWriterType type() const = 0;
+  /**
+   * @brief Append the data to the WAL.
+   * The published messages contains these info.
+   * 1. The thread id
+   * 2. The timestamp of the message(could be deemed as the id of WAL).
+   * 3. The data(The WAL content).
+   *
+   * @param data The data to be sent
+   * @param length The length of the data
+   *
+   */
+  virtual bool append(uint32_t ts, const char* data, size_t length) = 0;
+};
+
+class LocalWalWriter : public IWalWriter {
   static constexpr size_t TRUNC_SIZE = 1ul << 30;
 
  public:
-  WalWriter() : thread_id_(-1), fd_(-1), file_size_(0), file_used_(0) {}
-  ~WalWriter() { close(); }
+  LocalWalWriter() : thread_id_(-1), fd_(-1), file_size_(0), file_used_(0) {}
+  ~LocalWalWriter() { close(); }
 
-  void open(const std::string& prefix, int thread_id, const std::string& kafka_endpoint = "");
+  void open(const std::string& path, int thread_id) override;
 
-  void close();
+  void close() override;
 
-  void append(const char* data, size_t length);
+  bool append(uint32_t ts, const char* data, size_t length) override;
+
+  IWalWriter::WalWriterType type() const override;
 
  private:
-  void send_to_kafka(const char* data, size_t length);
-  
   int thread_id_;
   int fd_;
   size_t file_size_;
   size_t file_used_;
-  std::string kafka_endpoint_;
 };
+
+#ifdef ENABLE_KAFKA
+class KafkaWalWriter : public IWalWriter {
+ public:
+  KafkaWalWriter(const std::string& kafka_brokers)
+      : thread_id_(-1), kafka_brokers_(kafka_brokers), kafka_topic_("") {}
+  ~KafkaWalWriter() { close(); }
+
+  void open(const std::string& kafka_topic, int thread_id) override;
+
+  void close() override;
+
+  bool append(uint32_t ts, const char* data, size_t length) override;
+
+  IWalWriter::WalWriterType type() const override;
+
+ private:
+  int thread_id_;
+  std::string kafka_brokers_;
+  std::string kafka_topic_;
+  std::shared_ptr<cppkafka::Producer> producer_;
+};
+#endif
 
 class WalsParser {
  public:
