@@ -117,32 +117,28 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | User Defined Functions | convert integer value to datetime | datetime(1287230400000) | gs.function.datetime(1287230400000) | <input type="checkbox" disabled checked /> |   |
 
 ## Clause
-Currently, we support multiple `MATCH` clauses within a single Cypher query, and the entire query can be converted into different logical plans under different circumstances.
-
-By default, we transform multiple `MATCH` clauses into a `Join` tree.
-
-For example:
-
+A notable limitation for now is that we do not
+allow specifying multiple `MATCH` clauses in **one** query. For example,
+the following code will not compile:
 ```Cypher
-// phase 1
 MATCH (a) -[]-> (b)
 WITH a, b
-
-// phase 2
-MATCH (a) -[]-> () -[]-> (b)
-
-// phase 3
+MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
 RETURN a, b;
 ```
 
-In this case, an `INNER JOIN` operator is used to combine the results from the first two phases, with phase 1 as the left input and phase 2 as the right input. This works similarly for `OPTIONAL MATCH` clauses, except that the join type would be a `LEFT OUTER JOIN` instead of an `INNER JOIN`.
-
-If the `FlatJoinToExpandRule` is registered, the `Join` operator will be eliminated, and the query will be transformed into a sequence of `Expand` and `GetV` operators, while preserving the execution order specified by the user. For more details, see [GOpt](../gopt.md#flatjointoexpandrule).
+Besides, we support `OPTIONAL MATCH`. For example,
+the following query can be supported:
+```Cypher
+MATCH (a) -[]-> (b)
+Optional MATCH (b) -[]-> (c) 
+RETURN a, b, c;
+```
 
 | Keyword | Comments |  Supported  |  Todo
 |:---|---|:---:|:---|
-| MATCH | description about a graph pattern | <input type="checkbox" disabled checked />  |
-| OPTIONAL MATCH | implements as left outer join by default | <input type="checkbox" checked /> |  |
+| MATCH | only one Match clause is allowed  | <input type="checkbox" disabled checked />  |
+| OPTIONAL MATCH | implements as left outer join | <input type="checkbox" checked /> |  |
 | RETURN .. [AS] |  | <input type="checkbox" disabled checked />  |   |
 | WITH .. [AS] | project, aggregate, distinct | <input type="checkbox" disabled checked />  | |
 | WHERE |  | <input type="checkbox" disabled checked />  |    |
