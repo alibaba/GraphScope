@@ -1,5 +1,6 @@
 import base64
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing.reduction import ForkingPickler
@@ -20,100 +21,58 @@ from torch_geometric.typing import FeatureTensorType
 
 from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
 from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
-from graphscope.learning.graphlearn_torch.typing import EdgeType
 from graphscope.learning.graphlearn_torch.typing import NodeType
 
 KeyType = Tuple[str, ...]
 
 
-@dataclass
-class GsTensorAttr(TensorAttr):
-    group_name: Optional[Union[NodeType, EdgeType]] = _FieldStatus.UNSET
-    is_label: Optional[bool] = False
-
-    def is_fully_specified(self) -> bool:
-        r"""Whether the :obj:`TensorAttr` has no unset fields(except "attr_name")."""
-        result = True
-        for key in self.__dataclass_fields__:
-            if not self.is_set(key) and key != "attr_name":
-                result = False
-                break
-        return result
-
-
 class GsFeatureStore(FeatureStore):
-    def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
-        self.handle = handle
         self.config = config
-        self.attr2index: Dict[KeyType, Dict[str, int]] = {}
-        self.tensor_attrs: Dict[Tuple[Union[NodeType, EdgeType], str], GsTensorAttr] = (
-            {}
+        self.tensor_attrs: Dict[Tuple[NodeType, str], TensorAttr] = {}
+
+        assert config is not None
+        config = json.loads(
+            base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
         )
-        if handle is not None:
-            handle = json.loads(
-                base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
-                    "utf-8", errors="ignore"
-                )
-            )
-            self.num_servers = handle["num_servers"]
-        if config is not None:
-            config = json.loads(
-                base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
-                    "utf-8", errors="ignore"
-                )
-            )
-            self.edge_features = config["edge_features"]
-            self.node_features = config["node_features"]
-            self.node_labels = config["node_labels"]
+        self.node_features = config["node_features"]
+        self.node_labels = config["node_labels"]
+        self.edges = config["edges"]
 
-            if self.node_features is not None:
-                for node_type, node_features in self.node_features.items():
-                    node_attr2index = {}
-                    for idx, node_feature in enumerate(node_features):
-                        self.tensor_attrs[(node_type, node_feature)] = GsTensorAttr(
-                            node_type, node_feature
-                        )
-                        node_attr2index[node_feature] = idx
-                    self.attr2index[node_type] = node_attr2index
-            if self.edge_features is not None:
-                for edge_type, edge_features in self.edge_features.items():
-                    edge_attr2index = {}
-                    for idx, edge_feature in enumerate(edge_features):
-                        self.tensor_attrs[(edge_type, edge_feature)] = GsTensorAttr(
-                            edge_type, edge_feature
-                        )
-                        edge_attr2index[edge_feature] = idx
-                    self.attr2index[edge_type] = edge_attr2index
-            if self.node_labels is not None:
-                for node_type, node_label in self.node_labels.items():
-                    self.tensor_attrs[(node_type, node_label)] = GsTensorAttr(
-                        node_type, node_label, is_label=True
-                    )
-                    if node_type in self.attr2index:
-                        _attr2index = self.attr2index[node_type]
-                        _attr2index[node_label] = 0
-                        self.attr2index[node_type] = _attr2index
-                    else:
-                        label_attr2index = {}
-                        label_attr2index[node_feature] = 0
-                        self.attr2index[node_type] = label_attr2index
+        assert self.node_features is not None
+        self.node_types = set()
+        for node in self.node_features:
+            self.node_types.add(node)
 
-        self.endpoints = endpoints
+        for edge in self.edges:
+            self.node_types.add(edge[0])
+            self.node_types.add(edge[-1])
+
+        for node_type in self.node_types:
+            self.tensor_attrs[(node_type, "x")] = TensorAttr(node_type, "x")
+
+        assert self.node_labels is not None
+        for node_type, node_label in self.node_labels.items():
+            self.tensor_attrs[(node_type, node_label)] = TensorAttr(
+                node_type, node_label
+            )
 
     @staticmethod
-    def key(attr: GsTensorAttr) -> KeyType:
-        return (attr.group_name, attr.attr_name, attr.index, attr.is_label)
+    def key(attr: TensorAttr) -> KeyType:
+        return (attr.group_name, attr.attr_name, attr.index)
 
-    def _put_tensor(self, tensor: FeatureTensorType, attr: GsTensorAttr) -> bool:
+    def _put_tensor(self, tensor: FeatureTensorType, attr: TensorAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
-    def _get_tensor(self, attr: GsTensorAttr) -> Optional[Tensor]:
+    def _get_tensor(self, attr: TensorAttr) -> Optional[Tensor]:
         r"""Obtains a :class:`torch.Tensor` from the remote server.
 
         Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
+            attr(`TensorAttr`): Uniquely corresponds to a node/edge feature tensor .
 
         Raises:
             ValueError: If the attr can not be found in the attrlists of feature store.
@@ -122,96 +81,114 @@ class GsFeatureStore(FeatureStore):
             feature(`torch.Tensor`): The node/edge feature tensor.
         """
 
-        group_name, attr_name, index, is_label = self.key(attr)
+        group_name, attr_name, index = self.key(attr)
         if not self._check_attr(attr):
             raise ValueError(
                 f"Attribute {group_name}-{attr_name} not found in feature store."
             )
-        result = None
-        server_id = self._get_partition_id(attr)
+        result = torch.tensor([])
         index = self.index_to_tensor(index)
-        if is_label:
-            result = _request_server(
-                server_id, DistServer.get_node_label, group_name, index
-            )
-        else:
-            if isinstance(group_name, str):
-                result = _request_server(
-                    server_id, DistServer.get_node_feature, group_name, index
-                )
-            else:
-                result = _request_server(
-                    server_id, DistServer.get_edge_feature, group_name, index
-                )
-            if attr.is_set("attr_name"):
-                attr_index = [self.attr2index[group_name][attr_name]]
-                return result[0, attr_index]
-        return result[0]
+        if index.numel() == 0:
+            return result
 
-    def _get_partition_id(self, attr: GsTensorAttr) -> Optional[int]:
+        server_id = self._get_partition_id(attr)
+
+        partition_to_ids = defaultdict(list)
+        partition_to_indices = defaultdict(list)
+        for idx, id in enumerate(index):
+            partition_id = server_id[idx].item()
+            partition_to_ids[partition_id].append(id.item())
+            partition_to_indices[partition_id].append(idx)
+
+        server_fun = None
+        labels = self.node_labels[group_name]
+        is_label = False
+        if isinstance(labels, list):
+            is_label = attr_name in labels
+        elif isinstance(labels, str):
+            is_label = attr_name == labels
+
+        if is_label:
+            server_fun = DistServer.get_node_label
+        else:
+            server_fun = DistServer.get_node_feature
+
+        partition_to_features = defaultdict(list)
+        for partition_id, ids in partition_to_ids.items():
+            feature = request_server(
+                partition_id, server_fun, group_name, self.index_to_tensor(ids)
+            )
+            partition_to_features[partition_id] = feature
+
+        result = torch.zeros(
+            (len(index), list(partition_to_features.values())[0].shape[-1])
+        )
+        for partition_id, indices in partition_to_indices.items():
+            partition_features = partition_to_features[partition_id]
+            for i, idx in enumerate(indices):
+                result[idx] = partition_features[i]
+
+        if is_label:
+            result = result.reshape(-1)
+        return result
+
+    def _get_partition_id(self, attr: TensorAttr) -> Optional[int]:
         r"""Obtains the id of the partition where the tensor is stored from remote server.
 
         Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
+            attr(`TensorAttr`): Uniquely corresponds to a node/edge feature tensor .
 
         Returns:
             partition_id(int): The corresponding partition id.
         """
         result = None
-        group_name, _, gid, _ = self.key(attr)
+        group_name, _, gid = self.key(attr)
         gid = self.index_to_tensor(gid)
-        if isinstance(group_name, str):
-            result = _request_server(
-                0, DistServer.get_node_partition_id, group_name, gid
-            )
-        else:
-            result = _request_server(
-                0, DistServer.get_edge_partition_id, group_name, gid
-            )
+        result = request_server(0, DistServer.get_node_partition_id, group_name, gid)
         return result
 
-    def _remove_tensor(self, attr: GsTensorAttr) -> bool:
+    def _remove_tensor(self, attr: TensorAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
 
-    def _check_attr(self, attr: GsTensorAttr) -> bool:
-        r"""Check the given :class:`GsTensorAttr` is stored in remote server or not.
+    def _check_attr(self, attr: TensorAttr) -> bool:
+        r"""Check the given :class:`TensorAttr` is stored in remote server or not.
 
         Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor .
+            attr(`TensorAttr`): Uniquely corresponds to a node/edge feature tensor .
 
         Returns:
-            flag(bool): True: :class:`GsTensorAttr` is stored in remote server. \
-                False: :class:`GsTensorAttr` is not stored in remote server
+            flag(bool): True: :class:`TensorAttr` is stored in remote server. \
+                False: :class:`TensorAttr` is not stored in remote server
         """
-        group_name, attr_name, _, _ = self.key(attr)
+        group_name, attr_name, _ = self.key(attr)
         if not attr.is_set("attr_name"):
             return any(group_name in key for key in self.tensor_attrs.keys())
         return (group_name, attr_name) in self.tensor_attrs
 
-    def _get_tensor_size(self, attr: GsTensorAttr) -> Optional[torch.Size]:
+    def _get_tensor_size(self, attr: TensorAttr) -> Optional[torch.Size]:
         r"""Obtains the dimension of feature tensor from remote server.
 
         Args:
-            attr(`GsTensorAttr`): Uniquely corresponds to a node/edge feature tensor type .
+            attr(`TensorAttr`): Uniquely corresponds to a node/edge feature tensor type .
 
         Returns:
             tensor_size(`torch.Size`): The dimension of corresponding tensor type.
         """
-        group_name, attr_name, _, _ = self.key(attr)
-        attr = GsTensorAttr(group_name, attr_name, 0)
+        group_name, attr_name, _ = self.key(attr)
+        attr = TensorAttr(group_name, attr_name, 0)
         tensor = self._get_tensor(attr)
-        return tensor.shape
+        return tensor[0].size()
 
-    def get_all_tensor_attrs(self) -> List[GsTensorAttr]:
+    def get_all_tensor_attrs(self) -> List[TensorAttr]:
         r"""Obtains all the tensor type stored in remote server.
 
         Returns:
-            tensor_attrs(`List[GsTensorAttr]`): All the tensor type stored in the remote server.
+            tensor_attrs(`List[TensorAttr]`): All the tensor type stored in the remote server.
         """
         return [attr for attr in self.tensor_attrs.values()]
 
-    def index_to_tensor(self, index: IndexType) -> torch.Tensor:
+    def index_to_tensor(self, index) -> torch.Tensor:
         r"""Convert the Index to type :class:`torch.Tensor`.
 
         Args:
@@ -231,6 +208,8 @@ class GsFeatureStore(FeatureStore):
             return torch.arange(start, stop, step)
         elif isinstance(index, int):
             return torch.tensor([index])
+        elif isinstance(index, list):
+            return torch.tensor(index)
         else:
             raise TypeError(f"Unsupported index type: {type(index)}")
 
@@ -239,7 +218,7 @@ class GsFeatureStore(FeatureStore):
         return cls(*ipc_handle)
 
     def share_ipc(self):
-        ipc_hanlde = (list(self.endpoints), self.handle, self.config)
+        ipc_hanlde = self.config
         return ipc_hanlde
 
 
@@ -257,7 +236,3 @@ def reduce_featurestore(FeatureStore: GsFeatureStore):
 
 
 ForkingPickler.register(GsFeatureStore, reduce_featurestore)
-
-
-def _request_server(server_id, method, *args):
-    return request_server(server_id, method, *args)

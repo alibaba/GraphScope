@@ -15,92 +15,32 @@ from graphscope.learning.graphlearn_torch.distributed.dist_server import DistSer
 
 
 class GsGraphStore(GraphStore):
-    def __init__(self, endpoints, handle=None, config=None, graph=None) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
-        self.handle = handle
         self.config = config
         self.edge_attrs: Dict[Tuple[Tuple[str, str, str], str, bool], EdgeAttr] = {}
 
-        if config is not None:
-            config = json.loads(
-                base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
-                    "utf-8", errors="ignore"
-                )
+        assert config is not None
+        config = json.loads(
+            base64.b64decode(config.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
             )
-            self.edges = config["edges"]
-            self.edge_weights = config["edge_weights"]
-            self.edge_dir = config["edge_dir"]
-            self.random_node_split = config["random_node_split"]
-            if self.edges is not None:
-                for edge in self.edges:
-                    edge = tuple(edge)
-                    if self.edge_dir is not None:
-                        layout = "csr" if self.edge_dir == "out" else "csc"
-                        is_sorted = False if layout == "csr" else True
-                        self.edge_attrs[(edge, layout, is_sorted)] = EdgeAttr(
-                            edge, layout, is_sorted
-                        )
-                    else:
-                        layout = "coo"
-                        self.edge_attrs[(edge, layout, False)] = EdgeAttr(
-                            edge, layout, is_sorted
-                        )
-
-        assert len(endpoints) == 4
-        self.endpoints = endpoints
-        self._master_addr, self._server_client_master_port = endpoints[0].split(":")
-        self._train_master_addr, self._train_loader_master_port = endpoints[1].split(
-            ":"
         )
-        self._val_master_addr, self._val_loader_master_port = endpoints[2].split(":")
-        self._test_master_addr, self._test_loader_master_port = endpoints[3].split(":")
-        assert (
-            self._master_addr
-            == self._train_master_addr
-            == self._val_master_addr
-            == self._test_master_addr
-        )
+        self.edges = config["edges"]
+        self.edge_dir = config["edge_dir"]
 
-    @property
-    def master_addr(self):
-        return self._master_addr
-
-    @property
-    def train_master_addr(self):
-        return self._train_master_addr
-
-    @property
-    def val_master_addr(self):
-        return self._val_master_addr
-
-    @property
-    def test_master_addr(self):
-        return self._test_master_addr
-
-    @property
-    def server_client_master_port(self):
-        return self._server_client_master_port
-
-    @property
-    def train_loader_master_port(self):
-        return self._train_loader_master_port
-
-    @property
-    def val_loader_master_port(self):
-        return self._val_loader_master_port
-
-    @property
-    def test_loader_master_port(self):
-        return self._test_loader_master_port
-
-    def get_handle(self):
-        return self.handle
-
-    def get_config(self):
-        return self.config
-
-    def get_endpoints(self):
-        return self.endpoints
+        assert self.edges is not None
+        for edge in self.edges:
+            edge = tuple(edge)
+            if self.edge_dir is not None:
+                layout = "csr" if self.edge_dir == "out" else "csc"
+                is_sorted = False if layout == "csr" else True
+                new_edge_attr = EdgeAttr(edge, layout, is_sorted)
+                self.edge_attrs[(edge, layout, is_sorted)] = new_edge_attr
+            else:
+                layout = "coo"
+                new_edge_attr = EdgeAttr(edge, layout, False)
+                self.edge_attrs[(edge, layout, False)] = new_edge_attr
 
     @staticmethod
     def key(attr: EdgeAttr) -> Tuple:
@@ -124,21 +64,34 @@ class GsGraphStore(GraphStore):
             edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
             (row indice tensor, column indice tensor)(COO)\
             (row ptr tensor, column indice tensor)(CSR)\
-            (column ptr tensor, row indice tensor)(CSC).
+            (row indice tensor, column ptr tensor)(CSC).
         """
-        group_name, layout, is_sorted, _ = self.key(edge_attr)
+        group_name, layout, _, _ = self.key(edge_attr)
         edge_index = None
-        edge_index, size = _request_server(
-            0, DistServer.get_edge_index, group_name, layout
-        )
-        if edge_index is not None:
-            new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
-            self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
+        edge_index, _ = request_server(0, DistServer.get_edge_index, group_name, layout)
         return edge_index
 
     def _remove_edge_index(self, edge_attr: EdgeAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
         raise NotImplementedError
+
+    def _get_edge_size(self, edge_attr: EdgeAttr) -> Tuple[int, int]:
+        r"""Obtains a :class:`EdgeTensorType` from the remote server with :class:`EdgeAttr`.
+
+        Args:
+            edge_attr(`EdgeAttr`): Uniquely corresponds to a topology of subgraph .
+
+        Returns:
+            edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
+            (row indice tensor, column indice tensor)(COO)\
+            (row ptr tensor, column indice tensor)(CSR)\
+            (row indice tensor, column ptr tensor)(CSC).
+        """
+        group_name, layout, is_sorted, _ = self.key(edge_attr)
+        size = request_server(0, DistServer.get_edge_size, group_name, layout)
+        new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
+        self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
+        return size
 
     def get_all_edge_attrs(self) -> List[EdgeAttr]:
         r"""Obtains all the subgraph type stored in remote server.
@@ -149,10 +102,11 @@ class GsGraphStore(GraphStore):
         result = []
         for attr in self.edge_attrs.values():
             if attr.size is None:
-                self._get_edge_index(attr)
-                result.append(
-                    self.edge_attrs[(attr.edge_type, attr.layout.value, attr.is_sorted)]
+                size = self._get_edge_size(attr)
+                new_edge_attr = EdgeAttr(
+                    attr.edge_type, attr.layout, attr.is_sorted, size
                 )
+                result.append(new_edge_attr)
             else:
                 result.append(attr)
         return result
@@ -162,7 +116,7 @@ class GsGraphStore(GraphStore):
         return cls(*ipc_handle)
 
     def share_ipc(self):
-        ipc_hanlde = (list(self.endpoints), self.handle, self.config)
+        ipc_hanlde = self.config
         return ipc_hanlde
 
 
@@ -180,7 +134,3 @@ def reduce_graphstore(GraphStore: GsGraphStore):
 
 
 ForkingPickler.register(GsGraphStore, reduce_graphstore)
-
-
-def _request_server(server_id, method, *args):
-    return request_server(server_id, method, *args)
