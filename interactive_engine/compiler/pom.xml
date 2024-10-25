@@ -81,10 +81,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
@@ -169,6 +165,11 @@
         <dependency>
             <groupId>com.alibaba.graphscope</groupId>
             <artifactId>interactive</artifactId>
+            <classifier>${interactive.sdk.classifier}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
 
@@ -236,6 +237,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
                     <filesets>
@@ -255,12 +260,28 @@
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
                     </pluginArtifact>
-                    <protoSourceRoot>${project.basedir}/../executor/ir/proto</protoSourceRoot>
                     <outputDirectory>src/main/generated/</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>error-code</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/../../proto/error</protoSourceRoot>
+                            <includes>
+                                <include>frontend.proto</include>
+                            </includes>
+                        </configuration>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>ir-proto</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/../executor/ir/proto</protoSourceRoot>
+                        </configuration>
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>

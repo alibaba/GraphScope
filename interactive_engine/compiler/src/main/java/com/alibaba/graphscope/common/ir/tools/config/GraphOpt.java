@@ -59,7 +59,10 @@ public abstract class GraphOpt {
 
     public enum PathExpandPath {
         ARBITRARY,
-        SIMPLE
+        SIMPLE,
+        TRAIL,
+        ANY_SHORTEST,
+        ALL_SHORTEST
     }
 
     public enum PathExpandResult {

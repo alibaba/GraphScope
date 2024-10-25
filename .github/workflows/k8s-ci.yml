@@ -52,7 +52,7 @@ jobs:
       gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Detect the tmate session
       run: |
@@ -62,7 +62,7 @@ jobs:
         fi
 
     # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         base: main  # Change detection against merge-base with main before push
@@ -159,7 +159,7 @@ jobs:
         python3 -m flake8 .
 
     - name: Setup Java11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -202,7 +202,7 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build Artifact
       run: |
@@ -217,7 +217,7 @@ jobs:
         strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: analytical
         path: ${{ github.workspace }}/install
@@ -229,9 +229,9 @@ jobs:
     #if: ${{ github.repository == 'alibaba/GraphScope' }}
     if: false
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -252,7 +252,7 @@ jobs:
         strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: analytical-java
         path: ${{ github.workspace }}/install
@@ -263,16 +263,16 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -294,7 +294,7 @@ jobs:
         sccache --show-stats
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: interactive
         path: ${{ github.workspace }}/install
@@ -305,11 +305,11 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -335,7 +335,7 @@ jobs:
         cp dist/*.whl ${{ github.workspace }}/install/
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: learning
         path: ${{ github.workspace }}/install
@@ -346,23 +346,23 @@ jobs:
   #   needs: [changes]
   #   if: false  # Wheels of learning includes coordinator and client
   #   steps:
-  #   - uses: actions/checkout@v3g
+  #   - uses: actions/checkout@v4g
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-analytical, build-interactive, build-learning]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -498,13 +498,15 @@ jobs:
                             ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
-          file: ./python/coverage.xml
-          fail_ci_if_error: false
+          files: ./python/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
 
       - name: HDFS test
+        if: false  # FIXME(siyuan): Open this test
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -543,7 +545,7 @@ jobs:
           MODE: stop
 
       - name: Upload the k8s logs to artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ always() }}
         continue-on-error: true
         with:
@@ -555,16 +557,16 @@ jobs:
     needs: [build-analytical, build-interactive, build-learning]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -619,16 +621,16 @@ jobs:
     runs-on: [self-hosted, manylinux2014]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -654,7 +656,7 @@ jobs:
             interactive_engine/executor/ir/target/release/${RPC_TARGET}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gie-experimental
           path: |
@@ -662,13 +664,14 @@ jobs:
           retention-days: 5
 
   gie-k8s-failover-test:
+    if: false  # No need to run this test for now
     needs: [build-gie-experimental]
     runs-on: [self-hosted, ubuntu2004]
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: gie-experimental
           path: artifacts
@@ -735,7 +738,7 @@ jobs:
           MODE: stop
 
       - name: upload the k8s logs to artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:

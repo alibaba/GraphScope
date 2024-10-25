@@ -21,14 +21,10 @@ namespace gs {
 
 namespace runtime {
 
-Context eval_path_expand_v(const physical::PathExpand& opr,
-                           const ReadTransaction& txn, Context&& ctx,
-                           const std::map<std::string, std::string>& params,
-                           const physical::PhysicalOpr_MetaData& meta,
-                           int alias) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
+bl::result<Context> eval_path_expand_v(
+    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
+    const std::map<std::string, std::string>& params,
+    const physical::PhysicalOpr_MetaData& meta, int alias) {
   CHECK(opr.has_start_tag());
   int start_tag = opr.start_tag().value();
   CHECK(opr.path_opt() ==
@@ -57,22 +53,24 @@ Context eval_path_expand_v(const physical::PathExpand& opr,
   if (opr.base().edge_expand().expand_opt() ==
       physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
     if (query_params.has_predicate()) {
-      LOG(FATAL) << "not support";
+      LOG(ERROR) << "path expand vertex with predicate is not supported";
+      RETURN_UNSUPPORTED_ERROR(
+          "path expand vertex with predicate is not supported");
     } else {
       return PathExpand::edge_expand_v(txn, std::move(ctx), pep);
     }
   } else {
-    LOG(FATAL) << "not support";
+    LOG(ERROR) << "Currently only support edge expand to vertex";
+    RETURN_UNSUPPORTED_ERROR("Currently only support edge expand to vertex");
   }
 
   return ctx;
 }
 
-Context eval_path_expand_p(const physical::PathExpand& opr,
-                           const ReadTransaction& txn, Context&& ctx,
-                           const std::map<std::string, std::string>& params,
-                           const physical::PhysicalOpr_MetaData& meta,
-                           int alias) {
+bl::result<Context> eval_path_expand_p(
+    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
+    const std::map<std::string, std::string>& params,
+    const physical::PhysicalOpr_MetaData& meta, int alias) {
   CHECK(opr.has_start_tag());
   int start_tag = opr.start_tag().value();
   CHECK(opr.path_opt() ==
@@ -97,7 +95,9 @@ Context eval_path_expand_p(const physical::PathExpand& opr,
   pep.labels = parse_label_triplets(meta);
 
   if (query_params.has_predicate()) {
-    LOG(FATAL) << "not support";
+    LOG(ERROR) << "Currently can not support predicate in path expand";
+    RETURN_UNSUPPORTED_ERROR(
+        "Currently can not support predicate in path expand");
   } else {
     return PathExpand::edge_expand_p(txn, std::move(ctx), pep);
   }

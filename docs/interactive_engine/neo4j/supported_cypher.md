@@ -110,6 +110,13 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | elementId | Get a vertex or an edge identifier, unique by an object type and a database | elementId() | elementId() | <input type="checkbox" disabled checked /> |   |
 | Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
 | Extract | Get interval value from a temporal type | \<temporal\>.\<interval\> | \<temporal\>.\<interval\> | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get all edges from a path | relationships(path) | gs.function.relationships(path) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get all nodes from a path | nodes(path) | gs.function.nodes(path) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get start node from an edge | startNode(edge) | gs.function.startNode(edge) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | get end node from an edge | endNode(edge) | gs.function.endNode(edge) | <input type="checkbox" disabled checked /> |   |
+| User Defined Functions | convert integer value to datetime | datetime(1287230400000) | gs.function.datetime(1287230400000) | <input type="checkbox" disabled checked /> |   |
+| Path Modifier | get any shortest path between two endpoints | SHORTEST | SHORTESTPATH | <input type="checkbox" disabled checked /> |   |
+| Path Modifier | get all shortest paths between two endpoints | ALL SHORTEST | ALL SHORTESTPATH | <input type="checkbox" disabled checked /> |
 
 ## Clause
 A notable limitation for now is that we do not
@@ -122,6 +129,14 @@ MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
 RETURN a, b;
 ```
 
+Besides, we support `OPTIONAL MATCH`. For example,
+the following query can be supported:
+```Cypher
+MATCH (a) -[]-> (b)
+Optional MATCH (b) -[]-> (c) 
+RETURN a, b, c;
+```
+
 | Keyword | Comments |  Supported  |  Todo
 |:---|---|:---:|:---|
 | MATCH | only one Match clause is allowed  | <input type="checkbox" disabled checked />  |
@@ -132,4 +147,14 @@ RETURN a, b;
 | WHERE NOT EXIST (an edge/path) | implements as anti join  |  <input type="checkbox" checked  />|  |
 | ORDER BY |  | <input type="checkbox" disabled checked />  |  |
 | LIMIT |  | <input type="checkbox" disabled checked />  |    |
+| UNFOLD | The operation is similar to SQL's 'UNSET', as it unfolds elements from a collection type | <input type="checkbox" disabled checked />  |    |
 
+Additionally, we support two types of procedure call invocations in Cypher:
+- We offer a set of built-in procedures that can be invoked directly within Cypher queries. These procedures are all prefixed with `gs.procedure.`.
+
+    | Keyword | Comments |  Example |
+    |:---|---|:---:|
+    | CALL | Retrieve schema information in a JSON format following the FLEX specification | `call gs.procedure.meta.schema();`  |
+    | CALL | Retrieve statistics information in a JSON format following the FLEX specification | `call gs.procedure.meta.statistics();`  |
+
+- User-defined procedures: Users can define custom procedures in GIE and invoke them within their Cypher queries.

@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, macos-latest]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -44,11 +44,11 @@ jobs:
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         python3 -m pip install click 
-        python3 gsctl.py install-deps dev --v6d-version v0.22.0
+        python3 gsctl.py install-deps dev --v6d-version v0.23.0
 
     - name: Setup tmate session
       if: false
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Build GraphScope
       run: |
@@ -70,9 +70,10 @@ jobs:
         make unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       if: matrix.os == 'ubuntu-20.04'
       continue-on-error: true
       with:
-        file: ./python/coverage.xml
-        fail_ci_if_error: false
+        files: ./python/coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

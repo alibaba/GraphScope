@@ -51,13 +51,14 @@ enum class DataType {
 struct ParamConst {
   DataType type;
   std::string var_name;
+  std::string expr_var_name;
   int32_t id;  // unique id for each param const
 };
 
 // implement operator == for ParamConst
 inline bool operator==(const ParamConst& lhs, const ParamConst& rhs) {
   return lhs.type == rhs.type && lhs.var_name == rhs.var_name &&
-         lhs.id == rhs.id;
+         lhs.expr_var_name == rhs.expr_var_name && lhs.id == rhs.id;
 }
 
 }  // namespace codegen
@@ -159,7 +160,7 @@ static codegen::ParamConst param_const_pb_to_param_const(
   CHECK(data_type_pb.type_case() == common::IrDataType::kDataType);
   return codegen::ParamConst{
       common_data_type_pb_2_data_type(data_type_pb.data_type()),
-      param_const_pb.name(), param_const_pb.index()};
+      param_const_pb.name(), param_const_pb.name(), param_const_pb.index()};
 }
 
 static codegen::ParamConst param_const_pb_to_param_const(
@@ -168,13 +169,18 @@ static codegen::ParamConst param_const_pb_to_param_const(
   if (ir_data_type.type_case() == common::IrDataType::kDataType) {
     auto primitive_type = ir_data_type.data_type();
     return codegen::ParamConst{common_data_type_pb_2_data_type(primitive_type),
-                               param_const_pb.name(), param_const_pb.index()};
+                               param_const_pb.name(), param_const_pb.name(),
+                               param_const_pb.index()};
   } else {
     throw std::runtime_error("Expect node type in ir_data_type");
   }
 }
 
-static std::string data_type_2_string(const codegen::DataType& data_type) {
+// The second params only control the ret value when type is string.In some
+// cases, we need to use std::string_view, but in some cases, we need to use
+// std::string.
+static std::string data_type_2_string(const codegen::DataType& data_type,
+                                      bool string_view = true) {
   switch (data_type) {
   case codegen::DataType::kInt32:
     return "int32_t";
@@ -183,7 +189,11 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
   case codegen::DataType::kDouble:
     return "double";
   case codegen::DataType::kString:
-    return "std::string_view";
+    if (string_view) {
+      return "std::string_view";
+    } else {
+      return "std::string";
+    }
   case codegen::DataType::kInt64Array:
     return "std::vector<int64_t>";
   case codegen::DataType::kInt32Array:
@@ -280,11 +290,13 @@ static void parse_param_const_from_pb(
   if (data_type.type_case() == common::IrDataType::kDataType) {
     param_cost.type = common_data_type_pb_2_data_type(data_type.data_type());
     param_cost.var_name = param_const_pb.name();
+    param_cost.expr_var_name = param_const_pb.name();
     param_cost.id = param_const_pb.index();
     return;
   } else if (node_type.type_case() == common::IrDataType::kDataType) {
     param_cost.type = common_data_type_pb_2_data_type(node_type.data_type());
     param_cost.var_name = param_const_pb.name();
+    param_cost.expr_var_name = param_const_pb.name();
     param_cost.id = param_const_pb.index();
     return;
   } else {

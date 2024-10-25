@@ -63,7 +63,7 @@ impl<I: Data> Unary<I> for Stream<I> {
     {
         self.transform(name, |info| {
             let func = construct(info);
-            Box::new(UnaryOperator::new(func))
+            UnaryOperator::new(func)
         })
     }
 }

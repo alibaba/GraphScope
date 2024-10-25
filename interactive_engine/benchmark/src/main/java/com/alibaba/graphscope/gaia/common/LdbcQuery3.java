@@ -27,8 +27,7 @@ public class LdbcQuery3 extends AbstractLdbcWithSubQuery {
     }
 
     @Override
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         singleParameter.put("startDate", transformDate(singleParameter.get("startDate")));
         String endDate =
                 getEndDate(singleParameter.get("startDate"), singleParameter.get("durationDays"));

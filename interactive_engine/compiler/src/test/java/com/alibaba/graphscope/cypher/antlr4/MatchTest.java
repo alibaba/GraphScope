@@ -18,18 +18,49 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.exception.FrontendException;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.runtime.CalciteException;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class MatchTest {
+    private static Configs configs;
+    private static IrMeta irMeta;
+    private static GraphRelOptimizer optimizer;
+
+    @BeforeClass
+    public static void beforeClass() {
+        configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                        + " ExpandGetVFusionRule"));
+        optimizer = new GraphRelOptimizer(configs);
+        irMeta =
+                com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
+                        "config/modern/graph.yaml",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
+    }
+
     @Test
     public void match_1_test() {
         RelNode source = Utils.eval("Match (n) Return n").build();
@@ -264,8 +295,8 @@ public class MatchTest {
     public void match_12_test() {
         try {
             RelNode node = Utils.eval("Match (a:人类) Return a").build();
-        } catch (CalciteException e) {
-            Assert.assertEquals("Table '人类' not found", e.getMessage());
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("Table \'人类\' not found"));
             return;
         }
         Assert.fail();
@@ -275,10 +306,12 @@ public class MatchTest {
     public void match_13_test() {
         try {
             RelNode node = Utils.eval("Match (a:person {名称:'marko'}) Return a").build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=名称} not found; expected properties are: [id, name, age]",
-                    e.getMessage());
+        } catch (FrontendException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "{property=名称} not found; expected properties are: [id, name,"
+                                            + " age]"));
             return;
         }
         Assert.fail();
@@ -503,5 +536,181 @@ public class MatchTest {
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
+    }
+
+    @Test
+    public void property_exist_after_type_inference_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(
+                        "schema/ldbc_schema_exp_hierarchy.json");
+        // check property 'creationDate' still exists after type inference has updated the type of
+        // 'HASCREATOR'
+        RelNode rel =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON)<-[h:HASCREATOR]-(b:COMMENT) Return h;", builder)
+                        .build();
+        Assert.assertEquals(
+                "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
+                        + " properties=[BIGINT creationDate]) h)",
+                rel.getRowType().toString());
+    }
+
+    @Test
+    public void udf_function_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval(
+                                "MATCH (person1:person)-[path:knows]->(person2:person)\n"
+                                        + " Return gs.function.startNode(path)",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[gs.function.startNode(path)], isAppend=[false])\n"
+                        + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person2], opt=[END])\n"
+                        + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[path], startAlias=[person1], opt=[OUT])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person1], opt=[VERTEX])",
+                after.explain().trim());
+
+        RelNode node2 =
+                Utils.eval(
+                                "Match (person)-[:created]->(software) WITH software.creationDate"
+                                    + " as date1\n"
+                                    + "Return 12 * (date1.year - gs.function.datetime($date2).year)"
+                                    + " + (date1.month - gs.function.datetime($date2).month)",
+                                builder)
+                        .build();
+        RelNode after2 = optimizer.optimize(node2, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[+(*(12, -(EXTRACT(FLAG(YEAR), date1), EXTRACT(FLAG(YEAR),"
+                    + " gs.function.datetime(?0)))), -(EXTRACT(FLAG(MONTH), date1),"
+                    + " EXTRACT(FLAG(MONTH), gs.function.datetime(?0))))], isAppend=[false])\n"
+                    + "  GraphLogicalProject(date1=[software.creationDate], isAppend=[false])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
+                    + " alias=[software], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                after2.explain().trim());
+
+        RelNode node3 =
+                Utils.eval(
+                                "Match (person:person)\n"
+                                        + "Return gs.function.toFloat(person.age)",
+                                builder)
+                        .build();
+        RelNode after3 = optimizer.optimize(node3, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[gs.function.toFloat(person.age)], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[person], opt=[VERTEX])",
+                after3.explain().trim());
+    }
+
+    @Test
+    public void procedure_shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(builder, irMeta);
+        LogicalPlan logicalPlan =
+                logicalPlanVisitor.visit(
+                        new CypherAntlr4Parser()
+                                .parse(
+                                        "MATCH\n"
+                                            + "(person1:person {id:"
+                                            + " $person1Id})-[:knows]->(person2:person {id:"
+                                            + " $person2Id})\n"
+                                            + "CALL shortestPath.dijkstra.stream(\n"
+                                            + "  person1, person2, 'KNOWS', 'BOTH', 'weight', 5)\n"
+                                            + "WITH person1, person2, totalCost\n"
+                                            + "WHERE person1.id <> $person2Id\n"
+                                            + "Return person1.id AS person1Id, totalCost AS"
+                                            + " totalWeight;"));
+        RelNode after =
+                optimizer.optimize(
+                        logicalPlan.getRegularQuery(), new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(person1Id=[person1.id], totalWeight=[totalCost],"
+                    + " isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[<>(person1.id, ?1)])\n"
+                    + "    GraphLogicalProject(person1=[person1], person2=[person2],"
+                    + " totalCost=[totalCost], isAppend=[false])\n"
+                    + "      GraphProcedureCall(procedure=[shortestPath.dijkstra.stream(person1,"
+                    + " person2, _UTF-8'KNOWS', _UTF-8'BOTH', _UTF-8'weight', 5)])\n"
+                    + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], fusedFilter=[[=(_.id, ?1)]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void shortest_path_test() {
+        // convert 'shortestpath' modifier to 'path_opt=[ANY_SHORTEST]' in IR, and 'all
+        // shortestpath' to 'path_opt=[ALL_SHORTEST]'
+        RelNode rel =
+                Utils.eval(
+                                "MATCH"
+                                    + " shortestPath((person1:person)-[path:knows*1..5]->(person2:person))"
+                                    + " Return count(person1)")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[path])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                rel.explain().trim());
+    }
+
+    @Test
+    public void optional_shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval(
+                                "Match (p1: person {id: $id1})\n"
+                                        + "Optional Match shortestPath((p1:person {id:"
+                                        + " $id1})-[k:knows*1..5]->(p2:person {id: $id2}))\n"
+                                        + "WITH\n"
+                                        + "CASE WHEN k is null then -1\n"
+                                        + "ELSE length(k)\n"
+                                        + "END as len\n"
+                                        + "RETURN len;",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(len=[len], isAppend=[false])\n"
+                    + "  GraphLogicalProject(len=[CASE(IS NULL(k), -(1), k.~len)],"
+                    + " isAppend=[false])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p2], fusedFilter=[[=(_.id, ?1)]], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[k], start_alias=[p1], optional=[true])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
     }
 }

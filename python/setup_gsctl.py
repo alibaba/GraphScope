@@ -17,9 +17,15 @@
 #
 
 import os
+import platform
+import shutil
+import subprocess
+import tempfile
+from distutils.cmd import Command
 
 from setuptools import find_packages  # noqa: H301
 from setuptools import setup
+from setuptools.command.develop import develop
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
@@ -39,18 +45,74 @@ def parse_version(root, **kwargs):
     return parse(root, **kwargs)
 
 
-NAME = "gsctl"
-PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [
-    "click >= 8.1.6",
-    "graphscope-flex >= 0.27.0",
+    (
+        "click"
+        if platform.system() == "Linux" and platform.machine() == "aarch64"
+        else "click >= 8.1.6"
+    ),
+    "graphscope-flex >= 0.28.0",
     "treelib",
     "packaging",
     "pyyaml",
 ]
 
+
+class GenerateFlexSDK(Command):
+    description = "generate flex client sdk from openapi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # remove
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_client")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
+        if os.path.exists(targetdir):
+            shutil.rmtree(targetdir)
+        # generate
+        specification = os.path.join(
+            pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
+        )
+        cmd = [
+            "openapi-generator",
+            "generate",
+            "-g",
+            "python",
+            "-i",
+            str(specification),
+            "-o",
+            str(tempdir),
+            "--package-name",
+            "graphscope.flex.rest",
+        ]
+        print(" ".join(cmd))
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
+        subprocess.check_call(
+            cmd,
+            env=env,
+        )
+        # cp
+        subprocess.run(
+            ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
+        )
+
+
+class CustomDevelop(develop):
+    def run(self):
+        develop.run(self)
+        self.run_command("generate_flex_sdk")
+
+
 setup(
-    name=NAME,
+    name="gsctl",
     description="Command line tool for GraphScope",
     author="GraphScope",
     author_email="graphscope@alibaba-inc.com",
@@ -68,10 +130,14 @@ setup(
     long_description="""\
     gsctl is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
     """,  # noqa: E501
-    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh", "VERSION"]},
+    package_data={"graphscope.gsctl": ["scripts/*.sh", "VERSION", "V6D_VERSION"]},
     entry_points={
         "console_scripts": [
             "gsctl = graphscope.gsctl.gsctl:cli",
         ],
+    },
+    cmdclass={
+        "generate_flex_sdk": GenerateFlexSDK,
+        "develop": CustomDevelop,
     },
 )

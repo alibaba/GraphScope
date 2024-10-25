@@ -46,11 +46,12 @@ else ()
         set(ARROW_STATIC_LIB arrow_static)
     endif()
 endif ()
-
-# include nlohmann json
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/nlohmann-json/single_include)
 # include odps cpp sdk
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/odps/include/)
+add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 
 find_package(yaml-cpp REQUIRED)
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
@@ -69,9 +70,11 @@ add_custom_target(grin_clformat
         COMMAND clang-format --style=file -i ${FILES_NEED_FORMAT}
         COMMENT "Running clang-format."
         VERBATIM)
+file(GLOB_RECURSE SRC_SOURCES "src/*.cc")
+file(GLOB_RECURSE UTILS_SOURCES "../../../utils/*.cc")
+file(GLOB_RECURSE STORAGE_SOURCES "../../../storages/rt_mutable_graph/*.cc")
+set(SOURCES ${SRC_SOURCES} ${UTILS_SOURCES} ${STORAGE_SOURCES})
 
-file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../utils/*.cc"
-                  "../../../storages/rt_mutable_graph/*.cc" "../../../storages/rt_mutable_graph/loader/*.cc")
 add_library(flex_grin SHARED ${SOURCES})
 target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS}  ${YAML_CPP_LIBRARIES})
 if (ARROW_SHARED_LIB)

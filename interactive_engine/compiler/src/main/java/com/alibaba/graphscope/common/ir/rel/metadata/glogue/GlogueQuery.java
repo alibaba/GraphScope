@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Set;
 
 public class GlogueQuery {
@@ -48,10 +50,11 @@ public class GlogueQuery {
     /**
      * get pattern count
      * @param pattern
+     * @param allowsNull if the flag is set to true, return null when the pattern is not found, otherwise return 1.0d
      * @return
      */
-    public Double getRowCount(Pattern pattern) {
-        return glogue.getRowCount(pattern);
+    public @Nullable Double getRowCount(Pattern pattern, boolean allowsNull) {
+        return glogue.getRowCount(pattern, allowsNull);
     }
 
     /**
@@ -60,6 +63,10 @@ public class GlogueQuery {
      */
     public int getMaxPatternSize() {
         return glogue.getMaxPatternSize();
+    }
+
+    public Double getLabelConstraintsDeltaCost(PatternEdge edge, PatternVertex target) {
+        return glogue.schema.getLabelConstraintsDeltaCost(edge, target);
     }
 
     @Override

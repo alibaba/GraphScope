@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.28.0"
+  tag: "0.29.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -251,6 +251,101 @@ coordinator:
   ##
   schedulerName: ""
 
+## GraphScope Portal parameters
+##
+portal:
+  enabled: false
+  replicaCount: 1
+  coordinatorImage:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/coordinator
+    tag: "0.29.0"
+  ## Service parameters
+  ##
+  service:
+    type: NodePort
+    servicePort: 8080
+    ## Specify the nodePort value for the LoadBalancer and NodePort service types.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ##
+    nodePorts:
+      service: ""
+    ## Service clusterIP
+    ##
+    # clusterIP: None
+    clusterIP: ""
+    ## Set the LoadBalancer service type to internal only.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    ## Enable client source IP preservation
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## E.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## Provide any additional annotations which may be required
+    ##
+    annotations: {}
+  ## Request for data loading
+  ##
+  studioWrapperEndpoint: ""
+  ## @param hostIPC Specify if host IPC should be enabled for pods
+  ##
+  hostIPC: false
+  ## @param hostNetwork Specify if host network should be enabled for pods
+  ##
+  hostNetwork: false
+  ## @param hostAliases pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  ## @param podAnnotations Extra annotations for pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
+  podAnnotations: {}
+  ## @param podLabels Extra labels for pods
+  ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  ##
+  podLabels: {}
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  ## pod network plugin type
+  ##
+  podNetworkPluginType: flannel
+  ## resource request and limit
+  resources: {}
+  ## Custom environment variables
+  ##
+  env:
+    key1: value1
+  ## persistent storage
+  ##
+  runtimePath: "/var/runtime"
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## If true, use a Persistent Volume Claim, If false, use emptyDir
+    ##
+    enabled: true
+    ## Name of existing PVC to hold portal runtime information
+    ## @param persistence.existingClaim A manually managed Persistent Volume and Claim
+    ## If defined, PVC must be created manually before volume will be bound
+    ## The value is evaluated as a template
+    ##
+    existingClaim: ""
+    ## Persistent Volume size
+    ##
+    size: 100Mi
+    selector: {}
+
 ## @section Common parameters
 ##
 
@@ -433,7 +528,7 @@ discoveryMode: "file"
 
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000
-offsetsPersistIntervalMs: 3000
+offsetsPersistIntervalMs: 1000
 fileMetaStorePath: "/etc/groot/my.meta"
 logRecycleEnable: true
 logRecycleOffsetReserve: 86400
@@ -443,9 +538,10 @@ storeDataPath: "/var/lib/graphscope-store"
 storeDataDownloadPath: "/var/lib/graphscope-store/download"
 storeDataSecondaryPath: "/home/graphscope/secondary"
 storeWriteThreadCount: 1
-storeQueueBufferSize: 102400
+storeQueueBufferSize: "102400"
 
 storeGcIntervalMs: 5000
+storeCatchupIntervalMs: 5000
 
 ## Kafka Config
 ##
@@ -496,6 +592,8 @@ graphPlannerRules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, Exp
 gremlinScriptLanguageName: antlr_gremlin_traversal
 graphPhysicalOpt: ffi
 queryExecutionTimeoutMs: 600000
+graphPlannerJoinMinPatternSize: 5
+graphPlannerCboGlogueSize: 3
 
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
@@ -542,4 +640,9 @@ uptrace:
 distributed:
   enabled: false
 
-collectStatistics: false
+collect:
+  statistics:
+    enabled: false
+    initial:
+      delay: 5
+    interval: 60

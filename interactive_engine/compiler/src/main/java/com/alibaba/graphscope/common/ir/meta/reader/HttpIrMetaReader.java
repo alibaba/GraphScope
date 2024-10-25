@@ -24,10 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
-import com.alibaba.graphscope.common.ir.meta.schema.FileFormatType;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
-import com.alibaba.graphscope.common.ir.meta.schema.SchemaInputStream;
+import com.alibaba.graphscope.common.ir.meta.schema.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -76,7 +73,7 @@ public class HttpIrMetaReader implements IrMetaReader {
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
                                             metaInYaml.getBytes(StandardCharsets.UTF_8)),
-                                    FileFormatType.YAML)),
+                                    SchemaSpec.Type.FLEX_IN_YAML)),
                     new GraphStoredProcedures(
                             new ByteArrayInputStream(metaInYaml.getBytes(StandardCharsets.UTF_8)),
                             this));
@@ -108,6 +105,23 @@ public class HttpIrMetaReader implements IrMetaReader {
         }
     }
 
+    @Override
+    public boolean syncStatsEnabled(GraphId graphId) throws IOException {
+        try {
+            HttpResponse<String> response =
+                    sendRequest(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+            String res = response.body();
+            Preconditions.checkArgument(
+                    response.statusCode() == 200,
+                    "read service status fail, status code: %s, error message: %s",
+                    response.statusCode(),
+                    res);
+            return getStaticEnabled(res);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private HttpResponse<String> sendRequest(String requestUri)
             throws IOException, InterruptedException {
         HttpRequest request =
@@ -127,5 +141,15 @@ public class HttpIrMetaReader implements IrMetaReader {
         GraphId graphId = new GraphId(metaMap.get("id"));
         Yaml yaml = new Yaml();
         return Pair.with(graphId, yaml.dump(metaMap));
+    }
+
+    private boolean getStaticEnabled(String metaInJson) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(metaInJson);
+        Map<String, Object> rootMap = mapper.convertValue(rootNode, Map.class);
+        if (rootMap.containsKey("statistics_enabled")) {
+            return (boolean) rootMap.get("statistics_enabled");
+        }
+        return false; // default value
     }
 }

@@ -56,6 +56,10 @@ struct CommandDetail {
   rpc::QueryArgs query_args;
 };
 
+/**
+ * @brief Implement the serialization and deserialization of CommandDetail
+ * through grape::InArchive and grape::OutArchive.
+ */
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const CommandDetail& cd);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,

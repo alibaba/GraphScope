@@ -26,8 +26,9 @@ limitations under the License.
 #include "grape/parallel/parallel_message_manager.h"
 #include "grape/worker/comm_spec.h"
 
-#include "flash/flash_bitset.h"
-#include "flash/vertex_subset.h"
+#include "apps/flash/flash_bitset.h"
+#include "apps/flash/vertex_subset.h"
+#include "core/config.h"
 
 namespace gs {
 
@@ -141,7 +142,7 @@ class FlashWare : public grape::Communicator, public grape::ParallelEngine {
   vid_t n_;
   vid_t n_loc_;
   fid_t pid_;
-  int n_procs_;
+  fid_t n_procs_;
   int n_threads_;
   std::vector<vid_t> masters_;
   std::vector<vid_t> mirrors_;

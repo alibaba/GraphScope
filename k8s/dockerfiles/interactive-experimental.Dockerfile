@@ -1,8 +1,9 @@
 # Interactive engine which uses experimental storage
 
+ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BUILDER_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+ARG VINEYARD_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 

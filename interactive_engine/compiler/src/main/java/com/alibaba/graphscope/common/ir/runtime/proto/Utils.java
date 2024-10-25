@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.*;
@@ -35,6 +36,7 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -561,6 +563,12 @@ public abstract class Utils {
                 return GraphAlgebraPhysical.PathExpand.PathOpt.ARBITRARY;
             case SIMPLE:
                 return GraphAlgebraPhysical.PathExpand.PathOpt.SIMPLE;
+            case TRAIL:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.TRAIL;
+            case ANY_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ANY_SHORTEST;
+            case ALL_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ALL_SHORTEST;
             default:
                 throw new UnsupportedOperationException(
                         "opt " + opt + " in path is unsupported yet");
@@ -738,7 +746,7 @@ public abstract class Utils {
         return columns;
     }
 
-    // remove edge properties from columns by checking if the tags refers to edge type
+    // remove properties from columns by checking if the tags refers to edge type or path type
     public static void removeEdgeProperties(
             RelDataType inputDataType, Map<Integer, Set<GraphNameOrId>> tagColumns) {
         List<RelDataTypeField> fieldTypes = inputDataType.getFieldList();
@@ -750,21 +758,55 @@ public abstract class Utils {
                     && GraphOpt.Source.EDGE.equals(
                             ((GraphSchemaType) headFieldType.getType()).getScanOpt())) {
                 tags.remove(AliasInference.DEFAULT_ID);
+            } else if (headFieldType.getType() instanceof GraphPathType) {
+                tags.remove(AliasInference.DEFAULT_ID);
             }
         }
+
         if (tags.isEmpty()) {
             return;
         }
-        // then, process other tags by checking if they are of edge type
+        // then, process other tags by checking if they are of edge type or path type
         List<Integer> removeKeys = new ArrayList<>();
         for (RelDataTypeField fieldType : fieldTypes) {
-            if (tags.contains(fieldType.getIndex())
-                    && fieldType.getType() instanceof GraphSchemaType
-                    && GraphOpt.Source.EDGE.equals(
-                            ((GraphSchemaType) fieldType.getType()).getScanOpt())) {
-                removeKeys.add(fieldType.getIndex());
+            if (tags.contains(fieldType.getIndex())) {
+                if (fieldType.getType() instanceof GraphSchemaType
+                        && GraphOpt.Source.EDGE.equals(
+                                ((GraphSchemaType) fieldType.getType()).getScanOpt())) {
+                    removeKeys.add(fieldType.getIndex());
+                } else if (fieldType.getType() instanceof GraphPathType) {
+                    removeKeys.add(fieldType.getIndex());
+                }
             }
         }
         tagColumns.keySet().removeAll(removeKeys);
+    }
+
+    public static final StoredProcedure.Query.Builder protoProcedure(
+            RexNode procedure, RexToProtoConverter converter) {
+        RexCall procedureCall = (RexCall) procedure;
+        StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
+        SqlOperator operator = procedureCall.getOperator();
+        builder.setQueryName(Common.NameOrId.newBuilder().setName(operator.getName()).build());
+        List<RexNode> operands = procedureCall.getOperands();
+        for (int i = 0; i < operands.size(); ++i) {
+            // param name is omitted
+            StoredProcedure.Argument.Builder paramBuilder =
+                    StoredProcedure.Argument.newBuilder().setParamInd(i);
+            OuterExpression.ExprOpr protoValue = operands.get(i).accept(converter).getOperators(0);
+            switch (protoValue.getItemCase()) {
+                case VAR:
+                    paramBuilder.setVar(protoValue.getVar());
+                    break;
+                case CONST:
+                    paramBuilder.setConst(protoValue.getConst());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "cannot set value=" + protoValue + " to any parameter in procedure");
+            }
+            builder.addArguments(paramBuilder);
+        }
+        return builder;
     }
 }

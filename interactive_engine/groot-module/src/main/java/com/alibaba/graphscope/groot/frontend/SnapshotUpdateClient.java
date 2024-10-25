@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.CoordinatorSnapshotServiceGrpc;
@@ -45,7 +46,7 @@ public class SnapshotUpdateClient extends RpcClient {
                         .build();
         UpdateMinQuerySnapshotIdResponse res = getStub().updateMinQuerySnapshotId(req);
         if (!res.getSuccess()) {
-            throw new RuntimeException("update snapshot fail {} " + res.getErrMsg());
+            throw new InternalException("update snapshot fail {} " + res.getErrMsg());
         }
     }
 }

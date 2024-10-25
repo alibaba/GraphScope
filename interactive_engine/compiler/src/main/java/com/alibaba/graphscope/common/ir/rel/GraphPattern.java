@@ -29,6 +29,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 public class GraphPattern extends AbstractRelNode {
     private final Pattern pattern;
+    private double rowCount = 0.0d;
 
     public GraphPattern(RelOptCluster cluster, RelTraitSet traitSet, Pattern pattern) {
         super(cluster, traitSet);
@@ -56,5 +57,13 @@ public class GraphPattern extends AbstractRelNode {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("pattern", pattern);
+    }
+
+    public void setRowCount(double rowCount) {
+        this.rowCount = rowCount;
+    }
+
+    public double getRowCount() {
+        return rowCount;
     }
 }

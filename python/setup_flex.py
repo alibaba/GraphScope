@@ -29,9 +29,14 @@
 """  # noqa: E501
 
 import os
+import shutil
+import subprocess
+import tempfile
+from distutils.cmd import Command
 
 from setuptools import find_packages  # noqa: H301
 from setuptools import setup
+from wheel.bdist_wheel import bdist_wheel
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,6 +54,53 @@ def parse_version(root, **kwargs):
         with open(version_file, "r", encoding="utf-8") as fp:
             return meta(fp.read().strip())
     return parse(root, **kwargs)
+
+
+class GenerateFlexSDK(Command):
+    description = "generate flex client sdk from openapi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # remove
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_client")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
+        if os.path.exists(targetdir):
+            shutil.rmtree(targetdir)
+        # generate
+        specification = os.path.join(
+            pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
+        )
+        cmd = [
+            "openapi-generator",
+            "generate",
+            "-g",
+            "python",
+            "-i",
+            str(specification),
+            "-o",
+            str(tempdir),
+            "--package-name",
+            "graphscope.flex.rest",
+        ]
+        print(" ".join(cmd))
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
+        subprocess.check_call(
+            cmd,
+            env=env,
+        )
+        # cp
+        subprocess.run(
+            ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
+        )
 
 
 # To install the library, run the following
@@ -87,4 +139,7 @@ setup(
     This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about specification at [doc](https://swagger.io/specification/v3/).  Some useful links: - [GraphScope Repository](https://github.com/alibaba/GraphScope) - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
     """,  # noqa: E501
     package_data={"graphscope.flex.rest": ["py.typed"]},
+    cmdclass={
+        "generate_flex_sdk": GenerateFlexSDK,
+    },
 )

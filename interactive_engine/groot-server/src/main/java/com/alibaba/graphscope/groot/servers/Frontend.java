@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.InternalException;
 import com.alibaba.graphscope.groot.common.util.RpcUtils;
 import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
@@ -135,7 +135,7 @@ public class Frontend extends NodeBase {
 
         boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher =
-                new WrappedSchemaFetcher(snapshotCache, metaService, isSecondary);
+                new WrappedSchemaFetcher(snapshotCache, metaService, configs);
         IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.graphService = serviceProducer.makeGraphService(wrappedSchemaFetcher, channelManager);
     }
@@ -169,7 +169,7 @@ public class Frontend extends NodeBase {
         try {
             this.rpcServer.start();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
         this.discovery.start();
         this.channelManager.start();
@@ -179,14 +179,14 @@ public class Frontend extends NodeBase {
                 Thread.sleep(1000);
                 logger.info("Waiting for schema ready...");
             } catch (InterruptedException e) {
-                throw new GrootException(e);
+                throw new InternalException(e);
             }
         }
         this.graphService.start();
         try {
             this.serviceServer.start();
         } catch (IOException e) {
-            throw new GrootException(e);
+            throw new InternalException(e);
         }
     }
 

@@ -786,8 +786,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             base
                         )))
                     })?;
-
-                    if pb::path_expand::ResultOpt::AllVE == unsafe { std::mem::transmute(path.result_opt) }
+                    if (pb::path_expand::ResultOpt::AllVE
+                        == unsafe { std::mem::transmute(path.result_opt) }
+                        || pb::path_expand::PathOpt::Trail == unsafe { std::mem::transmute(path.path_opt) })
                         && pb::edge_expand::ExpandOpt::Vertex
                             == unsafe { std::mem::transmute(edge_expand.expand_opt) }
                     {
@@ -948,6 +949,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // this would be processed in assemble, and cannot be reached when install.
                     Err(FnGenError::unsupported_error("unreachable sink in install"))?
                 }
+                OpKind::ProcedureCall(procedure_call) => Err(FnGenError::unsupported_error(&format!(
+                    "ProcedureCall Operator {:?}",
+                    procedure_call
+                )))?,
             }
 
             prev_op_kind = to_op_kind(op)?;

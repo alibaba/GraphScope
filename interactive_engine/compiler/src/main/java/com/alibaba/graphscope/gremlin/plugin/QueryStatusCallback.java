@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin.plugin;
 
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
-import com.alibaba.graphscope.groot.common.util.JSON;
 import com.google.gson.JsonObject;
 
 import io.opentelemetry.api.common.Attributes;
@@ -26,19 +25,17 @@ import io.opentelemetry.api.trace.Span;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.List;
-
 public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
 
-    private LongHistogram queryHistogram;
+    private final @Nullable LongHistogram queryHistogram;
     // if query cost large than threshold, will print detail log
-    private long printThreshold;
+    private final long printThreshold;
 
     public QueryStatusCallback(
             MetricsCollector metricsCollector,
-            LongHistogram histogram,
+            @Nullable LongHistogram histogram,
             QueryLogger queryLogger,
             long printThreshold) {
         this.metricsCollector = metricsCollector;
@@ -59,13 +56,13 @@ public class QueryStatusCallback {
         onErrorEnd(t, null);
     }
 
-    private void onErrorEnd(Throwable t, String msg) {
+    public void onErrorEnd(Throwable t, String msg) {
         String errorMsg = msg;
         if (t != null) {
             errorMsg = t.getMessage();
         }
         JsonObject logJson = buildSimpleLog(false, metricsCollector.getElapsedMillis());
-        fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis(), null);
+        fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis());
         queryLogger.print(logJson.toString(), false, t);
 
         Attributes attrs =
@@ -75,16 +72,17 @@ public class QueryStatusCallback {
                         .put("success", false)
                         .put("message", msg != null ? msg : "")
                         .build();
-        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        if (this.queryHistogram != null) {
+            this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        }
         queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
     }
 
-    public void onSuccessEnd(List<Object> results) {
+    public void onSuccessEnd() {
         this.metricsCollector.stop();
+        queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
         JsonObject logJson = buildSimpleLog(true, metricsCollector.getElapsedMillis());
-        if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
-            fillLogDetail(logJson, null, metricsCollector.getStartMillis(), results);
-        }
+        fillLogDetail(logJson, null);
         queryLogger.print(logJson.toString(), true, null);
 
         Attributes attrs =
@@ -94,11 +92,13 @@ public class QueryStatusCallback {
                         .put("success", true)
                         .put("message", "")
                         .build();
-        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        if (this.queryHistogram != null) {
+            this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        }
         queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
     }
 
-    private JsonObject buildSimpleLog(boolean isSucceed, long elaspedMillis) {
+    private JsonObject buildSimpleLog(boolean isSucceed, long elapsedMillis) {
         String traceId = Span.current().getSpanContext().getTraceId();
         JsonObject simpleJson = new JsonObject();
         simpleJson.addProperty(LogConstant.TRACE_ID, traceId);
@@ -107,16 +107,28 @@ public class QueryStatusCallback {
         if (queryLogger.getUpstreamId() != null) {
             simpleJson.addProperty(LogConstant.UPSTREAM_ID, queryLogger.getUpstreamId());
         }
-        simpleJson.addProperty(LogConstant.COST, elaspedMillis);
+        simpleJson.addProperty(LogConstant.COST, elapsedMillis);
         return simpleJson;
     }
 
-    private void fillLogDetail(
-            JsonObject logJson, String errorMessage, long startMillis, List<Object> results) {
-        logJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
-        if (results != null) {
-            logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
+    private void fillLogDetail(JsonObject logJson, String errorMsg) {
+        try {
+            if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
+                // todo(siyuan): the invocation of the function can cause Exception when serializing
+                // a gremlin vertex to json format
+                fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis());
+            }
+        } catch (Throwable t) {
+            queryLogger.warn("fill log detail error", t);
         }
+    }
+
+    private void fillLogDetail(JsonObject logJson, String errorMessage, long startMillis) {
+        logJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
+        // do not serialize result.
+        //        if (results != null) {
+        //            logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
+        //        }
         if (errorMessage != null) {
             logJson.addProperty(LogConstant.ERROR_MESSAGE, errorMessage);
         }

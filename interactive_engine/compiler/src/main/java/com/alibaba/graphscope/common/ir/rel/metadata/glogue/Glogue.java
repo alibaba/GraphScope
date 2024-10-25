@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVerte
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 import org.slf4j.Logger;
@@ -41,7 +42,10 @@ public class Glogue {
 
     private static Logger logger = LoggerFactory.getLogger(Glogue.class);
 
+    protected final GlogueSchema schema;
+
     public Glogue(GlogueSchema schema, int maxPatternSize) {
+        this.schema = schema;
         glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         roots = new ArrayList<>();
         maxPatternId = 0;
@@ -90,7 +94,10 @@ public class Glogue {
         }
         // compute pattern cardinality
         this.glogueCardinalityEstimation = new GlogueBasicCardinalityEstimationImpl(this, schema);
-        logger.debug("GlogueGraph\n" + this.toString());
+        logger.info(
+                "GlogueGraph is created, with {} vertices and {} edges",
+                this.glogueGraph.vertexSet().size(),
+                this.glogueGraph.edgeSet().size());
 
         return this;
     }
@@ -117,6 +124,13 @@ public class Glogue {
 
     public Double getRowCount(Pattern pattern) {
         return this.glogueCardinalityEstimation.getCardinality(pattern);
+    }
+
+    public @Nullable Double getRowCount(Pattern pattern, boolean allowsNull) {
+        return (glogueCardinalityEstimation instanceof GlogueBasicCardinalityEstimationImpl)
+                ? ((GlogueBasicCardinalityEstimationImpl) glogueCardinalityEstimation)
+                        .getCardinality(pattern, allowsNull)
+                : getRowCount(pattern);
     }
 
     public int getMaxPatternSize() {

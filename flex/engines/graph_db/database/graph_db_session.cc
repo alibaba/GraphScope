@@ -21,13 +21,15 @@
 #include "flex/utils/app_utils.h"
 
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
-#include "nlohmann/json.hpp"
+#include "service_utils.h"
+
+#include <rapidjson/document.h>
 
 namespace gs {
 
 ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
-  return ReadTransaction(db_.graph_, db_.version_manager_, ts);
+  return ReadTransaction(*this, db_.graph_, db_.version_manager_, ts);
 }
 
 InsertTransaction GraphDBSession::GetInsertTransaction() {
@@ -111,7 +113,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
   if (input.size() < 2) {
     return Result<std::vector<char>>(
-        StatusCode::InValidArgument,
+        StatusCode::INVALID_ARGUMENT,
         "Invalid input, input size: " + std::to_string(input.size()),
         std::vector<char>());
   }
@@ -134,11 +136,12 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   AppBase* app = GetApp(type);
   if (!app) {
     return Result<std::vector<char>>(
-        StatusCode::NotFound,
+        StatusCode::NOT_FOUND,
         "Procedure not found, id:" + std::to_string((int) type), result_buffer);
   }
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
+    result_buffer.clear();
     if (app->run(*this, decoder, encoder)) {
       const auto end = std::chrono::high_resolution_clock::now();
       app_metrics_[type].add_record(
@@ -158,7 +161,6 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     }
 
     decoder.reset(sv.data(), sv.size());
-    result_buffer.clear();
   }
 
   const auto end = std::chrono::high_resolution_clock::now();
@@ -166,10 +168,23 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
   ++query_num_;
-  return Result<std::vector<char>>(
-      StatusCode::QueryFailed,
-      "Query failed for procedure id:" + std::to_string((int) type),
-      result_buffer);
+  // When query failed, we assume the user may put the error message in the
+  // output buffer.
+  // For example, for adhoc_app.cc, if the query failed, the error info will
+  // be put in the output buffer.
+  if (result_buffer.size() > 4) {
+    return Result<std::vector<char>>(
+        StatusCode::QUERY_FAILED,
+        std::string{result_buffer.data() + 4,
+                    result_buffer.size() -
+                        4},  // The first 4 bytes are the length of the message.
+        result_buffer);
+  } else {
+    return Result<std::vector<char>>(
+        StatusCode::QUERY_FAILED,
+        "Query failed for procedure id:" + std::to_string((int) type),
+        result_buffer);
+  }
 }
 
 void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }
@@ -198,6 +213,15 @@ double GraphDBSession::eval_duration() const {
 }
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
+
+AppBase* GraphDBSession::GetApp(const std::string& app_name) {
+  auto& app_name_to_path_index = db_.schema().GetPlugins();
+  if (app_name_to_path_index.count(app_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << app_name;
+    return nullptr;
+  }
+  return GetApp(app_name_to_path_index.at(app_name).second);
+}
 
 #define likely(x) __builtin_expect(!!(x), 1)
 
@@ -231,25 +255,23 @@ Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
   VLOG(10) << "string view: " << str_view;
-  nlohmann::json j;
-  try {
-    j = nlohmann::json::parse(str_view);
-  } catch (const nlohmann::json::parse_error& e) {
-    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+  rapidjson::Document j;
+  if (j.Parse(std::string(str_view.data(), str_view.size() - 1))
+          .HasParseError()) {
+    LOG(ERROR) << "Fail to parse json from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::InternalError,
-        "Fail to parse json from input content:" + std::string(e.what())));
+        StatusCode::INTERNAL_ERROR, "Fail to parse json from input content"));
   }
-  auto query_name = j["query_name"].get<std::string>();
+  std::string query_name = j["query_name"].GetString();
   const auto& app_name_to_path_index = schema().GetPlugins();
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::NotFound, "Query name is not registered: " + query_name));
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
-  if (j.contains("arguments")) {
-    for (auto& arg : j["arguments"]) {
-      VLOG(10) << "arg: " << arg;
+  if (j.HasMember("arguments")) {
+    for (auto& arg : j["arguments"].GetArray()) {
+      VLOG(10) << "arg: " << jsonToString(arg);
     }
   }
   VLOG(10) << "Query name: " << query_name;
@@ -260,22 +282,29 @@ Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_internal(
     const std::string_view& str_view) {
   procedure::Query cur_query;
-  if (!cur_query.ParseFromArray(str_view.data(), str_view.size())) {
+  if (!cur_query.ParseFromArray(str_view.data(), str_view.size() - 1)) {
     LOG(ERROR) << "Fail to parse query from input content";
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::InternalError, "Fail to parse query from input content"));
+        StatusCode::INTERNAL_ERROR, "Fail to parse query from input content"));
   }
   auto query_name = cur_query.query_name().name();
   if (query_name.empty()) {
     LOG(ERROR) << "Query name is empty";
     return Result<std::pair<uint8_t, std::string_view>>(
-        gs::Status(StatusCode::NotFound, "Query name is empty"));
+        gs::Status(StatusCode::NOT_FOUND, "Query name is empty"));
   }
   const auto& app_name_to_path_index = schema().GetPlugins();
+  // First check whether the query name is builtin query
+  for (int i = 0; i < Schema::BUILTIN_PLUGIN_NUM; ++i) {
+    std::string builtin_query_name = Schema::BUILTIN_PLUGIN_NAMES[i];
+    if (query_name == builtin_query_name) {
+      return std::make_pair(Schema::BUILTIN_PLUGIN_IDS[i], str_view);
+    }
+  }
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-        StatusCode::NotFound, "Query name is not registered: " + query_name));
+        StatusCode::NOT_FOUND, "Query name is not registered: " + query_name));
   }
   return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
 }

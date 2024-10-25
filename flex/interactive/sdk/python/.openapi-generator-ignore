@@ -30,3 +30,4 @@ gs_interactive/models/long_text.py
 requirements.txt
 test-requirements.txt
 test/
+setup.cfg

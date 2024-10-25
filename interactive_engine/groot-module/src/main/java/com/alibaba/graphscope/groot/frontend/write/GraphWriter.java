@@ -2,7 +2,8 @@ package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.common.exception.NotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
@@ -122,7 +123,7 @@ public class GraphWriter {
                     addClearEdgePropertiesOperation(batchBuilder, schema, dataRecord);
                     break;
                 default:
-                    throw new IllegalArgumentException(
+                    throw new InvalidArgumentException(
                             "Invalid operationType [" + operationType + "]");
             }
         }
@@ -184,7 +185,7 @@ public class GraphWriter {
         EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         if (edgeId.id == 0) {
             // This is for update edge, if edgeInnerId is 0, generate new id, incase there isn't
-            // such a edge
+            // such an edge
             edgeId.id = edgeIdGenerator.getNextId();
         }
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
@@ -300,7 +301,7 @@ public class GraphWriter {
                     (propertyName, valString) -> {
                         GraphProperty propertyDef = graphElement.getProperty(propertyName);
                         if (propertyDef == null) {
-                            throw new PropertyDefNotFoundException(
+                            throw new NotFoundException(
                                     "property ["
                                             + propertyName
                                             + "] not found in ["

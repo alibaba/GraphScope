@@ -465,11 +465,10 @@ class EdgeExpand {
     CHECK(edge_triplets.size() > 0);
     // result_set_t is the type of calling EdgeExpandV with cur_vertex_set
     // and edge_triplets[i]
-    using result_set_t =
-        decltype(EdgeExpandV(graph, cur_vertex_set, direction,
-                             edge_triplets[0][2], edge_triplets[0][1],
-                             std::move(edge_filter))
-                     .first);
+    using result_set_t = decltype(
+        EdgeExpandV(graph, cur_vertex_set, direction, edge_triplets[0][2],
+                    edge_triplets[0][1], std::move(edge_filter))
+            .first);
     using result_pair_t = std::pair<result_set_t, std::vector<offset_t>>;
     std::vector<result_pair_t> result_pairs;
     for (size_t i = 0; i < edge_triplets.size(); ++i) {
@@ -1565,7 +1564,7 @@ class EdgeExpand {
     offset.reserve(cur_set.Size() + 1);
     size_t size = 0;
     offset.emplace_back(size);
-    std::vector<std::tuple<vertex_id_t, vertex_id_t, std::tuple<T>>>
+    std::vector<std::tuple<vertex_id_t, vertex_id_t, std::tuple<T>, Direction>>
         prop_tuples;
     prop_tuples.reserve(cur_set.Size() + 1);
     using adj_list_array_t =
@@ -1590,7 +1589,6 @@ class EdgeExpand {
       adj_list_array_vec.emplace_back(
           std::make_pair(std::move(adj_list_array), Direction::In));
     }
-    std::vector<Direction> directions;
 
     auto cur_set_iter = cur_set.begin();
     auto end_iter = cur_set.end();
@@ -1610,8 +1608,7 @@ class EdgeExpand {
           // TODO: better performance
           if (run_expr_filter(state.edge_filter_.expr_, props)) {
             prop_tuples.emplace_back(
-                std::make_tuple(src, edge.neighbor(), props));
-            directions.emplace_back(direction);
+                std::make_tuple(src, edge.neighbor(), props, direction));
           }
         }
       }
@@ -1625,7 +1622,7 @@ class EdgeExpand {
                                             state.edge_label_};
     SingleLabelEdgeSet<vertex_id_t, label_id_t, std::tuple<T>> edge_set(
         std::move(prop_tuples), std::move(label_triplet),
-        std::vector{array_to_vec(prop_names)}, std::move(directions));
+        std::vector{array_to_vec(prop_names)});
 
     CHECK(offset.back() == edge_set.Size())
         << "offset: " << offset.back() << ", " << edge_set.Size();

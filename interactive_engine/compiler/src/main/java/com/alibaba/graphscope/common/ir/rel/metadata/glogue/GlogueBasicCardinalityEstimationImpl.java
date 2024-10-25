@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,12 +157,21 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
 
     @Override
     public Double getCardinality(Pattern queryPattern) {
+        return getCardinality(queryPattern, false);
+    }
+
+    public @Nullable Double getCardinality(Pattern queryPattern, boolean allowsNull) {
         for (Pattern pattern : this.patternCardinality.keySet()) {
             if (pattern.equals(queryPattern)) {
                 return this.patternCardinality.get(pattern);
             }
         }
-        return 0.0;
+        if (allowsNull) {
+            return null;
+        }
+        // if not exist, return 1.0
+        logger.warn("pattern {} not found in glogue, return count = 1.0", queryPattern);
+        return 1.0;
     }
 
     @Override

@@ -18,6 +18,7 @@
 #include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -390,7 +391,29 @@ std::shared_ptr<IContextColumn> tuple_to_list(
   return builder.finish();
 }
 
-std::shared_ptr<IContextColumn> apply_reduce(
+std::shared_ptr<IContextColumn> string_to_list(
+    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+  ListValueColumnBuilder<std::string> builder;
+  size_t col_size = to_aggregate.size();
+  builder.reserve(col_size);
+  std::vector<std::shared_ptr<ListImplBase>> impls;
+  for (size_t k = 0; k < col_size; ++k) {
+    auto& vec = to_aggregate[k];
+
+    std::vector<std::string> elem;
+    for (auto idx : vec) {
+      elem.push_back(std::string(var.get(idx).as_string()));
+    }
+    auto impl = ListImpl<std::string_view>::make_list_impl(std::move(elem));
+    auto list = List::make_list(impl);
+    impls.emplace_back(impl);
+    builder.push_back_opt(list);
+  }
+  builder.set_list_impls(impls);
+  return builder.finish();
+}
+
+bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
     const AggFunc& func, const std::vector<std::vector<size_t>>& to_aggregate) {
   if (func.aggregate == AggrKind::kSum) {
     if (func.vars.size() != 1) {
@@ -400,8 +423,12 @@ std::shared_ptr<IContextColumn> apply_reduce(
     if (var.type() == RTAnyType::kI32Value) {
       return numeric_sum<int>(var, to_aggregate);
     } else {
-      LOG(FATAL) << "reduce on " << static_cast<int>(var.type().type_enum_)
+      LOG(ERROR) << "reduce on " << static_cast<int>(var.type().type_enum_)
                  << " is not supported...";
+      RETURN_UNSUPPORTED_ERROR(
+          "reduce on " +
+          std::to_string(static_cast<int>(var.type().type_enum_)) +
+          " is not supported...");
     }
   } else if (func.aggregate == AggrKind::kToSet) {
     if (func.vars.size() != 1) {
@@ -411,7 +438,12 @@ std::shared_ptr<IContextColumn> apply_reduce(
     if (var.type() == RTAnyType::kStringValue) {
       return string_to_set(var, to_aggregate);
     } else {
-      LOG(FATAL) << "not support";
+      LOG(ERROR) << "reduce on " << static_cast<int>(var.type().type_enum_)
+                 << " is not supported...";
+      RETURN_UNSUPPORTED_ERROR(
+          "reduce on " +
+          std::to_string(static_cast<int>(var.type().type_enum_)) +
+          " is not supported...");
     }
   } else if (func.aggregate == AggrKind::kCountDistinct) {
     if (func.vars.size() == 1 && func.vars[0].type() == RTAnyType::kVertex) {
@@ -463,6 +495,10 @@ std::shared_ptr<IContextColumn> apply_reduce(
     }
     if (var.type() == RTAnyType::kTuple) {
       return tuple_to_list(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kStringValue) {
+      return string_to_list(var, to_aggregate);
+    } else {
+      LOG(FATAL) << "not support" << static_cast<int>(var.type().type_enum_);
     }
   } else if (func.aggregate == AggrKind::kAvg) {
     if (func.vars.size() != 1) {
@@ -487,15 +523,15 @@ std::shared_ptr<IContextColumn> apply_reduce(
     }
   }
 
-  LOG(FATAL) << "unsupport " << static_cast<int>(func.aggregate);
+  LOG(ERROR) << "Unsupported aggregate function "
+             << static_cast<int>(func.aggregate);
+  RETURN_UNSUPPORTED_ERROR("Unsupported aggregate function " +
+                           std::to_string(static_cast<int>(func.aggregate)));
   return nullptr;
 }
 
-Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
-                      Context&& ctx) {
-  if (ctx.row_num() == 0) {
-    return ctx;
-  }
+bl::result<Context> eval_group_by(const physical::GroupBy& opr,
+                                  const ReadTransaction& txn, Context&& ctx) {
   std::vector<AggFunc> functions;
   std::vector<AggKey> mappings;
   int func_num = opr.functions_size();
@@ -512,7 +548,7 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
       for (size_t _i = 0; _i < ctx.row_num(); ++_i) {
         tmp.emplace_back(_i);
       }
-      auto new_col = apply_reduce(functions[i], {tmp});
+      BOOST_LEAF_AUTO(new_col, apply_reduce(functions[i], {tmp}));
       ret.set(functions[i].alias, new_col);
       ret.append_tag_id(functions[i].alias);
     }
@@ -546,7 +582,7 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
     }
 
     for (int i = 0; i < func_num; ++i) {
-      auto new_col = apply_reduce(functions[i], to_aggregate);
+      BOOST_LEAF_AUTO(new_col, apply_reduce(functions[i], to_aggregate));
       ret.set(functions[i].alias, new_col);
       ret.append_tag_id(functions[i].alias);
     }

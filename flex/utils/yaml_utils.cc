@@ -15,8 +15,11 @@
  */
 
 #include "flex/utils/yaml_utils.h"
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
+#include <rapidjson/prettywriter.h>
 #include <fstream>
-#include "nlohmann/json.hpp"
+#include "service_utils.h"
 
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
@@ -35,40 +38,47 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   return res_yaml_files;
 }
 
-nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
-  nlohmann::json json;
+void convert_yaml_node_to_json(const YAML::Node& node,
+                               rapidjson::Document::AllocatorType& allocator,
+                               rapidjson::Value& json) {
   try {
     switch (node.Type()) {
     case YAML::NodeType::Null: {
-      json = {};
+      json.SetNull();
       break;
     }
     case YAML::NodeType::Scalar: {
       try {
-        json = node.as<int>();
+        json.SetInt(node.as<int>());
       } catch (const YAML::BadConversion& e) {
         try {
-          json = node.as<double>();
+          json.SetDouble(node.as<double>());
         } catch (const YAML::BadConversion& e) {
           try {
-            json = node.as<bool>();
+            json.SetBool(node.as<bool>());
           } catch (const YAML::BadConversion& e) {
-            json = node.as<std::string>();
+            json.SetString(node.as<std::string>().c_str(), allocator);
           }
         }
       }
       break;
     }
     case YAML::NodeType::Sequence: {
+      json.SetArray();
       for (const auto& item : node) {
-        json.push_back(convert_yaml_node_to_json(item));
+        rapidjson::Value element;
+        convert_yaml_node_to_json(item, allocator, element);
+        json.PushBack(element, allocator);
       }
       break;
     }
     case YAML::NodeType::Map:
+      json.SetObject();
       for (const auto& pair : node) {
-        json[pair.first.as<std::string>()] =
-            convert_yaml_node_to_json(pair.second);
+        rapidjson::Value key(pair.first.as<std::string>().c_str(), allocator);
+        rapidjson::Value value;
+        convert_yaml_node_to_json(pair.second, allocator, value);
+        json.AddMember(key, value, allocator);
       }
       break;
     default:
@@ -77,9 +87,8 @@ nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
       break;
     }
   } catch (const YAML::BadConversion& e) {
-    throw Status{StatusCode::IOError, e.what()};
+    throw Status{StatusCode::IO_ERROR, e.what()};
   }
-  return json;
 }
 
 Result<std::string> get_json_string_from_yaml(const std::string& file_path) {
@@ -88,7 +97,7 @@ Result<std::string> get_json_string_from_yaml(const std::string& file_path) {
     // output config to json string
     return get_json_string_from_yaml(config);
   } catch (const YAML::BadFile& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   }
 }
 
@@ -97,24 +106,29 @@ Result<std::string> get_json_string_from_yaml(const YAML::Node& node) {
     if (node.IsNull()) {
       return Result<std::string>(Status{StatusCode::OK, "{}"});
     }
-    nlohmann::json json = convert_yaml_node_to_json(node);
-    return json.dump(2);  // 2 indents
+    rapidjson::Document doc;
+    convert_yaml_node_to_json(node, doc.GetAllocator(), doc);
+    // return json.dump(2);  // 2 indents
+    return std::string(rapidjson_stringify(doc, 2));
   } catch (const YAML::BadConversion& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   } catch (const std::runtime_error& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   } catch (...) {
-    return Result<std::string>(Status{StatusCode::IOError, "Unknown error"});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, "Unknown error"});
   }
 }
 
 Result<std::string> get_yaml_string_from_yaml_node(const YAML::Node& node) {
   try {
     YAML::Emitter emitter;
-    write_yaml_node_to_yaml_string(node, emitter);
+    auto status = write_yaml_node_to_yaml_string(node, emitter);
+    if (!status.ok()) {
+      return Result<std::string>(status);
+    }
     return std::string(emitter.c_str());
   } catch (const YAML::BadConversion& e) {
-    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+    return Result<std::string>(Status{StatusCode::IO_ERROR, e.what()});
   }
 }
 
@@ -154,7 +168,7 @@ Status write_yaml_node_to_yaml_string(const YAML::Node& node,
       break;
     }
   } catch (const YAML::BadConversion& e) {
-    return Status{StatusCode::IOError, e.what()};
+    return Status{StatusCode::IO_ERROR, e.what()};
   }
   return Status::OK();
 }

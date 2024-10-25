@@ -26,9 +26,14 @@ namespace gs {
 namespace runtime {
 
 uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid);
+std::pair<label_t, vid_t> decode_unique_vertex_id(uint64_t unique_id);
+
 uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id);
 int64_t encode_unique_edge_id(uint32_t label_id, vid_t src, vid_t dst);
+
+std::tuple<label_t, label_t, label_t> decode_edge_label_id(
+    uint32_t edge_label_id);
 enum class Direction {
   kOut,
   kIn,
@@ -83,5 +88,38 @@ struct LabelTriplet {
 }  // namespace runtime
 
 }  // namespace gs
+
+namespace std {
+
+// operator << for Direction
+inline std::ostream& operator<<(std::ostream& os,
+                                const gs::runtime::Direction& dir) {
+  switch (dir) {
+  case gs::runtime::Direction::kOut:
+    os << "OUT";
+    break;
+  case gs::runtime::Direction::kIn:
+    os << "IN";
+    break;
+  case gs::runtime::Direction::kBoth:
+    os << "BOTH";
+    break;
+  }
+  return os;
+}
+
+// std::to_string
+inline std::string to_string(const gs::runtime::Direction& dir) {
+  switch (dir) {
+  case gs::runtime::Direction::kOut:
+    return "OUT";
+  case gs::runtime::Direction::kIn:
+    return "IN";
+  case gs::runtime::Direction::kBoth:
+    return "BOTH";
+  }
+  return "UNKNOWN";
+}
+}  // namespace std
 
 #endif  // RUNTIME_COMMON_TYPES_H_

@@ -84,60 +84,34 @@ void init_codegen_proxy(const bpo::variables_map& vm,
                                    graph_schema_file);
 }
 
-void openDefaultGraph(const std::string workspace, int32_t thread_num,
-                      const std::string& default_graph, uint32_t memory_level) {
-  if (!std::filesystem::exists(workspace)) {
-    LOG(ERROR) << "Workspace directory not exists: " << workspace;
-  }
-  auto data_dir_path =
-      workspace + "/" + server::WorkDirManipulator::DATA_DIR_NAME;
-  if (!std::filesystem::exists(data_dir_path)) {
-    LOG(ERROR) << "Data directory not exists: " << data_dir_path;
-    return;
-  }
-
-  // Get current executable path
-
-  server::WorkDirManipulator::SetWorkspace(workspace);
-
-  VLOG(1) << "Finish init workspace";
-
-  if (default_graph.empty()) {
-    LOG(FATAL) << "No Default graph is specified";
-    return;
+void config_log_level(int log_level, int verbose_level) {
+  if (getenv("GLOG_minloglevel") != nullptr) {
+    FLAGS_stderrthreshold = atoi(getenv("GLOG_minloglevel"));
+  } else {
+    if (log_level == 0) {
+      FLAGS_minloglevel = 0;
+    } else if (log_level == 1) {
+      FLAGS_minloglevel = 1;
+    } else if (log_level == 2) {
+      FLAGS_minloglevel = 2;
+    } else if (log_level == 3) {
+      FLAGS_minloglevel = 3;
+    } else {
+      LOG(ERROR) << "Unsupported log level: " << log_level;
+    }
   }
 
-  auto& db = gs::GraphDB::get();
-  auto schema_path =
-      server::WorkDirManipulator::GetGraphSchemaPath(default_graph);
-  auto schema_res = gs::Schema::LoadFromYaml(schema_path);
-  if (!schema_res.ok()) {
-    LOG(FATAL) << "Fail to load graph schema from yaml file: " << schema_path;
+  // If environment variable is set, we will use it
+  if (getenv("GLOG_v") != nullptr) {
+    FLAGS_v = atoi(getenv("GLOG_v"));
+  } else {
+    if (verbose_level >= 0) {
+      FLAGS_v = verbose_level;
+    } else {
+      LOG(ERROR) << "Unsupported verbose level: " << verbose_level;
+    }
   }
-  auto data_dir_res =
-      server::WorkDirManipulator::GetDataDirectory(default_graph);
-  if (!data_dir_res.ok()) {
-    LOG(FATAL) << "Fail to get data directory for default graph: "
-               << data_dir_res.status().error_message();
-  }
-  std::string data_dir = data_dir_res.value();
-  if (!std::filesystem::exists(data_dir)) {
-    LOG(FATAL) << "Data directory not exists: " << data_dir
-               << ", for graph: " << default_graph;
-  }
-  db.Close();
-  gs::GraphDBConfig config(schema_res.value(), data_dir, thread_num);
-  config.memory_level = memory_level;
-  if (config.memory_level >= 2) {
-    config.enable_auto_compaction = true;
-  }
-  if (!db.Open(config).ok()) {
-    LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
-  }
-  LOG(INFO) << "Successfully init graph db for default graph: "
-            << default_graph;
 }
-
 }  // namespace gs
 
 /**
@@ -192,6 +166,7 @@ int main(int argc, char** argv) {
   if (vm.count("workspace")) {
     workspace = vm["workspace"].as<std::string>();
   }
+  server::WorkDirManipulator::SetWorkspace(workspace);
 
   if (!vm.count("server-config")) {
     LOG(FATAL) << "server-config is needed";
@@ -206,6 +181,9 @@ int main(int argc, char** argv) {
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
   service_config.enable_adhoc_handler = vm["enable-adhoc-handler"].as<bool>();
+
+  // Config log level
+  gs::config_log_level(service_config.log_level, service_config.verbose_level);
 
   auto& db = gs::GraphDB::get();
 
@@ -228,9 +206,6 @@ int main(int argc, char** argv) {
                     "data-path should NOT be specified";
     }
 
-    gs::openDefaultGraph(workspace, service_config.shard_num,
-                         service_config.default_graph,
-                         service_config.memory_level);
     // Suppose the default_graph is already loaded.
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(

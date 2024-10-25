@@ -66,6 +66,8 @@ data:
     graph.physical.opt={{ .Values.graphPhysicalOpt }}
     gremlin.script.language.name={{ .Values.gremlinScriptLanguageName }}
     query.execution.timeout.ms={{ .Values.queryExecutionTimeoutMs }}
+    graph.planner.join.min.pattern.size={{ .Values.graphPlannerJoinMinPatternSize }}
+    graph.planner.cbo.glogue.size={{ .Values.graphPlannerCboGlogueSize }}
 
     log4rs.config=LOG4RS_CONFIG
     ## Auth config
@@ -87,6 +89,7 @@ data:
     secondary.instance.enabled={{ .Values.secondary.enabled }}
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
+    store.catchup.interval.ms={{ .Values.storeCatchupIntervalMs }}
 
     write.ha.enabled={{ .Values.backup.enabled }}
 
@@ -96,7 +99,9 @@ data:
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
     log.recycle.enable={{ .Values.logRecycleEnable }}
-    collect.statistics={{ .Values.collectStatistics }}
+    collect.statistics={{ .Values.collect.statistics.enabled }}
+    collect.statistics.interval.min={{ .Values.collect.statistics.interval }}
+    collect.statistics.initial.delay.min={{ .Values.collect.statistics.initial.delay }}
     log.recycle.offset.reserve={{ .Values.logRecycleOffsetReserve }}
 
     ## Extra Config
@@ -161,8 +166,31 @@ data:
     # For core and heap profiling
     # ulimit -c unlimited
     # sudo mkdir -p /apsara/cloud/data/corefile/ && sudo chown -R graphscope:graphscope /apsara/cloud/data/corefile/
-    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:32,lg_prof_sample:19
-    # export MALLOC_CONF=prof:true,lg_prof_interval:32
+    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:29,lg_prof_sample:19,prof_prefix=/tmp
+    # export MALLOC_CONF=prof:true,lg_prof_interval:29,lg_prof_sample:19,prof_prefix=/tmp
 
     export RUST_BACKTRACE=1
     ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
+  portal_setup.sh: |-
+    #!/bin/bash
+
+    while true
+    do
+      export HOST="${INSTANCE_NAME}-graphscope-store-frontend-0.${INSTANCE_NAME}-graphscope-store-frontend-headless"
+      export GRPC_PORT=${GROOT_GRPC_PORT}
+      export GREMLIN_PORT=${GROOT_GREMLIN_PORT}
+      echo "${HOST} ${GRPC_PORT} ${GREMLIN_PORT}"
+      python3 -c 'import base64;import os;from gremlin_python.driver.client import Client;ip=os.getenv("HOST");gremlin_port=os.getenv("GREMLIN_PORT");graph_url=f"ws://{ip}:{gremlin_port}/gremlin";username=os.getenv("GROOT_USERNAME");password=base64.b64decode(os.getenv("GROOT_PASSWORD")).decode("utf-8");client = Client(graph_url, "g", username=username, password=password); ret = client.submit("g.V().limit(1)").all().result(); client.close();' && break
+      sleep 3
+    done
+
+    export CONFIG_FILE=/tmp/coordinator_config.yaml
+    echo "coordinator:" > ${CONFIG_FILE}
+    echo "  http_port: ${SERVICE_PORT}" >> ${CONFIG_FILE}
+    echo "" >> ${CONFIG_FILE}
+    echo "launcher_type: hosts" >> ${CONFIG_FILE}
+    echo "" >> ${CONFIG_FILE}
+    echo "session:" >> ${CONFIG_FILE}
+    echo "  instance_id: demo" >> ${CONFIG_FILE}
+
+    python3 -m gscoordinator --config-file ${CONFIG_FILE}

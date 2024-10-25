@@ -17,6 +17,7 @@
 package org.apache.calcite.plan;
 
 import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
+import com.alibaba.graphscope.gremlin.Utils;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -34,6 +35,9 @@ public class GraphOptCluster extends RelOptCluster {
     // to generate alias id increasingly in one query
     private final AliasIdGenerator idGenerator;
 
+    // maintain local state for some operators specifically
+    private final LocalState localState;
+
     protected GraphOptCluster(
             RelOptPlanner planner,
             RelDataTypeFactory typeFactory,
@@ -41,8 +45,27 @@ public class GraphOptCluster extends RelOptCluster {
             AtomicInteger nextCorrel,
             Map<String, RelNode> mapCorrelToRel,
             AliasIdGenerator idGenerator) {
+        this(
+                planner,
+                typeFactory,
+                rexBuilder,
+                nextCorrel,
+                mapCorrelToRel,
+                idGenerator,
+                new LocalState());
+    }
+
+    protected GraphOptCluster(
+            RelOptPlanner planner,
+            RelDataTypeFactory typeFactory,
+            RexBuilder rexBuilder,
+            AtomicInteger nextCorrel,
+            Map<String, RelNode> mapCorrelToRel,
+            AliasIdGenerator idGenerator,
+            LocalState localState) {
         super(planner, typeFactory, rexBuilder, nextCorrel, mapCorrelToRel);
         this.idGenerator = idGenerator;
+        this.localState = localState;
     }
 
     public static GraphOptCluster create(RelOptPlanner planner, RexBuilder rexBuilder) {
@@ -55,7 +78,25 @@ public class GraphOptCluster extends RelOptCluster {
                 new AliasIdGenerator());
     }
 
+    public GraphOptCluster copy(LocalState localState) {
+        GraphOptCluster copy =
+                new GraphOptCluster(
+                        getPlanner(),
+                        getTypeFactory(),
+                        getRexBuilder(),
+                        Utils.getFieldValue(RelOptCluster.class, this, "nextCorrel"),
+                        Utils.getFieldValue(RelOptCluster.class, this, "mapCorrelToRel"),
+                        idGenerator,
+                        localState);
+        copy.setMetadataQuerySupplier(this.getMetadataQuerySupplier());
+        return copy;
+    }
+
     public AliasIdGenerator getIdGenerator() {
         return idGenerator;
+    }
+
+    public LocalState getLocalState() {
+        return this.localState;
     }
 }

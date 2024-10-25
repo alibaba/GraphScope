@@ -24,6 +24,7 @@ import "expr.proto";
 import "schema.proto";
 import "type.proto";
 import "algebra.proto";
+import "stored_procedure.proto";
 import "google/protobuf/wrappers.proto";
 
 // To project a relation on certain attributes or further their properties
@@ -221,6 +222,13 @@ message PathExpand {
     ARBITRARY = 0;
     // a path without vertex duplications
     SIMPLE = 1;
+    // a path without edge duplications
+    TRAIL = 2;
+    // Define the shortest option according to the GQL standard:
+    // Selects one path with shortest length, Non-deterministic.
+    ANY_SHORTEST = 3;
+    // Selects all paths that have the minimal length. Deterministic.
+    ALL_SHORTEST = 4;
   }
   // Define what result is required for this path. We currently support `EndV` and `AllV`, while an option to
   // include all edges and vertices may be needed in the future.
@@ -275,6 +283,10 @@ message Repartition {
 // A dummy node to delegate a source opr for multiple scan cases.
 message Root {}
 
+message ProcedureCall {
+  procedure.Query query = 1; 
+}
+
 message PhysicalOpr {
   message Operator {
     oneof op_kind {
@@ -298,6 +310,7 @@ message PhysicalOpr {
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
+      ProcedureCall procedure_call = 33;
     }
   }
   message MetaData {

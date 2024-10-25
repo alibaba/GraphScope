@@ -54,7 +54,7 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g,
   std::string prop_name(name);
   auto vps = new GRIN_VERTEX_PROPERTY_LIST_T();
   std::string _name = std::string(name);
-  for (auto idx = 0; idx < _g->g.vertex_label_num_; idx++) {
+  for (size_t idx = 0; idx < _g->g.vertex_label_num_; idx++) {
     auto& table = _g->g.get_vertex_table(static_cast<GRIN_VERTEX_TYPE>(idx));
 
     auto col = table.get_column(name);
@@ -88,7 +88,7 @@ void grin_destroy_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {}
  */
 GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g,
                                                 GRIN_VERTEX_PROPERTY vp) {
-  return (GRIN_DATATYPE) (vp >> 16);
+  return (GRIN_DATATYPE)(vp >> 16);
 }
 
 int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,

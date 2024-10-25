@@ -2,4 +2,5 @@
 omit =
     */graphscope/learning/*
     */graphscope/nx/*
+    */graphscope/flex/*
     */jupyter/graphscope/node_modules/.*

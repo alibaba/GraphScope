@@ -16,8 +16,7 @@ pub(crate) struct FeedbackOperator<D: Data> {
 }
 
 impl<D: Data> FeedbackOperator<D> {
-    pub fn new(scope_level: u32, max_iters: u32) -> Self {
-        let worker_index = crate::worker_id::get_current_worker().index;
+    pub fn new(scope_level: u32, max_iters: u32, worker_index: u32) -> Self {
         FeedbackOperator {
             scope_level,
             worker_index,

@@ -3,7 +3,7 @@
 """
     GraphScope Interactive API v0.3
 
-    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
+    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
 
     The version of the OpenAPI document: 1.0.0
     Contact: graphscope@alibaba-inc.com
@@ -13,7 +13,8 @@
 """  # noqa: E501
 
 
-from setuptools import find_packages, setup  # noqa: H301
+from setuptools import find_packages  # noqa: H301
+from setuptools import setup
 
 # To install the library, run the following
 #
@@ -27,7 +28,7 @@ PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [
     "urllib3 >= 1.25.3, < 2.1.0",
     "python-dateutil",
-    "pydantic >= 2",
+    "pydantic >= 2, <= 2.8.2",
     "typing-extensions >= 4.7.1",
     "neo4j >= 4.4.19",
     "gremlinpython >= 3.4.10",
@@ -51,12 +52,13 @@ class BuildProto(Command):
     def finalize_options(self):
         pass
 
-    def run(self):
-        proto_path = "../../../../interactive_engine/executor/ir/proto/"
-        proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
-        output_dir = "./gs_interactive/client/generated/"
+    def generate_proto(self, proto_path, output_dir, proto_files=None):
+        if proto_files is None:
+            proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
         os.makedirs(output_dir, exist_ok=True)
         for proto_file in proto_files:
+            if not os.path.exists(proto_file):
+                proto_file = os.path.join(proto_path, proto_file)
             cmd = [
                 sys.executable,
                 "-m",
@@ -71,6 +73,17 @@ class BuildProto(Command):
                 cmd,
                 stderr=subprocess.STDOUT,
             )
+
+    def run(self):
+        self.generate_proto(
+            "../../../../interactive_engine/executor/ir/proto/",
+            "./gs_interactive/client/generated/",
+        )
+        self.generate_proto(
+            "../../../../proto/error",
+            "./gs_interactive/client/generated/",
+            ["interactive.proto"],
+        )
 
 
 setup(
@@ -87,7 +100,7 @@ setup(
     license="Apache 2.0",
     long_description_content_type="text/markdown",
     long_description="""\
-    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
+    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
     """,  # noqa: E501
     package_data={"gs_interactive": ["py.typed"]},
     cmdclass={"build_proto": BuildProto},

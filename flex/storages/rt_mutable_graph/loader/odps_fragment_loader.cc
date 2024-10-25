@@ -117,11 +117,17 @@ void ODPSReadClient::CreateReadSession(
     const std::vector<std::string>& selected_partitions) {
   auto resp = createReadSession(table_identifier, selected_cols, partition_cols,
                                 selected_partitions);
+  size_t cur_retry = 0;
   while (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
          resp.status_ != apsara::odps::sdk::storage_api::Status::WAIT) {
     LOG(ERROR) << "CreateReadSession failed" << resp.error_message_;
+    if (cur_retry >= MAX_RETRY) {
+      LOG(FATAL) << "Reach max retry times " << MAX_RETRY
+                 << ", when creating read session.";
+    }
     resp = createReadSession(table_identifier, selected_cols, partition_cols,
                              selected_partitions);
+    cur_retry++;
   }
   *session_id = resp.session_id_;
 
@@ -279,6 +285,7 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
   if (!cur_batch_reader_ || cur_split_index_ >= split_count_) {
     return record_batch;
   }
+  size_t cur_retry = 0;
   while (true) {
     if (!cur_batch_reader_->Read(record_batch)) {
       if (cur_batch_reader_->GetStatus() !=
@@ -287,10 +294,16 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetErrorMessage() << ", "
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
+        if (cur_retry >= ODPSReadClient::MAX_RETRY) {
+          LOG(FATAL) << "Reach max retry times " << ODPSReadClient::MAX_RETRY
+                     << ", split id: " << cur_split_index_;
+        }
         cur_batch_reader_ =
             odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
+        cur_retry++;
       } else {
         VLOG(1) << "Read split " << cur_split_index_ << " finished";
+        cur_retry = 0;
         // move to next split
         cur_split_index_ += worker_num_;
         if (cur_split_index_ >= split_count_) {
@@ -347,12 +360,22 @@ std::shared_ptr<IFragmentLoader> ODPSFragmentLoader::Make(
 }
 void ODPSFragmentLoader::init() { odps_read_client_.init(); }
 
-void ODPSFragmentLoader::LoadFragment() {
-  init();
-  loadVertices();
-  loadEdges();
+Result<bool> ODPSFragmentLoader::LoadFragment() {
+  try {
+    init();
+    loadVertices();
+    loadEdges();
 
-  basic_fragment_loader_.LoadFragment();
+    basic_fragment_loader_.LoadFragment();
+  } catch (const std::exception& e) {
+    auto work_dir = basic_fragment_loader_.work_dir();
+    printDiskRemaining(work_dir);
+    LOG(ERROR) << "Failed to load fragment: " << e.what();
+    return Result<bool>(StatusCode::INTERNAL_ERROR,
+                        "Load fragment failed: " + std::string(e.what()),
+                        false);
+  }
+  return Result<bool>(true);
 }
 
 // odps_table_path is like /project_name/table_name/partition_name

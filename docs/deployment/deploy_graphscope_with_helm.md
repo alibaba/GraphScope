@@ -67,6 +67,17 @@ You'll need `graphscope-client` package to `import graphscope`.
 Since the GraphScope has been running in the cluster, you only need to **connect** to it.
 Other than the connection procedure, other statements are identical to those GraphScope clusters launched by Python client.
 
+````{tip}
+If you meet connection problems with minikube, try getting the service name and exposing the service like this:
+
+```bash
+# kubectl get services
+minikube service coordinator-service-<release-name> --url
+```
+
+For more usage, you could refer to [minikube's accessing tutorial](https://minikube.sigs.k8s.io/docs/handbook/accessing/).
+````
+
 ```python
 import graphscope
 graphscope.set_option(show_log=True)

@@ -17,7 +17,9 @@
 package com.alibaba.graphscope.common.ir.meta.glogue.calcite;
 
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.ExternalMetaData;
+import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.MetadataHandlerProvider;
@@ -27,13 +29,19 @@ import java.util.Set;
 
 public class GraphRelMetadataQuery extends RelMetadataQuery {
     private final ExternalMetaData.GlogueEdges.Handler glogueEdgesHandler;
+    private final GlogueQuery glogueQuery;
 
     public GraphRelMetadataQuery(MetadataHandlerProvider provider) {
         super(provider);
         this.glogueEdgesHandler = provider.handler(ExternalMetaData.GlogueEdges.Handler.class);
+        this.glogueQuery = ((GraphMetadataHandlerProvider) provider).getGlogueQuery();
     }
 
     public Set<GlogueEdge> getGlogueEdges(RelNode node) {
         return this.glogueEdgesHandler.getGlogueEdges(node, this);
+    }
+
+    public GlogueQuery getGlogueQuery() {
+        return this.glogueQuery;
     }
 }

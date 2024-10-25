@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/runtime/common/columns/path_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 namespace runtime {
@@ -30,9 +31,9 @@ struct GetVParams {
   int alias;
 };
 
-std::vector<label_t> extract_labels(const std::vector<LabelTriplet>& labels,
-                                    const std::vector<label_t>& tables,
-                                    VOpt opt) {
+bl::result<std::vector<label_t>> extract_labels(
+    const std::vector<LabelTriplet>& labels, const std::vector<label_t>& tables,
+    VOpt opt) {
   std::vector<label_t> output_labels;
   for (const auto& label : labels) {
     if (opt == VOpt::kStart) {
@@ -48,7 +49,9 @@ std::vector<label_t> extract_labels(const std::vector<LabelTriplet>& labels,
         output_labels.push_back(label.dst_label);
       }
     } else {
-      LOG(FATAL) << "not support" << static_cast<int>(opt);
+      LOG(ERROR) << "Vopt: " << static_cast<int>(opt) << " not supported";
+      RETURN_UNSUPPORTED_ERROR("Vopt not supported: " +
+                               std::to_string(static_cast<int>(opt)));
     }
   }
   return output_labels;
@@ -56,9 +59,10 @@ std::vector<label_t> extract_labels(const std::vector<LabelTriplet>& labels,
 class GetV {
  public:
   template <typename PRED_T>
-  static Context get_vertex_from_edges(const ReadTransaction& txn,
-                                       Context&& ctx, const GetVParams& params,
-                                       const PRED_T& pred) {
+  static bl::result<Context> get_vertex_from_edges(const ReadTransaction& txn,
+                                                   Context&& ctx,
+                                                   const GetVParams& params,
+                                                   const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
     auto col = ctx.get(params.tag);
     if (col->column_type() == ContextColumnType::kPath) {
@@ -97,7 +101,9 @@ class GetV {
       } else if (opt == VOpt::kEnd) {
         output_vertex_label = edge_label.dst_label;
       } else {
-        LOG(FATAL) << "not support";
+        LOG(ERROR) << "Vopt: " << static_cast<int>(opt) << " not supported";
+        RETURN_UNSUPPORTED_ERROR("Vopt not supported: " +
+                                 std::to_string(static_cast<int>(opt)));
       }
       // params tables size may be 0
       if (params.tables.size() == 1) {
@@ -123,7 +129,9 @@ class GetV {
               }
             });
       } else {
-        LOG(FATAL) << "not support";
+        LOG(ERROR) << "Vopt: " << static_cast<int>(opt) << " not supported";
+        RETURN_UNSUPPORTED_ERROR("Vopt not supported: " +
+                                 std::to_string(static_cast<int>(opt)));
       }
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       return ctx;
@@ -139,9 +147,11 @@ class GetV {
         }
       }
 
-      auto labels =
-          extract_labels(input_edge_list.get_labels(), params.tables, opt);
+      BOOST_LEAF_AUTO(labels, extract_labels(input_edge_list.get_labels(),
+                                             params.tables, opt));
       if (labels.size() == 0) {
+        MLVertexColumnBuilder builder;
+        ctx.set_with_reshuffle(params.alias, builder.finish(), {});
         return ctx;
       }
       if (labels.size() > 1) {
@@ -169,7 +179,9 @@ class GetV {
             }
           });
         } else {
-          LOG(FATAL) << "not support";
+          LOG(ERROR) << "Vopt: " << static_cast<int>(opt) << " not supported";
+          RETURN_UNSUPPORTED_ERROR("Vopt not supported: " +
+                                   std::to_string(static_cast<int>(opt)));
         }
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
@@ -335,9 +347,11 @@ class GetV {
         return ctx;
       }
     }
-
-    LOG(FATAL) << "not support" << static_cast<int>(column->edge_column_type());
-    return ctx;
+    LOG(ERROR) << "Unsupported edge column type: "
+               << static_cast<int>(column->edge_column_type());
+    RETURN_UNSUPPORTED_ERROR(
+        "Unsupported edge column type: " +
+        std::to_string(static_cast<int>(column->edge_column_type())));
   }
 
   template <typename PRED_T>

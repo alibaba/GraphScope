@@ -16,9 +16,22 @@
 
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeDesc;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec;
+import com.alibaba.graphscope.common.ir.rex.RexProcedureCall;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanExecutor;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -34,8 +47,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StoredProcedureMeta {
-    private static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
-
+    public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     private final String name;
     private final RelDataType returnType;
     private final List<Parameter> parameters;
@@ -44,7 +56,7 @@ public class StoredProcedureMeta {
     private final String extension;
     private final Map<String, Object> options;
 
-    protected StoredProcedureMeta(
+    public StoredProcedureMeta(
             String name,
             Mode mode,
             String description,
@@ -107,6 +119,10 @@ public class StoredProcedureMeta {
                 + ", option="
                 + options
                 + '}';
+    }
+
+    public Mode getMode() {
+        return this.mode;
     }
 
     public static class Parameter {
@@ -265,10 +281,56 @@ public class StoredProcedureMeta {
         }
     }
 
-    public enum Mode {
+    public enum Mode implements GraphPlanExecutor {
         READ,
         WRITE,
-        SCHEMA
+        SCHEMA {
+            @Override
+            public void execute(
+                    GraphPlanner.Summary summary, IrMeta irMeta, ExecutionResponseListener listener)
+                    throws Exception {
+                RexProcedureCall procedureCall =
+                        (RexProcedureCall) summary.getLogicalPlan().getProcedureCall();
+                String metaProcedure = procedureCall.op.getName();
+                String metaInJson;
+                // call gs.procedure.meta.schema();
+                if (metaProcedure.endsWith("schema")) {
+                    metaInJson = irMeta.getSchema().getSchemaSpec(SchemaSpec.Type.FLEX_IN_JSON);
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode rootNode = mapper.readTree(metaInJson);
+                    metaInJson = mapper.writeValueAsString(rootNode.get("schema"));
+                } else if (metaProcedure.endsWith(
+                        "statistics")) { // call gs.procedure.meta.statistics();
+                    Preconditions.checkArgument(
+                            irMeta instanceof IrMetaStats,
+                            "cannot get statistics from ir meta, should be instance"
+                                    + " of %s, but is %s",
+                            IrMetaStats.class,
+                            irMeta.getClass());
+                    metaInJson =
+                            ((IrGraphStatistics) ((IrMetaStats) irMeta).getStatistics())
+                                    .getStatsJson();
+                } else {
+                    throw new IllegalArgumentException("invalid meta procedure: " + metaProcedure);
+                }
+                IrResult.Entry metaEntry =
+                        IrResult.Entry.newBuilder()
+                                .setElement(
+                                        IrResult.Element.newBuilder()
+                                                .setObject(
+                                                        Common.Value.newBuilder()
+                                                                .setStr(metaInJson)
+                                                                .build())
+                                                .build())
+                                .build();
+                listener.onNext(
+                        IrResult.Record.newBuilder()
+                                .addColumns(
+                                        IrResult.Column.newBuilder().setEntry(metaEntry).build())
+                                .build());
+                listener.onCompleted();
+            }
+        }
     }
 
     public static class Config {

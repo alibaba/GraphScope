@@ -1,3 +1,5 @@
+[Result-doc]: ./reference/com/alibaba/graphscope/interactive/client/common/Result.rst
+
 # ProcedureManagementApi
 
 All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
@@ -13,12 +15,12 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 <a id="CreateProcedure"></a>
 # **CreateProcedure**
-> Result&lt;CreateProcedureResponse&gt; createProcedure(graphId, createProcedureRequest)
+> [Result][Result-doc]&lt;CreateProcedureResponse&gt; createProcedure(graphId, createProcedureRequest)
 
 
 Create a new procedure on a graph with give id. 
 Both `cypher` and `c++` stored procedures could be registered.
-Please refer to [CppStoredProcedure](../stored_procedure/cpp_procedure.md) and [CypherStoredProcedure](../stored_procedure/cypher_procedure.md).
+Please refer to [CppStoredProcedure](../stored_procedure/cpp_procedure.md) and [CypherStoredProcedure](../../stored_procedures.md).
 
 ### Example
 ```java
@@ -60,7 +62,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;CreateProcedureResponse&gt;**](CreateProcedureResponse.md)
+[Result][Result-doc]&lt;[CreateProcedureResponse](CreateProcedureResponse.md)&gt;
 
 ### Authorization
 
@@ -81,7 +83,7 @@ No authorization required
 
 <a id="DeleteProcedure"></a>
 # **DeleteProcedure**
-> Result&lt;String&gt; deleteProcedure(graphId, procedureId)
+> [Result][Result-doc]&lt;String&gt; deleteProcedure(graphId, procedureId)
 
 
 
@@ -120,7 +122,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 
@@ -178,7 +180,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;GetProcedureResponse&gt;**](GetProcedureResponse.md)
+[Result][Result-doc]&lt;[GetProcedureResponse](GetProcedureResponse.md)&gt;
 
 ### Authorization
 
@@ -197,7 +199,7 @@ No authorization required
 
 <a id="ListProcedures"></a>
 # **ListProcedures**
-> Result&lt;List&lt;GetProcedureResponse&gt;&gt; listProcedures(graphId)
+> [Result][Result-doc]&lt;List&lt;GetProcedureResponse&gt;&gt; listProcedures(graphId)
 
 
 
@@ -237,7 +239,7 @@ public class Example {
 
 ### Return type
 
-[**Result&lt;List&lt;GetProcedureResponse&gt;&gt;**](GetProcedureResponse.md)
+[Result][Result-doc]]&lt;List&lt;[GetProcedureResponse](GetProcedureResponse.md)&gt;&gt;
 
 ### Authorization
 
@@ -301,7 +303,7 @@ public class Example {
 
 ### Return type
 
-**Result&lt;String&gt;**
+[Result][Result-doc]&lt;String&gt;
 
 ### Authorization
 

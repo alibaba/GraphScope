@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
@@ -135,6 +136,10 @@ public class SnapshotCache {
     }
 
     public void setGraphStatisticsRef(GraphStatistics statistics) {
+        logger.info(
+                "update graph statistics in frontend cache, vertex num: {}, edge num: {}",
+                statistics.getVertexCount(),
+                statistics.getEdgeCount());
         this.graphStatisticsRef.set(statistics);
     }
 

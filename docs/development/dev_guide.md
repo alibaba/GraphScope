@@ -34,25 +34,29 @@ To use the dev containers for GraphScope development, you can follow these steps
 
 ### Install deps on local 
 
-To install all dependencies on your local, use the GraphScope command-line utility [gs](https://github.com/alibaba/GraphScope/blob/main/gs) with the subcommand `install-deps` like this
+To install all dependencies on your local, use the GraphScope command-line utility [gsctl](../utilities/gs.md) with the subcommand `install-deps` like this
 
 ```bash
-python3 gsctl.py install-deps dev
+# pip3 install gsctl
+gsctl install-deps dev
 
 # for more usage, try
-# python3 gsctl.py install-deps -h
+# gsctl install-deps -h
 ```
 
-You could download the `gs` directly or clone the [GraphScope](https://github.com/alibaba/GraphScope) to local, the `gs` is located in the root directory of GraphScope.
+You could download the `gsctl` directly or clone the [GraphScope](https://github.com/alibaba/GraphScope) to local, the `gsctl` is located in the root directory of GraphScope.
 
-
+```
+# git clone https://github.com/alibaba/GraphScope.git
+cd GraphScope && python3 gsctl.py install-deps dev
+```
 
 ## Build All Targets for GraphScope
 
-With `gs` command-line utility, you can build all targets for GraphScope with a single command.
+You can build all targets for GraphScope with a single command.
 
 ```bash
-python3 gsctl.py make all
+cd GraphScope && make
 ```
 
 This would build all targets sequentially, here we
@@ -65,10 +69,10 @@ You may found the built artifacts in several places according to each components
 And you could install them to one place by
 
 ```bash
-python3 gsctl.py make install [--prefix=/opt/graphscope]
+make install [INSTALL_PREFIX=/opt/graphscope]
 ```
 
-By default it would install all artifacts to `/opt/graphscope`, and you could specify another location by assigning the value of `--prefix`.
+By default it would install all artifacts to `/opt/graphscope`, and you could specify another location by assigning the value of `INSTALL_PREFIX`.
 
 ## Build Components Individually
 
@@ -86,7 +90,6 @@ You may find the guides for building and testing each engine as below.
 
 The gscoordinator package is responsible for launching engines, circulating and propagating messages and errors, and scheduling the workload operations.
 
-
 This will install coordinator package, thus make `import gscoordinator` work
 
 ````{tip}
@@ -94,19 +97,33 @@ The package would be installed in [editable mode](https://pip.pypa.io/en/stable/
 ````
 
 ```shell
-python3 gsctl.py make coordinator
+make coordinator
 ```
 
 ### Build Python Client
 
-The `graphscope` package is the entrypoint for playing with GraphScope.
+The `graphscope` package is a python entrypoint for playing with GraphScope.
 
 This will install the graphscope-client package, thus make `import graphscope` work.
 
 ````{tip}
-This package would also be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-e)
+This package would also be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-e), which means any changed you made in local directory will take effect.
 ````
 
 ```shell
-python3 gsctl.py make client
+make client
+```
+
+### Build gsctl
+
+The `gsctl` package is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope.
+
+This will install the gsctl package, thus make `gsctl` work.
+
+````{tip}
+This package would also be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-e), which means any changed you made in local directory will take effect.
+````
+
+```shell
+make gsctl
 ```

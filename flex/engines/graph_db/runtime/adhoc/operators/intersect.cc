@@ -20,9 +20,9 @@
 namespace gs {
 namespace runtime {
 
-Context eval_intersect(const ReadTransaction& txn,
-                       const physical::Intersect& opr,
-                       std::vector<Context>&& ctxs) {
+bl::result<Context> eval_intersect(const ReadTransaction& txn,
+                                   const physical::Intersect& opr,
+                                   std::vector<Context>&& ctxs) {
   int32_t key = opr.key();
   if (ctxs.size() == 1) {
     return std::move(ctxs[0]);

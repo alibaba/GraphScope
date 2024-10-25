@@ -52,7 +52,7 @@ jobs:
       gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Detect the tmate session
       run: |
@@ -64,7 +64,7 @@ jobs:
         fi
 
     # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         base: main  # Change detection against merge-base with main before push
@@ -79,7 +79,7 @@ jobs:
             - 'python/graphscope/framework/**'
             - 'python/graphscope/tests/unittest/**'
             - 'coordinator/gscoordinator/**'
-            - '.github/workflows/ci.yml'
+            - '.github/workflows/local-ci.yml'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
@@ -162,7 +162,7 @@ jobs:
         python3 -m flake8 .
 
     - name: Setup Java11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -207,18 +207,18 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -228,7 +228,7 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -257,7 +257,7 @@ jobs:
         tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel-${{ github.sha }}
         path: |
@@ -270,9 +270,9 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -297,9 +297,10 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install --no-cache-dir pytest pytest-xdist "tensorflow" "pandas" --user
+          python3 -m pip install --no-cache-dir pytest pytest-xdist "pandas" --user
+          # python3 -m pip install --no-cache-dir "tensorflow" --user
           # install pytorch
-          python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
+          # python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -320,7 +321,7 @@ jobs:
 
       - name: Upload GIE log
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: gie-log
@@ -328,8 +329,8 @@ jobs:
 
   python-unittest:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
+    needs: [build-wheels, changes]
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -338,10 +339,10 @@ jobs:
         deployment: ["standalone", "distributed"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
       with:
         path: artifacts
@@ -384,17 +385,17 @@ jobs:
 
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
-                          --cov=graphscope --cov-config=python/.coveragerc --cov-report=xml --cov-report=term \
+                          --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
                           $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       continue-on-error: true
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
+        files: ./coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
   networkx-basic-test:
     runs-on: ubuntu-20.04
@@ -407,10 +408,10 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:
@@ -429,7 +430,7 @@ jobs:
             - 'python/graphscope/nx/convert_matrix.py'
             - 'python/graphscope/nx/tests/convert/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
@@ -496,10 +497,10 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:
@@ -516,7 +517,7 @@ jobs:
           io:
             - 'python/graphscope/nx/readwrite/**'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts

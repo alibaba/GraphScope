@@ -380,7 +380,7 @@ class EdgeSetInnerIdGetter {
     auto& tuple = gs::get_from_tuple<tag_id>(all_ele);
     using cur_tuple_t =
         std::remove_const_t<std::remove_reference_t<decltype(tuple)>>;
-    if constexpr (std::tuple_size_v < cur_tuple_t >> 2) {
+    if constexpr ((std::tuple_size_v<cur_tuple_t>) > 2) {
       auto src_vid = std::get<0>(tuple);
       auto dst_vid = std::get<1>(tuple);
       return Edge<VID_T, grape::EmptyType>(src_vid, dst_vid);

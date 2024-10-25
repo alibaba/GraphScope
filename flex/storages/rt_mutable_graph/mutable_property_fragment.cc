@@ -191,12 +191,11 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           schema_.get_vertex_storage_strategies(v_label_name), true);
     }
 
+    // We will reserve the at least 4096 slots for each vertex label
     size_t vertex_capacity =
-        schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
-    if (build_empty_graph) {
+        std::max(lf_indexers_[i].capacity(), (size_t) 4096);
+    if (vertex_capacity >= lf_indexers_[i].size()) {
       lf_indexers_[i].reserve(vertex_capacity);
-    } else {
-      vertex_capacity = lf_indexers_[i].capacity();
     }
     vertex_data_[i].resize(vertex_capacity);
     vertex_capacities[i] = vertex_capacity;
@@ -299,7 +298,15 @@ void MutablePropertyFragment::Compact(uint32_t version) {
 void MutablePropertyFragment::Dump(const std::string& work_dir,
                                    uint32_t version) {
   std::string snapshot_dir_path = snapshot_dir(work_dir, version);
-  std::filesystem::create_directories(snapshot_dir_path);
+  std::error_code errorCode;
+  std::filesystem::create_directories(snapshot_dir_path, errorCode);
+  if (errorCode) {
+    std::stringstream ss;
+    ss << "Failed to create snapshot directory: " << snapshot_dir_path << ", "
+       << errorCode.message();
+    LOG(ERROR) << ss.str();
+    throw std::runtime_error(ss.str());
+  }
   std::vector<size_t> vertex_num(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     vertex_num[i] = lf_indexers_[i].size();

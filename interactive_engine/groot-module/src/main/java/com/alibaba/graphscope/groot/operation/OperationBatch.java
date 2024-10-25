@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.proto.groot.OperationBatchPb;
 import com.alibaba.graphscope.proto.groot.OperationPb;
 
@@ -135,6 +136,10 @@ public class OperationBatch implements Iterable<OperationBlob> {
         public Builder setTraceId(String traceId) {
             this.traceId = traceId;
             return this;
+        }
+
+        public int getOperationCount() {
+            return operationBlobs.size();
         }
 
         public OperationBatch build() {

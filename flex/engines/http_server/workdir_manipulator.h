@@ -31,10 +31,10 @@
 #include <seastar/core/future.hh>
 #include <seastar/core/sstring.hh>
 
+#include <rapidjson/document.h>
 #include <yaml-cpp/yaml.h>
 #include <boost/process.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "nlohmann/json.hpp"
 
 namespace server {
 
@@ -66,6 +66,9 @@ class WorkDirManipulator {
   static void SetWorkspace(const std::string& workspace_path);
 
   static std::string GetWorkspace();
+
+  static gs::Result<seastar::sstring> DumpGraphSchema(
+      const gs::GraphId& graph_id, const std::string& json_string);
 
   /**
    * @brief Create a graph with a given name and config.
@@ -139,7 +142,7 @@ class WorkDirManipulator {
 
   static seastar::future<seastar::sstring> CreateProcedure(
       const std::string& graph_name, const std::string& plugin_id,
-      const nlohmann::json& json, const std::string& engine_config_path);
+      const rapidjson::Value& json, const std::string& engine_config_path);
 
   static gs::Result<seastar::sstring> DeleteProcedure(
       const std::string& graph_name, const std::string& procedure_name);
@@ -197,7 +200,7 @@ class WorkDirManipulator {
       std::shared_ptr<gs::IGraphMetaStore> metadata_store);
 
   static gs::Result<seastar::sstring> create_procedure_sanity_check(
-      const nlohmann::json& json);
+      const rapidjson::Value& json);
 
   static std::string get_graph_indices_file(const std::string& graph_name);
 
@@ -215,7 +218,7 @@ class WorkDirManipulator {
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(
       const std::string& graph_id, const std::string& plugin_id,
-      const nlohmann::json& json, const std::string& engine_config_path);
+      const rapidjson::Value& json, const std::string& engine_config_path);
 
   // Get all the procedure yaml configs in plugins directory, add additional
   // enabled:false to each config.

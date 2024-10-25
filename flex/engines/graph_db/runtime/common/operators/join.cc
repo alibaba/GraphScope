@@ -16,10 +16,13 @@
 #include "flex/engines/graph_db/runtime/common/operators/join.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 
 namespace runtime {
-Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
+bl::result<Context> Join::join(Context&& ctx, Context&& ctx2,
+                               const JoinParams& params) {
   CHECK(params.left_columns.size() == params.right_columns.size())
       << "Join columns size mismatch";
   if (params.join_type == JoinKind::kSemiJoin ||
@@ -111,7 +114,7 @@ Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
   } else if (params.join_type == JoinKind::kLeftOuterJoin) {
     size_t right_size = ctx2.row_num();
     auto right_col = ctx2.get(params.right_columns[0]);
-    CHECK(right_col->column_type() == ContextColumnType::kVertex);
+    //    CHECK(right_col->column_type() == ContextColumnType::kVertex);
 
     std::map<std::string, std::vector<vid_t>> right_map;
     for (size_t r_i = 0; r_i < right_size; r_i++) {
@@ -176,8 +179,13 @@ Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
     }
 
     return ctx;
+  } else {
+    LOG(ERROR) << "Unsupported join type: "
+               << static_cast<int>(params.join_type);
+    RETURN_NOT_IMPLEMENTED_ERROR(
+        "Join of type " + std::to_string(static_cast<int>(params.join_type)) +
+        " is not supported");
   }
-  LOG(FATAL) << "Unsupported join type";
 
   return Context();
 }

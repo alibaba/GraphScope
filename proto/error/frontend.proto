@@ -1,0 +1,99 @@
+/**
+ *
+ * The file proto/attr_value.proto is referred and derived from project
+ * tensorflow,
+ *
+ *    https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/attr_value.proto
+ *
+ * which has the following license:
+ *
+ *
+ Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ ==============================================================================
+ */
+syntax = "proto3";
+
+option java_package = "com.alibaba.graphscope.proto.frontend";
+option java_multiple_files = true;
+
+// component-03: GIE Frontend
+enum Code {
+    // Not an error; returned on success.
+    OK = 0;
+    CANCELLED = 1;
+    // Arguments of operations is invalid / in a wrong format.
+    INVALID_ARGUMENT = 2;
+    // Timeout, used when an operation fail to return result in an specific time.
+    TIMEOUT = 3;
+    // Required resources cannot be found.
+    NOT_FOUND = 4;
+    // File or resources already existed.
+    ALREADY_EXISTS = 5;
+    RESOURCE_EXHAUSTED = 6;
+    // Functionality not implemented yet
+    UNIMPLEMENTED = 7;
+    // Client doesn't have the permission.
+    PERMISSION_DENIED = 8;
+    // Compile graph frame or app frame failed.
+    COMPILATION_FAILURE = 9;
+    PORT_IN_USE = 10;
+    UNSUPPORTED_OPERATION = 11;
+    ILLEGAL_STATE = 12;
+    // Network is unreachable
+    NETWORK_FAILURE = 13;
+
+    // invalid gremlin syntax thrown by antlr4
+    // GremlinSyntaxParseError = 100;
+    GREMLIN_INVALID_SYNTAX = 100;
+    // invalid cypher syntax thrown by antlr4
+    // CypherSyntaxParseError = 101;
+    CYPHER_INVALID_SYNTAX = 101;
+    // query given label is not found in schema
+    // LabelNotFoundError = 102;
+    LABEL_NOT_FOUND = 102;
+    // query given property name is not found in schema
+    // PropertyNotFoundError = 103;
+    PROPERTY_NOT_FOUND = 103;
+    // tag not exist in current query contex
+    // TagNotFoundError = 104;
+    TAG_NOT_FOUND = 104;
+    // targets two types of errors:
+    // 1. invalid algebraic type, such as "cannot apply + to string arguments"
+    // 2. invalid graph patterns based on the given schema
+    // TypeInferenceError = 105;
+    TYPE_INFERENCE_FAILED = 105;
+    // error thrown in logical plan optimization
+    // LogicalPlanBuildError = 106;
+    LOGICAL_PLAN_BUILD_FAILED = 106;
+    // error thrown in physical plan build
+    // PhysicalPlanBuildError = 107;
+    PHYSICAL_PLAN_BUILD_FAILED = 107;
+    // error thrown when parsing gremlin results
+    // GremlinResultParseError = 108;
+    GREMLIN_INVALID_RESULT = 108;
+    // error thrown then parsing cypher results
+    // CypherResultParseError = 109;
+    CYPHER_INVALID_RESULT = 109;
+    // engine is not available to process the query, e.g. engine is down
+    // EngineUnavailableError = 110;
+    ENGINE_UNAVAILABLE = 110;
+    // query execution time exceeds the limit
+    // QueryExecutionTimeoutError = 111;
+    QUERY_EXECUTION_TIMEOUT = 111;
+    // schema is not ready for querying
+    META_SCHEMA_NOT_READY = 112;
+    // statistics is not ready for querying
+    META_STATISTICS_NOT_READY = 113;
+}

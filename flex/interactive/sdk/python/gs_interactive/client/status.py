@@ -16,32 +16,31 @@
 # limitations under the License.
 #
 
-
-from enum import Enum
-
 from gs_interactive.api_response import ApiResponse
-from gs_interactive.exceptions import (
-    ApiException,
-    BadRequestException,
-    ForbiddenException,
-    NotFoundException,
-    ServiceException,
-    UnauthorizedException,
-)
+from gs_interactive.exceptions import ApiException
+from gs_interactive.exceptions import BadRequestException
+from gs_interactive.exceptions import ForbiddenException
+from gs_interactive.exceptions import NotFoundException
+from gs_interactive.exceptions import ServiceException
+from urllib3.exceptions import MaxRetryError
 
-
-class StatusCode(Enum):
-    OK = 0
-    BAD_REQUEST = 1
-    FORBIDDEN = 2
-    NOT_FOUND = 3
-    SERVER_INTERNAL_ERROR = 4
-    SERVICE_UNAVAILABLE = 5
-    UNKNOWN = 6
+from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
+from gs_interactive.models.api_response_with_code import APIResponseWithCode
 
 
 class Status:
+    """
+    This class represents the status of an operation. It contains the status code and the message.
+    """
+
     def __init__(self, status: StatusCode, message: str):
+        """
+        Construct a new Status object with the specified status code and message.
+
+        Args:
+            status (StatusCode): the returnd code of the operation.
+            message (str): the message returned by the operation.
+        """
         self.status = status
         self.message = message
 
@@ -52,62 +51,89 @@ class Status:
         return f"Status: {self.status}, message: {self.message}"
 
     def is_ok(self) -> bool:
+        """
+        Whether the operation is successful.
+        """
+
         return self.status == StatusCode.OK
 
     def is_error(self) -> bool:
+        """
+        Whether the operation is failed.
+        """
         return self.status != StatusCode.OK
-    
+
     def get_code(self):
+        """
+        Get the status code returned by the operation.
+        """
+
         return self.status
 
     @property
     def get_message(self):
+        """
+        Get the message returned by the operation.
+        """
+
         return self.message
 
     # static method create a server internal error object
     @staticmethod
     def server_internal_error(message: str):
-        return Status(StatusCode.SERVER_INTERNAL_ERROR, message)
+        """
+        Create a server internal error object with the specified message.
+        """
+
+        return Status(StatusCode.INTERNAL_ERROR, message)
 
     @staticmethod
     def from_exception(exception: ApiException):
+        """
+        Create a Status object from an ApiException.
+        """
+
         # mapping from ApiException to StatusCode
+        print("exception: ", exception)
         if isinstance(exception, BadRequestException):
-            return Status(StatusCode.BAD_REQUEST, str(exception))
+            return Status(StatusCode.BAD_REQUEST, exception.body)
         elif isinstance(exception, ForbiddenException):
-            return Status(StatusCode.FORBIDDEN, str(exception))
+            return Status(StatusCode.PERMISSION_DENIED, exception.body)
         elif isinstance(exception, NotFoundException):
-            return Status(StatusCode.NOT_FOUND, str(exception))
-        elif isinstance(exception, UnauthorizedException):
-            return Status(StatusCode.BAD_REQUEST, str(exception))
+            return Status(StatusCode.NOT_FOUND, exception.body)
         elif isinstance(exception, ServiceException):
-            if (exception.status == 503):
-                return Status(StatusCode.SERVICE_UNAVAILABLE, str(exception))
+            if exception.status == 503:
+                return Status(StatusCode.SERVICE_UNAVAILABLE, exception.body)
             else:
-                return Status(StatusCode.SERVER_INTERNAL_ERROR, str(exception))
+                return Status(StatusCode.INTERNAL_ERROR, exception.body)
+        elif isinstance(exception, MaxRetryError):
+            return Status(StatusCode.INTERNAL_ERROR, exception)
         return Status(
-            StatusCode.UNKNOWN, "Unknown Error from exception " + str(exception)
+            StatusCode.UNKNOWN, "Unknown Error from exception " + exception.body
         )
 
     @staticmethod
     def from_response(response: ApiResponse):
+        """
+        Create a Status object from an ApiResponse.
+        """
+
         # mapping from ApiResponse to StatusCode
         if response.status_code == 200:
             return Status(StatusCode.OK, "OK")
-        if response.status_code == 400:
-            return Status(StatusCode.BAD_REQUEST, "Bad Request")
-        if response.status_code == 403:
-            return Status(StatusCode.FORBIDDEN, "Forbidden")
-        if response.status_code == 404:
-            return Status(StatusCode.NOT_FOUND, "Not Found")
-        if response.status_code == 401:
-            return Status(StatusCode.BAD_REQUEST, "Unauthorized")
-        if response.status_code == 500:
-            return Status(StatusCode.SERVER_INTERNAL_ERROR, "Internal Server Error")
-        if response.status_code == 503:
-            return Status(StatusCode.SERVICE_UNAVAILABLE, "Service Unavailable")
-        return Status(StatusCode.UNKNOWN, "Unknown Error")
+        else:
+            # If the status_code is not 200, we expect APIReponseWithCode returned from server
+            api_response_with_code = response.data
+            if isinstance(api_response_with_code, APIResponseWithCode):
+                return Status(
+                    api_response_with_code.code, api_response_with_code.message
+                )
+            return Status(StatusCode.UNKNOWN, "Unknown Error")
 
     @staticmethod
     def ok():
+        """
+        Create a successful status object.
+        """
+
         return Status(StatusCode.OK, "OK")

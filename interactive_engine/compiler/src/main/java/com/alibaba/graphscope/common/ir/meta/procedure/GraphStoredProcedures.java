@@ -18,8 +18,12 @@ package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
@@ -34,9 +38,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraphStoredProcedures {
+    public static final String META_PROCEDURE_PREFIX = "gs.procedure.meta.";
     private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
     private final IrMetaReader metaReader;
+
+    public GraphStoredProcedures() {
+        this.metaReader = null;
+        this.storedProcedureMetaMap = Maps.newLinkedHashMap();
+        registerBuiltInProcedures();
+    }
 
     public GraphStoredProcedures(InputStream metaStream, IrMetaReader metaReader) {
         Yaml yaml = new Yaml();
@@ -61,6 +72,38 @@ public class GraphStoredProcedures {
                             .collect(Collectors.toMap(StoredProcedureMeta::getName, k -> k));
         }
         this.metaReader = metaReader;
+        registerBuiltInProcedures();
+    }
+
+    private void registerBuiltInProcedures() {
+        // register system-built-in procedures
+        String schemaProcedure = META_PROCEDURE_PREFIX + "schema";
+        RelDataTypeFactory typeFactory = StoredProcedureMeta.typeFactory;
+        this.storedProcedureMetaMap.put(
+                schemaProcedure,
+                new StoredProcedureMeta(
+                        schemaProcedure,
+                        StoredProcedureMeta.Mode.SCHEMA,
+                        "",
+                        "",
+                        typeFactory.createStructType(
+                                ImmutableList.of(typeFactory.createSqlType(SqlTypeName.CHAR)),
+                                ImmutableList.of("schema")),
+                        ImmutableList.of(),
+                        ImmutableMap.of()));
+        String statsProcedure = META_PROCEDURE_PREFIX + "statistics";
+        this.storedProcedureMetaMap.put(
+                statsProcedure,
+                new StoredProcedureMeta(
+                        statsProcedure,
+                        StoredProcedureMeta.Mode.SCHEMA,
+                        "",
+                        "",
+                        typeFactory.createStructType(
+                                ImmutableList.of(typeFactory.createSqlType(SqlTypeName.CHAR)),
+                                ImmutableList.of("statistics")),
+                        ImmutableList.of(),
+                        ImmutableMap.of()));
     }
 
     public @Nullable StoredProcedureMeta getStoredProcedure(String procedureName) {

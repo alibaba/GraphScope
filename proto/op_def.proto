@@ -18,7 +18,7 @@ syntax = "proto3";
 package gs.rpc;
 
 import "attr_value.proto";
-import "error_codes.proto";
+import "error/coordinator.proto";
 import "graph_def.proto";
 import "types.proto";
 

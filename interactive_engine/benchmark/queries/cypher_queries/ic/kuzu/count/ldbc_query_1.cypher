@@ -1,0 +1,2 @@
+MATCH  (p1:PERSON {id:$personId})-[:PERSON_KNOWS_PERSON]-(p2:PERSON {firstName:'$firstName'})-[:PERSON_ISLOCATEDIN_PLACE]-(pl:PLACE) 
+RETURN COUNT(p1)

@@ -106,6 +106,30 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     }
 
     @Override
+    public RelNode visit(GraphProcedureCall procedureCall) {
+        visitChildren(procedureCall);
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setProcedureCall(
+                                                GraphAlgebraPhysical.ProcedureCall.newBuilder()
+                                                        .setQuery(
+                                                                Utils.protoProcedure(
+                                                                        procedureCall
+                                                                                .getProcedure(),
+                                                                        new RexToProtoConverter(
+                                                                                true,
+                                                                                isColumnId,
+                                                                                this.rexBuilder))))
+                                        .build())
+                        .addAllMetaData(
+                                Utils.physicalProtoRowType(procedureCall.getRowType(), isColumnId))
+                        .build());
+        return procedureCall;
+    }
+
+    @Override
     public RelNode visit(GraphLogicalSource source) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
@@ -121,7 +145,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     queryParamsBuilder,
                     Utils.extractColumnsFromRelDataType(source.getRowType(), isColumnId));
         }
-        scanBuilder.setParams(buildQueryParams(source));
+        scanBuilder.setParams(queryParamsBuilder);
         if (source.getAliasId() != AliasInference.DEFAULT_ID) {
             scanBuilder.setAlias(Utils.asAliasId(source.getAliasId()));
         }
@@ -396,6 +420,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 Map<Integer, Set<GraphNameOrId>> tagColumns =
                         Utils.extractTagColumnsFromRexNodes(List.of(filter.getCondition()));
                 if (preCacheEdgeProps) {
+                    // Currently, we've already precache edge properties and path properties, so we
+                    // need to remove them. So as the follows.
                     Utils.removeEdgeProperties(
                             com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
                                     filter.getInput()),
@@ -958,6 +984,37 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                         .setIntersect(intersectBuilder));
         physicalBuilder.addPlan(intersectOprBuilder.build());
         return multiJoin;
+    }
+
+    @Override
+    public RelNode visit(GraphLogicalUnfold unfold) {
+        visitChildren(unfold);
+        RexNode unfoldKey = unfold.getUnfoldKey();
+        Preconditions.checkArgument(
+                unfoldKey instanceof RexGraphVariable,
+                "unfold key should be a variable, but is [%s]",
+                unfoldKey);
+        int keyAliasId = ((RexGraphVariable) unfoldKey).getAliasId();
+        GraphAlgebraPhysical.Unfold.Builder unfoldBuilder =
+                GraphAlgebraPhysical.Unfold.newBuilder().setTag(Utils.asAliasId(keyAliasId));
+        if (unfold.getAliasId() != AliasInference.DEFAULT_ID) {
+            unfoldBuilder.setAlias(Utils.asAliasId(unfold.getAliasId()));
+        }
+        List<RelDataTypeField> fullFields = unfold.getRowType().getFieldList();
+        Preconditions.checkArgument(!fullFields.isEmpty(), "there is no fields in unfold row type");
+        RelDataType curRowType =
+                new RelRecordType(
+                        StructKind.FULLY_QUALIFIED,
+                        fullFields.subList(fullFields.size() - 1, fullFields.size()));
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setUnfold(unfoldBuilder)
+                                        .build())
+                        .addAllMetaData(Utils.physicalProtoRowType(curRowType, isColumnId))
+                        .build());
+        return unfold;
     }
 
     private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {

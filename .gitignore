@@ -59,6 +59,7 @@ docs/flex/interactive/development/python/*
 !docs/flex/interactive/development/python/*Api.md
 !docs/flex/interactive/development/python/python_sdk.md
 docs/flex/interactive/development/restful_api.html
+docs/flex/coordinator/development/python/*
 
 analytical_engine/build/
 
@@ -76,6 +77,7 @@ interactive_engine/executor/store/groot/src/db/proto/*
 !interactive_engine/executor/store/groot/src/db/proto/mod.rs
 interactive_engine/data-load-tool/dependency-reduced-pom.xml
 interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
+interactive_engine/neo4j-shaded/dependency-reduced-pom.xml
 interactive_engine/executor/Cargo.lock
 interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
 interactive_engine/executor/ir/Cargo.lock
@@ -98,6 +100,9 @@ package.lock
 # Core dump
 core.*
 *.core
+
+# Openapi generated code
+python/graphscope/flex/rest
 
 # Flex related
 flex/docs/
@@ -124,6 +129,7 @@ flex/interactive/sdk/java/.openapi-generator/*
 flex/interactive/sdk/java/src/main/AndroidManifest.xml
 flex/interactive/sdk/java/.openapi-generate/
 flex/interactive/sdk/java/settings.gradle
+flex/interactive/sdk/java/reference/**
 flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/models/
 flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/api/
 flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/auth/
@@ -153,3 +159,6 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 
 
 **/.cache/
+
+**/*.ci-friendly-pom.xml
+**/dependency-reduced-pom.xml

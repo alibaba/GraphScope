@@ -16,21 +16,21 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
+import com.alibaba.graphscope.common.ir.meta.glogue.DetailedSourceCost;
 import com.alibaba.graphscope.common.ir.meta.glogue.PrimitiveCountEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
+import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphJoinDecomposition;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -39,13 +39,17 @@ import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.rules.MultiJoin;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
+public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
     private final PrimitiveCountEstimator countEstimator;
     private final RelOptPlanner optPlanner;
     private final RelMdRowCount mdRowCount;
@@ -109,18 +113,17 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     }
                 }
             }
-            throw new UnsupportedOperationException(
-                    "estimate count for pattern " + pattern + " is unsupported yet");
-        } else if (node instanceof TableScan) {
-            return getRowCount((TableScan) node, mq);
-        } else if (node instanceof Filter) {
-            return mdRowCount.getRowCount((Filter) node, mq);
-        } else if (node instanceof Aggregate) {
-            return mdRowCount.getRowCount((Aggregate) node, mq);
-        } else if (node instanceof Sort) {
-            return mdRowCount.getRowCount((Sort) node, mq);
-        } else if (node instanceof Project) {
-            return mdRowCount.getRowCount((Project) node, mq);
+            double totalRowCount = 1.0d;
+            for (PatternEdge edge : pattern.getEdgeSet()) {
+                totalRowCount *= countEstimator.estimate(edge);
+            }
+            for (PatternVertex vertex : pattern.getVertexSet()) {
+                int degree = pattern.getEdgesOf(vertex).size();
+                if (degree > 0) {
+                    totalRowCount /= Math.pow(countEstimator.estimate(vertex), degree - 1);
+                }
+            }
+            return totalRowCount;
         } else if (node instanceof RelSubset) {
             return mq.getRowCount(((RelSubset) node).getOriginal());
         } else if (node instanceof GraphExtendIntersect || node instanceof GraphJoinDecomposition) {
@@ -131,59 +134,76 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     return mq.getRowCount(subset);
                 }
             }
+            Pattern original =
+                    (node instanceof GraphExtendIntersect)
+                            ? ((GraphExtendIntersect) node).getGlogueEdge().getDstPattern()
+                            : ((GraphJoinDecomposition) node).getParentPatten();
+            return mq.getRowCount(
+                    new GraphPattern(node.getCluster(), node.getTraitSet(), original));
+        } else if (node instanceof AbstractBindableTableScan) {
+            return getRowCount((AbstractBindableTableScan) node, mq);
+        } else if (node instanceof GraphLogicalPathExpand) {
+            return node.estimateRowCount(mq);
+        } else if (node instanceof GraphPhysicalExpand) {
+            return node.estimateRowCount(mq);
+        } else if (node instanceof GraphPhysicalGetV) {
+            return node.estimateRowCount(mq);
+        } else if (node instanceof MultiJoin) {
+            GraphOptCluster optCluster = (GraphOptCluster) node.getCluster();
+            RelOptCost cachedCost = optCluster.getLocalState().getCachedCost();
+            if (cachedCost != null) {
+                return cachedCost.getRows();
+            }
         } else if (node instanceof Join) {
-            return mdRowCount.getRowCount((Join) node, mq);
+            GraphOptCluster optCluster = (GraphOptCluster) node.getCluster();
+            RelOptCost cachedCost = optCluster.getLocalState().getCachedCost();
+            return cachedCost != null
+                    ? cachedCost.getRows()
+                    : mdRowCount.getRowCount((Join) node, mq);
         } else if (node instanceof Union) {
             return mdRowCount.getRowCount((Union) node, mq);
+        } else if (node instanceof Filter) {
+            return mdRowCount.getRowCount((Filter) node, mq);
+        } else if (node instanceof Aggregate) {
+            return mdRowCount.getRowCount((Aggregate) node, mq);
+        } else if (node instanceof Sort) {
+            return mdRowCount.getRowCount((Sort) node, mq);
+        } else if (node instanceof Project) {
+            return mdRowCount.getRowCount((Project) node, mq);
+        } else if (node instanceof CommonTableScan) {
+            return mdRowCount.getRowCount((CommonTableScan) node, mq);
         }
         throw new IllegalArgumentException("can not estimate row count for the node=" + node);
     }
 
-    private double getRowCount(TableScan rel, RelMetadataQuery mq) {
-        if (rel instanceof GraphLogicalSource || rel instanceof GraphLogicalGetV) {
+    private double getRowCount(AbstractBindableTableScan rel, RelMetadataQuery mq) {
+        if (rel.getCachedCost() == null && rel instanceof GraphLogicalSource) {
+            GraphLogicalSource source = (GraphLogicalSource) rel;
             List<Integer> vertexTypeIds = Utils.getVertexTypeIds(rel);
             PatternVertex vertex =
                     (vertexTypeIds.size() == 1)
                             ? new SinglePatternVertex(vertexTypeIds.get(0))
                             : new FuzzyPatternVertex(vertexTypeIds);
-            return mq.getRowCount(
-                    new GraphPattern(rel.getCluster(), rel.getTraitSet(), new Pattern(vertex)));
-        } else if (rel instanceof GraphLogicalExpand) {
-            List<EdgeTypeId> edgeTypeIds = Utils.getEdgeTypeIds(rel);
-            List<Integer> srcVertexTypeIds =
-                    edgeTypeIds.stream().map(k -> k.getSrcLabelId()).collect(Collectors.toList());
-            List<Integer> dstVertexTypeIds =
-                    edgeTypeIds.stream().map(k -> k.getDstLabelId()).collect(Collectors.toList());
-            PatternVertex srcVertex =
-                    (srcVertexTypeIds.size() == 1)
-                            ? new SinglePatternVertex(srcVertexTypeIds.get(0), 0)
-                            : new FuzzyPatternVertex(srcVertexTypeIds, 0);
-            PatternVertex dstVertex =
-                    (dstVertexTypeIds.size() == 1)
-                            ? new SinglePatternVertex(dstVertexTypeIds.get(0), 1)
-                            : new FuzzyPatternVertex(dstVertexTypeIds, 1);
-            boolean isBoth = ((GraphLogicalExpand) rel).getOpt() == GraphOpt.Expand.BOTH;
-            PatternEdge edge =
-                    (edgeTypeIds.size() == 1)
-                            ? new SinglePatternEdge(
-                                    srcVertex,
-                                    dstVertex,
-                                    edgeTypeIds.get(0),
-                                    0,
-                                    isBoth,
-                                    new ElementDetails())
-                            : new FuzzyPatternEdge(
-                                    srcVertex,
-                                    dstVertex,
-                                    edgeTypeIds,
-                                    0,
-                                    isBoth,
-                                    new ElementDetails());
-            Pattern pattern = new Pattern();
-            pattern.addVertex(srcVertex);
-            pattern.addVertex(dstVertex);
-            pattern.addEdge(srcVertex, dstVertex, edge);
-            return mq.getRowCount(new GraphPattern(rel.getCluster(), rel.getTraitSet(), pattern));
+            double fullCount =
+                    mq.getRowCount(
+                            new GraphPattern(
+                                    rel.getCluster(), rel.getTraitSet(), new Pattern(vertex)));
+            List<RexNode> sourceFilters = Lists.newArrayList();
+            if (source.getUniqueKeyFilters() != null) {
+                sourceFilters.add(source.getUniqueKeyFilters());
+            }
+            if (ObjectUtils.isNotEmpty(source.getFilters())) {
+                sourceFilters.addAll(source.getFilters());
+            }
+            double selectivity =
+                    mq.getSelectivity(
+                            rel,
+                            RexUtil.composeConjunction(
+                                    rel.getCluster().getRexBuilder(), sourceFilters));
+            source.setCachedCost(new DetailedSourceCost(fullCount, fullCount * selectivity));
+        }
+        if (rel.getCachedCost() != null) {
+            return rel.estimateRowCount(mq);
         }
         throw new IllegalArgumentException("can not estimate row count for the rel=" + rel);
     }

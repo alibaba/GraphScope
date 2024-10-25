@@ -19,9 +19,10 @@
 
 namespace gs {
 
-ReadTransaction::ReadTransaction(const MutablePropertyFragment& graph,
+ReadTransaction::ReadTransaction(const GraphDBSession& session,
+                                 const MutablePropertyFragment& graph,
                                  VersionManager& vm, timestamp_t timestamp)
-    : graph_(graph), vm_(vm), timestamp_(timestamp) {}
+    : session_(session), graph_(graph), vm_(vm), timestamp_(timestamp) {}
 ReadTransaction::~ReadTransaction() { release(); }
 
 timestamp_t ReadTransaction::timestamp() const { return timestamp_; }
@@ -134,5 +135,7 @@ void ReadTransaction::release() {
     timestamp_ = std::numeric_limits<timestamp_t>::max();
   }
 }
+
+const GraphDBSession& ReadTransaction::GetSession() const { return session_; }
 
 }  // namespace gs

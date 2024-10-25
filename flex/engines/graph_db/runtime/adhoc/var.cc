@@ -40,7 +40,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       tag = pb.tag().id();
       CHECK(ctx.get(tag) != nullptr);
       type_ = ctx.get(tag)->elem_type();
-    } else if (pb.has_property() && pb.property().has_label()) {
+    } else if (pb.has_property() &&
+               (pb.property().has_label() || pb.property().has_id())) {
       type_ = RTAnyType::kI64Value;
     } else {
       LOG(FATAL) << "not support";
@@ -48,6 +49,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
   }
 
   if (pb.has_tag() || var_type == VarType::kPathVar) {
+    CHECK(ctx.get(tag) != nullptr) << "tag not found - " << tag;
     if (ctx.get(tag)->column_type() == ContextColumnType::kVertex) {
       if (pb.has_property()) {
         auto& pt = pb.property();
@@ -55,7 +57,20 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            getter_ = std::make_shared<VertexIdPathAccessor>(txn, ctx, tag);
+            if (type_ == RTAnyType::kStringValue) {
+              getter_ =
+                  std::make_shared<VertexIdPathAccessor<std::string_view>>(
+                      txn, ctx, tag);
+            } else if (type_ == RTAnyType::kI32Value) {
+              getter_ = std::make_shared<VertexIdPathAccessor<int32_t>>(
+                  txn, ctx, tag);
+            } else if (type_ == RTAnyType::kI64Value) {
+              getter_ = std::make_shared<VertexIdPathAccessor<int64_t>>(
+                  txn, ctx, tag);
+            } else {
+              LOG(FATAL) << "not support for "
+                         << static_cast<int>(type_.type_enum_);
+            }
           } else {
             getter_ = create_vertex_property_path_accessor(txn, ctx, tag, type_,
                                                            pt.key().name());
@@ -76,9 +91,13 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_key()) {
-          getter_ = create_edge_property_path_accessor(ctx, tag, type_);
+          auto name = pt.key().name();
+          getter_ =
+              create_edge_property_path_accessor(txn, name, ctx, tag, type_);
         } else if (pt.has_label()) {
           getter_ = create_edge_label_path_accessor(ctx, tag);
+        } else if (pt.has_id()) {
+          getter_ = create_edge_global_id_path_accessor(ctx, tag);
         } else {
           LOG(FATAL) << "not support...";
         }
@@ -108,7 +127,18 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
           if (pt.key().name() == "id") {
-            getter_ = std::make_shared<VertexIdVertexAccessor>(txn);
+            if (type_ == RTAnyType::kStringValue) {
+              getter_ =
+                  std::make_shared<VertexIdVertexAccessor<std::string_view>>(
+                      txn);
+            } else if (type_ == RTAnyType::kI32Value) {
+              getter_ = std::make_shared<VertexIdVertexAccessor<int32_t>>(txn);
+            } else if (type_ == RTAnyType::kI64Value) {
+              getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(txn);
+            } else {
+              LOG(FATAL) << "not support for "
+                         << static_cast<int>(type_.type_enum_);
+            }
           } else {
             getter_ = create_vertex_property_vertex_accessor(txn, type_,
                                                              pt.key().name());
@@ -125,7 +155,12 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
       if (pb.has_property()) {
         auto& pt = pb.property();
         if (pt.has_key()) {
-          getter_ = create_edge_property_edge_accessor(type_);
+          auto name = pt.key().name();
+          getter_ = create_edge_property_edge_accessor(txn, name, type_);
+        } else if (pt.has_label()) {
+          getter_ = create_edge_label_edge_accessor();
+        } else if (pt.has_id()) {
+          getter_ = create_edge_global_id_edge_accessor();
         } else {
           LOG(FATAL) << "not support";
         }

@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.groot.common.util;
 
+import com.alibaba.graphscope.groot.common.exception.UnsupportedOperationException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.collect.ImmutableMap;

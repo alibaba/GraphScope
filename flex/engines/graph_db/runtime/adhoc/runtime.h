@@ -18,13 +18,17 @@
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
+#include "boost/leaf.hpp"
+
+namespace bl = boost::leaf;
+
 namespace gs {
 
 namespace runtime {
 
-Context runtime_eval(const physical::PhysicalPlan& plan,
-                     const ReadTransaction& txn,
-                     const std::map<std::string, std::string>& params);
+bl::result<Context> runtime_eval(
+    const physical::PhysicalPlan& plan, const ReadTransaction& txn,
+    const std::map<std::string, std::string>& params);
 
 }  // namespace runtime
 

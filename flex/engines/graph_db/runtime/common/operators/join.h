@@ -19,6 +19,8 @@
 #include <vector>
 #include "flex/engines/graph_db/runtime/common/context.h"
 
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+
 namespace gs {
 namespace runtime {
 
@@ -30,7 +32,8 @@ struct JoinParams {
 
 class Join {
  public:
-  static Context join(Context&& ctx, Context&& ctx2, const JoinParams& params);
+  static bl::result<Context> join(Context&& ctx, Context&& ctx2,
+                                  const JoinParams& params);
 };
 }  // namespace runtime
 }  // namespace gs

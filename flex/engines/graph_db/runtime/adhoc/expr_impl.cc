@@ -119,6 +119,10 @@ RTAny LogicalExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
     std::string rhs(rhs_->eval_vertex(label, v, idx).as_string());
     return RTAny::from_bool(std::regex_match(ret, std::regex(rhs)));
 
+  } else if (logic_ == common::Logical::OR) {
+    bool ret = (rhs_->eval_vertex(label, v, idx).as_bool() ||
+                lhs_->eval_vertex(label, v, idx).as_bool());
+    return RTAny::from_bool(ret);
   } else {
     LOG(FATAL) << "not support..." << static_cast<int>(logic_);
   }
@@ -153,6 +157,14 @@ RTAny LogicalExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
     return RTAny::from_bool(!ret);
   } else if (logic_ == common::Logical::AND) {
     bool ret = (rhs_->eval_edge(label, src, dst, data, idx).as_bool() &&
+                lhs_->eval_edge(label, src, dst, data, idx).as_bool());
+    return RTAny::from_bool(ret);
+  } else if (logic_ == common::Logical::REGEX) {
+    std::string ret(lhs_->eval_edge(label, src, dst, data, idx).as_string());
+    std::string rhs(rhs_->eval_edge(label, src, dst, data, idx).as_string());
+    return RTAny::from_bool(std::regex_match(ret, std::regex(rhs)));
+  } else if (logic_ == common::Logical::OR) {
+    bool ret = (rhs_->eval_edge(label, src, dst, data, idx).as_bool() ||
                 lhs_->eval_edge(label, src, dst, data, idx).as_bool());
     return RTAny::from_bool(ret);
   } else {
@@ -438,6 +450,9 @@ static RTAny parse_param(const common::DynamicParam& param,
     } else if (dt == common::DataType::INT32) {
       int val = std::stoi(input.at(name));
       return RTAny::from_int32(val);
+    } else if (dt == common::DataType::INT64) {
+      int64_t val = std::stoll(input.at(name));
+      return RTAny::from_int64(val);
     }
 
     LOG(FATAL) << "not support type: " << common::DataType_Name(dt);
@@ -538,6 +553,9 @@ static std::unique_ptr<ExprBase> build_expr(
         } else if (key->type() == RTAnyType::kI32Value) {
           return std::make_unique<WithInExpr<int32_t>>(txn, ctx, std::move(key),
                                                        rhs.const_());
+        } else if (key->type() == RTAnyType::kStringValue) {
+          return std::make_unique<WithInExpr<std::string>>(
+              txn, ctx, std::move(key), rhs.const_());
         } else {
           LOG(FATAL) << "not support";
         }
