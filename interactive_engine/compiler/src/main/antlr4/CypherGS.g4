@@ -52,7 +52,7 @@ CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
-     :  oC_Match ( SP? ( oC_Match | oC_With | oC_Unwind ) )* ( SP oC_Return ) ;
+     :  oC_Match ( SP? ( oC_Match | oC_With | oC_StandaloneCall | oC_Unwind ) )* ( SP oC_Return ) ;
 
 oC_Match
      :  ( OPTIONAL SP )? MATCH SP? oC_Pattern ( SP? oC_Where )? ;
@@ -76,12 +76,15 @@ oC_PatternPart
        ;
 
 oC_AnonymousPatternPart
-                    :  oC_PatternElement ;
+                    :  oC_ShortestPathOption? oC_PatternElement ;
 
 oC_PatternElement
-              :  ( oC_NodePattern ( SP? oC_PatternElementChain )* )
-                  | ( '(' oC_PatternElement ')' )
-                  ;
+              : ( oC_NodePattern ( SP? oC_PatternElementChain )* )
+              | ( '(' oC_PatternElement ')' )
+              ;
+
+oC_ShortestPathOption
+            : ( ALL SP? )? SHORTESTPATH ;
 
 oC_With
     :  WITH oC_ProjectionBody ( SP? oC_Where )? ;

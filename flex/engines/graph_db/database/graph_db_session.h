@@ -105,6 +105,8 @@ class GraphDBSession {
 
   AppBase* GetApp(int idx);
 
+  AppBase* GetApp(const std::string& name);
+
   // Ingest wals from a string, the input string is a serialized wal.
   // We will convert it to a transaction and apply it to the graph.
   Result<std::string> IngestWals(const std::string_view& input);

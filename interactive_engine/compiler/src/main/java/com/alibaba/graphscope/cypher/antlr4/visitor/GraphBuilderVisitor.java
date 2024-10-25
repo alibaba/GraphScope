@@ -19,6 +19,9 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
+import com.alibaba.graphscope.common.ir.rel.GraphProcedureCall;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
@@ -26,10 +29,15 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -47,15 +55,41 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     private final GraphBuilder builder;
     private final ExpressionVisitor expressionVisitor;
     private final ExprUniqueAliasInfer aliasInfer;
+    private final Supplier<ProcedureCallVisitor> procedureCallVisitorSupplier;
 
-    public GraphBuilderVisitor(GraphBuilder builder) {
-        this(builder, new ExprUniqueAliasInfer());
+    public GraphBuilderVisitor(
+            GraphBuilder builder, Supplier<ProcedureCallVisitor> procedureCallVisitorSupplier) {
+        this(builder, new ExprUniqueAliasInfer(), procedureCallVisitorSupplier);
     }
 
-    public GraphBuilderVisitor(GraphBuilder builder, ExprUniqueAliasInfer aliasInfer) {
+    public GraphBuilderVisitor(
+            GraphBuilder builder,
+            ExprUniqueAliasInfer aliasInfer,
+            Supplier<ProcedureCallVisitor> procedureCallVisitorSupplier) {
         this.builder = Objects.requireNonNull(builder);
         this.aliasInfer = Objects.requireNonNull(aliasInfer);
         this.expressionVisitor = new ExpressionVisitor(this);
+        this.procedureCallVisitorSupplier = Objects.requireNonNull(procedureCallVisitorSupplier);
+    }
+
+    @VisibleForTesting
+    public GraphBuilderVisitor(GraphBuilder builder) {
+        this(builder, new ExprUniqueAliasInfer(), () -> null);
+    }
+
+    @Override
+    public GraphBuilder visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
+        ProcedureCallVisitor procedureCallVisitor = procedureCallVisitorSupplier.get();
+        Preconditions.checkArgument(
+                procedureCallVisitor != null,
+                "cannot do procedure call without procedure call visitor");
+        RexNode procedure = procedureCallVisitor.visitOC_StandaloneCall(ctx);
+        return builder.push(
+                new GraphProcedureCall(
+                        builder.getCluster(),
+                        RelTraitSet.createEmpty(),
+                        builder.build(),
+                        procedure));
     }
 
     @Override
@@ -91,6 +125,45 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             throw new IllegalArgumentException("sentences in match should not be empty");
         }
         return (ctx.oC_Where() != null) ? visitOC_Where(ctx.oC_Where()) : builder;
+    }
+
+    @Override
+    public GraphBuilder visitOC_AnonymousPatternPart(
+            CypherGSParser.OC_AnonymousPatternPartContext ctx) {
+        visitOC_PatternElement(ctx.oC_PatternElement());
+        if (ctx.oC_ShortestPathOption() == null) return builder;
+        if (builder.size() > 0) {
+            RelNode top = builder.peek();
+            if (top instanceof GraphLogicalGetV
+                    && top.getInputs().size() == 1
+                    && top.getInput(0) instanceof GraphLogicalPathExpand) {
+                GraphLogicalGetV getV = (GraphLogicalGetV) top;
+                GraphLogicalPathExpand path = (GraphLogicalPathExpand) getV.getInput(0);
+                boolean isAll = ctx.oC_ShortestPathOption().ALL() != null;
+                GraphLogicalPathExpand shortestPath =
+                        GraphLogicalPathExpand.create(
+                                (GraphOptCluster) path.getCluster(),
+                                ImmutableList.of(),
+                                path.getInput(),
+                                path.getExpand(),
+                                path.getGetV(),
+                                path.getOffset(),
+                                path.getFetch(),
+                                path.getResultOpt(),
+                                isAll
+                                        ? GraphOpt.PathExpandPath.ALL_SHORTEST
+                                        : GraphOpt.PathExpandPath.ANY_SHORTEST,
+                                path.getUntilCondition(),
+                                path.getAliasName(),
+                                path.getStartAlias(),
+                                path.isOptional());
+                GraphLogicalGetV shortestGetV =
+                        getV.copy(getV.getTraitSet(), ImmutableList.of(shortestPath));
+                builder.build();
+                builder.push(shortestGetV);
+            }
+        }
+        return builder;
     }
 
     @Override

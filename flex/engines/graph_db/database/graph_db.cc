@@ -262,9 +262,8 @@ void GraphDB::Close() {
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
-ReadTransaction GraphDB::GetReadTransaction() {
-  uint32_t ts = version_manager_.acquire_read_timestamp();
-  return {graph_, version_manager_, ts};
+ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
+  return contexts_[thread_id].session.GetReadTransaction();
 }
 
 InsertTransaction GraphDB::GetInsertTransaction(int thread_id) {
@@ -473,9 +472,14 @@ void GraphDB::initApps(
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {
     auto path = path_and_index.second.first;
+    auto name = path_and_index.first;
     auto index = path_and_index.second.second;
-    if (registerApp(path, index)) {
-      ++valid_plugins;
+    if (!Schema::IsBuiltinPlugin(name)) {
+      if (registerApp(path, index)) {
+        ++valid_plugins;
+      }
+    } else {
+      valid_plugins++;
     }
   }
   LOG(INFO) << "Successfully registered stored procedures : " << valid_plugins

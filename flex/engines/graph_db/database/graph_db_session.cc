@@ -29,7 +29,7 @@ namespace gs {
 
 ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
-  return ReadTransaction(db_.graph_, db_.version_manager_, ts);
+  return ReadTransaction(*this, db_.graph_, db_.version_manager_, ts);
 }
 
 InsertTransaction GraphDBSession::GetInsertTransaction() {
@@ -213,6 +213,15 @@ double GraphDBSession::eval_duration() const {
 }
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
+
+AppBase* GraphDBSession::GetApp(const std::string& app_name) {
+  auto& app_name_to_path_index = db_.schema().GetPlugins();
+  if (app_name_to_path_index.count(app_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << app_name;
+    return nullptr;
+  }
+  return GetApp(app_name_to_path_index.at(app_name).second);
+}
 
 #define likely(x) __builtin_expect(!!(x), 1)
 

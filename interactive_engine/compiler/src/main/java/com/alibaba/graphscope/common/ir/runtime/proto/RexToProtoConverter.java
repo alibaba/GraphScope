@@ -31,8 +31,11 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.IntervalSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Sarg;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -365,6 +368,88 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
                         .build();
+                // if the operand of MINUS_PREFIX is a literal, we can convert it to a negative
+                // value
+            case MINUS_PREFIX:
+                if (operand.getKind() == SqlKind.LITERAL) {
+                    RexLiteral literal = (RexLiteral) operand;
+                    switch (literal.getType().getSqlTypeName()) {
+                        case INTEGER:
+                            BigInteger negative =
+                                    BigInteger.valueOf(literal.getValueAs(Number.class).intValue())
+                                            .negate();
+                            if (negative.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) >= 0
+                                    && negative.compareTo(BigInteger.valueOf(Integer.MAX_VALUE))
+                                            <= 0) {
+                                return OuterExpression.Expression.newBuilder()
+                                        .addOperators(
+                                                OuterExpression.ExprOpr.newBuilder()
+                                                        .setConst(
+                                                                Common.Value.newBuilder()
+                                                                        .setI32(
+                                                                                negative
+                                                                                        .intValue()))
+                                                        .setNodeType(
+                                                                Utils.protoIrDataType(
+                                                                        call.getType(),
+                                                                        isColumnId)))
+                                        .build();
+                            }
+                        case BIGINT:
+                            BigInteger negative2 =
+                                    BigInteger.valueOf(literal.getValueAs(Number.class).longValue())
+                                            .negate();
+                            if (negative2.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) >= 0
+                                    && negative2.compareTo(BigInteger.valueOf(Long.MAX_VALUE))
+                                            <= 0) {
+                                return OuterExpression.Expression.newBuilder()
+                                        .addOperators(
+                                                OuterExpression.ExprOpr.newBuilder()
+                                                        .setConst(
+                                                                Common.Value.newBuilder()
+                                                                        .setI64(
+                                                                                negative2
+                                                                                        .longValue()))
+                                                        .setNodeType(
+                                                                Utils.protoIrDataType(
+                                                                        rexBuilder
+                                                                                .getTypeFactory()
+                                                                                .createSqlType(
+                                                                                        SqlTypeName
+                                                                                                .BIGINT),
+                                                                        isColumnId)))
+                                        .build();
+                            } else {
+                                throw new IllegalArgumentException(
+                                        "negation of value ["
+                                                + negative2
+                                                + "] is out of range of BIGINT");
+                            }
+                        case FLOAT:
+                        case DOUBLE:
+                            BigDecimal negative3 =
+                                    BigDecimal.valueOf(
+                                                    literal.getValueAs(Number.class).doubleValue())
+                                            .negate();
+                            return OuterExpression.Expression.newBuilder()
+                                    .addOperators(
+                                            OuterExpression.ExprOpr.newBuilder()
+                                                    .setConst(
+                                                            Common.Value.newBuilder()
+                                                                    .setF64(
+                                                                            negative3
+                                                                                    .doubleValue()))
+                                                    .setNodeType(
+                                                            Utils.protoIrDataType(
+                                                                    rexBuilder
+                                                                            .getTypeFactory()
+                                                                            .createSqlType(
+                                                                                    SqlTypeName
+                                                                                            .DOUBLE),
+                                                                    isColumnId)))
+                                    .build();
+                    }
+                }
             case IS_NULL:
             case NOT:
             default:
