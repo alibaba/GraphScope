@@ -20,22 +20,11 @@
 
 namespace gs {
 
-int tmout_multip(int msecs) {
-  int r;
-  r = (int) (((double) (msecs)) * 1.0);
-  return r;
-}
-
-void test_conf_init(rd_kafka_conf_t** conf, rd_kafka_topic_conf_t** topic_conf,
-                    int timeout) {
-  if (conf) {
-    *conf = rd_kafka_conf_new();
-  }
-
-  if (topic_conf)
-    *topic_conf = rd_kafka_topic_conf_new();
-}
-
+/**
+ *The following implementation for creating a topic is derived from
+ *https://github.com/confluentinc/librdkafka/blob/master/tests/test.c#L4734.
+ */
+#ifdef BUILD_KAFKA_WAL_WRITER
 rd_kafka_t* test_create_handle(rd_kafka_type_t mode, rd_kafka_conf_t* conf) {
   rd_kafka_t* rk;
   char errstr[512];
@@ -51,17 +40,14 @@ rd_kafka_t* test_create_handle(rd_kafka_type_t mode, rd_kafka_conf_t* conf) {
 }
 
 rd_kafka_t* test_create_producer(const std::string& brokers) {
-  rd_kafka_conf_t* conf;
+  rd_kafka_conf_t* conf = rd_kafka_conf_new();
 
-  test_conf_init(&conf, NULL, 0);
-  // set metadata.broker.list
   char errstr[512];
   if (rd_kafka_conf_set(conf, "metadata.broker.list", brokers.c_str(), errstr,
                         sizeof(errstr)) != RD_KAFKA_CONF_OK) {
     LOG(ERROR) << "Failed to set metadata.broker.list: " << errstr;
     return NULL;
   }
-
   return test_create_handle(RD_KAFKA_PRODUCER, conf);
 }
 std::string generate_graph_wal_topic(const std::string& kafka_brokers,
@@ -77,7 +63,7 @@ std::string generate_graph_wal_topic(const std::string& kafka_brokers,
   rd_kafka_event_t* rkev;
   const rd_kafka_CreateTopics_result_t* res;
   const rd_kafka_topic_result_t** terr;
-  int timeout_ms = tmout_multip(10000);
+  int timeout_ms = 10000;
   size_t res_cnt;
   rd_kafka_resp_err_t err;
   char errstr[512];
@@ -148,17 +134,15 @@ std::string generate_graph_wal_topic(const std::string& kafka_brokers,
   }
 
   rd_kafka_event_destroy(rkev);
-
   rd_kafka_queue_destroy(rkqu);
-
   rd_kafka_AdminOptions_destroy(options);
-
   rd_kafka_NewTopic_destroy(newt[0]);
-
   rd_kafka_destroy(rk);
   LOG(INFO) << "Destroyed producer for topic " << topic_name;
   return topic_name;
 }
+
+#endif  // BUILD_KAFKA_WAL_WRITER
 
 void LocalWalWriter::open(const std::string& prefix, int thread_id) {
   if (fd_ != -1 || thread_id_ != -1) {
@@ -198,7 +182,7 @@ void LocalWalWriter::close() {
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-bool LocalWalWriter::append(uint32_t ts, const char* data, size_t length) {
+bool LocalWalWriter::append(const char* data, size_t length) {
   if (unlikely(fd_ == -1)) {
     return false;
   }
@@ -241,7 +225,7 @@ IWalWriter::WalWriterType LocalWalWriter::type() const {
   return IWalWriter::WalWriterType::kLocal;
 }
 
-#ifdef ENABLE_KAFKA
+#ifdef BUILD_KAFKA_WAL_WRITER
 
 void KafkaWalWriter::open(const std::string& topic, int thread_id) {
   if (thread_id_ != -1 || producer_) {
@@ -271,12 +255,9 @@ void KafkaWalWriter::close() {
   }
 }
 
-bool KafkaWalWriter::append(uint32_t ts, const char* data, size_t length) {
+bool KafkaWalWriter::append(const char* data, size_t length) {
   try {
-    std::string key = std::to_string(ts);
-    // cppkafka::Buffer key(reinterpret_cast<const char*>(&ts),
-    // sizeof(uint32_t));
-    producer_->sync_produce(builder_.key(key).payload({data, length}));
+    producer_->sync_produce(builder_.payload({data, length}));
     producer_->flush(true);
   } catch (const cppkafka::HandleException& e) {
     LOG(ERROR) << "Failed to send to kafka: " << e.what();
@@ -292,7 +273,7 @@ IWalWriter::WalWriterType KafkaWalWriter::type() const {
 }
 #endif
 
-WalsParser::WalsParser(const std::vector<std::string>& paths)
+LocalWalsParser::LocalWalsParser(const std::vector<std::string>& paths)
     : insert_wal_list_(NULL), insert_wal_list_size_(0) {
   for (auto path : paths) {
     LOG(INFO) << "Start to ingest WALs from file: " << path;
@@ -354,7 +335,7 @@ WalsParser::WalsParser(const std::vector<std::string>& paths)
   }
 }
 
-WalsParser::~WalsParser() {
+LocalWalsParser::~LocalWalsParser() {
   if (insert_wal_list_ != NULL) {
     munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
   }
@@ -367,25 +348,36 @@ WalsParser::~WalsParser() {
   }
 }
 
-uint32_t WalsParser::last_ts() const { return last_ts_; }
+uint32_t LocalWalsParser::last_ts() const { return last_ts_; }
 
-const WalContentUnit& WalsParser::get_insert_wal(uint32_t ts) const {
+const WalContentUnit& LocalWalsParser::get_insert_wal(uint32_t ts) const {
   return insert_wal_list_[ts];
 }
 
-const std::vector<UpdateWalUnit>& WalsParser::update_wals() const {
+const std::vector<UpdateWalUnit>& LocalWalsParser::update_wals() const {
   return update_wal_list_;
 }
 
-const WalContentUnit* WalsParser::insert_wal_list() const {
-  return insert_wal_list_;
+#ifdef BUILD_KAFKA_WAL_WRITER
+
+std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
+    const cppkafka::Configuration& config, const std::string& topic_name) {
+  std::vector<cppkafka::TopicPartition> partitions;
+  cppkafka::Consumer consumer(config);  // tmp consumer
+  auto metadata =
+      consumer.get_metadata().get_topics({topic_name}).front().get_partitions();
+  for (const auto& partition : metadata) {
+    partitions.push_back(cppkafka::TopicPartition(
+        topic_name, partition.get_id(), 0));  // from the beginning
+  }
+  return partitions;
 }
 
-// WalConsumer consumes from multiple partitions of a topic, and can start from
-// the beginning or from the latest message.
-WalConsumer::WalConsumer(cppkafka::Configuration config,
-                         const std::string& topic_name, int32_t thread_num)
-    : running(true), expect_timestamp_(1) {
+// KafkaWalConsumer consumes from multiple partitions of a topic, and can start
+// from the beginning or from the latest message.
+KafkaWalConsumer::KafkaWalConsumer(cppkafka::Configuration config,
+                                   const std::string& topic_name,
+                                   int32_t thread_num) {
   auto topic_partitions = get_all_topic_partitions(config, topic_name);
   consumers_.reserve(topic_partitions.size());
   for (size_t i = 0; i < topic_partitions.size(); ++i) {
@@ -394,7 +386,8 @@ WalConsumer::WalConsumer(cppkafka::Configuration config,
   }
 }
 
-std::pair<uint32_t, std::string> WalConsumer::poll() {
+// TODO: make this effiicient
+std::string KafkaWalConsumer::poll() {
   for (auto& consumer : consumers_) {
     auto msg = consumer->poll();
     if (msg) {
@@ -403,67 +396,26 @@ std::pair<uint32_t, std::string> WalConsumer::poll() {
           LOG(INFO) << "[+] Received error notification: " << msg.get_error();
         }
       } else {
-        uint32_t key = atoi(static_cast<std::string>(msg.get_key()).c_str());
         std::string payload = msg.get_payload();
         LOG(INFO) << "receive from partition " << msg.get_partition()
-                  << ", key: " << key << ", payload: " << payload
-                  << " size: " << payload.size();
-        message_queue_.push(std::make_pair(key, payload));
-        // consumer->commit(msg);
+                  << ", payload: " << payload << " size: " << payload.size();
+        message_queue_.push(payload);
+        consumer->commit(msg);
       }
     }
   }
-  // Check the message queue, if the top message is the expected message,
-  // send it to the engine. Otherwise, wait for the expected message.
-  if (!message_queue_.empty()) {
-    while (!message_queue_.empty() &&
-           message_queue_.top().first < expect_timestamp_) {
-      LOG(WARNING) << "Drop message: <" << message_queue_.top().first << " -> "
-                   << message_queue_.top().second << ">";
-      message_queue_.pop();
-    }
-    while (!message_queue_.empty() &&
-           message_queue_.top().first == expect_timestamp_) {
-      expect_timestamp_++;
-      auto ret = message_queue_.top();
-      message_queue_.pop();
-      return ret;
-    }
-    while (!message_queue_.empty() &&
-           message_queue_.top().first < expect_timestamp_) {
-      LOG(WARNING) << "Drop message: <" << message_queue_.top().first << " -> "
-                   << message_queue_.top().second << ">";
-      message_queue_.pop();
-    }
-    LOG(INFO) << "Expect timestamp: " << expect_timestamp_
-              << ", but got: " << message_queue_.top().first;
+  if (message_queue_.empty()) {
+    return "";
   }
-  return std::make_pair(std::numeric_limits<uint32_t>::max(), "");
+  std::string payload = message_queue_.top();
+  message_queue_.pop();
+  return payload;
 }
 
-std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
-    const cppkafka::Configuration& config, const std::string& topic_name) {
-  std::vector<cppkafka::TopicPartition> partitions;
-  cppkafka::Consumer consumer(config);  // tmp consumer
-  auto metadata =
-      consumer.get_metadata().get_topics({topic_name}).front().get_partitions();
-  LOG(INFO) << "metadata: " << metadata.size();
-  for (const auto& partition : metadata) {
-    partitions.push_back(cppkafka::TopicPartition(
-        topic_name, partition.get_id(), 0));  // from the beginning
-  }
-  return partitions;
-}
-
-KafkaWalParser::KafkaWalParser(cppkafka::Configuration config,
-                               const std::string& topic_name)
+KafkaWalsParser::KafkaWalsParser(cppkafka::Configuration config,
+                                 const std::string& topic_name)
     : insert_wal_list_(NULL), insert_wal_list_size_(0), last_ts_(0) {
   auto topic_partitions = get_all_topic_partitions(config, topic_name);
-  // consumers_.reserve(topic_partitions.size());
-  // for (size_t i = 0; i < topic_partitions.size(); ++i) {
-  //   consumers_.emplace_back(std::make_unique<cppkafka::Consumer>(config));
-  //   consumers_.back()->assign({topic_partitions[i]});
-  // }
   consumer_ = std::make_unique<cppkafka::Consumer>(config);
   consumer_->assign(topic_partitions);
 
@@ -479,7 +431,6 @@ KafkaWalParser::KafkaWalParser(cppkafka::Configuration config,
       LOG(INFO) << "No message are polled, the topic has been all consumed.";
       break;
     }
-    LOG(INFO) << "got messages of size: " << msgs.size();
     // message_vector_.emplace_back(std::move(msgs));
     for (auto& msg : msgs) {
       if (msg) {
@@ -525,22 +476,20 @@ KafkaWalParser::KafkaWalParser(cppkafka::Configuration config,
   }
 }
 
-KafkaWalParser::~KafkaWalParser() {
+KafkaWalsParser::~KafkaWalsParser() {
   if (insert_wal_list_ != NULL) {
     munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
   }
 }
 
-uint32_t KafkaWalParser::last_ts() const { return last_ts_; }
-const WalContentUnit& KafkaWalParser::get_insert_wal(uint32_t ts) const {
+uint32_t KafkaWalsParser::last_ts() const { return last_ts_; }
+const WalContentUnit& KafkaWalsParser::get_insert_wal(uint32_t ts) const {
   return insert_wal_list_[ts];
 }
-const std::vector<UpdateWalUnit>& KafkaWalParser::update_wals() const {
+const std::vector<UpdateWalUnit>& KafkaWalsParser::update_wals() const {
   return update_wal_list_;
 }
 
-const WalContentUnit* KafkaWalParser::insert_wal_list() const {
-  return insert_wal_list_;
-}
+#endif  // BUILD_KAFKA_WAL_WRITER
 
 }  // namespace gs

@@ -17,7 +17,7 @@ void run(std::vector<gs::IWalWriter*>& writers, const std::string& payload) {
   for (size_t i = 0; i < writers.size(); ++i) {
     threads.emplace_back([&writers, i, payload]() {
       for (int j = 0; j < times; ++j) {
-        if (!writers[i]->append(j, payload.c_str(), payload.size())) {
+        if (!writers[i]->append(payload.c_str(), payload.size())) {
           std::cerr << "Failed to append message to kafka" << std::endl;
         }
         if (j % 10000 == 0) {

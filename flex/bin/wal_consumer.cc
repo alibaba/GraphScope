@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef BUILD_KAFKA_WAL_WRITER
+
 #include <csignal>
 #include <filesystem>
 #include <iostream>
@@ -34,12 +36,11 @@ class WalSender {
   static constexpr int32_t CONNECTION_TIMEOUT = 10;
   static constexpr int32_t READ_TIMEOUT = 60;
   static constexpr int32_t WRITE_TIMEOUT = 60;
-  WalSender(const std::string& host, int port, const std::string& graph_id)
-      : host_(host), port_(port), client_(host_, port_), graph_id_(graph_id) {
+  WalSender(const std::string& host, int port, const std::string& dst_url)
+      : host_(host), port_(port), client_(host_, port_), req_url_(dst_url) {
     client_.set_connection_timeout(CONNECTION_TIMEOUT);
     client_.set_read_timeout(READ_TIMEOUT);
     client_.set_write_timeout(WRITE_TIMEOUT);
-    req_url_ = "/v1/graph/" + graph_id_ + "/wal";
   }
 
   void send(const std::string& payload) {
@@ -57,7 +58,6 @@ class WalSender {
   std::string host_;
   int port_;
   httplib::Client client_;
-  std::string graph_id_;
   std::string req_url_;
 };
 
@@ -68,23 +68,25 @@ namespace bpo = boost::program_options;
 int main(int argc, char** argv) {
   std::string brokers;
   std::string topic_name;
-  std::string graph_id;
   std::string group_id;
-  std::string engine_url;
+  std::string engine_host;
+  std::string req_url;
   int32_t engine_port;
 
   bpo::options_description desc("Usage:");
   desc.add_options()("help", "Display help message")(
       "kafka-brokers,b", bpo::value<std::string>(&brokers)->required(),
       "Kafka brokers list")(
-      "graph-id,i", bpo::value<std::string>(&graph_id)->required(), "graph_id")(
+      "url,u", bpo::value<std::string>(&req_url)->required(), "req_url")(
       "group-id,g",
       bpo::value<std::string>(&group_id)->default_value("interactive_group"),
-      "Kafka group id")("engine-url,u",
-                        bpo::value<std::string>(&engine_url)->required(),
+      "Kafka group id")("engine-host,h",
+                        bpo::value<std::string>(&engine_host)->required(),
                         "Engine URL")(
       "engine-port,p", bpo::value<int32_t>(&engine_port)->required(),
-      "Engine port");
+      "Engine port")("topic,t",
+                     bpo::value<std::string>(&topic_name)->required(),
+                     "Kafka topic name");
 
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
@@ -110,14 +112,11 @@ int main(int argc, char** argv) {
                                     {"group.id", group_id},
                                     // Disable auto commit
                                     {"enable.auto.commit", false}};
-
-  topic_name = "graph_" + graph_id + "_wal";
   // Create the consumer
   gs::WalSender sender(vm["engine-url"].as<std::string>(),
-                       vm["engine-port"].as<int32_t>(), graph_id);
-  gs::WalConsumer consumer(config, topic_name, 1);
-
-  // signal(SIGINT, [](int) { consumer.terminate(); });
+                       vm["engine-port"].as<int32_t>(),
+                       vm["req-url"].as<std::string>());
+  gs::KafkaWalConsumer consumer(config, topic_name, 1);
 
   if (vm.count("help")) {
     std::cout << desc << std::endl;
@@ -126,16 +125,13 @@ int main(int argc, char** argv) {
 
   while (true) {
     auto msg = consumer.poll();
-    if (msg.first == std::numeric_limits<uint32_t>::max()) {
-      continue;
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    LOG(INFO) << "Received message: <" << msg.first << " -> " << msg.second
-              << ">";
-    sender.send(msg.second);
+    LOG(INFO) << "Received message:  -> " << msg << ">";
+    sender.send(msg);
   }
 
   LOG(INFO) << "Consuming messages from topic " << topic_name;
 
   return 0;
 }
+
+#endif

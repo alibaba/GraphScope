@@ -106,6 +106,28 @@ mvn clean package -DskipTests -Pexperimental
 - `USE_PTHASH`: Indicates whether to use a perfect hash when building the vertex map.  
 - `OPTIMIZE_FOR_HOST`: Determines if Flex should be optimized for performance on the current machine. Note that enabling this option may result in a binary that does not run on different platforms or CPU architectures.
 
+### Wal Writer
+
+Interactive use WAL(Write Ahead Logging) to ensure the data integrity. Two different wal writer is provided with respect to different storage interface: `LocalWalWriter` for writing wals to local disk and `KafkaWalWriter` for persisting wals on kafka.
+
+You could switch the wal writer type in the configuration. See [Configuration](./../configuration.md#service-configuration).
+
+#### Local Wal Writer
+
+The default wal writer, you don't need to do anything, just make sure your disk has enough space
+
+#### Kafka Wal Writer
+
+You need to deploy a kafka cluster first. For details, please refer to [Kafka Documentation](https://kafka.apache.org/documentation/). Follow the [QuickStart](https://kafka.apache.org/quickstart) to deploy a service.
+
+#### Performance
+
+##### Settings
+
+##### Producing Wals
+
+##### Consuming Wals
+
 ## Testing
 
 Numerous test cases have been created for Interactive, which can be referenced in the GitHub workflow[interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml).

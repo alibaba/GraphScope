@@ -978,10 +978,24 @@ seastar::future<admin_query_result> admin_actor::start_service(
           db.Close();
           VLOG(10) << "Closed the previous graph db";
           gs::GraphDBConfig config(schema_value, data_dir_value, thread_num);
-          config.kafka_brokers =
-              graph_db_service.get_service_config().kafka_brokers;
-          config.kafka_topic = gs::generate_graph_wal_topic(
-              config.kafka_brokers, graph_name, thread_num);
+          config.set_wal_writer_type(
+              graph_db_service.get_service_config().wal_writer_type);
+          if (graph_db_service.get_service_config().wal_writer_type ==
+              gs::IWalWriter::WalWriterType::kKafka) {
+#ifdef BUILD_KAFKA_WAL_WRITER
+            config.kafka_brokers =
+                graph_db_service.get_service_config().kafka_brokers;
+            config.kafka_topic = gs::generate_graph_wal_topic(
+                config.kafka_brokers, graph_name, thread_num);
+          }
+#else
+            LOG(ERROR) << "Kafka wal writer is not supported in this build";
+            return seastar::make_ready_future<admin_query_result>(
+                gs::Result<seastar::sstring>(gs::Status(
+                    gs::StatusCode::INTERNAL_ERROR,
+                    "Kafka wal writer is not supported in this build")));
+          }
+#endif
           if (!db.Open(config).ok()) {
             LOG(ERROR) << "Fail to load graph from data directory: "
                        << data_dir_value;

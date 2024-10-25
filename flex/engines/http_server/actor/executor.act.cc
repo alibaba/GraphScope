@@ -257,13 +257,9 @@ seastar::future<admin_query_result> executor::delete_edge(
 
 seastar::future<admin_query_result> executor::ingest_wal(query_param&& param) {
   // Receive the WAL from the client, and write it to the WAL file.
-  auto& content = param.content;
-  std::string_view wal_data(content.data(), content.size());
-  LOG(INFO) << "Receive wal of size: " << content.size();
-
   auto& db = gs::GraphDB::get();
   auto& sess = db.GetSession(hiactor::local_shard_id());
-  auto result = sess.IngestWals({wal_data});
+  auto result = sess.IngestWals(param.content.data(), param.content.size());
   if (result.ok()) {
     LOG(ERROR) << "Ingest WALs successfully";
     return seastar::make_ready_future<admin_query_result>(

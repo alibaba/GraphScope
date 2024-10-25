@@ -28,9 +28,7 @@
 
 #include "flex/utils/result.h"
 
-#ifdef ENABLE_KAFKA
-#include <librdkafka/rdkafka.h>
-#include <librdkafka/rdkafkacpp.h>
+#ifdef BUILD_KAFKA_WAL_WRITER
 #include "cppkafka/cppkafka.h"
 #endif
 
@@ -93,7 +91,7 @@ class IWalWriter {
    * @param length The length of the data
    *
    */
-  virtual bool append(uint32_t ts, const char* data, size_t length) = 0;
+  virtual bool append(const char* data, size_t length) = 0;
 };
 
 class LocalWalWriter : public IWalWriter {
@@ -107,7 +105,7 @@ class LocalWalWriter : public IWalWriter {
 
   void close() override;
 
-  bool append(uint32_t ts, const char* data, size_t length) override;
+  bool append(const char* data, size_t length) override;
 
   IWalWriter::WalWriterType type() const override;
 
@@ -118,7 +116,7 @@ class LocalWalWriter : public IWalWriter {
   size_t file_used_;
 };
 
-#ifdef ENABLE_KAFKA
+#ifdef BUILD_KAFKA_WAL_WRITER
 class KafkaWalWriter : public IWalWriter {
  public:
   KafkaWalWriter(const std::string& kafka_brokers)
@@ -132,7 +130,7 @@ class KafkaWalWriter : public IWalWriter {
 
   void close() override;
 
-  bool append(uint32_t ts, const char* data, size_t length) override;
+  bool append(const char* data, size_t length) override;
 
   IWalWriter::WalWriterType type() const override;
 
@@ -152,18 +150,16 @@ class IWalsParser {
   virtual uint32_t last_ts() const = 0;
   virtual const WalContentUnit& get_insert_wal(uint32_t ts) const = 0;
   virtual const std::vector<UpdateWalUnit>& update_wals() const = 0;
-  virtual const WalContentUnit* insert_wal_list() const = 0;
 };
 
-class WalsParser : public IWalsParser {
+class LocalWalsParser : public IWalsParser {
  public:
-  WalsParser(const std::vector<std::string>& paths);
-  ~WalsParser();
+  LocalWalsParser(const std::vector<std::string>& paths);
+  ~LocalWalsParser();
 
   uint32_t last_ts() const override;
   const WalContentUnit& get_insert_wal(uint32_t ts) const override;
   const std::vector<UpdateWalUnit>& update_wals() const override;
-  const WalContentUnit* insert_wal_list() const override;
 
  private:
   std::vector<int> fds_;
@@ -176,62 +172,25 @@ class WalsParser : public IWalsParser {
   std::vector<UpdateWalUnit> update_wal_list_;
 };
 
-/**
- * Get all topic partitions for a given topic
- */
-std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
-    const cppkafka::Configuration& config, const std::string& topic_name);
+#ifdef BUILD_KAFKA_WAL_WRITER
 
 /**
- * @brief The WalConsumer class is used to consume the WAL from kafka. The topic
- * could have multiple partitions, and we could use multiple thread to consume
- * the WAL from different partitions.(Not necessary to use the same number of
- * partitions)
- *
- * We assume that the messages in each partition are ordered by the timestamp.
+ * @brief Parse all the WALs from kafka.
  */
-class WalConsumer {
- public:
-  struct CustomComparator {
-    inline bool operator()(const std::pair<uint32_t, std::string>& lhs,
-                           const std::pair<uint32_t, std::string>& rhs) {
-      return lhs.first > rhs.first;
-    }
-  };
-  static constexpr const std::chrono::milliseconds POLL_TIMEOUT =
-      std::chrono::milliseconds(100);
-
-  // always track all partitions and from begining
-  WalConsumer(cppkafka::Configuration config, const std::string& topic_name,
-              int32_t thread_num);
-
-  std::pair<uint32_t, std::string> poll();
-
- private:
-  bool running;
-  uint32_t expect_timestamp_;  // The expected timestamp of the next message
-  std::vector<std::unique_ptr<cppkafka::Consumer>> consumers_;
-  std::priority_queue<std::pair<uint32_t, std::string>,
-                      std::vector<std::pair<uint32_t, std::string>>,
-                      CustomComparator>
-      message_queue_;
-};
-
-/** Consumes offline data in batch. */
-class KafkaWalParser : public IWalsParser {
+class KafkaWalsParser : public IWalsParser {
  public:
   static constexpr const std::chrono::milliseconds POLL_TIMEOUT =
       std::chrono::milliseconds(100);
   static constexpr const size_t MAX_BATCH_SIZE = 1000;
 
   // always track all partitions and from begining
-  KafkaWalParser(cppkafka::Configuration config, const std::string& topic_name);
-  ~KafkaWalParser();
+  KafkaWalsParser(cppkafka::Configuration config,
+                  const std::string& topic_name);
+  ~KafkaWalsParser();
 
   uint32_t last_ts() const override;
   const WalContentUnit& get_insert_wal(uint32_t ts) const override;
   const std::vector<UpdateWalUnit>& update_wals() const override;
-  const WalContentUnit* insert_wal_list() const override;
 
  private:
   std::unique_ptr<cppkafka::Consumer> consumer_;
@@ -242,6 +201,42 @@ class KafkaWalParser : public IWalsParser {
   std::vector<UpdateWalUnit> update_wal_list_;
   std::vector<std::string> message_vector_;  // used to hold the polled messages
 };
+
+/**
+ * @brief The KafkaWalConsumer class is used to consume the WAL from kafka. The
+ * topic could have multiple partitions, and we could use multiple thread to
+ * consume the WAL from different partitions.(Not necessary to use the same
+ * number of partitions)
+ *
+ * We assume that the messages in each partition are ordered by the timestamp.
+ */
+class KafkaWalConsumer {
+ public:
+  struct CustomComparator {
+    inline bool operator()(const std::string& lhs, const std::string& rhs) {
+      const WalHeader* header1 = reinterpret_cast<const WalHeader*>(lhs.data());
+      const WalHeader* header2 = reinterpret_cast<const WalHeader*>(rhs.data());
+      return header1->timestamp > header2->timestamp;
+    }
+  };
+  static constexpr const std::chrono::milliseconds POLL_TIMEOUT =
+      std::chrono::milliseconds(100);
+
+  // always track all partitions and from begining
+  KafkaWalConsumer(cppkafka::Configuration config,
+                   const std::string& topic_name, int32_t thread_num);
+
+  std::string poll();
+
+ private:
+  bool running;
+  std::vector<std::unique_ptr<cppkafka::Consumer>> consumers_;
+  std::priority_queue<std::string, std::vector<std::string>, CustomComparator>
+      message_queue_;
+};
+
+#endif  // BUILD_KAFKA_WAL_WRITER
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_DATABASE_WAL_H_

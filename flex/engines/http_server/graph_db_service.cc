@@ -99,10 +99,15 @@ void openGraph(const gs::GraphId& graph_id,
   config.set_wal_writer_type(service_config.wal_writer_type);
   config.memory_level = service_config.memory_level;
   if (config.wal_writer_type == gs::IWalWriter::WalWriterType::kKafka) {
+#ifdef BUILD_KAFKA_WAL_WRITER
     config.kafka_brokers = service_config.kafka_brokers;
     config.kafka_topic = gs::generate_graph_wal_topic(
         service_config.kafka_brokers, graph_id, service_config.shard_num);
+#else
+    LOG(FATAL) << "Kafka wal writer is not enabled in this build";
+#endif
   }
+
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }

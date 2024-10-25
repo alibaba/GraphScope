@@ -38,7 +38,7 @@ void CompactTransaction::Commit() {
     header->timestamp = timestamp_;
     header->type = 1;
 
-    logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
+    logger_.append(arc_.GetBuffer(), arc_.GetSize());
     arc_.Clear();
 
     LOG(INFO) << "before compact - " << timestamp_;

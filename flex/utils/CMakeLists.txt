@@ -69,7 +69,7 @@ target_include_directories(flex_utils PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 # Link the static library of arrow, to save the trouble of linking the shared library of arrow
-target_link_libraries(flex_utils ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} CppKafka::cppkafka)
+target_link_libraries(flex_utils ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
 install_flex_target(flex_utils)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

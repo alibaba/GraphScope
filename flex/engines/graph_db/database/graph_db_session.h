@@ -109,7 +109,7 @@ class GraphDBSession {
 
   // Ingest wals from a string, the input string is a serialized wal.
   // We will convert it to a transaction and apply it to the graph.
-  Result<std::string> IngestWals(const std::string_view& input);
+  Result<std::string> IngestWals(const char* input, size_t len);
 
  private:
   Result<std::pair<uint8_t, std::string_view>>

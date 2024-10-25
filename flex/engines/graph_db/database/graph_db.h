@@ -170,9 +170,11 @@ class GraphDB {
   void ingestWalsFromLocalFiles(const std::string& wal_dir,
                                 const std::string& work_dir, int thread_num);
 
+#ifdef BUILD_KAFKA_WAL_WRITER
   void ingestWalsFromKafka(const std::string& kafka_brokers,
                            const std::string& kafka_topic,
                            const std::string& work_dir, int thread_num);
+#endif
 
   void initApps(
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&

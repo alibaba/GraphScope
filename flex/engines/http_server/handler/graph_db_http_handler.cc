@@ -882,7 +882,6 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       running_(false),
       actors_running_(true) {
   current_graph_query_handlers_.resize(shard_num);
-  current_wal_handlers_.resize(shard_num);
   all_graph_query_handlers_.resize(shard_num);
   all_wal_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
@@ -919,10 +918,6 @@ seastar::future<> graph_db_http_handler::stop_query_actors(size_t index) {
   }
   return current_graph_query_handlers_[index]
       ->stop()
-      .then([this, index] {
-        LOG(INFO) << "Stopped current query actors on shard id: " << index;
-        return current_wal_handlers_[index]->stop();
-      })
       .then([this, index] {
         LOG(INFO) << "Stopped current query actors on shard id: " << index;
         return all_graph_query_handlers_[index]->stop();
@@ -965,7 +960,6 @@ void graph_db_http_handler::start_query_actors() {
   // to start actors, call method on each handler
   for (size_t i = 0; i < current_graph_query_handlers_.size(); ++i) {
     current_graph_query_handlers_[i]->start();
-    current_wal_handlers_[i]->start();
     all_graph_query_handlers_[i]->start();
     all_wal_handlers_[i]->start();
     for (size_t j = 0; j < vertex_handlers_[i].size(); ++j) {
@@ -1010,9 +1004,6 @@ seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     // matches /v1/graph/current/query
     current_graph_query_handlers_[hiactor::local_shard_id()] =
-        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
-                                shard_query_concurrency);
-    current_wal_handlers_[hiactor::local_shard_id()] =
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
     r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",

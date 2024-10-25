@@ -348,7 +348,7 @@ void GraphDB::GetAppInfo(Encoder& output) {
 
 static void IngestWalRange(SessionLocalContext* contexts,
                            MutablePropertyFragment& graph,
-                           const WalContentUnit* insert_wal_list, uint32_t from,
+                           const IWalsParser& parser, uint32_t from,
                            uint32_t to, int thread_num) {
   LOG(INFO) << "IngestWalRange, from " << from << ", to " << to;
   std::atomic<uint32_t> cur_ts(from);
@@ -362,7 +362,7 @@ static void IngestWalRange(SessionLocalContext* contexts,
             if (got_ts >= to) {
               break;
             }
-            const auto& unit = insert_wal_list[got_ts];
+            const auto& unit = parser.get_insert_wal(got_ts);
             InsertTransaction::IngestWal(graph, got_ts, unit.ptr, unit.size,
                                          alloc);
             if (got_ts % 1000000 == 0) {
@@ -387,13 +387,12 @@ void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
   for (const auto& entry : std::filesystem::directory_iterator(wal_dir_path)) {
     wals.push_back(entry.path().string());
   }
-  WalsParser parser(wals);
+  LocalWalsParser parser(wals);
   uint32_t from_ts = 1;
   for (auto& update_wal : parser.update_wals()) {
     uint32_t to_ts = update_wal.timestamp;
     if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
-                     to_ts, thread_num);
+      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
     }
     if (update_wal.size == 0) {
       graph_.Compact(update_wal.timestamp);
@@ -405,12 +404,13 @@ void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
-                   parser.last_ts() + 1, thread_num);
+    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
+                   thread_num);
   }
   version_manager_.init_ts(parser.last_ts(), thread_num);
 }
 
+#ifdef BUILD_KAFKA_WAL_WRITER
 void GraphDB::ingestWalsFromKafka(const std::string& kafka_brokers,
                                   const std::string& kafka_topic,
                                   const std::string& work_dir, int thread_num) {
@@ -418,13 +418,12 @@ void GraphDB::ingestWalsFromKafka(const std::string& kafka_brokers,
                                     {"group.id", "primary_group"},
                                     // Disable auto commit
                                     {"enable.auto.commit", false}};
-  KafkaWalParser parser(config, kafka_topic);
+  KafkaWalsParser parser(config, kafka_topic);
   uint32_t from_ts = 1;
   for (auto& update_wal : parser.update_wals()) {
     uint32_t to_ts = update_wal.timestamp;
     if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
-                     to_ts, thread_num);
+      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
     }
     if (update_wal.size == 0) {
       graph_.Compact(update_wal.timestamp);
@@ -436,12 +435,13 @@ void GraphDB::ingestWalsFromKafka(const std::string& kafka_brokers,
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
-                   parser.last_ts() + 1, thread_num);
+    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
+                   thread_num);
   }
 
   version_manager_.init_ts(parser.last_ts(), thread_num);
 }
+#endif
 
 void GraphDB::initApps(
     const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
@@ -508,6 +508,7 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
       contexts_[i].logger->open(wal_dir_path, i);
     }
   } else if (config.wal_writer_type == IWalWriter::WalWriterType::kKafka) {
+#ifdef BUILD_KAFKA_WAL_WRITER
     for (int i = 0; i < thread_num_; ++i) {
       new (&contexts_[i]) SessionLocalContext(
           *this, data_dir, i, allocator_strategy,
@@ -520,6 +521,9 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
     for (int i = 0; i < thread_num_; ++i) {
       contexts_[i].logger->open(config.kafka_topic, i);
     }
+#else
+    LOG(FATAL) << "Kafka wal writer is not enabled in this build";
+#endif
   } else {
     LOG(FATAL) << "Unsupported wal writer type: "
                << static_cast<int>(config.wal_writer_type);

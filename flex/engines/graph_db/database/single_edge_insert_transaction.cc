@@ -117,7 +117,7 @@ void SingleEdgeInsertTransaction::Commit() {
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
-  logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
+  logger_.append(arc_.GetBuffer(), arc_.GetSize());
 
   grape::OutArchive arc;
   {

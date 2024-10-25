@@ -16,7 +16,7 @@ option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
-option(ENABLE_KAFKA "Whether to enable kafka" ON)
+option(BUILD_KAFKA_WAL_WRITER "Whether to build kafka wal writer" ON)
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -58,11 +58,10 @@ if(USE_PTHASH)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
 endif()
 
-if (ENABLE_KAFKA)
+if (BUILD_KAFKA_WAL_WRITER)
     find_package(CppKafka)
-    if (CppKafka_FOUND)
-        message(STATUS "cppkafka found, build without third_party/cppkafka")
-    else ()
+    if (NOT CppKafka_FOUND)
+        message(STATUS "cppkafka not found, try to build with third_party/cppkafka")
         add_subdirectory(third_party/cppkafka)
         # if cppkafka/CMakeLists.txt not exits, tell user  to run git submodule update --init --recursive
         if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/CMakeLists.txt)
@@ -71,11 +70,12 @@ if (ENABLE_KAFKA)
         include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/include)
         set (CppKafka_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/build)
         list (APPEND CMAKE_PREFIX_PATH ${CppKafka_INSTALL_DIR})
-        # find_package (CppKafka CONFIG REQUIRED)
-        # alias target
-        add_library(CppKafka::cppkafka ALIAS cppkafka)
+        set(CppKafka_LIBRARIES cppkafka)
+    else()
+        include_directories(SYSTEM ${CppKafka_INCLUDE_DIRS})
+        set(CppKafka_LIBRARIES CppKafka::cppkafka)
     endif ()
-    add_definitions(-DENABLE_KAFKA)
+    add_definitions(-DBUILD_KAFKA_WAL_WRITER)
 endif()
 
 set(DEFAULT_BUILD_TYPE "Release")

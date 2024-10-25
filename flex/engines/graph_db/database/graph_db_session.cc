@@ -251,17 +251,17 @@ AppBase* GraphDBSession::GetApp(int type) {
 
 #undef likely  // likely
 
-Result<std::string> GraphDBSession::IngestWals(const std::string_view& input) {
-  if (input.size() < sizeof(WalHeader)) {
+Result<std::string> GraphDBSession::IngestWals(const char* input, size_t len) {
+  if (len < sizeof(WalHeader)) {
     LOG(ERROR) << "Invalid wal content";
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal content");
   }
-  const WalHeader* header = reinterpret_cast<const WalHeader*>(input.data());
-  if (header->length + sizeof(WalHeader) != input.size()) {
+  const WalHeader* header = reinterpret_cast<const WalHeader*>(input);
+  if (header->length + sizeof(WalHeader) != len) {
     LOG(ERROR) << "Invalid wal content";
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal content");
   }
-  return deserialize_and_apply_wal(header, input.data(), header->length);
+  return deserialize_and_apply_wal(header, input, header->length);
 }
 
 // Quite similar to the InsertTransation::Commit();
@@ -278,7 +278,7 @@ Result<std::string> GraphDBSession::deserialize_and_apply_insert_wal(
   LOG(INFO) << "Applying insert wal with timestamp: " << ts
             << ", length: " << length
             << ", logger type: " << static_cast<int>(logger_.type());
-  logger_.append(ts, data, length);
+  logger_.append(data, length);
 
   InsertTransaction::IngestWal(db_.graph(), ts,
                                const_cast<char*>(data) + sizeof(WalHeader),
@@ -296,7 +296,7 @@ Result<std::string> GraphDBSession::deserialize_and_apply_update_wal(
     db_.version_manager_.revert_update_timestamp(ts);
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal timestamp");
   }
-  logger_.append(ts, data, length);
+  logger_.append(data, length);
   UpdateTransaction::IngestWal(db_.graph(), work_dir_, ts,
                                const_cast<char*>(data), length, alloc_);
   db_.version_manager_.release_update_timestamp(ts);
@@ -310,13 +310,8 @@ Result<std::string> GraphDBSession::deserialize_and_apply_wal(
     return Status::OK();
   }
   if (header->type == 0) {
-    // insert_transaction
-    // single_edge_insert_transaction
-    // single_vertex_insert_transaction
     return deserialize_and_apply_insert_wal(header, data, length);
   } else if (header->type == 1) {
-    // compact_transaction
-    // update_transaction
     return deserialize_and_apply_update_wal(header, data, length);
   } else {
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal type");
