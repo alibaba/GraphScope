@@ -565,6 +565,10 @@ public abstract class Utils {
                 return GraphAlgebraPhysical.PathExpand.PathOpt.SIMPLE;
             case TRAIL:
                 return GraphAlgebraPhysical.PathExpand.PathOpt.TRAIL;
+            case ANY_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ANY_SHORTEST;
+            case ALL_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ALL_SHORTEST;
             default:
                 throw new UnsupportedOperationException(
                         "opt " + opt + " in path is unsupported yet");

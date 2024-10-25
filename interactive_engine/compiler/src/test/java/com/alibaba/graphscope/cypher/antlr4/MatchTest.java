@@ -611,7 +611,7 @@ public class MatchTest {
     }
 
     @Test
-    public void shortest_path_test() {
+    public void procedure_shortest_path_test() {
         GraphBuilder builder =
                 com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
         LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(builder, irMeta);
@@ -647,6 +647,70 @@ public class MatchTest {
                     + " alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[person1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void shortest_path_test() {
+        // convert 'shortestpath' modifier to 'path_opt=[ANY_SHORTEST]' in IR, and 'all
+        // shortestpath' to 'path_opt=[ALL_SHORTEST]'
+        RelNode rel =
+                Utils.eval(
+                                "MATCH"
+                                    + " shortestPath((person1:person)-[path:knows*1..5]->(person2:person))"
+                                    + " Return count(person1)")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[path])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                rel.explain().trim());
+    }
+
+    @Test
+    public void optional_shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval(
+                                "Match (p1: person {id: $id1})\n"
+                                        + "Optional Match shortestPath((p1:person {id:"
+                                        + " $id1})-[k:knows*1..5]->(p2:person {id: $id2}))\n"
+                                        + "WITH\n"
+                                        + "CASE WHEN k is null then -1\n"
+                                        + "ELSE length(k)\n"
+                                        + "END as len\n"
+                                        + "RETURN len;",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(len=[len], isAppend=[false])\n"
+                    + "  GraphLogicalProject(len=[CASE(IS NULL(k), -(1), k.~len)],"
+                    + " isAppend=[false])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p2], fusedFilter=[[=(_.id, ?1)]], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[k], start_alias=[p1], optional=[true])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
                 after.explain().trim());
     }
 }
