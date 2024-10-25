@@ -170,7 +170,8 @@ class GraphDB {
   void ingestWalsFromLocalFiles(const std::string& wal_dir,
                                 const std::string& work_dir, int thread_num);
 
-  void ingestWalsFromKafka(const std::string& kafka_topic,
+  void ingestWalsFromKafka(const std::string& kafka_brokers,
+                           const std::string& kafka_topic,
                            const std::string& work_dir, int thread_num);
 
   void initApps(
@@ -204,8 +205,6 @@ class GraphDB {
   timestamp_t last_compaction_ts_;
   bool compact_thread_running_ = false;
   std::thread compact_thread_;
-
-  std::string kafka_brokers_;
 };
 
 }  // namespace gs

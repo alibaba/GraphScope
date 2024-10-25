@@ -165,7 +165,7 @@ void SingleVertexInsertTransaction::Commit() {
   header->timestamp = timestamp_;
 
   logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
-  // ingestWal();
+  ingestWal();
 
   vm_.release_insert_timestamp(timestamp_);
   clear();

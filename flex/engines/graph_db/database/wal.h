@@ -66,6 +66,7 @@ class IWalWriter {
     kLocal = 0,
     kKafka = 1,
   };
+  static constexpr size_t MAX_WALS_NUM = 134217728;
   static inline WalWriterType parseWalWriterType(const std::string& type_str) {
     if (type_str == "local") {
       return WalWriterType::kLocal;
@@ -121,7 +122,10 @@ class LocalWalWriter : public IWalWriter {
 class KafkaWalWriter : public IWalWriter {
  public:
   KafkaWalWriter(const std::string& kafka_brokers)
-      : thread_id_(-1), kafka_brokers_(kafka_brokers), kafka_topic_("") {}
+      : thread_id_(-1),
+        kafka_brokers_(kafka_brokers),
+        kafka_topic_(""),
+        builder_("") {}
   ~KafkaWalWriter() { close(); }
 
   void open(const std::string& kafka_topic, int thread_id) override;
@@ -136,18 +140,30 @@ class KafkaWalWriter : public IWalWriter {
   int thread_id_;
   std::string kafka_brokers_;
   std::string kafka_topic_;
-  std::shared_ptr<cppkafka::Producer> producer_;
+  std::shared_ptr<cppkafka::BufferedProducer<std::string>> producer_;
+  cppkafka::MessageBuilder builder_;
 };
 #endif
 
-class WalsParser {
+class IWalsParser {
+ public:
+  virtual ~IWalsParser() {}
+
+  virtual uint32_t last_ts() const = 0;
+  virtual const WalContentUnit& get_insert_wal(uint32_t ts) const = 0;
+  virtual const std::vector<UpdateWalUnit>& update_wals() const = 0;
+  virtual const WalContentUnit* insert_wal_list() const = 0;
+};
+
+class WalsParser : public IWalsParser {
  public:
   WalsParser(const std::vector<std::string>& paths);
   ~WalsParser();
 
-  uint32_t last_ts() const;
-  const WalContentUnit& get_insert_wal(uint32_t ts) const;
-  const std::vector<UpdateWalUnit>& update_wals() const;
+  uint32_t last_ts() const override;
+  const WalContentUnit& get_insert_wal(uint32_t ts) const override;
+  const std::vector<UpdateWalUnit>& update_wals() const override;
+  const WalContentUnit* insert_wal_list() const override;
 
  private:
   std::vector<int> fds_;
@@ -160,6 +176,72 @@ class WalsParser {
   std::vector<UpdateWalUnit> update_wal_list_;
 };
 
+/**
+ * Get all topic partitions for a given topic
+ */
+std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
+    const cppkafka::Configuration& config, const std::string& topic_name);
+
+/**
+ * @brief The WalConsumer class is used to consume the WAL from kafka. The topic
+ * could have multiple partitions, and we could use multiple thread to consume
+ * the WAL from different partitions.(Not necessary to use the same number of
+ * partitions)
+ *
+ * We assume that the messages in each partition are ordered by the timestamp.
+ */
+class WalConsumer {
+ public:
+  struct CustomComparator {
+    inline bool operator()(const std::pair<uint32_t, std::string>& lhs,
+                           const std::pair<uint32_t, std::string>& rhs) {
+      return lhs.first > rhs.first;
+    }
+  };
+  static constexpr const std::chrono::milliseconds POLL_TIMEOUT =
+      std::chrono::milliseconds(100);
+
+  // always track all partitions and from begining
+  WalConsumer(cppkafka::Configuration config, const std::string& topic_name,
+              int32_t thread_num);
+
+  std::pair<uint32_t, std::string> poll();
+
+ private:
+  bool running;
+  uint32_t expect_timestamp_;  // The expected timestamp of the next message
+  std::vector<std::unique_ptr<cppkafka::Consumer>> consumers_;
+  std::priority_queue<std::pair<uint32_t, std::string>,
+                      std::vector<std::pair<uint32_t, std::string>>,
+                      CustomComparator>
+      message_queue_;
+};
+
+/** Consumes offline data in batch. */
+class KafkaWalParser : public IWalsParser {
+ public:
+  static constexpr const std::chrono::milliseconds POLL_TIMEOUT =
+      std::chrono::milliseconds(100);
+  static constexpr const size_t MAX_BATCH_SIZE = 1000;
+
+  // always track all partitions and from begining
+  KafkaWalParser(cppkafka::Configuration config, const std::string& topic_name);
+  ~KafkaWalParser();
+
+  uint32_t last_ts() const override;
+  const WalContentUnit& get_insert_wal(uint32_t ts) const override;
+  const std::vector<UpdateWalUnit>& update_wals() const override;
+  const WalContentUnit* insert_wal_list() const override;
+
+ private:
+  std::unique_ptr<cppkafka::Consumer> consumer_;
+  WalContentUnit* insert_wal_list_;
+  size_t insert_wal_list_size_;
+  uint32_t last_ts_;
+
+  std::vector<UpdateWalUnit> update_wal_list_;
+  std::vector<std::string> message_vector_;  // used to hold the polled messages
+};
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_DATABASE_WAL_H_

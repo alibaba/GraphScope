@@ -193,7 +193,7 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
 
     // We will reserve the at least 4096 slots for each vertex label
     size_t vertex_capacity =
-        std::max(schema_.get_max_vnum(v_label_name), (size_t) 4096);
+        std::max(lf_indexers_[i].capacity(), (size_t) 4096);
     if (vertex_capacity >= lf_indexers_[i].size()) {
       lf_indexers_[i].reserve(vertex_capacity);
     }

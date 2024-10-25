@@ -295,8 +295,6 @@ const GraphDBSession& GraphDB::GetSession(int thread_id) const {
 
 int GraphDB::SessionNum() const { return thread_num_; }
 
-const std::string& GraphDB::GetKafkaBrokers() const { return kafka_brokers_; }
-
 void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
   last_compaction_ts_ = ts;
 }
@@ -351,8 +349,9 @@ void GraphDB::GetAppInfo(Encoder& output) {
 
 static void IngestWalRange(SessionLocalContext* contexts,
                            MutablePropertyFragment& graph,
-                           const WalsParser& parser, uint32_t from, uint32_t to,
-                           int thread_num) {
+                           const WalContentUnit* insert_wal_list, uint32_t from,
+                           uint32_t to, int thread_num) {
+  LOG(INFO) << "IngestWalRange, from " << from << ", to " << to;
   std::atomic<uint32_t> cur_ts(from);
   std::vector<std::thread> threads(thread_num);
   for (int i = 0; i < thread_num; ++i) {
@@ -364,7 +363,7 @@ static void IngestWalRange(SessionLocalContext* contexts,
             if (got_ts >= to) {
               break;
             }
-            const auto& unit = parser.get_insert_wal(got_ts);
+            const auto& unit = insert_wal_list[got_ts];
             InsertTransaction::IngestWal(graph, got_ts, unit.ptr, unit.size,
                                          alloc);
             if (got_ts % 1000000 == 0) {
@@ -394,7 +393,8 @@ void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
   for (auto& update_wal : parser.update_wals()) {
     uint32_t to_ts = update_wal.timestamp;
     if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
+      IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
+                     to_ts, thread_num);
     }
     if (update_wal.size == 0) {
       graph_.Compact(update_wal.timestamp);
@@ -406,15 +406,42 @@ void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
-                   thread_num);
+    IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
+                   parser.last_ts() + 1, thread_num);
   }
   version_manager_.init_ts(parser.last_ts(), thread_num);
 }
 
-void GraphDB::ingestWalsFromKafka(const std::string& kafka_topic,
+void GraphDB::ingestWalsFromKafka(const std::string& kafka_brokers,
+                                  const std::string& kafka_topic,
                                   const std::string& work_dir, int thread_num) {
-  LOG(WARNING) << "Kafka ingestion is not supported yet";
+  cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
+                                    {"group.id", "primary_group"},
+                                    // Disable auto commit
+                                    {"enable.auto.commit", false}};
+  KafkaWalParser parser(config, kafka_topic);
+  uint32_t from_ts = 1;
+  for (auto& update_wal : parser.update_wals()) {
+    uint32_t to_ts = update_wal.timestamp;
+    if (from_ts < to_ts) {
+      IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
+                     to_ts, thread_num);
+    }
+    if (update_wal.size == 0) {
+      graph_.Compact(update_wal.timestamp);
+      last_compaction_ts_ = update_wal.timestamp;
+    } else {
+      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
+                                   update_wal.size, contexts_[0].allocator);
+    }
+    from_ts = to_ts + 1;
+  }
+  if (from_ts <= parser.last_ts()) {
+    IngestWalRange(contexts_, graph_, parser.insert_wal_list(), from_ts,
+                   parser.last_ts() + 1, thread_num);
+  }
+
+  version_manager_.init_ts(parser.last_ts(), thread_num);
 }
 
 void GraphDB::initApps(
@@ -483,7 +510,8 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
           std::make_unique<KafkaWalWriter>(config.kafka_brokers));
     }
     // ingest wals from kafka
-    ingestWalsFromKafka(config.kafka_topic, data_dir, thread_num_);
+    ingestWalsFromKafka(config.kafka_brokers, config.kafka_topic, data_dir,
+                        thread_num_);
 
     for (int i = 0; i < thread_num_; ++i) {
       contexts_[i].logger->open(config.kafka_topic, i);

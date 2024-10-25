@@ -150,8 +150,8 @@ void InsertTransaction::Commit() {
   header->timestamp = timestamp_;
 
   logger_.append(timestamp_, arc_.GetBuffer(), arc_.GetSize());
-  // IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
-  //           header->length, alloc_);
+  IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
+            header->length, alloc_);
 
   vm_.release_insert_timestamp(timestamp_);
   clear();
