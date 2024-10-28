@@ -195,106 +195,101 @@ class stored_proc_handler : public StoppableHandler {
     auto dst_executor = dispatcher_.get_executor_idx();
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
+    if (req->param.exists("graph_id") && req->param["graph_id"] != "current") {
+      // TODO(zhanglei): get from graph_db.
+      if (!is_running_graph(req->param["graph_id"])) {
+        rep->set_status(
+            seastar::httpd::reply::status_type::internal_server_error);
+        rep->write_body("bin",
+                        seastar::sstring("The querying query is not running:" +
+                                         req->param["graph_id"]));
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      }
+    }
     auto& method = req->_method;
     if (method == "POST") {
-      if (req->param.exists("graph_id")) {
-        auto graph_id = trim_slash(req->param.at("graph_id"));
-        if (path.find("vertex") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .create_vertex(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        } else if (path.find("edge") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .create_edge(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        }
+      if (path.find("vertex") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .create_vertex(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      } else if (path.find("edge") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .create_edge(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "GET") {
-      if (req->param.exists("graph_id")) {
-        auto graph_id = trim_slash(req->param.at("graph_id"));
-        if (path.find("vertex") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .get_vertex(graph_management_query_param{std::make_pair(
-                  std::move(graph_id), std::move(req->query_parameters))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        } else if (path.find("edge") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .get_edge(graph_management_query_param{std::make_pair(
-                  std::move(graph_id), std::move(req->query_parameters))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        }
+      if (path.find("vertex") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .get_vertex(
+                graph_management_query_param{std::move(req->query_parameters)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      } else if (path.find("edge") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .get_edge(
+                graph_management_query_param{std::move(req->query_parameters)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "DELETE") {
-      if (req->param.exists("graph_id")) {
-        auto graph_id = trim_slash(req->param.at("graph_id"));
-        if (path.find("vertex") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .delete_vertex(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        } else if (path.find("edge") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .delete_edge(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        }
+      if (path.find("vertex") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .delete_vertex(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      } else if (path.find("edge") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .delete_edge(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "PUT") {
-      if (req->param.exists("graph_id")) {
-        auto graph_id = trim_slash(req->param.at("graph_id"));
-        if (path.find("vertex") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .update_vertex(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        } else if (path.find("edge") != seastar::sstring::npos) {
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
-              .update_edge(graph_management_param{
-                  std::make_pair(std::move(graph_id), std::move(req->content))})
-              .then_wrapped(
-                  [rep = std::move(rep)](
-                      seastar::future<admin_query_result>&& fut) mutable {
-                    return return_reply_with_result(std::move(rep),
-                                                    std::move(fut));
-                  });
-        }
+      if (path.find("vertex") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .update_vertex(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      } else if (path.find("edge") != seastar::sstring::npos) {
+        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+            .update_edge(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     }
     uint8_t last_byte;
@@ -321,19 +316,7 @@ class stored_proc_handler : public StoppableHandler {
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-    if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
-      // TODO(zhanglei): get from graph_db.
-      if (!is_running_graph(req->param["graph_id"])) {
-        rep->set_status(
-            seastar::httpd::reply::status_type::internal_server_error);
-        rep->write_body("bin",
-                        seastar::sstring("The querying query is not running:" +
-                                         req->param["graph_id"]));
-        rep->done();
-        return seastar::make_ready_future<
-            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-      }
-    }
+
 #ifdef HAVE_OPENTELEMETRY_CPP
     auto tracer = otel::get_tracer("hqps_procedure_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
@@ -442,7 +425,7 @@ class stored_proc_handler : public StoppableHandler {
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
       latency_histogram_;
 #endif
-};
+};  // namespace server
 
 class adhoc_runtime_query_handler : public StoppableHandler {
  public:
