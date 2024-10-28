@@ -80,17 +80,6 @@ class IWalWriter {
   virtual void open(const std::string& path, int thread_id) = 0;
   virtual void close() = 0;
   virtual IWalWriter::WalWriterType type() const = 0;
-  /**
-   * @brief Append the data to the WAL.
-   * The published messages contains these info.
-   * 1. The thread id
-   * 2. The timestamp of the message(could be deemed as the id of WAL).
-   * 3. The data(The WAL content).
-   *
-   * @param data The data to be sent
-   * @param length The length of the data
-   *
-   */
   virtual bool append(const char* data, size_t length) = 0;
 };
 
@@ -102,11 +91,8 @@ class LocalWalWriter : public IWalWriter {
   ~LocalWalWriter() { close(); }
 
   void open(const std::string& path, int thread_id) override;
-
   void close() override;
-
   bool append(const char* data, size_t length) override;
-
   IWalWriter::WalWriterType type() const override;
 
  private:
@@ -127,11 +113,8 @@ class KafkaWalWriter : public IWalWriter {
   ~KafkaWalWriter() { close(); }
 
   void open(const std::string& kafka_topic, int thread_id) override;
-
   void close() override;
-
   bool append(const char* data, size_t length) override;
-
   IWalWriter::WalWriterType type() const override;
 
  private:
@@ -229,7 +212,6 @@ class KafkaWalConsumer {
   std::string poll();
 
  private:
-  bool running;
   std::vector<std::unique_ptr<cppkafka::Consumer>> consumers_;
   std::priority_queue<std::string, std::vector<std::string>, CustomComparator>
       message_queue_;
