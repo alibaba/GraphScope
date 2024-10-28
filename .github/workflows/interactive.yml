@@ -56,15 +56,15 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope && sudo make -j$(nproc)
-        sudo make install
+        # package the build artifacts
+        cd .. && tar -zcf build.tar.gz build
     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: interactive_build
+        name: interactive_build-${{ github.sha }}
         path: |
-          ${{ github.workspace }}/flex/build
-          /opt/graphscope/
+          ${{ github.workspace }}/flex/build.tar.gz
 
 
   test-hqps-engine:
@@ -109,7 +109,7 @@ jobs:
         name: interactive_build
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v3
 
     - name: Build

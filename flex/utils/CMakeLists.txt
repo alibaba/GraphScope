@@ -6,7 +6,7 @@ set(INTERACTIVE_ERROR_PROTO_FILES
         ${GRAPHSCOPE_ERROR_PROTO_DIR}/interactive.proto
 )
 #create directory first
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/error_pb)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/utils/error_pb)
 
 # proto gen for gie proto
 protobuf_generate(APPEND_PATH
@@ -15,7 +15,7 @@ protobuf_generate(APPEND_PATH
         OUT_VAR ERROR_PROTO_SRCS
         PROTOS ${INTERACTIVE_ERROR_PROTO_FILES}
         IMPORT_DIRS ${GRAPHSCOPE_ERROR_PROTO_DIR}
-        PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/error_pb
+        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/flex/utils/error_pb
 )
 
 
