@@ -28,12 +28,12 @@ class GsGraphStore(GraphStore):
                 "utf-8", errors="ignore"
             )
         )
-        self.num_servers = config["num_servers"]
         self.edges = config["edges"]
         self.edge_dir = config["edge_dir"]
 
         assert self.edges is not None
         for edge in self.edges:
+            edge = tuple(edge)
             # Only support COO layout
             layout = "coo"
             new_edge_attr = EdgeAttr(edge, layout, True)
@@ -62,9 +62,10 @@ class GsGraphStore(GraphStore):
             (row indice tensor, column indice tensor)
         """
         group_name, layout, _, _ = self.key(edge_attr)
+        num_servers, _, _, _ = request_server(0, DistServer.get_dataset_meta)
         rows = []
         cols = []
-        for server_id in range(self.num_servers):
+        for server_id in range(num_servers):
             (row, col) = request_server(
                 server_id, DistServer.get_edge_index, group_name, layout
             )
