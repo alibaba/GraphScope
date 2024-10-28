@@ -30,6 +30,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
+    - uses: actions/checkout@v4
     - name: Install latest libgrape-lite
       if: false
       run: |
