@@ -120,9 +120,12 @@ class GsFeatureStore(FeatureStore):
             )
             partition_to_features[partition_id] = feature
 
-        result = torch.zeros(
-            (len(index), list(partition_to_features.values())[0].shape[-1])
-        )
+        if not is_label:
+            result = torch.zeros(
+                (len(index), list(partition_to_features.values())[0].shape[-1])
+            )
+        else:
+            result = torch.zeros((len(index), 1))
         for partition_id, indices in partition_to_indices.items():
             partition_features = partition_to_features[partition_id]
             for i, idx in enumerate(indices):

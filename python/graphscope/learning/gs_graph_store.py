@@ -6,9 +6,11 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+import torch
 from torch_geometric.data.graph_store import EdgeAttr
 from torch_geometric.data.graph_store import GraphStore
 from torch_geometric.typing import EdgeTensorType
+from torch_geometric.utils import index_sort
 
 from graphscope.learning.graphlearn_torch.distributed.dist_client import request_server
 from graphscope.learning.graphlearn_torch.distributed.dist_server import DistServer
@@ -26,21 +28,16 @@ class GsGraphStore(GraphStore):
                 "utf-8", errors="ignore"
             )
         )
+        self.num_servers = config["num_servers"]
         self.edges = config["edges"]
         self.edge_dir = config["edge_dir"]
 
         assert self.edges is not None
         for edge in self.edges:
-            edge = tuple(edge)
-            if self.edge_dir is not None:
-                layout = "csr" if self.edge_dir == "out" else "csc"
-                is_sorted = False if layout == "csr" else True
-                new_edge_attr = EdgeAttr(edge, layout, is_sorted)
-                self.edge_attrs[(edge, layout, is_sorted)] = new_edge_attr
-            else:
-                layout = "coo"
-                new_edge_attr = EdgeAttr(edge, layout, False)
-                self.edge_attrs[(edge, layout, False)] = new_edge_attr
+            # Only support COO layout
+            layout = "coo"
+            new_edge_attr = EdgeAttr(edge, layout, True)
+            self.edge_attrs[(edge, layout, True)] = new_edge_attr
 
     @staticmethod
     def key(attr: EdgeAttr) -> Tuple:
@@ -62,14 +59,22 @@ class GsGraphStore(GraphStore):
 
         Returns:
             edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
-            (row indice tensor, column indice tensor)(COO)\
-            (row ptr tensor, column indice tensor)(CSR)\
-            (row indice tensor, column ptr tensor)(CSC).
+            (row indice tensor, column indice tensor)
         """
         group_name, layout, _, _ = self.key(edge_attr)
-        edge_index = None
-        edge_index, _ = request_server(0, DistServer.get_edge_index, group_name, layout)
-        return edge_index
+        rows = []
+        cols = []
+        for server_id in range(self.num_servers):
+            (row, col) = request_server(
+                server_id, DistServer.get_edge_index, group_name, layout
+            )
+            rows.append(row)
+            cols.append(col)
+
+        global_row = torch.cat(rows, dim=0)
+        global_row, perm = index_sort(global_row, max_value=int(global_row.max()) + 1)
+        global_col = torch.cat(cols, dim=0)[perm]
+        return (global_row, global_col)
 
     def _remove_edge_index(self, edge_attr: EdgeAttr) -> bool:
         r"""To be implemented by :class:`GsFeatureStore`."""
@@ -82,13 +87,11 @@ class GsGraphStore(GraphStore):
             edge_attr(`EdgeAttr`): Uniquely corresponds to a topology of subgraph .
 
         Returns:
-            edge_index(`EdgeTensorType`): The edge index tensor, which is a :class:`tuple` of\
-            (row indice tensor, column indice tensor)(COO)\
-            (row ptr tensor, column indice tensor)(CSR)\
-            (row indice tensor, column ptr tensor)(CSC).
+            size(`tupple(int, int)`): The size of the subgraph.
         """
         group_name, layout, is_sorted, _ = self.key(edge_attr)
-        size = request_server(0, DistServer.get_edge_size, group_name, layout)
+        (row, col) = self._get_edge_index(edge_attr)
+        size = (int(row.max()) + 1, int(col.max()) + 1)
         new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
         self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
         return size
