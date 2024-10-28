@@ -364,8 +364,13 @@ std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
     const cppkafka::Configuration& config, const std::string& topic_name) {
   std::vector<cppkafka::TopicPartition> partitions;
   cppkafka::Consumer consumer(config);  // tmp consumer
-  auto metadata =
-      consumer.get_metadata().get_topics({topic_name}).front().get_partitions();
+  auto meta_vector = consumer.get_metadata().get_topics({topic_name});
+  if (meta_vector.empty()) {
+    LOG(WARNING) << "Failed to get metadata for topic " << topic_name
+                 << ", maybe the topic does not exist";
+    return {};
+  }
+  auto metadata = meta_vector.front().get_partitions();
   for (const auto& partition : metadata) {
     partitions.push_back(cppkafka::TopicPartition(
         topic_name, partition.get_id(), 0));  // from the beginning
@@ -398,7 +403,7 @@ std::string KafkaWalConsumer::poll() {
       } else {
         std::string payload = msg.get_payload();
         LOG(INFO) << "receive from partition " << msg.get_partition()
-                  << ", payload: " << payload << " size: " << payload.size();
+                  << "payload size: " << payload.size();
         message_queue_.push(payload);
         consumer->commit(msg);
       }

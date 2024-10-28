@@ -358,6 +358,7 @@ jobs:
       matrix:
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
+        BUILD_KAFKA_WAL_WRITER: [ON, OFF]
     steps:
     - uses: actions/checkout@v4
 
@@ -554,3 +555,62 @@ jobs:
         SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+    
+    - name: Test kafkaWalWriter
+      run: |
+        wget https://dlcdn.apache.org/kafka/3.8.0/kafka_2.13-3.8.0.tgz -O /tmp/kafka.tgz
+        tar -xzf /tmp/kafka.tgz -C /tmp/
+        cd /tmp/kafka_2.13-3.8.0
+        KAFKA_CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"
+        bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c config/kraft/server.properties
+        bin/kafka-server-start.sh config/kraft/server.properties &
+        sleep 10
+
+        # write to the kafka brokers : localhost:9092
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        ./tests/wal_writer/wal_writer_test localhost:9092 kafka topic_1 1 10
+        ./bin/wal_consumer -b localhost:9092 -t topic_1
+
+        # kill the kafka server
+        kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')
+
+    - name: Test Interactive Server persisting wal on kafka
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+        cd /tmp/kafka_2.13-3.8.0 && bin/kafka-server-start.sh config/kraft/server.properties &
+        sleep 10
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        ./bin/interactive_server -g ${SCHEMA_FILE} --data-path /tmp/csr-data-dir/ \
+            -c ../tests/hqps/interactive_config_test.yaml -k localhost:9092 --kafka-topic test_graph --wal-type kafka &
+        sleep 3
+        # check whether the process is up, if not, fails
+        if ! ps aux | grep 'interactive_server' | grep -v grep; then
+          echo "interactive_server is not running"
+          exit 1
+        fi
+        curl -X POST http://localhost:10000/v1/graph/current/vertex \
+          -d '{"vertex_request": [{"label": "person", "primary_key_value": "1234", "properties": [{"name": "name", "value": "Alice"}, {"name": "age", "value": 20}]}], "edge_request": []}' \
+          -H "Content-Type: application/json"
+
+        # kill the interactive server
+        kill $(ps aux | grep 'interactive_server' | awk '{print $2}')
+        ./bin/interactive_server -g ${SCHEMA_FILE} --data-path /tmp/csr-data-dir/ \
+            -c ../tests/hqps/interactive_config_test.yaml -k localhost:9092 --kafka-topic test_graph --wal-type kafka &
+        sleep 3
+        
+        #get the vertex, and store the value
+        res=`curl -X GET 'http://localhost:10000/v1/graph/current/vertex?label=person&primary_key_value=123'`
+        #expect Alice and 20 
+        if [[ $res != *"Alice"* ]] || [[ $res != *"20"* ]]; then
+          echo "Failed to get the vertex"
+          exit 1
+        else
+          echo "Succeed to get the vertex"
+        fi

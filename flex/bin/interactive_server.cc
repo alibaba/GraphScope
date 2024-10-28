@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
                         bpo::value<std::string>()->default_value(""),
                         "kafka topic")(
       "wal-type,t", bpo::value<std::string>()->default_value("local"),
-      "wal writer type");
+      "wal writer type, local or kafka");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
