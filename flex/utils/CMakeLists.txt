@@ -56,8 +56,8 @@ target_link_libraries(flex_plan_proto PUBLIC ${Protobuf_LIBRARIES})
 install_flex_target(flex_plan_proto)
 
 #install proto_generated_files
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie/
-        DESTINATION include/flex/proto_generated_gie/
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex
+        DESTINATION include
         FILES_MATCHING
         PATTERN "*.h"
 )

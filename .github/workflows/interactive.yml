@@ -109,13 +109,13 @@ jobs:
         name: interactive_build-${{ github.sha }}
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v3
 
     - name: Extract build artifacts
       run: |
         cd ${GITHUB_WORKSPACE}
-        tar -zxf flex/build.tar.gz
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Build
       env:
@@ -474,7 +474,7 @@ jobs:
     - name: Extract build artifacts
       run: |
         cd ${GITHUB_WORKSPACE}
-        tar -zxf flex/build.tar.gz
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Test GRIN on mutable csr 
       run: |
