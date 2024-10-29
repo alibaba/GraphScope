@@ -63,6 +63,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../storages/rt_mutable_graph)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/property)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../../build/utils)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../build/utils)
+else ()
+    message(FATAL_ERROR "Please build flex first")
+endif ()
 
 file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
 

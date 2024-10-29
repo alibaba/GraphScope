@@ -4,7 +4,7 @@ if (Hiactor_FOUND)
 
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
         
 
   # get all .cc files in current directory, except for generated/
@@ -32,7 +32,7 @@ if (Hiactor_FOUND)
   endif ()
   set_target_properties(Hiactor::seastar PROPERTIES INTERFACE_COMPILE_OPTIONS "${seastar_options}")
   
-  target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
+  target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
   target_link_libraries(flex_server flex_plan_proto)
   if (OPENTELEMETRY_CPP_FOUND)
     target_link_libraries(flex_server otel)

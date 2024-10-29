@@ -24,8 +24,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-interactive:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Build Interactive
+      env:
+        GIE_HOME: ${{ github.workspace }}/interactive_engine/
+        HOME: /home/graphscope/
+      run: |
+        . /home/graphscope/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/
+        git submodule update --init
+        cd ${GITHUB_WORKSPACE}/flex
+        mkdir build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope && sudo make -j$(nproc)
+        # package the build artifacts
+        cd .. && tar -zcf build.tar.gz build
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
+        path: |
+          ${{ github.workspace }}/flex/build.tar.gz
+
+
   test-hqps-engine:
     runs-on: ubuntu-20.04
+    needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -58,10 +102,20 @@ jobs:
         cmake ..
         make -j$(nproc)
         make install
+    
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
 
     - name: Setup tmate session
       if: false
       uses: mxschmitt/action-tmate@v3
+
+    - name: Extract build artifacts
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Build
       env:
@@ -70,11 +124,6 @@ jobs:
       run: |
         . /home/graphscope/.graphscope_env
         cd ${GITHUB_WORKSPACE}/
-        git submodule update --init
-        cd ${GITHUB_WORKSPACE}/flex
-        mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
-        sudo make install
 
         # cargo
         . /home/graphscope/.cargo/env
@@ -400,6 +449,7 @@ jobs:
 
   test-flex:
     runs-on: ubuntu-20.04
+    needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -416,14 +466,15 @@ jobs:
         make -j$(nproc)
         make install
 
-    - name: Build
-      env:
-        HOME: /home/graphscope/
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
+
+    - name: Extract build artifacts
       run: |
-        cd ${GITHUB_WORKSPACE}/flex
-        git submodule update --init
-        mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
+        cd ${GITHUB_WORKSPACE}
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Test GRIN on mutable csr 
       run: |
