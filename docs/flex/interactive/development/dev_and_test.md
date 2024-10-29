@@ -150,15 +150,16 @@ mkdir /tmp/wal_dir/
 
 ##### Consuming WALs
 
-We compare the performance of parsing WALs from local disk versus Kafka. The WALs are generated with `wal_writer_test`, using 8 partitions with 100,000 messages each.
+We compare the performance of parsing WALs from local disk versus Kafka. 
+There are totally 1,600,000 wals, and only 1 thread is used.
 
 | Threads | LocalWalParser | KafkaWalParser |  
 |---------|----------------|----------------|  
-| 1       | 0.001s         | 8.35s          |
+| 1       | 0.47s         | 13.35s          |
 
 ```bash
-./tests/wal/wal_reader_test h10:9092 kafka topic_1 1
-./tests/wal/wal_reader_test localhost:9092 local /tmp/wal_dir 1
+./tests/wal/wal_reader_test h10:9092 kafka topic_1
+./tests/wal/wal_reader_test localhost:9092 local /tmp/wal_dir
 ```
 
 ## Testing

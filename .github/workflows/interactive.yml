@@ -620,7 +620,7 @@ jobs:
         # write to the kafka brokers : localhost:9092
         cd ${GITHUB_WORKSPACE}/flex/build/
         ./tests/wal/wal_writer_test localhost:9092 kafka topic_1 1 10
-        ./tests/wal/wal_reader_test localhost:9092 kafka topic_1 1
+        ./tests/wal/wal_reader_test localhost:9092 kafka topic_1
 
         # kill the kafka server
         kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')
@@ -657,7 +657,7 @@ jobs:
         sleep 3
         
         #get the vertex, and store the value
-        res=`curl -X GET 'http://localhost:10000/v1/graph/current/vertex?label=person&primary_key_value=123'`
+        res=`curl -X GET 'http://localhost:10000/v1/graph/current/vertex?label=person&primary_key_value=1234'`
         #expect Alice and 20 
         if [[ $res != *"Alice"* ]] || [[ $res != *"20"* ]]; then
           echo "Failed to get the vertex"
@@ -665,3 +665,7 @@ jobs:
         else
           echo "Succeed to get the vertex"
         fi
+
+        # kill the servers
+        kill $(ps aux | grep 'interactive_server' | awk '{print $2}')
+        kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')

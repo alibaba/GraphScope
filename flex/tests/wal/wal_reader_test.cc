@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     if (from_ts < to_ts) {
       insert_wals += visitWalRange(parser, from_ts, to_ts);
     }
-    if (!update_wal.size == 0) {
+    if (update_wal.size != (size_t) 0) {
       update_wals++;
     }
     from_ts = to_ts + 1;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 
   t += grape::GetCurrentTime();
   std::cout << "Consuming message took " << t << " seconds, update wals"
-            << update_wals << std::endl;
+            << update_wals << " insert wals " << insert_wals << std::endl;
 
   return 0;
 }
