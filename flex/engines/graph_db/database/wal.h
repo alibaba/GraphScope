@@ -26,8 +26,6 @@
 #include <string>
 #include <thread>
 
-#include "flex/utils/result.h"
-
 #ifdef BUILD_KAFKA_WAL_WRITER
 #include "cppkafka/cppkafka.h"
 #endif

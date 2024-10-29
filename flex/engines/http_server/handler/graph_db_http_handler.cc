@@ -426,16 +426,6 @@ class stored_proc_handler : public StoppableHandler {
   }
 
  private:
-  std::pair<int, seastar::sstring> get_executor_id_from_wal_payload(
-      const seastar::sstring& payload) {
-    if (payload.size() < 4) {
-      LOG(ERROR) << "Invalid payload size: " << payload.size();
-      return std::make_pair(-1, payload);
-    }
-    auto executor_id = *reinterpret_cast<const int*>(payload.data());
-    return std::make_pair(executor_id, payload.substr(4));
-  }
-
   query_dispatcher dispatcher_;
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
