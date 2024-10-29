@@ -47,7 +47,7 @@ target_link_libraries(stored_procedure_runner flex_rt_mutable_graph flex_utils f
 install_without_export_flex_target(stored_procedure_runner)
 
 if (BUILD_KAFKA_WAL_WRITER)
-        add_executable(wal_consumer wal_consumer.cc)
-        target_link_libraries(wal_consumer PUBLIC ${CppKafka_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} flex_graph_db)
-        install_without_export_flex_target(wal_consumer)
+        add_executable(kafka_wal_consumer kafka_wal_consumer.cc)
+        target_link_libraries(kafka_wal_consumer PUBLIC ${CppKafka_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} flex_graph_db)
+        install_without_export_flex_target(kafka_wal_consumer)
 endif()

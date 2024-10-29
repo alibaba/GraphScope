@@ -144,7 +144,7 @@ def addVertex(sess: Session, graph_id: str):
     vertex_request = [
         VertexRequest(
             label="person",
-            primary_key_value=12,
+            primary_key_value=8,
             properties=[
                 ModelProperty(name="name", value="mike"),
                 ModelProperty(name="age", value=1),
@@ -156,7 +156,7 @@ def addVertex(sess: Session, graph_id: str):
             src_label="person",
             dst_label="person",
             edge_label="knows",
-            src_primary_key_value=12,
+            src_primary_key_value=8,
             dst_primary_key_value=1,
             properties=[ModelProperty(name="weight", value=7)],
         ),
@@ -279,7 +279,6 @@ if __name__ == "__main__":
         job_id = bulkLoading(sess, graph_id)
         waitJobFinish(sess, job_id)
         print("bulk loading finished")
-        graph_id = "3"
 
         # Now start service on the created graph.
         resp = sess.start_service(
@@ -289,7 +288,7 @@ if __name__ == "__main__":
         time.sleep(5)
         print("restart service on graph ", graph_id)
 
-        running a simple cypher query
+        # running a simple cypher query
         query = "MATCH (n) RETURN COUNT(n);"
         with driver.getNeo4jSession() as session:
             resp = session.run(query)

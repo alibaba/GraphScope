@@ -27,6 +27,9 @@
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/third_party/httplib.h"
 
+/**
+ * Consume the WAL from Kafka and forward to the Interactive Engine.
+ */
 namespace gs {
 
 // Give a WAL(in string format), forward to the Interactive Engine, which should
@@ -62,7 +65,7 @@ class WalSender {
   int port_;
   httplib::Client client_;
   std::string req_url_;
-};  // namespace gs
+};
 
 }  // namespace gs
 
@@ -114,7 +117,6 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Kafka brokers: " << kafka_brokers;
   LOG(INFO) << "engine endpoint: " << engine_endpoint;
 
-  // Construct the configuration
   cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
                                     {"group.id", group_id},
                                     // Disable auto commit

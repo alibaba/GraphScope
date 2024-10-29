@@ -278,7 +278,7 @@ Result<std::string> GraphDBSession::deserialize_and_apply_insert_wal(
   LOG(INFO) << "Applying insert wal with timestamp: " << ts
             << ", length: " << length
             << ", logger type: " << static_cast<int>(logger_.type());
-  logger_.append(data, length);
+  CHECK(logger_.append(data, length)) << "Failed to append wal to logger";
 
   InsertTransaction::IngestWal(db_.graph(), ts,
                                const_cast<char*>(data) + sizeof(WalHeader),
@@ -296,7 +296,7 @@ Result<std::string> GraphDBSession::deserialize_and_apply_update_wal(
     db_.version_manager_.revert_update_timestamp(ts);
     return Status(StatusCode::INVALID_ARGUMENT, "Invalid wal timestamp");
   }
-  logger_.append(data, length);
+  CHECK(logger_.append(data, length)) << "Failed to append wal to logger";
   UpdateTransaction::IngestWal(db_.graph(), work_dir_, ts,
                                const_cast<char*>(data), length, alloc_);
   db_.version_manager_.release_update_timestamp(ts);

@@ -63,7 +63,6 @@ if (BUILD_KAFKA_WAL_WRITER)
     if (NOT CppKafka_FOUND)
         message(STATUS "cppkafka not found, try to build with third_party/cppkafka")
         add_subdirectory(third_party/cppkafka)
-        # if cppkafka/CMakeLists.txt not exits, tell user  to run git submodule update --init --recursive
         if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/CMakeLists.txt)
             message(FATAL_ERROR "cppkafka not found, please run git submodule update --init --recursive")
         endif ()

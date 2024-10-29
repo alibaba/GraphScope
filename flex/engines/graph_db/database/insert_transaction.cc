@@ -149,7 +149,7 @@ void InsertTransaction::Commit() {
   header->type = 0;
   header->timestamp = timestamp_;
 
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  CHECK(logger_.append(arc_.GetBuffer(), arc_.GetSize())) << "append failed";
   IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
             header->length, alloc_);
 

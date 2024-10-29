@@ -105,7 +105,7 @@ void UpdateTransaction::Commit() {
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 1;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  CHECK(logger_.append(arc_.GetBuffer(), arc_.GetSize())) << "append failed";
 
   applyVerticesUpdates();
   applyEdgesUpdates();
@@ -748,7 +748,7 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
     header->length = arc.GetSize() - sizeof(WalHeader);
     header->type = 1;
     header->timestamp = timestamp_;
-    logger_.append(arc.GetBuffer(), arc.GetSize());
+    CHECK(logger_.append(arc.GetBuffer(), arc.GetSize())) << "append failed";
   }
 
   release();

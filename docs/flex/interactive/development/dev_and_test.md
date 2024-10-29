@@ -110,7 +110,11 @@ mvn clean package -DskipTests -Pexperimental
 
 Interactive use WAL(Write Ahead Logging) to ensure the data integrity. Two different wal writer is provided with respect to different storage interface: `LocalWalWriter` for writing wals to local disk and `KafkaWalWriter` for persisting wals on kafka.
 
-You could switch the wal writer type in the configuration. See [Configuration](./../configuration.md#service-configuration).
+The customization for Wal storage type is current not exposed at user level. In development, you could enable it with following options. If not specified, `LocalWalWriter` is the default option.
+
+```bash
+./bin/interactive_server -k localhost:9092 -t kafka ...
+```
 
 #### Local Wal Writer
 

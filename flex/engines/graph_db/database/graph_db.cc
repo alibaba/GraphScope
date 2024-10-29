@@ -377,6 +377,31 @@ static void IngestWalRange(SessionLocalContext* contexts,
   }
 }
 
+void GraphDB::ingestWalsFromIWalsParser(const IWalsParser& parser,
+                                        int thread_num) {
+  uint32_t from_ts = 1;
+  for (auto& update_wal : parser.update_wals()) {
+    uint32_t to_ts = update_wal.timestamp;
+    if (from_ts < to_ts) {
+      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
+    }
+    if (update_wal.size == 0) {
+      graph_.Compact(update_wal.timestamp);
+      last_compaction_ts_ = update_wal.timestamp;
+    } else {
+      UpdateTransaction::IngestWal(graph_, work_dir_, update_wal.timestamp,
+                                   update_wal.ptr, update_wal.size,
+                                   contexts_[0].allocator);
+    }
+    from_ts = to_ts + 1;
+  }
+  if (from_ts <= parser.last_ts()) {
+    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
+                   thread_num);
+  }
+  version_manager_.init_ts(parser.last_ts(), thread_num);
+}
+
 void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
                                        const std::string& work_dir,
                                        int thread_num) {
@@ -388,26 +413,7 @@ void GraphDB::ingestWalsFromLocalFiles(const std::string& wal_dir_path,
     wals.push_back(entry.path().string());
   }
   LocalWalsParser parser(wals);
-  uint32_t from_ts = 1;
-  for (auto& update_wal : parser.update_wals()) {
-    uint32_t to_ts = update_wal.timestamp;
-    if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
-    }
-    if (update_wal.size == 0) {
-      graph_.Compact(update_wal.timestamp);
-      last_compaction_ts_ = update_wal.timestamp;
-    } else {
-      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
-                                   update_wal.size, contexts_[0].allocator);
-    }
-    from_ts = to_ts + 1;
-  }
-  if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
-                   thread_num);
-  }
-  version_manager_.init_ts(parser.last_ts(), thread_num);
+  ingestWalsFromIWalsParser(parser, thread_num);
 }
 
 #ifdef BUILD_KAFKA_WAL_WRITER
@@ -419,27 +425,7 @@ void GraphDB::ingestWalsFromKafka(const std::string& kafka_brokers,
                                     // Disable auto commit
                                     {"enable.auto.commit", false}};
   KafkaWalsParser parser(config, kafka_topic);
-  uint32_t from_ts = 1;
-  for (auto& update_wal : parser.update_wals()) {
-    uint32_t to_ts = update_wal.timestamp;
-    if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
-    }
-    if (update_wal.size == 0) {
-      graph_.Compact(update_wal.timestamp);
-      last_compaction_ts_ = update_wal.timestamp;
-    } else {
-      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
-                                   update_wal.size, contexts_[0].allocator);
-    }
-    from_ts = to_ts + 1;
-  }
-  if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
-                   thread_num);
-  }
-
-  version_manager_.init_ts(parser.last_ts(), thread_num);
+  ingestWalsFromIWalsParser(parser, thread_num);
 }
 #endif
 

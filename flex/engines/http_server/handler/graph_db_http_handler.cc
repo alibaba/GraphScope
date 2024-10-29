@@ -338,8 +338,6 @@ class stored_proc_handler : public StoppableHandler {
     auto scope = tracer->WithActiveSpan(outer_span);
     auto start_ts = gs::GetCurrentTimeStamp();
 #endif  // HAVE_OPENTELEMETRY_CPP
-    LOG(INFO) << "Eval procedure on shard: " << StoppableHandler::shard_id()
-              << " executor: " << dst_executor;
     return get_executors()[StoppableHandler::shard_id()][dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
         .then([last_byte
@@ -906,7 +904,7 @@ seastar::future<> graph_db_http_handler::stop_query_actors(size_t index) {
         return all_graph_query_handlers_[index]->stop();
       })
       .then([this, index] {
-        LOG(INFO) << "Stopped all query actors on shard id: " << index;
+        LOG(INFO) << "Stopped all wal handlers on shard id: " << index;
         return all_wal_handlers_[index]->stop();
       })
       .then([this, index] {

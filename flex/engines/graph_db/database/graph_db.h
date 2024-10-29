@@ -167,6 +167,8 @@ class GraphDB {
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
+  void ingestWalsFromIWalsParser(const IWalsParser& parser, int thread_num);
+
   void ingestWalsFromLocalFiles(const std::string& wal_dir,
                                 const std::string& work_dir, int thread_num);
 

@@ -623,7 +623,7 @@ jobs:
         ./tests/wal/wal_reader_test localhost:9092 kafka topic_1
 
         # kill the kafka server
-        kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')
+        (kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')) || true
 
     - name: Test Interactive Server persisting wal on kafka
       env:
@@ -646,12 +646,19 @@ jobs:
           echo "interactive_server is not running"
           exit 1
         fi
-        curl -X POST http://localhost:10000/v1/graph/current/vertex \
+        res=`curl -X POST http://localhost:10000/v1/graph/current/vertex \
           -d '{"vertex_request": [{"label": "person", "primary_key_value": "1234", "properties": [{"name": "name", "value": "Alice"}, {"name": "age", "value": 20}]}], "edge_request": []}' \
-          -H "Content-Type: application/json"
+          -H "Content-Type: application/json"`
+        # expect success
+        if [[ $res != *"success"* ]]; then
+          echo "Failed to write vertex"
+          exit 1
+        else
+          echo "Succeed to write vertex"
+        fi
 
         # kill the interactive server
-        kill $(ps aux | grep 'interactive_server' | awk '{print $2}')
+        (kill $(ps aux | grep 'interactive_server' | awk '{print $2}')) || true
         ./bin/interactive_server -g ${SCHEMA_FILE} --data-path /tmp/csr-data-dir/ \
             -c ../tests/hqps/interactive_config_test.yaml -k localhost:9092 --kafka-topic test_graph --wal-type kafka &
         sleep 3
@@ -667,5 +674,5 @@ jobs:
         fi
 
         # kill the servers
-        kill $(ps aux | grep 'interactive_server' | awk '{print $2}')
-        kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')
+        (kill $(ps aux | grep 'interactive_server' | awk '{print $2}')) || true
+        (kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')) || true
