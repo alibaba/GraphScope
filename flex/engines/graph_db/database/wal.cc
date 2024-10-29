@@ -391,7 +391,7 @@ KafkaWalConsumer::KafkaWalConsumer(cppkafka::Configuration config,
   }
 }
 
-// TODO: make this effiicient
+// TODO(zhanglei): make this more effiicient
 std::string KafkaWalConsumer::poll() {
   for (auto& consumer : consumers_) {
     auto msg = consumer->poll();
@@ -402,8 +402,6 @@ std::string KafkaWalConsumer::poll() {
         }
       } else {
         std::string payload = msg.get_payload();
-        LOG(INFO) << "receive from partition " << msg.get_partition()
-                  << "payload size: " << payload.size();
         message_queue_.push(payload);
         consumer->commit(msg);
       }

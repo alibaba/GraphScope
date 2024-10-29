@@ -136,7 +136,6 @@ int main(int argc, char** argv) {
       LOG(INFO) << "No message polled, exit";
       break;
     }
-    LOG(INFO) << "Received message:" << msg.size();
     if (sender) {
       sender->send(msg);
     }

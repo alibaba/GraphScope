@@ -128,9 +128,38 @@ We Compare the performance of `LocalWalWriter` and `KafkaWalWriter` on a host wi
 
 ##### Producing Wals
 
+Both `LocalWalWriter` and `KafkaWalWriter` log data on 894GB NVMe disks. When deploying Kafka with two brokers, we use kraft mode, with each message being 600 bytes.
 
+| Threads | Messages Per Thread | LocalWalWriter | KafkaWalWriter (One Broker) | KafkaWalWriter (Two Brokers) |  
+|---------|---------------------|----------------|-----------------------------|------------------------------|  
+| 1       | 100,000             | 2.93s          | 8.04s                       | 8.63s                        |  
+| 2       | 100,000             | 3.14s          | 8.15s                       | 9.58s                        |  
+| 4       | 100,000             | 3.69s          | 9.3s                        | 13.8s                        |  
+| 8       | 100,000             | 4.82s          | 11s                         | 16.9s                        |  
+| 16      | 100,000             | 7.8s           | 17s                         | 40.8s                        |  
+| 32      | 100,000             | 14.0s          | 28s                         | 79.2s                        |
 
-##### Consuming Wals
+To run the microbenchmark:
+
+```bash
+mkdir build && cd build && cmake .. -DBUILD_KAFKA_WAL_WRITER=ON && make -j
+./tests/wal/wal_writer_test localhost:9092 kafka topic_1 1 10
+mkdir /tmp/wal_dir/
+./tests/wal/wal_writer_test localhost:9092 local /tmp/wal_dir/ 1 10
+```
+
+##### Consuming WALs
+
+We compare the performance of parsing WALs from local disk versus Kafka. The WALs are generated with `wal_writer_test`, using 8 partitions with 100,000 messages each.
+
+| Threads | LocalWalParser | KafkaWalParser |  
+|---------|----------------|----------------|  
+| 1       | 0.001s         | 8.35s          |
+
+```bash
+./tests/wal/wal_reader_test h10:9092 kafka topic_1 1
+./tests/wal/wal_reader_test localhost:9092 local /tmp/wal_dir 1
+```
 
 ## Testing
 
