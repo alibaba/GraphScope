@@ -1331,7 +1331,7 @@ class Session(object):
         num_clients=1,
         manifest_path=None,
         client_folder_path="./",
-        is_pyg_remote_backend=False,
+        return_pyg_remote_backend=False,
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
         from graphscope.learning.gs_feature_store import GsFeatureStore
@@ -1384,13 +1384,9 @@ class Session(object):
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
 
-        if is_pyg_remote_backend:
+        if return_pyg_remote_backend:
             feature_store = GsFeatureStore(config)
             graph_store = GsGraphStore(config)
-            self._learning_instance_dict[graph.vineyard_id] = feature_store
-            self._learning_instance_dict[graph.vineyard_id] = graph_store
-            graph._attach_learning_instance(feature_store)
-            graph._attach_learning_instance(graph_store)
             return g, feature_store, graph_store
 
         return g
@@ -1695,7 +1691,7 @@ def graphlearn_torch(
     num_clients=1,
     manifest_path=None,
     client_folder_path="./",
-    is_pyg_remote_backend=False,
+    return_pyg_remote_backend=False,
 ):
     assert graph is not None, "graph cannot be None"
     assert (
@@ -1713,5 +1709,5 @@ def graphlearn_torch(
         num_clients,
         manifest_path,
         client_folder_path,
-        is_pyg_remote_backend,
+        return_pyg_remote_backend,
     )  # pylint: disable=protected-access

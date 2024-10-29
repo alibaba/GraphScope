@@ -105,14 +105,7 @@ class GsGraphStore(GraphStore):
         """
         result = []
         for attr in self.edge_attrs.values():
-            if attr.size is None:
-                size = self._get_edge_size(attr)
-                new_edge_attr = EdgeAttr(
-                    attr.edge_type, attr.layout, attr.is_sorted, size
-                )
-                result.append(new_edge_attr)
-            else:
-                result.append(attr)
+            result.append(attr)
         return result
 
     @classmethod

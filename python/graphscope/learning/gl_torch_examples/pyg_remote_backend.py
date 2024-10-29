@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from ogb.nodeproppred import Evaluator
+from torch_geometric.data.feature_store import TensorAttr
 from torch_geometric.loader import NeighborLoader
 from torch_geometric.nn import GraphSAGE
 from tqdm import tqdm
@@ -44,7 +45,7 @@ glt_graph, feature_store, graph_store = gs.graphlearn_torch(
         "num_val": 0.1,
         "num_test": 0.1,
     },
-    is_pyg_remote_backend=True,
+    return_pyg_remote_backend=True,
 )
 
 print("-- Initializing client ...")
@@ -61,11 +62,7 @@ glt.distributed.init_client(
 
 print("-- Initializing loader ...")
 # get train & test mask
-edge_attrs = graph_store.get_all_edge_attrs()
-for edge_attr in edge_attrs:
-    if edge_attr.edge_type == ("paper", "citation", "paper"):
-        num_nodes = edge_attr.size[0]
-        break
+num_nodes = feature_store.get_tensor_size(TensorAttr(group_name="paper"))[0]
 print("Node num:", num_nodes)
 shuffle_id = torch.randperm(num_nodes)
 train_indices = shuffle_id[: int(0.8 * num_nodes)]

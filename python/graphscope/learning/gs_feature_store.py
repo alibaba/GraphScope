@@ -91,46 +91,38 @@ class GsFeatureStore(FeatureStore):
         if index.numel() == 0:
             return result
 
-        server_id = self._get_partition_id(attr)
-
-        partition_to_ids = defaultdict(list)
-        partition_to_indices = defaultdict(list)
-        for idx, id in enumerate(index):
-            partition_id = server_id[idx].item()
-            partition_to_ids[partition_id].append(id.item())
-            partition_to_indices[partition_id].append(idx)
-
-        server_fun = None
+        server_fun = DistServer.get_node_feature
         labels = self.node_labels[group_name]
         is_label = False
-        if isinstance(labels, list):
-            is_label = attr_name in labels
-        elif isinstance(labels, str):
-            is_label = attr_name == labels
-
-        if is_label:
+        if isinstance(labels, list) and attr_name in labels:
             server_fun = DistServer.get_node_label
-        else:
-            server_fun = DistServer.get_node_feature
+            is_label = True
+        elif isinstance(labels, str) and attr_name == labels:
+            server_fun = DistServer.get_node_label
+            is_label = True
 
-        partition_to_features = defaultdict(list)
-        for partition_id, ids in partition_to_ids.items():
-            feature = request_server(
-                partition_id, server_fun, group_name, self.index_to_tensor(ids)
-            )
-            partition_to_features[partition_id] = feature
+        num_partitions, _, _, _ = request_server(0, DistServer.get_dataset_meta)
+        partition_ids = self._get_partition_id(attr)
+        indexes = []
+        features = []
+        input_order = torch.arange(index.size(0), dtype=torch.long)
+        for pidx in range(0, num_partitions):
+            remote_mask = partition_ids == pidx
+            remote_ids = torch.masked_select(index, remote_mask)
+            if remote_ids.shape[0] > 0:
+                feature = request_server(pidx, server_fun, group_name, remote_ids)
+                features.append(feature)
+                indexes.append(torch.masked_select(input_order, remote_mask))
 
         if not is_label:
             result = torch.zeros(
-                (len(index), list(partition_to_features.values())[0].shape[-1])
+                index.shape[0], features[0].shape[1], dtype=features[0].dtype
             )
         else:
-            result = torch.zeros((len(index), 1))
-        for partition_id, indices in partition_to_indices.items():
-            partition_features = partition_to_features[partition_id]
-            for i, idx in enumerate(indices):
-                result[idx] = partition_features[i]
+            result = torch.zeros(index.shape[0], 1, dtype=features[0].dtype)
 
+        for i, feature in enumerate(features):
+            result[indexes[i]] = feature
         if is_label:
             result = result.reshape(-1)
         return result
@@ -176,12 +168,11 @@ class GsFeatureStore(FeatureStore):
             attr(`TensorAttr`): Uniquely corresponds to a node/edge feature tensor type .
 
         Returns:
-            tensor_size(`torch.Size`): The dimension of corresponding tensor type.
+            tensor_size(`torch.Size`): The num of corresponding tensor type.
         """
-        group_name, attr_name, _ = self.key(attr)
-        attr = TensorAttr(group_name, attr_name, 0)
-        tensor = self._get_tensor(attr)
-        return tensor[0].size()
+        group_name, _, _ = self.key(attr)
+        size = request_server(0, DistServer.get_tensor_size, group_name)
+        return size
 
     def get_all_tensor_attrs(self) -> List[TensorAttr]:
         r"""Obtains all the tensor type stored in remote server.
