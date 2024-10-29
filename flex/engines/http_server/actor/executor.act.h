@@ -32,17 +32,17 @@ class ANNOTATION(actor:impl) executor : public hiactor::actor {
 
   seastar::future<query_result> ANNOTATION(actor:method) run_graph_db_query(query_param&& param);
   
-  seastar::future<admin_query_result> ANNOTATION(actor:method) create_vertex(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_vertex(query_param&& param);
 
-  seastar::future<admin_query_result> ANNOTATION(actor:method) create_edge(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_edge(query_param&& param);
 
-  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_vertex(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_vertex(query_param&& param);
 
-  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_edge(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_edge(query_param&& param);
 
-  seastar::future<admin_query_result> ANNOTATION(actor:method) update_vertex(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_vertex(query_param&& param);
 
-  seastar::future<admin_query_result> ANNOTATION(actor:method) update_edge(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_edge(query_param&& param);
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) get_vertex(graph_management_query_param&& param);
 

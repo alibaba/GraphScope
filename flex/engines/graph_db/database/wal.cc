@@ -434,7 +434,6 @@ KafkaWalsParser::KafkaWalsParser(cppkafka::Configuration config,
       LOG(INFO) << "No message are polled, the topic has been all consumed.";
       break;
     }
-    // message_vector_.emplace_back(std::move(msgs));
     for (auto& msg : msgs) {
       if (msg) {
         if (msg.get_error()) {
@@ -443,33 +442,37 @@ KafkaWalsParser::KafkaWalsParser(cppkafka::Configuration config,
           }
         } else {
           message_vector_.emplace_back(msg.get_payload());
-          const char* payload = message_vector_.back().data();
-          const WalHeader* header = reinterpret_cast<const WalHeader*>(payload);
-          uint32_t cur_ts = header->timestamp;
-          if (cur_ts == 0) {
-            LOG(WARNING) << "Invalid timestamp 0, skip";
-            continue;
-          }
-          int length = header->length;
-          if (header->type) {
-            UpdateWalUnit unit;
-            unit.timestamp = cur_ts;
-            unit.ptr = const_cast<char*>(payload + sizeof(WalHeader));
-            unit.size = length;
-            update_wal_list_.push_back(unit);
-          } else {
-            if (insert_wal_list_[cur_ts].ptr) {
-              LOG(WARNING) << "Duplicated timestamp " << cur_ts << ", skip";
-            }
-            insert_wal_list_[cur_ts].ptr =
-                const_cast<char*>(payload + sizeof(WalHeader));
-            insert_wal_list_[cur_ts].size = length;
-          }
-          last_ts_ = std::max(cur_ts, last_ts_);
         }
       }
     }
   }
+
+  for (auto& wal : message_vector_) {
+    const char* payload = wal.data();
+    const WalHeader* header = reinterpret_cast<const WalHeader*>(payload);
+    uint32_t cur_ts = header->timestamp;
+    if (cur_ts == 0) {
+      LOG(WARNING) << "Invalid timestamp 0, skip";
+      continue;
+    }
+    int length = header->length;
+    if (header->type) {
+      UpdateWalUnit unit;
+      unit.timestamp = cur_ts;
+      unit.ptr = const_cast<char*>(payload + sizeof(WalHeader));
+      unit.size = length;
+      update_wal_list_.push_back(unit);
+    } else {
+      if (insert_wal_list_[cur_ts].ptr) {
+        LOG(WARNING) << "Duplicated timestamp " << cur_ts << ", skip";
+      }
+      insert_wal_list_[cur_ts].ptr =
+          const_cast<char*>(payload + sizeof(WalHeader));
+      insert_wal_list_[cur_ts].size = length;
+    }
+    last_ts_ = std::max(cur_ts, last_ts_);
+  }
+
   LOG(INFO) << "last_ts: " << last_ts_;
   if (!update_wal_list_.empty()) {
     std::sort(update_wal_list_.begin(), update_wal_list_.end(),
@@ -487,6 +490,9 @@ KafkaWalsParser::~KafkaWalsParser() {
 
 uint32_t KafkaWalsParser::last_ts() const { return last_ts_; }
 const WalContentUnit& KafkaWalsParser::get_insert_wal(uint32_t ts) const {
+  if (insert_wal_list_[ts].ptr == NULL) {
+    LOG(WARNING) << "No WAL for timestamp " << ts;
+  }
   return insert_wal_list_[ts];
 }
 const std::vector<UpdateWalUnit>& KafkaWalsParser::update_wals() const {

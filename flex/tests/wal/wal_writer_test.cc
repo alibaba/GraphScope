@@ -8,12 +8,25 @@
 
 void run(std::vector<gs::IWalWriter*>& writers, const std::string& payload,
          int message_cnt) {
+  // Construct real payload with WalHeader.
+
+  std::atomic<size_t> curr_ts(1);
+
   std::vector<std::thread> threads;
   double t = -grape::GetCurrentTime();
   for (size_t i = 0; i < writers.size(); ++i) {
-    threads.emplace_back([&writers, &message_cnt, i, payload]() {
+    threads.emplace_back([&writers, &message_cnt, &curr_ts, i, payload]() {
+      grape::InArchive arc;
+      arc.Resize(sizeof(gs::WalHeader));
+      arc << payload;
+
+      auto* header = reinterpret_cast<gs::WalHeader*>(arc.GetBuffer());
+      header->length = arc.GetSize() - sizeof(gs::WalHeader);
+      header->type = 0;
+
       for (int j = 0; j < message_cnt; ++j) {
-        if (!writers[i]->append(payload.c_str(), payload.size())) {
+        header->timestamp = curr_ts.fetch_add(1);
+        if (!writers[i]->append(arc.GetBuffer(), arc.GetSize())) {
           std::cerr << "Failed to append message to kafka" << std::endl;
         }
         if (j % 10000 == 0) {
@@ -25,6 +38,8 @@ void run(std::vector<gs::IWalWriter*>& writers, const std::string& payload,
   for (auto& thrd : threads) {
     thrd.join();
   }
+  CHECK(curr_ts == message_cnt * writers.size() + 1)
+      << "curr_ts: " << curr_ts << " message_cnt: " << message_cnt;
   t += grape::GetCurrentTime();
   std::cout << "Producing " << message_cnt << " messages to kafka took " << t
             << " seconds" << std::endl;
