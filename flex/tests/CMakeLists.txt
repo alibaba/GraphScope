@@ -1,5 +1,5 @@
 add_subdirectory(hqps)
 add_subdirectory(rt_mutable_graph)
 if (BUILD_KAFKA_WAL_WRITER)
-    add_subdirectory(wal_writer)
+    add_subdirectory(wal)
 endif()

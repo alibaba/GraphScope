@@ -37,9 +37,8 @@ void test_local_wal_writer(const std::string& topic_name, int thread_num,
     kafka_writers.emplace_back(new gs::LocalWalWriter());
   }
   for (int i = 0; i < thread_num; ++i) {
-    std::string dst_path = "/tmp/";
     // check whether files exist
-    kafka_writers[i]->open(dst_path, i);
+    kafka_writers[i]->open(topic_name, i);
   }
   run(kafka_writers, payload, message_cnt);
 }

@@ -568,8 +568,8 @@ jobs:
 
         # write to the kafka brokers : localhost:9092
         cd ${GITHUB_WORKSPACE}/flex/build/
-        ./tests/wal_writer/wal_writer_test localhost:9092 kafka topic_1 1 10
-        ./bin/wal_consumer -b localhost:9092 -t topic_1
+        ./tests/wal/wal_writer_test localhost:9092 kafka topic_1 1 10
+        ./tests/wal/wal_reader_test localhost:9092 kafka topic_1 1
 
         # kill the kafka server
         kill $(ps aux | grep 'kafka_2.13-3.8.0' | awk '{print $2}')

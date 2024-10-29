@@ -124,7 +124,11 @@ You need to deploy a kafka cluster first. For details, please refer to [Kafka Do
 
 ##### Settings
 
+We Compare the performance of `LocalWalWriter` and `KafkaWalWriter` on a host with 
+
 ##### Producing Wals
+
+
 
 ##### Consuming Wals
 
