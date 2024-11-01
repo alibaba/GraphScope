@@ -137,6 +137,8 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
+            - name: log
+              mountPath: {{ .Values.logPersistence.mountPath }}
             {{- if .Values.store.extraVolumeMounts }}
             {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
@@ -148,15 +150,16 @@ spec:
         {{- if .Values.store.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumes "context" $) | nindent 8 }}
         {{- end }}
-  {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
+        {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
             claimName: {{ printf "%s" (tpl .Values.store.persistence.existingClaim .) }}
-  {{- else if not .Values.store.persistence.enabled }}
+        {{- else if not .Values.store.persistence.enabled }}
         - name: data
           emptyDir: {}
-  {{- else if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
+        {{- end }}
   volumeClaimTemplates:
+    {{- if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
     - metadata:
         name: data
         {{- if .Values.persistence.annotations }}
@@ -177,5 +180,25 @@ spec:
         {{- if .Values.store.persistence.selector }}
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
-  {{- end }}
+    {{- end }}
+    - metadata:
+        name: log
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.logPersistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.logPersistence.size | quote }}
+        {{ include "graphscope-store.storageClass" . | nindent 8 }}
+        {{- if .Values.logPersistence.selector }}
+        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.logPersistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
 {{- end }}

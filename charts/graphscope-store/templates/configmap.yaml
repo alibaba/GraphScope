@@ -116,6 +116,7 @@ data:
 
     sudo chown -R graphscope:graphscope {{ .Values.storeDataPath }} || true
     sudo chown -R graphscope:graphscope /etc/groot || true
+    sudo chown -R graphscope:graphscope /var/log/graphscope || true
 
     [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
     ordinal=${BASH_REMATCH[1]}
