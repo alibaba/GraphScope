@@ -160,6 +160,14 @@ spec:
         - name: data
           emptyDir: {}
         {{- end }}
+        {{- if not .Values.logPersistence.enabled }}
+        - name: log
+          emptyDir: {}
+        {{- else if .Values.logPersistence.existingClaim }}
+        - name: log
+          persistentVolumeClaim:
+            claimName: {{ printf "%s" (tpl .Values.logPersistence.existingClaim .) }}
+        {{- end }}
   volumeClaimTemplates:
     {{- if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
     - metadata:
@@ -183,6 +191,7 @@ spec:
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
     {{- end }}
+    {{- if and .Values.logPersistence.enabled (not .Values.logPersistence.existingClaim) }}
     - metadata:
         name: log
         {{- if .Values.persistence.annotations }}
@@ -203,4 +212,5 @@ spec:
         {{- if .Values.logPersistence.selector }}
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.logPersistence.selector "context" $) | nindent 10 }}
         {{- end -}}
+    {{- end }}
 {{- end -}}

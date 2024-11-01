@@ -598,9 +598,9 @@ graphPlannerCboGlogueSize: 3
 ## Log Persistence parameters
 ##
 logPersistence:
-  ## Enable persistence using Persistent Volume Claims
-  enabled: false
-  ## If true, use a Persistent Volume Claim, If false, use emptyDir
+  ## Enable persistence using Persistent Volume Claims. If false, use emptyDir
+  enabled: true
+  ## Existing PVC to hold the log data. If not provided, a new PVC will be created.
   existingClaim: ""
   ## Persistent Volume storage class
   storageClass: ""
@@ -608,7 +608,7 @@ logPersistence:
   accessModes:
   - ReadWriteOnce
   ## Persistent Volume size
-  size: 2Gi
+  size: 1Gi
   ## Persistent Volume annotations
   annotations: {}
   ## Persistent Volume labels
