@@ -20,7 +20,7 @@ package com.alibaba.graphscope.common.ir.meta.fetcher;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.meta.GraphId;
+import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
@@ -46,21 +46,27 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private volatile IrMetaStats currentState;
     // To manage the state changes of statistics resulting from different update operations.
     private volatile StatsState statsState;
-    private volatile Boolean statsEnabled = null;
+    private final boolean fetchStats;
 
     public DynamicIrMetaFetcher(Configs configs, IrMetaReader dataReader, IrMetaTracker tracker) {
         super(dataReader, tracker);
-        this.scheduler = new ScheduledThreadPoolExecutor(2);
+        this.scheduler = new ScheduledThreadPoolExecutor(1);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncMeta(),
-                2000,
+                0,
                 GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
-        this.scheduler.scheduleAtFixedRate(
-                () -> syncStats(statsEnabled == null ? false : statsEnabled),
-                2000,
-                GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.get(configs),
-                TimeUnit.MILLISECONDS);
+        this.fetchStats =
+                PlannerConfig.GRAPH_PLANNER_IS_ON.get(configs)
+                        && PlannerConfig.GRAPH_PLANNER_OPT.get(configs).equals("CBO");
+        if (this.fetchStats) {
+            logger.info("start to schedule statistics fetch task");
+            this.scheduler.scheduleAtFixedRate(
+                    () -> syncStats(),
+                    2000,
+                    GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.get(configs),
+                    TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -94,32 +100,18 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                             meta.getSchema(),
                             meta.getStoredProcedures(),
                             curStats);
-            boolean statsEnabled = getStatsEnabled(this.currentState.getGraphId());
-            if (statsEnabled && this.statsState != StatsState.SYNCED
-                    || (!statsEnabled && this.statsState != StatsState.MOCKED)) {
-                logger.debug("start to sync stats");
-                syncStats(statsEnabled);
+            if (this.fetchStats && this.statsState != StatsState.SYNCED) {
+                logger.info("start to schedule statistics fetch task");
+                syncStats();
             }
         } catch (Throwable e) {
-            logger.warn("failed to read meta data, error is {}", e);
+            logger.warn("failed to read meta data", e);
         }
     }
 
-    private boolean getStatsEnabled(GraphId graphId) {
+    private synchronized void syncStats() {
         try {
-            return this.statsEnabled == null
-                    ? this.reader.syncStatsEnabled(graphId)
-                    : this.statsEnabled;
-        } catch (
-                Throwable e) { // if errors happen when reading stats enabled, we assume it is false
-            logger.warn("failed to read stats enabled, error is {}", e);
-            return false;
-        }
-    }
-
-    private synchronized void syncStats(boolean statsEnabled) {
-        try {
-            if (this.currentState != null && statsEnabled) {
+            if (this.currentState != null) {
                 GraphStatistics stats = this.reader.readStats(this.currentState.getGraphId());
                 logger.debug("statistics from remote: {}", stats);
                 if (stats != null && stats.getVertexCount() != 0) {
@@ -137,7 +129,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 }
             }
         } catch (Throwable e) {
-            logger.warn("failed to read graph statistics, error is {}", e);
+            logger.warn("failed to read graph statistics, error is", e);
         } finally {
             try {
                 if (this.currentState != null
@@ -148,7 +140,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                     this.statsState = StatsState.MOCKED;
                 }
             } catch (Throwable t) {
-                logger.warn("failed to mock the glogue, error is {}", t);
+                logger.warn("failed to mock the glogue, error is", t);
             }
         }
     }

@@ -250,3 +250,12 @@ message ReopenSecondaryRequest {
 message ReopenSecondaryResponse {
   bool success = 1;
 }
+
+message ReplayRecordsRequestV2 {
+  int64 offset = 1;
+  int64 timestamp = 2;
+}
+
+message ReplayRecordsResponseV2 {
+  repeated int64 snapshot_id = 1;
+}

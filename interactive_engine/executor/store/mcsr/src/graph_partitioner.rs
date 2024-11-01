@@ -212,21 +212,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                     .unwrap()
                     .ends_with(".csv")
                 {
-                    let input_path = vertex_file
-                        .as_os_str()
-                        .clone()
-                        .to_str()
-                        .unwrap();
-                    let input_dir_path = self
-                        .input_dir
-                        .as_os_str()
-                        .clone()
-                        .to_str()
-                        .unwrap();
+                    let input_path = vertex_file.as_os_str().to_str().unwrap();
+                    let input_dir_path = self.input_dir.as_os_str().to_str().unwrap();
                     let output_path = if let Some(pos) = input_path.find(input_dir_path) {
                         self.partition_dir.join(
                             input_path
-                                .clone()
                                 .split_at(pos + input_dir_path.len() + 1)
                                 .1,
                         )
@@ -258,23 +248,13 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                     .unwrap()
                     .ends_with(".csv.gz")
                 {
-                    let input_path = vertex_file
-                        .as_os_str()
-                        .clone()
-                        .to_str()
-                        .unwrap();
-                    let input_dir_path = self
-                        .input_dir
-                        .as_os_str()
-                        .clone()
-                        .to_str()
-                        .unwrap();
+                    let input_path = vertex_file.as_os_str().to_str().unwrap();
+                    let input_dir_path = self.input_dir.as_os_str().to_str().unwrap();
                     let gz_loc = input_path.find(".gz").unwrap();
                     let input_path = input_path.split_at(gz_loc).0;
                     let output_path = if let Some(pos) = input_path.find(input_dir_path) {
                         self.partition_dir.join(
                             input_path
-                                .clone()
                                 .split_at(pos + input_dir_path.len() + 1)
                                 .1,
                         )
@@ -327,18 +307,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                 .unwrap()
                                 .ends_with(".csv")
                             {
-                                info!("{}", edge_file.as_os_str().clone().to_str().unwrap());
-                                let input_path = edge_file.as_os_str().clone().to_str().unwrap();
-                                let input_dir_path = self
-                                    .input_dir
-                                    .as_os_str()
-                                    .clone()
-                                    .to_str()
-                                    .unwrap();
+                                info!("{}", edge_file.as_os_str().to_str().unwrap());
+                                let input_path = edge_file.as_os_str().to_str().unwrap();
+                                let input_dir_path = self.input_dir.as_os_str().to_str().unwrap();
                                 let output_path = if let Some(pos) = input_path.find(input_dir_path) {
                                     self.partition_dir.join(
                                         input_path
-                                            .clone()
                                             .split_at(pos + input_dir_path.len() + 1)
                                             .1,
                                     )
@@ -373,19 +347,13 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                 .unwrap()
                                 .ends_with(".csv.gz")
                             {
-                                let input_path = edge_file.as_os_str().clone().to_str().unwrap();
-                                let input_dir_path = self
-                                    .input_dir
-                                    .as_os_str()
-                                    .clone()
-                                    .to_str()
-                                    .unwrap();
+                                let input_path = edge_file.as_os_str().to_str().unwrap();
+                                let input_dir_path = self.input_dir.as_os_str().to_str().unwrap();
                                 let gz_loc = input_path.find(".gz").unwrap();
                                 let input_path = input_path.split_at(gz_loc).0;
                                 let output_path = if let Some(pos) = input_path.find(input_dir_path) {
                                     self.partition_dir.join(
                                         input_path
-                                            .clone()
                                             .split_at(pos + input_dir_path.len() + 1)
                                             .1,
                                     )

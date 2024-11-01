@@ -68,11 +68,14 @@ public class SnapshotSortQueue {
         if (innerQueue == null) {
             throw new InvalidArgumentException("invalid queueId [" + queueId + "]");
         }
-        boolean res = innerQueue.offer(entry, this.queueWaitMs, TimeUnit.MILLISECONDS);
-        if (res) {
-            this.size.incrementAndGet();
-        }
-        return res;
+        //        boolean res = innerQueue.offer(entry, this.queueWaitMs, TimeUnit.MILLISECONDS);
+        //        if (res) {x
+        //            this.size.incrementAndGet();
+        //        }
+        //        return res;
+        innerQueue.put(entry);
+        this.size.incrementAndGet();
+        return true;
     }
 
     public StoreDataBatch poll() throws InterruptedException {
@@ -108,7 +111,10 @@ public class SnapshotSortQueue {
             }
 
             long snapshotId = entry.getSnapshotId();
-            if (snapshotId == this.currentPollSnapshotId) {
+            // allow for a short duration inconsistent, due to different frontend may have minor
+            // difference in timing
+            if (snapshotId == this.currentPollSnapshotId
+                    || currentPollSnapshotId - snapshotId < 10) {
                 this.size.decrementAndGet();
                 return entry;
             }

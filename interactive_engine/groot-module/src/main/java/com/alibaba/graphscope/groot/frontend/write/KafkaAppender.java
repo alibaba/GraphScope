@@ -240,13 +240,14 @@ public class KafkaAppender {
         types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
 
-        long batchSnapshotId = 0;
+        List<Long> ids = new ArrayList<>();
         int replayCount = 0;
 
         try (LogWriter logWriter = this.logService.createWriter()) {
             for (int storeId = 0; storeId < storeCount; ++storeId) {
                 try (LogReader logReader =
                         this.logService.createReader(storeId, offset, timestamp)) {
+                    long batchSnapshotId = ingestSnapshotId.get();
                     ReadLogEntry readLogEntry;
                     while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
                         LogEntry logEntry = readLogEntry.getLogEntry();
@@ -255,15 +256,16 @@ public class KafkaAppender {
                         if (batch.getOperationCount() == 0) {
                             continue;
                         }
-                        logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
+                        logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
                         replayCount++;
                     }
+                    ids.add(batchSnapshotId + 1);
                 }
             }
         }
 
         logger.info("replay DML records finished. total replayed [{}] records", replayCount);
-        return List.of(batchSnapshotId);
+        return ids;
     }
 
     /**

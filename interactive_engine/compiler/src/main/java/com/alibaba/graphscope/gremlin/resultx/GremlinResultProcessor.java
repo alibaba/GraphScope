@@ -59,9 +59,8 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
         this.statusCallback = statusCallback;
         this.timeoutConfig = timeoutConfig;
         this.reducer = Maps.newLinkedHashMap();
-        this.recordStreamIterator =
-                new StreamIterator<>(
-                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
+        int capacity = FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs);
+        this.recordStreamIterator = new StreamIterator<>(capacity);
     }
 
     @Override

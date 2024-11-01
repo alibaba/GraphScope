@@ -135,4 +135,25 @@ public class FrontendStoreClient extends RpcClient {
                             public void onCompleted() {}
                         });
     }
+
+    public void replayRecordsV2(
+            ReplayRecordsRequestV2 request, CompletionCallback<ReplayRecordsResponseV2> callback) {
+        getStub()
+                .replayRecordsV2(
+                        request,
+                        new StreamObserver<ReplayRecordsResponseV2>() {
+                            @Override
+                            public void onNext(ReplayRecordsResponseV2 value) {
+                                callback.onCompleted(value);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
+
+                            @Override
+                            public void onCompleted() {}
+                        });
+    }
 }
