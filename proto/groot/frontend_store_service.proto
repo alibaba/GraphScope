@@ -27,4 +27,5 @@ service FrontendStoreService {
   rpc compactDB(CompactDBRequest) returns(CompactDBResponse);
   rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
   rpc GetState(GetStoreStateRequest) returns (GetStoreStateResponse);
+  rpc replayRecordsV2(ReplayRecordsRequestV2) returns(ReplayRecordsResponseV2);
 }

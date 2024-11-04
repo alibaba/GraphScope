@@ -187,7 +187,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                         summary.getLogicalPlan(),
                                                         summary.getPhysicalPlan()),
                                                 listener,
-                                                timeoutConfig);
+                                                timeoutConfig,
+                                                statusCallback.getQueryLogger());
                                     }
                                     // request results from remote engine in a blocking way
                                     listener.request();

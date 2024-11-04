@@ -535,4 +535,49 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                             });
         }
     }
+
+    @Override
+    public void replayRecordsV2(
+            ReplayRecordsRequestV2 request,
+            StreamObserver<ReplayRecordsResponseV2> responseObserver) {
+        ReplayRecordsResponseV2.Builder response = ReplayRecordsResponseV2.newBuilder();
+        logger.info("replay records v2");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+
+        for (int i = 0; i < storeCount; i++) {
+            this.frontendStoreClients
+                    .getClient(i)
+                    .replayRecordsV2(
+                            request,
+                            new CompletionCallback<ReplayRecordsResponseV2>() {
+                                @Override
+                                public void onCompleted(ReplayRecordsResponseV2 res) {
+                                    response.mergeFrom(res);
+                                    if (!finished.get() && counter.decrementAndGet() == 0) {
+                                        finish(null);
+                                    }
+                                }
+
+                                @Override
+                                public void onError(Throwable t) {
+                                    logger.error("failed to replay records", t);
+                                    finish(t);
+                                }
+
+                                private void finish(Throwable t) {
+                                    if (finished.getAndSet(true)) {
+                                        return;
+                                    }
+                                    if (t != null) {
+                                        responseObserver.onError(t);
+                                    } else {
+                                        responseObserver.onNext(response.build());
+                                        responseObserver.onCompleted();
+                                    }
+                                }
+                            });
+        }
+    }
 }

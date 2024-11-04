@@ -19,7 +19,7 @@ import com.alibaba.graphscope.proto.groot.LogEntryPb;
 import java.util.Objects;
 
 public class LogEntry {
-    private final long snapshotId;
+    private long snapshotId;
     private final OperationBatch operationBatch;
 
     public LogEntry(long snapshotId, OperationBatch operationBatch) {
@@ -46,6 +46,10 @@ public class LogEntry {
                 .setSnapshotId(snapshotId)
                 .setOperations(operationBatch.toProto())
                 .build();
+    }
+
+    public void setSnapshotId(long snapshotId) {
+        this.snapshotId = snapshotId;
     }
 
     @Override

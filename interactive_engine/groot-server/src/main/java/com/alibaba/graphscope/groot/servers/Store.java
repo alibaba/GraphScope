@@ -65,10 +65,13 @@ public class Store extends NodeBase {
 
         this.writerAgent =
                 new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
+        this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
+
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
-        FrontendStoreService storeIngestService = new FrontendStoreService(this.storeService);
+        FrontendStoreService frontendStoreService =
+                new FrontendStoreService(this.storeService, this.processor);
         StoreSnapshotService storeSnapshotService = new StoreSnapshotService(this.storeService);
         this.rpcServer =
                 new RpcServer(
@@ -76,13 +79,12 @@ public class Store extends NodeBase {
                         localNodeProvider,
                         storeBackupService,
                         storeSchemaService,
-                        storeIngestService,
+                        frontendStoreService,
                         storeSnapshotService);
         IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
         this.partitionService = new PartitionService(configs, storeService);
-        this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 
     @Override
