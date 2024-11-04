@@ -318,7 +318,7 @@ jobs:
         mvn clean install -Pexperimental -DskipTests -q
 
     - name: Test physical plan generation
-      run:
+      run: |
         cd ${GITHUB_WORKSPACE}/flex/build
         cat > /tmp/physical_plan_gen_config.yaml <<EOF
         compiler:
