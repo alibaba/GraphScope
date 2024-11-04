@@ -599,7 +599,7 @@ graphPlannerCboGlogueSize: 3
 ##
 logPersistence:
   ## Enable persistence using Persistent Volume Claims. If false, use emptyDir
-  enabled: true
+  enabled: false
   ## Existing PVC to hold the log data. If not provided, a new PVC will be created.
   existingClaim: ""
   ## Persistent Volume storage class
