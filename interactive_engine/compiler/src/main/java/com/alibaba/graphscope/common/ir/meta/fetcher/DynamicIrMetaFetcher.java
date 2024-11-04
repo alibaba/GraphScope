@@ -137,7 +137,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                 }
             }
         } catch (Throwable e) {
-            logger.warn("failed to read graph statistics, error is {}", e);
+            logger.warn("failed to read graph statistics, error is: " + e);
         } finally {
             try {
                 if (this.currentState != null

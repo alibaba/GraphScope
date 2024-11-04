@@ -1,0 +1,2 @@
+add_executable(graph_planner_test graph_planner_test.cc)
+target_link_libraries(graph_planner_test graph_planner ${GLOG_LIBRARIES})

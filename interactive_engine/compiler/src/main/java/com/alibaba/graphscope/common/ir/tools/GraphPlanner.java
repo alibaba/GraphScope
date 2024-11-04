@@ -221,6 +221,24 @@ public class GraphPlanner {
                 "unknown graph meta reader mode: " + schemaUri.getScheme());
     }
 
+    public static Summary generatePlan(String config_path, String query_string) throws Exception {
+        Configs configs = Configs.Factory.create(config_path);
+        GraphRelOptimizer optimizer =
+                new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
+        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
+        GraphPlanner planner =
+                new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
+        PlannerInstance instance = planner.instance(query_string, metaFetcher.fetch().get());
+        Summary summary = instance.plan();
+        return summary;
+    }
+
+    public static byte[] generatePhysicalPlan(String config_path, String query_string) throws Exception {
+        Summary summary = generatePlan(config_path, query_string);
+        PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
+        return physicalPlan.getContent();
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 4
                 || args[0].isEmpty()
@@ -232,15 +250,8 @@ public class GraphPlanner {
                             + " '<path_to_physical_output_file>' '<path_to_procedure_file>'"
                             + " 'optional <extra_key_value_config_file>'");
         }
-        Configs configs = Configs.Factory.create(args[0]);
-        GraphRelOptimizer optimizer =
-                new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
-        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
-        GraphPlanner planner =
-                new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
-        PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
-        Summary summary = instance.plan();
+        Summary summary = generatePlan(args[0], query);
         // write physical plan to file
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
         FileUtils.writeByteArrayToFile(new File(args[2]), physicalPlan.getContent());
