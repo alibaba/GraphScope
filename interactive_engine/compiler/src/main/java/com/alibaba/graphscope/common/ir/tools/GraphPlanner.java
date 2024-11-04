@@ -233,7 +233,8 @@ public class GraphPlanner {
         return summary;
     }
 
-    public static byte[] generatePhysicalPlan(String config_path, String query_string) throws Exception {
+    public static byte[] generatePhysicalPlan(String config_path, String query_string)
+            throws Exception {
         Summary summary = generatePlan(config_path, query_string);
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
         return physicalPlan.getContent();
