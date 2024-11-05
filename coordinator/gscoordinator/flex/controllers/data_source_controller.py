@@ -7,7 +7,7 @@ from gscoordinator.flex.models.error import Error  # noqa: E501
 from gscoordinator.flex.models.schema_mapping import SchemaMapping  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -26,7 +26,7 @@ def bind_datasource_in_batch(graph_id, schema_mapping):  # noqa: E501
     """
     if connexion.request.is_json:
         schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.bind_datasource_in_batch(graph_id, schema_mapping)
+    return get_client_wrapper().bind_datasource_in_batch(graph_id, schema_mapping)
 
 
 @handle_api_exception()
@@ -40,7 +40,7 @@ def get_datasource_by_id(graph_id):  # noqa: E501
 
     :rtype: Union[SchemaMapping, Tuple[SchemaMapping, int], Tuple[SchemaMapping, int, Dict[str, str]]
     """
-    return client_wrapper.get_datasource_by_id(graph_id)
+    return get_client_wrapper().get_datasource_by_id(graph_id)
 
 
 @handle_api_exception()
@@ -60,7 +60,7 @@ def unbind_edge_datasource(graph_id, type_name, source_vertex_type, destination_
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.unbind_edge_datasource(graph_id, type_name, source_vertex_type, destination_vertex_type)
+    return get_client_wrapper().unbind_edge_datasource(graph_id, type_name, source_vertex_type, destination_vertex_type)
 
 
 @handle_api_exception()
@@ -76,4 +76,4 @@ def unbind_vertex_datasource(graph_id, type_name):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.unbind_vertex_datasource(graph_id, type_name)
+    return get_client_wrapper().unbind_vertex_datasource(graph_id, type_name)

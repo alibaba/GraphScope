@@ -32,6 +32,7 @@ import grpc
 from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
+from gscoordinator.flex.core.client_wrapper import initialize_client_wrapper
 from gscoordinator.flex.encoder import JSONEncoder
 from gscoordinator.monitor import Monitor
 from gscoordinator.servicer import init_graphscope_one_service_servicer
@@ -125,6 +126,7 @@ def get_servicer(config: Config):
 
 
 def start_http_service(config):
+    initialize_client_wrapper(config)
     app = connexion.App(__name__, specification_dir="./flex/openapi/")
     app.app.json_encoder = JSONEncoder
     app.add_api(

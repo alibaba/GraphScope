@@ -251,7 +251,6 @@ def deploy(
         ]
         if gremlin_port != -1:
             cmd.extend(["-p", f"{gremlin_port}:8182"])
-        image = f"{image_registry}/{type}:{image_tag}"
         if interactive_config is not None:
             if not os.path.isfile(interactive_config):
                 click.secho(
@@ -263,7 +262,14 @@ def deploy(
             cmd.extend(
                 ["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"]
             )
+        image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
+        cmd.extend(
+            [
+                "--port-mapping",
+                f"8080:{coordinator_port},7777:{admin_port},10000:{storedproc_port},7687:{cypher_port}",
+            ]
+        )
     returncode = run_shell_cmd(cmd, os.getcwd())
     if returncode == 0:
         message = f"""

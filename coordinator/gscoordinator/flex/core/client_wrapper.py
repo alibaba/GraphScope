@@ -22,6 +22,8 @@ import os
 import threading
 from typing import List
 
+from graphscope.config import Config
+
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import DATASET_WORKSPACE
 from gscoordinator.flex.core.config import SOLUTION
@@ -61,17 +63,17 @@ logger = logging.getLogger("graphscope")
 class ClientWrapper(object):
     """Wrapper of client that interacts with engine"""
 
-    def __init__(self):
+    def __init__(self, config: Config):
         # lock to protect the service
         self._lock = threading.RLock()
         # initialize specific client
-        self._client = self._initialize_client()
+        self._client = self._initialize_client(config)
         # data source management
         self._datasource_manager = DataSourceManager()
         # deployment
         self._deployment = initialize_deployemnt()
 
-    def _initialize_client(self):
+    def _initialize_client(self, config: Config):
         service_initializer = {
             "INTERACTIVE": init_hqps_client,
             "GRAPHSCOPE_INSIGHT": init_groot_client,
@@ -80,7 +82,7 @@ class ClientWrapper(object):
         if initializer is None:
             logger.warn(f"Client initializer of {SOLUTION} not found.")
             return None
-        return initializer()
+        return initializer(config)
 
     def list_graphs(self) -> List[GetGraphResponse]:
         graphs = self._client.list_graphs()
@@ -368,4 +370,12 @@ class ClientWrapper(object):
         return self._client.gremlin_service_available()
 
 
-client_wrapper = ClientWrapper()
+client_wrapper = None
+
+# Interactive/Insight specific configuration
+def initialize_client_wrapper(config=None):
+    global client_wrapper
+    client_wrapper = ClientWrapper(config)
+
+def get_client_wrapper():
+    return client_wrapper

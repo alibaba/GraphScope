@@ -23,7 +23,7 @@ import socket
 import psutil
 from gremlin_python.driver.client import Client
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core.alert.alert_rule import AlertRule
 from gscoordinator.flex.core.alert.message_collector import AlertMessageCollector
 from gscoordinator.flex.core.config import CLUSTER_TYPE
@@ -65,7 +65,7 @@ class HighDiskUtilizationAlert(AlertRule):
         try:
             alert_nodes = []
             disk_usages = []
-            disk_utils = client_wrapper.get_storage_usage().to_dict()
+            disk_utils = get_client_wrapper().get_storage_usage().to_dict()
             for node, usage in disk_utils["storage_usage"].items():
                 if float(usage) > self._threshold:
                     alert_nodes.append(node)
@@ -107,7 +107,7 @@ class GremlinServiceAvailableAlert(AlertRule):
     def run_alert(self):
         """This function needs to handle exception by itself"""
         try:
-            available = client_wrapper.gremlin_service_available()
+            available = get_client_wrapper().gremlin_service_available()
             if not available:
                 message = f"Gremlin service unavailable: unknown reason"
         except Exception as e:
