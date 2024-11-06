@@ -236,7 +236,7 @@ class HQPSClient(object):
             api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
             response = api_instance.get_service_status()
             if CLUSTER_TYPE == "HOSTS":
-                host = 'localhost' # for interactive deployed in hosts, we could not determine the public ip in container. So we let user to replace with the public ip.
+                host = '127.0.0.1' # for interactive deployed in hosts, we could not determine the public ip in container. So we let user to replace with the public ip.
                 if response.status == "Running" and response.graph is not None:
                     g = response.graph.to_dict()
                     serving_graph_id = g["id"]
@@ -246,10 +246,11 @@ class HQPSClient(object):
                     status = {
                         "status": response.status,
                         "sdk_endpoints": {
-                            "cypher": f"neo4j://{host}:{self._get_mapped_port(response.bolt_port)} (Replace localhost with public ip if connecting from outside)",
-                            "hqps": f"http://{host}:{self._get_mapped_port(response.hqps_port)} (Replace localhost with public ip if connecting from outside)",
-                            "gremlin": f"ws://{host}:{self._get_mapped_port(response.gremlin_port)}/gremlin (Replace localhost with public ip if connecting from outside)",
+                            "cypher": f"neo4j://{host}:{self._get_mapped_port(response.bolt_port)}",
+                            "hqps": f"http://{host}:{self._get_mapped_port(response.hqps_port)}",
+                            "gremlin": f"ws://{host}:{self._get_mapped_port(response.gremlin_port)}/gremlin",
                         },
+                        "info": "Replace 127.0.0.1 with public ip if connecting from outside",
                         "start_time": service_start_time,
                         "graph_id": g["id"],
                     }
