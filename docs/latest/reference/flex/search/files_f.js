@@ -1,15 +1,7 @@
 var searchData=
 [
-  ['schema_2ecc_1779',['schema.cc',['../schema_8cc.html',1,'']]],
-  ['schema_2eh_1780',['schema.h',['../schema_8h.html',1,'']]],
-  ['server_5fapp_2ecc_1781',['server_app.cc',['../server__app_8cc.html',1,'']]],
-  ['server_5fapp_2eh_1782',['server_app.h',['../server__app_8h.html',1,'']]],
-  ['service_5futils_2ecc_1783',['service_utils.cc',['../service__utils_8cc.html',1,'']]],
-  ['service_5futils_2eh_1784',['service_utils.h',['../service__utils_8h.html',1,'']]],
-  ['single_5fedge_5finsert_5ftransaction_2ecc_1785',['single_edge_insert_transaction.cc',['../single__edge__insert__transaction_8cc.html',1,'']]],
-  ['single_5fedge_5finsert_5ftransaction_2eh_1786',['single_edge_insert_transaction.h',['../single__edge__insert__transaction_8h.html',1,'']]],
-  ['single_5fphf_5fview_2eh_1787',['single_phf_view.h',['../single__phf__view_8h.html',1,'']]],
-  ['single_5fvertex_5finsert_5ftransaction_2ecc_1788',['single_vertex_insert_transaction.cc',['../single__vertex__insert__transaction_8cc.html',1,'']]],
-  ['single_5fvertex_5finsert_5ftransaction_2eh_1789',['single_vertex_insert_transaction.h',['../single__vertex__insert__transaction_8h.html',1,'']]],
-  ['string_5fview_5fvector_2eh_1790',['string_view_vector.h',['../string__view__vector_8h.html',1,'']]]
+  ['read_5ftransaction_2ecc_1833',['read_transaction.cc',['../read__transaction_8cc.html',1,'']]],
+  ['read_5ftransaction_2eh_1834',['read_transaction.h',['../read__transaction_8h.html',1,'']]],
+  ['result_2ecc_1835',['result.cc',['../result_8cc.html',1,'']]],
+  ['result_2eh_1836',['result.h',['../result_8h.html',1,'']]]
 ];

@@ -19,12 +19,11 @@ type: cypher
 ```
 
 Note:
-- `name` is required.
-- `description` is optional.
-- The string in `query` field could be either `cypher` query or `c++` code. For comprehensive guidelines on crafting stored procedures in GraphScope Interactive using both Cypher and C++, refer to the [Cypher procedure](./development/stored_procedure/cypher_procedure.md) and [C++ procedure](./development/stored_procedure/cpp_procedure.md) documentation.
-- When compiling from Cypher code, the optimization rules defined under [`compiler.planner`](./configuration) will be taken into account to generate a more efficient program.
+- `name` is required. It serves as a unique identifier for a stored procedure, necessary for calling it from the Interactive SDK or Neo4j-native tools. Uniqueness is maintained within the context of a graph, allowing the same name for procedures in different graphs. Ensure the Interactive instance is running on the desired graph when calling the procedure.
+- `description` is optional. It is a string that helps you remember and illustrate the procedure's use. If omitted, a default description will be assigned.
+- The `query` field can contain either a Cypher query or C++ code. Cypher queries support templates where runtime parameters can be denoted as `$param_name`, which can be assigned values when calling the procedure. For defining a stored procedure in C++, see [C++ procedure](./development/stored_procedure/cpp_procedure.md).
+- When compiling Cypher code, the optimization rules specified in [`compiler.planner`](./configuration) will be applied to generate a more efficient program.
 
-For more information on defining a Cypher stored procedure, please refer to [Cypher Stored Procedure](./development/stored_procedure/cypher_procedure.md).
 
 ## Create a Stored Procedure
 
@@ -104,3 +103,7 @@ You can also call the stored procedure via neo4j-native tools, like `cypher-shel
 ```cypher
 CALL test_procedure("marko") YIELD *;
 ```
+
+
+
+In addition to defining a stored procedure with a Cypher query, we also support for customizing query execution through C++ stored procedures. See [C++ Stored Procedure](./development/stored_procedure/cpp_procedure.md).

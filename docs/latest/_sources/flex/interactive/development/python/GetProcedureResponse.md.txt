@@ -14,6 +14,7 @@ Name | Type | Description | Notes
 **params** | [**List[Parameter]**](Parameter.md) |  | [optional] 
 **returns** | [**List[Parameter]**](Parameter.md) |  | [optional] 
 **enable** | **bool** |  | [optional] 
+**option** | **Dict[str, object]** |  | [optional] 
 **bound_graph** | **str** |  | [optional] 
 **runnable** | **bool** |  | [optional] 
 **creation_time** | **int** |  | [optional] 
@@ -36,6 +37,6 @@ get_procedure_response_dict = get_procedure_response_instance.to_dict()
 # create an instance of GetProcedureResponse from a dict
 get_procedure_response_from_dict = GetProcedureResponse.from_dict(get_procedure_response_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

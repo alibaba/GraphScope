@@ -27,6 +27,6 @@ base_edge_type_vertex_type_pair_relations_inner_dict = base_edge_type_vertex_typ
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInner from a dict
 base_edge_type_vertex_type_pair_relations_inner_from_dict = BaseEdgeTypeVertexTypePairRelationsInner.from_dict(base_edge_type_vertex_type_pair_relations_inner_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

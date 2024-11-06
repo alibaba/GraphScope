@@ -24,6 +24,6 @@ update_procedure_request_dict = update_procedure_request_instance.to_dict()
 # create an instance of UpdateProcedureRequest from a dict
 update_procedure_request_from_dict = UpdateProcedureRequest.from_dict(update_procedure_request_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

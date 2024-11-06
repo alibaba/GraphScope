@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['unlikely_3096',['unlikely',['../wal_8cc.html#ac6c45889010c1bd68631771b64f18101',1,'wal.cc']]]
+  ['throw_5fexception_5fif_3179',['THROW_EXCEPTION_IF',['../exception_8h.html#a1e28f99f6044b12dd538dd062685aea5',1,'exception.h']]]
 ];

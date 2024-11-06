@@ -25,6 +25,6 @@ schema_mapping_loading_config_data_source_dict = schema_mapping_loading_config_d
 # create an instance of SchemaMappingLoadingConfigDataSource from a dict
 schema_mapping_loading_config_data_source_from_dict = SchemaMappingLoadingConfigDataSource.from_dict(schema_mapping_loading_config_data_source_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

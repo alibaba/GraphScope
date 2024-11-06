@@ -16,6 +16,7 @@
 |**params** | [**List&lt;Parameter&gt;**](Parameter.md) |  |  [optional] |
 |**returns** | [**List&lt;Parameter&gt;**](Parameter.md) |  |  [optional] |
 |**enable** | **Boolean** |  |  [optional] |
+|**option** | **Map&lt;String, Object&gt;** |  |  [optional] |
 |**boundGraph** | **String** |  |  [optional] |
 |**runnable** | **Boolean** |  |  [optional] |
 |**creationTime** | **Integer** |  |  [optional] |

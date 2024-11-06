@@ -25,6 +25,6 @@ schema_mapping_loading_config_format_dict = schema_mapping_loading_config_format
 # create an instance of SchemaMappingLoadingConfigFormat from a dict
 schema_mapping_loading_config_format_from_dict = SchemaMappingLoadingConfigFormat.from_dict(schema_mapping_loading_config_format_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

@@ -26,6 +26,6 @@ string_type_string_dict = string_type_string_instance.to_dict()
 # create an instance of StringTypeString from a dict
 string_type_string_from_dict = StringTypeString.from_dict(string_type_string_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

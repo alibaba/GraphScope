@@ -28,6 +28,6 @@ base_edge_type_vertex_type_pair_relations_inner_x_csr_params_dict = base_edge_ty
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams from a dict
 base_edge_type_vertex_type_pair_relations_inner_x_csr_params_from_dict = BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(base_edge_type_vertex_type_pair_relations_inner_x_csr_params_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

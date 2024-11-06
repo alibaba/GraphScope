@@ -24,6 +24,6 @@ date_type_dict = date_type_instance.to_dict()
 # create an instance of DateType from a dict
 date_type_from_dict = DateType.from_dict(date_type_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

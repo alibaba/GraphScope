@@ -1,0 +1,29 @@
+# StringTypeString
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**long_text** | **str** |  | 
+
+## Example
+
+```python
+from graphscope.flex.rest.models.string_type_string import StringTypeString
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of StringTypeString from a JSON string
+string_type_string_instance = StringTypeString.from_json(json)
+# print the JSON string representation of the object
+print(StringTypeString.to_json())
+
+# convert the object into a dict
+string_type_string_dict = string_type_string_instance.to_dict()
+# create an instance of StringTypeString from a dict
+string_type_string_from_dict = StringTypeString.from_dict(string_type_string_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

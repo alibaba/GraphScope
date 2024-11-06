@@ -18,6 +18,8 @@ https://slack.graphscope.io
 
 https://graphscope.io/blog/
 
+
+https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack
 https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel
 https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark
 https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope

@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['uintcolumn_2999',['UIntColumn',['../namespacegs.html#a1548ea946c73c00270b20dd2d178fdec',1,'gs']]],
-  ['uintemptycolumn_3000',['UIntEmptyColumn',['../namespacegs.html#abbf16c3a7d35a47ad73e3fa546deaa8f',1,'gs']]],
-  ['ulongcolumn_3001',['ULongColumn',['../namespacegs.html#aec4a50bb16855686486d5ed481249348',1,'gs']]],
-  ['ulongemptycolumn_3002',['ULongEmptyColumn',['../namespacegs.html#a724ef692c4b5abb02d335b99e734af9a',1,'gs']]]
+  ['timestamp_5ft_3101',['timestamp_t',['../namespacegs.html#a623c7eb1bad3c06968c77306473d4df0',1,'gs']]],
+  ['type_3102',['type',['../structgs_1_1id__indexer__impl_1_1KeyBuffer.html#a7fce72c7869c941841a9d93673d5e870',1,'gs::id_indexer_impl::KeyBuffer::type()'],['../structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html#a7854deccf2d49561c20da63dd5e0434f',1,'gs::id_indexer_impl::KeyBuffer&lt; std::string &gt;::type()'],['../structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string__view_01_4.html#a62052cd4eea3fdcd1a0f5606025ae552',1,'gs::id_indexer_impl::KeyBuffer&lt; std::string_view &gt;::type()']]]
 ];

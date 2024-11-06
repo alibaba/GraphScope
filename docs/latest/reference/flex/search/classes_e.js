@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['odpsfragmentloader_1634',['ODPSFragmentLoader',['../classgs_1_1ODPSFragmentLoader.html',1,'gs']]],
-  ['odpsreadclient_1635',['ODPSReadClient',['../classgs_1_1ODPSReadClient.html',1,'gs']]],
-  ['odpsstreamrecordbatchsupplier_1636',['ODPSStreamRecordBatchSupplier',['../classgs_1_1ODPSStreamRecordBatchSupplier.html',1,'gs']]],
-  ['odpstablerecordbatchsupplier_1637',['ODPSTableRecordBatchSupplier',['../classgs_1_1ODPSTableRecordBatchSupplier.html',1,'gs']]]
+  ['pagerank_1681',['PageRank',['../classgs_1_1PageRank.html',1,'gs']]],
+  ['pagerankfactory_1682',['PageRankFactory',['../classgs_1_1PageRankFactory.html',1,'gs']]],
+  ['propertytype_1683',['PropertyType',['../structgs_1_1PropertyType.html',1,'gs']]]
 ];

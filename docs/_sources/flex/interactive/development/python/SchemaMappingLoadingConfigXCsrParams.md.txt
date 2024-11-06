@@ -27,6 +27,6 @@ schema_mapping_loading_config_x_csr_params_dict = schema_mapping_loading_config_
 # create an instance of SchemaMappingLoadingConfigXCsrParams from a dict
 schema_mapping_loading_config_x_csr_params_from_dict = SchemaMappingLoadingConfigXCsrParams.from_dict(schema_mapping_loading_config_x_csr_params_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

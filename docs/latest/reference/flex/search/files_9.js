@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['loader_5ffactory_2ecc_1761',['loader_factory.cc',['../loader__factory_8cc.html',1,'']]],
-  ['loader_5ffactory_2eh_1762',['loader_factory.h',['../loader__factory_8h.html',1,'']]],
-  ['loading_5fconfig_2ecc_1763',['loading_config.cc',['../loading__config_8cc.html',1,'']]],
-  ['loading_5fconfig_2eh_1764',['loading_config.h',['../loading__config_8h.html',1,'']]]
+  ['k_5fhop_5fneighbors_2ecc_1815',['k_hop_neighbors.cc',['../k__hop__neighbors_8cc.html',1,'']]],
+  ['k_5fhop_5fneighbors_2eh_1816',['k_hop_neighbors.h',['../k__hop__neighbors_8h.html',1,'']]]
 ];

@@ -1,8 +1,9 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classgs_1_1AppBase.html" title=" " alt="" coords="5,31,108,57"/>
-<area shape="rect" id="node2" href="$classgs_1_1ReadAppBase.html" title=" " alt="" coords="157,5,292,32"/>
-<area shape="rect" id="node4" href="$classgs_1_1WriteAppBase.html" title=" " alt="" coords="156,56,293,83"/>
-<area shape="rect" id="node3" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="343,5,523,32"/>
-<area shape="rect" id="node5" href="$classgs_1_1HQPSAdhocWriteApp.html" title="HQPSAdhocWriteApp is a builtin, proxy app used to evaluate adhoc write query." alt="" coords="341,56,524,83"/>
-<area shape="rect" id="node6" href="$classgs_1_1ServerApp.html" title=" " alt="" coords="377,107,489,133"/>
+<area shape="rect" id="node1" href="$classgs_1_1AppBase.html" title=" " alt="" coords="5,81,108,108"/>
+<area shape="rect" id="node2" href="$classgs_1_1ReadAppBase.html" title=" " alt="" coords="157,56,292,83"/>
+<area shape="rect" id="node5" href="$classgs_1_1WriteAppBase.html" title=" " alt="" coords="156,107,293,133"/>
+<area shape="rect" id="node3" href="$classgs_1_1AdhocReadApp.html" title=" " alt="" coords="361,5,504,32"/>
+<area shape="rect" id="node4" href="$classgs_1_1HQPSAdhocReadApp.html" title="HQPSAdhocReadApp is a builtin, proxy app used to evaluate adhoc read query." alt="" coords="343,56,523,83"/>
+<area shape="rect" id="node6" href="$classgs_1_1HQPSAdhocWriteApp.html" title="HQPSAdhocWriteApp is a builtin, proxy app used to evaluate adhoc write query." alt="" coords="341,107,524,133"/>
+<area shape="rect" id="node7" href="$classgs_1_1ServerApp.html" title=" " alt="" coords="377,157,489,184"/>
 </map>

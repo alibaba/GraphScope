@@ -24,6 +24,6 @@ start_service_request_dict = start_service_request_instance.to_dict()
 # create an instance of StartServiceRequest from a dict
 start_service_request_from_dict = StartServiceRequest.from_dict(start_service_request_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

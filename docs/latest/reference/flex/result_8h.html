@@ -70,7 +70,8 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#enum-members">Enumerations</a>  </div>
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">result.h File Reference</div>  </div>
 </div><!--header-->
@@ -79,18 +80,20 @@ $(function() {
 <code>#include &lt;iostream&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
+<code>#include &quot;flex/utils/error_pb/interactive.pb.h&quot;</code><br />
 <code>#include &quot;glog/logging.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for result.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="result_8h__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8h" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8h" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8h">
-<area shape="rect" title=" " alt="" coords="140,5,367,47"/>
-<area shape="rect" title=" " alt="" coords="5,95,96,121"/>
-<area shape="rect" title=" " alt="" coords="120,95,200,121"/>
-<area shape="rect" title=" " alt="" coords="224,95,283,121"/>
-<area shape="rect" title=" " alt="" coords="307,95,370,121"/>
-<area shape="rect" title=" " alt="" coords="395,95,509,121"/>
+<area shape="rect" title=" " alt="" coords="183,5,409,47"/>
+<area shape="rect" title=" " alt="" coords="5,102,96,129"/>
+<area shape="rect" title=" " alt="" coords="120,102,200,129"/>
+<area shape="rect" title=" " alt="" coords="224,102,283,129"/>
+<area shape="rect" title=" " alt="" coords="307,102,370,129"/>
+<area shape="rect" title=" " alt="" coords="395,95,531,136"/>
+<area shape="rect" title=" " alt="" coords="555,102,669,129"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -98,49 +101,56 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="result_8h__dep__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8hdep" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8hdep" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2result_8hdep">
-<area shape="rect" title=" " alt="" coords="1021,5,1248,47"/>
-<area shape="rect" href="schema_8h.html" title=" " alt="" coords="871,199,1097,255"/>
-<area shape="rect" href="graph__db__operations_8cc.html" title=" " alt="" coords="1673,896,1900,967"/>
-<area shape="rect" href="graph__db__operations_8h.html" title=" " alt="" coords="1673,777,1900,848"/>
-<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="2653,659,2880,729"/>
-<area shape="rect" href="result_8cc.html" title=" " alt="" coords="1272,102,1499,143"/>
-<area shape="rect" href="service__utils_8h.html" title=" " alt="" coords="569,199,796,255"/>
-<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="1021,95,1248,151"/>
-<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="476,421,703,492"/>
-<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="805,421,1032,492"/>
-<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1724,303,1951,373"/>
-<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="871,310,1097,366"/>
-<area shape="rect" href="abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="797,540,1040,611"/>
-<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="396,659,623,729"/>
-<area shape="rect" href="odps__fragment__loader_8h.html" title=" " alt="" coords="1015,659,1241,729"/>
-<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="195,540,421,611"/>
-<area shape="rect" href="abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="748,659,991,729"/>
-<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="396,777,623,848"/>
-<area shape="rect" href="odps__fragment__loader_8cc.html" title=" " alt="" coords="1015,777,1241,848"/>
-<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="1217,540,1447,611"/>
-<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="1849,666,2076,722"/>
-<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="547,540,773,611"/>
-<area shape="rect" href="loader__factory_8cc.html" title=" " alt="" coords="1266,659,1497,729"/>
-<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="2327,785,2553,841"/>
-<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="2673,903,2905,959"/>
-<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="2025,777,2252,848"/>
-<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="2327,903,2553,959"/>
-<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="1107,421,1333,492"/>
-<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="3160,421,3387,492"/>
-<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="3411,421,3637,492"/>
-<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="1675,540,1901,611"/>
-<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="2830,547,3111,603"/>
-<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="2379,429,2653,485"/>
-<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1925,540,2152,611"/>
-<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="2176,540,2403,611"/>
-<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="2071,429,2345,485"/>
-<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="2403,659,2629,729"/>
-<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="2577,785,2804,841"/>
-<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="2879,785,3105,841"/>
-<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="2929,903,3156,959"/>
-<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="2477,540,2704,611"/>
-<area shape="rect" href="service__utils_8cc.html" title=" " alt="" coords="519,310,745,366"/>
-<area shape="rect" href="yaml__utils_8cc.html" title=" " alt="" coords="1223,199,1449,255"/>
+<area shape="rect" title=" " alt="" coords="2836,5,3063,47"/>
+<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1067,199,1293,255"/>
+<area shape="rect" href="graph__db__operations_8cc.html" title=" " alt="" coords="1473,896,1700,967"/>
+<area shape="rect" href="graph__db__operations_8h.html" title=" " alt="" coords="1925,777,2152,848"/>
+<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="3124,659,3351,729"/>
+<area shape="rect" href="result_8cc.html" title=" " alt="" coords="3325,102,3552,143"/>
+<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="2660,95,2887,151"/>
+<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="412,421,639,492"/>
+<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="816,421,1043,492"/>
+<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1896,303,2123,373"/>
+<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="916,310,1143,366"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="747,540,989,611"/>
+<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="421,659,648,729"/>
+<area shape="rect" href="odps__fragment__loader_8h.html" title=" " alt="" coords="1065,659,1292,729"/>
+<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="144,540,371,611"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="747,659,989,729"/>
+<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="421,777,648,848"/>
+<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="1115,540,1346,611"/>
+<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="1675,666,1901,722"/>
+<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="496,540,723,611"/>
+<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="2227,785,2453,841"/>
+<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="3068,903,3300,959"/>
+<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="1675,777,1901,848"/>
+<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="2227,903,2453,959"/>
+<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="1117,421,1344,492"/>
+<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="1469,421,1696,492"/>
+<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="1720,421,1947,492"/>
+<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="1921,540,2148,611"/>
+<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="2322,666,2603,722"/>
+<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="2724,547,2999,603"/>
+<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="2172,540,2399,611"/>
+<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="2423,540,2649,611"/>
+<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="2373,429,2648,485"/>
+<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="2072,421,2299,492"/>
+<area shape="rect" href="adhoc__app_8h.html" title=" " alt="" coords="2477,785,2704,841"/>
+<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="2728,785,2955,841"/>
+<area shape="rect" href="count__vertices_8h.html" title=" " alt="" coords="2979,777,3205,848"/>
+<area shape="rect" href="k__hop__neighbors_8h.html" title=" " alt="" coords="3280,777,3507,848"/>
+<area shape="rect" href="pagerank_8h.html" title=" " alt="" coords="3531,785,3767,841"/>
+<area shape="rect" href="shortest__path__among__three_8h.html" title=" " alt="" coords="3841,777,4068,848"/>
+<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="4092,785,4319,841"/>
+<area shape="rect" href="adhoc__app_8cc.html" title=" " alt="" coords="2477,903,2704,959"/>
+<area shape="rect" href="count__vertices_8cc.html" title=" " alt="" coords="2817,896,3044,967"/>
+<area shape="rect" href="k__hop__neighbors_8cc.html" title=" " alt="" coords="3324,896,3551,967"/>
+<area shape="rect" href="pagerank_8cc.html" title=" " alt="" coords="3575,903,3817,959"/>
+<area shape="rect" href="shortest__path__among__three_8cc.html" title=" " alt="" coords="3841,896,4068,967"/>
+<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="4092,903,4319,959"/>
+<area shape="rect" href="service__utils_8h.html" title=" " alt="" coords="2660,199,2887,255"/>
+<area shape="rect" href="yaml__utils_8cc.html" title=" " alt="" coords="2923,310,3149,366"/>
+<area shape="rect" href="service__utils_8cc.html" title=" " alt="" coords="2621,310,2848,366"/>
 </map>
 </div>
 </div>
@@ -165,6 +175,8 @@ Classes</h2></td></tr>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:namespacestd"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestd.html">std</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -176,39 +188,18 @@ Macros</h2></td></tr>
 <tr class="separator:a68ff3ea3e8175871dac6e1b8ad438ae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af92a143f0ed83d6d37fdab95589ee248"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="result_8h.html#af92a143f0ed83d6d37fdab95589ee248">FLEX_AUTO</a>(var,  expr)&#160;&#160;&#160;ASSIGN_AND_RETURN_IF_NOT_OK(auto var, expr)</td></tr>
 <tr class="separator:af92a143f0ed83d6d37fdab95589ee248"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22a7abb9c6a13f48df331b8796620188"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="result_8h.html#a22a7abb9c6a13f48df331b8796620188">RETURN_FLEX_LEAF_ERROR</a>(code,  msg)</td></tr>
+<tr class="separator:a22a7abb9c6a13f48df331b8796620188"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:a64cf1725c649a5e2bca41deb419a67bd"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bd">gs::StatusCode</a> { <br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdae0aa021e21dddbd6d8cecec71e9cf564">gs::StatusCode::OK</a> = 0, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda31e0b6a9966888a4107e841b20e128ec">gs::StatusCode::InValidArgument</a> = 1, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda4d968eb9c5db5fcb13a0a9a5faa8054c">gs::StatusCode::UnsupportedOperator</a> = 2, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda89b69484680b18e9179e826c6e023805">gs::StatusCode::AlreadyExists</a> = 3, 
-<br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda7cbeab3617c4f73e18222a052566d3f4">gs::StatusCode::NotExists</a> = 4, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda2a82e100213c3972dd917508063a9579">gs::StatusCode::CodegenError</a> = 5, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda4ae8173ab6d2dfd07e3925a3e305c49a">gs::StatusCode::UninitializedStatus</a> = 6, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda2d5935ddd4d84b62e3c07964090f2377">gs::StatusCode::InvalidSchema</a> = 7, 
-<br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdaa54cbd08f6b0a830a1ff19d562588b1f">gs::StatusCode::PermissionError</a> = 8, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdaf1dbc610f9ba6abafd62ae7fc08c1268">gs::StatusCode::IllegalOperation</a> = 9, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda8462b58246e70e5c83e5b939a9332cb5">gs::StatusCode::InternalError</a> = 10, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda0d2b12c94aeba64ea3297148c23fb3eb">gs::StatusCode::InvalidImportFile</a> = 11, 
-<br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda5206bd7472156351d2d9a99633ac9580">gs::StatusCode::IOError</a> = 12, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda38c300f4fc9ce8a77aad4a30de05cad8">gs::StatusCode::NotFound</a> = 13, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdad14f393e86cbe5976f0457ae2a0fcc49">gs::StatusCode::QueryFailed</a> = 14, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdaa0ebd5276d9827ebb538006403f04bb4">gs::StatusCode::ReopenError</a> = 15, 
-<br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda245ded1d44e9bfdb1605e9213db5ee41">gs::StatusCode::ErrorOpenMeta</a> = 16, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bda2d97b79d9bb4ab58fbf9eb900ef63148">gs::StatusCode::SQlExecutionError</a> = 17, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdab3c028203a9cdcd9a1649ea32475b906">gs::StatusCode::SqlBindingError</a> = 18, 
-<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdaa6122fbac59d9c4f3fd78b12cfe6c5ee">gs::StatusCode::Unimplemented</a> = 19, 
-<br />
-&#160;&#160;<a class="el" href="namespacegs.html#a64cf1725c649a5e2bca41deb419a67bdaadffd3d5ec501b22d787704b9a83aa2f">gs::StatusCode::AlreadyLocked</a> = 20
-<br />
- }</td></tr>
-<tr class="separator:a64cf1725c649a5e2bca41deb419a67bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a2ebc317d40b2f8f367242b30febb4a56"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a2ebc317d40b2f8f367242b30febb4a56">gs::StatusCode</a> = gs::flex::interactive::Code</td></tr>
+<tr class="separator:a2ebc317d40b2f8f367242b30febb4a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a6db68052fe08de0ffed76765b0552ed7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestd.html#a6db68052fe08de0ffed76765b0552ed7">std::to_string</a> (const gs::flex::interactive::Code &amp;status)</td></tr>
+<tr class="separator:a6db68052fe08de0ffed76765b0552ed7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="af72c563e5a9983ee2758a0a38e9c49af"></a>
@@ -236,14 +227,17 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">auto</span>&amp;&amp; FLEX_TMP_VAR = expr;                                                  \</div>
-<div class="line">  static_assert(::<a class="code" href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a>&lt;                                       \</div>
-<div class="line">                    <span class="keyword">typename</span> std::decay&lt;decltype(FLEX_TMP_VAR)&gt;::type&gt;::value, \</div>
-<div class="line">                <span class="stringliteral">&quot;The expression must return a Result type&quot;</span>);                   \</div>
-<div class="line">  if (!FLEX_TMP_VAR.ok()) {                                                    \</div>
-<div class="line">    return FLEX_TMP_VAR;                                                       \</div>
-<div class="line">  }                                                                            \</div>
-<div class="line">  var = std::forward&lt;decltype(FLEX_TMP_VAR)&gt;(FLEX_TMP_VAR).move_value()</div>
+<b>Value:</b><div class="fragment"><div class="line">  {                                                                        \</div>
+<div class="line">    auto&amp;&amp; FLEX_TMP_VAR = expr;                                            \</div>
+<div class="line">    static_assert(                                                         \</div>
+<div class="line">        ::<a class="code" href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a>&lt;                                           \</div>
+<div class="line">            <span class="keyword">typename</span> std::decay&lt;decltype(FLEX_TMP_VAR)&gt;::type&gt;::value,     \</div>
+<div class="line">        <span class="stringliteral">&quot;The expression must return a Result type&quot;</span>);                       \</div>
+<div class="line">    if (!FLEX_TMP_VAR.ok()) {                                              \</div>
+<div class="line">      return FLEX_TMP_VAR;                                                 \</div>
+<div class="line">    }                                                                      \</div>
+<div class="line">    var = std::forward&lt;decltype(FLEX_TMP_VAR)&gt;(FLEX_TMP_VAR).move_value(); \</div>
+<div class="line">  }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -272,14 +266,17 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">auto</span>&amp;&amp; FLEX_TMP_VAR = expr;                                                  \</div>
-<div class="line">  static_assert(::<a class="code" href="structgs_1_1is__gs__status__type.html">gs::is_gs_status_type</a>&lt;                                       \</div>
-<div class="line">                    <span class="keyword">typename</span> std::decay&lt;decltype(FLEX_TMP_VAR)&gt;::type&gt;::value, \</div>
-<div class="line">                <span class="stringliteral">&quot;The expression must return a Status type&quot;</span>);                   \</div>
-<div class="line">  if (!FLEX_TMP_VAR.ok()) {                                                    \</div>
-<div class="line">    return FLEX_TMP_VAR;                                                       \</div>
-<div class="line">  }                                                                            \</div>
-<div class="line">  var = std::forward&lt;decltype(FLEX_TMP_VAR)&gt;(FLEX_TMP_VAR)</div>
+<b>Value:</b><div class="fragment"><div class="line">  {                                                                        \</div>
+<div class="line">    auto&amp;&amp; FLEX_TMP_VAR = expr;                                            \</div>
+<div class="line">    static_assert(                                                         \</div>
+<div class="line">        ::<a class="code" href="structgs_1_1is__gs__status__type.html">gs::is_gs_status_type</a>&lt;                                           \</div>
+<div class="line">            <span class="keyword">typename</span> std::decay&lt;decltype(FLEX_TMP_VAR)&gt;::type&gt;::value,     \</div>
+<div class="line">        <span class="stringliteral">&quot;The expression must return a Status type&quot;</span>);                       \</div>
+<div class="line">    if (!FLEX_TMP_VAR.ok()) {                                              \</div>
+<div class="line">      return FLEX_TMP_VAR;                                                 \</div>
+<div class="line">    }                                                                      \</div>
+<div class="line">    var = std::forward&lt;decltype(FLEX_TMP_VAR)&gt;(FLEX_TMP_VAR).move_value(); \</div>
+<div class="line">  }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -311,6 +308,36 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
+<a id="a22a7abb9c6a13f48df331b8796620188"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22a7abb9c6a13f48df331b8796620188">&#9670;&nbsp;</a></span>RETURN_FLEX_LEAF_ERROR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RETURN_FLEX_LEAF_ERROR</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">code, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">msg&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  return ::boost::leaf::new_error(        \</div>
+<div class="line">      <a class="code" href="classgs_1_1Status.html">gs::Status</a>(::gs::flex::interactive::Code::code, msg))</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="abfede2fd3091ebb5b01dc280abe4b1ec"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abfede2fd3091ebb5b01dc280abe4b1ec">&#9670;&nbsp;</a></span>RETURN_IF_NOT_OK</h2>
 
@@ -336,8 +363,9 @@ Enumerations</h2></td></tr>
 </div>
 </div>
 </div><!-- contents -->
-<div class="ttc" id="astructgs_1_1is__gs__status__type_html"><div class="ttname"><a href="structgs_1_1is__gs__status__type.html">gs::is_gs_status_type</a></div><div class="ttdef"><b>Definition:</b> result.h:120</div></div>
-<div class="ttc" id="astructgs_1_1is__gs__result__type_html"><div class="ttname"><a href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a></div><div class="ttdef"><b>Definition:</b> result.h:114</div></div>
+<div class="ttc" id="aclassgs_1_1Status_html"><div class="ttname"><a href="classgs_1_1Status.html">gs::Status</a></div><div class="ttdef"><b>Definition:</b> result.h:32</div></div>
+<div class="ttc" id="astructgs_1_1is__gs__status__type_html"><div class="ttname"><a href="structgs_1_1is__gs__status__type.html">gs::is_gs_status_type</a></div><div class="ttdef"><b>Definition:</b> result.h:103</div></div>
+<div class="ttc" id="astructgs_1_1is__gs__result__type_html"><div class="ttname"><a href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a></div><div class="ttdef"><b>Definition:</b> result.h:97</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

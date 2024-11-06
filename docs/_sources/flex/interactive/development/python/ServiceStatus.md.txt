@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**statistics_enabled** | **bool** |  | [optional] 
 **status** | **str** |  | [optional] 
 **graph** | [**GetGraphResponse**](GetGraphResponse.md) |  | [optional] 
 **bolt_port** | **int** |  | [optional] 
@@ -29,6 +30,6 @@ service_status_dict = service_status_instance.to_dict()
 # create an instance of ServiceStatus from a dict
 service_status_from_dict = ServiceStatus.from_dict(service_status_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 

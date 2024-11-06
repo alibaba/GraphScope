@@ -83,13 +83,18 @@ Collaboration diagram for gs::ReadTransaction:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1ReadTransaction__coll__graph.png" border="0" usemap="#gs_1_1ReadTransaction_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1ReadTransaction_coll__map" id="gs_1_1ReadTransaction_coll__map">
-<area shape="rect" title=" " alt="" coords="71,407,223,433"/>
+<area shape="rect" title=" " alt="" coords="181,585,333,612"/>
 <area shape="rect" href="classgs_1_1VersionManager.html" title=" " alt="" coords="5,317,156,344"/>
-<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="180,317,395,344"/>
-<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="239,228,336,255"/>
-<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="217,109,357,151"/>
-<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="89,5,277,47"/>
-<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="301,13,484,39"/>
+<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="460,407,563,433"/>
+<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="187,317,401,344"/>
+<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="245,228,343,255"/>
+<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="224,109,364,151"/>
+<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="96,5,284,47"/>
+<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="308,13,491,39"/>
+<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="412,496,565,523"/>
+<area shape="rect" href="structgs_1_1SessionLocalContext.html" title=" " alt="" coords="473,585,653,612"/>
+<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="641,407,750,433"/>
+<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="294,407,435,433"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -102,8 +107,8 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1b6aa011d0aa4a2b2b4c34cd0871cd14"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a1b6aa011d0aa4a2b2b4c34cd0871cd14">ReadTransaction</a> (const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1ReadTransaction.html#ae4ebef555e6a7ef6295d52c5a5cac7e5">timestamp</a>)</td></tr>
-<tr class="separator:a1b6aa011d0aa4a2b2b4c34cd0871cd14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9daeae253aa0acbd77d0ea5c4f5e18cd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a9daeae253aa0acbd77d0ea5c4f5e18cd">ReadTransaction</a> (const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;session, const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;<a class="el" href="classgs_1_1ReadTransaction.html#ac099c889147817034e4d3c32d97c11e3">graph</a>, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1ReadTransaction.html#ae4ebef555e6a7ef6295d52c5a5cac7e5">timestamp</a>)</td></tr>
+<tr class="separator:a9daeae253aa0acbd77d0ea5c4f5e18cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a765d896d839ac11029e64b9949b9d8a9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a765d896d839ac11029e64b9949b9d8a9">~ReadTransaction</a> ()</td></tr>
 <tr class="separator:a765d896d839ac11029e64b9949b9d8a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4ebef555e6a7ef6295d52c5a5cac7e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ae4ebef555e6a7ef6295d52c5a5cac7e5">timestamp</a> () const</td></tr>
@@ -112,6 +117,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ad3cd66107546cb17e023da4539a19c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91c6ae8e2e8ec32d7a961e1ab5c0e928"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a91c6ae8e2e8ec32d7a961e1ab5c0e928">Abort</a> ()</td></tr>
 <tr class="separator:a91c6ae8e2e8ec32d7a961e1ab5c0e928"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac099c889147817034e4d3c32d97c11e3"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ac099c889147817034e4d3c32d97c11e3">graph</a> () const</td></tr>
+<tr class="separator:ac099c889147817034e4d3c32d97c11e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a2bc0898d9f7d0f724bca7b587be147c4">get_vertex_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
+<tr class="separator:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a545e92759f83c95817b669d47510b070"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a545e92759f83c95817b669d47510b070">GetVertexIterator</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
 <tr class="separator:a545e92759f83c95817b669d47510b070"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f62aeccb10885ecd89f235c1bd8fc77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a3f62aeccb10885ecd89f235c1bd8fc77">FindVertex</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;id) const</td></tr>
@@ -152,6 +161,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abb8489d0b83c5a3f8c250cd01f937825"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:abb8489d0b83c5a3f8c250cd01f937825"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1SingleImmutableGraphView.html">SingleImmutableGraphView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#abb8489d0b83c5a3f8c250cd01f937825">GetIncomingSingleImmutableGraphView</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:abb8489d0b83c5a3f8c250cd01f937825"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab48d01aea20f2a18fcb9d4e270d56dfd"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab48d01aea20f2a18fcb9d4e270d56dfd">GetSession</a> () const</td></tr>
+<tr class="separator:ab48d01aea20f2a18fcb9d4e270d56dfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -160,6 +171,8 @@ Private Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
+<tr class="memitem:abf8fb7a66cffc9bf621db7f491c4a832"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#abf8fb7a66cffc9bf621db7f491c4a832">session_</a></td></tr>
+<tr class="separator:abf8fb7a66cffc9bf621db7f491c4a832"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab798be49c3cecf26ffd94391cf115f02"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab798be49c3cecf26ffd94391cf115f02">graph_</a></td></tr>
 <tr class="separator:ab798be49c3cecf26ffd94391cf115f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8b87a00d39f1aac80809b9b87374d83"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab8b87a00d39f1aac80809b9b87374d83">vm_</a></td></tr>
@@ -168,8 +181,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a68f64918c454b5a3248ed34884b9011b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a1b6aa011d0aa4a2b2b4c34cd0871cd14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1b6aa011d0aa4a2b2b4c34cd0871cd14">&#9670;&nbsp;</a></span>ReadTransaction()</h2>
+<a id="a9daeae253aa0acbd77d0ea5c4f5e18cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9daeae253aa0acbd77d0ea5c4f5e18cd">&#9670;&nbsp;</a></span>ReadTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -177,6 +190,12 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="memname">gs::ReadTransaction::ReadTransaction </td>
           <td>(</td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td>
+          <td class="paramname"><em>session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td>
           <td class="paramname"><em>graph</em>, </td>
         </tr>
@@ -278,6 +297,42 @@ Private Attributes</h2></td></tr>
           <td></td><td> const</td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2bc0898d9f7d0f724bca7b587be147c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2bc0898d9f7d0f724bca7b587be147c4">&#9670;&nbsp;</a></span>get_vertex_property_column()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::shared_ptr&lt;<a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a>&gt; gs::ReadTransaction::get_vertex_property_column </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -726,6 +781,23 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="ab48d01aea20f2a18fcb9d4e270d56dfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab48d01aea20f2a18fcb9d4e270d56dfd">&#9670;&nbsp;</a></span>GetSession()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp; gs::ReadTransaction::GetSession </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a5b75c8d6e68ef365cb75a0d67cb73674"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5b75c8d6e68ef365cb75a0d67cb73674">&#9670;&nbsp;</a></span>GetVertexId()</h2>
 
@@ -824,6 +896,23 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="ac099c889147817034e4d3c32d97c11e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac099c889147817034e4d3c32d97c11e3">&#9670;&nbsp;</a></span>graph()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp; gs::ReadTransaction::graph </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a4c36e10d638c275753572b4bed62a858"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4c36e10d638c275753572b4bed62a858">&#9670;&nbsp;</a></span>release()</h2>
 
@@ -895,6 +984,28 @@ template&lt;typename EDATA_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a>&amp; gs::ReadTransaction::graph_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abf8fb7a66cffc9bf621db7f491c4a832"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf8fb7a66cffc9bf621db7f491c4a832">&#9670;&nbsp;</a></span>session_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&amp; gs::ReadTransaction::session_</td>
         </tr>
       </table>
   </td>

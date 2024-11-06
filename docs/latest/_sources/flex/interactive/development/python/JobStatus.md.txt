@@ -30,6 +30,6 @@ job_status_dict = job_status_instance.to_dict()
 # create an instance of JobStatus from a dict
 job_status_from_dict = JobStatus.from_dict(job_status_dict)
 ```
-[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+[[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
 
