@@ -229,6 +229,12 @@ class VineyardConfig:
 
 
 @dataclass
+class InteractiveConfig:
+    # a map from internal port to external port
+    port_mapping: Union[dict, None] = None
+
+
+@dataclass
 class CoordinatorConfig:
     endpoint: Union[str, None] = None
     """The address of existed coordinator service, with formats like 'ip:port'.
@@ -351,6 +357,8 @@ class Config(Serializable):
     coordinator: CoordinatorConfig = field(default_factory=CoordinatorConfig)
     # Vineyard configuration.
     vineyard: VineyardConfig = field(default_factory=VineyardConfig)
+    # Interactive configuration.
+    interactive: InteractiveConfig = field(default_factory=InteractiveConfig)
 
     # Local cluster configuration.
     hosts_launcher: HostsLauncherConfig = field(default_factory=HostsLauncherConfig)

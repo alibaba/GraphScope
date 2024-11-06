@@ -26,6 +26,7 @@ import socket
 from typing import List
 
 import psutil
+from graphscope.config import Config
 from gremlin_python.driver.client import Client
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
@@ -307,5 +308,5 @@ class GrootClient(object):
             return True
 
 
-def init_groot_client():
+def init_groot_client(config: Config):
     return GrootClient()
