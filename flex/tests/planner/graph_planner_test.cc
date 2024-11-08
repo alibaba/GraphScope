@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     LOG(ERROR) << "Invalid compiler config path.";
     return 1;
   }
-  gs::jni::GraphPlannerWrapper planner(java_path, jna_path, graph_schema_path);
+  gs::GraphPlannerWrapper planner(java_path, jna_path, graph_schema_path);
   if (!planner.is_valid()) {
     LOG(ERROR) << "Invalid GraphPlannerWrapper.";
     return 1;

@@ -12,10 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <sys/wait.h>
+#include <unistd.h>
+#include <zlib.h>
+#include <fstream>
 
 #include <flex/planner/graph_planner.h>
 
 namespace gs {
+#if (GRAPH_PLANNER_JNI_INVOKER)
 namespace jni {
 
 static JavaVM* _jvm = NULL;
@@ -139,11 +144,72 @@ JNIEnvMark::~JNIEnvMark() {
 
 JNIEnv* JNIEnvMark::env() { return _env; }
 
-physical::PhysicalPlan GraphPlannerWrapper::CompilePlan(
-    const std::string& compiler_config_path,
-    const std::string& cypher_query_string) {
+}  // namespace jni
+
+#endif
+
+std::vector<std::string> list_files(const std::string& path) {
+  // list all files in the directory
+  std::vector<std::string> files;
+  for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    files.push_back(entry.path().string());
+  }
+  return files;
+}
+
+std::string GraphPlannerWrapper::expand_directory(const std::string& path) {
+  std::vector<std::string> paths;
+  std::string::size_type start = 0;
+  std::string::size_type end = path.find(':');
+  while (end != std::string::npos) {
+    auto sub_path = path.substr(start, end - start);
+    if (!sub_path.empty()) {
+      if (std::filesystem::is_directory(sub_path)) {
+        auto files = list_files(sub_path);
+        paths.insert(paths.end(), files.begin(), files.end());
+      } else {
+        paths.push_back(sub_path);
+      }
+    }
+    start = end + 1;
+    end = path.find(':', start);
+  }
+  auto sub_path = path.substr(start);
+  if (!sub_path.empty()) {
+    auto files = list_files(sub_path);
+    paths.insert(paths.end(), files.begin(), files.end());
+  }
+  std::stringstream ss;
+  for (const auto& p : paths) {
+    ss << p << ":";
+  }
+  return ss.str();
+}
+
+#if (GRAPH_PLANNER_JNI_INVOKER)
+
+std::string GraphPlannerWrapper::generate_jvm_options(
+    const std::string java_path, const std::string& jna_path,
+    const std::string& graph_schema_yaml,
+    const std::string& graph_statistic_json) {
+  auto expanded_java_path = expand_directory(java_path);
+  VLOG(10) << "Expanded java path: " << expanded_java_path;
+  std::string jvm_options = "-Djava.class.path=" + expanded_java_path;
+  jvm_options += " -Djna.library.path=" + jna_path;
+  jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
+  if (!graph_statistic_json.empty()) {
+    jvm_options += " -Dgraph.statistic=" + graph_statistic_json;
+  }
+  return jvm_options;
+}
+
+physical::PhysicalPlan compilePlanJNI(jclass graph_planner_clz_,
+                                      jmethodID graph_planner_method_id_,
+                                      jni::JNIEnvMark& jni_wrapper_,
+                                      const std::string& compiler_config_path,
+                                      const std::string& cypher_query_string) {
   physical::PhysicalPlan physical_plan;
-  if (!is_valid()) {
+  if (graph_planner_clz_ == NULL || graph_planner_method_id_ == NULL) {
     LOG(ERROR) << "Invalid GraphPlannerWrapper.";
     return physical_plan;
   }
@@ -176,60 +242,101 @@ physical::PhysicalPlan GraphPlannerWrapper::CompilePlan(
 
   return physical_plan;
 }
+#endif
 
-std::string GraphPlannerWrapper::generate_jvm_options(
-    const std::string java_path, const std::string& jna_path,
+#if (!GRAPH_PLANNER_JNI_INVOKER)
+
+physical::PhysicalPlan readPhysicalPlan(const std::string& output_file) {
+  std::ifstream file(output_file, std::ios::binary);
+
+  if (!file.is_open()) {
+    LOG(ERROR) << "Fail to open file: " << output_file;
+    return physical::PhysicalPlan();
+  }
+
+  file.seekg(0, std::ios::end);
+  size_t size = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  std::string buffer;
+  buffer.resize(size);
+
+  file.read(&buffer[0], size);
+
+  file.close();
+  physical::PhysicalPlan plan;
+  if (!plan.ParseFromString(std::string(buffer))) {
+    LOG(ERROR) << "Fail to parse physical plan.";
+    return physical::PhysicalPlan();
+  }
+  return plan;
+}
+
+physical::PhysicalPlan compilePlanSubprocess(
+    const std::string& class_path, const std::string& jna_path,
     const std::string& graph_schema_yaml,
-    const std::string& graph_statistic_json) {
-  auto expanded_java_path = expand_directory(java_path);
-  VLOG(10) << "Expanded java path: " << expanded_java_path;
-  std::string jvm_options = "-Djava.class.path=" + expanded_java_path;
-  jvm_options += " -Djna.library.path=" + jna_path;
-  jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
-  if (!graph_statistic_json.empty()) {
-    jvm_options += " -Dgraph.statistic=" + graph_statistic_json;
-  }
-  return jvm_options;
-}
-
-std::string GraphPlannerWrapper::expand_directory(const std::string& path) {
-  std::vector<std::string> paths;
-  std::string::size_type start = 0;
-  std::string::size_type end = path.find(':');
-  while (end != std::string::npos) {
-    auto sub_path = path.substr(start, end - start);
-    if (!sub_path.empty()) {
-      if (std::filesystem::is_directory(sub_path)) {
-        auto files = list_files(sub_path);
-        paths.insert(paths.end(), files.begin(), files.end());
-      } else {
-        paths.push_back(sub_path);
-      }
+    const std::string& graph_statistic_json,
+    const std::string& compiler_config_path,
+    const std::string& cypher_query_string) {
+  // use execvp to run the command
+  auto random_prefix = std::to_string(
+      std::chrono::system_clock::now().time_since_epoch().count());
+  std::string dst_query_path = "/tmp/temp_query_" + random_prefix + ".cypher";
+  std::string dst_output_file = "/tmp/temp_output_" + random_prefix + ".pb";
+  std::ofstream query_file(dst_query_path);
+  query_file << cypher_query_string;
+  query_file.close();
+  pid_t pid = fork();
+  if (pid == 0) {
+    // generate a random file name for query
+    const char* const command_string_array[] = {
+        "java",
+        "-cp",
+        class_path.c_str(),
+        jna_path.c_str(),
+        graph_schema_yaml.c_str(),
+        graph_statistic_json.c_str(),
+        "com.alibaba.graphscope.common.ir.tools.GraphPlanner",
+        compiler_config_path.c_str(),
+        dst_query_path.c_str(),
+        dst_output_file.c_str(),
+        "/tmp/temp.cypher.yaml",
+        NULL};
+    LOG(INFO) << command_string_array[0] << " " << command_string_array[1]
+              << " " << command_string_array[2] << " "
+              << command_string_array[3] << " " << command_string_array[4]
+              << " " << command_string_array[5] << " "
+              << command_string_array[6] << " " << command_string_array[7]
+              << " " << command_string_array[8] << " "
+              << command_string_array[9];
+    execvp(command_string_array[0],
+           const_cast<char* const*>(command_string_array));
+  } else if (pid < 0) {
+    LOG(ERROR) << "Error in fork.";
+  } else {
+    int status;
+    waitpid(pid, &status, 0);
+    if (status != 0) {
+      LOG(ERROR) << "Error in running command.";
     }
-    start = end + 1;
-    end = path.find(':', start);
+    return readPhysicalPlan(dst_output_file);
   }
-  auto sub_path = path.substr(start);
-  if (!sub_path.empty()) {
-    auto files = list_files(sub_path);
-    paths.insert(paths.end(), files.begin(), files.end());
-  }
-  std::stringstream ss;
-  for (const auto& p : paths) {
-    ss << p << ":";
-  }
-  return ss.str();
+  return physical::PhysicalPlan();
+}
+#endif
+
+physical::PhysicalPlan GraphPlannerWrapper::CompilePlan(
+    const std::string& compiler_config_path,
+    const std::string& cypher_query_string) {
+#if (GRAPH_PLANNER_JNI_INVOKER)
+  return compilePlanJNI(graph_planner_clz_, graph_planner_method_id_,
+                        jni_wrapper_, compiler_config_path,
+                        cypher_query_string);
+#else
+  return compilePlanSubprocess(class_path_, jna_path_, graph_schema_yaml_,
+                               graph_statistic_json_, compiler_config_path,
+                               cypher_query_string);
+#endif
 }
 
-std::vector<std::string> GraphPlannerWrapper::list_files(
-    const std::string& path) {
-  // list all files in the directory
-  std::vector<std::string> files;
-  for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    files.push_back(entry.path().string());
-  }
-  return files;
-}
-
-}  // namespace jni
 }  // namespace gs

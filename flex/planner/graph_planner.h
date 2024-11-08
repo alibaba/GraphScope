@@ -26,7 +26,15 @@ limitations under the License.
 
 #include "glog/logging.h"
 
+// #define GRAPH_PLANNER_JNI_INVOKER JNI
+#ifndef GRAPH_PLANNER_JNI_INVOKER
+#define GRAPH_PLANNER_JNI_INVOKER 0  // 1: JNI, 0: subprocess
+#endif
+// Could be JNI or subprocess
+
 namespace gs {
+
+#if (GRAPH_PLANNER_JNI_INVOKER)
 namespace jni {
 struct JNIEnvMark {
   JNIEnv* _env;
@@ -36,6 +44,9 @@ struct JNIEnvMark {
   ~JNIEnvMark();
   JNIEnv* env();
 };
+
+}  // namespace jni
+#endif
 
 class GraphPlannerWrapper {
  public:
@@ -48,6 +59,7 @@ class GraphPlannerWrapper {
   GraphPlannerWrapper(const std::string java_path, const std::string& jna_path,
                       const std::string& graph_schema_yaml,
                       const std::string& graph_statistic_json = "")
+#if (GRAPH_PLANNER_JNI_INVOKER)
       : jni_wrapper_(generate_jvm_options(
             java_path, jna_path, graph_schema_yaml, graph_statistic_json)) {
     jclass clz = jni_wrapper_.env()->FindClass(kGraphPlannerClass);
@@ -64,15 +76,29 @@ class GraphPlannerWrapper {
     }
     graph_planner_method_id_ = j_method_id;
   }
+#else
+      : jna_path_("-Djna.library.path=" + jna_path),
+        graph_schema_yaml_("-Dgraph.schema=" + graph_schema_yaml),
+        graph_statistic_json_("-Dgraph.statistic=" + graph_statistic_json) {
+    class_path_ = expand_directory(java_path);
+  }
+#endif
 
   ~GraphPlannerWrapper() {
+#if (GRAPH_PLANNER_JNI_INVOKER)
     if (graph_planner_clz_ != NULL) {
       jni_wrapper_.env()->DeleteGlobalRef(graph_planner_clz_);
     }
+#endif
   }
 
   inline bool is_valid() {
+#if (GRAPH_PLANNER_JNI_INVOKER)
     return graph_planner_clz_ != NULL && graph_planner_method_id_ != NULL;
+#else
+    return true;  // just return true, since we don't have a way to check the
+                  // validity when calling via subprocess.
+#endif
   }
 
   /**
@@ -90,21 +116,28 @@ class GraphPlannerWrapper {
                                    const std::string& jna_path,
                                    const std::string& graph_schema_yaml,
                                    const std::string& graph_statistic_json);
-
+  // physical::PhysicalPlan compilePlanJNI(const std::string&
+  // compiler_config_path,
+  //                                       const std::string&
+  //                                       cypher_query_string);
+  std::string expand_directory(const std::string& path);
+#if (GRAPH_PLANNER_JNI_INVOKER)
   // We need to list all files in the directory, if exists.
   // The reason why we need to list all files in the directory is that
   // java -Djava.class.path=dir/* (in jni, which we are using)will not load all
   // jar files in the directory, While java -cp dir/* will load all jar files in
   // the directory.
-  std::string expand_directory(const std::string& path);
-  std::vector<std::string> list_files(const std::string& path);
 
-  JNIEnvMark jni_wrapper_;
+  gs::jni::JNIEnvMark jni_wrapper_;
   jclass graph_planner_clz_;
   jmethodID graph_planner_method_id_;
+#else
+  std::string class_path_;
+  std::string jna_path_;
+  std::string graph_schema_yaml_;
+  std::string graph_statistic_json_;
+#endif
 };
-
-}  // namespace jni
 }  // namespace gs
 
 #endif  // PLANNER_GRAPH_PLANNER_H_
