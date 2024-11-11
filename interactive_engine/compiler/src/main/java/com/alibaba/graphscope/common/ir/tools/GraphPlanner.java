@@ -54,6 +54,14 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.RandomAccessFile;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -251,11 +259,23 @@ public class GraphPlanner {
                             + " '<path_to_physical_output_file>' '<path_to_procedure_file>'"
                             + " 'optional <extra_key_value_config_file>'");
         }
-        String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
+
+        BufferedReader reader = new BufferedReader(new FileReader(args[1]));
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+        String query = builder.toString();
+        reader.close();
+
         Summary summary = generatePlan(args[0], query);
         // write physical plan to file
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
-        FileUtils.writeByteArrayToFile(new File(args[2]), physicalPlan.getContent());
+        FileOutputStream fos = new FileOutputStream(args[2]);
+        fos.write(physicalPlan.getContent());
+        fos.close();
+
         // write stored procedure meta to file
         LogicalPlan logicalPlan = summary.getLogicalPlan();
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);

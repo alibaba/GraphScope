@@ -17,6 +17,7 @@
 #include <glog/logging.h>
 #include <filesystem>
 #include <string>
+#include <thread>
 
 int main(int argc, char** argv) {
   if (argc != 6) {
@@ -40,11 +41,18 @@ int main(int argc, char** argv) {
     return 1;
   }
   gs::GraphPlannerWrapper planner(java_path, jna_path, graph_schema_path);
-  if (!planner.is_valid()) {
-    LOG(ERROR) << "Invalid GraphPlannerWrapper.";
-    return 1;
+  std::vector<std::thread> threads;
+  for (int i = 0; i < 10; ++i) {
+    threads.emplace_back([&]() {
+      if (!planner.is_valid()) {
+        LOG(ERROR) << "Invalid GraphPlannerWrapper.";
+      }
+      auto plan = planner.CompilePlan(compiler_config_path, cypher_query);
+      CHECK(plan.plan_size() == 3) << "Invalid plan size: " << plan.plan_size();
+    });
   }
-  auto plan = planner.CompilePlan(compiler_config_path, cypher_query);
-  CHECK(plan.plan_size() == 3) << "Invalid plan size: " << plan.plan_size();
+  for (auto& t : threads) {
+    t.join();
+  }
   return 0;
 }

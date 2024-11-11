@@ -26,11 +26,9 @@ limitations under the License.
 
 #include "glog/logging.h"
 
-// #define GRAPH_PLANNER_JNI_INVOKER JNI
 #ifndef GRAPH_PLANNER_JNI_INVOKER
-#define GRAPH_PLANNER_JNI_INVOKER 0  // 1: JNI, 0: subprocess
+#define GRAPH_PLANNER_JNI_INVOKER 1  // 1: JNI, 0: subprocess
 #endif
-// Could be JNI or subprocess
 
 namespace gs {
 
