@@ -156,8 +156,9 @@ class VertexPropertyPathAccessor : public IAccessor {
     int label_num = txn.schema().vertex_label_num();
     property_columns_.resize(label_num, nullptr);
     for (int i = 0; i < label_num; ++i) {
-      property_columns_[i] = dynamic_cast<const TypedColumn<elem_t>*>(
-          txn.get_vertex_property_column(static_cast<label_t>(i), prop_name)
+      property_columns_[i] = dynamic_cast<const TypedRefColumn<elem_t>*>(
+          txn.template get_vertex_ref_property_column<T>(
+                 static_cast<label_t>(i), prop_name)
               .get());
     }
   }
@@ -205,7 +206,7 @@ class VertexPropertyPathAccessor : public IAccessor {
 
  private:
   const IVertexColumn& vertex_col_;
-  std::vector<const TypedColumn<elem_t>*> property_columns_;
+  std::vector<const TypedRefColumn<elem_t>*> property_columns_;
 };
 
 class VertexLabelPathAccessor : public IAccessor {
@@ -323,8 +324,9 @@ class VertexPropertyVertexAccessor : public IAccessor {
     int label_num = txn.schema().vertex_label_num();
     property_columns_.resize(label_num, nullptr);
     for (int i = 0; i < label_num; ++i) {
-      property_columns_[i] = dynamic_cast<const TypedColumn<elem_t>*>(
-          txn.get_vertex_property_column(static_cast<label_t>(i), prop_name)
+      property_columns_[i] = dynamic_cast<const TypedRefColumn<elem_t>*>(
+          txn.template get_vertex_ref_property_column<T>(
+                 static_cast<label_t>(i), prop_name)
               .get());
     }
   }
@@ -366,7 +368,7 @@ class VertexPropertyVertexAccessor : public IAccessor {
   }
 
  private:
-  std::vector<const TypedColumn<elem_t>*> property_columns_;
+  std::vector<const TypedRefColumn<elem_t>*> property_columns_;
 };
 
 class EdgeIdPathAccessor : public IAccessor {

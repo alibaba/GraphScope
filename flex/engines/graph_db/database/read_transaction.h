@@ -295,6 +295,25 @@ class ReadTransaction {
     return graph_.get_vertex_table(label).get_column(col_name);
   }
 
+  template <typename T>
+  const std::shared_ptr<TypedRefColumn<T>> get_vertex_ref_property_column(
+      uint8_t label, const std::string& col_name) const {
+    auto pk = graph_.schema().get_vertex_primary_key(label);
+    CHECK(pk.size() == 1) << "Only support single primary key";
+    if (col_name == std::get<1>(pk[0])) {
+      return std::dynamic_pointer_cast<TypedRefColumn<T>>(
+          graph_.get_vertex_id_column(label));
+    } else {
+      auto ptr = graph_.get_vertex_table(label).get_column(col_name);
+      if (ptr) {
+        return std::dynamic_pointer_cast<TypedRefColumn<T>>(
+            CreateRefColumn(ptr));
+      } else {
+        return nullptr;
+      }
+    }
+  }
+
   class vertex_iterator {
    public:
     vertex_iterator(label_t label, vid_t cur, vid_t num,

@@ -112,6 +112,11 @@ class MutablePropertyFragment {
 
   void loadSchema(const std::string& filename);
 
+  std::shared_ptr<ColumnBase> get_vertex_property_column(
+      uint8_t label, const std::string& prop) const;
+
+  std::shared_ptr<RefColumnBase> get_vertex_id_column(uint8_t label) const;
+
   Schema schema_;
   std::vector<IndexerType> lf_indexers_;
   std::vector<CsrBase*> ie_, oe_;
