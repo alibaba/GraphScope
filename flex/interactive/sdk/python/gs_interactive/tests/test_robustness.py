@@ -290,4 +290,4 @@ def test_custom_pk_name(
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
     start_service_on_graph(interactive_session, "1")
-    sleep(1) # sleep for a while to make sure the compiler has updated to the new schema
+    sleep(3) # sleep for a while to make sure the compiler has updated to the new schema
