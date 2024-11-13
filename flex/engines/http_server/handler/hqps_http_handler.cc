@@ -85,13 +85,33 @@ hqps_heartbeat_handler::handle(const seastar::sstring& path,
   if (path.find("sampleQuery") != seastar::sstring::npos) {
     using namespace std::chrono_literals;
     LOG(INFO) << "Before sampleQuery";
-    return seastar::sleep(10s).then([rep = std::move(rep)]() mutable {
+    return seastar::sleep(3s).then([rep = std::move(rep)]() mutable {
       rep->write_body("bin", seastar::sstring{"OK"});
       rep->done();
       LOG(INFO) << "Finish sampleQuery";
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     });
+  } else if (path.find("ready") != seastar::sstring::npos) {
+    auto& hqps_service = HQPSService::get();
+    auto metadata_store = hqps_service.get_metadata_store();
+    if (!metadata_store) {
+      rep->write_body("bin", seastar::sstring{"Metadata store is not ready"});
+      rep->done();
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
+    }
+    auto service_status = metadata_store->GetRunningGraph();
+    if (service_status.ok()) {
+      rep->write_body("bin", seastar::sstring{"Ready"});
+      rep->done();
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
+    } else {
+      return seastar::make_exception_future<
+          std::unique_ptr<seastar::httpd::reply>>(
+          std::runtime_error("Service not ready"));
+    }
   } else {
     rep->write_body("bin", seastar::sstring{"Heartbeat OK"});
     rep->done();
@@ -659,6 +679,8 @@ seastar::future<> hqps_http_handler::set_routes() {
     adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
     r.add(seastar::httpd::operation_type::GET,
           seastar::httpd::url("/heartbeat"), heart_beat_handler_);
+    r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/ready"),
+          heart_beat_handler_);
     r.add(seastar::httpd::operation_type::GET,
           seastar::httpd::url("/sampleQuery"), heart_beat_handler_);
 

@@ -1022,6 +1022,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
       // use the previous thread num
       auto thread_num = db.SessionNum();
+      metadata_store_->ClearRunningGraph();
       db.Close();
       VLOG(10) << "Closed the previous graph db";
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
