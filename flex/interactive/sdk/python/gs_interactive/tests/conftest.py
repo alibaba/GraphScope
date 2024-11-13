@@ -334,6 +334,20 @@ def create_partial_modern_graph(interactive_session):
     delete_running_graph(interactive_session, graph_id)
 
 
+@pytest.fixture(scope="function")
+def create_graph_with_custom_pk_name(interactive_session):
+    modern_graph_custom_pk_name = modern_graph_full.copy()
+    for vertex_type in modern_graph_custom_pk_name["schema"]["vertex_types"]:
+        vertex_type["properties"][0]["property_name"] = "custom_id"
+        vertex_type["primary_keys"] = ["custom_id"]
+    create_graph_request = CreateGraphRequest.from_dict(modern_graph_custom_pk_name)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
 def wait_job_finish(sess: Session, job_id: str):
     assert job_id is not None
     while True:
