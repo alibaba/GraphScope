@@ -288,3 +288,4 @@ def test_custom_pk_name(
     )
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
+    start_service_on_graph(interactive_session, "1")
