@@ -290,11 +290,22 @@ class ReadTransaction {
 
   const MutablePropertyFragment& graph() const;
 
+  /*
+   * @brief Get the handle of the vertex property column, only for non-primary
+   * key columns.
+   */
   const std::shared_ptr<ColumnBase> get_vertex_property_column(
       uint8_t label, const std::string& col_name) const {
     return graph_.get_vertex_table(label).get_column(col_name);
   }
 
+  /**
+   * @brief Get the handle of the vertex property column, including the primary
+   * key.
+   * @tparam T The type of the column.
+   * @param label The label of the vertex.
+   * @param col_name The name of the column.
+   */
   template <typename T>
   const std::shared_ptr<TypedRefColumn<T>> get_vertex_ref_property_column(
       uint8_t label, const std::string& col_name) const {
