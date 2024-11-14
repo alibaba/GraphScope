@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
@@ -86,10 +85,13 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     @Override
     public @Nullable RelDataType leastRestrictive(List<RelDataType> types) {
         if (types.stream().anyMatch(t -> t instanceof GraphLabelType)) {
+            // union all labels
+            List<GraphLabelType.Entry> unionLabels = Lists.newArrayList();
             for (RelDataType type : types) {
                 if (!(type instanceof GraphLabelType)) return null;
+                unionLabels.addAll(((GraphLabelType) type).getLabelsEntry());
             }
-            return types.get(0);
+            return new GraphLabelType(unionLabels.stream().distinct().collect(Collectors.toList()));
         }
         if (types.stream().anyMatch(t -> t instanceof ArbitraryMapType)) {
             return leastRestrictiveForArbitraryMapType(types);

@@ -87,6 +87,24 @@ public class GraphBuilderTest {
     }
 
     @Test
+    public void tmp_test() {
+        optimizer = new GraphRelOptimizer(configs);
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
+        // g.V(72057594037928268).as("a").outE("KNOWS").as("b").inV().as("c").select("a", "b").by(elementMap())
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                eval(
+                        "g.V(72057594037928268).as(\"a\").outE(\"KNOWS\").as(\"b\").inV().as(\"c\").select('a', \"b\").by(elementMap())",
+                        builder);
+//        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        System.out.println(node.getRowType());
+    }
+
+    @Test
     public void g_V_test() {
         RelNode node = eval("g.V()");
         Assert.assertEquals(
