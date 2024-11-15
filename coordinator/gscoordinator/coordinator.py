@@ -29,6 +29,7 @@ from concurrent import futures
 
 import connexion
 import grpc
+from flask_cors import CORS
 from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
@@ -134,6 +135,8 @@ def start_http_service(config):
         arguments={"title": "GraphScope FLEX HTTP SERVICE API"},
         pythonic_params=True,
     )
+    # support cross origin.
+    CORS(app.app)
     app.run(port=config.coordinator.http_port)
 
 
