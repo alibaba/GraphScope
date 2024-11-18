@@ -91,8 +91,8 @@ public class GraphBuilderTest {
 
     @Test
     public void g_V_elementMap_test() {
-        optimizer = new GraphRelOptimizer(configs);
-        irMeta =
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMeta irMeta =
                 Utils.mockIrMeta(
                         "schema/ldbc.json",
                         "statistics/ldbc30_statistics.json",
