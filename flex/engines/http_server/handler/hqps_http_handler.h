@@ -146,7 +146,7 @@ class hqps_http_handler {
 
   std::vector<hqps_ic_handler*> ic_handlers_;
   std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
-  hqps_heartbeat_handler* heart_beat_handler_;
+  std::vector<hqps_heartbeat_handler*> heart_beat_handlers_;
 };
 
 }  // namespace server

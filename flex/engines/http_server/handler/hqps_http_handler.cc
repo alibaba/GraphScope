@@ -585,7 +585,7 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port, int32_t shard_num)
     : http_port_(http_port), actors_running_(true) {
   ic_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
-  heart_beat_handler_ = new hqps_heartbeat_handler();
+  heart_beat_handlers_.resize(shard_num);
 }
 
 hqps_http_handler::~hqps_http_handler() {
@@ -664,6 +664,7 @@ seastar::future<> hqps_http_handler::set_routes() {
     auto adhoc_query_handler = new hqps_adhoc_query_handler(
         ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
         shard_adhoc_concurrency);
+    auto heart_beat_handler = new hqps_heartbeat_handler();
 
     auto rule_proc = new seastar::httpd::match_rule(ic_handler);
     rule_proc->add_str("/v1/graph")
@@ -677,12 +678,13 @@ seastar::future<> hqps_http_handler::set_routes() {
 
     ic_handlers_[hiactor::local_shard_id()] = ic_handler;
     adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
+    heart_beat_handlers_[hiactor::local_shard_id()] = heart_beat_handler;
     r.add(seastar::httpd::operation_type::GET,
-          seastar::httpd::url("/heartbeat"), heart_beat_handler_);
+          seastar::httpd::url("/heartbeat"), heart_beat_handler);
     r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/ready"),
-          heart_beat_handler_);
+          heart_beat_handler);
     r.add(seastar::httpd::operation_type::GET,
-          seastar::httpd::url("/sampleQuery"), heart_beat_handler_);
+          seastar::httpd::url("/sampleQuery"), heart_beat_handler);
 
     return seastar::make_ready_future<>();
   });
