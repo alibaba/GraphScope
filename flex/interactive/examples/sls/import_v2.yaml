@@ -1,0 +1,748 @@
+graph: sls
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    location: /workspaces/GraphScope/flex/interactive/examples/sls/output_v2/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: ","  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+      null_values: [""]
+
+vertex_mappings:
+  - type_name: acs_acs_ram_role
+    inputs:
+      - acs_acs_ram_role.csv
+  - type_name: acs_acs_ess_scalinggroup
+    inputs:
+      - acs_acs_ess_scalinggroup.csv
+  - type_name: acs_acs_sls_project
+    inputs:
+      - acs_acs_sls_project.csv
+  - type_name: acs_acs_alb_loadbalancer
+    inputs: 
+      - acs_acs_alb_loadbalancer.csv
+  - type_name: acs_acs_pai_quota
+    inputs:
+      - acs_acs_pai_quota.csv
+  # - type_name: acs_acs_rds_instance
+  #   inputs:
+  #     - acs_acs_rds_instance.csv
+  - type_name: acs_acs_vpc_vswitch
+    inputs: 
+      - acs_acs_vpc_vswitch.csv
+  # - type_name: acs_acs_sls_logstore
+  #   inputs:
+  #     -  acs_acs_sls_logstore.csv
+  - type_name: acs_acs_ecs_instance
+    inputs: 
+      - acs_acs_ecs_instance.csv
+  # - type_name: acs_acs_maxcompute_project
+  #   inputs: 
+  #     - acs_acs_maxcompute_project.csv
+  - type_name: acs_acs_alb_servergroup
+    inputs:
+      - acs_acs_alb_servergroup.csv
+  # - type_name: acs_acs_nlb_loadbalancer
+  #   inputs:
+  #     - acs_acs_nlb_loadbalancer.csv
+  # - type_name: acs_acs_cdn_domain
+  #   inputs:
+  #     - acs_acs_cdn_domain.csv
+  - type_name: acs_acs_ack_cluster
+    inputs:
+      - acs_acs_ack_cluster.csv
+  - type_name: acs_acs_alb_listener
+    inputs:
+      - acs_acs_alb_listener.csv
+  - type_name:  acs_acs_k8s_configmap
+    inputs:
+      -  acs_acs_k8s_configmap.csv
+  - type_name: acs_acs_k8s_container
+    inputs: 
+      - acs_acs_k8s_container.csv
+  - type_name: acs_acs_k8s_cronjob
+    inputs:
+      - acs_acs_k8s_cronjob.csv
+  - type_name: acs_acs_k8s_daemonset
+    inputs:
+      - acs_acs_k8s_daemonset.csv
+  - type_name: acs_acs_k8s_deployment
+    inputs:
+      - acs_acs_k8s_deployment.csv
+  - type_name: acs_acs_k8s_job
+    inputs:
+      - acs_acs_k8s_job.csv
+  - type_name: acs_acs_k8s_namespace
+    inputs:
+      - acs_acs_k8s_namespace.csv
+  - type_name: acs_acs_k8s_node
+    inputs:
+      - acs_acs_k8s_node.csv
+  - type_name: acs_acs_k8s_pod
+    inputs:
+      - acs_acs_k8s_pod.csv
+  - type_name: acs_acs_k8s_replicaset
+    inputs:
+      - acs_acs_k8s_replicaset.csv
+  - type_name: acs_acs_k8s_secret
+    inputs:
+      -  acs_acs_k8s_secret.csv
+  - type_name: acs_acs_k8s_service
+    inputs:
+      - acs_acs_k8s_service.csv
+  - type_name: acs_acs_k8s_statefulset
+    inputs:
+      - acs_acs_k8s_statefulset.csv
+  - type_name: acs_acs_k8s_storageclass
+    inputs:
+      - acs_acs_k8s_storageclass.csv
+  - type_name: acs_acs_pai_dlc_job
+    inputs:
+      - acs_acs_pai_dlc_job.csv
+  - type_name:  acs_acs_pai_dlc_pod
+    inputs:
+      -  acs_acs_pai_dlc_pod.csv
+  - type_name: acs_acs_pai_node
+    inputs:
+      - acs_acs_pai_node.csv
+  - type_name: acs_acs_pai_workspace
+    inputs:
+      - acs_acs_pai_workspace.csv
+  - type_name:  acs_acs_slb_loadbalancer
+    inputs:
+      -  acs_acs_slb_loadbalancer.csv
+  - type_name: acs_acs_slb_vservergroup
+    inputs:
+      - acs_acs_slb_vservergroup.csv
+  - type_name: acs_acs_sls_logstore
+    inputs:
+      - acs_acs_sls_logstore.csv
+  - type_name: acs_acs_vpc_vpc
+    inputs:
+      - acs_acs_vpc_vpc.csv
+  # - type_name: acs_mse
+  #   inputs:
+  #     - acs_mse.csv
+  - type_name: app_app_database
+    inputs:
+      -  app_app_database.csv
+  - type_name: app_app_instance
+    inputs:
+      - app_app_instance.csv
+  - type_name: app_app_operation
+    inputs:
+      - app_app_operation.csv
+  - type_name: app_app_service
+    inputs:
+      - app_app_service.csv
+edge_mappings:
+  - type_triplet:  
+      edge: can_access  
+      source_vertex: acs_acs_ram_role  
+      destination_vertex: acs_acs_ecs_instance
+    inputs:  
+      - acs_acs_ram_role__can_access__acs_acs_ecs_instance.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+      edge: can_access  
+      source_vertex: acs_acs_ram_role  
+      destination_vertex: acs_acs_slb_loadbalancer
+    inputs:  
+      - acs_acs_ram_role__can_access__acs_acs_slb_loadbalancer.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  # - type_triplet:  
+  #     edge: can_access  
+  #     source_vertex: acs_acs_ram_role  
+  #     destination_vertex: acs_mse
+  #   inputs:  
+  #     - acs_acs_ram_role__can_access__acs_mse.csv
+  #   source_vertex_mappings:  
+  #     - column:  
+  #         index: 0  
+  #   destination_vertex_mappings:  
+  #     - column:  
+  #         index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_vpc_vpc
+        destination_vertex: acs_acs_ess_scalinggroup
+    inputs:  
+        - acs_acs_vpc_vpc__contain__acs_acs_ess_scalinggroup.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_workspace
+        destination_vertex: acs_acs_pai_dlc_pod
+    inputs:  
+        - acs_acs_pai_workspace__contain__acs_acs_pai_dlc_pod.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_alb_servergroup
+        destination_vertex: acs_acs_ecs_instance
+    inputs:  
+        - acs_acs_alb_servergroup__contain__acs_acs_ecs_instance.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_alb_servergroup
+        destination_vertex: acs_acs_alb_listener
+    inputs:  
+        - acs_acs_alb_servergroup__contain__acs_acs_alb_listener.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_dlc_job
+        destination_vertex: acs_acs_pai_dlc_pod
+    inputs:  
+        - acs_acs_pai_dlc_job__contain__acs_acs_pai_dlc_pod.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_vpc_vpc
+        destination_vertex: acs_acs_ecs_instance
+    inputs:  
+        - acs_acs_vpc_vpc__contain__acs_acs_ecs_instance.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_slb_loadbalancer
+        destination_vertex: acs_acs_slb_vservergroup
+    inputs:  
+        - acs_acs_slb_loadbalancer__contain__acs_acs_slb_vservergroup.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_sls_project
+        destination_vertex: acs_acs_sls_logstore
+    inputs:  
+        - acs_acs_sls_project__contain__acs_acs_sls_logstore.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_node
+        destination_vertex: acs_acs_pai_dlc_pod
+    inputs:  
+        - acs_acs_pai_node__contain__acs_acs_pai_dlc_pod.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_vpc_vswitch
+        destination_vertex: acs_acs_ess_scalinggroup
+    inputs:  
+        - acs_acs_vpc_vswitch__contain__acs_acs_ess_scalinggroup.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_quota
+        destination_vertex: acs_acs_pai_node
+    inputs:  
+        - acs_acs_pai_quota__contain__acs_acs_pai_node.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_quota
+        destination_vertex: acs_acs_pai_dlc_job
+    inputs:  
+        - acs_acs_pai_quota__contain__acs_acs_pai_dlc_job.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_workspace
+        destination_vertex: acs_acs_pai_quota
+    inputs:  
+        - acs_acs_pai_workspace__contain__acs_acs_pai_quota.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_pai_workspace
+        destination_vertex: acs_acs_pai_node
+    inputs:  
+        - acs_acs_pai_workspace__contain__acs_acs_pai_node.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_container
+    inputs:  
+        - acs_acs_k8s_pod__contain__acs_acs_k8s_container.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: app_app_service
+        destination_vertex: app_app_operation
+    inputs:  
+        - app_app_service__contain__app_app_operation.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: contain
+        source_vertex: acs_acs_vpc_vswitch
+        destination_vertex: acs_acs_ecs_instance
+    inputs:  
+        - acs_acs_vpc_vswitch__contain__acs_acs_ecs_instance.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1
+  - type_triplet:  
+        edge: runs_on
+        source_vertex: app_app_service
+        destination_vertex: app_app_instance
+    inputs:  
+        - app_app_service__runs_on__app_app_instance.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs_on
+        source_vertex: app_app_instance
+        destination_vertex: acs_acs_k8s_pod
+    inputs:  
+        - app_app_instance__runs_on__acs_acs_k8s_pod.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1 
+  - type_triplet:  
+        edge: calls
+        source_vertex: acs_acs_alb_listener
+        destination_vertex: acs_acs_alb_loadbalancer
+    inputs:  
+        - acs_acs_alb_listener__calls__acs_acs_alb_loadbalancer.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: calls
+        source_vertex: app_app_service
+        destination_vertex: app_app_service
+    inputs:  
+        - app_app_service__calls__app_app_service.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: calls
+        source_vertex: app_app_service
+        destination_vertex: app_app_database
+    inputs:  
+        - app_app_service__calls__app_app_database.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+      edge: related_to
+      source_vertex: acs_acs_k8s_pod
+      destination_vertex: acs_acs_k8s_daemonset
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_daemonset.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_job
+        destination_vertex: acs_acs_k8s_cronjob
+    inputs:  
+        - acs_acs_k8s_job__related_to__acs_acs_k8s_cronjob.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_replicaset
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_replicaset.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_statefulset
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_statefulset.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_service
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_service.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_configmap
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_configmap.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_replicaset
+        destination_vertex: acs_acs_k8s_deployment
+    inputs:  
+        - acs_acs_k8s_replicaset__related_to__acs_acs_k8s_deployment.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: app_app_service
+        destination_vertex: acs_acs_k8s_deployment
+    inputs:  
+        - app_app_service__related_to__acs_acs_k8s_deployment.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_job
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_job.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: related_to
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_secret
+    inputs:  
+        - acs_acs_k8s_pod__related_to__acs_acs_k8s_secret.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_replicaset
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_replicaset__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_storageclass
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_storageclass__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_secret
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_secret__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_k8s_node
+    inputs:  
+        - acs_acs_k8s_pod__runs__acs_acs_k8s_node.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_daemonset
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_daemonset__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_node
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_node__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_cronjob
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_cronjob__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_configmap
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_configmap__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_pod
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_pod__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_job
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_job__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_statefulset
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_statefulset__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_deployment
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_deployment__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_namespace
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_namespace__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_service
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_service__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1  
+  - type_triplet:  
+        edge: runs
+        source_vertex: acs_acs_k8s_container
+        destination_vertex: acs_acs_ack_cluster
+    inputs:  
+        - acs_acs_k8s_container__runs__acs_acs_ack_cluster.csv
+    source_vertex_mappings:  
+      - column:  
+          index: 0  
+    destination_vertex_mappings:  
+      - column:  
+          index: 1 

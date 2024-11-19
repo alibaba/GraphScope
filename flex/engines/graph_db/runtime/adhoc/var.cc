@@ -23,6 +23,58 @@ namespace gs {
 
 namespace runtime {
 
+// Including primary key properties.
+bool check_whether_pk_property(const common::NameOrId& pt_key,
+                               const Context& ctx, const ReadTransaction& txn,
+                               int tag) {
+  auto vertex_column = std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag));
+  //
+  std::string pk_prop_name;
+  auto column_type = vertex_column->vertex_column_type();
+  if (column_type == VertexColumnType::kSingle ||
+      column_type == VertexColumnType::kSingleOptional) {
+    std::vector<std::tuple<PropertyType, std::string, size_t>> pks;
+    if (column_type == VertexColumnType::kSingle) {
+      auto sl_vertex_column =
+          std::dynamic_pointer_cast<SLVertexColumn>(vertex_column);
+      pks = txn.schema().get_vertex_primary_key(sl_vertex_column->label());
+    } else {
+      auto sl_vertex_column =
+          std::dynamic_pointer_cast<OptionalSLVertexColumn>(vertex_column);
+      pks = txn.schema().get_vertex_primary_key(sl_vertex_column->label());
+    }
+    if (pks.size() != 1) {
+      LOG(FATAL) << "Currently only support single primary key";
+    }
+    return std::get<1>(pks[0]) == pt_key.name();
+  } else if (column_type == VertexColumnType::kMultiple ||
+             column_type == VertexColumnType::kMultiSegment) {
+    std::set<label_t> labels_set;
+    if (column_type == VertexColumnType::kMultiSegment) {
+      auto ms_vertex_column =
+          std::dynamic_pointer_cast<MSVertexColumn>(vertex_column);
+      labels_set = ms_vertex_column->get_labels_set();
+    } else {
+      auto ms_vertex_column =
+          std::dynamic_pointer_cast<MLVertexColumn>(vertex_column);
+      labels_set = ms_vertex_column->get_labels_set();
+    }
+    // For vertex column with multiple labels, we should return true if any of
+    // the labels has the primary key property.
+    for (auto label : labels_set) {
+      auto pks = txn.schema().get_vertex_primary_key(label);
+      for (auto& pk : pks) {
+        if (std::get<1>(pk) == pt_key.name()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  } else {
+    LOG(FATAL) << "Unknown vertex column type";
+  }
+}
+
 Var::Var(const ReadTransaction& txn, const Context& ctx,
          const common::Variable& pb, VarType var_type)
     : getter_(nullptr) {
@@ -56,7 +108,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
+          if (check_whether_pk_property(pt.key(), ctx, txn, tag)) {
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdPathAccessor<std::string_view>>(
@@ -126,7 +178,7 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
+          if (check_whether_pk_property(pt.key(), ctx, txn, tag)) {
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdVertexAccessor<std::string_view>>(

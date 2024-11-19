@@ -1,6 +1,6 @@
 log_level: INFO
 verbose_level: 10
-default_graph: modern_graph
+default_graph: sls
 compute_engine:
   type: hiactor
   workers:
@@ -13,7 +13,7 @@ compute_engine:
 compiler:
   planner:
     is_on: true
-    opt: RBO
+    opt: CBO
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule

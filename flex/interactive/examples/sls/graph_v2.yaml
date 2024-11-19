@@ -1,0 +1,602 @@
+description: sls
+name: sls
+schema:
+  edge_types:
+    - description: Role 访问云产品 ack cluster
+      type_name: can_access
+      vertex_type_pair_relations:
+        - destination_vertex: acs_acs_ecs_instance
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_ram_role
+        - destination_vertex: acs_acs_slb_loadbalancer
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_ram_role
+        - destination_vertex: acs_mse
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_ram_role
+    - description: ""
+      type_name: contain
+      vertex_type_pair_relations:
+        - destination_vertex: acs_acs_ess_scalinggroup
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_vpc_vpc
+        - destination_vertex: acs_acs_pai_dlc_pod
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_workspace
+        - destination_vertex: acs_acs_ecs_instance
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_alb_servergroup
+        - destination_vertex: acs_acs_alb_listener
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_alb_servergroup
+        - destination_vertex: acs_acs_pai_dlc_pod
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_dlc_job
+        - destination_vertex: acs_acs_ecs_instance
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_vpc_vpc
+        - destination_vertex: acs_acs_slb_vservergroup
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_slb_loadbalancer
+        - destination_vertex: acs_acs_sls_logstore
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_sls_project
+        - destination_vertex: acs_acs_pai_dlc_pod
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_node
+        - destination_vertex: acs_acs_ess_scalinggroup
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_vpc_vswitch
+        - destination_vertex: acs_acs_pai_node
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_quota
+        - destination_vertex: acs_acs_pai_dlc_job
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_quota
+        - destination_vertex: acs_acs_pai_quota
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_workspace
+        - destination_vertex: acs_acs_pai_node
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_pai_workspace
+        - destination_vertex: acs_acs_k8s_container
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: app_app_operation
+          relation: MANY_TO_MANY
+          source_vertex: app_app_service
+        - destination_vertex: acs_acs_ecs_instance
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_vpc_vswitch
+    - description: 查看APM服务主机
+      type_name: runs_on
+      vertex_type_pair_relations:
+        - destination_vertex: app_app_instance
+          relation: MANY_TO_MANY
+          source_vertex: app_app_service
+        - destination_vertex: acs_acs_k8s_pod
+          relation: MANY_TO_MANY
+          source_vertex: app_app_instance
+    - description: 查看APM服务数据库
+      type_name: calls
+      vertex_type_pair_relations:
+        - destination_vertex: acs_acs_alb_loadbalancer
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_alb_listener
+        - destination_vertex: app_app_service
+          relation: MANY_TO_MANY
+          source_vertex: app_app_service
+        - destination_vertex: app_app_database
+          relation: MANY_TO_MANY
+          source_vertex: app_app_service
+    # - description: APM Database Same as RDS instance
+    #   type_name: same_as
+    #   vertex_type_pair_relations:
+    #     - destination_vertex: CloudInsights_rds_dbinstance
+    #       relation: MANY_TO_MANY
+    #       source_vertex: apm_apm_database
+    #     - destination_vertex: CloudInsights_ecs_instance
+    #       relation: MANY_TO_MANY
+    #       source_vertex: apm_apm_service_host
+    #     - destination_vertex: CloudInsights_redis_dbinstance
+    #       relation: MANY_TO_MANY
+    #       source_vertex: apm_apm_database
+    - description: ""
+      type_name: related_to
+      vertex_type_pair_relations:
+        - destination_vertex: acs_acs_k8s_daemonset
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_cronjob
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_job
+        - destination_vertex: acs_acs_k8s_replicaset
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_statefulset
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_service
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_configmap
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_deployment
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_replicaset
+        - destination_vertex: acs_acs_k8s_deployment
+          relation: MANY_TO_MANY
+          source_vertex: app_app_service
+        - destination_vertex: acs_acs_k8s_job
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_k8s_secret
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+    - description: ""
+      type_name: runs
+      vertex_type_pair_relations:
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_replicaset
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_storageclass
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_secret
+        - destination_vertex: acs_acs_k8s_node
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_daemonset
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_node
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_cronjob
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_configmap
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_pod
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_job
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_statefulset
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_deployment
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_namespace
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_service
+        - destination_vertex: acs_acs_ack_cluster
+          relation: MANY_TO_MANY
+          source_vertex: acs_acs_k8s_container
+  vertex_types:
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+        - property_id: 1
+          property_name: __first_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 2
+          property_name: __last_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 3
+          property_name: __keep_alive_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+      type_name: acs_acs_ess_scalinggroup
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+        - property_id: 1
+          property_name: __first_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 2
+          property_name: __last_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 3
+          property_name: __keep_alive_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+      type_name: acs_acs_alb_loadbalancer
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_slb_loadbalancer
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_vpc_vpc
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_ecs_instance
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+        - property_id: 1
+          property_name: __first_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 2
+          property_name: __last_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 3
+          property_name: __keep_alive_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+      type_name: acs_acs_alb_servergroup
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_ack_cluster
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+        - property_id: 1
+          property_name: __first_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 2
+          property_name: __last_observe_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+        - property_id: 3
+          property_name: __keep_alive_time__
+          property_type:
+            primitive_type: DT_UNSIGNED_INT64
+      type_name: acs_acs_alb_listener
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_configmap
+    - primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_container
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_cronjob
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_daemonset
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_deployment
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_job
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_namespace
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_node
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_pod
+    - description: ""
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_replicaset
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_secret
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_service
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_statefulset
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_k8s_storageclass
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_pai_dlc_job
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_pai_dlc_pod
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_pai_node
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_pai_quota
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_pai_workspace
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_ram_role
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_slb_vservergroup
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_sls_logstore
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_sls_project
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_acs_vpc_vswitch
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: acs_mse
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: app_app_database
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: app_app_instance
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: app_app_operation
+    - description:
+      primary_keys:
+        - __entity_id__
+      properties:
+        - property_id: 0
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text: ""
+      type_name: app_app_service
