@@ -63,4 +63,7 @@ public class FrontendConfig {
 
     public static final Config<Long> QUERY_PRINT_THRESHOLD_MS =
             Config.longConfig("query.print.threshold.ms", 200l);
+
+    public static final Config<Long> METRICS_TOOL_INTERVAL_MS =
+            Config.longConfig("metrics.tool.interval.ms", 5 * 60 * 1000l);
 }

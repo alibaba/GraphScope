@@ -17,34 +17,41 @@
 package com.alibaba.graphscope.common.client;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.client.metric.RpcExecutorMetric;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.metric.MetricsTool;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 
+import io.grpc.ClientInterceptors;
 import io.grpc.Status;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * rpc client to send request to pegasus engine service
  */
 public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     private final Configs graphConfig;
-    private final AtomicReference<RpcClient> rpcClientRef;
 
-    public RpcExecutionClient(Configs graphConfig, ChannelFetcher<RpcChannel> channelFetcher) {
+    public RpcExecutionClient(
+            Configs graphConfig,
+            ChannelFetcher<RpcChannel> channelFetcher,
+            MetricsTool metricsTool) {
         super(channelFetcher);
         this.graphConfig = graphConfig;
-        this.rpcClientRef = new AtomicReference<>();
+        metricsTool.registerMetric(new RpcExecutorMetric(channelFetcher));
     }
 
     @Override
@@ -54,10 +61,18 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
             QueryTimeoutConfig timeoutConfig,
             QueryLogger queryLogger)
             throws Exception {
-        if (rpcClientRef.get() == null) {
-            rpcClientRef.compareAndSet(null, new RpcClient(channelFetcher.fetch()));
-        }
-        RpcClient rpcClient = rpcClientRef.get();
+        List<RpcChannel> interceptChannels =
+                channelFetcher.fetch().stream()
+                        .map(
+                                k ->
+                                        new RpcChannel(
+                                                ClientInterceptors.intercept(
+                                                        k.getChannel(), new RpcInterceptor())))
+                        .collect(Collectors.toList());
+        RpcClient rpcClient =
+                new RpcClient(
+                        interceptChannels,
+                        ImmutableMap.of(RpcInterceptor.QUERY_LOGGER_OPTION, queryLogger));
         PegasusClient.JobRequest jobRequest =
                 PegasusClient.JobRequest.newBuilder()
                         .setPlan(
@@ -95,7 +110,8 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                     @Override
                     public void finish() {
                         listener.onCompleted();
-                        queryLogger.info("[compile]: received results from engine");
+                        queryLogger.info(
+                                "[query][response]: received all responses from all servers");
                     }
 
                     @Override
@@ -109,8 +125,17 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
 
     @Override
     public void close() throws Exception {
-        if (rpcClientRef.get() != null) {
-            rpcClientRef.get().shutdown();
-        }
+        channelFetcher
+                .fetch()
+                .forEach(
+                        k -> {
+                            try {
+                                if (k != null) {
+                                    k.shutdown();
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 }

@@ -16,19 +16,22 @@
  *
  */
 
-package com.alibaba.graphscope;
+package io.grpc.netty;
 
-import org.apache.tinkerpop.gremlin.driver.Client;
-import org.apache.tinkerpop.gremlin.driver.Cluster;
-import org.junit.Test;
+import com.alibaba.graphscope.gremlin.Utils;
 
-public class ConcurrentTest {
-    @Test
-    public void concurrent_test() throws Exception {
-        Cluster cluster = Cluster.build().addContactPoint("localhost").port(8182).create();
-        Client client = cluster.connect();
-        for (int i = 0; i < 1000000; ++i) {
-            client.submit(String.format("g.V(%d).limit(1)", i));
+import io.grpc.internal.ClientTransport;
+import io.netty.channel.Channel;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+public class NettyUtils {
+    public static @Nullable Channel getNettyChannel(ClientTransport transport) {
+        if (transport instanceof NettyClientTransport) {
+            NettyClientTransport nettyClientTransport = (NettyClientTransport) transport;
+            // Access the Netty Channel from NettyClientTransport
+            return Utils.getFieldValue(NettyClientTransport.class, nettyClientTransport, "channel");
         }
+        return null;
     }
 }

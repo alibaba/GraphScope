@@ -121,7 +121,9 @@ public class GraphQueryExecutor extends FabricExecutor {
                         null,
                         graphConfig);
         try {
-            statusCallback.getQueryLogger().info("[compile]: query received");
+            statusCallback
+                    .getQueryLogger()
+                    .info("[query][received]: query received from the cypher client");
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
                 return super.run(fabricTransaction, statement, parameters);
@@ -189,7 +191,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                                         statusCallback.getQueryLogger());
                                 statusCallback
                                         .getQueryLogger()
-                                        .info("[compile]: physical IR submitted");
+                                        .info("[query][submitted]: physical IR submitted");
                             }
                         };
             }

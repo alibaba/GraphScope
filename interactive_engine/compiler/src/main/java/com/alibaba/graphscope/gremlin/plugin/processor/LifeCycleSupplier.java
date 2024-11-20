@@ -130,7 +130,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                             statusCallback.getQueryLogger());
                                     statusCallback
                                             .getQueryLogger()
-                                            .info("[compile]: physical IR submitted");
+                                            .info("[query][submitted]: physical IR submitted");
                                 }
                                 // request results from remote engine in a blocking way
                                 listener.request();

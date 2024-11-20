@@ -92,6 +92,9 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
                 processRecord(recordStreamIterator.next());
             }
             finishRecord();
+            statusCallback
+                    .getQueryLogger()
+                    .info("[query][response]: processed and sent all responses to the client");
         } catch (Throwable t) {
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor

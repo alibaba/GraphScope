@@ -20,14 +20,12 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.google.common.util.concurrent.RateLimiter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimitExecutor extends ThreadPoolExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(RateLimitExecutor.class);
     private final RateLimiter rateLimiter;
+    private final AtomicLong queryCounter;
 
     public RateLimitExecutor(
             Configs configs,
@@ -48,9 +46,15 @@ public class RateLimitExecutor extends ThreadPoolExecutor {
                 handler);
         int permitsPerSecond = FrontendConfig.QUERY_PER_SECOND_LIMIT.get(configs);
         this.rateLimiter = RateLimiter.create(permitsPerSecond);
+        this.queryCounter = new AtomicLong(0);
+    }
+
+    public long getQueryCounter() {
+        return queryCounter.get();
     }
 
     public Future<?> submit(Runnable task) {
+        incrementCounter();
         if (rateLimiter.tryAcquire()) {
             return super.submit(task);
         }
@@ -59,5 +63,16 @@ public class RateLimitExecutor extends ThreadPoolExecutor {
                         + rateLimiter.getRate()
                         + " per second. Please increase the QPS limit by the config"
                         + " 'query.per.second.limit' or slow down the query sending speed");
+    }
+
+    // lock-free
+    private void incrementCounter() {
+        while (true) {
+            long currentValue = queryCounter.get();
+            long nextValue = (currentValue == Long.MAX_VALUE) ? 0 : currentValue + 1;
+            if (queryCounter.compareAndSet(currentValue, nextValue)) {
+                break;
+            }
+        }
     }
 }

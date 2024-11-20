@@ -138,13 +138,13 @@ public class GraphPlanner {
             LogicalPlan logicalPlan =
                     ClassUtils.callException(() -> planLogical(), Code.LOGICAL_PLAN_BUILD_FAILED);
             if (queryLogger != null) {
-                queryLogger.info("[compile]: logical IR compiled");
+                queryLogger.info("[query][compiled]: logical IR compiled");
             }
             PhysicalPlan physicalPlan =
                     ClassUtils.callException(
                             () -> planPhysical(logicalPlan), Code.PHYSICAL_PLAN_BUILD_FAILED);
             if (queryLogger != null) {
-                queryLogger.info("[compile]: physical IR compiled");
+                queryLogger.info("[query][compiled]: physical IR compiled");
             }
             return new Summary(logicalPlan, physicalPlan);
         }

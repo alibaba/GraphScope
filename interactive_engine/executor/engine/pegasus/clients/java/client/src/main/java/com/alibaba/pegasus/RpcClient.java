@@ -22,6 +22,7 @@ import com.alibaba.pegasus.service.protocol.JobServiceGrpc.JobServiceStub;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 
+import io.grpc.CallOptions;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.Span;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,6 +48,22 @@ public class RpcClient {
         this.serviceStubs =
                 channels.stream()
                         .map(k -> JobServiceGrpc.newStub(k.getChannel()))
+                        .collect(Collectors.toList());
+    }
+
+    public RpcClient(List<RpcChannel> channels, Map<CallOptions.Key, Object> options) {
+        this.channels = Objects.requireNonNull(channels);
+        this.serviceStubs =
+                channels.stream()
+                        .map(
+                                k -> {
+                                    JobServiceStub stub = JobServiceGrpc.newStub(k.getChannel());
+                                    for (Map.Entry<CallOptions.Key, Object> entry :
+                                            options.entrySet()) {
+                                        stub = stub.withOption(entry.getKey(), entry.getValue());
+                                    }
+                                    return stub;
+                                })
                         .collect(Collectors.toList());
     }
 

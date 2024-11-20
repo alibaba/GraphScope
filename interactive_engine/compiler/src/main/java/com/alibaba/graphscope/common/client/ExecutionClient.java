@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.metric.MetricsTool;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 
 /**
@@ -45,10 +46,11 @@ public abstract class ExecutionClient<C> {
     public abstract void close() throws Exception;
 
     public static class Factory {
-        public static ExecutionClient create(Configs configs, ChannelFetcher channelFetcher) {
+        public static ExecutionClient create(
+                Configs configs, ChannelFetcher channelFetcher, MetricsTool metricsTool) {
             switch (channelFetcher.getType()) {
                 case RPC:
-                    return new RpcExecutionClient(configs, channelFetcher);
+                    return new RpcExecutionClient(configs, channelFetcher, metricsTool);
                 case HTTP:
                     return new HttpExecutionClient(configs, channelFetcher);
                 default:

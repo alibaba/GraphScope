@@ -200,7 +200,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         new MetricsCollector.Gremlin(evalOpTimer),
                         queryHistogram,
                         configs);
-        statusCallback.getQueryLogger().info("[compile]: query received");
+        statusCallback
+                .getQueryLogger()
+                .info("[query][received]: query received from the gremlin client");
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
@@ -361,7 +363,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             if (o != null && o instanceof Traversal) {
                                 applyStrategies((Traversal) o);
                             }
-                            statusCallback.getQueryLogger().info("[compile]: traversal compiled");
+                            statusCallback
+                                    .getQueryLogger()
+                                    .info("[query][compiled]: traversal compiled");
                             return o;
                         })
                 .withResult(
@@ -406,7 +410,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             return opCollection;
                         },
                         Code.LOGICAL_PLAN_BUILD_FAILED);
-        queryLogger.info("[compile]: logical IR compiled");
+        queryLogger.info("[query][compiled]: logical IR compiled");
         StringBuilder irPlanStr = new StringBuilder();
         PegasusClient.JobRequest physicalRequest =
                 ClassUtils.callException(
@@ -451,7 +455,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             return request;
                         },
                         Code.PHYSICAL_PLAN_BUILD_FAILED);
-        queryLogger.info("[compile]: physical IR compiled");
+        queryLogger.info("[query][compiled]: physical IR compiled");
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
         if (TraceId.isValid(queryLogger.getUpstreamId())) {
@@ -478,7 +482,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             outgoing.setAttribute("query.plan", irPlanStr.toString());
             this.rpcClient.submit(
                     physicalRequest, resultProcessor, timeoutConfig.getChannelTimeoutMS());
-            queryLogger.info("[compile]: physical IR submitted");
+            queryLogger.info("[query][submitted]: physical IR submitted");
             // request results from remote engine service in blocking way
             resultProcessor.request();
         } catch (Throwable t) {

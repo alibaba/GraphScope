@@ -15,6 +15,7 @@
  */
 package com.alibaba.pegasus;
 
+import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.api.OpenTelemetry;
@@ -28,9 +29,9 @@ import java.util.concurrent.TimeUnit;
 public class RpcChannel {
     private static final Logger logger = LoggerFactory.getLogger(RpcChannel.class);
 
-    private final ManagedChannel channel;
+    private final Channel channel;
 
-    public RpcChannel(ManagedChannel channel) {
+    public RpcChannel(Channel channel) {
         this.channel = channel;
     }
 
@@ -47,12 +48,17 @@ public class RpcChannel {
                         .build();
     }
 
-    public ManagedChannel getChannel() {
+    public Channel getChannel() {
         return channel;
     }
 
     public void shutdown() throws InterruptedException {
-        this.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+        if (this.channel instanceof ManagedChannel) {
+            String name = channel.authority();
+            ManagedChannel managedChannel = (ManagedChannel) this.channel;
+            managedChannel.awaitTermination(5, TimeUnit.SECONDS);
+            logger.info("rpc channel {} shutdown successfully", name);
+        }
     }
 
     public String toString() {
