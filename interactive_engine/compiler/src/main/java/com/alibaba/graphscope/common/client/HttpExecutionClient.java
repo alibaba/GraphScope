@@ -87,7 +87,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                 // if response is not 200
                                 if (!response.isOk()) {
                                     // parse String from response.body()
-                                    String errorMessage = response.getStatusMessage();
+                                    String errorMessage = new String(response.getStatusMessage());
                                     RuntimeException ex =
                                             new RuntimeException(
                                                     "Query execution failed:"

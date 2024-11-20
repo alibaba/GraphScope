@@ -56,7 +56,7 @@ public class RpcChannel {
         if (this.channel instanceof ManagedChannel) {
             String name = channel.authority();
             ManagedChannel managedChannel = (ManagedChannel) this.channel;
-            managedChannel.awaitTermination(5, TimeUnit.SECONDS);
+            managedChannel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
             logger.info("rpc channel {} shutdown successfully", name);
         }
     }
