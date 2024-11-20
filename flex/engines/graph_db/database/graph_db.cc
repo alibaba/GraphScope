@@ -42,7 +42,14 @@ struct SessionLocalContext {
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
 };
 
-GraphDB::GraphDB() = default;
+GraphDB::GraphDB()
+    : work_dir_(""),
+      contexts_(nullptr),
+      thread_num_(0),
+      monitor_thread_running_(false),
+      last_compaction_ts_(0),
+      compact_thread_running_(false) {}
+
 GraphDB::~GraphDB() {
   if (compact_thread_running_) {
     compact_thread_running_ = false;
@@ -78,6 +85,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
 }
 
 Result<bool> GraphDB::Open(const GraphDBConfig& config) {
+  graph_ = std::make_unique<MutablePropertyFragment>();
   const std::string& data_dir = config.data_dir;
   const Schema& schema = config.schema;
   if (!std::filesystem::exists(data_dir)) {
@@ -88,19 +96,19 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   bool create_empty_graph = false;
   if (!std::filesystem::exists(schema_file)) {
     create_empty_graph = true;
-    graph_.mutable_schema() = schema;
+    graph_->mutable_schema() = schema;
   }
   work_dir_ = data_dir;
   thread_num_ = config.thread_num;
   try {
-    graph_.Open(data_dir, config.memory_level);
+    graph_->Open(data_dir, config.memory_level);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     return Result<bool>(StatusCode::InternalError,
                         "Exception: " + std::string(e.what()), false);
   }
 
-  if ((!create_empty_graph) && (!graph_.schema().Equals(schema))) {
+  if ((!create_empty_graph) && (!graph_->schema().Equals(schema))) {
     LOG(ERROR) << "Schema inconsistent..\n";
     return Result<bool>(StatusCode::InternalError,
                         "Schema of work directory is not compatible with the "
@@ -109,7 +117,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   }
   // Set the plugin info from schema to graph_.schema(), since the plugin info
   // is not serialized and deserialized.
-  auto& mutable_schema = graph_.mutable_schema();
+  auto& mutable_schema = graph_->mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
   std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
@@ -136,7 +144,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   openWalAndCreateContexts(data_dir, allocator_strategy);
 
   if ((!create_empty_graph) && config.warmup) {
-    graph_.Warmup(thread_num_);
+    graph_->Warmup(thread_num_);
   }
 
   if (config.enable_monitoring) {
@@ -219,8 +227,9 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
           VLOG(10) << "Trigger auto compaction";
           last_compaction_at = query_num_after;
           timestamp_t ts = this->version_manager_.acquire_update_timestamp();
-          auto txn = CompactTransaction(this->graph_, this->contexts_[0].logger,
-                                        this->version_manager_, ts);
+          auto txn =
+              CompactTransaction(*this->graph_, this->contexts_[0].logger,
+                                 this->version_manager_, ts);
           txn.Commit();
           VLOG(10) << "Finish compaction";
         }
@@ -231,18 +240,44 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   return Result<bool>(true);
 }
 
+void GraphDB::Swap(GraphDB& other) {
+  std::swap(work_dir_, other.work_dir_);
+  std::swap(contexts_, other.contexts_);
+  std::swap(thread_num_, other.thread_num_);
+  std::swap(graph_, other.graph_);
+  version_manager_.swap(other.version_manager_);
+
+  std::swap(app_paths_, other.app_paths_);
+  std::swap(app_factories_, other.app_factories_);
+  std::swap(monitor_thread_running_, other.monitor_thread_running_);
+  std::swap(monitor_thread_, other.monitor_thread_);
+  std::swap(last_compaction_ts_, other.last_compaction_ts_);
+  std::swap(compact_thread_running_, other.compact_thread_running_);
+  std::swap(compact_thread_, other.compact_thread_);
+
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+}
+
 void GraphDB::Close() {
+  LOG(INFO) << "closing: " << static_cast<int>(monitor_thread_running_);
   if (monitor_thread_running_) {
     monitor_thread_running_ = false;
     monitor_thread_.join();
   }
+  LOG(INFO) << "Close monitor thread: "
+            << static_cast<int>(monitor_thread_running_);
   if (compact_thread_running_) {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
+  LOG(INFO) << "Close compact thread";
   //-----------Clear graph_db----------------
-  graph_.Clear();
+  if (graph_) {
+    graph_->Clear();
+  }
+  LOG(INFO) << "Clear graph db";
   version_manager_.clear();
+  LOG(INFO) << "Clear version manager";
   if (contexts_ != nullptr) {
     for (int i = 0; i < thread_num_; ++i) {
       contexts_[i].~SessionLocalContext();
@@ -250,13 +285,14 @@ void GraphDB::Close() {
     free(contexts_);
     contexts_ = nullptr;
   }
+  LOG(INFO) << "Clear contexts";
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {
   uint32_t ts = version_manager_.acquire_read_timestamp();
-  return {graph_, version_manager_, ts};
+  return {*graph_, version_manager_, ts};
 }
 
 InsertTransaction GraphDB::GetInsertTransaction(int thread_id) {
@@ -294,14 +330,14 @@ timestamp_t GraphDB::GetLastCompactionTimestamp() const {
   return last_compaction_ts_;
 }
 
-const MutablePropertyFragment& GraphDB::graph() const { return graph_; }
-MutablePropertyFragment& GraphDB::graph() { return graph_; }
+const MutablePropertyFragment& GraphDB::graph() const { return *graph_; }
+MutablePropertyFragment& GraphDB::graph() { return *graph_; }
 
-const Schema& GraphDB::schema() const { return graph_.schema(); }
+const Schema& GraphDB::schema() const { return graph_->schema(); }
 
 std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
     uint8_t label, const std::string& col_name) const {
-  return graph_.get_vertex_table(label).get_column(col_name);
+  return graph_->get_vertex_table(label).get_column(col_name);
 }
 
 AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
@@ -376,19 +412,19 @@ void GraphDB::ingestWals(const std::vector<std::string>& wals,
   for (auto& update_wal : parser.update_wals()) {
     uint32_t to_ts = update_wal.timestamp;
     if (from_ts < to_ts) {
-      IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
+      IngestWalRange(contexts_, *graph_, parser, from_ts, to_ts, thread_num);
     }
     if (update_wal.size == 0) {
-      graph_.Compact(update_wal.timestamp);
+      graph_->Compact(update_wal.timestamp);
       last_compaction_ts_ = update_wal.timestamp;
     } else {
-      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
+      UpdateTransaction::IngestWal(*graph_, work_dir, to_ts, update_wal.ptr,
                                    update_wal.size, contexts_[0].allocator);
     }
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
-    IngestWalRange(contexts_, graph_, parser, from_ts, parser.last_ts() + 1,
+    IngestWalRange(contexts_, *graph_, parser, from_ts, parser.last_ts() + 1,
                    thread_num);
   }
   version_manager_.init_ts(parser.last_ts(), thread_num);
@@ -448,7 +484,7 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
     contexts_[i].logger.open(wal_dir_path, i);
   }
 
-  initApps(graph_.schema().GetPlugins());
+  initApps(graph_->schema().GetPlugins());
   VLOG(1) << "Successfully restore load plugins";
 }
 

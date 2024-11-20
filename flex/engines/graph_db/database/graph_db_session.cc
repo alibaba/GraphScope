@@ -29,31 +29,31 @@ namespace gs {
 
 ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
-  return ReadTransaction(db_.graph_, db_.version_manager_, ts);
+  return ReadTransaction(*db_.graph_, db_.version_manager_, ts);
 }
 
 InsertTransaction GraphDBSession::GetInsertTransaction() {
   uint32_t ts = db_.version_manager_.acquire_insert_timestamp();
-  return InsertTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
+  return InsertTransaction(*db_.graph_, alloc_, logger_, db_.version_manager_,
                            ts);
 }
 
 SingleVertexInsertTransaction
 GraphDBSession::GetSingleVertexInsertTransaction() {
   uint32_t ts = db_.version_manager_.acquire_insert_timestamp();
-  return SingleVertexInsertTransaction(db_.graph_, alloc_, logger_,
+  return SingleVertexInsertTransaction(*db_.graph_, alloc_, logger_,
                                        db_.version_manager_, ts);
 }
 
 SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
   uint32_t ts = db_.version_manager_.acquire_insert_timestamp();
-  return SingleEdgeInsertTransaction(db_.graph_, alloc_, logger_,
+  return SingleEdgeInsertTransaction(*db_.graph_, alloc_, logger_,
                                      db_.version_manager_, ts);
 }
 
 UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+  return UpdateTransaction(*db_.graph_, alloc_, work_dir_, logger_,
                            db_.version_manager_, ts);
 }
 
@@ -180,7 +180,7 @@ int GraphDBSession::SessionId() const { return thread_id_; }
 
 CompactTransaction GraphDBSession::GetCompactTransaction() {
   timestamp_t ts = db_.version_manager_.acquire_update_timestamp();
-  return CompactTransaction(db_.graph_, logger_, db_.version_manager_, ts);
+  return CompactTransaction(*db_.graph_, logger_, db_.version_manager_, ts);
 }
 
 bool GraphDBSession::Compact() {
@@ -228,6 +228,29 @@ AppBase* GraphDBSession::GetApp(int type) {
 }
 
 #undef likely  // likely
+
+bool GraphDBSession::SwapGraphData(const Schema& schema,
+                                   const std::string& data_dir) {
+  // auto update_transaction = GetUpdateTransaction();
+  LOG(INFO) << "Acquire update timestamp...";
+  auto ts = db_.version_manager_.acquire_update_timestamp();
+  // Use a update transaction to avoid new transaction come.
+  GraphDB new_db;
+  auto open_res = new_db.Open(schema, data_dir, db_.thread_num_);
+  if (!open_res.ok()) {
+    return false;
+  }
+  LOG(INFO) << "Successfully open new db...";
+  db_.Swap(new_db);
+  LOG(INFO) << "Successfully swap db...";
+
+  // NOW the version manager is in the new db.
+  new_db.version_manager_.release_update_timestamp(ts);
+  LOG(INFO) << "Successfully release update timestamp...";
+  new_db.Close();
+  LOG(INFO) << "Successfully close new db...";
+  return true;
+}
 
 #ifdef BUILD_HQPS
 Result<std::pair<uint8_t, std::string_view>>

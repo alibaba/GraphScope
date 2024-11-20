@@ -109,6 +109,8 @@ class GraphDBSession {
 
   AppBase* GetApp(int idx);
 
+  bool SwapGraphData(const Schema& schema, const std::string& data_dir);
+
  private:
 #ifdef BUILD_HQPS
   Result<std::pair<uint8_t, std::string_view>>

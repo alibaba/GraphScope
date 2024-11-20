@@ -241,7 +241,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
     auto dst_executor = executor_idx_;
 
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
+    // LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "POST") {
       if (path.find("dataloading") != seastar::sstring::npos) {
@@ -489,7 +489,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
     auto dst_executor = executor_idx_;
 
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
+    // LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "POST") {
       // Then param[action] should exists
@@ -526,7 +526,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       }
     } else {
       // get status
-      LOG(INFO) << "GET with action: status";
+      // LOG(INFO) << "GET with action: status";
       return admin_actor_refs_[dst_executor]
           .service_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](

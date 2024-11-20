@@ -89,6 +89,8 @@ class GraphDB {
 
   Result<bool> Open(const GraphDBConfig& config);
 
+  void Swap(GraphDB& new_db);
+
   /**
    * @brief Close the current opened graph.
    */
@@ -173,7 +175,7 @@ class GraphDB {
 
   int thread_num_;
 
-  MutablePropertyFragment graph_;
+  std::unique_ptr<MutablePropertyFragment> graph_;
   VersionManager version_manager_;
 
   std::array<std::string, 256> app_paths_;

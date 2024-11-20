@@ -485,19 +485,23 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
       VLOG(10) << "Successfully get all procedures: "
                << get_all_procedure_res.value().size();
       auto& all_plugin_metas = get_all_procedure_res.value();
-      for (auto& plugin_meta : all_plugin_metas) {
-        add_runnable_info(plugin_meta);
+      {
+        std::lock_guard<std::mutex> lock(mtx_);
+        for (auto& plugin_meta : all_plugin_metas) {
+          add_runnable_info(plugin_meta);
+        }
+        auto& graph_meta = meta_res.value();
+        // There can also be procedures that builtin in the graph meta.
+        for (auto& plugin_meta : graph_meta.plugin_metas) {
+          add_runnable_info(plugin_meta);
+        }
+
+        graph_meta.plugin_metas.insert(graph_meta.plugin_metas.end(),
+                                       all_plugin_metas.begin(),
+                                       all_plugin_metas.end());
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(std::move(graph_meta.ToJson())));
       }
-      auto& graph_meta = meta_res.value();
-      // There can also be procedures that builtin in the graph meta.
-      for (auto& plugin_meta : graph_meta.plugin_metas) {
-        add_runnable_info(plugin_meta);
-      }
-      graph_meta.plugin_metas.insert(graph_meta.plugin_metas.end(),
-                                     all_plugin_metas.begin(),
-                                     all_plugin_metas.end());
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(std::move(graph_meta.ToJson())));
     } else {
       LOG(ERROR) << "Fail to get all procedures: "
                  << get_all_procedure_res.status().error_message() << " for "
@@ -1010,77 +1014,71 @@ seastar::future<admin_query_result> admin_actor::start_service(
   // First Stop query_handler's actors.
 
   auto& hqps_service = HQPSService::get();
-  return hqps_service.stop_query_actors().then([this, prev_lock, graph_name,
-                                                schema_value, cur_running_graph,
-                                                data_dir_value, &hqps_service] {
-    LOG(INFO) << "Successfully stopped query handler";
+  LOG(INFO) << "Successfully stopped query handler";
 
-    {
-      std::lock_guard<std::mutex> lock(mtx_);
-      auto& db = gs::GraphDB::get();
-      LOG(INFO) << "Update service running on graph:" << graph_name;
+  {
+    std::lock_guard<std::mutex> lock(mtx_);
+    auto& db = gs::GraphDB::get();
+    LOG(INFO) << "Update service running on graph:" << graph_name;
 
-      // use the previous thread num
-      auto thread_num = db.SessionNum();
-      metadata_store_->ClearRunningGraph();
-      db.Close();
-      VLOG(10) << "Closed the previous graph db";
-      if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
-        LOG(ERROR) << "Fail to load graph from data directory: "
-                   << data_dir_value;
-        if (!prev_lock) {  // If the graph is not locked before, and we
-                           // fail at some steps after locking, we should
-                           // unlock it.
-          metadata_store_->UnlockGraphIndices(graph_name);
-        }
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(gs::Status(
-                gs::StatusCode::InternalError,
-                "Fail to load graph from data directory: " + data_dir_value)));
+    metadata_store_->ClearRunningGraph();
+    VLOG(10) << "Closed the previous graph db";
+    if (graph_name != cur_running_graph &&
+        !db.GetSession(hiactor::local_shard_id())
+             .SwapGraphData(schema_value, data_dir_value)) {
+      // if (!db.SwapOpen(schema_value, data_dir_value, thread_num).ok()) {
+      LOG(ERROR) << "Fail to load graph from data directory: "
+                 << data_dir_value;
+      if (!prev_lock) {  // If the graph is not locked before, and we
+                         // fail at some steps after locking, we should
+                         // unlock it.
+        metadata_store_->UnlockGraphIndices(graph_name);
       }
-      LOG(INFO) << "Successfully load graph from data directory: "
-                << data_dir_value;
-      // unlock the previous graph
-      if (graph_name != cur_running_graph) {
-        auto unlock_res =
-            metadata_store_->UnlockGraphIndices(cur_running_graph);
-        if (!unlock_res.ok()) {
-          LOG(ERROR) << "Fail to unlock graph: " << cur_running_graph;
-          if (!prev_lock) {
-            metadata_store_->UnlockGraphIndices(graph_name);
-          }
-          return seastar::make_ready_future<admin_query_result>(
-              gs::Result<seastar::sstring>(unlock_res.status()));
-        }
-      }
-      LOG(INFO) << "Update running graph to: " << graph_name;
-      auto set_res = metadata_store_->SetRunningGraph(graph_name);
-      if (!set_res.ok()) {
-        LOG(ERROR) << "Fail to set running graph: " << graph_name;
-        if (!prev_lock) {
-          metadata_store_->UnlockGraphIndices(graph_name);
-        }
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(set_res.status()));
-      }
-    }
-    hqps_service.start_query_actors();  // start on a new scope.
-    LOG(INFO) << "Successfully restart query actors";
-    // now start the compiler
-    auto schema_path =
-        server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
-    if (!hqps_service.start_compiler_subprocess(schema_path)) {
-      LOG(ERROR) << "Fail to start compiler";
       return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-                                                  "Fail to start compiler")));
+          gs::Result<seastar::sstring>(gs::Status(
+              gs::StatusCode::InternalError,
+              "Fail to load graph from data directory: " + data_dir_value)));
     }
-    LOG(INFO) << "Successfully started service with graph: " << graph_name;
-    hqps_service.reset_start_time();
+  }
+  LOG(INFO) << "Successfully load graph from data directory: "
+            << data_dir_value;
+  // unlock the previous graph
+  if (graph_name != cur_running_graph) {
+    auto unlock_res = metadata_store_->UnlockGraphIndices(cur_running_graph);
+    if (!unlock_res.ok()) {
+      LOG(ERROR) << "Fail to unlock graph: " << cur_running_graph;
+      if (!prev_lock) {
+        metadata_store_->UnlockGraphIndices(graph_name);
+      }
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(unlock_res.status()));
+    }
+  }
+  LOG(INFO) << "Update running graph to: " << graph_name;
+  auto set_res = metadata_store_->SetRunningGraph(graph_name);
+  if (!set_res.ok()) {
+    LOG(ERROR) << "Fail to set running graph: " << graph_name;
+    if (!prev_lock) {
+      metadata_store_->UnlockGraphIndices(graph_name);
+    }
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            to_message_json("Successfully start service")));
-  });
+        gs::Result<seastar::sstring>(set_res.status()));
+  }
+
+  LOG(INFO) << "Successfully restart query actors";
+  // now start the compiler
+  auto schema_path = server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
+  if (!hqps_service.start_compiler_subprocess(schema_path)) {
+    LOG(ERROR) << "Fail to start compiler";
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
+                                                "Fail to start compiler")));
+  }
+  LOG(INFO) << "Successfully started service with graph: " << graph_name;
+  hqps_service.reset_start_time();
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(
+          std::move(to_message_json("Successfully start service"))));
 }
 
 // Stop service.
@@ -1150,10 +1148,10 @@ seastar::future<admin_query_result> admin_actor::service_status(
         auto get_all_procedure_res =
             metadata_store_->GetAllPluginMeta(running_graph_res.value());
         if (get_all_procedure_res.ok()) {
-          VLOG(10) << "Successfully get all procedures: "
-                   << get_all_procedure_res.value().size();
+          // VLOG(10) << "Successfully get all procedures: "
+          //  << get_all_procedure_res.value().size();
           auto& all_plugin_metas = get_all_procedure_res.value();
-          VLOG(10) << "original all plugins : " << all_plugin_metas.size();
+          // VLOG(10) << "original all plugins : " << all_plugin_metas.size();
           for (auto& plugin_meta : all_plugin_metas) {
             add_runnable_info(plugin_meta);
           }
@@ -1161,13 +1159,14 @@ seastar::future<admin_query_result> admin_actor::service_status(
             add_runnable_info(plugin_meta);
           }
 
-          VLOG(10) << "original graph meta: " << graph_meta.plugin_metas.size();
+          // VLOG(10) << "original graph meta: " <<
+          // graph_meta.plugin_metas.size();
           for (auto& plugin_meta : all_plugin_metas) {
             if (plugin_meta.runnable) {
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          VLOG(10) << "got graph meta: " << graph_meta.ToJson();
+          // VLOG(10) << "got graph meta: " << graph_meta.ToJson();
           res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
         } else {
           LOG(ERROR) << "Fail to get all procedures: "
@@ -1338,10 +1337,13 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
                        "The queried graph is not running: " + graph_id +
                            ", current running graph is: " + queried_graph)));
   }
-  auto statistics = get_graph_statistics(
-      gs::GraphDB::get().GetSession(hiactor::local_shard_id()));
-  return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(statistics.ToJson()));
+  {
+    std::lock_guard<std::mutex> lock(mtx_);
+    auto statistics = get_graph_statistics(
+        gs::GraphDB::get().GetSession(hiactor::local_shard_id()));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(std::move(statistics.ToJson())));
+  }
 }
 
 seastar::future<admin_query_result> admin_actor::upload_file(

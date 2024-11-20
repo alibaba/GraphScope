@@ -140,6 +140,28 @@ bool VersionManager::revert_update_timestamp(uint32_t ts) {
   return false;
 }
 
+void VersionManager::swap(VersionManager& vm) {
+  auto tmp = vm.write_ts_.load();
+  vm.write_ts_.store(write_ts_.load());
+  write_ts_.store(tmp);
+
+  tmp = vm.read_ts_.load();
+  vm.read_ts_.store(read_ts_.load());
+  read_ts_.store(tmp);
+
+  tmp = vm.pending_reqs_.load();
+  vm.pending_reqs_.store(pending_reqs_.load());
+  pending_reqs_.store(tmp);
+
+  tmp = vm.pending_update_reqs_.load();
+  vm.pending_update_reqs_.store(pending_update_reqs_.load());
+  pending_update_reqs_.store(tmp);
+
+  buf_.swap(vm.buf_);
+  // std::swap(lock_, vm.lock_);
+  std::swap(thread_num_, vm.thread_num_);
+}
+
 }  // namespace gs
 
 #undef likely

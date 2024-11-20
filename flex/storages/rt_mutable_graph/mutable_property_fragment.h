@@ -109,6 +109,8 @@ class MutablePropertyFragment {
 
   void loadSchema(const std::string& filename);
 
+  void swap(MutablePropertyFragment& rhs);
+
   Schema schema_;
   std::vector<IndexerType> lf_indexers_;
   std::vector<CsrBase*> ie_, oe_;
