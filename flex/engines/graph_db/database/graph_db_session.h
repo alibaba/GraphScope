@@ -28,6 +28,8 @@
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
 
+#include <functional>
+
 namespace gs {
 
 class GraphDB;
@@ -66,6 +68,8 @@ class GraphDBSession {
     }
   }
   ~GraphDBSession() {}
+
+  void set_db(GraphDB& db);
 
   ReadTransaction GetReadTransaction() const;
 
@@ -109,7 +113,7 @@ class GraphDBSession {
 
   AppBase* GetApp(int idx);
 
-  bool SwapGraphData(const Schema& schema, const std::string& data_dir);
+  // bool SwapGraphData(const Schema& schema, const std::string& data_dir);
 
  private:
 #ifdef BUILD_HQPS
@@ -185,7 +189,7 @@ class GraphDBSession {
                      "Invalid input tag: " + std::to_string(input_tag)));
     }
   }
-  GraphDB& db_;
+  std::reference_wrapper<GraphDB> db_;
   Allocator& alloc_;
   WalWriter& logger_;
   std::string work_dir_;

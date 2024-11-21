@@ -151,6 +151,19 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
+  inline int ThreadNum() const { return thread_num_; }
+
+  inline VersionManager& version_manager() { return version_manager_; }
+
+  inline void printAppFactory() {
+    for (size_t i = 0; i < app_factories_.size(); ++i) {
+      if (app_factories_[i] != nullptr) {
+        LOG(INFO) << "App factory: " << i << ", " << app_paths_[i] << ", "
+                  << app_factories_[i];
+      }
+    }
+  }
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 

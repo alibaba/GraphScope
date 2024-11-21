@@ -242,12 +242,22 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
 
 void GraphDB::Swap(GraphDB& other) {
   std::swap(work_dir_, other.work_dir_);
-  std::swap(contexts_, other.contexts_);
   std::swap(thread_num_, other.thread_num_);
-  std::swap(graph_, other.graph_);
+  std::swap(contexts_, other.contexts_);
+  // NOTE: the graph db has changed, so the session should be updated.
+  for (int i = 0; i < thread_num_; ++i) {
+    contexts_[i].session.set_db(*this);
+  }
+
   version_manager_.swap(other.version_manager_);
 
   std::swap(app_paths_, other.app_paths_);
+  LOG(INFO) << "before swap app factories";
+  for (size_t i = 0; i < app_factories_.size(); ++i) {
+    LOG(INFO) << "Fac: " << i << ", " << app_factories_[i] << ", "
+              << app_paths_[i] << ";" << other.app_factories_[i] << ", "
+              << other.app_paths_[i];
+  }
   std::swap(app_factories_, other.app_factories_);
   std::swap(monitor_thread_running_, other.monitor_thread_running_);
   std::swap(monitor_thread_, other.monitor_thread_);
@@ -255,7 +265,12 @@ void GraphDB::Swap(GraphDB& other) {
   std::swap(compact_thread_running_, other.compact_thread_running_);
   std::swap(compact_thread_, other.compact_thread_);
 
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  // std::this_thread::sleep_for(std::chrono::seconds(10));
+  auto plugins = graph_->schema().GetPlugins();
+  for (auto plugin : graph_->schema().GetPlugins()) {
+    LOG(INFO) << "plugin: " << plugin.first << ", " << plugin.second.first
+              << ", " << plugin.second.second;
+  }
 }
 
 void GraphDB::Close() {
@@ -341,6 +356,12 @@ std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
 }
 
 AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
+  for (size_t i = 0; i < app_factories_.size(); ++i) {
+    if (app_factories_[i] != nullptr) {
+      LOG(INFO) << "App factory: " << i << ", " << app_paths_[i] << ", "
+                << app_factories_[i];
+    }
+  }
   if (app_factories_[app_type] == nullptr) {
     LOG(ERROR) << "Stored procedure " << static_cast<int>(app_type)
                << " is not registered.";

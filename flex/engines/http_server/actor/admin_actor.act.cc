@@ -33,6 +33,30 @@ std::string to_message_json(const std::string& message) {
   return "{\"message\":\"" + message + "\"}";
 }
 
+bool SwapGraphData(const gs::Schema& schema, const std::string& data_dir) {
+  // auto update_transaction = GetUpdateTransaction();
+  LOG(INFO) << "Acquire update timestamp...";
+  auto& old_db = gs::GraphDB::get();
+  auto ts = old_db.version_manager().acquire_update_timestamp();
+  // Use a update transaction to avoid new transaction come.
+  gs::GraphDB new_db;
+  auto open_res = new_db.Open(schema, data_dir, old_db.ThreadNum());
+  if (!open_res.ok()) {
+    return false;
+  }
+  LOG(INFO) << "Successfully open new db...";
+  old_db.Swap(new_db);
+  LOG(INFO) << "Successfully swap db...";
+
+  // NOW the version manager is in the new db.
+  new_db.version_manager().release_update_timestamp(ts);
+  LOG(INFO) << "Successfully release update timestamp...";
+  new_db.Close();
+  old_db.printAppFactory();
+  LOG(INFO) << "Successfully close new db...";
+  return true;
+}
+
 gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
   gs::GraphStatistics stat;
   const auto& graph = sess.graph();
@@ -1024,8 +1048,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
     metadata_store_->ClearRunningGraph();
     VLOG(10) << "Closed the previous graph db";
     if (graph_name != cur_running_graph &&
-        !db.GetSession(hiactor::local_shard_id())
-             .SwapGraphData(schema_value, data_dir_value)) {
+        !SwapGraphData(schema_value, data_dir_value)) {
       // if (!db.SwapOpen(schema_value, data_dir_value, thread_num).ok()) {
       LOG(ERROR) << "Fail to load graph from data directory: "
                  << data_dir_value;
@@ -1040,6 +1063,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
               "Fail to load graph from data directory: " + data_dir_value)));
     }
   }
+  LOG(INFO) << "After swap";
+  gs::GraphDB::get().printAppFactory();
   LOG(INFO) << "Successfully load graph from data directory: "
             << data_dir_value;
   // unlock the previous graph
