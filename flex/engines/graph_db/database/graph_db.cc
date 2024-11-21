@@ -242,13 +242,14 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
 
 void GraphDB::Swap(GraphDB& other) {
   std::swap(work_dir_, other.work_dir_);
-  std::swap(thread_num_, other.thread_num_);
   std::swap(contexts_, other.contexts_);
   // NOTE: the graph db has changed, so the session should be updated.
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].session.set_db(*this);
   }
+  std::swap(thread_num_, other.thread_num_);
 
+  std::swap(graph_, other.graph_);
   version_manager_.swap(other.version_manager_);
 
   std::swap(app_paths_, other.app_paths_);
