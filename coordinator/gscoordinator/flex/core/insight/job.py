@@ -19,9 +19,9 @@
 import datetime
 import http.client
 import json
+import logging
 import time
 import urllib.parse
-import logging
 
 import pandas as pd
 from graphscope.framework.record import EdgeRecordKey
