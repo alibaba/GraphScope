@@ -252,12 +252,6 @@ void GraphDB::Swap(GraphDB& other) {
   version_manager_.swap(other.version_manager_);
 
   std::swap(app_paths_, other.app_paths_);
-  LOG(INFO) << "before swap app factories";
-  for (size_t i = 0; i < app_factories_.size(); ++i) {
-    LOG(INFO) << "Fac: " << i << ", " << app_factories_[i] << ", "
-              << app_paths_[i] << ";" << other.app_factories_[i] << ", "
-              << other.app_paths_[i];
-  }
   std::swap(app_factories_, other.app_factories_);
   std::swap(monitor_thread_running_, other.monitor_thread_running_);
   std::swap(monitor_thread_, other.monitor_thread_);

@@ -93,6 +93,7 @@ hqps_heartbeat_handler::handle(const seastar::sstring& path,
           std::move(rep));
     });
   } else if (path.find("ready") != seastar::sstring::npos) {
+    LOG(INFO) << "/ready:" << hiactor::local_shard_id();
     auto& hqps_service = HQPSService::get();
     auto metadata_store = hqps_service.get_metadata_store();
     if (!metadata_store) {

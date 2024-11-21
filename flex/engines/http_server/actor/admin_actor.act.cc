@@ -33,28 +33,37 @@ std::string to_message_json(const std::string& message) {
   return "{\"message\":\"" + message + "\"}";
 }
 
-bool SwapGraphData(const gs::Schema& schema, const std::string& data_dir) {
-  // auto update_transaction = GetUpdateTransaction();
-  LOG(INFO) << "Acquire update timestamp...";
-  auto& old_db = gs::GraphDB::get();
-  auto ts = old_db.version_manager().acquire_update_timestamp();
-  // Use a update transaction to avoid new transaction come.
-  gs::GraphDB new_db;
-  auto open_res = new_db.Open(schema, data_dir, old_db.ThreadNum());
-  if (!open_res.ok()) {
-    return false;
+seastar::future<bool> SwapGraphData(const std::string& in_graph_name,
+                                    const std::string& cur_graph_name,
+                                    const gs::Schema& schema,
+                                    const std::string& data_dir) {
+  if (in_graph_name == cur_graph_name) {
+    return seastar::make_ready_future<bool>(true);
   }
-  LOG(INFO) << "Successfully open new db...";
-  old_db.Swap(new_db);
-  LOG(INFO) << "Successfully swap db...";
 
-  // NOW the version manager is in the new db.
-  new_db.version_manager().release_update_timestamp(ts);
-  LOG(INFO) << "Successfully release update timestamp...";
-  new_db.Close();
-  old_db.printAppFactory();
-  LOG(INFO) << "Successfully close new db...";
-  return true;
+  return seastar::sleep(std::chrono::seconds(1))
+      .then([in_graph_name, cur_graph_name, data_dir, schema]() {
+        // auto update_transaction = GetUpdateTransaction();
+        LOG(INFO) << "Acquire update timestamp...";
+        auto& old_db = gs::GraphDB::get();
+        auto ts = old_db.version_manager().acquire_update_timestamp();
+        // Use a update transaction to avoid new transaction come.
+        gs::GraphDB new_db;
+        auto open_res = new_db.Open(schema, data_dir, old_db.ThreadNum());
+        if (!open_res.ok()) {
+          return seastar::make_ready_future<bool>(false);
+        }
+        LOG(INFO) << "Successfully open new db...";
+        old_db.Swap(new_db);
+        LOG(INFO) << "Successfully swap db...";
+        // NOW the version manager is in the new db.
+        new_db.version_manager().release_update_timestamp(ts);
+        LOG(INFO) << "Successfully release update timestamp...";
+        new_db.Close();
+        old_db.printAppFactory();
+        LOG(INFO) << "Successfully close new db...";
+        return seastar::make_ready_future<bool>(true);
+      });
 }
 
 gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
@@ -1040,70 +1049,75 @@ seastar::future<admin_query_result> admin_actor::start_service(
   auto& hqps_service = HQPSService::get();
   LOG(INFO) << "Successfully stopped query handler";
 
-  {
-    std::lock_guard<std::mutex> lock(mtx_);
-    auto& db = gs::GraphDB::get();
-    LOG(INFO) << "Update service running on graph:" << graph_name;
+  metadata_store_->ClearRunningGraph();
+  VLOG(10) << "Closed the previous graph db";
 
-    metadata_store_->ClearRunningGraph();
-    VLOG(10) << "Closed the previous graph db";
-    if (graph_name != cur_running_graph &&
-        !SwapGraphData(schema_value, data_dir_value)) {
-      // if (!db.SwapOpen(schema_value, data_dir_value, thread_num).ok()) {
-      LOG(ERROR) << "Fail to load graph from data directory: "
-                 << data_dir_value;
-      if (!prev_lock) {  // If the graph is not locked before, and we
-                         // fail at some steps after locking, we should
-                         // unlock it.
-        metadata_store_->UnlockGraphIndices(graph_name);
-      }
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(
-              gs::StatusCode::InternalError,
-              "Fail to load graph from data directory: " + data_dir_value)));
-    }
-  }
-  LOG(INFO) << "After swap";
-  gs::GraphDB::get().printAppFactory();
-  LOG(INFO) << "Successfully load graph from data directory: "
-            << data_dir_value;
-  // unlock the previous graph
-  if (graph_name != cur_running_graph) {
-    auto unlock_res = metadata_store_->UnlockGraphIndices(cur_running_graph);
-    if (!unlock_res.ok()) {
-      LOG(ERROR) << "Fail to unlock graph: " << cur_running_graph;
-      if (!prev_lock) {
-        metadata_store_->UnlockGraphIndices(graph_name);
-      }
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(unlock_res.status()));
-    }
-  }
-  LOG(INFO) << "Update running graph to: " << graph_name;
-  auto set_res = metadata_store_->SetRunningGraph(graph_name);
-  if (!set_res.ok()) {
-    LOG(ERROR) << "Fail to set running graph: " << graph_name;
-    if (!prev_lock) {
-      metadata_store_->UnlockGraphIndices(graph_name);
-    }
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(set_res.status()));
-  }
+  LOG(INFO) << "Update service running on graph:" << graph_name;
 
-  LOG(INFO) << "Successfully restart query actors";
-  // now start the compiler
-  auto schema_path = server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
-  if (!hqps_service.start_compiler_subprocess(schema_path)) {
-    LOG(ERROR) << "Fail to start compiler";
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-                                                "Fail to start compiler")));
-  }
-  LOG(INFO) << "Successfully started service with graph: " << graph_name;
-  hqps_service.reset_start_time();
-  return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          std::move(to_message_json("Successfully start service"))));
+  return SwapGraphData(graph_name, cur_running_graph, schema_value,
+                       data_dir_value)
+      .then([this, &hqps_service, graph_name, cur_running_graph, data_dir_value,
+             prev_lock](bool res) {
+        if (!res) {
+          LOG(ERROR) << "Fail to load graph from data directory: "
+                     << data_dir_value;
+          if (!prev_lock) {  // If the graph is not locked before, and we
+                             // fail at some steps after locking, we should
+                             // unlock it.
+            metadata_store_->UnlockGraphIndices(graph_name);
+          }
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::Status(gs::StatusCode::InternalError,
+                             "Fail to load graph from data directory: " +
+                                 data_dir_value)));
+        } else {
+          LOG(INFO) << "After swap";
+          gs::GraphDB::get().printAppFactory();
+          LOG(INFO) << "Successfully load graph from data directory: "
+                    << data_dir_value;
+          // unlock the previous graph
+          if (graph_name != cur_running_graph) {
+            auto unlock_res =
+                metadata_store_->UnlockGraphIndices(cur_running_graph);
+            if (!unlock_res.ok()) {
+              LOG(ERROR) << "Fail to unlock graph: " << cur_running_graph;
+              if (!prev_lock) {
+                metadata_store_->UnlockGraphIndices(graph_name);
+              }
+              return seastar::make_ready_future<admin_query_result>(
+                  gs::Result<seastar::sstring>(unlock_res.status()));
+            }
+          }
+          LOG(INFO) << "Update running graph to: " << graph_name;
+          auto set_res = metadata_store_->SetRunningGraph(graph_name);
+          if (!set_res.ok()) {
+            LOG(ERROR) << "Fail to set running graph: " << graph_name;
+            if (!prev_lock) {
+              metadata_store_->UnlockGraphIndices(graph_name);
+            }
+            return seastar::make_ready_future<admin_query_result>(
+                gs::Result<seastar::sstring>(set_res.status()));
+          }
+
+          LOG(INFO) << "Successfully restart query actors";
+          // now start the compiler
+          auto schema_path =
+              server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
+          if (!hqps_service.start_compiler_subprocess(schema_path)) {
+            LOG(ERROR) << "Fail to start compiler";
+            return seastar::make_ready_future<admin_query_result>(
+                gs::Result<seastar::sstring>(gs::Status(
+                    gs::StatusCode::InternalError, "Fail to start compiler")));
+          }
+          LOG(INFO) << "Successfully started service with graph: "
+                    << graph_name;
+          hqps_service.reset_start_time();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  std::move(to_message_json("Successfully start service"))));
+        }
+      });
 }
 
 // Stop service.
@@ -1155,6 +1169,7 @@ seastar::future<admin_query_result> admin_actor::stop_service(
 // get service status
 seastar::future<admin_query_result> admin_actor::service_status(
     query_param&& query_param) {
+  LOG(INFO) << "Get service status.";
   auto& hqps_service = HQPSService::get();
   auto query_port = hqps_service.get_query_port();
   auto running_graph_res = metadata_store_->GetRunningGraph();
