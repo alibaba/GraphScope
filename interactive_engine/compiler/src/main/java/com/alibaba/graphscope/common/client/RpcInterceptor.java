@@ -42,11 +42,6 @@ public class RpcInterceptor implements ClientInterceptor {
             public void start(Listener<RespT> responseListener, Metadata headers) {
                 requestStartTime = Instant.now();
                 QueryLogger queryLogger = callOptions.getOption(QUERY_LOGGER_OPTION);
-                if (queryLogger != null) {
-                    queryLogger.info(
-                            "[query][submitted]: submit the query to the channel {}",
-                            channel.authority());
-                }
                 super.start(
                         new ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(
                                 responseListener) {
@@ -86,6 +81,11 @@ public class RpcInterceptor implements ClientInterceptor {
                             }
                         },
                         headers);
+                if (queryLogger != null) {
+                    queryLogger.info(
+                            "[query][submitted]: submit the query to the task queue of channel {}",
+                            channel.authority());
+                }
             }
         };
     }
