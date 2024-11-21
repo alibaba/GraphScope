@@ -18,14 +18,10 @@
 
 package com.alibaba.graphscope.common.metric;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.util.Map;
-
 public interface Metric<Value> {
 
     class KeyFactory {
-        public static final Key MEMORY = new Key("memory");
+        public static final Key MEMORY = new Key("memory.usage");
         public static final Key RPC_CHANNELS_EXECUTOR_QUEUE =
                 new Key("rpc.channels.executor.queue");
         public static final Key GREMLIN_EXECUTOR_QUEUE = new Key("gremlin.executor.queue");
@@ -33,9 +29,8 @@ public interface Metric<Value> {
     }
 
     class ValueFactory {
-        public static long INVALID_LONG = -1l;
+        public static long INVALID_LONG = -1L;
         public static int INVALID_INT = -1;
-        public static Map INVALID_MAP = ImmutableMap.of();
     }
 
     Key getKey();
