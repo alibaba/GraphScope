@@ -93,6 +93,15 @@ find_package(libgrapelite REQUIRED)
 include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS})
 include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
+# find JNI-----------------------------------------------------------------------
+find_package(JNI REQUIRED)
+if (JNI_FOUND)
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+else()
+    message(FATAL_ERROR "JNI not found")
+endif()
+
 # find Threads------------------------------------------------------------------
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
@@ -233,6 +242,7 @@ endif()
 if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
+add_subdirectory(planner)
 
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config.in.cmake
