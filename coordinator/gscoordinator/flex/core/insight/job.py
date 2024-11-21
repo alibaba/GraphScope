@@ -21,6 +21,7 @@ import http.client
 import json
 import time
 import urllib.parse
+import logging
 
 import pandas as pd
 from graphscope.framework.record import EdgeRecordKey
@@ -35,6 +36,7 @@ from gscoordinator.flex.core.stoppable_thread import StoppableThread
 from gscoordinator.flex.core.utils import encode_datetime
 from gscoordinator.flex.models import JobStatus
 
+logger = logging.getLogger("graphscope")
 
 class FetchDataloadingJobStatus(object):
     def __init__(self, graph, status: JobStatus):
@@ -307,12 +309,14 @@ class DataloadingJobScheduler(Scheduler):
                     json.dumps(configini),
                     headers={"Content-type": "application/json"},
                 )
-                r = conn.getresponse()
-                if r.status > 400 and r.status < 600:
+                resp = conn.getresponse()
+                data = resp.read().decode("utf-8")
+                if resp.status != 200:
+                    logger.error("Failed to submit dataloading job, code: ", resp.status, ", data: ", data)
                     raise RuntimeError(
-                        "Failed to submit dataloading job: " + r.read().decode("utf-8")
+                        "Failed to submit dataloading job, code: ", resp.status, ", data: ", data
                     )
-                rlt = json.loads(r.read().decode("utf-8"))
+                rlt = json.loads(data)
                 if rlt["success"]:
                     self._jobid = rlt["data"]
                     status = self.generate_job_status(
@@ -325,6 +329,7 @@ class DataloadingJobScheduler(Scheduler):
                         log=rlt["message"],
                     )
         except Exception as e:
+            logger.error("Exception occured: ", str(e))
             status = self.generate_job_status(
                 status="FAILED", end_time=datetime.datetime.now(), log=str(e)
             )
