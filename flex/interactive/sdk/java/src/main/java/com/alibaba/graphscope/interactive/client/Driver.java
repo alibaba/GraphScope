@@ -44,6 +44,10 @@ public class Driver {
         return new Driver(uri);
     }
 
+    public static ProcedureInterface procedureOnly(String uri) {
+        return DefaultSession.queryServiceOnly(uri);
+    }
+
     private Driver(String uri) {
         // Parse uri
         String[] parts = uri.split(":");

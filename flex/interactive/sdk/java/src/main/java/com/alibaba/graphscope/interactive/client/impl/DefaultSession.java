@@ -41,16 +41,19 @@ public class DefaultSession implements Session {
     private static String JSON_FORMAT_STRING = "json";
     private static String PROTO_FORMAT_STRING = "proto";
     private static String ENCODER_FORMAT_STRING = "encoder";
-    private final AdminServiceGraphManagementApi graphApi;
-    private final AdminServiceJobManagementApi jobApi;
-    private final AdminServiceProcedureManagementApi procedureApi;
-    private final AdminServiceServiceManagementApi serviceApi;
-    private final GraphServiceVertexManagementApi vertexApi;
-    private final GraphServiceEdgeManagementApi edgeApi;
-    private final QueryServiceApi queryApi;
-    private final UtilsApi utilsApi;
-    private final ApiClient client, queryClient;
+    private AdminServiceGraphManagementApi graphApi;
+    private AdminServiceJobManagementApi jobApi;
+    private AdminServiceProcedureManagementApi procedureApi;
+    private AdminServiceServiceManagementApi serviceApi;
+    private GraphServiceVertexManagementApi vertexApi;
+    private GraphServiceEdgeManagementApi edgeApi;
+    private QueryServiceApi queryApi;
+    private UtilsApi utilsApi;
+    private ApiClient client, queryClient;
 
+    private DefaultSession(){
+
+    }
     /**
      * Create a default GraphScope Interactive Session.
      *
@@ -87,6 +90,16 @@ public class DefaultSession implements Session {
         queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
         queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
         queryApi = new QueryServiceApi(queryClient);
+    }
+
+    public static DefaultSession queryServiceOnly(String queryUri) {
+        DefaultSession sess = new DefaultSession();
+        sess.queryClient = new ApiClient();
+        sess.queryClient.setBasePath(queryUri);
+        sess.queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        sess.queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+        sess.queryApi = new QueryServiceApi(sess.queryClient);
+        return sess;
     }
 
     public static DefaultSession newInstance(String uri) {
