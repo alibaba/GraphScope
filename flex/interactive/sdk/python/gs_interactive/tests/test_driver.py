@@ -31,7 +31,7 @@ from gs_interactive.models import CreateEdgeType
 from gs_interactive.models import CreateGraphRequest
 from gs_interactive.models import CreateGraphSchemaRequest
 from gs_interactive.models import CreateProcedureRequest
-from gs_interactive.models import CreatePropertyMeta
+from gs_interactive.models import BasePropertyMeta
 from gs_interactive.models import CreateVertexType
 from gs_interactive.models import EdgeMapping
 from gs_interactive.models import EdgeMappingTypeTriplet
@@ -172,19 +172,19 @@ class TestDriver(unittest.TestCase):
             type_name="person",
             primary_keys=["id"],
             properties=[
-                CreatePropertyMeta(
+                BasePropertyMeta(
                     property_name="id",
                     property_type=GSDataType(
                         PrimitiveType(primitive_type="DT_SIGNED_INT64")
                     ),
                 ),
-                CreatePropertyMeta(
+                BasePropertyMeta(
                     property_name="name",
                     property_type=GSDataType(
                         StringType(string=StringTypeString(LongText(long_text="")))
                     ),
                 ),
-                CreatePropertyMeta(
+                BasePropertyMeta(
                     property_name="age",
                     property_type=GSDataType(
                         PrimitiveType(primitive_type="DT_SIGNED_INT32")
@@ -196,7 +196,7 @@ class TestDriver(unittest.TestCase):
         create_knows_edge = CreateEdgeType(
             type_name="knows",
             properties=[
-                CreatePropertyMeta(
+                BasePropertyMeta(
                     property_name="weight",
                     property_type=GSDataType(PrimitiveType(primitive_type="DT_DOUBLE")),
                 )
