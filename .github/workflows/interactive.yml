@@ -605,3 +605,15 @@ jobs:
         SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+    
+    - name: Test graph loading with different delimiter
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/modern_graph_tab_delimiter/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        sed -i 's/|/\\t/g' ${BULK_LOAD_FILE}
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
