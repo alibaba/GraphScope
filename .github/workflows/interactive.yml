@@ -609,7 +609,7 @@ jobs:
     - name: Test graph loading with different delimiter
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
-        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/modern_graph_table_delimiter/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/modern_graph_tab_delimiter/
       run: |
         rm -rf /tmp/csr-data-dir/
         cd ${GITHUB_WORKSPACE}/flex/build/
