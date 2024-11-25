@@ -141,7 +141,8 @@ static std::vector<std::string> read_header(
       std::string token;
       while (std::getline(ss, token, delimiter)) {
         // trim the token
-        token.erase(token.find_last_not_of(" \n\r\t") + 1);
+        token.erase(token.find_last_not_of(" \n\r") + 1);
+        LOG(INFO) << "Got token: " << token;
         token = process_header_row_token(token, loading_config);
         res_vec.push_back(token);
       }
@@ -158,10 +159,30 @@ static std::vector<std::string> read_header(
 static void put_delimiter_option(const LoadingConfig& loading_config,
                                  arrow::csv::ParseOptions& parse_options) {
   auto delimiter_str = loading_config.GetDelimiter();
-  if (delimiter_str.size() != 1) {
+  if (delimiter_str.size() != 1 && delimiter_str[0] != '\\') {
     LOG(FATAL) << "Delimiter should be a single character";
   }
-  parse_options.delimiter = delimiter_str[0];
+  if (delimiter_str[0] == '\\') {
+    if (delimiter_str.size() != 2) {
+      LOG(FATAL) << "Delimiter should be a single character";
+    }
+    // escape the special character
+    switch (delimiter_str[1]) {
+    case 't':
+      parse_options.delimiter = '\t';
+      break;
+    case 'n':
+      parse_options.delimiter = '\n';
+      break;
+    case 'r':
+      parse_options.delimiter = '\r';
+      break;
+    default:
+      LOG(FATAL) << "Unsupported escape character: " << delimiter_str[1];
+    }
+  } else {
+    parse_options.delimiter = delimiter_str[0];
+  }
 }
 
 static bool put_skip_rows_option(const LoadingConfig& loading_config,

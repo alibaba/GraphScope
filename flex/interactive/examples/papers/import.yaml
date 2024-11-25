@@ -2,12 +2,13 @@ graph: papers
 loading_config:
   import_option: init # append, overwrite, only init is supported now
   data_source:
-    scheme: odps  # file, odps
+    scheme: file  # file, odps
+    location: /workspaces/paper_1w_graph
   format:
-    type: arrow
+    type: csv
     metadata:
-      delimiter: ','  # other loading configuration places here
-      header_row: false # whether to use the first row as the header
+      delimiter: '\t'  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
       quoting: true
       quote_char: '"'
       double_quote: false
@@ -19,5 +20,19 @@ loading_config:
 vertex_mappings:
   - type_name: Paper  
     inputs:
-      - itag..dim_mit_itag_workflow_kb_arxiv
-
+      - vertices.csv
+edge_mappings:
+  - type_triplet: 
+      edge: Cite
+      source_vertex: Paper  
+      destination_vertex: Paper
+    inputs:
+      - edges.csv
+    source_vertex_mappings:
+      - column:
+          index: 0
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+        property: id

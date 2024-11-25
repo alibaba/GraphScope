@@ -4,6 +4,9 @@ schema:
   vertex_types:
     - type_name: Paper
       properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT32
         - property_name: title
           property_type:
             string:
@@ -58,24 +61,12 @@ schema:
               long_text:
         - property_name: ref_count
           property_type:
-            string:
-              var_char:
-                8
+            primitive_type: DT_SIGNED_INT32
         - property_name: idp_info
           property_type:
             string:
-              var_char:
-                max_length: 512
-        - property_name: publish_date
-          property_type:
-            string:
-              var_char:
-                10
-        - property_name: references_list
-          property_type:
-            string:
               long_text:
-        - property_name: citation_list
+        - property_name: publish_date
           property_type:
             string:
               long_text:
@@ -91,5 +82,75 @@ schema:
           property_type:
             string:
               long_text:
+        - property_name: title_layouts
+          property_type:
+            string:
+              long_text:
+        - property_name: github_link
+          property_type:
+            string:
+              long_text:
+        - property_name: future_work
+          property_type:
+            string:
+              long_text:
+        - property_name: formulae
+          property_type:
+            string:
+              long_text:
+        - property_name: author_location
+          property_type:
+            string:
+              long_text:
+        - property_name: problem
+          property_type:
+            string:
+              long_text:
+        - property_name: contributions
+          property_type:
+            string:
+              long_text:
+        - property_name: challenges
+          property_type:
+            string:
+              long_text:
+        - property_name: solutions
+          property_type:
+            string:
+              long_text:
+        - property_name: experiments
+          property_type:
+            string:
+              long_text:
+        - property_name: baseline_list
+          property_type:
+            string:
+              long_text:
+        - property_name: evaluation_metrics
+          property_type:
+            string:
+              long_text:
+        - property_name: pdf_url
+          property_type:
+            string:
+              long_text:
+        - property_name: error
+          property_type:
+            string:
+              long_text:
       primary_keys:
-        - title
+        - id
+  edge_types:
+    - type_id: 0
+      type_name: Cite
+      description: A cite edge type
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Paper
+          relation: MANY_TO_MANY
+          x_csr_params:
+            sort_on_compaction: TRUE
+      properties:
+        - property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE

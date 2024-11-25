@@ -1,0 +1,6 @@
+#ifndef MYIGRAPH_INCLUDED
+#define MYIGRAPH_INCLUDED
+
+class MyIGraph {};
+
+#endif  // MYIGRAPH_INCLUDED
