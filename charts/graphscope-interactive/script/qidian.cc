@@ -260,9 +260,13 @@ class QiDian : public WriteAppBase {
     auto& cur_direction = cur_directions[cur_ind];
 
     for (auto& edge : edges) {
+      auto rel_type = edge.get_data()[1].AsInt64();
+      if (rel_type >= REL_TYPE_MAX || !valid_rel_type_ids[rel_type]){
+	  continue ;
+      }
       auto dst = edge.get_neighbor();
       cur_path.emplace_back(dst);
-      cur_rel_type.emplace_back(edge.get_data()[1].AsInt64());
+      cur_rel_type.emplace_back();
       cur_rel_weight.emplace_back(edge.get_data()[0].AsDouble());
       cur_direction.emplace_back(direction);
       if (is_simple(cur_path)) {
