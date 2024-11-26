@@ -65,7 +65,7 @@ ARG ENABLE_COORDINATOR="false"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata iputils-ping curl && \
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata iputils-ping curl rapidjson-dev && \
     locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # shanghai zoneinfo
