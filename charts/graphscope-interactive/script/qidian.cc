@@ -104,7 +104,7 @@ class ResultCreator {
   }
 
   std::string Dump() const {
-    rapidjson::Document document_;
+    rapidjson::Document document_(rapidjson::kObjectType);
     document_.AddMember("currentPage", page_id_, document_.GetAllocator());
     document_.AddMember("pageSize", page_size_, document_.GetAllocator());
     //
@@ -362,7 +362,7 @@ class QiDian : public WriteAppBase {
     auto cmp_invest_incoming_view = txn.GetIncomingGraphView<RecordView>(
         vertex_label_id_, vertex_label_id_, invest_label_id_);
 #endif
-    ResultCreator result_creator_(graph.GetReadTransaction());
+    ResultCreator result_creator_(txn);
     result_creator_.Init(page_id, page_limit, typed_comp_named_col_);
 
     // Expand from vid_vec, until end_vertex is valid, or hop limit is reached.
