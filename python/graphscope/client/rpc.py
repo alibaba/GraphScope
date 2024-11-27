@@ -41,18 +41,22 @@ class GRPCClient(object):
     def __init__(self, launcher, endpoint, reconnect=False):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
-        options = [
+        self._options = [
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
+        self._endpoint = endpoint
         self._launcher = launcher
         self._grpc_utils = GRPCUtils()
-        self._channel = grpc.insecure_channel(endpoint, options=options)
-        self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
+        self._stub = self._get_stub()
         self._session_id = None
         self._logs_fetching_thread = None
         self._reconnect = reconnect
+
+    def _get_stub(self):
+        channel = grpc.insecure_channel(self._endpoint, options=self._options)
+        return coordinator_service_pb2_grpc.CoordinatorServiceStub(channel)
 
     def waiting_service_ready(self, timeout_seconds=60):
         begin_time = time.time()
@@ -76,6 +80,9 @@ class GRPCClient(object):
                     logger.warning("Heart beat analytical engine failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
                     raise ConnectionError(f"Connect coordinator timeout, {msg}")
+                # refresh the channel incase the server became available
+                if e.code() == grpc.StatusCode.UNAVAILABLE:
+                    self._stub = self._get_stub()
                 time.sleep(1)
 
     def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
