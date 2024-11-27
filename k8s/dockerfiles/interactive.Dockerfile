@@ -18,6 +18,7 @@ RUN cd /home/graphscope/GraphScope/ && \
     else \
         mkdir /home/graphscope/install; \
         . /home/graphscope/.graphscope_env; \
+        rustup toolchain install 1.76.0 && rustup default 1.76.0; \
         make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install; \
     fi
 
