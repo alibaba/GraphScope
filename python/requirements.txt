@@ -1,7 +1,7 @@
 Cython>=3.0.0b3,<3.1.0
 gremlinpython==3.7.0
-grpcio>=1.49,<1.68
-grpcio-tools>=1.49,<1.68
+grpcio>=1.49
+grpcio-tools>=1.49
 kubernetes>=24.2.0
 msgpack>=1.0.5
 mypy-protobuf>=3.4.0

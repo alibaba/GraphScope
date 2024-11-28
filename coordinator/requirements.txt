@@ -1,6 +1,6 @@
 etcd-distro>=3.5.1
-grpcio>=1.49,<1.68
-grpcio-tools>=1.49,<1.68
+grpcio>=1.49
+grpcio-tools>=1.49
 kubernetes>=24.2.0
 protobuf>=4
 PyYAML
