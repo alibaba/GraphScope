@@ -26,19 +26,7 @@
 using std::cout;
 using std::endl;
 
-void graph_db_to_igraph(igraph_t* g, const std::string& schema_path,
-                        const std::string& db_path) {
-  auto& db = gs::GraphDB::get();
-  auto schema_res = gs::Schema::LoadFromYaml(schema_path);
-  if (!schema_res.ok()) {
-    LOG(FATAL) << "Fail to load graph schema from yaml file: " << schema_path;
-  }
-  auto load_res = db.Open(schema_res.value(), db_path, 1);
-  if (!load_res.ok()) {
-    LOG(FATAL) << "Failed to load graph from data directory: "
-               << load_res.status().error_message();
-  }
-  auto& sess = db.GetSession(0);
+void graph_db_to_igraph(igraph_t* g, gs::GraphDBSession& sess) {
   // Make sure only one vertex label and one edge label
   CHECK(sess.graph().schema().vertex_label_num() == 1 &&
         sess.graph().schema().edge_label_num() == 1);
@@ -70,22 +58,37 @@ int main(int argc, char** argv) {
 
   igraph_t g;
 
-  graph_db_to_igraph(&g, schema_path, db_path);
+  auto& db = gs::GraphDB::get();
+  auto schema_res = gs::Schema::LoadFromYaml(schema_path);
+  if (!schema_res.ok()) {
+    LOG(FATAL) << "Fail to load graph schema from yaml file: " << schema_path;
+  }
+  auto load_res = db.Open(schema_res.value(), db_path, 1);
+  if (!load_res.ok()) {
+    LOG(FATAL) << "Failed to load graph from data directory: "
+               << load_res.status().error_message();
+  }
+  auto& sess = db.GetSession(0);
+
+  graph_db_to_igraph(&g, sess);
 
   LOG(INFO) << "Graph created, vcount: " << igraph_vcount(&g)
             << ", ecount: " << igraph_ecount(&g);
 
   Graph graph(&g);
 
-  CPMVertexPartition part(&graph, 0.05 /* resolution */);
+  CPMVertexPartition part(&graph, 0.5 /* resolution */);
 
   Optimiser o;
 
   o.optimise_partition(&part);
 
   cout << "Node\tCommunity" << endl;
-  for (size_t i = 0; i < graph.vcount(); i++)
-    cout << i << "\t" << part.membership(i) << endl;
+  auto txn = sess.GetReadTransaction();
+  for (size_t i = 0; i < graph.vcount(); i++) {
+    cout << part.membership(i) << "," << txn.GetVertexId(0, i).to_string()
+         << endl;
+  }
 
   igraph_destroy(&g);
 }
