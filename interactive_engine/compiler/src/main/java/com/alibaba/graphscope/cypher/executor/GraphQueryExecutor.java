@@ -121,13 +121,18 @@ public class GraphQueryExecutor extends FabricExecutor {
                         null,
                         graphConfig);
         try {
+            statusCallback
+                    .getQueryLogger()
+                    .info("[query][received]: query received from the cypher client");
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
                 return super.run(fabricTransaction, statement, parameters);
             }
             irMeta = metaQueryCallback.beforeExec();
             QueryCache.Key cacheKey =
-                    queryCache.createKey(graphPlanner.instance(statement, irMeta));
+                    queryCache.createKey(
+                            graphPlanner.instance(
+                                    statement, irMeta, statusCallback.getQueryLogger()));
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
             Preconditions.checkArgument(
                     cacheValue != null,
@@ -137,21 +142,15 @@ public class GraphQueryExecutor extends FabricExecutor {
                     new GraphPlanner.Summary(
                             cacheValue.summary.getLogicalPlan(),
                             cacheValue.summary.getPhysicalPlan());
-            logger.debug(
-                    "cypher query \"{}\", job conf name \"{}\", calcite logical plan {}, hash id"
-                            + " {}",
-                    statement,
-                    jobName,
-                    planSummary.getLogicalPlan().explain(),
-                    cacheKey.hashCode());
+            statusCallback
+                    .getQueryLogger()
+                    .info("logical IR plan \n\n {} \n\n", planSummary.getLogicalPlan().explain());
+            statusCallback
+                    .getQueryLogger()
+                    .debug("physical IR plan {}", planSummary.getPhysicalPlan().explain());
             if (planSummary.getLogicalPlan().isReturnEmpty()) {
                 return StatementResults.initial();
             }
-            logger.info(
-                    "cypher query \"{}\", job conf name \"{}\", ir core logical plan {}",
-                    statement,
-                    jobName,
-                    planSummary.getPhysicalPlan().explain());
             QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
             GraphPlanExecutor executor;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
@@ -190,6 +189,9 @@ public class GraphQueryExecutor extends FabricExecutor {
                                         listener,
                                         timeoutConfig,
                                         statusCallback.getQueryLogger());
+                                statusCallback
+                                        .getQueryLogger()
+                                        .info("[query][submitted]: physical IR submitted");
                             }
                         };
             }
