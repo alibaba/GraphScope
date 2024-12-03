@@ -2088,7 +2088,7 @@ def check_argument(condition, message=None):
 
 def check_server_ready(endpoint, server="gremlin"):
     def _check_gremlin_task(endpoint):
-        from gremlin_python.driver.client import Client
+        import socket
 
         if "MY_POD_NAME" in os.environ:
             # inner kubernetes env
@@ -2099,16 +2099,14 @@ def check_server_ready(endpoint, server="gremlin"):
                 return True
 
         try:
-            client = Client(f"ws://{endpoint}/gremlin", "g")
-            # May throw
-            client.submit("g.V().limit(1)").all().result()
-            logger.info("Gremlin server is ready.")
-        finally:
-            try:
-                client.close()
-            except:  # noqa: E722
-                pass
-        return True
+            # Check whether endpoint is reachable and connectable without gremlin client
+            host, port = endpoint.split(":")
+            with socket.create_connection((host, port), timeout=3):
+                logger.info("Checked connectivity to gremlin server.")
+                return True
+        except socket.error as e:
+            logger.error("Failed to connect to gremlin server: %s", str(e))
+            return False
 
     def _check_cypher_task(endpoint):
         from neo4j import GraphDatabase
