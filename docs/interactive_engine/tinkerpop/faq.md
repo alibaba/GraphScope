@@ -63,7 +63,7 @@ We can further define characteristics of the path pattern using path_expand. For
 g.V().hasLabel('PERSON').both('3..4').with('PATH_OPT', 'SIMPLE').endV()
 ```
 
-You can refer to [PathExpand](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#pathexpand) for more examples and usage of path_expand.
+You can refer to [PathExpand](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#pathexpand) for more examples and usage of path_expand.
 
 ## How to filter data in GIE Gremlin like SQL ?
 
@@ -92,7 +92,7 @@ Traditional Gremlin uses the ```HasStep``` operator to support filter queries, w
 - ```HasStep``` can only express query filters based on the current vertex or edge and their properties, without the ability to cross multiple vertices or edges.
 - On the other hand, ```HasStep``` in Gremlin for complex expressions may not be as intuitive as in SQL.
 
-We have addressed the limitations and shortcomings of Gremlin in filter expression by using ```expr```, for more usage, please refer to [Expression](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#expression).
+We have addressed the limitations and shortcomings of Gremlin in filter expression by using ```expr```, for more usage, please refer to [Expression](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#expression).
 
 ## How to aggregate data in GIE Gremlin like SQL?
 
@@ -141,7 +141,7 @@ GROUP BY
   name
 ```
 
-Please refer to [Aggregate](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#aggregate-group) for more usage.
+Please refer to [Aggregate](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#aggregate-group) for more usage.
 
 ## How to optimize Gremlin queries for performance in GIE?
 
@@ -175,7 +175,7 @@ Therefore, You can only perform subgraph operations after edge-output operators 
 g.V().outE().limit(10).subgraph('sub_graph').count()
 ```
 
-Please refer to [Subgraph](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#subgraph) for more usage.
+Please refer to [Subgraph](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#subgraph) for more usage.
 
 ## Suggestions About Parallism Settings for Queries
 
