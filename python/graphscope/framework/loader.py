@@ -43,7 +43,7 @@ logger = logging.getLogger("graphscope")
 
 class CSVOptions(object):
     """Options to read from CSV files.
-    Avaiable options are:
+    Available options are:
         - column delimiters
         - include a subset of columns
         - types of each columns
@@ -165,7 +165,7 @@ class Loader(object):
         return self.__str__()
 
     def resolve(self, source):
-        """Dispatch resolver based on type of souce.
+        """Dispatch resolver based on type of source.
 
         Args:
             source: Different data sources

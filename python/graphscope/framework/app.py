@@ -501,7 +501,7 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
           specified path or bytes.
 
           For java apps, gar can be none to indicate we should find the app in
-          previouse added libs.
+          previous added libs.
 
     Returns:
         Instance of <graphscope.framework.app.AppAssets>

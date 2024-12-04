@@ -54,7 +54,7 @@ get_os_version() {
     OS_VERSION=$(uname -r)
   fi
   if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* && "${PLATFORM}" != *"Darwin"* && "${PLATFORM}" != *"Aliyun"* ]];then
-    err "Only suppport on Ubuntu/CentOS/macOS/AliyunOS platform."
+    err "Only support on Ubuntu/CentOS/macOS/AliyunOS platform."
     exit 1
   fi
   if [[ "${PLATFORM}" == *"Ubuntu"* && "${OS_VERSION:0:2}" -lt "20" ]]; then
