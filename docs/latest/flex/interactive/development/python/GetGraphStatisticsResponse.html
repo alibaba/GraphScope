@@ -10,8 +10,8 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -736,12 +736,12 @@ MathJax = {
 <span class="c1"># create an instance of GetGraphStatisticsResponse from a JSON string</span>
 <span class="n">get_graph_statistics_response_instance</span> <span class="o">=</span> <span class="n">GetGraphStatisticsResponse</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
 <span class="c1"># print the JSON string representation of the object</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">GetGraphStatisticsResponse</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+<span class="nb">print</span> <span class="n">GetGraphStatisticsResponse</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 
 <span class="c1"># convert the object into a dict</span>
 <span class="n">get_graph_statistics_response_dict</span> <span class="o">=</span> <span class="n">get_graph_statistics_response_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 <span class="c1"># create an instance of GetGraphStatisticsResponse from a dict</span>
-<span class="n">get_graph_statistics_response_from_dict</span> <span class="o">=</span> <span class="n">GetGraphStatisticsResponse</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">get_graph_statistics_response_dict</span><span class="p">)</span>
+<span class="n">get_graph_statistics_response_form_dict</span> <span class="o">=</span> <span class="n">get_graph_statistics_response</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">get_graph_statistics_response_dict</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>

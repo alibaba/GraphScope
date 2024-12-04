@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of StopServiceRequest from a JSON string
 stop_service_request_instance = StopServiceRequest.from_json(json)
 # print the JSON string representation of the object
-print(StopServiceRequest.to_json())
+print StopServiceRequest.to_json()
 
 # convert the object into a dict
 stop_service_request_dict = stop_service_request_instance.to_dict()
 # create an instance of StopServiceRequest from a dict
-stop_service_request_from_dict = StopServiceRequest.from_dict(stop_service_request_dict)
+stop_service_request_form_dict = stop_service_request.from_dict(stop_service_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
