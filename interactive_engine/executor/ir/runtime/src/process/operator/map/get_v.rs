@@ -158,7 +158,8 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             //     then we set tag=None and alias="a" in auxilia
 
             // 1. If to filter by labels, and the entry itself carries label information already, directly eval it without query the store
-            if self.query_params.has_labels() && entry.label().is_some() {
+            if self.query_params.has_labels() && entry.as_graph_path().is_some() && entry.label().is_some()
+            {
                 if !self
                     .query_params
                     .labels
