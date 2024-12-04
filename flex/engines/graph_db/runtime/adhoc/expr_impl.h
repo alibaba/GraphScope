@@ -85,7 +85,8 @@ class WithInExpr : public ExprBase {
   WithInExpr(const ReadTransaction& txn, const Context& ctx,
              std::unique_ptr<ExprBase>&& key, const common::Value& array)
       : key_(std::move(key)) {
-    if constexpr( (std::is_same_v<T, int64_t>) || (std::is_same_v<T, int32_t>)) {
+    if constexpr ((std::is_same_v<T, int64_t>) ||
+                  (std::is_same_v<T, int32_t>) ) {
       // Implicitly convert to T
       if (array.item_case() == common::Value::kI64Array) {
         size_t len = array.i64_array().item_size();
@@ -102,8 +103,7 @@ class WithInExpr : public ExprBase {
                    << typeid(T).name() << " with array of type "
                    << array.item_case();
       }
-    }
-     else if constexpr (std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
       CHECK(array.item_case() == common::Value::kStrArray);
       size_t len = array.str_array().item_size();
       for (size_t idx = 0; idx < len; ++idx) {
