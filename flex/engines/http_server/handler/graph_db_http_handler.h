@@ -69,7 +69,7 @@ class StoppableHandler : public seastar::httpd::handler_base {
           } catch (const std::exception& e) {
             // In case the scope is already cancelled, we should ignore the
             // exception.
-            LOG(INFO) << "Failed to cancel IC scope: " << e.what();
+            VLOG(1) << "Failed to cancel IC scope: " << e.what();
           }
           func();
           return seastar::make_ready_future<>();
