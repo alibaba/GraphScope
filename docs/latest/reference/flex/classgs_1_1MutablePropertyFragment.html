@@ -151,6 +151,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a961e464d1ad4dbb7365c562245cc2ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacfd018967dcbd8ccaa731ff66946a92"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#aacfd018967dcbd8ccaa731ff66946a92">loadSchema</a> (const std::string &amp;filename)</td></tr>
 <tr class="separator:aacfd018967dcbd8ccaa731ff66946a92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1dfd9842e52ca111f19e9edbfab5cad4"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a1dfd9842e52ca111f19e9edbfab5cad4">get_vertex_property_column</a> (uint8_t label, const std::string &amp;prop) const</td></tr>
+<tr class="separator:a1dfd9842e52ca111f19e9edbfab5cad4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bc09846920674248e847aa97b0d787a"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a9bc09846920674248e847aa97b0d787a">get_vertex_id_column</a> (uint8_t label) const</td></tr>
+<tr class="separator:a9bc09846920674248e847aa97b0d787a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -777,6 +781,52 @@ Public Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>edge_label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9bc09846920674248e847aa97b0d787a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bc09846920674248e847aa97b0d787a">&#9670;&nbsp;</a></span>get_vertex_id_column()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a> &gt; gs::MutablePropertyFragment::get_vertex_id_column </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>label</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1dfd9842e52ca111f19e9edbfab5cad4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1dfd9842e52ca111f19e9edbfab5cad4">&#9670;&nbsp;</a></span>get_vertex_property_column()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt; gs::MutablePropertyFragment::get_vertex_property_column </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>prop</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

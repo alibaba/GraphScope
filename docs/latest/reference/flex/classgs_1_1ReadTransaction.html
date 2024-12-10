@@ -121,6 +121,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ac099c889147817034e4d3c32d97c11e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a2bc0898d9f7d0f724bca7b587be147c4">get_vertex_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
 <tr class="separator:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab25eec95b34001bd2b701e4400ede9f7"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ab25eec95b34001bd2b701e4400ede9f7"><td class="memTemplItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classgs_1_1TypedRefColumn.html">TypedRefColumn</a>&lt; T &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab25eec95b34001bd2b701e4400ede9f7">get_vertex_ref_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
+<tr class="memdesc:ab25eec95b34001bd2b701e4400ede9f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the handle of the vertex property column, including the primary key.  <a href="classgs_1_1ReadTransaction.html#ab25eec95b34001bd2b701e4400ede9f7">More...</a><br /></td></tr>
+<tr class="separator:ab25eec95b34001bd2b701e4400ede9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a545e92759f83c95817b669d47510b070"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a545e92759f83c95817b669d47510b070">GetVertexIterator</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
 <tr class="separator:a545e92759f83c95817b669d47510b070"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f62aeccb10885ecd89f235c1bd8fc77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a3f62aeccb10885ecd89f235c1bd8fc77">FindVertex</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;id) const</td></tr>
@@ -334,6 +338,59 @@ Private Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab25eec95b34001bd2b701e4400ede9f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab25eec95b34001bd2b701e4400ede9f7">&#9670;&nbsp;</a></span>get_vertex_ref_property_column()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::shared_ptr&lt;<a class="el" href="classgs_1_1TypedRefColumn.html">TypedRefColumn</a>&lt;T&gt; &gt; gs::ReadTransaction::get_vertex_ref_property_column </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the handle of the vertex property column, including the primary key. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td>The type of the column. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">label</td><td>The label of the vertex. </td></tr>
+    <tr><td class="paramname">col_name</td><td>The name of the column. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
