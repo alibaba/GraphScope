@@ -30,6 +30,8 @@ use crate::utils::expr::eval_pred::PEvaluator;
 
 pub mod element;
 pub type ID = i64;
+// a special id for Null graph elements.
+pub const NULL_ID: ID = ID::MAX;
 
 pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
     reader.read_i64()
