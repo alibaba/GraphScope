@@ -52,17 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.RandomAccessFile;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -241,11 +231,21 @@ public class GraphPlanner {
         return summary;
     }
 
-    public static byte[] generatePhysicalPlan(String config_path, String query_string)
+    public static Object[] generatePhysicalPlan(String config_path, String query_string)
             throws Exception {
         Summary summary = generatePlan(config_path, query_string);
+        LogicalPlan logicalPlan = summary.getLogicalPlan();
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
-        return physicalPlan.getContent();
+        Configs extraConfigs = createExtraConfigs(null);
+        StoredProcedureMeta procedureMeta =
+                new StoredProcedureMeta(
+                        extraConfigs,
+                        query_string,
+                        logicalPlan.getOutputType(),
+                        logicalPlan.getDynamicParams());
+        ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
+        StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
+        return new Object[] {physicalPlan.getContent(), new String(metaStream.toByteArray())};
     }
 
     public static void main(String[] args) throws Exception {
@@ -285,6 +285,6 @@ public class GraphPlanner {
                         query,
                         logicalPlan.getOutputType(),
                         logicalPlan.getDynamicParams());
-        StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]));
+        StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]), true);
     }
 }

@@ -52,7 +52,7 @@ public abstract class Utils {
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
         GSDataTypeConvertor<DataType> typeConvertor =
-                GSDataTypeConvertor.Factory.create(DataType.class, null);
+                GSDataTypeConvertor.Factory.create(DataType.class, null, true);
         builderGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(
