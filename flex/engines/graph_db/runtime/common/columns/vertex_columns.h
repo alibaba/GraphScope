@@ -215,6 +215,8 @@ class OptionalSLVertexColumn : public IVertexColumn {
 
   ISigColumn* generate_signature() const override;
 
+  label_t label() const { return label_; }
+
  private:
   friend class OptionalSLVertexColumnBuilder;
   label_t label_;

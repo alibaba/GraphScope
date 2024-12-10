@@ -34,6 +34,23 @@
         </encoder>
     </appender>
 
+    <appender name="PerfMetricLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_dir}/perf_metric.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_dir}/perf_metric.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <maxFileSize>100MB</maxFileSize>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <Logger name="PerfMetricLog" level="INFO" additivity="false">
+        <appender-ref ref="PerfMetricLog"/>
+    </Logger>
+
     <logger name="org.apache.zookeeper" level="ERROR" />
     <logger name="org.apache.kafka" level="ERROR" />
     <logger name="kafka" level="ERROR" />

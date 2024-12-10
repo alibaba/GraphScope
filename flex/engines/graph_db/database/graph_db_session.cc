@@ -79,33 +79,7 @@ std::shared_ptr<ColumnBase> GraphDBSession::get_vertex_property_column(
 
 std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
     uint8_t label) const {
-  if (db_.graph().lf_indexers_[label].get_type() == PropertyType::kInt64) {
-    return std::make_shared<TypedRefColumn<int64_t>>(
-        dynamic_cast<const TypedColumn<int64_t>&>(
-            db_.graph().lf_indexers_[label].get_keys()));
-  } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kInt32) {
-    return std::make_shared<TypedRefColumn<int32_t>>(
-        dynamic_cast<const TypedColumn<int32_t>&>(
-            db_.graph().lf_indexers_[label].get_keys()));
-  } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kUInt64) {
-    return std::make_shared<TypedRefColumn<uint64_t>>(
-        dynamic_cast<const TypedColumn<uint64_t>&>(
-            db_.graph().lf_indexers_[label].get_keys()));
-  } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kUInt32) {
-    return std::make_shared<TypedRefColumn<uint32_t>>(
-        dynamic_cast<const TypedColumn<uint32_t>&>(
-            db_.graph().lf_indexers_[label].get_keys()));
-  } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kStringView) {
-    return std::make_shared<TypedRefColumn<std::string_view>>(
-        dynamic_cast<const TypedColumn<std::string_view>&>(
-            db_.graph().lf_indexers_[label].get_keys()));
-  } else {
-    return nullptr;
-  }
+  return db_.get_vertex_id_column(label);
 }
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {

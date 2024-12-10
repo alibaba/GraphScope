@@ -35,6 +35,8 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlanFactory;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.metric.MemoryMetric;
+import com.alibaba.graphscope.common.metric.MetricsTool;
 import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
@@ -62,6 +64,7 @@ public class GraphServer {
     private final IrMetaQueryCallback metaQueryCallback;
     private final GraphProperties testGraph;
     private final GraphRelOptimizer optimizer;
+    private final MetricsTool metricsTool;
 
     private IrGremlinServer gremlinServer;
     private CypherBootstrapper cypherBootstrapper;
@@ -77,10 +80,13 @@ public class GraphServer {
         this.metaQueryCallback = metaQueryCallback;
         this.testGraph = testGraph;
         this.optimizer = optimizer;
+        this.metricsTool = new MetricsTool(configs);
+        this.metricsTool.registerMetric(new MemoryMetric());
     }
 
     public void start() throws Exception {
-        ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
+        ExecutionClient executionClient =
+                ExecutionClient.Factory.create(configs, channelFetcher, metricsTool);
         QueryIdGenerator idGenerator = new QueryIdGenerator(configs);
         QueryCache queryCache = new QueryCache(configs);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
@@ -95,7 +101,8 @@ public class GraphServer {
                             executionClient,
                             channelFetcher,
                             metaQueryCallback,
-                            testGraph);
+                            testGraph,
+                            metricsTool);
             this.gremlinServer.start();
         }
         if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {

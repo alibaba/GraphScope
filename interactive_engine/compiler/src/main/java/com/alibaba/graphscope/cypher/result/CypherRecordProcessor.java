@@ -110,6 +110,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
         }
         if (!recordIterator.hasNext()) {
             subscriber.onResultCompleted(QueryStatistics.EMPTY);
+            statusCallback.onSuccessEnd();
         }
     }
 
@@ -136,7 +137,6 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     public void onCompleted() {
         try {
             this.recordIterator.finish();
-            this.statusCallback.onSuccessEnd();
         } catch (InterruptedException e) {
             onError(e);
         }

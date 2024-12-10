@@ -18,6 +18,7 @@
 
 import os
 import sys
+from time import sleep
 
 import pytest
 
@@ -265,3 +266,27 @@ def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_g
     for record in result:
         cnt += 1
     assert cnt == 8
+
+
+def test_custom_pk_name(
+    interactive_session, neo4j_session, create_graph_with_custom_pk_name
+):
+    print("[Test custom pk name]")
+    import_data_to_full_modern_graph(
+        interactive_session, create_graph_with_custom_pk_name
+    )
+    start_service_on_graph(interactive_session, create_graph_with_custom_pk_name)
+    result = neo4j_session.run(
+        "MATCH (n: person) where n.custom_id = 4 return n.custom_id;"
+    )
+    records = result.fetch(10)
+    for record in records:
+        print(record)
+    assert len(records) == 1
+
+    result = neo4j_session.run(
+        "MATCH (n:person)-[e]-(v:person) where v.custom_id = 1 return count(e);"
+    )
+    records = result.fetch(1)
+    assert len(records) == 1 and records[0]["$f0"] == 2
+    start_service_on_graph(interactive_session, "1")

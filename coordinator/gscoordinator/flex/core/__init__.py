@@ -21,5 +21,6 @@ import warnings
 # Disable warnings
 warnings.filterwarnings("ignore", category=Warning)
 
-from gscoordinator.flex.core.client_wrapper import client_wrapper  # noqa: F401, E402
+from gscoordinator.flex.core.client_wrapper import \
+    get_client_wrapper  # noqa: F401, E402
 from gscoordinator.flex.core.utils import handle_api_exception  # noqa: F401, E402

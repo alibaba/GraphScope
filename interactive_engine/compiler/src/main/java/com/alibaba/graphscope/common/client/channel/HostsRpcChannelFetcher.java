@@ -21,30 +21,30 @@ import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.Utils;
 import com.alibaba.pegasus.RpcChannel;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * rpc implementation of {@link ChannelFetcher}, init rpc from local config
  */
 public class HostsRpcChannelFetcher implements ChannelFetcher<RpcChannel> {
-    private Configs config;
+    private final List<RpcChannel> rpcChannels;
 
     public HostsRpcChannelFetcher(Configs config) {
-        this.config = config;
+        this.rpcChannels =
+                Utils.convertDotString(PegasusConfig.PEGASUS_HOSTS.get(config)).stream()
+                        .map(
+                                k -> {
+                                    String[] host = k.split(":");
+                                    return new RpcChannel(host[0], Integer.valueOf(host[1]));
+                                })
+                        .collect(Collectors.toList());
     }
 
     @Override
     public List<RpcChannel> fetch() {
-        List<String> hostAddresses =
-                Utils.convertDotString(PegasusConfig.PEGASUS_HOSTS.get(config));
-        List<RpcChannel> rpcChannels = new ArrayList<>();
-        hostAddresses.forEach(
-                k -> {
-                    String[] host = k.split(":");
-                    rpcChannels.add(new RpcChannel(host[0], Integer.valueOf(host[1])));
-                });
-        return rpcChannels;
+        return Collections.unmodifiableList(rpcChannels);
     }
 
     @Override

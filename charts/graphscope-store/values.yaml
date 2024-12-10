@@ -295,6 +295,9 @@ portal:
   ## Request for data loading
   ##
   studioWrapperEndpoint: ""
+  ##
+  ## baseId is the id used for creating odps dataloading job
+  baseId: ""
   ## @param hostIPC Specify if host IPC should be enabled for pods
   ##
   hostIPC: false

@@ -25,12 +25,15 @@ import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.manager.RateLimitExecutor;
+import com.alibaba.graphscope.common.metric.MetricsTool;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
 import com.alibaba.graphscope.gremlin.auth.AuthManagerReference;
 import com.alibaba.graphscope.gremlin.auth.DefaultAuthManager;
 import com.alibaba.graphscope.gremlin.integration.processor.IrTestOpProcessor;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
+import com.alibaba.graphscope.gremlin.metric.GremlinExecutorQueueMetric;
+import com.alibaba.graphscope.gremlin.metric.GremlinQPSMetric;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
@@ -62,6 +65,7 @@ public class IrGremlinServer implements AutoCloseable {
     private final GraphTraversalSource g;
 
     private final QueryIdGenerator idGenerator;
+    private final MetricsTool metricsTool;
 
     public IrGremlinServer(
             Configs configs,
@@ -71,7 +75,8 @@ public class IrGremlinServer implements AutoCloseable {
             ExecutionClient executionClient,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
-            GraphProperties testGraph) {
+            GraphProperties testGraph,
+            MetricsTool metricsTool) {
         this.configs = configs;
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
@@ -91,6 +96,7 @@ public class IrGremlinServer implements AutoCloseable {
         this.settings.evaluationTimeout = FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs);
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
+        this.metricsTool = metricsTool;
     }
 
     public void start() throws Exception {
@@ -131,6 +137,9 @@ public class IrGremlinServer implements AutoCloseable {
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
 
         this.gremlinServer.start().join();
+        this.metricsTool
+                .registerMetric(new GremlinExecutorQueueMetric(this.gremlinServer))
+                .registerMetric(new GremlinQPSMetric(this.gremlinServer));
     }
 
     private ExecutorService createRateLimitExecutor() {

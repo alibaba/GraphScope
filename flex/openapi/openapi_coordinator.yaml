@@ -250,6 +250,9 @@ components:
               type: string
             grpc:
               type: string
+        info:
+          type: string
+          nullable: true
         start_time:
           type: string
 
@@ -2196,6 +2199,7 @@ paths:
                     cypher: neo4j://mock.api.cypher:7676
                     gremlin: ws://mock.api.gremlin/gremlin
                     hqps: http://mock.api.hqps:10000
+                  info: "Replace 127.0.0.1 with public ip if connecting from outside"          
                   start_time: "2024-01-01 00:00:00"
         500:
           $ref: "#/components/responses/500"

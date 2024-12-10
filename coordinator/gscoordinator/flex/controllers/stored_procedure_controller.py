@@ -10,7 +10,7 @@ from gscoordinator.flex.models.get_stored_proc_response import GetStoredProcResp
 from gscoordinator.flex.models.update_stored_proc_request import UpdateStoredProcRequest  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -29,7 +29,7 @@ def create_stored_procedure(graph_id, create_stored_proc_request):  # noqa: E501
     """
     if connexion.request.is_json:
         create_stored_proc_request = CreateStoredProcRequest.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.create_stored_procedure(graph_id, create_stored_proc_request)
+    return get_client_wrapper().create_stored_procedure(graph_id, create_stored_proc_request)
 
 
 @handle_api_exception()
@@ -45,7 +45,7 @@ def delete_stored_procedure_by_id(graph_id, stored_procedure_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.delete_stored_procedure_by_id(graph_id, stored_procedure_id)
+    return get_client_wrapper().delete_stored_procedure_by_id(graph_id, stored_procedure_id)
 
 
 @handle_api_exception()
@@ -61,7 +61,7 @@ def get_stored_procedure_by_id(graph_id, stored_procedure_id):  # noqa: E501
 
     :rtype: Union[GetStoredProcResponse, Tuple[GetStoredProcResponse, int], Tuple[GetStoredProcResponse, int, Dict[str, str]]
     """
-    return client_wrapper.get_stored_procedure_by_id(graph_id, stored_procedure_id)
+    return get_client_wrapper().get_stored_procedure_by_id(graph_id, stored_procedure_id)
 
 
 @handle_api_exception()
@@ -75,7 +75,7 @@ def list_stored_procedures(graph_id):  # noqa: E501
 
     :rtype: Union[List[GetStoredProcResponse], Tuple[List[GetStoredProcResponse], int], Tuple[List[GetStoredProcResponse], int, Dict[str, str]]
     """
-    return client_wrapper.list_stored_procedures(graph_id)
+    return get_client_wrapper().list_stored_procedures(graph_id)
 
 
 @handle_api_exception()
@@ -95,4 +95,4 @@ def update_stored_procedure_by_id(graph_id, stored_procedure_id, update_stored_p
     """
     if connexion.request.is_json:
         update_stored_proc_request = UpdateStoredProcRequest.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.update_stored_procedure_by_id(graph_id, stored_procedure_id, update_stored_proc_request)
+    return get_client_wrapper().update_stored_procedure_by_id(graph_id, stored_procedure_id, update_stored_proc_request)

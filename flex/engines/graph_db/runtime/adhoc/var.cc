@@ -56,25 +56,9 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
-            if (type_ == RTAnyType::kStringValue) {
-              getter_ =
-                  std::make_shared<VertexIdPathAccessor<std::string_view>>(
-                      txn, ctx, tag);
-            } else if (type_ == RTAnyType::kI32Value) {
-              getter_ = std::make_shared<VertexIdPathAccessor<int32_t>>(
-                  txn, ctx, tag);
-            } else if (type_ == RTAnyType::kI64Value) {
-              getter_ = std::make_shared<VertexIdPathAccessor<int64_t>>(
-                  txn, ctx, tag);
-            } else {
-              LOG(FATAL) << "not support for "
-                         << static_cast<int>(type_.type_enum_);
-            }
-          } else {
-            getter_ = create_vertex_property_path_accessor(txn, ctx, tag, type_,
-                                                           pt.key().name());
-          }
+          getter_ = create_vertex_property_path_accessor(txn, ctx, tag, type_,
+                                                         pt.key().name());
+
         } else if (pt.has_label()) {
           getter_ = create_vertex_label_path_accessor(ctx, tag);
         } else {
@@ -126,23 +110,8 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
-            if (type_ == RTAnyType::kStringValue) {
-              getter_ =
-                  std::make_shared<VertexIdVertexAccessor<std::string_view>>(
-                      txn);
-            } else if (type_ == RTAnyType::kI32Value) {
-              getter_ = std::make_shared<VertexIdVertexAccessor<int32_t>>(txn);
-            } else if (type_ == RTAnyType::kI64Value) {
-              getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(txn);
-            } else {
-              LOG(FATAL) << "not support for "
-                         << static_cast<int>(type_.type_enum_);
-            }
-          } else {
-            getter_ = create_vertex_property_vertex_accessor(txn, type_,
-                                                             pt.key().name());
-          }
+          getter_ = create_vertex_property_vertex_accessor(txn, type_,
+                                                           pt.key().name());
         } else if (pt.has_label()) {
           getter_ = std::make_shared<VertexLabelVertexAccessor>();
         } else {

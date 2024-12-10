@@ -290,9 +290,39 @@ class ReadTransaction {
 
   const MutablePropertyFragment& graph() const;
 
+  /*
+   * @brief Get the handle of the vertex property column, only for non-primary
+   * key columns.
+   */
   const std::shared_ptr<ColumnBase> get_vertex_property_column(
       uint8_t label, const std::string& col_name) const {
     return graph_.get_vertex_table(label).get_column(col_name);
+  }
+
+  /**
+   * @brief Get the handle of the vertex property column, including the primary
+   * key.
+   * @tparam T The type of the column.
+   * @param label The label of the vertex.
+   * @param col_name The name of the column.
+   */
+  template <typename T>
+  const std::shared_ptr<TypedRefColumn<T>> get_vertex_ref_property_column(
+      uint8_t label, const std::string& col_name) const {
+    auto pk = graph_.schema().get_vertex_primary_key(label);
+    CHECK(pk.size() == 1) << "Only support single primary key";
+    if (col_name == std::get<1>(pk[0])) {
+      return std::dynamic_pointer_cast<TypedRefColumn<T>>(
+          graph_.get_vertex_id_column(label));
+    } else {
+      auto ptr = graph_.get_vertex_table(label).get_column(col_name);
+      if (ptr) {
+        return std::dynamic_pointer_cast<TypedRefColumn<T>>(
+            CreateRefColumn(ptr));
+      } else {
+        return nullptr;
+      }
+    }
   }
 
   class vertex_iterator {
