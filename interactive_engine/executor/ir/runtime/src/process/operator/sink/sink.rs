@@ -252,6 +252,7 @@ impl RecordSinkEncoder {
             EntryType::Pair => {
                 unreachable!()
             }
+            EntryType::NullGraphType => Some(result_pb::element::Inner::Object(Object::None.into())),
         };
         result_pb::Element { inner }
     }

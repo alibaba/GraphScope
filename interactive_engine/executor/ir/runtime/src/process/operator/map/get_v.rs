@@ -15,7 +15,6 @@
 
 use std::convert::TryInto;
 
-use dyn_type::Object;
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
 use graph_proxy::utils::expr::eval_pred::EvalPred;
@@ -26,7 +25,7 @@ use ir_common::{KeyId, LabelId};
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
-use crate::process::entry::{DynEntry, Entry};
+use crate::process::entry::{DynEntry, Entry, NullGraphEntry};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -118,16 +117,9 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 } else {
                     Err(FnExecError::unexpected_data_error("unreachable path end entry in GetV"))?
                 }
-            } else if let Some(obj) = entry.as_object() {
-                if Object::None.eq(obj) {
-                    input.append(Object::None, self.alias);
-                    Ok(Some(input))
-                } else {
-                    Err(FnExecError::unexpected_data_error(&format!(
-                        "Can only apply `GetV` on an object that is not None. The entry is {:?}",
-                        entry
-                    )))?
-                }
+            } else if entry.is_none() {
+                input.append(NullGraphEntry, self.alias);
+                Ok(Some(input))
             } else {
                 Err(FnExecError::unexpected_data_error( &format!(
                     "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry, while the entry is {:?}", entry
@@ -158,8 +150,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             //     then we set tag=None and alias="a" in auxilia
 
             // 1. If to filter by labels, and the entry itself carries label information already, directly eval it without query the store
-            if self.query_params.has_labels() && entry.as_graph_path().is_some() && entry.label().is_some()
-            {
+            if self.query_params.has_labels() && entry.label().is_some() {
                 if !self
                     .query_params
                     .labels
@@ -252,27 +243,20 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 } else {
                     return Ok(None);
                 }
-            } else if let Some(obj) = entry.as_object() {
-                if Object::None.eq(obj) {
-                    if let Some(predicate) = &self.query_params.filter {
-                        let res = predicate
-                            .eval_bool(Some(&input))
-                            .map_err(|e| FnExecError::from(e))?;
-                        if res {
-                            input.append(Object::None, self.alias);
-                            return Ok(Some(input));
-                        } else {
-                            return Ok(None);
-                        }
-                    } else {
-                        input.append(Object::None, self.alias);
+            } else if entry.is_none() {
+                if let Some(predicate) = &self.query_params.filter {
+                    let res = predicate
+                        .eval_bool(Some(&input))
+                        .map_err(|e| FnExecError::from(e))?;
+                    if res {
+                        input.append(NullGraphEntry, self.alias);
                         return Ok(Some(input));
+                    } else {
+                        return Ok(None);
                     }
                 } else {
-                    Err(FnExecError::unexpected_data_error(&format!(
-                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
-                        entry
-                    )))?
+                    input.append(NullGraphEntry, self.alias);
+                    return Ok(Some(input));
                 }
             } else {
                 Err(FnExecError::unexpected_data_error(&format!(

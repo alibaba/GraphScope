@@ -25,7 +25,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::process::entry::{Entry, EntryType};
+use crate::process::entry::{Entry, EntryType, NullGraphEntry};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
 
@@ -50,7 +50,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                         // the case of expand edge, and get end vertex;
                         ExpandOpt::Vertex => {
                             if self.is_optional && iter.peek().is_none() {
-                                input.append(Object::None, self.alias);
+                                input.append(NullGraphEntry, self.alias);
                                 Ok(Box::new(vec![input].into_iter()))
                             } else {
                                 let neighbors_iter = iter.map(|e| {
@@ -74,7 +74,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                         // the case of expand neighbors, including edges/vertices
                         ExpandOpt::Edge => {
                             if self.is_optional && iter.peek().is_none() {
-                                input.append(Object::None, self.alias);
+                                input.append(NullGraphEntry, self.alias);
                                 Ok(Box::new(vec![input].into_iter()))
                             } else {
                                 Ok(Box::new(RecordExpandIter::new(

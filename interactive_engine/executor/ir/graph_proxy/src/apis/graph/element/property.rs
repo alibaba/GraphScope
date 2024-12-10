@@ -44,44 +44,40 @@ impl PropKey {
         let prop_obj = if let PropKey::Len = self {
             element.len().into()
         } else {
-            if let Some(graph_element) = element.as_graph_element() {
-                match self {
-                    PropKey::Id => graph_element.id().into(),
-                    PropKey::Label => graph_element
-                        .label()
-                        .map(|label| label.into())
-                        .unwrap_or(Object::None),
-                    PropKey::Len => unreachable!(),
-                    PropKey::All => graph_element
-                        .get_all_properties()
-                        .map(|obj| {
-                            obj.into_iter()
-                                .map(|(key, value)| {
-                                    let obj_key: Object = match key {
-                                        NameOrId::Str(str) => str.into(),
-                                        NameOrId::Id(id) => id.into(),
-                                    };
-                                    (obj_key, value)
-                                })
-                                .collect::<Vec<(Object, Object)>>()
-                                .into()
-                        })
-                        .unwrap_or(Object::None),
-                    PropKey::Key(key) => {
-                        if let Some(prop_val) = graph_element.get_property(key) {
-                            prop_val.try_to_owned().ok_or_else(|| {
-                                ExprEvalError::OtherErr(
-                                    "cannot get `Object` from `BorrowObject`".to_string(),
-                                )
-                            })?
-                        } else {
-                            Object::None
-                        }
+            let graph_element = element
+                .as_graph_element()
+                .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
+            match self {
+                PropKey::Id => graph_element.id().into(),
+                PropKey::Label => graph_element
+                    .label()
+                    .map(|label| label.into())
+                    .unwrap_or(Object::None),
+                PropKey::Len => unreachable!(),
+                PropKey::All => graph_element
+                    .get_all_properties()
+                    .map(|obj| {
+                        obj.into_iter()
+                            .map(|(key, value)| {
+                                let obj_key: Object = match key {
+                                    NameOrId::Str(str) => str.into(),
+                                    NameOrId::Id(id) => id.into(),
+                                };
+                                (obj_key, value)
+                            })
+                            .collect::<Vec<(Object, Object)>>()
+                            .into()
+                    })
+                    .unwrap_or(Object::None),
+                PropKey::Key(key) => {
+                    if let Some(prop_val) = graph_element.get_property(key) {
+                        prop_val.try_to_owned().ok_or_else(|| {
+                            ExprEvalError::OtherErr("cannot get `Object` from `BorrowObject`".to_string())
+                        })?
+                    } else {
+                        Object::None
                     }
                 }
-            } else {
-                // if try to get property from non-graph-element, return None
-                Object::None
             }
         };
         Ok(prop_obj)
