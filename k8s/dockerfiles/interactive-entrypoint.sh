@@ -57,6 +57,9 @@ function prepare_workspace() {
     cp /opt/flex/share/interactive_config.yaml $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
+    # By default, we occupy the all available cpus
+    cpus=$(grep -c ^processor /proc/cpuinfo)
+    sed -i "s/thread_num_per_worker:.*/thread_num_per_worker: ${cpus}/" $engine_config_path
     echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
     
     # copy the builtin graph
