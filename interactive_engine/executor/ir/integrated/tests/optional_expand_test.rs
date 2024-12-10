@@ -21,7 +21,6 @@ mod common;
 mod test {
     use std::sync::Arc;
 
-    use dyn_type::Object;
     use graph_proxy::apis::{register_graph, GraphElement};
     use graph_proxy::create_exp_store;
     use graph_store::ldbc::LDBCVertexParser;
@@ -96,8 +95,7 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
-            } else if let Some(obj) = record.get(None).unwrap().as_object() {
-                assert_eq!(obj, &Object::None);
+            } else if record.get(None).unwrap().is_none() {
                 none_cnt += 1;
             }
         }
@@ -131,8 +129,7 @@ mod test {
             println!("record: {:?}", record);
             if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
-            } else if let Some(obj) = record.get(None).unwrap().as_object() {
-                assert_eq!(obj, &Object::None);
+            } else if record.get(None).unwrap().is_none() {
                 none_cnt += 1;
             }
         }
@@ -168,8 +165,7 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(e) = record.get(None).unwrap().as_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
-            } else if let Some(obj) = record.get(None).unwrap().as_object() {
-                assert_eq!(obj, &Object::None);
+            } else if record.get(None).unwrap().is_none() {
                 none_cnt += 1;
             }
         }
@@ -268,11 +264,8 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize);
-            } else if let Some(obj) = record.get(None).unwrap().as_object() {
-                assert_eq!(obj, &Object::None);
+            } else if record.get(None).unwrap().is_none() {
                 none_cnt += 1;
-            } else {
-                unreachable!()
             }
         }
         result_ids.sort();
