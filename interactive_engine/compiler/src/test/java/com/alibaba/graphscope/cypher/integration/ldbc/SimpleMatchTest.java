@@ -162,6 +162,13 @@ public class SimpleMatchTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_simple_match_18_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_18_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {
