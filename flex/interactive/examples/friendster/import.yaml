@@ -1,0 +1,40 @@
+graph: modern_graph
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: ","  # other loading configuration places here
+      header_row: false # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+      null_values: [""]
+
+vertex_mappings:
+  - type_name: user  # must align with the schema
+    inputs:
+      - vertices.csv
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+        property: id
+edge_mappings:
+  - type_triplet:
+      edge: friend
+      source_vertex:  user
+      destination_vertex:  user
+    inputs:
+      - edges.csv
+    source_vertex_mappings:
+      - column:
+          index: 0
+    destination_vertex_mappings:
+      - column:
+          index: 1

@@ -1,0 +1,22 @@
+name: wiki # then must have a modern dir under ${data} directory
+store_type: mutable_csr  # v6d, groot, gart
+schema:
+  vertex_types:
+    - type_name: article
+      type_id: 0
+      x_csr_params:
+        max_vertex_num: 5000000
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+      primary_keys:
+        - id
+  edge_types:
+    - type_name: link
+      type_id: 0
+      vertex_type_pair_relations:
+        - source_vertex: article
+          destination_vertex: article
+          relation: MANY_TO_MANY

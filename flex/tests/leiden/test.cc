@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Graph created, vcount: " << igraph_vcount(&g)
             << ", ecount: " << igraph_ecount(&g);
 
+  double t = -grape::GetCurrentTime();
+
   Graph graph(&g);
 
   CPMVertexPartition part(&graph, 0.5 /* resolution */);
@@ -91,4 +93,7 @@ int main(int argc, char** argv) {
   }
 
   igraph_destroy(&g);
+
+  t += grape::GetCurrentTime();
+  LOG(INFO) << "Time: " << t << "s";
 }
