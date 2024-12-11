@@ -225,26 +225,32 @@ public class GraphPlanner {
         return new Configs(keyValueMap);
     }
 
-    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
-            throws IOException {
-        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
-        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
-        } else if (schemaUri.getScheme().equals("http")) {
-            return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
-        }
-        throw new IllegalArgumentException(
-                "unknown graph meta reader mode: " + schemaUri.getScheme());
+    public interface IrMetaFetcherFactory {
+        IrMetaFetcher create(Configs configs, IrMetaTracker tracker) throws IOException;
+
+        IrMetaFetcherFactory DEFAULT =
+                (configs, tracker) -> {
+                    URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+                    if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+                        return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+                    } else if (schemaUri.getScheme().equals("http")) {
+                        return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
+                    }
+                    throw new IllegalArgumentException(
+                            "unknown graph meta reader mode: " + schemaUri.getScheme());
+                };
     }
 
-    public static Summary generatePlan(String config_path, String query_string) throws Exception {
-        Configs configs = Configs.Factory.create(config_path);
+    public static Summary generatePlan(
+            String configPath, String queryString, IrMetaFetcherFactory metaFetcherFactory)
+            throws Exception {
+        Configs configs = Configs.Factory.create(configPath);
         GraphRelOptimizer optimizer =
                 new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
-        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
+        IrMetaFetcher metaFetcher = metaFetcherFactory.create(configs, optimizer.getGlogueHolder());
         GraphPlanner planner =
                 new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
-        PlannerInstance instance = planner.instance(query_string, metaFetcher.fetch().get());
+        PlannerInstance instance = planner.instance(queryString, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         return summary;
     }
@@ -270,7 +276,7 @@ public class GraphPlanner {
         String query = builder.toString();
         reader.close();
 
-        Summary summary = generatePlan(args[0], query);
+        Summary summary = generatePlan(args[0], query, IrMetaFetcherFactory.DEFAULT);
         // write physical plan to file
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
         FileOutputStream fos = new FileOutputStream(args[2]);

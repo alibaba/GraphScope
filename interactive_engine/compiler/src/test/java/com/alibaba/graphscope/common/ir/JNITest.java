@@ -29,7 +29,7 @@ public class JNITest {
     public void test() throws Exception {
         JNIPlan objects =
                 GraphPlannerJNI.compilePlan(
-                        "conf/ir.compiler.properties", "Match (n) Return n, count(n)");
+                        "conf/ir.compiler.properties", "Match (n) Return n, count(n)", "", "");
         GraphAlgebraPhysical.PhysicalPlan plan =
                 GraphAlgebraPhysical.PhysicalPlan.parseFrom(objects.physicalBytes);
         System.out.println(plan);

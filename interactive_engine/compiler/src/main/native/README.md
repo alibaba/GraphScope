@@ -13,7 +13,7 @@ mvn clean package -DskipTests -Pgraph-planner-jni
 
 ### Step 2: Locate and Extract the Package
 
-After the build completes, a tarball named graph-planner-jni.tar.gz will be available in the assembly/target directory. Extract the contents of the tarball:
+After the build completes, a tarball named `graph-planner-jni.tar.gz` will be available in the `assembly/target` directory. Extract the contents of the tarball:
 
 ```bash
 cd assembly/target  
@@ -23,7 +23,7 @@ cd graph-planner-jni
 
 ### Step 3: Run the Example Binary
 
-To demonstrate the usage of the JNI interface, an example binary test_graph_planner is provided. Use the following command to execute it:
+To demonstrate the usage of the JNI interface, an example binary `test_graph_planner` is provided. Use the following command to execute it:
 
 ```bash
 # bin/test_graph_planner <java class path> <jna lib path> <graph schema path> <graph statistics path> <query> <config path>  
@@ -62,24 +62,28 @@ Below is a brief explanation of the interface provided by the example:
  * @brief Constructs a new GraphPlannerWrapper object  
  * @param java_path Java class path  
  * @param jna_path JNA library path  
- * @param graph_schema_yaml Path to the graph schema file in YAML format  
- * @param graph_statistic_json Path to the graph statistics file in JSON format
+ * @param graph_schema_yaml Path to the graph schema file in YAML format (optional) 
+ * @param graph_statistic_json Path to the graph statistics file in JSON format (optional)
  */  
 GraphPlannerWrapper(const std::string &java_path,  
                     const std::string &jna_path,  
-                    const std::string &graph_schema_yaml,  
+                    const std::string &graph_schema_yaml = "",  
                     const std::string &graph_statistic_json = "");  
 ```
 
 ## Method
 
 ```cpp
-/**  
- * @brief Compiles a Cypher query into a physical plan via JNI invocation.  
- * @param compiler_config_path Path to the compiler configuration file.  
- * @param cypher_query_string Cypher query string to compile.  
- * @return Physical plan in bytes and result schema in YAML format.  
- */  
-Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,  
-                                      const std::string &cypher_query_string);  
+/**
+ * @brief Compile a cypher query to a physical plan by JNI invocation.
+ * @param compiler_config_path The path of compiler config file.
+ * @param cypher_query_string The cypher query string.
+ * @param graph_schema_yaml Content of the graph schema in YAML format
+ * @param graph_statistic_json Content of the graph statistics in JSON format
+ * @return The physical plan in bytes and result schema in yaml.
+ */
+Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
+                                      const std::string &cypher_query_string,
+                                      const std::string &graph_schema_yaml,
+                                      const std::string &graph_statistic_json)
 ```

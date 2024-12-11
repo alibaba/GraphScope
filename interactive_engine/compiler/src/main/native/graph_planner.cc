@@ -239,18 +239,20 @@ namespace gs
     std::cout << "Expanded java path: " << expanded_java_path << std::endl;
     std::string jvm_options = "-Djava.class.path=" + expanded_java_path;
     jvm_options += " -Djna.library.path=" + jna_path;
-    jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
-    if (!graph_statistic_json.empty())
-    {
-      jvm_options += " -Dgraph.statistics=" + graph_statistic_json;
-    }
+    // jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
+    // if (!graph_statistic_json.empty())
+    // {
+    //   jvm_options += " -Dgraph.statistics=" + graph_statistic_json;
+    // }
     return jvm_options;
   }
 
   Plan compilePlanJNI(jclass graph_planner_clz_,
                       jmethodID graph_planner_method_id_, JNIEnv *env,
                       const std::string &compiler_config_path,
-                      const std::string &cypher_query_string)
+                      const std::string &cypher_query_string,
+                      const std::string &graph_schema_yaml,
+                      const std::string &graph_statistic_json)
   {
     jni::GetJavaVM()->AttachCurrentThread(reinterpret_cast<void **>(&env),
                                           nullptr);
@@ -262,10 +264,12 @@ namespace gs
     }
     jstring param1 = env->NewStringUTF(compiler_config_path.c_str());
     jstring param2 = env->NewStringUTF(cypher_query_string.c_str());
+    jstring param3 = env->NewStringUTF(graph_schema_yaml.c_str());
+    jstring param4 = env->NewStringUTF(graph_statistic_json.c_str());
 
     // invoke jvm static function to get results as Object[]
     jobject jni_plan = (jobject)env->CallStaticObjectMethod(
-        graph_planner_clz_, graph_planner_method_id_, param1, param2);
+        graph_planner_clz_, graph_planner_method_id_, param1, param2, param3, param4);
 
     if (env->ExceptionCheck())
     {
@@ -437,15 +441,19 @@ namespace gs
    * @brief Compile a cypher query to a physical plan by JNI invocation.
    * @param compiler_config_path The path of compiler config file.
    * @param cypher_query_string The cypher query string.
+   * @param graph_schema_yaml Content of the graph schema in YAML format
+   * @param graph_statistic_json Content of the graph statistics in JSON format
    * @return The physical plan in bytes and result schema in yaml.
    */
   Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
-                                        const std::string &cypher_query_string)
+                                        const std::string &cypher_query_string,
+                                        const std::string &graph_schema_yaml,
+                                        const std::string &graph_statistic_json)
   {
 #if (GRAPH_PLANNER_JNI_INVOKER)
     return compilePlanJNI(graph_planner_clz_, graph_planner_method_id_,
                           jni_wrapper_.env(), compiler_config_path,
-                          cypher_query_string);
+                          cypher_query_string, graph_schema_yaml, graph_statistic_json);
 #else
     return compilePlanSubprocess(class_path_, jna_path_, graph_schema_yaml_,
                                  graph_statistic_json_, compiler_config_path,

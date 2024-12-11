@@ -14,6 +14,9 @@ limitations under the License.
 */
 #include "graph_planner.h"
 
+#include <fstream>
+#include <sstream>
+
 #include <sys/stat.h>
 
 std::string get_dir_name()
@@ -53,6 +56,25 @@ void check_path_exits(const std::string &path)
     std::cout << "Path exists: " << path << std::endl;
 }
 
+std::string read_string_from_file(const std::string &file_path)
+{
+    std::ifstream inputFile(file_path); // Open the file for reading
+
+    if (!inputFile.is_open())
+    {
+        std::cerr << "Error: Could not open the file " << file_path << std::endl;
+        exit(1);
+    }
+    // Use a stringstream to read the entire content of the file
+    std::ostringstream buffer;
+    buffer << inputFile.rdbuf(); // Read the file stream into the stringstream
+
+    std::string fileContent = buffer.str(); // Get the string from the stringstream
+    inputFile.close();                      // Close the file
+
+    return fileContent;
+}
+
 int main(int argc, char **argv)
 {
     // Check if the correct number of arguments is provided
@@ -65,22 +87,25 @@ int main(int argc, char **argv)
 
     std::string java_class_path = argv[1];
     std::string jna_class_path = argv[2];
-    std::string graph_schema_yaml = argv[3];
-    std::string graph_statistic_json = argv[4];
+    std::string graph_schema_path = argv[3];
+    std::string graph_statistic_path = argv[4];
 
     // check director or file exists
     check_path_exits(java_class_path);
     check_path_exits(jna_class_path);
-    check_path_exits(graph_schema_yaml);
-    check_path_exits(graph_statistic_json);
+    check_path_exits(graph_schema_path);
+    check_path_exits(graph_statistic_path);
 
     gs::GraphPlannerWrapper graph_planner_wrapper(
-        java_class_path, jna_class_path, graph_schema_yaml, graph_statistic_json);
+        java_class_path, jna_class_path);
+
+    std::string schema_content = read_string_from_file(graph_schema_path);
+    std::string statistic_content = read_string_from_file(graph_statistic_path);
 
     std::string cypher_query_string = argv[5];
     std::string config_path = argv[6];
     auto plan =
-        graph_planner_wrapper.CompilePlan(config_path, cypher_query_string);
+        graph_planner_wrapper.CompilePlan(config_path, cypher_query_string, schema_content, statistic_content);
     std::cout << "Plan: " << plan.physical_plan.DebugString() << std::endl;
     std::cout << "schema: " << plan.result_schema << std::endl;
     return 0;

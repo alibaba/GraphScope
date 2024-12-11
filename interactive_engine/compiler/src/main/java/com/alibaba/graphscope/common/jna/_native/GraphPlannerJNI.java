@@ -19,26 +19,48 @@
 package com.alibaba.graphscope.common.jna._native;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.GraphId;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaInputStream;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class GraphPlannerJNI {
     /**
      * Provide a java-side implementation to compile the query in string to a physical plan
-     * @param config
+     * @param configPath
      * @param query
+     *
      * @return JNIPlan has two fields: physicalBytes and resultSchemaYaml,
      * physicalBytes can be decoded to {@code PhysicalPlan} in c++ side by standard PB serialization,
      * resultSchemaYaml defines the result specification of the query in yaml format
      * @throws Exception
      */
-    public static JNIPlan compilePlan(String config, String query) throws Exception {
-        GraphPlanner.Summary summary = GraphPlanner.generatePlan(config, query);
+    public static JNIPlan compilePlan(
+            String configPath, String query, String schemaYaml, String statsJson) throws Exception {
+        GraphPlanner.Summary summary =
+                GraphPlanner.generatePlan(
+                        configPath,
+                        query,
+                        (Configs configs, IrMetaTracker tracker) ->
+                                new StaticIrMetaFetcher(
+                                        new StringMetaReader(schemaYaml, statsJson), tracker));
         LogicalPlan logicalPlan = summary.getLogicalPlan();
         PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
         StoredProcedureMeta procedureMeta =
@@ -50,5 +72,41 @@ public class GraphPlannerJNI {
         ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
         StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
         return new JNIPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
+    }
+
+    static class StringMetaReader implements IrMetaReader {
+        private final String schemaYaml;
+        private final String statsJson;
+
+        public StringMetaReader(String schemaYaml, String statsJson) {
+            this.schemaYaml = schemaYaml;
+            this.statsJson = statsJson;
+        }
+
+        @Override
+        public IrMeta readMeta() throws IOException {
+            IrGraphSchema graphSchema =
+                    new IrGraphSchema(
+                            new SchemaInputStream(
+                                    new ByteArrayInputStream(
+                                            schemaYaml.getBytes(StandardCharsets.UTF_8)),
+                                    SchemaSpec.Type.FLEX_IN_YAML));
+            return new IrMeta(
+                    graphSchema,
+                    new GraphStoredProcedures(
+                            new ByteArrayInputStream(schemaYaml.getBytes(StandardCharsets.UTF_8)),
+                            this));
+        }
+
+        @Override
+        public GraphStatistics readStats(GraphId graphId) throws IOException {
+            return new IrGraphStatistics(
+                    new ByteArrayInputStream(statsJson.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        @Override
+        public boolean syncStatsEnabled(GraphId graphId) throws IOException {
+            return false;
+        }
     }
 }

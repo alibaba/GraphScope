@@ -63,18 +63,18 @@ namespace gs
         "com.alibaba.graphscope.common.jna._native.GraphPlannerJNI";
     static constexpr const char *kGraphPlannerMethod = "compilePlan";
     static constexpr const char *kGraphPlannerMethodSignature =
-        "(Ljava/lang/String;Ljava/lang/String;)Lcom/alibaba/graphscope/common/jna/_native/JNIPlan;";
+        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/alibaba/graphscope/common/jna/_native/JNIPlan;";
 
     /**
-     * @brief Construct a new Graph Planner Wrapper object
-     * @param java_path java class path
-     * @param jna_path jna library path
-     * @param graph_schema_yaml graph schema path
-     * @param graph_statistic_json graph statistic path
+     * @brief Constructs a new GraphPlannerWrapper object
+     * @param java_path Java class path
+     * @param jna_path JNA library path
+     * @param graph_schema_yaml Path to the graph schema file in YAML format (optional)
+     * @param graph_statistic_json Path to the graph statistics file in JSON format (optional)
      */
     GraphPlannerWrapper(const std::string java_path,
                         const std::string &jna_path,
-                        const std::string &graph_schema_yaml,
+                        const std::string &graph_schema_yaml = "",
                         const std::string &graph_statistic_json = "")
 #if (GRAPH_PLANNER_JNI_INVOKER)
         : jni_wrapper_(generate_jvm_options(
@@ -133,7 +133,9 @@ namespace gs
      * @return physical plan in string.
      */
     Plan CompilePlan(const std::string &compiler_config_path,
-                     const std::string &cypher_query_string);
+                     const std::string &cypher_query_string,
+                     const std::string &graph_schema_yaml,
+                     const std::string &graph_statistic_json);
 
   private:
     std::string generate_jvm_options(const std::string java_path,
