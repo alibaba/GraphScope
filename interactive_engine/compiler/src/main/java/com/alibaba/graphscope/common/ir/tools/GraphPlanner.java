@@ -249,23 +249,6 @@ public class GraphPlanner {
         return summary;
     }
 
-    public static Object[] generatePhysicalPlan(String config_path, String query_string)
-            throws Exception {
-        Summary summary = generatePlan(config_path, query_string);
-        LogicalPlan logicalPlan = summary.getLogicalPlan();
-        PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
-        Configs extraConfigs = createExtraConfigs(null);
-        StoredProcedureMeta procedureMeta =
-                new StoredProcedureMeta(
-                        extraConfigs,
-                        query_string,
-                        logicalPlan.getOutputType(),
-                        logicalPlan.getDynamicParams());
-        ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
-        StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
-        return new Object[] {physicalPlan.getContent(), new String(metaStream.toByteArray())};
-    }
-
     public static void main(String[] args) throws Exception {
         if (args.length < 4
                 || args[0].isEmpty()

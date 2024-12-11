@@ -1,0 +1,1199 @@
+diff --git a/interactive_engine/assembly/graph-planner-jni.xml b/interactive_engine/assembly/graph-planner-jni.xml
+index 0e4495ca64..e8efca65d7 100644
+--- a/interactive_engine/assembly/graph-planner-jni.xml
++++ b/interactive_engine/assembly/graph-planner-jni.xml
+@@ -16,6 +16,16 @@
+         </fileSet>
+         <fileSet>
+             <directory>${project.parent.basedir}/target/native/</directory>
++            <includes>
++                <include>libgraph_planner.*</include>
++            </includes>
++            <outputDirectory>native</outputDirectory>
++        </fileSet>
++        <fileSet>
++            <directory>${project.parent.basedir}/target/native/</directory>
++            <includes>
++                <include>test_graph_planner</include>
++            </includes>
+             <outputDirectory>bin</outputDirectory>
+             <fileMode>0755</fileMode>
+         </fileSet>
+@@ -23,6 +33,13 @@
+             <directory>${project.parent.basedir}/compiler/target/libs/</directory>
+             <outputDirectory>libs</outputDirectory>
+         </fileSet>
++        <fileSet>
++            <directory>${project.parent.basedir}/compiler/target/</directory>
++            <includes>
++                <include>compiler-0.0.1-SNAPSHOT.jar</include>
++            </includes>
++            <outputDirectory>libs</outputDirectory>
++        </fileSet>
+         <fileSet>
+             <directory>${project.parent.basedir}/compiler/conf</directory>
+             <outputDirectory>conf</outputDirectory>
+diff --git a/interactive_engine/compiler/conf/ir.compiler.properties b/interactive_engine/compiler/conf/ir.compiler.properties
+index 992f828a2b..5a13dc9d4f 100644
+--- a/interactive_engine/compiler/conf/ir.compiler.properties
++++ b/interactive_engine/compiler/conf/ir.compiler.properties
+@@ -21,11 +21,11 @@ graph.schema: ../executor/ir/core/resource/modern_schema.json
+ graph.store: exp
+ 
+ graph.planner.is.on: true
+-graph.planner.opt: RBO
++graph.planner.opt: CBO
+ graph.planner.rules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, ExpandGetVFusionRule
+ 
+ # set statistics access uri
+-# graph.statistics: src/test/resources/statistics/modern_statistics.json
++graph.statistics: src/test/resources/statistics/modern_statistics.json
+ 
+ # set stored procedures directory path
+ # graph.stored.procedures: <your stored procedures directory path>
+@@ -60,7 +60,7 @@ calcite.default.charset: UTF-8
+ # gremlin.script.language.name: antlr_gremlin_traversal
+ 
+ # the output plan format, can be ffi(default) or proto
+-# graph.physical.opt: ffi
++graph.physical.opt: proto
+ 
+ # set the max capacity of the result streaming buffer for each query
+ # per.query.stream.buffer.max.capacity: 256
+diff --git a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/tools/GraphPlanner.java b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/tools/GraphPlanner.java
+index 991ae7b89d..77dc36d2a8 100644
+--- a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/tools/GraphPlanner.java
++++ b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/tools/GraphPlanner.java
+@@ -249,23 +249,6 @@ public class GraphPlanner {
+         return summary;
+     }
+ 
+-    public static Object[] generatePhysicalPlan(String config_path, String query_string)
+-            throws Exception {
+-        Summary summary = generatePlan(config_path, query_string);
+-        LogicalPlan logicalPlan = summary.getLogicalPlan();
+-        PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
+-        Configs extraConfigs = createExtraConfigs(null);
+-        StoredProcedureMeta procedureMeta =
+-                new StoredProcedureMeta(
+-                        extraConfigs,
+-                        query_string,
+-                        logicalPlan.getOutputType(),
+-                        logicalPlan.getDynamicParams());
+-        ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
+-        StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
+-        return new Object[] {physicalPlan.getContent(), new String(metaStream.toByteArray())};
+-    }
+-
+     public static void main(String[] args) throws Exception {
+         if (args.length < 4
+                 || args[0].isEmpty()
+diff --git a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI.java b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI.java
+index bea8926ed7..ee1766e855 100644
+--- a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI.java
++++ b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI.java
+@@ -1,2 +1,55 @@
+-package com.alibaba.graphscope.common.jna._native;public class GraphPlannerJNI {
++/*
++ *
++ *  * Copyright 2020 Alibaba Group Holding Limited.
++ *  *
++ *  * Licensed under the Apache License, Version 2.0 (the "License");
++ *  * you may not use this file except in compliance with the License.
++ *  * You may obtain a copy of the License at
++ *  *
++ *  * http://www.apache.org/licenses/LICENSE-2.0
++ *  *
++ *  * Unless required by applicable law or agreed to in writing, software
++ *  * distributed under the License is distributed on an "AS IS" BASIS,
++ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  * See the License for the specific language governing permissions and
++ *  * limitations under the License.
++ *
++ */
++
++package com.alibaba.graphscope.common.jna._native;
++
++import com.alibaba.graphscope.common.config.Configs;
++import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
++import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
++import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
++import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
++import com.google.common.collect.ImmutableMap;
++
++import java.io.ByteArrayOutputStream;
++
++public class GraphPlannerJNI {
++    /**
++     * Provide a java-side implementation to compile the query in string to a physical plan
++     * @param config
++     * @param query
++     * @return JNIPlan has two fields: physicalBytes and resultSchemaYaml,
++     * physicalBytes can be decoded to {@code PhysicalPlan} in c++ side by standard PB serialization,
++     * resultSchemaYaml defines the result specification of the query in yaml format
++     * @throws Exception
++     */
++    public static JNIPlan compilePlan(String config, String query)
++            throws Exception {
++        GraphPlanner.Summary summary = GraphPlanner.generatePlan(config, query);
++        LogicalPlan logicalPlan = summary.getLogicalPlan();
++        PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
++        StoredProcedureMeta procedureMeta =
++                new StoredProcedureMeta(
++                        new Configs(ImmutableMap.of()),
++                        query,
++                        logicalPlan.getOutputType(),
++                        logicalPlan.getDynamicParams());
++        ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
++        StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
++        return new JNIPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
++    }
+ }
+diff --git a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/JNIPlan.java b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/JNIPlan.java
+index 93d4e3615a..689c9c74ef 100644
+--- a/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/JNIPlan.java
++++ b/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/jna/_native/JNIPlan.java
+@@ -1,2 +1,37 @@
+-package com.alibaba.graphscope.common.jna._native;public class JNIPlan {
++/*
++ *
++ *  * Copyright 2020 Alibaba Group Holding Limited.
++ *  *
++ *  * Licensed under the Apache License, Version 2.0 (the "License");
++ *  * you may not use this file except in compliance with the License.
++ *  * You may obtain a copy of the License at
++ *  *
++ *  * http://www.apache.org/licenses/LICENSE-2.0
++ *  *
++ *  * Unless required by applicable law or agreed to in writing, software
++ *  * distributed under the License is distributed on an "AS IS" BASIS,
++ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  * See the License for the specific language governing permissions and
++ *  * limitations under the License.
++ *
++ */
++
++package com.alibaba.graphscope.common.jna._native;
++
++public class JNIPlan {
++    public final byte[] physicalBytes;
++    public final String resultSchemaYaml;
++
++    public JNIPlan(byte[] physicalBytes, String resultSchemaYaml) {
++        this.physicalBytes = physicalBytes;
++        this.resultSchemaYaml = resultSchemaYaml;
++    }
++
++    public byte[] getPhysicalBytes() {
++        return physicalBytes;
++    }
++
++    public String getResultSchemaYaml() {
++        return resultSchemaYaml;
++    }
+ }
+diff --git a/interactive_engine/compiler/src/main/native/graph_planner.cc b/interactive_engine/compiler/src/main/native/graph_planner.cc
+index 417169a130..0b4a304fd6 100644
+--- a/interactive_engine/compiler/src/main/native/graph_planner.cc
++++ b/interactive_engine/compiler/src/main/native/graph_planner.cc
+@@ -22,365 +22,429 @@ limitations under the License.
+ #include "graph_planner.h"
+ #include <fcntl.h>
+ 
+-namespace gs {
++namespace gs
++{
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-namespace jni {
+-
+-static JavaVM *_jvm = NULL;
+-
+-JavaVM *CreateJavaVM(const std::string &jvm_options) {
+-  const char *p, *q;
+-  const char *jvm_opts;
+-  if (jvm_options.empty()) {
+-    jvm_opts = getenv("FLEX_JVM_OPTS");
+-  } else {
+-    jvm_opts = jvm_options.c_str();
+-  }
+-  if (jvm_opts == NULL) {
+-    std::cerr << "Expect FLEX_JVM_OPTS set before initiate jvm" << std::endl;
+-    return NULL;
+-  }
+-  std::cout << "Jvm opts str: " << jvm_opts << std::endl;
++  namespace jni
++  {
++
++    static JavaVM *_jvm = NULL;
++
++    JavaVM *CreateJavaVM(const std::string &jvm_options)
++    {
++      const char *p, *q;
++      const char *jvm_opts;
++      if (jvm_options.empty())
++      {
++        jvm_opts = getenv("FLEX_JVM_OPTS");
++      }
++      else
++      {
++        jvm_opts = jvm_options.c_str();
++      }
++      if (jvm_opts == NULL)
++      {
++        std::cerr << "Expect FLEX_JVM_OPTS set before initiate jvm" << std::endl;
++        return NULL;
++      }
++      std::cout << "Jvm opts str: " << jvm_opts << std::endl;
+ 
+-  if (*jvm_opts == '\0')
+-    return NULL;
++      if (*jvm_opts == '\0')
++        return NULL;
+ 
+-  int num_of_opts = 1;
+-  for (const char *p = jvm_opts; *p; p++) {
+-    if (*p == ' ')
+-      num_of_opts++;
+-  }
++      int num_of_opts = 1;
++      for (const char *p = jvm_opts; *p; p++)
++      {
++        if (*p == ' ')
++          num_of_opts++;
++      }
+ 
+-  if (num_of_opts == 0)
+-    return NULL;
++      if (num_of_opts == 0)
++        return NULL;
++
++      JavaVM *jvm = NULL;
++      JNIEnv *env = NULL;
++      int i = 0;
++      int status = 1;
++      JavaVMInitArgs vm_args;
++
++      JavaVMOption *options = new JavaVMOption[num_of_opts];
++      memset(options, 0, sizeof(JavaVMOption) * num_of_opts);
++
++      for (p = q = jvm_opts;; p++)
++      {
++        if (*p == ' ' || *p == '\0')
++        {
++          if (q >= p)
++          {
++            goto ret;
++          }
++          char *opt = new char[p - q + 1];
++          memcpy(opt, q, p - q);
++          opt[p - q] = '\0';
++          options[i++].optionString = opt;
++          q = p + 1; // assume opts are separated by single space
++          if (*p == '\0')
++            break;
++        }
++      }
+ 
+-  JavaVM *jvm = NULL;
+-  JNIEnv *env = NULL;
+-  int i = 0;
+-  int status = 1;
+-  JavaVMInitArgs vm_args;
++      memset(&vm_args, 0, sizeof(vm_args));
++      vm_args.version = JNI_VERSION_1_8;
++      vm_args.nOptions = num_of_opts;
++      vm_args.options = options;
+ 
+-  JavaVMOption *options = new JavaVMOption[num_of_opts];
+-  memset(options, 0, sizeof(JavaVMOption) * num_of_opts);
++      status = JNI_CreateJavaVM(&jvm, reinterpret_cast<void **>(&env), &vm_args);
++      if (status == JNI_OK)
++      {
++        std::cout << "Create java virtual machine successfully." << std::endl;
++      }
++      else if (status == JNI_EEXIST)
++      {
++        std::cout << "JNI evn already exists." << std::endl;
++      }
++      else
++      {
++        std::cerr << "Error, create java virtual machine failed. return JNI_CODE ("
++                  << status << ")" << std::endl;
++      }
+ 
+-  for (p = q = jvm_opts;; p++) {
+-    if (*p == ' ' || *p == '\0') {
+-      if (q >= p) {
+-        goto ret;
++    ret:
++      for (int i = 0; i < num_of_opts; i++)
++      {
++        delete[] options[i].optionString;
+       }
+-      char *opt = new char[p - q + 1];
+-      memcpy(opt, q, p - q);
+-      opt[p - q] = '\0';
+-      options[i++].optionString = opt;
+-      q = p + 1; // assume opts are separated by single space
+-      if (*p == '\0')
+-        break;
++      delete[] options;
++      return jvm;
+     }
+-  }
+-
+-  memset(&vm_args, 0, sizeof(vm_args));
+-  vm_args.version = JNI_VERSION_1_8;
+-  vm_args.nOptions = num_of_opts;
+-  vm_args.options = options;
+-
+-  status = JNI_CreateJavaVM(&jvm, reinterpret_cast<void **>(&env), &vm_args);
+-  if (status == JNI_OK) {
+-    std::cout << "Create java virtual machine successfully." << std::endl;
+-  } else if (status == JNI_EEXIST) {
+-    std::cout << "JNI evn already exists." << std::endl;
+-  } else {
+-    std::cerr << "Error, create java virtual machine failed. return JNI_CODE ("
+-              << status << ")" << std::endl;
+-  }
+ 
+-ret:
+-  for (int i = 0; i < num_of_opts; i++) {
+-    delete[] options[i].optionString;
+-  }
+-  delete[] options;
+-  return jvm;
+-}
+-
+-// One process can only create jvm for once.
+-JavaVM *GetJavaVM(const std::string jvm_options = "") {
+-  if (_jvm == NULL) {
+-    // Try to find whether there exists one javaVM
+-    jsize nVMs;
+-    JNI_GetCreatedJavaVMs(NULL, 0,
+-                          &nVMs); // 1. just get the required array length
+-    std::cout << "Found " << nVMs << " VMs existing in this process."
+-              << std::endl;
+-    JavaVM **buffer = new JavaVM *[nVMs];
+-    JNI_GetCreatedJavaVMs(buffer, nVMs, &nVMs); // 2. get the data
+-    for (auto i = 0; i < nVMs; ++i) {
+-      if (buffer[i] != NULL) {
+-        _jvm = buffer[i];
+-        std::cout << "Found index " << i << " VM non null "
+-                  << reinterpret_cast<jlong>(_jvm) << std::endl;
+-        return _jvm;
++    // One process can only create jvm for once.
++    JavaVM *GetJavaVM(const std::string jvm_options = "")
++    {
++      if (_jvm == NULL)
++      {
++        // Try to find whether there exists one javaVM
++        jsize nVMs;
++        JNI_GetCreatedJavaVMs(NULL, 0,
++                              &nVMs); // 1. just get the required array length
++        std::cout << "Found " << nVMs << " VMs existing in this process."
++                  << std::endl;
++        JavaVM **buffer = new JavaVM *[nVMs];
++        JNI_GetCreatedJavaVMs(buffer, nVMs, &nVMs); // 2. get the data
++        for (auto i = 0; i < nVMs; ++i)
++        {
++          if (buffer[i] != NULL)
++          {
++            _jvm = buffer[i];
++            std::cout << "Found index " << i << " VM non null "
++                      << reinterpret_cast<jlong>(_jvm) << std::endl;
++            return _jvm;
++          }
++        }
++        _jvm = CreateJavaVM(jvm_options);
++        std::cout << "Created JVM " << reinterpret_cast<jlong>(_jvm) << std::endl;
+       }
++      return _jvm;
+     }
+-    _jvm = CreateJavaVM(jvm_options);
+-    std::cout << "Created JVM " << reinterpret_cast<jlong>(_jvm) << std::endl;
+-  }
+-  return _jvm;
+-}
+ 
+-JNIEnvMark::JNIEnvMark() : JNIEnvMark::JNIEnvMark("") {}
++    JNIEnvMark::JNIEnvMark() : JNIEnvMark::JNIEnvMark("") {}
+ 
+-JNIEnvMark::JNIEnvMark(const std::string &jvm_options) : _env(NULL) {
+-  if (!GetJavaVM(jvm_options)) {
+-    return;
+-  }
+-  int status =
+-      GetJavaVM(jvm_options)
+-          ->AttachCurrentThread(reinterpret_cast<void **>(&_env), nullptr);
+-  if (status != JNI_OK) {
+-    std::cerr << "Error attach current thread: " << status << std::endl;
+-  }
+-}
++    JNIEnvMark::JNIEnvMark(const std::string &jvm_options) : _env(NULL)
++    {
++      if (!GetJavaVM(jvm_options))
++      {
++        return;
++      }
++      int status =
++          GetJavaVM(jvm_options)
++              ->AttachCurrentThread(reinterpret_cast<void **>(&_env), nullptr);
++      if (status != JNI_OK)
++      {
++        std::cerr << "Error attach current thread: " << status << std::endl;
++      }
++    }
+ 
+-JNIEnvMark::~JNIEnvMark() {
+-  if (_env) {
+-    GetJavaVM()->DetachCurrentThread();
+-  }
+-}
++    JNIEnvMark::~JNIEnvMark()
++    {
++      if (_env)
++      {
++        GetJavaVM()->DetachCurrentThread();
++      }
++    }
+ 
+-JNIEnv *JNIEnvMark::env() { return _env; }
++    JNIEnv *JNIEnvMark::env() { return _env; }
+ 
+-} // namespace jni
++  } // namespace jni
+ 
+ #endif
+ 
+-std::vector<std::string> list_files(const std::string &path) {
+-  // list all files in the directory
+-  std::vector<std::string> files;
+-  for (const auto &entry : std::filesystem::directory_iterator(path)) {
+-    files.push_back(entry.path().string());
++  std::vector<std::string> list_files(const std::string &path)
++  {
++    // list all files in the directory
++    std::vector<std::string> files;
++    for (const auto &entry : std::filesystem::directory_iterator(path))
++    {
++      files.push_back(entry.path().string());
++    }
++    return files;
+   }
+-  return files;
+-}
+ 
+-void iterate_over_director(const std::string& dir_or_path, std::vector<std::string>& output_paths){
+-  if (dir_or_path.empty()) {
+-    return;
++  void iterate_over_director(const std::string &dir_or_path, std::vector<std::string> &output_paths)
++  {
++    if (dir_or_path.empty())
++    {
++      return;
++    }
++    if (std::filesystem::is_directory(dir_or_path))
++    {
++      auto files = list_files(dir_or_path);
++      output_paths.insert(output_paths.end(), files.begin(), files.end());
++    }
++    else
++    {
++      output_paths.push_back(dir_or_path);
++    }
+   }
+-      if (std::filesystem::is_directory(dir_or_path)) {
+-        auto files = list_files(dir_or_path);
+-        output_paths.insert(output_paths.end(), files.begin(), files.end());
+-      } else {
+-        output_paths.push_back(dir_or_path);
+-      }
+-}
+-
+-std::string GraphPlannerWrapper::expand_directory(const std::string &path) {
+-  std::vector<std::string> paths;
+-  std::string::size_type start = 0;
+-  std::string::size_type end = path.find(':');
+-  while (end != std::string::npos) {
+-    auto sub_path = path.substr(start, end - start);
++
++  std::string GraphPlannerWrapper::expand_directory(const std::string &path)
++  {
++    std::vector<std::string> paths;
++    std::string::size_type start = 0;
++    std::string::size_type end = path.find(':');
++    while (end != std::string::npos)
++    {
++      auto sub_path = path.substr(start, end - start);
++      iterate_over_director(sub_path, paths);
++      start = end + 1;
++      end = path.find(':', start);
++    }
++    auto sub_path = path.substr(start);
+     iterate_over_director(sub_path, paths);
+-    start = end + 1;
+-    end = path.find(':', start);
+-  }
+-  auto sub_path = path.substr(start);
+-  iterate_over_director(sub_path, paths);
+-  std::stringstream ss;
+-  for (const auto &p : paths) {
+-    ss << p << ":";
++    std::stringstream ss;
++    for (const auto &p : paths)
++    {
++      ss << p << ":";
++    }
++    return ss.str();
+   }
+-  return ss.str();
+-}
+ 
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+ 
+-std::string GraphPlannerWrapper::generate_jvm_options(
+-    const std::string java_path, const std::string &jna_path,
+-    const std::string &graph_schema_yaml,
+-    const std::string &graph_statistic_json) {
+-  auto expanded_java_path = expand_directory(java_path);
+-  std::cout << "Expanded java path: " << expanded_java_path << std::endl;
+-  std::string jvm_options = "-Djava.class.path=" + expanded_java_path;
+-  jvm_options += " -Djna.library.path=" + jna_path;
+-  jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
+-  if (!graph_statistic_json.empty()) {
+-    jvm_options += " -Dgraph.statistic=" + graph_statistic_json;
+-  }
+-  return jvm_options;
+-}
+-
+-Plan compilePlanJNI(jclass graph_planner_clz_,
+-                    jmethodID graph_planner_method_id_, JNIEnv *env,
+-                    const std::string &compiler_config_path,
+-                    const std::string &cypher_query_string) {
+-  jni::GetJavaVM()->AttachCurrentThread(reinterpret_cast<void **>(&env),
+-                                        nullptr);
+-  Plan plan;
+-  if (graph_planner_clz_ == NULL || graph_planner_method_id_ == NULL) {
+-    std::cerr << "Invalid GraphPlannerWrapper." << std::endl;
+-    return plan;
++  std::string GraphPlannerWrapper::generate_jvm_options(
++      const std::string java_path, const std::string &jna_path,
++      const std::string &graph_schema_yaml,
++      const std::string &graph_statistic_json)
++  {
++    auto expanded_java_path = expand_directory(java_path);
++    std::cout << "Expanded java path: " << expanded_java_path << std::endl;
++    std::string jvm_options = "-Djava.class.path=" + expanded_java_path;
++    jvm_options += " -Djna.library.path=" + jna_path;
++    jvm_options += " -Dgraph.schema=" + graph_schema_yaml;
++    if (!graph_statistic_json.empty())
++    {
++      jvm_options += " -Dgraph.statistic=" + graph_statistic_json;
++    }
++    return jvm_options;
+   }
+-  jstring param1 = env->NewStringUTF(compiler_config_path.c_str());
+-  jstring param2 = env->NewStringUTF(cypher_query_string.c_str());
+ 
+-  // invoke jvm static function to get results as Object[]
+-  jobjectArray resultArray = (jobjectArray)env->CallStaticObjectMethod(
+-      graph_planner_clz_, graph_planner_method_id_, param1, param2);
++  Plan compilePlanJNI(jclass graph_planner_clz_,
++                      jmethodID graph_planner_method_id_, JNIEnv *env,
++                      const std::string &compiler_config_path,
++                      const std::string &cypher_query_string)
++  {
++    jni::GetJavaVM()->AttachCurrentThread(reinterpret_cast<void **>(&env),
++                                          nullptr);
++    Plan plan;
++    if (graph_planner_clz_ == NULL || graph_planner_method_id_ == NULL)
++    {
++      std::cerr << "Invalid GraphPlannerWrapper." << std::endl;
++      return plan;
++    }
++    jstring param1 = env->NewStringUTF(compiler_config_path.c_str());
++    jstring param2 = env->NewStringUTF(cypher_query_string.c_str());
++
++    // invoke jvm static function to get results as Object[]
++    jobject jni_plan = (jobject)env->CallStaticObjectMethod(
++        graph_planner_clz_, graph_planner_method_id_, param1, param2);
++
++    if (env->ExceptionCheck())
++    {
++      env->ExceptionDescribe();
++      env->ExceptionClear();
++      std::cerr << "Error in calling GraphPlanner." << std::endl;
++      return plan;
++    }
+ 
+-  if (env->ExceptionCheck()) {
+-    env->ExceptionDescribe();
+-    env->ExceptionClear();
+-    std::cerr << "Error in calling GraphPlanner." << std::endl;
+-    return plan;
+-  }
++    jmethodID method1 = env->GetMethodID(
++        env->GetObjectClass(jni_plan), "getPhysicalBytes", "()[B");
++    jmethodID method2 = env->GetMethodID(
++        env->GetObjectClass(jni_plan), "getResultSchemaYaml", "()Ljava/lang/String;");
++
++    // 0-th object is the physical plan in byte array
++    jbyteArray res1 = (jbyteArray)env->CallObjectMethod(jni_plan, method1);
++    // 1-th object is the result schema in yaml format
++    jstring res2 = (jstring)env->CallObjectMethod(jni_plan, method2);
++
++    if (res1 == NULL || res2 == NULL)
++    {
++      std::cerr << "Fail to generate plan." << std::endl;
++      return plan;
++    }
++    jbyte *str = env->GetByteArrayElements(res1, NULL);
++    jsize len = env->GetArrayLength(res1);
++    std::cout << "Physical plan size: " << len;
+ 
+-  // 0-th object is the physical plan in byte array
+-  jbyteArray res = (jbyteArray)env->GetObjectArrayElement(resultArray, 0);
+-  // 1-th object is the result schema in yaml format
+-  jstring res2 = (jstring)env->GetObjectArrayElement(resultArray, 1);
++    plan.physical_plan.ParseFromArray(str, len);
++    plan.result_schema = env->GetStringUTFChars(res2, NULL);
++
++    env->ReleaseByteArrayElements(res1, str, 0);
++    env->DeleteLocalRef(param1);
++    env->DeleteLocalRef(param2);
++    env->DeleteLocalRef(res1);
++    // remove new added jni objects
++    env->DeleteLocalRef(res2);
++    env->DeleteLocalRef(jni_plan);
+ 
+-  if (res == NULL || res2 == NULL) {
+-    std::cerr << "Fail to generate plan." << std::endl;
+     return plan;
+   }
+-  jbyte *str = env->GetByteArrayElements(res, NULL);
+-  jsize len = env->GetArrayLength(res);
+-  std::cout << "Physical plan size: " << len;
+-
+-  plan.physical_plan.ParseFromArray(str, len);
+-  plan.result_schema = env->GetStringUTFChars(res2, NULL);
+-
+-  env->ReleaseByteArrayElements(res, str, 0);
+-  env->DeleteLocalRef(param1);
+-  env->DeleteLocalRef(param2);
+-  env->DeleteLocalRef(res);
+-  // remove new added jni objects
+-  env->DeleteLocalRef(res2);
+-  env->DeleteLocalRef(resultArray);
+-
+-  return plan;
+-}
+ #endif
+ 
+ #if (!GRAPH_PLANNER_JNI_INVOKER)
+ 
+-void write_query_to_pipe(const std::string &path,
+-                         const std::string &query_str) {
+-  std::cout << "write_query_to_pipe: " << path << std::endl;
+-
+-  // mkfifo(path.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
+-  int fd_to_java = open(path.c_str(), O_WRONLY);
+-  if (fd_to_java < 0) {
+-    std::cerr << "Fail to open pipe: " << path << std::endl;
+-    return;
++  void write_query_to_pipe(const std::string &path,
++                           const std::string &query_str)
++  {
++    std::cout << "write_query_to_pipe: " << path << std::endl;
++
++    // mkfifo(path.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
++    int fd_to_java = open(path.c_str(), O_WRONLY);
++    if (fd_to_java < 0)
++    {
++      std::cerr << "Fail to open pipe: " << path << std::endl;
++      return;
++    }
++    std::cout << "open pipe done" << std::endl;
++    auto len = write(fd_to_java, query_str.c_str(), query_str.size());
++    if (len != (int)query_str.size())
++    {
++      std::cerr << "Fail to write query to pipe:" << len << std::endl;
++      return;
++    }
++    std::cout << "write_query_to_pipe done: " << len << std::endl;
++    close(fd_to_java);
+   }
+-  std::cout << "open pipe done" << std::endl;
+-  auto len = write(fd_to_java, query_str.c_str(), query_str.size());
+-  if (len != (int)query_str.size()) {
+-    std::cerr << "Fail to write query to pipe:" << len << std::endl;
+-    return;
++
++  void write_query_to_file(const std::string &path,
++                           const std::string &query_str)
++  {
++    std::ofstream query_file(path);
++    query_file << query_str;
++    query_file.close();
+   }
+-  std::cout << "write_query_to_pipe done: " << len << std::endl;
+-  close(fd_to_java);
+-}
+-
+-void write_query_to_file(const std::string &path,
+-                         const std::string &query_str) {
+-  std::ofstream query_file(path);
+-  query_file << query_str;
+-  query_file.close();
+-}
+-
+-physical::PhysicalPlan readPhysicalPlan(const std::string &plan_str) {
+-  std::cout << "plan str size: " << plan_str.size() << std::endl;
+-  physical::PhysicalPlan plan;
+-  if (!plan.ParseFromString(plan_str)) {
+-    std::cerr << "Fail to parse physical plan." << std::endl;
+-    return physical::PhysicalPlan();
++
++  physical::PhysicalPlan readPhysicalPlan(const std::string &plan_str)
++  {
++    std::cout << "plan str size: " << plan_str.size() << std::endl;
++    physical::PhysicalPlan plan;
++    if (!plan.ParseFromString(plan_str))
++    {
++      std::cerr << "Fail to parse physical plan." << std::endl;
++      return physical::PhysicalPlan();
++    }
++    return plan;
+   }
+-  return plan;
+-}
+-
+-physical::PhysicalPlan
+-compilePlanSubprocess(const std::string &class_path,
+-                      const std::string &jna_path,
+-                      const std::string &graph_schema_yaml,
+-                      const std::string &graph_statistic_json,
+-                      const std::string &compiler_config_path,
+-                      const std::string &cypher_query_string) {
+-  physical::PhysicalPlan physical_plan;
+-  auto random_prefix = std::to_string(
+-      std::chrono::system_clock::now().time_since_epoch().count());
+-  std::string dst_query_path = "/tmp/temp_query_" + random_prefix + ".cypher";
+-  std::string dst_output_file = "/tmp/temp_output_" + random_prefix + ".pb";
+-  std::cout << "dst_query_path: " << dst_query_path
+-            << " dst_output_file: " << dst_output_file << std::endl;
+-  mkfifo(dst_query_path.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
+-  mkfifo(dst_output_file.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
+-
+-  pid_t pid = fork();
+-
+-  if (pid == 0) {
+-    const char *const command_string_array[] = {"java",
+-                                                "-cp",
+-                                                class_path.c_str(),
+-                                                jna_path.c_str(),
+-                                                graph_schema_yaml.c_str(),
+-                                                graph_statistic_json.c_str(),
+-                                                GRAPH_PLANNER_FULL_NAME,
+-                                                compiler_config_path.c_str(),
+-                                                dst_query_path.c_str(),
+-                                                dst_output_file.c_str(),
+-                                                "/tmp/temp.cypher.yaml",
+-                                                NULL};
+-    execvp(command_string_array[0],
+-           const_cast<char *const *>(command_string_array));
+-  } else if (pid < 0) {
+-    std::cerr << "Error in fork." << std::endl;
+-  } else {
+-    write_query_to_pipe(dst_query_path, cypher_query_string);
+-
+-    int fd_from_java = open(dst_output_file.c_str(), O_RDONLY);
+-    if (fd_from_java < 0) {
+-      std::cerr << "Fail to open pipe: " << dst_output_file << std::endl;
+-      return physical_plan;
++
++  physical::PhysicalPlan
++  compilePlanSubprocess(const std::string &class_path,
++                        const std::string &jna_path,
++                        const std::string &graph_schema_yaml,
++                        const std::string &graph_statistic_json,
++                        const std::string &compiler_config_path,
++                        const std::string &cypher_query_string)
++  {
++    physical::PhysicalPlan physical_plan;
++    auto random_prefix = std::to_string(
++        std::chrono::system_clock::now().time_since_epoch().count());
++    std::string dst_query_path = "/tmp/temp_query_" + random_prefix + ".cypher";
++    std::string dst_output_file = "/tmp/temp_output_" + random_prefix + ".pb";
++    std::cout << "dst_query_path: " << dst_query_path
++              << " dst_output_file: " << dst_output_file << std::endl;
++    mkfifo(dst_query_path.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
++    mkfifo(dst_output_file.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
++
++    pid_t pid = fork();
++
++    if (pid == 0)
++    {
++      const char *const command_string_array[] = {"java",
++                                                  "-cp",
++                                                  class_path.c_str(),
++                                                  jna_path.c_str(),
++                                                  graph_schema_yaml.c_str(),
++                                                  graph_statistic_json.c_str(),
++                                                  GRAPH_PLANNER_FULL_NAME,
++                                                  compiler_config_path.c_str(),
++                                                  dst_query_path.c_str(),
++                                                  dst_output_file.c_str(),
++                                                  "/tmp/temp.cypher.yaml",
++                                                  NULL};
++      execvp(command_string_array[0],
++             const_cast<char *const *>(command_string_array));
+     }
+-    std::vector<char> stored_buffer;
+-    char buffer[128];
+-    while (true) {
+-      ssize_t bytesRead = read(fd_from_java, buffer, sizeof(buffer) - 1);
+-      if (bytesRead <= 0) {
+-        break;
+-      }
+-      stored_buffer.insert(stored_buffer.end(), buffer, buffer + bytesRead);
++    else if (pid < 0)
++    {
++      std::cerr << "Error in fork." << std::endl;
+     }
+-    physical_plan = readPhysicalPlan(
+-        std::string(stored_buffer.begin(), stored_buffer.end()));
+-    close(fd_from_java);
+-
+-    int status;
+-    waitpid(pid, &status, 0);
+-    if (status != 0) {
+-      std::cerr << "Error in running command." << std::endl;
++    else
++    {
++      write_query_to_pipe(dst_query_path, cypher_query_string);
++
++      int fd_from_java = open(dst_output_file.c_str(), O_RDONLY);
++      if (fd_from_java < 0)
++      {
++        std::cerr << "Fail to open pipe: " << dst_output_file << std::endl;
++        return physical_plan;
++      }
++      std::vector<char> stored_buffer;
++      char buffer[128];
++      while (true)
++      {
++        ssize_t bytesRead = read(fd_from_java, buffer, sizeof(buffer) - 1);
++        if (bytesRead <= 0)
++        {
++          break;
++        }
++        stored_buffer.insert(stored_buffer.end(), buffer, buffer + bytesRead);
++      }
++      physical_plan = readPhysicalPlan(
++          std::string(stored_buffer.begin(), stored_buffer.end()));
++      close(fd_from_java);
++
++      int status;
++      waitpid(pid, &status, 0);
++      if (status != 0)
++      {
++        std::cerr << "Error in running command." << std::endl;
++      }
+     }
++    unlink(dst_query_path.c_str());
++    unlink(dst_output_file.c_str());
++    return physical_plan;
+   }
+-  unlink(dst_query_path.c_str());
+-  unlink(dst_output_file.c_str());
+-  return physical_plan;
+-}
+ #endif
+ 
+-Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
+-                                      const std::string &cypher_query_string) {
++  Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
++                                        const std::string &cypher_query_string)
++  {
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-  return compilePlanJNI(graph_planner_clz_, graph_planner_method_id_,
+-                        jni_wrapper_.env(), compiler_config_path,
+-                        cypher_query_string);
++    return compilePlanJNI(graph_planner_clz_, graph_planner_method_id_,
++                          jni_wrapper_.env(), compiler_config_path,
++                          cypher_query_string);
+ #else
+-  return compilePlanSubprocess(class_path_, jna_path_, graph_schema_yaml_,
+-                               graph_statistic_json_, compiler_config_path,
+-                               cypher_query_string);
++    return compilePlanSubprocess(class_path_, jna_path_, graph_schema_yaml_,
++                                 graph_statistic_json_, compiler_config_path,
++                                 cypher_query_string);
+ #endif
+-}
++  }
+ 
+ } // namespace gs
+diff --git a/interactive_engine/compiler/src/main/native/graph_planner.h b/interactive_engine/compiler/src/main/native/graph_planner.h
+index 58ef9c7797..5c1229ef29 100644
+--- a/interactive_engine/compiler/src/main/native/graph_planner.h
++++ b/interactive_engine/compiler/src/main/native/graph_planner.h
+@@ -29,119 +29,131 @@ limitations under the License.
+ #define GRAPH_PLANNER_JNI_INVOKER 1 // 1: JNI, 0: subprocess
+ #endif
+ 
+-namespace gs {
++namespace gs
++{
+ 
+-struct Plan {
+-  physical::PhysicalPlan physical_plan;
+-  std::string result_schema;
+-};
++  struct Plan
++  {
++    physical::PhysicalPlan physical_plan;
++    std::string result_schema;
++  };
+ 
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-namespace jni {
+-struct JNIEnvMark {
+-  JNIEnv *_env;
+-
+-  JNIEnvMark();
+-  JNIEnvMark(const std::string &jvm_options);
+-  ~JNIEnvMark();
+-  JNIEnv *env();
+-};
+-
+-} // namespace jni
++  namespace jni
++  {
++    struct JNIEnvMark
++    {
++      JNIEnv *_env;
++
++      JNIEnvMark();
++      JNIEnvMark(const std::string &jvm_options);
++      ~JNIEnvMark();
++      JNIEnv *env();
++    };
++
++  } // namespace jni
+ #endif
+ 
+-class GraphPlannerWrapper {
+-public:
+-  static constexpr const char *kGraphPlannerClass =
+-      "com/alibaba/graphscope/common/ir/tools/GraphPlanner";
+-  static constexpr const char *GRAPH_PLANNER_FULL_NAME =
+-      "com.alibaba.graphscope.common.ir.tools.GraphPlanner";
+-  static constexpr const char *kGraphPlannerMethod = "generatePhysicalPlan";
+-  static constexpr const char *kGraphPlannerMethodSignature =
+-      "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/Object;";
+-
+-  GraphPlannerWrapper(const std::string java_path, const std::string &jna_path,
+-                      const std::string &graph_schema_yaml,
+-                      const std::string &graph_statistic_json = "")
++  class GraphPlannerWrapper
++  {
++  public:
++    static constexpr const char *kGraphPlannerClass =
++        "com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI";
++    static constexpr const char *GRAPH_PLANNER_FULL_NAME =
++        "com.alibaba.graphscope.common.jna._native.GraphPlannerJNI";
++    static constexpr const char *kGraphPlannerMethod = "compilePlan";
++    static constexpr const char *kGraphPlannerMethodSignature =
++        "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/Object;";
++
++    GraphPlannerWrapper(const std::string java_path, const std::string &jna_path,
++                        const std::string &graph_schema_yaml,
++                        const std::string &graph_statistic_json = "")
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-      : jni_wrapper_(generate_jvm_options(
+-            java_path, jna_path, graph_schema_yaml, graph_statistic_json)) {
+-    jclass clz = jni_wrapper_.env()->FindClass(kGraphPlannerClass);
+-    if (clz == NULL) {
+-      std::cerr << "Fail to find class: " << kGraphPlannerClass << std::endl;
+-      return;
++        : jni_wrapper_(generate_jvm_options(
++              java_path, jna_path, graph_schema_yaml, graph_statistic_json))
++    {
++      jclass clz = jni_wrapper_.env()->FindClass(kGraphPlannerClass);
++      if (clz == NULL)
++      {
++        std::cerr << "Fail to find class: " << kGraphPlannerClass << std::endl;
++        return;
++      }
++      graph_planner_clz_ = (jclass)jni_wrapper_.env()->NewGlobalRef(clz);
++      jmethodID j_method_id = jni_wrapper_.env()->GetStaticMethodID(
++          graph_planner_clz_, kGraphPlannerMethod, kGraphPlannerMethodSignature);
++      if (j_method_id == NULL)
++      {
++        std::cerr << "Fail to find method: " << kGraphPlannerMethod << std::endl;
++        return;
++      }
++      graph_planner_method_id_ = j_method_id;
+     }
+-    graph_planner_clz_ = (jclass)jni_wrapper_.env()->NewGlobalRef(clz);
+-    jmethodID j_method_id = jni_wrapper_.env()->GetStaticMethodID(
+-        graph_planner_clz_, kGraphPlannerMethod, kGraphPlannerMethodSignature);
+-    if (j_method_id == NULL) {
+-      std::cerr << "Fail to find method: " << kGraphPlannerMethod << std::endl;
+-      return;
+-    }
+-    graph_planner_method_id_ = j_method_id;
+-  }
+ #else
+-      : jna_path_("-Djna.library.path=" + jna_path),
+-        graph_schema_yaml_("-Dgraph.schema=" + graph_schema_yaml),
+-        graph_statistic_json_("-Dgraph.statistic=" + graph_statistic_json) {
+-    class_path_ = expand_directory(java_path);
+-  }
++        : jna_path_("-Djna.library.path=" + jna_path),
++          graph_schema_yaml_("-Dgraph.schema=" + graph_schema_yaml),
++          graph_statistic_json_("-Dgraph.statistic=" + graph_statistic_json)
++    {
++      class_path_ = expand_directory(java_path);
++    }
+ #endif
+ 
+-  ~GraphPlannerWrapper() {
++    ~GraphPlannerWrapper()
++    {
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-    if (graph_planner_clz_ != NULL) {
+-      jni_wrapper_.env()->DeleteGlobalRef(graph_planner_clz_);
+-    }
++      if (graph_planner_clz_ != NULL)
++      {
++        jni_wrapper_.env()->DeleteGlobalRef(graph_planner_clz_);
++      }
+ #endif
+-  }
++    }
+ 
+-  inline bool is_valid() {
++    inline bool is_valid()
++    {
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-    return graph_planner_clz_ != NULL && graph_planner_method_id_ != NULL;
++      return graph_planner_clz_ != NULL && graph_planner_method_id_ != NULL;
+ #else
+-    return true; // just return true, since we don't have a way to check the
+-                 // validity when calling via subprocess.
++      return true; // just return true, since we don't have a way to check the
++                   // validity when calling via subprocess.
+ #endif
+-  }
+-
+-  /**
+-   * @brief Invoker GraphPlanner to generate a physical plan from a cypher
+-   * query.
+-   * @param compiler_config_path The path of compiler config file.
+-   * @param cypher_query_string The cypher query string.
+-   * @return physical plan in string.
+-   */
+-  Plan CompilePlan(const std::string &compiler_config_path,
+-                   const std::string &cypher_query_string);
+-
+-private:
+-  std::string generate_jvm_options(const std::string java_path,
+-                                   const std::string &jna_path,
+-                                   const std::string &graph_schema_yaml,
+-                                   const std::string &graph_statistic_json);
+-  // physical::PhysicalPlan compilePlanJNI(const std::string&
+-  // compiler_config_path,
+-  //                                       const std::string&
+-  //                                       cypher_query_string);
+-  std::string expand_directory(const std::string &path);
++    }
++
++    /**
++     * @brief Invoker GraphPlanner to generate a physical plan from a cypher
++     * query.
++     * @param compiler_config_path The path of compiler config file.
++     * @param cypher_query_string The cypher query string.
++     * @return physical plan in string.
++     */
++    Plan CompilePlan(const std::string &compiler_config_path,
++                     const std::string &cypher_query_string);
++
++  private:
++    std::string generate_jvm_options(const std::string java_path,
++                                     const std::string &jna_path,
++                                     const std::string &graph_schema_yaml,
++                                     const std::string &graph_statistic_json);
++    // physical::PhysicalPlan compilePlanJNI(const std::string&
++    // compiler_config_path,
++    //                                       const std::string&
++    //                                       cypher_query_string);
++    std::string expand_directory(const std::string &path);
+ #if (GRAPH_PLANNER_JNI_INVOKER)
+-  // We need to list all files in the directory, if exists.
+-  // The reason why we need to list all files in the directory is that
+-  // java -Djava.class.path=dir/* (in jni, which we are using)will not load all
+-  // jar files in the directory, While java -cp dir/* will load all jar files in
+-  // the directory.
+-
+-  gs::jni::JNIEnvMark jni_wrapper_;
+-  jclass graph_planner_clz_;
+-  jmethodID graph_planner_method_id_;
++    // We need to list all files in the directory, if exists.
++    // The reason why we need to list all files in the directory is that
++    // java -Djava.class.path=dir/* (in jni, which we are using)will not load all
++    // jar files in the directory, While java -cp dir/* will load all jar files in
++    // the directory.
++
++    gs::jni::JNIEnvMark jni_wrapper_;
++    jclass graph_planner_clz_;
++    jmethodID graph_planner_method_id_;
+ #else
+-  std::string class_path_;
+-  std::string jna_path_;
+-  std::string graph_schema_yaml_;
+-  std::string graph_statistic_json_;
++    std::string class_path_;
++    std::string jna_path_;
++    std::string graph_schema_yaml_;
++    std::string graph_statistic_json_;
+ #endif
+-};
++  };
+ } // namespace gs
+ 
+ #endif // PLANNER_GRAPH_PLANNER_H_
+diff --git a/interactive_engine/compiler/src/test/java/com/alibaba/graphscope/common/ir/JNITest.java b/interactive_engine/compiler/src/test/java/com/alibaba/graphscope/common/ir/JNITest.java
+index 5469e8ad55..267363aa8a 100644
+--- a/interactive_engine/compiler/src/test/java/com/alibaba/graphscope/common/ir/JNITest.java
++++ b/interactive_engine/compiler/src/test/java/com/alibaba/graphscope/common/ir/JNITest.java
+@@ -18,21 +18,21 @@
+ 
+ package com.alibaba.graphscope.common.ir;
+ 
+-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
++import com.alibaba.graphscope.common.jna._native.GraphPlannerJNI;
++import com.alibaba.graphscope.common.jna._native.JNIPlan;
+ import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
+-
+ import org.junit.Test;
+ 
+ public class JNITest {
+     @Test
+     public void test() throws Exception {
+-        Object[] objects =
+-                GraphPlanner.generatePhysicalPlan(
++        JNIPlan objects =
++                GraphPlannerJNI.compilePlan(
+                         "conf/ir.compiler.properties", "Match (n) Return n, count(n)");
+         GraphAlgebraPhysical.PhysicalPlan plan =
+-                GraphAlgebraPhysical.PhysicalPlan.parseFrom((byte[]) objects[0]);
++                GraphAlgebraPhysical.PhysicalPlan.parseFrom(objects.physicalBytes);
+         System.out.println(plan);
+-        String resultSchema = (String) objects[1];
++        String resultSchema = objects.resultSchemaYaml;
+         System.out.println(resultSchema);
+     }
+ }

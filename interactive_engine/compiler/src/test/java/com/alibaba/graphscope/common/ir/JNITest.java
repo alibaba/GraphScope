@@ -18,7 +18,8 @@
 
 package com.alibaba.graphscope.common.ir;
 
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.jna._native.GraphPlannerJNI;
+import com.alibaba.graphscope.common.jna._native.JNIPlan;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 
 import org.junit.Test;
@@ -26,13 +27,13 @@ import org.junit.Test;
 public class JNITest {
     @Test
     public void test() throws Exception {
-        Object[] objects =
-                GraphPlanner.generatePhysicalPlan(
+        JNIPlan objects =
+                GraphPlannerJNI.compilePlan(
                         "conf/ir.compiler.properties", "Match (n) Return n, count(n)");
         GraphAlgebraPhysical.PhysicalPlan plan =
-                GraphAlgebraPhysical.PhysicalPlan.parseFrom((byte[]) objects[0]);
+                GraphAlgebraPhysical.PhysicalPlan.parseFrom(objects.physicalBytes);
         System.out.println(plan);
-        String resultSchema = (String) objects[1];
+        String resultSchema = objects.resultSchemaYaml;
         System.out.println(resultSchema);
     }
 }

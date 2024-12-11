@@ -27,10 +27,6 @@
     <condition property="platform" value="linux64">
       <os arch="aarch64" family="unix"/>
     </condition>
-    
-<!--    <exec executable="nproc" outputproperty="cores.count">-->
-<!--      <arg value="&#45;&#45;all"/>-->
-<!--    </exec>-->
 
     <fail unless="platform" message="Not a supported platform."/>
 
@@ -41,15 +37,15 @@
     <mkdir dir="${project.build.directory}/native"/>
 
     <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true">
-        <arg line="${basedir}/compiler/src/main/cpp"/>
+        <arg line="${basedir}/compiler/src/main/native"/>
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
       <arg line="VERBOSE=1 -j4"/>
     </exec>
 
-<!--    <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">-->
-<!--      <arg line="libgraph_planner.*"/>-->
-<!--    </exec>-->
+    <exec dir="${project.build.directory}/native" executable="strip" failonerror="false">
+      <arg line="${project.build.directory}/native/libgraph_planner.so"/>
+    </exec>
   </target>
 </project>
