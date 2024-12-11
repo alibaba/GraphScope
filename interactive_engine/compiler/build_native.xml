@@ -13,8 +13,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project name="Grape-JNI">
-  <target name="grape-jni">
+<project name="COMPILER-JNI">
+  <target name="graph_planner">
     <condition property="platform" value="linux64">
       <os arch="amd64" family="unix"/>
     </condition>
@@ -34,19 +34,14 @@
 
     <fail unless="platform" message="Not a supported platform."/>
 
-    <echo level="info" message="Make graphscope java sdk jni code"/>
+    <echo level="info" message="Make compiler graph planner jni code"/>
 
-    <echo level="info" message="Native Library Name: ${jni.library.name}"/>
+    <echo level="info" message="Native Library Name: graph_planner"/>
 
     <mkdir dir="${project.build.directory}/native"/>
 
-    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true" os="Linux">
-<!--      <arg line="-DCMAKE_PREFIX_PATH=/opt/graphscope;${env.GRAPHSCOPE_HOME} ${basedir}"/>-->
-    </exec>
-
-    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true"
-      os="Mac OS X">
-<!--      <arg line="${basedir}"/>-->
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true">
+     <arg line="${basedir}/src/main/cpp"/>
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
@@ -54,7 +49,7 @@
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">
-      <arg line="libgraph-planner-jni.so"/>
+      <arg line="libgraph_planner.so"/>
     </exec>
   </target>
 </project>

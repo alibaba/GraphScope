@@ -224,6 +224,36 @@
                 </plugins>
             </build>
         </profile>
+            <profile>
+      <id>graph-planner-jni</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>make</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <target>
+                    <ant antfile="build_native.xml">
+                      <target name="graph_planner"></target>
+                    </ant>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     </profiles>
 
     <build>

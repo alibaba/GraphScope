@@ -50,36 +50,6 @@
       </modules>
     </profile>
     <profile>
-      <id>graph-planner-jni</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>make</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <phase>compile</phase>
-                <configuration>
-                  <tasks>
-                    <ant antfile="compiler/build_native.xml">
-                      <target name="graph-planner-jni"></target>
-                    </ant>
-                  </tasks>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>graphscope</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -728,12 +698,6 @@
         <version>${interactive.sdk.version}</version>
         <classifier>${interactive.sdk.classifier}</classifier>
       </dependency>
-      <dependency>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
-        <type>maven-plugin</type>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -920,6 +884,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
       </plugin>
     </plugins>
   </build>
