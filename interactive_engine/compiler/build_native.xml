@@ -41,7 +41,7 @@
     <mkdir dir="${project.build.directory}/native"/>
 
     <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true">
-     <arg line="${basedir}/src/main/cpp"/>
+        <arg line="${basedir}/compiler/src/main/cpp"/>
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
