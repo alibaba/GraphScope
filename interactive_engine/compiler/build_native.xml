@@ -48,8 +48,8 @@
       <arg line="VERBOSE=1 -j4"/>
     </exec>
 
-    <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">
-      <arg line="libgraph_planner.so"/>
-    </exec>
+<!--    <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">-->
+<!--      <arg line="libgraph_planner.*"/>-->
+<!--    </exec>-->
   </target>
 </project>
