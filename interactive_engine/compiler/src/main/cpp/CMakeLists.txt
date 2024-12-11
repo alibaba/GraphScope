@@ -19,6 +19,7 @@ project(COMPILER-JNI
 option(BUILD_TEST "Whether to build test" ON)
 
 set(JAVA_AWT_INCLUDE_PATH NotNeeded)
+set(CMAKE_CXX_STANDARD 17)
 find_package(JNI QUIET)
 if (JNI_FOUND)
     include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
