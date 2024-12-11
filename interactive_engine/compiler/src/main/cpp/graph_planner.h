@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <cstring>
 #include <filesystem>
+#include <sstream>
 #include <jni.h>
 #include <string>
 #include <vector>

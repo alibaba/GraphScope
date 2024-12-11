@@ -28,9 +28,9 @@
       <os arch="aarch64" family="unix"/>
     </condition>
     
-    <exec executable="nproc" outputproperty="cores.count">
-      <arg value="--all"/>
-    </exec>
+<!--    <exec executable="nproc" outputproperty="cores.count">-->
+<!--      <arg value="&#45;&#45;all"/>-->
+<!--    </exec>-->
 
     <fail unless="platform" message="Not a supported platform."/>
 
@@ -45,7 +45,7 @@
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
-      <arg line="VERBOSE=1 -j${cores.count}"/>
+      <arg line="VERBOSE=1 -j4"/>
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">

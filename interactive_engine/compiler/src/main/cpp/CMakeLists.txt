@@ -59,6 +59,8 @@ protobuf_generate(APPEND_PATH
 
 add_library(ir_proto SHARED ${PROTO_SRCS_GIE})
 
+target_link_libraries(ir_proto ${Protobuf_LIBRARIES})
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB_RECURSE PLANNER_SRC_FILES "graph_planner.cc")
