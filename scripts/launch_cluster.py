@@ -146,7 +146,7 @@ class AWSLauncher(Launcher):
             default="1.21",
         )
         config["instance_type"] = click.prompt(
-            "Worker node instance type, defalut", default="t2.micro"
+            "Worker node instance type, default", default="t2.micro"
         )
         config["node_num"] = click.prompt(
             "Worker node num, default", type=int, default=4
