@@ -225,9 +225,9 @@ public class SimpleMatchQueries {
                 "MATCH (country:PLACE {name:"
                         + " \"India\"})<-[:ISPARTOF]-(:PLACE)<-[:ISLOCATEDIN]-(zombie:PERSON)\n"
                         + "OPTIONAL MATCH (zombie)<-[:HASCREATOR]-(message)\n"
-                        + "WHERE message.creationDate < 20100630000000000\n"
+                        + "WHERE message.length < 100\n"
                         + " Return count(country);";
-        List<String> expected = Arrays.asList("Record<{$f0: 25}>");
+        List<String> expected = Arrays.asList("Record<{$f0: 39783}>");
         return new QueryContext(query, expected);
     }
 }
