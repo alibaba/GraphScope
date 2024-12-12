@@ -582,7 +582,8 @@ static void sink_any(const Any& any, common::Value* value) {
     value->set_i64(any.AsInt64());
   } else if (any.type == PropertyType::StringView()) {
     auto str = any.AsStringView();
-    value->set_str(str.data(), str.size());
+    //value->set_str(str.data(), str.size());
+    value->mutable_str()->assign(str.data(), str.size());
   } else if (any.type == PropertyType::Date()) {
     value->set_i64(any.AsDate().milli_second);
   } else if (any.type == PropertyType::Int32()) {
