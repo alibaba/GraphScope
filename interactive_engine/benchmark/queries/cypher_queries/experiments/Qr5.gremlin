@@ -1,0 +1,7 @@
+g.V().
+match(
+  __.as('p').has('PERSON', 'id', 6592).out('KNOWS').out('KNOWS').out('KNOWS').has('PERSON', 'firstName', 'Mikhail').as('f')
+).select('f').as('f').select('p').as('p').
+match(
+  __.as('f').out('ISLOCATEDIN').as('e2')
+).count(f);

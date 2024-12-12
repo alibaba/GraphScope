@@ -1,0 +1,4 @@
+g.V().match(
+  __.as('p1').hasLabel('PERSON').out('KNOWS').as('p2'),
+  __.as('p2').out('LIKES').hasLabel('COMMENT').as('c1')).
+select('p1').has('id', $id1).select('p2').has('id', $id2).select('c1').has('length', P.gt($len)).count()
