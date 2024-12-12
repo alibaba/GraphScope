@@ -266,7 +266,8 @@ bl::result<procedure::Query> fill_in_query(const procedure::Query& query,
       } else if (val.type() == gs::runtime::RTAnyType::kI32Value) {
         const_value->set_i32(val.as_int32());
       } else if (val.type() == gs::runtime::RTAnyType::kStringValue) {
-        const_value->set_str(std::string(val.as_string()));
+        auto str = val.as_string();
+        const_value->mutable_str()->assign(str.data(), str.size());
       } else if (val.type() == gs::runtime::RTAnyType::kF64Value) {
         const_value->set_f64(val.as_double());
       } else if (val.type() == gs::runtime::RTAnyType::kBoolValue) {

@@ -553,7 +553,7 @@ void RTAny::sink_impl(common::Value* value) const {
   if (type_ == RTAnyType::kI64Value) {
     value->set_i64(value_.i64_val);
   } else if (type_ == RTAnyType::kStringValue) {
-    value->set_str(value_.str_val.data(), value_.str_val.size());
+    value->mutable_str()->assign(value_.str_val.data(), value_.str_val.size());
   } else if (type_ == RTAnyType::kI32Value) {
     value->set_i32(value_.i32_val);
   } else if (type_ == RTAnyType::kStringSetValue) {
@@ -582,7 +582,6 @@ static void sink_any(const Any& any, common::Value* value) {
     value->set_i64(any.AsInt64());
   } else if (any.type == PropertyType::StringView()) {
     auto str = any.AsStringView();
-    //value->set_str(str.data(), str.size());
     value->mutable_str()->assign(str.data(), str.size());
   } else if (any.type == PropertyType::Date()) {
     value->set_i64(any.AsDate().milli_second);
@@ -627,7 +626,8 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
   } else if (type_ == RTAnyType::kStringSetValue) {
     auto collection = col->mutable_entry()->mutable_collection();
     for (auto& s : *value_.str_set) {
-      collection->add_collection()->mutable_object()->set_str(s);
+      collection->add_collection()->mutable_object()->mutable_str()->assign(
+          s.data(), s.size());
     }
   } else if (type_ == RTAnyType::kTuple) {
     auto collection = col->mutable_entry()->mutable_collection();
@@ -648,7 +648,7 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
         continue;
       }
       auto ret = mp->add_key_values();
-      ret->mutable_key()->set_str(keys[i]);
+      ret->mutable_key()->mutable_str()->assign(keys[i].data(), keys[i].size());
       if (vals[i].type_ == RTAnyType::kVertex) {
         auto v = ret->mutable_value()->mutable_element()->mutable_vertex();
         sink_vertex(txn, vals[i].as_vertex(), v);

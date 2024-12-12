@@ -116,7 +116,8 @@ results::CollectiveResults PageRank::Query(const GraphDBSession& sess,
         ->mutable_entry()
         ->mutable_element()
         ->mutable_object()
-        ->set_str(vertex_label);
+        ->mutable_str()
+        ->assign(vertex_label.data(), vertex_label.size());
     result->mutable_record()
         ->add_columns()
         ->mutable_entry()

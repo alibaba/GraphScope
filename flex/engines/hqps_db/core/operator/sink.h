@@ -136,7 +136,7 @@ void template_set_value(common::Value* value, T v) {
 template <typename T, typename std::enable_if<
                           (std::is_same_v<T, std::string>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
-  value->set_str(v.data(), v.size());
+  value->mutable_str()->assign(v.data(), v.size());
 }
 
 template <typename T,
@@ -233,7 +233,8 @@ void template_set_key_value(results::KeyValues* map,
                             const VariableKeyValue& key_value) {
   for (auto& kv : key_value) {
     auto cur_kv = map->add_key_values();
-    cur_kv->mutable_key()->set_str(kv.first);
+    cur_kv->mutable_key()->mutable_str()->assign(kv.first.data(),
+                                                 kv.first.size());
     auto value = cur_kv->mutable_value()->mutable_element();
     set_any_to_element(kv.second, value);
   }
