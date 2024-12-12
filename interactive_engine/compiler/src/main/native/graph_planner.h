@@ -58,12 +58,12 @@ namespace gs
   {
   public:
     static constexpr const char *kGraphPlannerClass =
-        "com/alibaba/graphscope/common/jna/_native/GraphPlannerJNI";
+        "com/alibaba/graphscope/sdk/PlanUtils";
     static constexpr const char *GRAPH_PLANNER_FULL_NAME =
-        "com.alibaba.graphscope.common.jna._native.GraphPlannerJNI";
+        "com.alibaba.graphscope.sdk.PlanUtils";
     static constexpr const char *kGraphPlannerMethod = "compilePlan";
     static constexpr const char *kGraphPlannerMethodSignature =
-        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/alibaba/graphscope/common/jna/_native/JNIPlan;";
+        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/alibaba/graphscope/sdk/GraphPlan;";
 
     /**
      * @brief Constructs a new GraphPlannerWrapper object

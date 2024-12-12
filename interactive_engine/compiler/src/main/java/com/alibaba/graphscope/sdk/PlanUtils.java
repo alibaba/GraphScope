@@ -16,7 +16,7 @@
  *
  */
 
-package com.alibaba.graphscope.common.jna._native;
+package com.alibaba.graphscope.sdk;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
@@ -41,7 +41,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class GraphPlannerJNI {
+public class PlanUtils {
     /**
      * Provide a java-side implementation to compile the query in string to a physical plan
      * @param configPath
@@ -52,7 +52,7 @@ public class GraphPlannerJNI {
      * resultSchemaYaml defines the result specification of the query in yaml format
      * @throws Exception
      */
-    public static JNIPlan compilePlan(
+    public static GraphPlan compilePlan(
             String configPath, String query, String schemaYaml, String statsJson) throws Exception {
         GraphPlanner.Summary summary =
                 GraphPlanner.generatePlan(
@@ -71,7 +71,7 @@ public class GraphPlannerJNI {
                         logicalPlan.getDynamicParams());
         ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
         StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
-        return new JNIPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
+        return new GraphPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
     }
 
     static class StringMetaReader implements IrMetaReader {

@@ -16,19 +16,14 @@
  *
  */
 
-package com.alibaba.graphscope.common.ir;
+package com.alibaba.graphscope.sdk.restful;
 
-public class JNITest {
-    //    @Test
-    //    public void test() throws Exception {
-    //        GraphPlan objects =
-    //                PlanUtils.compilePlan(
-    //                        "conf/ir.compiler.properties", "Match (n) Return n, count(n)", "",
-    // "");
-    //        GraphAlgebraPhysical.PhysicalPlan plan =
-    //                GraphAlgebraPhysical.PhysicalPlan.parseFrom(objects.physicalBytes);
-    //        System.out.println(plan);
-    //        String resultSchema = objects.resultSchemaYaml;
-    //        System.out.println(resultSchema);
-    //    }
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class GraphPlannerService {
+    public static void main(String[] args) {
+        SpringApplication.run(GraphPlannerService.class, args);
+    }
 }

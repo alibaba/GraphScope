@@ -87,3 +87,135 @@ Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
                                       const std::string &graph_schema_yaml,
                                       const std::string &graph_statistic_json)
 ```
+
+Here is a refined version of your documentation with improvements for clarity, consistency, and readability:
+
+## Restful API
+
+We provide an alternative method to expose the interface as a RESTful API. Follow the steps below to access the interface via REST.
+
+### Step 1: Build the Project
+
+To build the project, run the following command:
+```bash
+cd interactive_engine
+# Use '-Dskip.native=true' to skip compiling C++ native code
+mvn clean package -DskipTests -Pgraph-planner-jni -Dskip.native=true
+```
+
+### Step 2: Locate and Extract the Package
+
+Once the build completes, a tarball named graph-planner-jni.tar.gz will be available in the assembly/target directory. Extract the contents as follows:
+
+```bash
+cd assembly/target
+tar xvzf graph-planner-jni.tar.gz
+cd graph-planner-jni
+```
+
+### Step 3: Start the Graph Planner RESTful Service
+
+To start the service, run the following command:
+
+```bash
+java -cp ".:./libs/*" com.alibaba.graphscope.sdk.restful.GraphPlannerService --spring.config.location=./conf/application.yaml
+```
+
+### Step 4: Access the RESTful API
+
+To send a request to the RESTful API, use the following `curl` command:
+
+```bash
+curl -X POST http://localhost:8080/api/compilePlan \
+    -H "Content-Type: application/json" \
+    -d "{
+        \"configPath\": \"$configPath\",
+        \"query\": \"$query\",
+        \"schemaYaml\": \"$schemaYaml\",
+        \"statsJson\": \"$statsJson\"
+    }"
+```
+
+Replace `$configPath`, `$query`, `$schemaYaml`, and `$statsJson` with the appropriate values.
+
+The response will be in JSON format, similar to:
+
+```json
+{
+    "graphPlan": {
+        "physicalBytes": "",
+        "resultSchemaYaml": ""
+    }
+}
+```
+
+The response contains two fields:
+1. physicalBytes: A Base64-encoded string representing the physical plan bytes.
+2. resultSchemaYaml: A string representing the YAML schema.
+
+You can decode these values into the required structures.
+
+Alternatively, you can run the following `Java` command to execute the same request:
+
+```bash
+java -cp ".:./libs/*" com.alibaba.graphscope.sdk.examples.TestGraphPlanner ./conf/interactive_config_test.yaml "Match (n) Return n;" ./conf/graph.yaml ./conf/modern_statistics.json
+```
+
+Here’s an example of how to access the RESTful API and decode the response in Java code:
+```
+public static void main(String[] args) throws Exception {
+    if (args.length < 4) {
+        System.out.println("Usage: <configPath> <query> <schemaPath> <statsPath>");
+        System.exit(1);
+    }
+    // set request body in json format
+    String jsonPayLoad = createParameters(args[0], args[1], args[2], args[3]).toString();
+    HttpClient client = HttpClient.newBuilder().build();
+    // create http request, set header and body content
+    HttpRequest request =
+            HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/api/compilePlan"))
+                    .setHeader("Content-Type", "application/json")
+                    .POST(
+                            HttpRequest.BodyPublishers.ofString(
+                                    jsonPayLoad, StandardCharsets.UTF_8))
+                    .build();
+    // send request and get response
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    String body = response.body();
+    // parse response body as json
+    JsonNode planNode = (new ObjectMapper()).readTree(body).get("graphPlan");
+    // print result
+    System.out.println(getPhysicalPlan(planNode));
+    System.out.println(getResultSchemaYaml(planNode));
+}
+
+private static JsonNode createParameters(
+        String configPath, String query, String schemaPath, String statsPath) throws Exception {
+    Map<String, String> params =
+            ImmutableMap.of(
+                    "configPath",
+                    configPath,
+                    "query",
+                    query,
+                    "schemaYaml",
+                    FileUtils.readFileToString(new File(schemaPath), StandardCharsets.UTF_8),
+                    "statsJson",
+                    FileUtils.readFileToString(new File(statsPath), StandardCharsets.UTF_8));
+    return (new ObjectMapper()).valueToTree(params);
+}
+
+// get base64 string from json, convert it to physical bytes , then parse it to PhysicalPlan
+private static GraphAlgebraPhysical.PhysicalPlan getPhysicalPlan(JsonNode planNode)
+        throws Exception {
+    String base64Str = planNode.get("physicalBytes").asText();
+    byte[] bytes = java.util.Base64.getDecoder().decode(base64Str);
+    return GraphAlgebraPhysical.PhysicalPlan.parseFrom(bytes);
+}
+
+// get result schema yaml from json
+private static String getResultSchemaYaml(JsonNode planNode) {
+    return planNode.get("resultSchemaYaml").asText();
+}
+```
+   

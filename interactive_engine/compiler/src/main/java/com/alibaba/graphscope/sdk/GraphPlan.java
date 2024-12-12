@@ -16,13 +16,15 @@
  *
  */
 
-package com.alibaba.graphscope.common.jna._native;
+package com.alibaba.graphscope.sdk;
 
-public class JNIPlan {
-    public final byte[] physicalBytes;
-    public final String resultSchemaYaml;
+import java.io.Serializable;
 
-    public JNIPlan(byte[] physicalBytes, String resultSchemaYaml) {
+public class GraphPlan implements Serializable {
+    private final byte[] physicalBytes;
+    public String resultSchemaYaml;
+
+    public GraphPlan(byte[] physicalBytes, String resultSchemaYaml) {
         this.physicalBytes = physicalBytes;
         this.resultSchemaYaml = resultSchemaYaml;
     }
