@@ -34,7 +34,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class GraphPlannerTest {
+public class RestCompilePlanTest {
     @Test
     public void testCompilePlan() throws Exception {
         String jsonPayLoad = createParameters().toString();

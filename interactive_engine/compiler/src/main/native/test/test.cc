@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 #include <sys/stat.h>
 
@@ -85,6 +86,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // auto start = std::chrono::high_resolution_clock::now();
+
     std::string java_class_path = argv[1];
     std::string jna_class_path = argv[2];
     std::string graph_schema_path = argv[3];
@@ -106,6 +109,12 @@ int main(int argc, char **argv)
     std::string config_path = argv[6];
     auto plan =
         graph_planner_wrapper.CompilePlan(config_path, cypher_query_string, schema_content, statistic_content);
+
+    // auto end = std::chrono::high_resolution_clock::now();
+    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    // std::cout << "total execution time: " << duration << " ms" << std::endl;
+
     std::cout << "Plan: " << plan.physical_plan.DebugString() << std::endl;
     std::cout << "schema: " << plan.result_schema << std::endl;
     return 0;

@@ -36,12 +36,16 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.google.common.collect.ImmutableMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class PlanUtils {
+    private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     /**
      * Provide a java-side implementation to compile the query in string to a physical plan
      * @param configPath
@@ -54,13 +58,16 @@ public class PlanUtils {
      */
     public static GraphPlan compilePlan(
             String configPath, String query, String schemaYaml, String statsJson) throws Exception {
-        GraphPlanner.Summary summary =
-                GraphPlanner.generatePlan(
+        long startTime = System.currentTimeMillis();
+        GraphPlanerInstance instance =
+                GraphPlanerInstance.getInstance(
                         configPath,
-                        query,
                         (Configs configs, IrMetaTracker tracker) ->
                                 new StaticIrMetaFetcher(
                                         new StringMetaReader(schemaYaml, statsJson), tracker));
+        GraphPlanner.PlannerInstance plannerInstance =
+                instance.getPlanner().instance(query, instance.getMeta());
+        GraphPlanner.Summary summary = plannerInstance.plan();
         LogicalPlan logicalPlan = summary.getLogicalPlan();
         PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
         StoredProcedureMeta procedureMeta =
@@ -71,6 +78,8 @@ public class PlanUtils {
                         logicalPlan.getDynamicParams());
         ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
         StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        logger.info("compile plan cost: {} ms", elapsedTime);
         return new GraphPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
     }
 
