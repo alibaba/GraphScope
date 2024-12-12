@@ -42,7 +42,7 @@ vertex_mappings:
       - Github.csv
 edge_mappings:
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Background
       source_vertex: Paper
       destination_vertex: Background
     inputs:
@@ -59,7 +59,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Challenge
       source_vertex: Paper
       destination_vertex: Challenge
     inputs:
@@ -76,7 +76,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Baseline
       source_vertex: Paper
       destination_vertex: Baseline
     inputs:
@@ -93,7 +93,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Contribution
       source_vertex: Paper
       destination_vertex: Contribution
     inputs:
@@ -110,7 +110,7 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Experiment
       source_vertex: Paper
       destination_vertex: Experiment
     inputs:
@@ -127,28 +127,11 @@ edge_mappings:
           name: target
         property: id
   - type_triplet:
-      edge: Has
+      edge: Paper_Has_Github
       source_vertex: Paper
       destination_vertex: Github
     inputs:
       - Paper_Has_Github.csv
-    column_mappings: []
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: source
-        property: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: target
-        property: id
-  - type_triplet:
-      edge: Has
-      source_vertex: Paper
-      destination_vertex: Solution
-    inputs:
-      - Paper_Has_Solution.csv
     column_mappings: []
     source_vertex_mappings:
       - column:
