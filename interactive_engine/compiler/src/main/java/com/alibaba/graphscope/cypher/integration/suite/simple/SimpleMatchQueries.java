@@ -219,4 +219,15 @@ public class SimpleMatchQueries {
         List<String> expected = Arrays.asList("Record<{$f0: 851}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_18_test() {
+        String query =
+                "MATCH (country:PLACE {name:"
+                        + " \"India\"})<-[:ISPARTOF]-(:PLACE)<-[:ISLOCATEDIN]-(zombie:PERSON)\n"
+                        + "OPTIONAL MATCH (zombie)<-[:HASCREATOR]-(message)\n"
+                        + "WHERE message.length < 100\n"
+                        + " Return count(country);";
+        List<String> expected = Arrays.asList("Record<{$f0: 39783}>");
+        return new QueryContext(query, expected);
+    }
 }
