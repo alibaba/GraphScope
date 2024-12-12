@@ -1,1 +1,0 @@
-Match (p1:Person)<-[:HAS_CREATOR]-()<-[:CONTAINER_OF]-(p2) Return count(p1);

@@ -1,0 +1,1 @@
+g.V().hasLabel('PLACE').as('p1').in('ISLOCATEDIN').as('i1').in('HASCREATOR').hasLabel('COMMENT').as('c1').in('LIKES', 'REPLYOF').as('r1').out('HASTAG', 'HASINTEREST').as('h1').count()
