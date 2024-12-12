@@ -25,7 +25,7 @@ use ir_common::{KeyId, LabelId};
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
-use crate::process::entry::{DynEntry, Entry, NullGraphEntry};
+use crate::process::entry::{DynEntry, Entry, NullEntry};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -118,7 +118,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     Err(FnExecError::unexpected_data_error("unreachable path end entry in GetV"))?
                 }
             } else if entry.is_none() {
-                input.append(NullGraphEntry, self.alias);
+                input.append(NullEntry, self.alias);
                 Ok(Some(input))
             } else {
                 Err(FnExecError::unexpected_data_error( &format!(
@@ -249,13 +249,13 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         .eval_bool(Some(&input))
                         .map_err(|e| FnExecError::from(e))?;
                     if res {
-                        input.append(NullGraphEntry, self.alias);
+                        input.append(NullEntry, self.alias);
                         return Ok(Some(input));
                     } else {
                         return Ok(None);
                     }
                 } else {
-                    input.append(NullGraphEntry, self.alias);
+                    input.append(NullEntry, self.alias);
                     return Ok(Some(input));
                 }
             } else {
