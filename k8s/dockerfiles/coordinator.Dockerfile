@@ -33,6 +33,9 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM ubuntu:22.04 AS coordinator
 
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
