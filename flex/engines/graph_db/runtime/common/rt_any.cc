@@ -626,8 +626,7 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
   } else if (type_ == RTAnyType::kStringSetValue) {
     auto collection = col->mutable_entry()->mutable_collection();
     for (auto& s : *value_.str_set) {
-      collection->add_collection()->mutable_object()->mutable_str()->assign(
-          s.data(), s.size());
+      collection->add_collection()->mutable_object()->set_str(s);
     }
   } else if (type_ == RTAnyType::kTuple) {
     auto collection = col->mutable_entry()->mutable_collection();
