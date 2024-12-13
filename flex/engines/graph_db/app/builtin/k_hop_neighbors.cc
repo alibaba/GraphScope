@@ -111,8 +111,7 @@ results::CollectiveResults KNeighbors::Query(const GraphDBSession& sess,
         ->mutable_entry()
         ->mutable_element()
         ->mutable_object()
-        ->mutable_str()
-        ->assign(label_name_.data(), label_name_.size());
+        ->set_str(label_name_);
     result->mutable_record()
         ->add_columns()
         ->mutable_entry()

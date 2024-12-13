@@ -90,8 +90,7 @@ results::CollectiveResults ShortestPathAmongThree::Query(
       ->mutable_entry()
       ->mutable_element()
       ->mutable_object()
-      ->mutable_str()
-      ->assign(result_path);
+      ->set_str(result_path);
 
   txn.Commit();
   return results;

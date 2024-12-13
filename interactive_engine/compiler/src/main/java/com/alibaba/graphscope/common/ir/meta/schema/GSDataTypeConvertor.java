@@ -67,7 +67,10 @@ public interface GSDataTypeConvertor<T> {
                             Map<String, Object> strType = (Map<String, Object>) value;
                             if (strType.containsKey("long_text")) {
                                 return DataType.STRING;
-                            } else if (strType.containsKey("var_char")){
+                            } else if (strType.containsKey("var_char")) {
+                                // TODO(shirly): Currently, we don't support var_char, so we treat
+                                // it as string to avoid error
+                                // In near future, we will support var_char as a new type
                                 return DataType.STRING;
                             } else {
                                 throw new UnsupportedOperationException(

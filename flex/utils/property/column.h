@@ -501,7 +501,8 @@ class TypedColumn<std::string_view> : public ColumnBase {
   void set_value(size_t idx, const std::string_view& val) {
     auto copied_val = val;
     if (copied_val.size() >= width_) {
-      LOG(WARNING) << "String length exceeds the maximum length: " << width_;
+      VLOG(1) << "String length" << copied_val.size()
+              << " exceeds the maximum length: " << width_ << ", cut off.";
       copied_val = copied_val.substr(0, width_);
     }
     if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
