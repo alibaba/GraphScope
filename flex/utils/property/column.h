@@ -499,12 +499,17 @@ class TypedColumn<std::string_view> : public ColumnBase {
   PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
+    auto copied_val = val;
+    if (copied_val.size() >= width_) {
+      LOG(WARNING) << "String length exceeds the maximum length: " << width_;
+      copied_val = copied_val.substr(0, width_);
+    }
     if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
-      size_t offset = pos_.fetch_add(val.size());
-      extra_buffer_.set(idx - basic_size_, offset, val);
+      size_t offset = pos_.fetch_add(copied_val.size());
+      extra_buffer_.set(idx - basic_size_, offset, copied_val);
     } else if (idx < basic_size_) {
-      size_t offset = basic_pos_.fetch_add(val.size());
-      basic_buffer_.set(idx, offset, val);
+      size_t offset = basic_pos_.fetch_add(copied_val.size());
+      basic_buffer_.set(idx, offset, copied_val);
     } else {
       LOG(FATAL) << "Index out of range";
     }

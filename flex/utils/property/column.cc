@@ -169,11 +169,14 @@ std::shared_ptr<ColumnBase> CreateColumn(
       return std::make_shared<DayColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<DefaultStringMapColumn>(strategy);
-    } else if (type == PropertyType::kStringView) {
-      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      // We must check is varchar first, because in implementation of
+      // PropertyType::operator==(const PropertyType& other), we string_view is
+      // equal to varchar.
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
+    } else if (type == PropertyType::kStringView) {
+      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kRecordView) {
       return std::make_shared<RecordViewColumn>(sub_types);
     } else {
