@@ -18,7 +18,8 @@ schema:
           property_name: name
           property_type:
             string:
-              long_text:
+              var_char:
+                max_length: 128
         - property_id: 2
           property_name: age
           property_type:
