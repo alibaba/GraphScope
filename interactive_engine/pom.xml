@@ -255,6 +255,8 @@
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
     <interactive.sdk.version>0.4.3</interactive.sdk.version>
     <interactive.sdk.classifier>no-gaia-ir</interactive.sdk.classifier>
+
+    <spring-boot.version>2.5.4</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -698,6 +700,19 @@
         <version>${interactive.sdk.version}</version>
         <classifier>${interactive.sdk.classifier}</classifier>
       </dependency>
+
+      <!-- Spring Boot -->
+      <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -884,6 +899,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
       </plugin>
     </plugins>
   </build>
