@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package flex;
+package common;
 option java_package = "com.alibaba.graphscope.proto.type";
 
 enum PrimitiveType {
@@ -98,16 +98,16 @@ message Temporal {
 }
 
 message Array {
-    StorageDataType component_type = 1;
+    DataType component_type = 1;
     uint32 max_length = 2;
 }
 
 message Map {
-    StorageDataType key_type = 1;
-    StorageDataType value_type = 2;
+    DataType key_type = 1;
+    DataType value_type = 2;
 }
 
-message StorageDataType {
+message DataType {
     oneof item {
         PrimitiveType primitive_type = 1;
         Decimal decimal = 2;

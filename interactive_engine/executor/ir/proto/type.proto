@@ -20,9 +20,8 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "DataType";
 
 import "common.proto";
-import "flex_type.proto";
+import "basic_type.proto";
 import "google/protobuf/wrappers.proto";
-
 
 // GraphDataType, including structured data types of vertices or edges.
 message GraphDataType {
@@ -59,9 +58,8 @@ message GraphDataType {
 
 // IrDataType, which could be either basic DataType or GraphDataType
 message IrDataType {
-  oneof type {
+  oneof item {
     common.DataType data_type = 1;
     GraphDataType graph_type = 2;
-    flex.StorageDataType flex_type = 3;
   }
 }
