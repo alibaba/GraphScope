@@ -178,7 +178,7 @@ class GrootClient(object):
         job_scheduler = DataloadingJobScheduler(
             config, ds_manager, self._job_status, self._graph, at_time, repeat
         )
-        return job_scheduler.schedulerid
+        return job_scheduler.jobid
 
     def get_dataloading_job_config(
         self, graph_id: str, config: dict, ds_manager: DataSourceManager
