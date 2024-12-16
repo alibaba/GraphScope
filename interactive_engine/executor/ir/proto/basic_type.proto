@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package common;
 option java_package = "com.alibaba.graphscope.proto.type";
+option java_outer_classname = "Common";
 
 enum PrimitiveType {
     DT_ANY = 0;
