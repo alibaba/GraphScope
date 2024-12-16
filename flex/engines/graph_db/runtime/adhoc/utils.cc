@@ -15,6 +15,7 @@
 #include "flex/engines/graph_db/runtime/adhoc/utils.h"
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
+#include "flex/proto_generated_gie/basic_type.pb.h"
 
 namespace gs {
 
@@ -144,68 +145,82 @@ std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type) {
   return nullptr;
 }
 
+std::shared_ptr<IContextColumn> build_optional_primitive_column(
+    const common::PrimitiveType& data_type, const Expr& expr, size_t row_num) {
+  switch (data_type) {
+  case common::PrimitiveType::DT_SIGNED_INT64: {
+    OptionalValueColumnBuilder<int64_t> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_int64(), true);
+      }
+    }
+
+    return builder.finish();
+  }
+  case common::PrimitiveType::DT_SIGNED_INT32: {
+    OptionalValueColumnBuilder<int> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_int32(), true);
+      }
+    }
+
+    return builder.finish();
+  }
+  case common::PrimitiveType::DT_DOUBLE: {
+    OptionalValueColumnBuilder<double> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_double(), true);
+      }
+    }
+
+    return builder.finish();
+  }
+  case common::PrimitiveType::DT_BOOL: {
+    OptionalValueColumnBuilder<bool> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i, 0);
+      if (v.is_null()) {
+        builder.push_back_null();
+      } else {
+        builder.push_back_opt(v.as_bool(), true);
+      }
+    }
+
+    return builder.finish();
+  }
+  default:
+    LOG(FATAL) << "not support";
+    return nullptr;
+  }
+}
+
 std::shared_ptr<IContextColumn> build_optional_column(
     const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
-    switch (data_type.data_type()) {
-    case common::DataType::INT64: {
-      OptionalValueColumnBuilder<int64_t> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i, 0);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_opt(v.as_int64(), true);
-        }
-      }
+    switch (data_type.data_type().item_case()) {
+    case common::DataType::ItemCase::kPrimitiveType: {
+      return build_optional_primitive_column(
+          data_type.data_type().primitive_type(), expr, row_num);
+    }
 
-      return builder.finish();
-    } break;
-    case common::DataType::INT32: {
-      OptionalValueColumnBuilder<int> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i, 0);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_opt(v.as_int32(), true);
-        }
-      }
-
-      return builder.finish();
-    } break;
-    case common::DataType::DOUBLE: {
-      OptionalValueColumnBuilder<double> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i, 0);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_opt(v.as_double(), true);
-        }
-      }
-
-      return builder.finish();
-    } break;
-    case common::DataType::BOOLEAN: {
-      OptionalValueColumnBuilder<bool> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i, 0);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_opt(v.as_bool(), true);
-        }
-      }
-
-      return builder.finish();
-    } break;
-    case common::DataType::STRING: {
+    case common::DataType::ItemCase::kString: {
       OptionalValueColumnBuilder<std::string_view> builder;
       builder.reserve(row_num);
       for (size_t i = 0; i < row_num; ++i) {
@@ -218,25 +233,30 @@ std::shared_ptr<IContextColumn> build_optional_column(
       }
 
       return builder.finish();
-    } break;
-    case common::DataType::TIMESTAMP: {
-      OptionalValueColumnBuilder<Date> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i, 0);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_opt(v.as_date32(), true);
+    }
+    case common::DataType::ItemCase::kTemporal: {
+      if (data_type.data_type().temporal().item_case() ==
+          common::Temporal::kDate32) {
+        OptionalValueColumnBuilder<Date> builder;
+        builder.reserve(row_num);
+        for (size_t i = 0; i < row_num; ++i) {
+          auto v = expr.eval_path(i, 0);
+          if (v.is_null()) {
+            builder.push_back_null();
+          } else {
+            builder.push_back_opt(v.as_date32(), true);
+          }
         }
-      }
 
-      return builder.finish();
-    } break;
+        return builder.finish();
+      } else {
+        LOG(FATAL) << "not support type: "
+                   << data_type.data_type().DebugString();
+      }
+    }
 
     default: {
-      LOG(FATAL) << "not support"
-                 << common::DataType_Name(data_type.data_type());
+      LOG(FATAL) << "not support" << data_type.data_type().DebugString();
       break;
     }
     }
@@ -252,6 +272,56 @@ std::shared_ptr<IContextColumn> build_optional_column(
   return nullptr;
 }
 
+std::shared_ptr<IContextColumn> build_primitive_column(
+    const common::PrimitiveType& data_type, const Expr& expr, size_t row_num) {
+  switch (data_type) {
+  case common::PrimitiveType::DT_SIGNED_INT64: {
+    ValueColumnBuilder<int64_t> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i).as_int64();
+      builder.push_back_opt(v);
+    }
+
+    return builder.finish();
+  }
+  case common::PrimitiveType::DT_SIGNED_INT32: {
+    ValueColumnBuilder<int> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i).as_int32();
+      builder.push_back_opt(v);
+    }
+
+    return builder.finish();
+  }
+  case common::PrimitiveType::DT_DOUBLE: {
+    ValueColumnBuilder<double> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i).as_double();
+      builder.push_back_opt(v);
+    }
+
+    return builder.finish();
+  }
+
+  case common::PrimitiveType::DT_BOOL: {
+    ValueColumnBuilder<bool> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      auto v = expr.eval_path(i).as_bool();
+      builder.push_back_opt(v);
+    }
+
+    return builder.finish();
+  }
+  default:
+    LOG(FATAL) << "not support";
+    return nullptr;
+  }
+}
+
 std::shared_ptr<IContextColumn> build_column(
     const common::IrDataType& data_type, const Expr& expr, size_t row_num) {
   if (expr.is_optional()) {
@@ -259,28 +329,12 @@ std::shared_ptr<IContextColumn> build_column(
   }
   switch (data_type.type_case()) {
   case common::IrDataType::kDataType: {
-    switch (data_type.data_type()) {
-    case common::DataType::INT64: {
-      ValueColumnBuilder<int64_t> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_int64();
-        builder.push_back_opt(v);
-      }
-
-      return builder.finish();
-    } break;
-    case common::DataType::INT32: {
-      ValueColumnBuilder<int> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_int32();
-        builder.push_back_opt(v);
-      }
-
-      return builder.finish();
-    } break;
-    case common::DataType::STRING: {
+    switch (data_type.data_type().item_case()) {
+    case common::DataType::ItemCase::kPrimitiveType: {
+      return build_primitive_column(data_type.data_type().primitive_type(),
+                                    expr, row_num);
+    }
+    case common::DataType::ItemCase::kString: {
       ValueColumnBuilder<std::string_view> builder;
       builder.reserve(row_num);
       for (size_t i = 0; i < row_num; ++i) {
@@ -289,61 +343,49 @@ std::shared_ptr<IContextColumn> build_column(
       }
 
       return builder.finish();
-    } break;
-    case common::DataType::DATE32: {
-      ValueColumnBuilder<Date> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_date32();
-        builder.push_back_opt(v);
-      }
+    }
+    case common::DataType::ItemCase::kTemporal: {
+      if (data_type.data_type().temporal().item_case() ==
+              common::Temporal::kDate32 ||
+          data_type.data_type().temporal().item_case() ==
+              common::Temporal::kTimestamp) {
+        ValueColumnBuilder<Date> builder;
+        builder.reserve(row_num);
+        for (size_t i = 0; i < row_num; ++i) {
+          auto v = expr.eval_path(i).as_date32();
+          builder.push_back_opt(v);
+        }
 
-      return builder.finish();
-    } break;
-    case common::DataType::STRING_ARRAY: {
-      ValueColumnBuilder<std::set<std::string>> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        const auto& v = expr.eval_path(i).as_string_set();
-        builder.push_back_opt(v);
+        return builder.finish();
+      } else {
+        LOG(FATAL) << "not support type: "
+                   << data_type.data_type().temporal().DebugString();
       }
+    }
 
-      return builder.finish();
-    } break;
-    case common::DataType::TIMESTAMP: {
-      ValueColumnBuilder<Date> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_date32();
-        builder.push_back_opt(v);
+    case common::DataType::ItemCase::kArray: {
+      if (data_type.data_type().array().component_type().item_case() ==
+          common::DataType::ItemCase::kString) {
+        ValueColumnBuilder<std::set<std::string>> builder;
+        builder.reserve(row_num);
+        for (size_t i = 0; i < row_num; ++i) {
+          const auto& v = expr.eval_path(i).as_string_set();
+          builder.push_back_opt(v);
+        }
+        return builder.finish();
+      } else {
+        LOG(FATAL) << "not support: " << data_type.DebugString();
       }
-
-      return builder.finish();
-    } break;
-    case common::DataType::BOOLEAN: {
-      ValueColumnBuilder<bool> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_bool();
-        builder.push_back_opt(v);
-      }
-      return builder.finish();
-    } break;
-    case common::DataType::DOUBLE: {
-      ValueColumnBuilder<double> builder;
-      builder.reserve(row_num);
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i).as_double();
-        builder.push_back_opt(v);
-      }
-      return builder.finish();
-    } break;
+    }
+    case common::DataType::ItemCase::kMap: {
+      LOG(FATAL) << "not support: " << data_type.DebugString();
+    }
     default: {
-      LOG(FATAL) << "not support: "
-                 << common::DataType_Name(data_type.data_type());
+      LOG(FATAL) << "not support" << data_type.data_type().DebugString();
+      break;
     }
     }
-  } break;
+
   case common::IrDataType::kGraphType: {
     const common::GraphDataType& graph_data_type = data_type.graph_type();
     common::GraphDataType_GraphElementOpt elem_opt =
@@ -383,17 +425,17 @@ std::shared_ptr<IContextColumn> build_column(
     } else {
       LOG(FATAL) << "unexpected type";
     }
-  } break;
+  }
   case common::IrDataType::TYPE_NOT_SET: {
     return build_column_beta(expr, row_num);
-  } break;
+  }
   default:
-    LOG(FATAL) << "unexpected type"
-               << common::DataType_Name(data_type.data_type());
+    LOG(FATAL) << "unexpected type" << data_type.data_type().DebugString();
     break;
   }
 
-  return nullptr;
+    return nullptr;
+  }
 }
 
 std::shared_ptr<IContextColumn> build_optional_column_beta(const Expr& expr,
@@ -563,7 +605,6 @@ std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
 
   return nullptr;
 }
-
 }  // namespace runtime
 
 }  // namespace gs

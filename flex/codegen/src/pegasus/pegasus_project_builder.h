@@ -176,14 +176,24 @@ class ProjectOpBuilder {
           ctx_.SetOutput(i, data_types);
         } else if (column_meta.type().type_case() ==
                    common::IrDataType::kDataType) {
-          switch (column_meta.type().data_type()) {
-          case common::DataType::INT64: {
-            std::vector<codegen::DataType> data_types;
-            data_types.push_back(codegen::DataType::kInt64);
-            ctx_.SetOutput(i, data_types);
-            break;
+          switch (column_meta.type().data_type().item_case()) {
+          case common::DataType::kPrimitiveType: {
+            auto data_type = column_meta.type().data_type().primitive_type();
+            switch (data_type) {
+            case common::PrimitiveType::DT_SIGNED_INT64: {
+              std::vector<codegen::DataType> data_types;
+              data_types.push_back(codegen::DataType::kInt64);
+              ctx_.SetOutput(i, data_types);
+              break;
+            }
+            default: {
+              std::vector<codegen::DataType> data_types;
+              data_types.push_back(codegen::DataType::kString);
+              ctx_.SetOutput(i, data_types);
+            }
+            }
           }
-          case common::DataType::STRING: {
+          case common::DataType::kString: {
             std::vector<codegen::DataType> data_types;
             data_types.push_back(codegen::DataType::kString);
             ctx_.SetOutput(i, data_types);

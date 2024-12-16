@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
+#include "flex/proto_generated_gie/basic_type.pb.h"
 
 namespace gs {
 
@@ -53,25 +54,37 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
   switch (dt.type_case()) {
   case ::common::IrDataType::TypeCase::kDataType: {
     const ::common::DataType ddt = dt.data_type();
-    switch (ddt) {
-    case ::common::DataType::BOOLEAN:
-      return RTAnyType::kBoolValue;
-    case ::common::DataType::INT64:
-      return RTAnyType::kI64Value;
-    case ::common::DataType::STRING:
+    switch (ddt.item_case()) {
+    case ::common::DataType::kPrimitiveType: {
+      const ::common::PrimitiveType pt = ddt.primitive_type();
+      switch (pt) {
+      case ::common::PrimitiveType::DT_SIGNED_INT32:
+        return RTAnyType::kI32Value;
+      case ::common::PrimitiveType::DT_SIGNED_INT64:
+        return RTAnyType::kI64Value;
+      case ::common::PrimitiveType::DT_DOUBLE:
+        return RTAnyType::kF64Value;
+      case ::common::PrimitiveType::DT_BOOL:
+        return RTAnyType::kBoolValue;
+      default:
+        LOG(FATAL) << "unrecoginized primitive type - " << pt;
+        break;
+      }
+    }
+    case ::common::DataType::kString:
       return RTAnyType::kStringValue;
-    case ::common::DataType::INT32:
-      return RTAnyType::kI32Value;
-    case ::common::DataType::DATE32:
-      return RTAnyType::kDate32;
-    case ::common::DataType::STRING_ARRAY:
+    case ::common::DataType::kTemporal: {
+      if (ddt.temporal().item_case() == ::common::Temporal::kDate32) {
+        return RTAnyType::kDate32;
+      } else {
+        LOG(FATAL) << "unrecoginized temporal type - "
+                   << ddt.temporal().DebugString();
+      }
+    }
+    case ::common::DataType::kArray:
       return RTAnyType::kList;
-    case ::common::DataType::TIMESTAMP:
-      return RTAnyType::kDate32;
-    case ::common::DataType::DOUBLE:
-      return RTAnyType::kF64Value;
     default:
-      LOG(FATAL) << "unrecoginized data type - " << ddt;
+      LOG(FATAL) << "unrecoginized data type - " << ddt.DebugString();
       break;
     }
   } break;
