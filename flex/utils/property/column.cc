@@ -40,8 +40,6 @@ std::string_view truncate_utf8(std::string_view str, size_t length) {
     } else if ((ch & 0xF8) == 0xF0) {
       char_length = 4;
     }
-    LOG(INFO) << "current char length: " << char_length
-              << ", byte_count: " << byte_count;
     if (byte_count + char_length > length) {
       break;
     }
