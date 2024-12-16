@@ -26,6 +26,8 @@
 
 namespace gs {
 
+std::string_view truncate_utf8(std::string_view str, size_t length);
+
 class ColumnBase {
  public:
   virtual ~ColumnBase() {}
@@ -503,7 +505,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     if (copied_val.size() >= width_) {
       VLOG(1) << "String length" << copied_val.size()
               << " exceeds the maximum length: " << width_ << ", cut off.";
-      copied_val = copied_val.substr(0, width_);
+      copied_val = truncate_utf8(copied_val, width_);
     }
     if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
       size_t offset = pos_.fetch_add(copied_val.size());

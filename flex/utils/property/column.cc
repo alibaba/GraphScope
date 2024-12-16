@@ -22,6 +22,35 @@
 
 namespace gs {
 
+std::string_view truncate_utf8(std::string_view str, size_t length) {
+  if (str.size() <= length) {
+    return str;
+  }
+  size_t byte_count = 0;
+
+  for (const char* p = str.data(); *p && byte_count < length;) {
+    unsigned char ch = *p;
+    size_t char_length = 0;
+    if ((ch & 0x80) == 0) {
+      char_length = 1;
+    } else if ((ch & 0xE0) == 0xC0) {
+      char_length = 2;
+    } else if ((ch & 0xF0) == 0xE0) {
+      char_length = 3;
+    } else if ((ch & 0xF8) == 0xF0) {
+      char_length = 4;
+    }
+    LOG(INFO) << "current char length: " << char_length
+              << ", byte_count: " << byte_count;
+    if (byte_count + char_length > length) {
+      break;
+    }
+    p += char_length;
+    byte_count += char_length;
+  }
+  return str.substr(0, byte_count);
+}
+
 template <typename T>
 class TypedEmptyColumn : public ColumnBase {
  public:
