@@ -58,7 +58,7 @@ message GraphDataType {
 
 // IrDataType, which could be either basic DataType or GraphDataType
 message IrDataType {
-  oneof item {
+  oneof type {
     common.DataType data_type = 1;
     GraphDataType graph_type = 2;
   }

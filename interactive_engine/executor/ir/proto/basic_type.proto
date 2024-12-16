@@ -15,7 +15,7 @@ enum PrimitiveType {
     DT_DOUBLE = 7;
 }
 
-message Decimal { // precision=4 scale=2 : 23.12 
+message Decimal { // precision=4 scale=2 : 23.12
     uint32 precision = 1;
     uint32 scale = 2;
 }
@@ -29,7 +29,7 @@ message String {
     message Char {
         uint32 fixed_length = 1;
     }
-    
+
     // string with variable length, bounded by max_length
     message VarChar {
         uint32 max_length = 1;
@@ -48,29 +48,29 @@ message Temporal {
     enum DateFormat {
         DF_YYYY_MM_DD = 0; // ISO fomat: 2019-01-01
     }
-    
+
     enum TimeFormat {
         TF_HH_MM_SS_SSS = 0; // ISO format: 00:00:00.000
     }
-    
+
     enum DateTimeFormat {
         DTF_YYYY_MM_DD_HH_MM_SS_SSS = 0; // ISO format: 2019-01-01 00:00:00.000
     }
-    
+
     enum TimeZoneFormat {
         TZF_UTC = 0; // Z
         TZF_OFFSET = 1; // +08:00 or -08:00
     }
-    
+
     message Date {
         DateFormat date_format = 1;
     }
-    
+
     message Time {
         TimeFormat time_format = 1;
         TimeZoneFormat time_zone_format = 2;
     }
-    
+
     message DateTime {
         DateTimeFormat date_time_format = 1;
         TimeZoneFormat time_zone_format = 2;
