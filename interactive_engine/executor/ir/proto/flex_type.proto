@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package flex;
+option java_package = "com.alibaba.graphscope.proto.type";
+
+enum PrimitiveType {
+    DT_ANY = 0;
+    DT_SIGNED_INT32 = 1;
+    DT_UNSIGNED_INT32 = 2;
+    DT_SIGNED_INT64 = 3;
+    DT_UNSIGNED_INT64 = 4;
+    DT_BOOL = 5;
+    DT_FLOAT = 6;
+    DT_DOUBLE = 7;
+}
+
+message Decimal { // precision=4 scale=2 : 23.12 
+    uint32 precision = 1;
+    uint32 scale = 2;
+}
+
+message String {
+    // string with unlimited length
+    message LongText {
+    }
+
+    // string with fixed length
+    message Char {
+        uint32 fixed_length = 1;
+    }
+    
+    // string with variable length, bounded by max_length
+    message VarChar {
+        uint32 max_length = 1;
+    }
+
+    oneof item {
+        LongText long_text = 1;
+        Char char = 2;
+        VarChar var_char = 3;
+    }
+}
+
+// temporal types
+
+message Temporal {
+    enum DateFormat {
+        DF_YYYY_MM_DD = 0; // ISO fomat: 2019-01-01
+    }
+    
+    enum TimeFormat {
+        TF_HH_MM_SS_SSS = 0; // ISO format: 00:00:00.000
+    }
+    
+    enum DateTimeFormat {
+        DTF_YYYY_MM_DD_HH_MM_SS_SSS = 0; // ISO format: 2019-01-01 00:00:00.000
+    }
+    
+    enum TimeZoneFormat {
+        TZF_UTC = 0; // Z
+        TZF_OFFSET = 1; // +08:00 or -08:00
+    }
+    
+    message Date {
+        DateFormat date_format = 1;
+    }
+    
+    message Time {
+        TimeFormat time_format = 1;
+        TimeZoneFormat time_zone_format = 2;
+    }
+    
+    message DateTime {
+        DateTimeFormat date_time_format = 1;
+        TimeZoneFormat time_zone_format = 2;
+    }
+
+    // int32 days since 1970-01-01
+    message Date32 {
+    }
+
+    // int32 milliseconds past midnight
+    message Time32 {
+    }
+
+    // int64 milliseconds since 1970-01-01 00:00:00.000000
+    message Timestamp {
+    }
+
+    oneof item {
+        Date date = 1;
+        Time time = 2;
+        DateTime date_time = 3;
+        Date32 date32 = 4;
+        Time32 time32 = 5;
+        Timestamp timestamp = 6;
+    }
+}
+
+message Array {
+    StorageDataType component_type = 1;
+    uint32 max_length = 2;
+}
+
+message Map {
+    StorageDataType key_type = 1;
+    StorageDataType value_type = 2;
+}
+
+message StorageDataType {
+    oneof item {
+        PrimitiveType primitive_type = 1;
+        Decimal decimal = 2;
+        String string = 3;
+        Temporal temporal = 4;
+        Array array = 5;
+        Map map = 6;
+    }
+}
