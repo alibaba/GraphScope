@@ -80,6 +80,7 @@
         <module>groot-module</module>
         <module>groot-server</module>
         <module>groot-client</module>
+        <module>groot-http</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
@@ -256,7 +257,7 @@
     <interactive.sdk.version>0.4.3</interactive.sdk.version>
     <interactive.sdk.classifier>no-gaia-ir</interactive.sdk.classifier>
 
-    <spring-boot.version>2.5.4</spring-boot.version>
+    <spring-boot.version>2.7.15</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -712,6 +713,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <version>${spring-boot.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>import</scope>
+            <type>pom</type>
         </dependency>
     </dependencies>
   </dependencyManagement>

@@ -81,6 +81,21 @@ function do_gen_python() {
     eval $cmd
 }
 
+function do_gen_spring() {
+    echo "Generating Spring API"
+    # TODO: make output path to groot-client path
+    OUTPUT_PATH="${CUR_DIR}/../../../interactive_engine/groot-http" 
+    GROOT_PACKAGE_NAME="com.alibaba.graphscope.groot"
+    GROOT_ARTIFACT_ID="groot-http"
+    additional_properties="apiPackage=${GROOT_PACKAGE_NAME}.service.api,modelPackage=${GROOT_PACKAGE_NAME}.service.models,artifactId=${GROOT_ARTIFACT_ID},groupId=${GROUP_ID},invokerPackage=${GROOT_PACKAGE_NAME}"
+    export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
+    cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g spring -o ${OUTPUT_PATH}"
+    cmd=" ${cmd} --additional-properties=${additional_properties}"
+    echo "Running command: ${cmd}"
+
+    eval $cmd
+}
+
 function do_gen() {
     # expect only one argument
     if [ $# -ne 1 ]; then
@@ -96,6 +111,9 @@ function do_gen() {
         ;;
     python)
         do_gen_python
+        ;;
+    spring)
+        do_gen_spring
         ;;
     *)
         err "Unsupported language: $lang"

@@ -641,25 +641,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexEdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/VertexRequest'
             example:
-              vertex_request:
                 - label: "person"
-                  primary_key_value: 2
+                  primary_key_values: 
+                    id: 2
                   properties:
                     age: 24
                     name: "Cindy"
-              edge_request:
-                - src_label: "person"
-                  dst_label: "software"
-                  edge_label: "created"
-                  src_pk_name: "id"
-                  src_pk_value: 1
-                  dst_pk_name: "id"
-                  dst_pk_value: 3
-                  properties:
-                    - name: "weight"
-                      value: 0.2
 
       responses:
         '200':
@@ -785,12 +776,15 @@ paths:
           description: The label name of querying vertex.
           schema:
             type: string
-        - name: primary_key_value
-          in: query
-          required: true
-          description: The value of the querying vertex's primary key
-          schema:
-            $ref: '#/components/schemas/AnyValue'
+      requestBody:
+        description: The primary key values of the vertex to delete.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Property'
       responses:
         '200':
           description: Successfully delete vertex
@@ -1066,6 +1060,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: edge_label
+          in: query
+          required: true
+          description: The label name of edge.
+          schema:
+            type: string
+          example: created
         - name: src_label
           in: query
           required: true
@@ -1073,14 +1074,6 @@ paths:
           schema:
             type: string
           example: person
-        - name: src_primary_key_value
-          in: query
-          required: true
-          description: The primary key value of src vertex.
-          schema:
-            $ref: '#/components/schemas/AnyValue'
-            # type: object
-          example: 1
         - name: dst_label
           in: query
           required: true
@@ -1088,13 +1081,22 @@ paths:
           schema:
             type: string
           example: software
-        - name: dst_primary_key_value
-          in: query
-          required: true
-          description: The primary key value of dst vertex.
-          schema:
-            $ref: '#/components/schemas/AnyValue'
-          example: 3
+      requestBody:
+        description: The primary key values of the src and dst vertices.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                src_primary_key_values:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Property'
+                dst_primary_key_values:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Property'
       responses:
         '200':
           description: Successfully delete edge
@@ -1441,14 +1443,16 @@ components:
       type: object
       required:
         - label
-        - primary_key_value
+        - primary_key_values
         - properties
       properties:
         label:
           type: string
           example: person
-        primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+        primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
         properties:
           type: array
           items:
@@ -1501,8 +1505,8 @@ components:
         - src_label
         - dst_label
         - edge_label
-        - src_primary_key_value
-        - dst_primary_key_value
+        - src_primary_key_values
+        - dst_primary_key_values
       properties:
         src_label:
           type: string
@@ -1513,10 +1517,14 @@ components:
         edge_label:
           type: string
           example: created
-        src_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
-        dst_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+        src_primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+        dst_primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
         properties:
           type: array
           items:

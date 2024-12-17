@@ -1,0 +1,2951 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: graphscope@alibaba-inc.com
+  description: |
+    This is the definition of GraphScope Interactive API, including
+      - AdminService API
+      - Vertex/Edge API
+      - QueryService
+
+
+    AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.
+
+    Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.
+
+    QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: GraphScope Interactive API v0.3
+  version: 1.0.0
+externalDocs:
+  description: Find out More about GraphScope
+  url: http://graphscope.io
+servers:
+- description: SwaggerHub API Auto Mocking
+  url: https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+- description: SwaggerHub API Auto Mocking
+  url: https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0
+tags:
+- description: GraphManagement
+  name: AdminService/GraphManagement
+- description: ProcedureManagement
+  name: AdminService/ProcedureManagement
+- description: ServiceManagement
+  name: AdminService/ServiceManagement
+- description: VertexManagement
+  name: GraphService/VertexManagement
+- description: EdgeManagement
+  name: GraphService/EdgeManagement
+- description: Graph query
+  name: QueryService
+paths:
+  /v1/graph:
+    get:
+      description: List all graphs
+      operationId: list_graphs
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetGraphResponse'
+                type: array
+          description: Successful operation
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+    post:
+      description: Create a new graph
+      operationId: create_graph
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateGraphResponse'
+          description: successful operation
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: BadRequest
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Internal error
+      tags:
+      - AdminService/GraphManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/graph/{graph_id}:
+    delete:
+      description: Delete a graph by id
+      operationId: delete_graph
+      parameters:
+      - description: The id of graph to delete
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example: Successfully delete graph
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Internal Error
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+    get:
+      description: Get a graph by name
+      operationId: get_graph
+      parameters:
+      - description: The id of graph to get
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              schema:
+                example: graph not exists
+                type: string
+          description: Not found
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/graph/{graph_id}/schema:
+    get:
+      description: Get schema by graph id
+      operationId: get_schema
+      parameters:
+      - description: The id of graph to delete
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphSchemaResponse'
+          description: successful operation
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/graph/{graph_id}/statistics:
+    get:
+      description: "Get the statics info of a graph, including number of vertices\
+        \ for each label, number of edges for each label."
+      operationId: get_graph_statistic
+      parameters:
+      - description: The id of graph to get statistics
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphStatisticsResponse'
+          description: successful operation
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server Internal Error
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Not Found
+        "503":
+          content:
+            application/json:
+              example:
+                code: 15
+                message: Service Unavailable
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Service Unavailable
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/graph/{graph_id}/dataloading:
+    post:
+      description: Create a dataloading job
+      operationId: create_dataloading_job
+      parameters:
+      - description: The id of graph to do bulk loading.
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaMapping'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+          description: successful operation
+      tags:
+      - AdminService/GraphManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/job/{job_id}:
+    delete:
+      operationId: delete_job_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example: "Successfully cancel job: 123"
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+      tags:
+      - AdminService/JobManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/JobManagement
+    get:
+      operationId: get_job_by_id
+      parameters:
+      - description: "The id of the job, returned from POST /v1/graph/{graph_id}/dataloading"
+        explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+          description: successful operation
+      tags:
+      - AdminService/JobManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/JobManagement
+  /v1/job:
+    get:
+      operationId: list_jobs
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/JobStatus'
+                type: array
+          description: successful operation
+      tags:
+      - AdminService/JobManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/JobManagement
+  /v1/graph/{graph_id}/procedure:
+    get:
+      description: List all procedures
+      operationId: list_procedures
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetProcedureResponse'
+                type: array
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              schema:
+                example: Graph not found
+                type: string
+          description: Not found
+      tags:
+      - AdminService/ProcedureManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ProcedureManagement
+    post:
+      description: Create a new procedure on a graph
+      operationId: create_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProcedureRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProcedureResponse'
+          description: successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                code: 14
+                message: Bad request
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Bad request
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: not found
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Internal Error
+      tags:
+      - AdminService/ProcedureManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ProcedureManagement
+  /v1/graph/{graph_id}/procedure/{procedure_id}:
+    delete:
+      description: Delete a procedure on a graph by id
+      operationId: delete_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found/Procedure not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Not Found
+      tags:
+      - AdminService/ProcedureManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ProcedureManagement
+    get:
+      description: Get a procedure by id
+      operationId: get_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProcedureResponse'
+          description: successful operation
+        "404":
+          content:
+            application/json:
+              schema:
+                example: Graph not found/procedure not found
+                type: string
+          description: Not found
+      tags:
+      - AdminService/ProcedureManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ProcedureManagement
+    put:
+      description: Update procedure on a graph by id
+      operationId: update_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcedureRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                code: 14
+                message: Bad request
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Bad request
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found/Procedure not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Internal error
+      tags:
+      - AdminService/ProcedureManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ProcedureManagement
+  /v1/service/start:
+    post:
+      description: Start service on a specified graph
+      operationId: start_service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartServiceRequest'
+        description: Start service on a specified graph
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: successful operation
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Internal Error
+      tags:
+      - AdminService/ServiceManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ServiceManagement
+  /v1/service/stop:
+    post:
+      description: Stop current service
+      operationId: stop_service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopServiceRequest'
+        description: Stop service on a specified graph
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: successful operation
+      tags:
+      - AdminService/ServiceManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ServiceManagement
+  /v1/service/restart:
+    post:
+      description: Start current service
+      operationId: restart_service
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: successful operation
+      tags:
+      - AdminService/ServiceManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ServiceManagement
+  /v1/service/status:
+    get:
+      description: Get service status
+      operationId: get_service_status
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+          description: successful operation
+      tags:
+      - AdminService/ServiceManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/ServiceManagement
+  /v1/graph/{graph_id}/vertex:
+    delete:
+      description: |
+        Remove the vertex from the specified graph.
+      operationId: delete_vertex
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The label name of querying vertex.
+        explode: true
+        in: query
+        name: label
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/Property'
+              type: array
+        description: The primary key values of the vertex to delete.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfully delete vertex
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully delete vertex
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input vertex schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input vertex
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Vertex not exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Vertex not exists or Graph not exits.
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Remove vertex from the graph
+      tags:
+      - GraphService/VertexManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/VertexManagement
+    get:
+      description: |
+        Get the properties for the specified vertex.
+        example:
+        ```http
+        GET /endpoint?param1=value1&param2=value2 HTTP/1.1
+        Host: example.com
+        ```
+      operationId: get_vertex
+      parameters:
+      - description: The id of the graph
+        explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The label name of querying vertex.
+        explode: true
+        in: query
+        name: label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The primary key value of querying vertex.
+        explode: true
+        in: query
+        name: primary_key_value
+        required: true
+        schema:
+          $ref: '#/components/schemas/AnyValue'
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                label: person
+                values:
+                - name: id
+                  value: 1
+                - name: age
+                  value: 23
+                - name: name
+                  value: amy
+              schema:
+                $ref: '#/components/schemas/VertexData'
+          description: Found vertex
+        "400":
+          description: Bad input parameter
+        "404":
+          description: Vertex not found or graph not found
+        "500":
+          description: Server internal error
+      summary: Get the vertex's properties with vertex primary key.
+      tags:
+      - GraphService/VertexManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/VertexManagement
+    post:
+      description: |
+        Add the provided vertex to the specified graph.
+      operationId: add_vertex
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - label: person
+              primary_key_values:
+                id: 2
+              properties:
+                age: 24
+                name: Cindy
+            schema:
+              items:
+                $ref: '#/components/schemas/VertexRequest'
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfully created vertex
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully created vertex
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input vertex schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input vertex
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Graph not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Graph not found
+        "409":
+          content:
+            application/json:
+              example:
+                code: 102
+                message: Vertex already exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Vertex already exists
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Add vertex to the graph
+      tags:
+      - GraphService/VertexManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/VertexManagement
+    put:
+      description: |
+        Remove the vertex from the specified graph.
+      operationId: update_vertex
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+              label: person
+              primary_key_value: 2
+              properties:
+                age: 24
+                name: Cindy
+            schema:
+              $ref: '#/components/schemas/VertexRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfully updated vertex
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully update vertex
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input vertex schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input parameters
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Vertex not exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Vertex not exists
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Update vertex's property
+      tags:
+      - GraphService/VertexManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/VertexManagement
+  /v1/graph/{graph_id}/edge:
+    delete:
+      description: |
+        Remove the edge from current graph.
+      operationId: delete_edge
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The label name of edge.
+        example: created
+        explode: true
+        in: query
+        name: edge_label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The label name of src vertex.
+        example: person
+        explode: true
+        in: query
+        name: src_label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The label name of dst vertex.
+        example: software
+        explode: true
+        in: query
+        name: dst_label
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/delete_edge_request'
+        description: The primary key values of the src and dst vertices.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfully delete edge
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully delete edge
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input edge schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input edge
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Edge not exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Edge not exists or Graph not exits
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Remove edge from the graph
+      tags:
+      - GraphService/EdgeManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/EdgeManagement
+    get:
+      description: |
+        Get the properties for the specified vertex.
+      operationId: get_edge
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The label name of querying edge.
+        example: created
+        explode: true
+        in: query
+        name: edge_label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The label name of src vertex.
+        example: person
+        explode: true
+        in: query
+        name: src_label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The primary key value of src vertex.
+        example: 1
+        explode: true
+        in: query
+        name: src_primary_key_value
+        required: true
+        schema:
+          $ref: '#/components/schemas/AnyValue'
+        style: form
+      - description: The label name of dst vertex.
+        example: software
+        explode: true
+        in: query
+        name: dst_label
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The value of dst vertex's primary key
+        example: 3
+        explode: true
+        in: query
+        name: dst_primary_key_value
+        required: true
+        schema:
+          $ref: '#/components/schemas/AnyValue'
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                src_label: person
+                dst_label: software
+                edge_label: created
+                src_pk_value: 1
+                dst_pk_value: 3
+                properties:
+                - name: weight
+                  value: 0.2
+              schema:
+                $ref: '#/components/schemas/EdgeData'
+          description: Found Edge
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input edge schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Bad input parameter
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Edge not found
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Edge not found or Graph not found
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Get the edge's properties with src and dst vertex primary keys.
+      tags:
+      - GraphService/EdgeManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/EdgeManagement
+    post:
+      description: |
+        Add the edge to graph.
+      operationId: add_edge
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+            - src_label: person
+              dst_label: software
+              edge_label: created
+              src_pk_name: id
+              src_pk_value: 1
+              dst_pk_name: id
+              dst_pk_value: 3
+              properties:
+              - name: weight
+                value: 0.2
+            schema:
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfuly create edge
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully insert the edge
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input edge schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input edge
+        "409":
+          content:
+            application/json:
+              example:
+                code: 102
+                message: Edge already exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: edge already exists
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Add edge to the graph
+      tags:
+      - GraphService/EdgeManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/EdgeManagement
+    put:
+      description: |
+        Update the edge on the running graph.
+      operationId: update_edge
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            example:
+              src_label: person
+              dst_label: software
+              edge_label: created
+              src_pk_name: id
+              src_pk_value: 1
+              dst_pk_name: id
+              dst_pk_value: 3
+              properties:
+              - name: weight
+                value: 0.3
+            schema:
+              $ref: '#/components/schemas/EdgeRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                message: Successfully update edge
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully update edge
+        "400":
+          content:
+            application/json:
+              example:
+                code: 101
+                message: Invalid input edge schema
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Invalid input parameters
+        "404":
+          content:
+            application/json:
+              example:
+                code: 4
+                message: Edge not exists
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Edge not exists
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Update edge's property
+      tags:
+      - GraphService/EdgeManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/EdgeManagement
+  /v1/graph/{graph_id}/query:
+    post:
+      description: |
+        After the procedure is created, user can use this API to run the procedure.
+      operationId: call_proc
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              format: byte
+              type: string
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                format: byte
+                type: string
+          description: Successfully runned.
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: run queries on graph
+      tags:
+      - QueryService
+      x-content-type: text/plain
+      x-accepts: application/json
+      x-tags:
+      - tag: QueryService
+  /v1/graph/current/query:
+    post:
+      description: |
+        Submit a query to the running graph.
+      operationId: call_proc_current
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              format: byte
+              type: string
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                format: byte
+                type: string
+          description: Successfully runned. Empty if failed?
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: run queries on the running graph
+      tags:
+      - QueryService
+      x-content-type: text/plain
+      x-accepts: application/json
+      x-tags:
+      - tag: QueryService
+  /v1/graph/current/adhoc_query:
+    post:
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      operationId: run_adhoc_current
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              format: byte
+              type: string
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                format: byte
+                type: string
+          description: Successfully runned. Empty if failed?
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Submit adhoc query to the Interactive Query Service.
+      tags:
+      - QueryService
+      x-content-type: text/plain
+      x-accepts: application/json
+      x-tags:
+      - tag: QueryService
+  /v1/graph/{graph_id}/adhoc_query:
+    post:
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      operationId: run_adhoc
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              format: byte
+              type: string
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                format: byte
+                type: string
+          description: Successfully runned.
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server internal error
+      summary: Submit adhoc query to the Interactive Query Service.
+      tags:
+      - QueryService
+      x-content-type: text/plain
+      x-accepts: application/json
+      x-tags:
+      - tag: QueryService
+  /v1/file/upload:
+    post:
+      operationId: uploadFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/uploadFile_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+          description: successful operation
+        "500":
+          content:
+            application/json:
+              example:
+                code: 103
+                message: Internal error
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+          description: Server Internal Error
+      tags:
+      - Utils
+      x-content-type: multipart/form-data
+      x-accepts: application/json
+      x-tags:
+      - tag: Utils
+components:
+  schemas:
+    AnyValue: {}
+    TypedValue:
+      properties:
+        type:
+          $ref: '#/components/schemas/GSDataType'
+        value: {}
+      required:
+      - type
+      - value
+      type: object
+    PrimitiveType:
+      properties:
+        primitive_type:
+          enum:
+          - DT_SIGNED_INT32
+          - DT_UNSIGNED_INT32
+          - DT_SIGNED_INT64
+          - DT_UNSIGNED_INT64
+          - DT_BOOL
+          - DT_FLOAT
+          - DT_DOUBLE
+          - DT_STRING
+          example: DT_SIGNED_INT32
+          type: string
+      required:
+      - primitive_type
+      type: object
+      x-body-name: primitive_type
+    LongText:
+      additionalProperties: false
+      properties:
+        long_text:
+          nullable: true
+          type: string
+      required:
+      - long_text
+      type: object
+      x-body-name: long_text
+    FixedChar:
+      additionalProperties: false
+      properties:
+        char:
+          $ref: '#/components/schemas/FixedChar_char'
+      required:
+      - char
+      type: object
+      x-body-name: fixed_char
+    VarChar:
+      additionalProperties: false
+      properties:
+        var_char:
+          $ref: '#/components/schemas/VarChar_var_char'
+      required:
+      - var_char
+      type: object
+      x-body-name: var_char
+    StringType:
+      properties:
+        string:
+          $ref: '#/components/schemas/StringType_string'
+      required:
+      - string
+      type: object
+      x-body-name: string_type
+    TimeStampType:
+      properties:
+        timestamp:
+          type: string
+      required:
+      - timestamp
+      type: object
+      x-body-name: time_stamp_type
+    DateType:
+      properties:
+        date32:
+          type: string
+      required:
+      - date32
+      type: object
+      x-body-name: date_type
+    TemporalType:
+      properties:
+        temporal:
+          $ref: '#/components/schemas/TemporalType_temporal'
+      required:
+      - temporal
+      type: object
+      x-body-name: temporal_type
+    GSDataType:
+      oneOf:
+      - $ref: '#/components/schemas/PrimitiveType'
+      - $ref: '#/components/schemas/StringType'
+      - $ref: '#/components/schemas/TemporalType'
+      x-body-name: gs_data_type
+      x-one-of-name: GSDataType
+    Property:
+      example:
+        name: id
+        value: ""
+      properties:
+        name:
+          example: id
+          type: string
+        value: {}
+      required:
+      - name
+      - value
+      type: object
+      x-body-name: property
+    Parameter:
+      properties:
+        name:
+          example: param1
+          type: string
+        type:
+          $ref: '#/components/schemas/GSDataType'
+      required:
+      - name
+      - type
+      type: object
+      x-body-name: parameter
+    VertexRequest:
+      example:
+        primary_key_values:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+        label: person
+        properties:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+      properties:
+        label:
+          example: person
+          type: string
+        primary_key_values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+        properties:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      required:
+      - label
+      - primary_key_values
+      - properties
+      type: object
+      x-body-name: vertex_request
+    VertexData:
+      example:
+        values:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+        label: person
+      properties:
+        label:
+          example: person
+          type: string
+        values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      required:
+      - label
+      type: object
+      x-body-name: vertex_data
+    EdgeData:
+      example:
+        src_label: person
+        src_primary_key_value: ""
+        dst_label: software
+        edge_label: created
+        dst_primary_key_value: ""
+        properties:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+      properties:
+        src_label:
+          example: person
+          type: string
+        dst_label:
+          example: software
+          type: string
+        edge_label:
+          example: created
+          type: string
+        src_primary_key_value: {}
+        dst_primary_key_value: {}
+        properties:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      required:
+      - dst_label
+      - dst_primary_key_value
+      - edge_label
+      - properties
+      - src_label
+      - src_primary_key_value
+      type: object
+      x-body-name: edge_data
+    EdgeRequest:
+      example:
+        src_label: person
+        dst_primary_key_values:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+        dst_label: software
+        src_primary_key_values:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+        edge_label: created
+        properties:
+        - name: id
+          value: ""
+        - name: id
+          value: ""
+      properties:
+        src_label:
+          example: person
+          type: string
+        dst_label:
+          example: software
+          type: string
+        edge_label:
+          example: created
+          type: string
+        src_primary_key_values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+        dst_primary_key_values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+        properties:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      required:
+      - dst_label
+      - dst_primary_key_values
+      - edge_label
+      - src_label
+      - src_primary_key_values
+      type: object
+      x-body-name: edge_request
+    QueryRequest:
+      properties:
+        query_name:
+          example: ic1
+          type: string
+        arguments:
+          items:
+            $ref: '#/components/schemas/TypedValue'
+          type: array
+      required:
+      - query_name
+      type: object
+      x-body-name: query_request
+    CreateProcedureRequest:
+      example:
+        query: MATCH(a) return COUNT(a);
+        name: query1
+        description: A sample stored procedure
+        type: cpp
+      properties:
+        name:
+          example: query1
+          type: string
+        description:
+          example: A sample stored procedure
+          type: string
+        type:
+          enum:
+          - cpp
+          - cypher
+          type: string
+        query:
+          example: MATCH(a) return COUNT(a);
+          type: string
+      required:
+      - name
+      - query
+      - type
+      type: object
+      x-body-name: create_procedure_request
+    CreateProcedureResponse:
+      example:
+        procedure_id: proc1
+      properties:
+        procedure_id:
+          example: proc1
+          type: string
+      required:
+      - procedure_id
+      type: object
+      x-body-name: create_procedure_response
+    StoredProcedureMeta:
+      allOf:
+      - $ref: '#/components/schemas/CreateProcedureRequest'
+      - properties:
+          id:
+            example: "The unique identifier of procedure, currently is same with name."
+            type: string
+          library:
+            example: /path/to/library
+            type: string
+          params:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+          returns:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+          enable:
+            example: true
+            type: boolean
+          option:
+            additionalProperties: true
+            type: object
+        type: object
+      x-body-name: stored_procedure_meta
+    GetProcedureResponse:
+      allOf:
+      - $ref: '#/components/schemas/StoredProcedureMeta'
+      - properties:
+          bound_graph:
+            type: string
+          runnable:
+            type: boolean
+          creation_time:
+            type: integer
+          update_time:
+            type: integer
+        type: object
+      x-body-name: get_procedure_response
+    UpdateProcedureRequest:
+      example:
+        description: A sample stored procedure
+      properties:
+        description:
+          example: A sample stored procedure
+          type: string
+      type: object
+      x-body-name: update_procedure_request
+    CreateGraphResponse:
+      example:
+        graph_id: "1"
+      properties:
+        graph_id:
+          example: "1"
+          type: string
+      type: object
+      x-body-name: create_graph_response
+    CreateGraphRequest:
+      example:
+        schema:
+          vertex_types:
+          - null
+          - null
+          edge_types:
+          - null
+          - null
+        stored_procedures:
+        - query: MATCH(a) return COUNT(a);
+          name: query1
+          description: A sample stored procedure
+          type: cpp
+        - query: MATCH(a) return COUNT(a);
+          name: query1
+          description: A sample stored procedure
+          type: cpp
+        name: modern_graph
+        description: A default description
+      properties:
+        name:
+          example: modern_graph
+          type: string
+        description:
+          example: A default description
+          type: string
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/CreateProcedureRequest'
+          type: array
+        schema:
+          $ref: '#/components/schemas/CreateGraphSchemaRequest'
+      type: object
+      x-body-name: create_graph_request
+    APIResponse:
+      example: Response string
+      type: string
+      x-body-name: api_response
+    APIResponseWithCode:
+      example:
+        code: 500
+        message: Internal Error
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      type: object
+      x-body-name: api_response_with_code
+    VertexStatistics:
+      example:
+        type_name: type_name
+        type_id: 1
+        count: 5
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        count:
+          type: integer
+      type: object
+      x-body-name: vertex_statistics
+    VertexTypePairStatistics:
+      example:
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+        count: 2
+      properties:
+        source_vertex:
+          type: string
+        destination_vertex:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - destination_vertex
+      - source_vertex
+      type: object
+      x-body-name: vertex_type_pair_statistics
+    EdgeStatistics:
+      example:
+        type_name: type_name
+        type_id: 5
+        vertex_type_pair_statistics:
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          count: 2
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          count: 2
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        vertex_type_pair_statistics:
+          items:
+            $ref: '#/components/schemas/VertexTypePairStatistics'
+          type: array
+      type: object
+      x-body-name: edge_statistics
+    GetGraphStatisticsResponse:
+      example:
+        edge_type_statistics:
+        - type_name: type_name
+          type_id: 5
+          vertex_type_pair_statistics:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            count: 2
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            count: 2
+        - type_name: type_name
+          type_id: 5
+          vertex_type_pair_statistics:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            count: 2
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            count: 2
+        total_vertex_count: 0
+        vertex_type_statistics:
+        - type_name: type_name
+          type_id: 1
+          count: 5
+        - type_name: type_name
+          type_id: 1
+          count: 5
+        total_edge_count: 6
+      properties:
+        total_vertex_count:
+          type: integer
+        total_edge_count:
+          type: integer
+        vertex_type_statistics:
+          items:
+            $ref: '#/components/schemas/VertexStatistics'
+          type: array
+        edge_type_statistics:
+          items:
+            $ref: '#/components/schemas/EdgeStatistics'
+          type: array
+      required:
+      - total_edge_count
+      - total_vertex_count
+      type: object
+      x-body-name: graph_statistics_response
+    GetGraphResponse:
+      example:
+        creation_time: 11223444
+        schema:
+          vertex_types:
+          - null
+          - null
+          edge_types:
+          - null
+          - null
+        stored_procedures:
+        - null
+        - null
+        name: name
+        description: description
+        id: id
+        store_type: mutable_csr
+        data_import_config:
+          loading_config:
+            x_csr_params:
+              parallelism: 0
+              build_csr_in_mem: true
+              use_mmap_vector: true
+            format:
+              metadata:
+                key: ""
+              type: type
+            import_option: init
+            data_source:
+              scheme: odps
+              location: location
+          edge_mappings:
+          - inputs:
+            - inputs
+            - inputs
+            source_vertex_mappings:
+            - column:
+                name: name
+                index: 6
+              property: id
+            - column:
+                name: name
+                index: 6
+              property: id
+            destination_vertex_mappings:
+            - column:
+                name: name
+                index: 6
+              property: id
+            - column:
+                name: name
+                index: 6
+              property: id
+            column_mappings:
+            - column:
+                name: name
+                index: 6
+              property: property
+            - column:
+                name: name
+                index: 6
+              property: property
+            type_triplet:
+              edge: edge
+              source_vertex: source_vertex
+              destination_vertex: destination_vertex
+          - inputs:
+            - inputs
+            - inputs
+            source_vertex_mappings:
+            - column:
+                name: name
+                index: 6
+              property: id
+            - column:
+                name: name
+                index: 6
+              property: id
+            destination_vertex_mappings:
+            - column:
+                name: name
+                index: 6
+              property: id
+            - column:
+                name: name
+                index: 6
+              property: id
+            column_mappings:
+            - column:
+                name: name
+                index: 6
+              property: property
+            - column:
+                name: name
+                index: 6
+              property: property
+            type_triplet:
+              edge: edge
+              source_vertex: source_vertex
+              destination_vertex: destination_vertex
+          vertex_mappings:
+          - type_name: type_name
+            inputs:
+            - file:///path/to/person.csv
+            - file:///path/to/person.csv
+            column_mappings:
+            - column:
+                name: name
+                index: 6
+              property: property
+            - column:
+                name: name
+                index: 6
+              property: property
+          - type_name: type_name
+            inputs:
+            - file:///path/to/person.csv
+            - file:///path/to/person.csv
+            column_mappings:
+            - column:
+                name: name
+                index: 6
+              property: property
+            - column:
+                name: name
+                index: 6
+              property: property
+        version: version
+        data_update_time: 11123445
+      properties:
+        version:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        store_type:
+          enum:
+          - mutable_csr
+          type: string
+        creation_time:
+          example: 11223444
+          type: integer
+        data_update_time:
+          example: 11123445
+          type: integer
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/GetProcedureResponse'
+          type: array
+        schema:
+          $ref: '#/components/schemas/GetGraphSchemaResponse'
+        data_import_config:
+          $ref: '#/components/schemas/SchemaMapping'
+      type: object
+      x-body-name: get_graph_response
+    CreateGraphSchemaRequest:
+      example:
+        vertex_types:
+        - null
+        - null
+        edge_types:
+        - null
+        - null
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/CreateVertexType'
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/CreateEdgeType'
+          type: array
+      type: object
+      x-body-name: create_graph_schema_request
+    GetGraphSchemaResponse:
+      example:
+        vertex_types:
+        - null
+        - null
+        edge_types:
+        - null
+        - null
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/GetVertexType'
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/GetEdgeType'
+          type: array
+      type: object
+      x-body-name: get_graph_schema_response
+    BaseVertexType:
+      properties:
+        type_name:
+          type: string
+        primary_keys:
+          items:
+            type: string
+          type: array
+        x_csr_params:
+          $ref: '#/components/schemas/BaseVertexType_x_csr_params'
+      type: object
+    CreateVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+        type: object
+      x-body-name: create_vertex_type
+    GetVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+          description:
+            type: string
+        type: object
+      x-body-name: get_vertex_type
+    BaseEdgeType:
+      properties:
+        type_name:
+          type: string
+        vertex_type_pair_relations:
+          items:
+            $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner'
+          type: array
+      type: object
+    CreateEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+        type: object
+      x-body-name: create_edge_type
+    GetEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          description:
+            type: string
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+        type: object
+      x-body-name: get_edge_type
+    BasePropertyMeta:
+      properties:
+        property_name:
+          type: string
+        property_type:
+          $ref: '#/components/schemas/GSDataType'
+      type: object
+    CreatePropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      x-body-name: create_property_meta
+    GetPropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      - properties:
+          property_id:
+            format: int32
+            type: integer
+        type: object
+      x-body-name: get_property_meta
+    SchemaMapping:
+      example:
+        loading_config:
+          x_csr_params:
+            parallelism: 0
+            build_csr_in_mem: true
+            use_mmap_vector: true
+          format:
+            metadata:
+              key: ""
+            type: type
+          import_option: init
+          data_source:
+            scheme: odps
+            location: location
+        edge_mappings:
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 6
+            property: id
+          - column:
+              name: name
+              index: 6
+            property: id
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 6
+            property: id
+          - column:
+              name: name
+              index: 6
+            property: id
+          column_mappings:
+          - column:
+              name: name
+              index: 6
+            property: property
+          - column:
+              name: name
+              index: 6
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 6
+            property: id
+          - column:
+              name: name
+              index: 6
+            property: id
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 6
+            property: id
+          - column:
+              name: name
+              index: 6
+            property: id
+          column_mappings:
+          - column:
+              name: name
+              index: 6
+            property: property
+          - column:
+              name: name
+              index: 6
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        vertex_mappings:
+        - type_name: type_name
+          inputs:
+          - file:///path/to/person.csv
+          - file:///path/to/person.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 6
+            property: property
+          - column:
+              name: name
+              index: 6
+            property: property
+        - type_name: type_name
+          inputs:
+          - file:///path/to/person.csv
+          - file:///path/to/person.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 6
+            property: property
+          - column:
+              name: name
+              index: 6
+            property: property
+      properties:
+        loading_config:
+          $ref: '#/components/schemas/SchemaMapping_loading_config'
+        vertex_mappings:
+          items:
+            $ref: '#/components/schemas/VertexMapping'
+          type: array
+        edge_mappings:
+          items:
+            $ref: '#/components/schemas/EdgeMapping'
+          type: array
+      type: object
+      x-body-name: schema_mapping
+    VertexMapping:
+      example:
+        type_name: type_name
+        inputs:
+        - file:///path/to/person.csv
+        - file:///path/to/person.csv
+        column_mappings:
+        - column:
+            name: name
+            index: 6
+          property: property
+        - column:
+            name: name
+            index: 6
+          property: property
+      properties:
+        type_name:
+          type: string
+        inputs:
+          items:
+            example: file:///path/to/person.csv
+            type: string
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          type: array
+      type: object
+      x-body-name: vertex_mapping
+    EdgeMapping:
+      example:
+        inputs:
+        - inputs
+        - inputs
+        source_vertex_mappings:
+        - column:
+            name: name
+            index: 6
+          property: id
+        - column:
+            name: name
+            index: 6
+          property: id
+        destination_vertex_mappings:
+        - column:
+            name: name
+            index: 6
+          property: id
+        - column:
+            name: name
+            index: 6
+          property: id
+        column_mappings:
+        - column:
+            name: name
+            index: 6
+          property: property
+        - column:
+            name: name
+            index: 6
+          property: property
+        type_triplet:
+          edge: edge
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        type_triplet:
+          $ref: '#/components/schemas/EdgeMapping_type_triplet'
+        inputs:
+          items:
+            type: string
+          type: array
+        source_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner'
+          type: array
+        destination_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/EdgeMapping_destination_vertex_mappings_inner'
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          type: array
+      type: object
+      x-body-name: edge_mapping
+    ColumnMapping:
+      example:
+        column:
+          name: name
+          index: 6
+        property: property
+      properties:
+        column:
+          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
+        property:
+          description: must align with the schema
+          type: string
+      type: object
+      x-body-name: column_mapping
+    StartServiceRequest:
+      example:
+        graph_id: graph_id
+      properties:
+        graph_id:
+          type: string
+      x-body-name: start_service_request
+    StopServiceRequest:
+      additionalProperties: false
+      example:
+        graph_id: graph_id
+      properties:
+        graph_id:
+          nullable: true
+          type: string
+      type: object
+      x-body-name: stop_service_request
+    ServiceStatus:
+      example:
+        start_time: 5
+        statistics_enabled: true
+        bolt_port: 0
+        hqps_port: 6
+        gremlin_port: 1
+        graph:
+          creation_time: 11223444
+          schema:
+            vertex_types:
+            - null
+            - null
+            edge_types:
+            - null
+            - null
+          stored_procedures:
+          - null
+          - null
+          name: name
+          description: description
+          id: id
+          store_type: mutable_csr
+          data_import_config:
+            loading_config:
+              x_csr_params:
+                parallelism: 0
+                build_csr_in_mem: true
+                use_mmap_vector: true
+              format:
+                metadata:
+                  key: ""
+                type: type
+              import_option: init
+              data_source:
+                scheme: odps
+                location: location
+            edge_mappings:
+            - inputs:
+              - inputs
+              - inputs
+              source_vertex_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              destination_vertex_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              column_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              type_triplet:
+                edge: edge
+                source_vertex: source_vertex
+                destination_vertex: destination_vertex
+            - inputs:
+              - inputs
+              - inputs
+              source_vertex_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              destination_vertex_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              - column:
+                  name: name
+                  index: 6
+                property: id
+              column_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              type_triplet:
+                edge: edge
+                source_vertex: source_vertex
+                destination_vertex: destination_vertex
+            vertex_mappings:
+            - type_name: type_name
+              inputs:
+              - file:///path/to/person.csv
+              - file:///path/to/person.csv
+              column_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              - column:
+                  name: name
+                  index: 6
+                property: property
+            - type_name: type_name
+              inputs:
+              - file:///path/to/person.csv
+              - file:///path/to/person.csv
+              column_mappings:
+              - column:
+                  name: name
+                  index: 6
+                property: property
+              - column:
+                  name: name
+                  index: 6
+                property: property
+          version: version
+          data_update_time: 11123445
+        status: status
+      properties:
+        statistics_enabled:
+          type: boolean
+        status:
+          type: string
+        graph:
+          $ref: '#/components/schemas/GetGraphResponse'
+        bolt_port:
+          format: int32
+          type: integer
+        hqps_port:
+          format: int32
+          type: integer
+        gremlin_port:
+          format: int32
+          type: integer
+        start_time:
+          format: int32
+          type: integer
+      type: object
+      x-body-name: service_status
+    JobResponse:
+      example:
+        job_id: job_id
+      properties:
+        job_id:
+          type: string
+      type: object
+      x-body-name: job_response
+    JobStatus:
+      example:
+        start_time: 0
+        log: log
+        end_time: 6
+        id: id
+        detail:
+          key: ""
+        type: type
+        status: RUNNING
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          enum:
+          - RUNNING
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+          - WAITING
+          type: string
+        start_time:
+          format: int32
+          type: integer
+        end_time:
+          format: int32
+          type: integer
+        log:
+          description: URL or log string
+          type: string
+        detail:
+          additionalProperties: true
+          type: object
+      type: object
+      x-body-name: job_status
+    UploadFileResponse:
+      example:
+        file_path: file_path
+        metadata:
+          key: ""
+      properties:
+        file_path:
+          type: string
+        metadata:
+          additionalProperties: true
+          type: object
+      required:
+      - file_path
+    VertexEdgeRequest:
+      properties:
+        vertex_request:
+          items:
+            $ref: '#/components/schemas/VertexRequest'
+          type: array
+        edge_request:
+          items:
+            $ref: '#/components/schemas/EdgeRequest'
+          type: array
+      required:
+      - edge_request
+      - vertex_request
+      type: object
+    delete_edge_request:
+      properties:
+        src_primary_key_values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+        dst_primary_key_values:
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      type: object
+    uploadFile_request:
+      properties:
+        filestorage:
+          format: binary
+          type: string
+      type: object
+    FixedChar_char:
+      properties:
+        fixed_length:
+          type: integer
+      required:
+      - fixed_length
+      type: object
+    VarChar_var_char:
+      properties:
+        max_length:
+          type: integer
+      required:
+      - max_length
+      type: object
+    StringType_string:
+      oneOf:
+      - $ref: '#/components/schemas/LongText'
+      - $ref: '#/components/schemas/FixedChar'
+      - $ref: '#/components/schemas/VarChar'
+      x-one-of-name: StringTypeString
+    TemporalType_temporal:
+      oneOf:
+      - $ref: '#/components/schemas/TimeStampType'
+      - $ref: '#/components/schemas/DateType'
+      x-one-of-name: TemporalTypeTemporal
+    BaseVertexType_x_csr_params:
+      description: Used for storage optimization
+      properties:
+        max_vertex_num:
+          type: integer
+      type: object
+    BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params:
+      description: Used for storage optimization
+      properties:
+        edge_storage_strategy:
+          enum:
+          - ONLY_IN
+          - ONLY_OUT
+          - BOTH_OUT_IN
+          type: string
+        sort_on_compaction:
+          type: boolean
+        oe_mutability:
+          type: string
+        ie_mutability:
+          type: string
+      type: object
+    BaseEdgeType_vertex_type_pair_relations_inner:
+      properties:
+        source_vertex:
+          type: string
+        destination_vertex:
+          type: string
+        relation:
+          enum:
+          - MANY_TO_MANY
+          - ONE_TO_MANY
+          - MANY_TO_ONE
+          - ONE_TO_ONE
+          type: string
+        x_csr_params:
+          $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params'
+      type: object
+    SchemaMapping_loading_config_x_csr_params:
+      description: mutable_csr specific parameters
+      example:
+        parallelism: 0
+        build_csr_in_mem: true
+        use_mmap_vector: true
+      properties:
+        parallelism:
+          type: integer
+        build_csr_in_mem:
+          type: boolean
+        use_mmap_vector:
+          type: boolean
+      type: object
+    SchemaMapping_loading_config_data_source:
+      example:
+        scheme: odps
+        location: location
+      properties:
+        scheme:
+          enum:
+          - odps
+          - file
+          type: string
+        location:
+          type: string
+      type: object
+    SchemaMapping_loading_config_format:
+      example:
+        metadata:
+          key: ""
+        type: type
+      properties:
+        type:
+          type: string
+        metadata:
+          additionalProperties: true
+          type: object
+      type: object
+    SchemaMapping_loading_config:
+      example:
+        x_csr_params:
+          parallelism: 0
+          build_csr_in_mem: true
+          use_mmap_vector: true
+        format:
+          metadata:
+            key: ""
+          type: type
+        import_option: init
+        data_source:
+          scheme: odps
+          location: location
+      properties:
+        x_csr_params:
+          $ref: '#/components/schemas/SchemaMapping_loading_config_x_csr_params'
+        data_source:
+          $ref: '#/components/schemas/SchemaMapping_loading_config_data_source'
+        import_option:
+          enum:
+          - init
+          - overwrite
+          type: string
+        format:
+          $ref: '#/components/schemas/SchemaMapping_loading_config_format'
+      type: object
+    EdgeMapping_type_triplet:
+      description: "source label -> [edge label] -> destination label"
+      example:
+        edge: edge
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+      properties:
+        edge:
+          type: string
+        source_vertex:
+          type: string
+        destination_vertex:
+          type: string
+      type: object
+    EdgeMapping_source_vertex_mappings_inner_column:
+      example:
+        name: name
+        index: 6
+      properties:
+        index:
+          format: int32
+          type: integer
+        name:
+          type: string
+      type: object
+    EdgeMapping_source_vertex_mappings_inner:
+      description: Mapping column to the primary key of source vertex
+      example:
+        column:
+          name: name
+          index: 6
+        property: id
+      properties:
+        column:
+          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
+        property:
+          example: id
+          type: string
+      type: object
+    EdgeMapping_destination_vertex_mappings_inner:
+      description: Mapping column to the primary key of destination vertex
+      example:
+        column:
+          name: name
+          index: 6
+        property: id
+      properties:
+        column:
+          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
+        property:
+          example: id
+          type: string
+      type: object
