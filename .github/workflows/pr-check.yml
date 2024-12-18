@@ -213,10 +213,14 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
         popd
-        pushd flex/interactive/sdk/python
+        # we need to generate the code first
+        pushd flex/interactive/sdk
+        bash generate_sdk.sh -g python
+        pushd python
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
         python3 -m flake8 .
+        popd
         popd
 
     - name: Generate Docs

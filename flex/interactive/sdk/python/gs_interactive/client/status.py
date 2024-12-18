@@ -24,6 +24,7 @@ from gs_interactive.exceptions import ApiException
 from gs_interactive.exceptions import BadRequestException
 from gs_interactive.exceptions import ForbiddenException
 from gs_interactive.exceptions import NotFoundException
+from gs_interactive.exceptions import ProtocolError
 from gs_interactive.exceptions import ServiceException
 from gs_interactive.models.api_response_with_code import APIResponseWithCode
 
