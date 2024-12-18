@@ -17,6 +17,7 @@
 #
 
 # get the directory of the current file
+import copy
 import os
 import time
 
@@ -40,7 +41,7 @@ print("MODERN_GRAPH_DATA_DIR: ", MODERN_GRAPH_DATA_DIR)
 
 
 modern_graph_full = {
-    "name": "modern_graph",
+    "name": "full_graph",
     "description": "This is a test graph",
     "schema": {
         "vertex_types": [
@@ -121,7 +122,7 @@ modern_graph_full = {
 }
 
 modern_graph_vertex_only = {
-    "name": "modern_graph",
+    "name": "vertex_only",
     "description": "This is a test graph, only contains vertex",
     "schema": {
         "vertex_types": [
@@ -149,7 +150,7 @@ modern_graph_vertex_only = {
 }
 
 modern_graph_partial = {
-    "name": "modern_graph",
+    "name": "partial_graph",
     "description": "This is a test graph",
     "schema": {
         "vertex_types": [
@@ -337,7 +338,7 @@ def create_partial_modern_graph(interactive_session):
 
 @pytest.fixture(scope="function")
 def create_graph_with_custom_pk_name(interactive_session):
-    modern_graph_custom_pk_name = modern_graph_full.copy()
+    modern_graph_custom_pk_name = copy.deepcopy(modern_graph_full)
     for vertex_type in modern_graph_custom_pk_name["schema"]["vertex_types"]:
         vertex_type["properties"][0]["property_name"] = "custom_id"
         vertex_type["primary_keys"] = ["custom_id"]
