@@ -27,6 +27,7 @@ from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import CreateGraphRequest
 from gs_interactive.models import CreateProcedureRequest
+from gs_interactive.models import GetGraphSchemaResponse
 from gs_interactive.models import SchemaMapping
 from gs_interactive.models import StartServiceRequest
 from gs_interactive.models import UpdateProcedureRequest
@@ -478,4 +479,25 @@ def start_service_on_graph(interactive_session, graph_id: str):
     resp = interactive_session.start_service(StartServiceRequest(graph_id=graph_id))
     assert resp.is_ok()
     # wait three second to let compiler get the new graph
-    time.sleep(10)
+    time.sleep(3)
+
+
+def ensure_compiler_schema_ready(
+    interactive_session, neo4j_session: Neo4jSession, graph_id: str
+):
+    rel_graph_meta = interactive_session.get_graph_schema(graph_id).get_value()
+    max_times = 10
+    while True:
+        if max_times == 0:
+            raise Exception("compiler schema is not ready")
+        res = neo4j_session.run("CALL gs.procedure.meta.schema();")
+        val = res.single().value()
+        compiler_graph_schema = GetGraphSchemaResponse.from_json(val)
+        # print("compiler_graph_schema: ", compiler_graph_schema)
+        # print("rel_graph_meta: ", rel_graph_meta)
+        if compiler_graph_schema == rel_graph_meta:
+            break
+        print("compiler schema is not ready, wait for 1 second")
+        time.sleep(1)
+        max_times -= 1
+    print("compiler schema is ready")
