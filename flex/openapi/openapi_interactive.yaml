@@ -155,6 +155,34 @@ paths:
                 code: 103
                 message: "Internal error"
   /v1/graph/{graph_id}/schema:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      summary: Import graph schema
+      operationId: import_schema
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphSchemaRequest'
+        required: true
+      responses:
+        200:
+          description: Successful imported the graph schema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        400:
+          $ref: "#/components/responses/400"
+        500:
+          $ref: "#/components/responses/500"
     get:
       tags:
         - AdminService/GraphManagement
@@ -166,14 +194,159 @@ paths:
           required: true
           schema:
             type: string
-          description: The id of graph to delete
+          description: The id of graph to get schema
       responses:
-        '200':
+        200:
           description: successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetGraphSchemaResponse'
+        500:
+          $ref: "#/components/responses/500"
+    delete:
+      tags:
+        - AdminService/GraphManagement
+      description: Delete schema by graph id
+      operationId: delete_schema
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+          description: The id of graph to delete
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        500:
+          $ref: "#/components/responses/500"
+  /v1/graph/{graph_id}/schema/vertex:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      description: Create a vertex type
+      operationId: createVertexType
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
+        required: true
+      responses:
+        200:
+          description: Successful created a vertex type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        400:
+          $ref: "#/components/responses/400"
+        500:
+          $ref: "#/components/responses/500"
+
+  /v1/graph/{graph_id}/schema/vertex/{type_name}:
+    delete:
+      tags:
+        - AdminService/GraphManagement
+      description: Delete vertex type by name
+      operationId: deleteVertexTypeByName
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful deleted the vertex type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        500:
+          $ref: "#/components/responses/500"
+
+  /v1/graph/{graph_id}/schema/edge:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      description: Create a edge type
+      operationId: createEdgeType
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        200:
+          description: Successful created the edge type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        400:
+          $ref: "#/components/responses/400"
+        500:
+          $ref: "#/components/responses/500"
+
+  /v1/graph/{graph_id}/schema/edge/{type_name}:
+    delete:
+      tags:
+        - AdminService/GraphManagement
+      description: Delete edge type by name
+      operationId: deleteEdgeTypeByName
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: source_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: destination_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful deleted the edge type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        500:
+          $ref: "#/components/responses/500"
   /v1/graph/{graph_id}/statistics:
     get:
       tags:
@@ -1306,6 +1479,7 @@ paths:
               example:
                 code: 103
                 message: "Internal error"
+
 components:
   schemas:
     AnyValue: {}

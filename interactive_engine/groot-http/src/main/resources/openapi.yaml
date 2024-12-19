@@ -40,6 +40,8 @@ tags:
   name: GraphService/EdgeManagement
 - description: Graph query
   name: QueryService
+- description: SchemaManagement
+  name: GraphService/SchemaManagement
 paths:
   /v1/graph:
     get:
@@ -193,6 +195,40 @@ paths:
       x-accepts: application/json
       x-tags:
       - tag: AdminService/GraphManagement
+    post:
+      operationId: import_schema
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphSchemaRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful imported the graph schema
+        "400":
+          $ref: '#/components/responses/400'
+        "500":
+          $ref: '#/components/responses/500'
+      summary: Import graph schema
+      tags:
+      - GraphService/SchemaManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/SchemaManagement
   /v1/graph/{graph_id}/statistics:
     get:
       description: "Get the statics info of a graph, including number of vertices\
@@ -1471,6 +1507,155 @@ paths:
       x-accepts: application/json
       x-tags:
       - tag: Utils
+  /v1/graph/{graph_id}/schema/vertex:
+    post:
+      description: Create a vertex type
+      operationId: createVertexType
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created a vertex type
+        "400":
+          $ref: '#/components/responses/400'
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - GraphService/SchemaManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/SchemaManagement
+  /api/v1/graph/{graph_id}/schema/vertex/{type_name}:
+    delete:
+      description: Delete vertex type by name
+      operationId: deleteVertexTypeByName
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the vertex type
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - GraphService/SchemaManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/SchemaManagement
+  /api/v1/graph/{graph_id}/schema/edge:
+    post:
+      description: Create a edge type
+      operationId: createEdgeType
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created the edge type
+        "400":
+          $ref: '#/components/responses/400'
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - GraphService/SchemaManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/SchemaManagement
+  /api/v1/graph/{graph_id}/schema/edge/{type_name}:
+    delete:
+      description: Delete edge type by name
+      operationId: deleteEdgeTypeByName
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the edge type
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - GraphService/SchemaManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: GraphService/SchemaManagement
 components:
   schemas:
     AnyValue: {}
