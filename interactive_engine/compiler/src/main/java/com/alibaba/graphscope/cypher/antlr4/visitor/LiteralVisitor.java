@@ -100,6 +100,15 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
         }
     }
 
+    @Override
+    public Object visitOC_SymbolicName(CypherGSParser.OC_SymbolicNameContext ctx) {
+        if (ctx.EscapedSymbolicName() != null) {
+            // escape the back-ticks
+            return ctx.getText().replace("`", "");
+        }
+        return ctx.getText();
+    }
+
     /**
      * Remove single/double quotes around String literal
      *

@@ -100,7 +100,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitOC_Unwind(CypherGSParser.OC_UnwindContext ctx) {
         RexNode expr = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
-        String alias = ctx.oC_Variable() == null ? null : ctx.oC_Variable().getText();
+        String alias = Utils.getAliasName(ctx.oC_Variable());
         return builder.unfold(expr, alias);
     }
 
@@ -339,7 +339,8 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         for (CypherGSParser.OC_ProjectionItemContext itemCtx :
                 ctx.oC_ProjectionItems().oC_ProjectionItem()) {
             ExprVisitorResult item = expressionVisitor.visitOC_Expression(itemCtx.oC_Expression());
-            String alias = (itemCtx.AS() == null) ? null : itemCtx.oC_Variable().getText();
+            String alias =
+                    (itemCtx.AS() == null) ? null : Utils.getAliasName(itemCtx.oC_Variable());
             if (item.getAggCalls().isEmpty()) {
                 keyExprs.add(item.getExpr());
                 keyAliases.add(alias);
