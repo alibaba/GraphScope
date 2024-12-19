@@ -45,6 +45,7 @@ import java.util.Map;
 public class HttpIrMetaReader implements IrMetaReader {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json; utf-8";
+    private static final int TIME_OUT_SECONDS = 1; // Expect to get response in 1 second
     private final HttpClient httpClient;
     private final Configs configs;
 
@@ -129,6 +130,7 @@ public class HttpIrMetaReader implements IrMetaReader {
                         .uri(URI.create(requestUri))
                         .headers(CONTENT_TYPE, APPLICATION_JSON)
                         .GET()
+                        .timeout(java.time.Duration.ofSeconds(TIME_OUT_SECONDS))
                         .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }

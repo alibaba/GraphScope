@@ -52,12 +52,20 @@ void convert_yaml_node_to_json(const YAML::Node& node,
         json.SetInt(node.as<int>());
       } catch (const YAML::BadConversion& e) {
         try {
-          json.SetDouble(node.as<double>());
+          json.SetInt64(node.as<int64_t>());
         } catch (const YAML::BadConversion& e) {
           try {
-            json.SetBool(node.as<bool>());
+            json.SetUint64(node.as<uint64_t>());
           } catch (const YAML::BadConversion& e) {
-            json.SetString(node.as<std::string>().c_str(), allocator);
+            try {
+              json.SetDouble(node.as<double>());
+            } catch (const YAML::BadConversion& e) {
+              try {
+                json.SetBool(node.as<bool>());
+              } catch (const YAML::BadConversion& e) {
+                json.SetString(node.as<std::string>().c_str(), allocator);
+              }
+            }
           }
         }
       }
