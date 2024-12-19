@@ -38,7 +38,8 @@ public interface GSDataTypeConvertor<T> {
     GSDataTypeDesc convert(T from);
 
     class Factory {
-        public static GSDataTypeConvertor create(Class tType, @Nullable Object config) {
+        public static GSDataTypeConvertor create(
+                Class tType, @Nullable Object config, boolean throwsOnFail) {
             if (tType.equals(DataType.class)) {
                 return new GSDataTypeConvertor<DataType>() {
                     @Override
@@ -58,20 +59,24 @@ public interface GSDataTypeConvertor<T> {
                                 case "DT_DOUBLE":
                                     return DataType.DOUBLE;
                                 default:
-                                    throw new UnsupportedOperationException(
-                                            "can not convert GSDataTypeDesc ["
-                                                    + from
-                                                    + "] to DataType");
+                                    if (throwsOnFail) {
+                                        throw new UnsupportedOperationException(
+                                                "can not convert GSDataTypeDesc ["
+                                                        + from
+                                                        + "] to DataType");
+                                    }
                             }
                         } else if ((value = typeMap.get("string")) != null) {
                             Map<String, Object> strType = (Map<String, Object>) value;
                             if (strType.containsKey("long_text")) {
                                 return DataType.STRING;
                             } else {
-                                throw new UnsupportedOperationException(
-                                        "can not convert GSDataTypeDesc ["
-                                                + from
-                                                + "] to DataType");
+                                if (throwsOnFail) {
+                                    throw new UnsupportedOperationException(
+                                            "can not convert GSDataTypeDesc ["
+                                                    + from
+                                                    + "] to DataType");
+                                }
                             }
                         } else if ((value = typeMap.get("temporal")) != null) {
                             Map<String, Object> temporalType = (Map<String, Object>) value;
@@ -82,15 +87,22 @@ public interface GSDataTypeConvertor<T> {
                             } else if (temporalType.containsKey("timestamp")) {
                                 return DataType.TIMESTAMP;
                             } else {
+                                if (throwsOnFail) {
+                                    throw new UnsupportedOperationException(
+                                            "can not convert GSDataTypeDesc ["
+                                                    + from
+                                                    + "] to DataType");
+                                }
+                            }
+                        } else {
+                            if (throwsOnFail) {
                                 throw new UnsupportedOperationException(
                                         "can not convert GSDataTypeDesc ["
                                                 + from
                                                 + "] to DataType");
                             }
-                        } else {
-                            throw new UnsupportedOperationException(
-                                    "can not convert GSDataTypeDesc [" + from + "] to DataType");
                         }
+                        return DataType.UNKNOWN;
                     }
 
                     @Override
@@ -121,20 +133,24 @@ public interface GSDataTypeConvertor<T> {
                                 case "DT_DOUBLE":
                                     return typeFactory.createSqlType(SqlTypeName.DOUBLE);
                                 default:
-                                    throw new UnsupportedOperationException(
-                                            "can not convert GSDataTypeDesc ["
-                                                    + from
-                                                    + "] to RelDataType");
+                                    if (throwsOnFail) {
+                                        throw new UnsupportedOperationException(
+                                                "can not convert GSDataTypeDesc ["
+                                                        + from
+                                                        + "] to RelDataType");
+                                    }
                             }
                         } else if ((value = typeMap.get("string")) != null) {
                             Map<String, Object> strType = (Map<String, Object>) value;
                             if (strType.containsKey("long_text")) {
                                 return typeFactory.createSqlType(SqlTypeName.CHAR);
                             } else {
-                                throw new UnsupportedOperationException(
-                                        "can not convert GSDataTypeDesc ["
-                                                + from
-                                                + "] to RelDataType");
+                                if (throwsOnFail) {
+                                    throw new UnsupportedOperationException(
+                                            "can not convert GSDataTypeDesc ["
+                                                    + from
+                                                    + "] to RelDataType");
+                                }
                             }
                         } else if ((value = typeMap.get("temporal")) != null) {
                             Map<String, Object> temporalType = (Map<String, Object>) value;
@@ -145,10 +161,12 @@ public interface GSDataTypeConvertor<T> {
                             } else if (temporalType.containsKey("timestamp")) {
                                 return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
                             } else {
-                                throw new UnsupportedOperationException(
-                                        "can not convert GSDataTypeDesc ["
-                                                + from
-                                                + "] to RelDataType");
+                                if (throwsOnFail) {
+                                    throw new UnsupportedOperationException(
+                                            "can not convert GSDataTypeDesc ["
+                                                    + from
+                                                    + "] to RelDataType");
+                                }
                             }
                         } else if ((value = typeMap.get("array")) != null) {
                             Map<String, Object> arrayType = (Map<String, Object>) value;
@@ -174,9 +192,14 @@ public interface GSDataTypeConvertor<T> {
                                     convert(new GSDataTypeDesc(keyType)),
                                     convert(new GSDataTypeDesc(valueType)));
                         } else {
-                            throw new UnsupportedOperationException(
-                                    "can not convert GSDataTypeDesc [" + from + "] to RelDataType");
+                            if (throwsOnFail) {
+                                throw new UnsupportedOperationException(
+                                        "can not convert GSDataTypeDesc ["
+                                                + from
+                                                + "] to RelDataType");
+                            }
                         }
+                        return typeFactory.createUnknownType();
                     }
 
                     @Override
@@ -256,10 +279,14 @@ public interface GSDataTypeConvertor<T> {
                                                         valueType));
                                 break;
                             default:
-                                throw new UnsupportedOperationException(
-                                        "can not convert RelDataType ["
-                                                + from
-                                                + "] to GSDataTypeDesc");
+                                if (throwsOnFail) {
+                                    throw new UnsupportedOperationException(
+                                            "can not convert RelDataType ["
+                                                    + from
+                                                    + "] to GSDataTypeDesc");
+                                } else {
+                                    yamlDesc = ImmutableMap.of("primitive_type", "DT_UNKNOWN");
+                                }
                         }
                         return new GSDataTypeDesc(yamlDesc);
                     }

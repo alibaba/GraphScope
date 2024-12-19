@@ -1,0 +1,51 @@
+<!--
+  ~ Copyright 2021 Alibaba Group Holding Limited.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~  	http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project name="COMPILER-JNI">
+  <target name="graph_planner">
+    <condition property="platform" value="linux64">
+      <os arch="amd64" family="unix"/>
+    </condition>
+
+    <condition property="platform" value="mac">
+      <!--Both m1 and x86 are ok, we will diff them in cmakelist-->
+      <os family="mac"/>
+    </condition>
+
+    <condition property="platform" value="linux64">
+      <os arch="aarch64" family="unix"/>
+    </condition>
+
+    <fail unless="platform" message="Not a supported platform."/>
+
+    <echo level="info" message="Make compiler graph planner jni code"/>
+
+    <echo level="info" message="Native Library Name: graph_planner"/>
+
+    <mkdir dir="${project.build.directory}/native"/>
+
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true">
+        <arg line="${basedir}/compiler/src/main/native"/>
+    </exec>
+
+    <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
+      <arg line="VERBOSE=1 -j4"/>
+    </exec>
+
+    <exec dir="${project.build.directory}/native" executable="strip" failonerror="false">
+      <arg line="${project.build.directory}/native/libgraph_planner.so"/>
+    </exec>
+  </target>
+</project>
