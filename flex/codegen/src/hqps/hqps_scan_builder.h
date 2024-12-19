@@ -149,7 +149,9 @@ class ScanOpBuilder {
 
       // TODO: make expr_builder a member of ScanOpBuilder
       // auto expr_builder = ExprBuilder(ctx_);
-      expr_builder_.set_return_type(common::DataType::BOOLEAN);
+      common::DataType type;
+      type.set_primitive_type(common::PrimitiveType::DT_BOOL);
+      expr_builder_.set_return_type(common::DataType(type));
       // Add extra (, ) to wrap the code, since we may append index_predicate
       // afterwards.
       common::ExprOpr left_brace, right_brace;

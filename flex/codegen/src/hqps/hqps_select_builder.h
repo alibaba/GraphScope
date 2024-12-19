@@ -41,7 +41,9 @@ class SelectOpBuilder {
 
   SelectOpBuilder& expr(const common::Expression expr) {
     ExprBuilder expr_builder(ctx_);
-    expr_builder.set_return_type(common::DataType::BOOLEAN);
+    common::DataType data_type;
+    data_type.set_primitive_type(common::PrimitiveType::DT_BOOL);
+    expr_builder.set_return_type(data_type);
     expr_builder.AddAllExprOpr(expr.operators());
 
     std::string func_code;
