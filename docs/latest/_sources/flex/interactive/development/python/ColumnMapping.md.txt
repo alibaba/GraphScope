@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of ColumnMapping from a JSON string
 column_mapping_instance = ColumnMapping.from_json(json)
 # print the JSON string representation of the object
-print(ColumnMapping.to_json())
+print ColumnMapping.to_json()
 
 # convert the object into a dict
 column_mapping_dict = column_mapping_instance.to_dict()
 # create an instance of ColumnMapping from a dict
-column_mapping_from_dict = ColumnMapping.from_dict(column_mapping_dict)
+column_mapping_form_dict = column_mapping.from_dict(column_mapping_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

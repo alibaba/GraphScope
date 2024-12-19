@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of EdgeStatistics from a JSON string
 edge_statistics_instance = EdgeStatistics.from_json(json)
 # print the JSON string representation of the object
-print(EdgeStatistics.to_json())
+print EdgeStatistics.to_json()
 
 # convert the object into a dict
 edge_statistics_dict = edge_statistics_instance.to_dict()
 # create an instance of EdgeStatistics from a dict
-edge_statistics_from_dict = EdgeStatistics.from_dict(edge_statistics_dict)
+edge_statistics_form_dict = edge_statistics.from_dict(edge_statistics_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -10,8 +10,8 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -759,7 +759,7 @@ Run interactive queries with Gremlin and Cypher<div class="summary-down docutils
 </summary><div class="summary-content card-body docutils">
 <p class="card-text">In this example, we use graph traversal to count the number of papers two given authors have co-authored. To simplify the query, we assume the authors can be uniquely identified by ID 2 and 4307, respectively.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the endpoint for submitting interactive queries on graph g.</span>
-<span class="n">interactive</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">interactive</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># Gremlin query for counting the number of papers two authors (with id 2 and 4307) have co-authored</span>
 <span class="n">papers</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;author&#39;, &#39;id&#39;, 2).out(&#39;writes&#39;).where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
@@ -953,7 +953,7 @@ Example: Run Interactive Queries in GraphScope<div class="summary-down docutils"
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
 
 <span class="c1"># Hereafter, you can use the `graph` object to create an `interactive` query session, which will start one Gremlin service and one Cypher service simultaneously on the backend.</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="c1"># then `execute` any supported gremlin query.</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().count()&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
@@ -962,7 +962,7 @@ Example: Run Interactive Queries in GraphScope<div class="summary-down docutils"
 <span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
 
 <span class="c1"># or `execute` any supported Cypher query</span>
-<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n:person) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n:person) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q3</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># should print 6</span>
 </pre></div>
 </div>
