@@ -47,11 +47,10 @@ bl::result<Context> Scan::find_vertex_with_id(const ReadTransaction& txn,
     }
     if (GlobalId::get_label_id(gid) == label) {
       vid = GlobalId::get_vid(gid);
+      builder.push_back_opt(vid);
     } else {
       LOG(ERROR) << "Global id " << gid << " does not match label " << label;
-      return Context();
     }
-    builder.push_back_opt(vid);
     Context ctx;
     ctx.set(alias, builder.finish());
     return ctx;
