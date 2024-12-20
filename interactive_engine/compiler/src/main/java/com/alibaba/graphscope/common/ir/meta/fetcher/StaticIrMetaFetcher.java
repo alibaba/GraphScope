@@ -51,7 +51,7 @@ public class StaticIrMetaFetcher extends IrMetaFetcher {
         try {
             return this.reader.readStats(meta.getGraphId());
         } catch (Exception e) {
-            logger.warn("failed to read graph statistics, error is {}", e);
+            logger.warn("failed to read graph statistics, error is: " + e);
             return null;
         }
     }
