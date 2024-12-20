@@ -45,7 +45,6 @@ import java.util.Map;
 public class HttpIrMetaReader implements IrMetaReader {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json; utf-8";
-    private static final int TIME_OUT_SECONDS = 1; // Expect to get response in 1 second
     private final HttpClient httpClient;
     private final Configs configs;
 
@@ -58,7 +57,9 @@ public class HttpIrMetaReader implements IrMetaReader {
     public IrMeta readMeta() throws IOException {
         try {
             HttpResponse<String> response =
-                    sendRequest(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+                    sendRequest(
+                            GraphConfig.GRAPH_META_SCHEMA_URI.get(configs),
+                            GraphConfig.GRAPH_META_FETCH_TIMEOUT_MS.get(configs));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -92,7 +93,8 @@ public class HttpIrMetaReader implements IrMetaReader {
                     sendRequest(
                             String.format(
                                     GraphConfig.GRAPH_META_STATISTICS_URI.get(configs),
-                                    graphId.getId()));
+                                    graphId.getId()),
+                            GraphConfig.GRAPH_META_FETCH_TIMEOUT_MS.get(configs));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -110,7 +112,9 @@ public class HttpIrMetaReader implements IrMetaReader {
     public boolean syncStatsEnabled(GraphId graphId) throws IOException {
         try {
             HttpResponse<String> response =
-                    sendRequest(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+                    sendRequest(
+                            GraphConfig.GRAPH_META_SCHEMA_URI.get(configs),
+                            GraphConfig.GRAPH_META_FETCH_TIMEOUT_MS.get(configs));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -123,14 +127,14 @@ public class HttpIrMetaReader implements IrMetaReader {
         }
     }
 
-    private HttpResponse<String> sendRequest(String requestUri)
+    private HttpResponse<String> sendRequest(String requestUri, long timeOut)
             throws IOException, InterruptedException {
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(URI.create(requestUri))
                         .headers(CONTENT_TYPE, APPLICATION_JSON)
                         .GET()
-                        .timeout(java.time.Duration.ofSeconds(TIME_OUT_SECONDS))
+                        .timeout(java.time.Duration.ofMillis(timeOut))
                         .build();
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
