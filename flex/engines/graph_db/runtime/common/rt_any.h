@@ -420,6 +420,7 @@ class ListImpl : ListImplBase {
   static std::shared_ptr<ListImplBase> make_list_impl(std::vector<T>&& vals) {
     auto new_list = new ListImpl<T>();
     new_list->list_ = std::move(vals);
+    new_list->is_valid_.resize(new_list->list_.size(), true);
     return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
