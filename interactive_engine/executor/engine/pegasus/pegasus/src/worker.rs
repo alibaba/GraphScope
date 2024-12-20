@@ -293,6 +293,9 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
 
     fn check_ready(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
+        if self.is_finished && self.peer_guard.load(Ordering::SeqCst) == 0 {
+            return TaskState::Finished;
+        }
         if self.check_cancel() {
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
