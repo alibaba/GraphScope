@@ -10,8 +10,8 @@
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -751,7 +751,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.both</span><span class="o">(</span><span class="s1">&#39;3..4&#39;</span><span class="o">)</span><span class="nc">.with</span><span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;SIMPLE&#39;</span><span class="o">)</span><span class="nc">.endV</span><span class="o">()</span>
 </pre></div>
 </div>
-<p>You can refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#pathexpand">PathExpand</a> for more examples and usage of path_expand.</p>
+<p>You can refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#pathexpand">PathExpand</a> for more examples and usage of path_expand.</p>
 </section>
 <section id="how-to-filter-data-in-gie-gremlin-like-sql">
 <h2>How to filter data in GIE Gremlin like SQL ?<a class="headerlink" href="#how-to-filter-data-in-gie-gremlin-like-sql" title="Permalink to this heading">¶</a></h2>
@@ -774,7 +774,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <li><p><code class="docutils literal notranslate"><span class="pre">HasStep</span></code> can only express query filters based on the current vertex or edge and their properties, without the ability to cross multiple vertices or edges.</p></li>
 <li><p>On the other hand, <code class="docutils literal notranslate"><span class="pre">HasStep</span></code> in Gremlin for complex expressions may not be as intuitive as in SQL.</p></li>
 </ul>
-<p>We have addressed the limitations and shortcomings of Gremlin in filter expression by using <code class="docutils literal notranslate"><span class="pre">expr</span></code>, for more usage, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#expression">Expression</a>.</p>
+<p>We have addressed the limitations and shortcomings of Gremlin in filter expression by using <code class="docutils literal notranslate"><span class="pre">expr</span></code>, for more usage, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#expression">Expression</a>.</p>
 </section>
 <section id="how-to-aggregate-data-in-gie-gremlin-like-sql">
 <h2>How to aggregate data in GIE Gremlin like SQL?<a class="headerlink" href="#how-to-aggregate-data-in-gie-gremlin-like-sql" title="Permalink to this heading">¶</a></h2>
@@ -817,7 +817,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <span class="w">  </span><span class="nt">name</span>
 </pre></div>
 </div>
-<p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#aggregate-group">Aggregate</a> for more usage.</p>
+<p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#aggregate-group">Aggregate</a> for more usage.</p>
 </section>
 </section>
 <section id="how-to-optimize-gremlin-queries-for-performance-in-gie">
@@ -844,7 +844,14 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.outE</span><span class="o">()</span><span class="nc">.limit</span><span class="o">(</span><span class="nt">10</span><span class="o">)</span><span class="nc">.subgraph</span><span class="o">(</span><span class="s1">&#39;sub_graph&#39;</span><span class="o">)</span><span class="nc">.count</span><span class="o">()</span>
 </pre></div>
 </div>
-<p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#subgraph">Subgraph</a> for more usage.</p>
+<p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#subgraph">Subgraph</a> for more usage.</p>
+</section>
+<section id="suggestions-about-parallism-settings-for-queries">
+<h2>Suggestions About Parallism Settings for Queries<a class="headerlink" href="#suggestions-about-parallism-settings-for-queries" title="Permalink to this heading">¶</a></h2>
+<p>We support per-query settings for query parallelism, using the syntax <code class="docutils literal notranslate"><span class="pre">g.with('pegasus.worker.num',</span> <span class="pre">$worker_num)</span></code>. The maximum parallelism is bound by the number of machine cores. In our engine’s scheduling, we employ a first-come, first-served strategy.</p>
+<p>If your query workloads is high-QPS, consisting of numerous small queries such as querying attributes or neighbor points from a single source vertex, we recommend lowering <code class="docutils literal notranslate"><span class="pre">worker_num</span></code> to 1. This adjustment allows the engine to allocate sufficient workers to handle these various small queries concurrently.</p>
+<p>Conversely, if you are dealing with costly large queries that start from large number of source vertices and involve complex operations, we suggest increasing <code class="docutils literal notranslate"><span class="pre">worker_num</span></code> (e.g., 16 or 32). This way, the engine can enhance query parallelism and improve overall query efficiency for each query.</p>
+<p>In scenarios where both small and large queries run concurrently, it is advisable to assign a reasonable number of workers to large queries (ensuring that they do not occupy all available workers). This approach helps prevent small queries from being blocked by large queries, which could monopolize all workers and result in high latency for smaller queries.</p>
 </section>
 </section>
 
@@ -922,6 +929,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-use-subgraph-in-gie-gremlin">How to use subgraph in GIE Gremlin ?</a></li>
+<li><a class="reference internal" href="#suggestions-about-parallism-settings-for-queries">Suggestions About Parallism Settings for Queries</a></li>
 </ul>
 </li>
 </ul>

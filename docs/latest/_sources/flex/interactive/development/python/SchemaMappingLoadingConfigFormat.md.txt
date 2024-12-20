@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of SchemaMappingLoadingConfigFormat from a JSON string
 schema_mapping_loading_config_format_instance = SchemaMappingLoadingConfigFormat.from_json(json)
 # print the JSON string representation of the object
-print(SchemaMappingLoadingConfigFormat.to_json())
+print SchemaMappingLoadingConfigFormat.to_json()
 
 # convert the object into a dict
 schema_mapping_loading_config_format_dict = schema_mapping_loading_config_format_instance.to_dict()
 # create an instance of SchemaMappingLoadingConfigFormat from a dict
-schema_mapping_loading_config_format_from_dict = SchemaMappingLoadingConfigFormat.from_dict(schema_mapping_loading_config_format_dict)
+schema_mapping_loading_config_format_form_dict = schema_mapping_loading_config_format.from_dict(schema_mapping_loading_config_format_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

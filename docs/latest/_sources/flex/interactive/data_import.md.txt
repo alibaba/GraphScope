@@ -227,7 +227,7 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | loading_config.scheme | file | The source of input data. Currently only `file` and `odps` are supported | No |
 | loading_config.format    | N/A     | The format of the raw data in CSV    |  Yes   |
 | loading_config.format.metadata    | N/A    | Mainly for configuring the options for reading CSV   |  Yes   |
-| loading_config.format.metadata.delimiter | '\|' | Delimiter used to split a row of data | Yes | 
+| loading_config.format.metadata.delimiter | '|' | Delimiter used to split a row of data, escaped char are also supported, i.e. '\t' | Yes | 
 | loading_config.format.metadata.header_row | true | Indicate if the first row should be used as the header | No | 
 | loading_config.format.metadata.quoting | false | Whether quoting is used | No |
 | loading_config.format.metadata.quote_char | '\"' | Quoting character (if `quoting` is true) | No |
