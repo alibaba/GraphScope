@@ -19,6 +19,7 @@ limitations under the License.
 #include <type_traits>
 
 #include "flex/codegen/src/string_utils.h"
+#include "flex/proto_generated_gie/basic_type.pb.h"
 #include "flex/proto_generated_gie/common.pb.h"
 #include "glog/logging.h"
 #include "google/protobuf/any.h"
@@ -63,62 +64,93 @@ inline bool operator==(const ParamConst& lhs, const ParamConst& rhs) {
 
 }  // namespace codegen
 
+static codegen::DataType primitive_type_to_data_type(
+    const common::PrimitiveType& type) {
+  switch (type) {
+  case common::PrimitiveType::DT_SIGNED_INT32:
+    return codegen::DataType::kInt32;
+  case common::PrimitiveType::DT_SIGNED_INT64:
+    return codegen::DataType::kInt64;
+  case common::PrimitiveType::DT_FLOAT:
+    return codegen::DataType::kFloat;
+  case common::PrimitiveType::DT_DOUBLE:
+    return codegen::DataType::kDouble;
+  case common::PrimitiveType::DT_BOOL:
+    return codegen::DataType::kBoolean;
+  default:
+    // LOG(FATAL) << "unknown primitive type";
+    throw std::runtime_error(
+        "unknown primitive type when converting primitive type to data type:" +
+        std::to_string(static_cast<int>(type)));
+  }
+}
+
 static codegen::DataType common_data_type_pb_2_data_type(
     const common::DataType& data_type) {
-  switch (data_type) {
-  case common::DataType::INT32:
-    return codegen::DataType::kInt32;
-  case common::DataType::INT64:
-    return codegen::DataType::kInt64;
-  case common::DataType::DOUBLE:
-    return codegen::DataType::kDouble;
-  case common::DataType::STRING:
+  switch (data_type.item_case()) {
+  case common::DataType::ItemCase::kPrimitiveType:
+    return primitive_type_to_data_type(data_type.primitive_type());
+  case common::DataType::ItemCase::kDecimal:
+    LOG(FATAL) << "Not support decimal type";
+  case common::DataType::ItemCase::kString:
     return codegen::DataType::kString;
-  case common::DataType::INT64_ARRAY:
-    return codegen::DataType::kInt64Array;
-  case common::DataType::INT32_ARRAY:
-    return codegen::DataType::kInt32Array;
-  case common::DataType::BOOLEAN:
-    return codegen::DataType::kBoolean;
-  case common::DataType::DATE32:
-    return codegen::DataType::kDate;
-  case common::DataType::TIME32:
-    return codegen::DataType::kTime;
-  case common::DataType::TIMESTAMP:
-    return codegen::DataType::kTimeStamp;
+  case common::DataType::ItemCase::kTemporal:
+    LOG(FATAL) << "Not support temporal type";
+  case common::DataType::ItemCase::kArray:
+  case common::DataType::ItemCase::kMap:
+    LOG(FATAL) << "Not support array or map type";
   default:
     // LOG(FATAL) << "unknown data type";
     throw std::runtime_error(
         "unknown data type when converting common_data_type to inner data "
         "type:" +
-        std::to_string(static_cast<int>(data_type)));
+        data_type.DebugString());
+  }
+}
+
+static std::string primitive_type_to_str(const common::PrimitiveType& type) {
+  switch (type) {
+  case common::PrimitiveType::DT_SIGNED_INT32:
+    return "int32_t";
+  case common::PrimitiveType::DT_UNSIGNED_INT32:
+    return "uint32_t";
+  case common::PrimitiveType::DT_SIGNED_INT64:
+    return "int64_t";
+  case common::PrimitiveType::DT_UNSIGNED_INT64:
+    return "uint64_t";
+  case common::PrimitiveType::DT_FLOAT:
+    return "float";
+  case common::PrimitiveType::DT_DOUBLE:
+    return "double";
+  case common::PrimitiveType::DT_BOOL:
+    return "bool";
+  default:
+    // LOG(FATAL) << "unknown primitive type";
+    throw std::runtime_error(
+        "unknown primitive type when converting primitive type to string:" +
+        std::to_string(static_cast<int>(type)));
   }
 }
 
 static std::string single_common_data_type_pb_2_str(
     const common::DataType& data_type) {
-  switch (data_type) {
-  case common::DataType::BOOLEAN:
-    return "bool";
-  case common::DataType::INT32:
-    return "int32_t";
-  case common::DataType::INT64:
-    return "int64_t";
-  case common::DataType::DOUBLE:
-    return "double";
-  case common::DataType::STRING:
+  switch (data_type.item_case()) {
+  case common::DataType::ItemCase::kPrimitiveType:
+    return primitive_type_to_str(data_type.primitive_type());
+  case common::DataType::ItemCase::kDecimal:
+    LOG(FATAL) << "Not support decimal type";
+  case common::DataType::ItemCase::kString:
     return "std::string_view";
-  case common::DataType::INT64_ARRAY:
-    return "std::vector<int64_t>";
-  case common::DataType::INT32_ARRAY:
-    return "std::vector<int32_t>";
-  case common::DataType::DATE32:
-    return "Date";
+  case common::DataType::ItemCase::kTemporal:
+    LOG(FATAL) << "Not support temporal type";
+  case common::DataType::ItemCase::kArray:
+  case common::DataType::ItemCase::kMap:
+    LOG(FATAL) << "Not support array or map type";
     // TODO: support time32 and timestamp
   default:
     throw std::runtime_error(
         "unknown data type when convert common data type to string:" +
-        std::to_string(static_cast<int>(data_type)));
+        data_type.DebugString());
   }
 }
 
@@ -266,21 +298,22 @@ static std::string data_type_2_rust_string(const codegen::DataType& data_type) {
 }
 
 static common::DataType common_value_2_data_type(const common::Value& value) {
+  common::DataType ret;
   switch (value.item_case()) {
   case common::Value::kI32:
-    return common::DataType::INT32;
+    ret.set_primitive_type(common::PrimitiveType::DT_SIGNED_INT32);
   case common::Value::kI64:
-    return common::DataType::INT64;
+    ret.set_primitive_type(common::PrimitiveType::DT_SIGNED_INT64);
   case common::Value::kBoolean:
-    return common::DataType::BOOLEAN;
+    ret.set_primitive_type(common::PrimitiveType::DT_BOOL);
   case common::Value::kF64:
-    return common::DataType::DOUBLE;
+    ret.set_primitive_type(common::PrimitiveType::DT_DOUBLE);
   case common::Value::kStr:
-    return common::DataType::STRING;
+    ret.mutable_string()->mutable_long_text();
   default:
     LOG(FATAL) << "unknown value" << value.DebugString();
   }
-  return common::DataType::NONE;
+  return ret;
 }
 
 static void parse_param_const_from_pb(

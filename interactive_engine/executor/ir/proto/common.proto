@@ -89,21 +89,3 @@ message Value {
     Timestamp timestamp      = 16;
   }
 }
-
-enum DataType {
-  BOOLEAN = 0;
-  INT32 = 1;
-  INT64 = 2 ;
-  DOUBLE = 3;
-  STRING = 4;
-  BYTES = 5;
-  INT32_ARRAY = 6;
-  INT64_ARRAY = 7;
-  DOUBLE_ARRAY = 8;
-  STRING_ARRAY = 9;
-  PAIR_ARRAY = 10;
-  NONE = 11;
-  DATE32 = 12;
-  TIME32 = 13;
-  TIMESTAMP = 14;
-}

@@ -21,6 +21,7 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "OuterSchema";
 
 import "common.proto";
+import "basic_type.proto";
 
 message LabelMeta {
   int32 id = 1;
@@ -29,9 +30,8 @@ message LabelMeta {
 
 message ColumnMeta {
   LabelMeta key = 1;
-  common.DataType data_type = 2;
   // Whether this column is a part of a primary key
-  bool is_primary_key = 3;
+  bool is_primary_key = 2;
 }
 
 message EntityMeta {

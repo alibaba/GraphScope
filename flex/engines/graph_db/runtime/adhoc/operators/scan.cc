@@ -16,6 +16,7 @@
 #include "flex/engines/graph_db/runtime/common/operators/scan.h"
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/proto_generated_gie/basic_type.pb.h"
 namespace gs {
 
 namespace runtime {
@@ -202,22 +203,28 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
     const common::DynamicParam& p = triplet.param();
     if (p.data_type().type_case() == common::IrDataType::TypeCase::kDataType) {
       auto dt = p.data_type().data_type();
-      if (dt == common::DataType::INT64) {
-        std::string name = p.name();
-        std::string value = params.at(name);
-        int64_t v = std::stoll(value);
-        oids.emplace_back(v);
-      } else if (dt == common::DataType::STRING) {
+      if (dt.item_case() == common::DataType::ItemCase::kPrimitiveType) {
+        if (dt.primitive_type() == common::PrimitiveType::DT_SIGNED_INT64) {
+          std::string name = p.name();
+          std::string value = params.at(name);
+          int64_t v = std::stoll(value);
+          oids.emplace_back(v);
+        } else if (dt.primitive_type() ==
+                   common::PrimitiveType::DT_SIGNED_INT32) {
+          std::string name = p.name();
+          std::string value = params.at(name);
+          int32_t v = std::stoi(value);
+          oids.emplace_back(v);
+        } else {
+          LOG(FATAL) << "unsupported primary key type" << dt.DebugString();
+          return false;
+        }
+      } else if (dt.item_case() == common::DataType::ItemCase::kString) {
         std::string name = p.name();
         std::string value = params.at(name);
         oids.emplace_back(Any::From(value));
-      } else if (dt == common::DataType::INT32) {
-        std::string name = p.name();
-        std::string value = params.at(name);
-        int32_t v = std::stoi(value);
-        oids.emplace_back(v);
       } else {
-        LOG(FATAL) << "unsupported primary key type" << dt;
+        LOG(FATAL) << "unsupported primary key type" << dt.item_case();
         return false;
       }
     }

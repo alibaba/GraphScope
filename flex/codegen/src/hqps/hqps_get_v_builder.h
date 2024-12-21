@@ -135,7 +135,9 @@ class GetVOpBuilder {
 
       auto& expr_oprs = expr.operators();
       expr_builder.AddAllExprOpr(expr_oprs);
-      expr_builder.set_return_type(common::DataType::BOOLEAN);
+      common::DataType data_type;
+      data_type.set_primitive_type(common::PrimitiveType::DT_BOOL);
+      expr_builder.set_return_type(data_type);
       std::vector<common::DataType> unused_expr_ret_type;
       if (!expr_builder.empty()) {
         std::tie(expr_name_, expr_call_param_, tag_properties_, expr_code_,
