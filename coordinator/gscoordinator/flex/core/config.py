@@ -101,6 +101,7 @@ INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "demo")
 # groot
 GROOT_GRPC_PORT = os.environ.get("GROOT_GRPC_PORT", 55556)
 GROOT_GREMLIN_PORT = os.environ.get("GROOT_GREMLIN_PORT", 12312)
+GROOT_CYPHER_PORT = os.environ.get("GROOT_CYPHER_PORT", 7687)
 GROOT_USERNAME = os.environ.get("GROOT_USERNAME", "")
 GROOT_PASSWORD = os.environ.get("GROOT_PASSWORD", "")
 try:

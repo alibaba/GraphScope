@@ -107,6 +107,7 @@ class GrootClient(object):
                 "start_time": CREATION_TIME,
                 "sdk_endpoints": {
                     "gremlin": gremlin_interface["gremlin_endpoint"],
+                    "cypher": gremlin_interface["cypher_endpoint"],
                     "grpc": gremlin_interface["grpc_endpoint"],
                 },
             }

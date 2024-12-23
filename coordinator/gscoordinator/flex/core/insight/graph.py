@@ -29,6 +29,7 @@ from kubernetes import config as kube_config
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import CREATION_TIME
 from gscoordinator.flex.core.config import GROOT_GREMLIN_PORT
+from gscoordinator.flex.core.config import GROOT_CYPHER_PORT
 from gscoordinator.flex.core.config import GROOT_GRPC_PORT
 from gscoordinator.flex.core.config import GROOT_PASSWORD
 from gscoordinator.flex.core.config import GROOT_USERNAME
@@ -46,7 +47,7 @@ logger = logging.getLogger("graphscope")
 class GrootGraph(object):
     """Graph class for GraphScope store"""
 
-    def __init__(self, name, creation_time, gremlin_endpoint, grpc_endpoint):
+    def __init__(self, name, creation_time, gremlin_endpoint, grpc_endpoint, cypher_endpoint = None):
         self._id = "1"
         self._name = name
 
@@ -66,6 +67,9 @@ class GrootGraph(object):
             "username": GROOT_USERNAME,
             "password": GROOT_PASSWORD,
         }
+        if cypher_endpoint:
+            self._gremlin_interface["cypher_endpoint"] = cypher_endpoint
+            
         # kubernetes
         if CLUSTER_TYPE == "KUBERNETES":
             self._api_client = resolve_api_client()
@@ -93,6 +97,7 @@ class GrootGraph(object):
             ]
             gremlin_endpoint = "ws://{0}/gremlin".format(endpoints[1])
             grpc_endpoint = endpoints[0]
+            cypher_endpoint = "neo4j://{0}:{1}".format(pod.status.pod_ip, GROOT_CYPHER_PORT)
             conn = graphscope.conn(
                 grpc_endpoint, gremlin_endpoint, GROOT_USERNAME, GROOT_PASSWORD
             )
@@ -103,6 +108,7 @@ class GrootGraph(object):
             if (
                 gremlin_endpoint != self._gremlin_interface["gremlin_endpoint"]
                 or grpc_endpoint != self._gremlin_interface["grpc_endpoint"]
+                or cypher_endpoint != self._gremlin_interface["cypher_endpoint"]
             ):
                 self._conn = conn
                 self._g = g
@@ -112,6 +118,7 @@ class GrootGraph(object):
                     "grpc_endpoint": grpc_endpoint,
                     "username": GROOT_USERNAME,
                     "password": GROOT_PASSWORD,
+                    "cypher_endpoint": cypher_endpoint,
                 }
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
 
@@ -269,6 +276,7 @@ def get_groot_graph_from_local():
     host = get_internal_ip()
     grpc_endpoint = f"{host}:{GROOT_GRPC_PORT}"
     gremlin_endpoint = f"ws://{host}:{GROOT_GREMLIN_PORT}/gremlin"
+    cypher_endpoint = f"neo4j://{host}:${GROOT_CYPHER_PORT}"
     client = Client(
         gremlin_endpoint, "g", username=GROOT_USERNAME, password=GROOT_PASSWORD
     )
@@ -290,6 +298,7 @@ def get_groot_graph_from_local():
         creation_time=CREATION_TIME,
         gremlin_endpoint=gremlin_endpoint,
         grpc_endpoint=grpc_endpoint,
+        cypher_endpoint=cypher_endpoint,
     )
 
 
@@ -310,6 +319,7 @@ def get_groot_graph_from_k8s():
     endpoints = [
         f"{pod.status.pod_ip}:{GROOT_GRPC_PORT}",
         f"{pod.status.pod_ip}:{GROOT_GREMLIN_PORT}",
+        f"{pod.status.pod_ip}:{GROOT_CYPHER_PORT}",
     ]
     # groot graph
     return GrootGraph(
@@ -317,6 +327,7 @@ def get_groot_graph_from_k8s():
         creation_time=creation_time,
         gremlin_endpoint="ws://{0}/gremlin".format(endpoints[1]),
         grpc_endpoint=endpoints[0],
+        cypher_endpoint="neo4j://{0}".format(endpoints[2]),
     )
 
 

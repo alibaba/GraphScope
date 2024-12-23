@@ -137,6 +137,8 @@ frontend:
 
     gremlinPort: 12312
 
+    cypherPort: 7687
+
     ## Internal port for communication between components.
     ##
     port: 55555
