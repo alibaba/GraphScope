@@ -109,6 +109,7 @@ class GrootGraph(object):
             try:
                 driver = GraphDatabase.driver(cypher_endpoint, auth=None)
                 sess = driver.session()
+                sess.run("MATCH (n) RETURN n LIMIT 1")
             except Exception as e:
                 logger.warn(f"Cypher endpoint is not available: {str(e)}")
                 cypher_endpoint = None
@@ -312,6 +313,7 @@ def get_groot_graph_from_local():
         cypher_endpoint = f"neo4j://{host}:${GROOT_CYPHER_PORT}"
         driver = GraphDatabase.driver(cypher_endpoint, auth=None)
         sess = driver.session()
+        sess.run("MATCH (n) RETURN n LIMIT 1")
     except Exception as e:
         logger.warn(f"Cypher endpoint is not available: {str(e)}")
         cypher_endpoint = None
