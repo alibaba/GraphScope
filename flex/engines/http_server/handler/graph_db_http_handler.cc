@@ -176,7 +176,7 @@ class stored_proc_handler : public StoppableHandler {
 
   bool start() override {
     if (get_executors()[StoppableHandler::shard_id()].size() > 0) {
-      LOG(ERROR) << "The actors have been already created!";
+      VLOG(10) << "The actors have been already created!";
       return false;
     }
     return StoppableHandler::start_scope(

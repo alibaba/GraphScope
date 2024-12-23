@@ -82,7 +82,7 @@ start_engine_service(){
     fi
 
     cmd="${SERVER_BIN} -c ${config_path} --enable-admin-service true "
-    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} --start-compiler true &"
+    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} --start-compiler true > /tmp/engine.log 2>&1 & "
 
     echo "Start engine service with command: ${cmd}"
     eval ${cmd} 
