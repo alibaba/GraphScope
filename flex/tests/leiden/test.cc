@@ -17,7 +17,11 @@
 #include <stdio.h>
 #include "include/CPMVertexPartition.h"
 #include "include/GraphHelper.h"
+#include "include/ModularityVertexPartition.h"
 #include "include/Optimiser.h"
+#include "include/RBConfigurationVertexPartition.h"
+#include "include/RBERVertexPartition.h"
+#include "include/SignificanceVertexPartition.h"
 
 #include <glog/logging.h>
 #include "flex/engines/graph_db/database/graph_db.h"
@@ -33,28 +37,33 @@ void graph_db_to_igraph(igraph_t* g, gs::GraphDBSession& sess) {
   igraph_vector_int_t edges;
   igraph_vector_int_init(&edges, 0);
   auto& frag = sess.graph();
+  size_t edges_cnt = 0;
   for (gs::vid_t v = 0; v < frag.vertex_num(0); ++v) {
     auto oe = frag.get_outgoing_edges_raw(0, v, 0, 0);
     while (oe->is_valid()) {
       igraph_vector_int_push_back(&edges, v);
       igraph_vector_int_push_back(&edges, oe->get_neighbor());
       oe->next();
+      edges_cnt++;
     }
   }
+  LOG(INFO) << "Edges count: " << edges_cnt;
 
-  igraph_create(g, &edges, 0, true);
+  igraph_create(g, &edges, frag.vertex_num(0), true);
   igraph_vector_int_destroy(&edges);
 }
 
 int main(int argc, char** argv) {
   // igraph_t g;
   // igraph_famous(&g, "Zachary");
-  if (argc != 3) {
-    LOG(ERROR) << "Usage: " << argv[0] << "<schema_path> <db_path>";
+  if (argc != 4) {
+    LOG(ERROR) << "Usage: " << argv[0]
+               << "<schema_path> <db_path> <output_path>";
     return 1;
   }
   std::string schema_path = argv[1];
   std::string db_path = argv[2];
+  std::string output_path = argv[3];
 
   igraph_t g;
 
@@ -85,12 +94,22 @@ int main(int argc, char** argv) {
 
   o.optimise_partition(&part);
 
-  cout << "Node\tCommunity" << endl;
+  // write to file
+  // /workspaces/GraphScope/flex/interactive/examples/wiki/leiden_out open file
+  FILE* f = fopen(output_path.c_str(), "w");
+  if (f == NULL) {
+    printf("Error opening file!\n");
+    exit(1);
+  }
+  // cout << "Node\tCommunity" << endl;
+  cout << "Number of communities: " << part.n_communities() << endl;
   auto txn = sess.GetReadTransaction();
   for (size_t i = 0; i < graph.vcount(); i++) {
-    cout << part.membership(i) << "," << txn.GetVertexId(0, i).to_string()
-         << endl;
+    // cout << i << "\t" << part.membership[i] << endl;
+    fprintf(f, "%zu\t%zu\n", txn.GetVertexId(0, i).AsInt64(),
+            part.membership()[i]);
   }
+  fclose(f);
 
   igraph_destroy(&g);
 

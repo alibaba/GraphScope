@@ -1,0 +1,31 @@
+graph: modern_graph
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    #location: /home/graphscope/gs_interactive_default_graph/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: ","  # other loading configuration places here
+      header_row: false # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+      null_values: [""]
+
+vertex_mappings:
+  - type_name: vertex  # must align with the schema
+    inputs:
+      - vertices.csv
+edge_mappings:
+  - type_triplet:
+      edge: edge
+      source_vertex:  vertex
+      destination_vertex:  vertex
+    inputs:
+      - edges.csv
