@@ -28,8 +28,8 @@ from kubernetes import config as kube_config
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import CREATION_TIME
-from gscoordinator.flex.core.config import GROOT_GREMLIN_PORT
 from gscoordinator.flex.core.config import GROOT_CYPHER_PORT
+from gscoordinator.flex.core.config import GROOT_GREMLIN_PORT
 from gscoordinator.flex.core.config import GROOT_GRPC_PORT
 from gscoordinator.flex.core.config import GROOT_PASSWORD
 from gscoordinator.flex.core.config import GROOT_USERNAME
