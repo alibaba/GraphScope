@@ -100,7 +100,7 @@ class GrootClient(object):
 
     def list_service_status(self) -> List[dict]:
         groot_endpoints = self._graph.groot_endpoints
-        res =  [
+        res = [
             {
                 "graph_id": self._graph.id,
                 "status": "Running",
