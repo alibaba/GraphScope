@@ -1,28 +1,12 @@
 package com.alibaba.graphscope.groot.service.impl;
 
-import com.alibaba.graphscope.groot.service.models.APIResponseWithCode;
-import com.alibaba.graphscope.groot.service.models.CreateGraphRequest;
-import com.alibaba.graphscope.groot.service.models.CreateGraphResponse;
-import com.alibaba.graphscope.groot.service.models.CreateProcedureRequest;
-import com.alibaba.graphscope.groot.service.models.CreateProcedureResponse;
+import com.alibaba.graphscope.groot.service.models.CreateEdgeType;
+import com.alibaba.graphscope.groot.service.models.CreateGraphSchemaRequest;
+import com.alibaba.graphscope.groot.service.models.CreateVertexType;
 import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
-import com.alibaba.graphscope.groot.service.models.EdgeData;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
-import com.alibaba.graphscope.groot.service.models.GetGraphResponse;
 import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
-import com.alibaba.graphscope.groot.service.models.GetGraphStatisticsResponse;
-import com.alibaba.graphscope.groot.service.models.GetProcedureResponse;
-import com.alibaba.graphscope.groot.service.models.JobResponse;
-import com.alibaba.graphscope.groot.service.models.JobStatus;
 import com.alibaba.graphscope.groot.service.models.Property;
-import com.alibaba.graphscope.groot.service.models.SchemaMapping;
-import com.alibaba.graphscope.groot.service.models.ServiceStatus;
-import com.alibaba.graphscope.groot.service.models.StartServiceRequest;
-import com.alibaba.graphscope.groot.service.models.StopServiceRequest;
-import com.alibaba.graphscope.groot.service.models.UpdateProcedureRequest;
-import com.alibaba.graphscope.groot.service.models.UploadFileResponse;
-import com.alibaba.graphscope.groot.service.models.VertexData;
-import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,18 +15,9 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import com.alibaba.graphscope.groot.service.api.ApiUtil;
 import com.alibaba.graphscope.groot.service.api.V1Api;
 
-import org.apache.tinkerpop.gremlin.driver.Cluster;
-import org.apache.tinkerpop.gremlin.util.Gremlin;
-import org.checkerframework.checker.units.qual.g;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
-
-import org.apache.tinkerpop.gremlin.driver.Client;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,11 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.alibaba.graphscope.groot.sdk.GrootClient;
-import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 
 @RestController
 @RequestMapping("${openapi.graphScopeInteractiveAPIV03.base-path:/v1/graph}")
@@ -70,11 +41,13 @@ public class GrootController implements V1Api {
 
     private final VertexManagementService vertexManagementService;
     private final EdgeManagementService edgeManagementService;
+    private final SchemaManagementService schemaManagementService;
 
     @Autowired
-    public GrootController(VertexManagementService vertexService, EdgeManagementService edgeService) {
+    public GrootController(VertexManagementService vertexService, EdgeManagementService edgeService, SchemaManagementService schemaManagementService) {
         this.vertexManagementService = vertexService;
         this.edgeManagementService = edgeService;
+        this.schemaManagementService = schemaManagementService;
     }
 
     @Override
@@ -84,30 +57,28 @@ public class GrootController implements V1Api {
             @RequestBody @Validated List<VertexRequest> vertexRequests) {
         try {
             if (vertexRequests.isEmpty()) {
-                return ResponseEntity.status(400).body("{\"error\": \"Vertex request must not be empty\"}");
+                return ApiUtil.createErrorResponse(HttpStatus.BAD_REQUEST, "Vertex request must not be empty");
             }
             long si = vertexManagementService.addVertices(vertexRequests);
-            return ResponseEntity.status(200)
-                    .body("{\"message\": \"Vertex added successfully\", \"snapshot id\": " + si + "}");
+            return ApiUtil.createSuccessResponse("Vertex added successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("{\"error\": \"Failed to add vertex\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add vertex");
         }
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/vertex", produces =MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{graph_id}/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertex(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "label", required = true) String label,
             @RequestBody(required = true) List<Property> primaryKeyValues) {
         try {
             long si = vertexManagementService.deleteVertex(label, primaryKeyValues);
-            return ResponseEntity.status(200)
-                    .body("{\"message\": \"Vertex deleted successfully\", \"snapshot id\": " + si + "}");
+            return ApiUtil.createSuccessResponse("Vertex deleted successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("{\"error\": \"Failed to delete vertex\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex");
         }
     }
 
@@ -118,13 +89,13 @@ public class GrootController implements V1Api {
             @RequestBody(required = false) VertexRequest vertexRequest) {
         try {
             if (vertexRequest == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\": \"Request body must not be null\"}");
+                return ApiUtil.createErrorResponse(HttpStatus.BAD_REQUEST, "Request body must not be null");
             }
             long si = vertexManagementService.updateVertex(vertexRequest);
-            return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"Vertex updated successfully\", \"snapshot id\": " + si + "}");
+            return ApiUtil.createSuccessResponse("Vertex updated successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"Failed to update vertex\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertex");
         }
     }
 
@@ -135,15 +106,13 @@ public class GrootController implements V1Api {
             @RequestBody @Validated List<EdgeRequest> edgeRequests) {
         try {
             if (edgeRequests.isEmpty()) {
-                return ResponseEntity.status(400).body("{\"error\": \"Edge request must not be empty\"}");
+                return ApiUtil.createErrorResponse(HttpStatus.BAD_REQUEST, "Edge request must not be empty");
             }
-            System.out.println("edgeRequests: " + edgeRequests);
             long si = edgeManagementService.addEdges(edgeRequests);
-            return ResponseEntity.status(200)
-                    .body("{\"message\": \"Edge added successfully\", \"snapshot id\": " + si + "}");
+            return ApiUtil.createSuccessResponse("Edge added successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("{\"error\": \"Failed to add edge\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add edge");
         }
     }
 
@@ -156,12 +125,12 @@ public class GrootController implements V1Api {
             @RequestParam(value = "dst_label", required = true) String dstLabel,
             @RequestBody(required = true) DeleteEdgeRequest deleteEdgeRequest) {
         try {
-            long si = edgeManagementService.deleteEdge(label, srcLabel, dstLabel, deleteEdgeRequest.getSrcPrimaryKeyValues(), deleteEdgeRequest.getDstPrimaryKeyValues());
-            return ResponseEntity.status(200)
-                    .body("{\"message\": \"Edge deleted successfully\", \"snapshot id\": " + si + "}");
+            long si = edgeManagementService.deleteEdge(label, srcLabel, dstLabel,
+                    deleteEdgeRequest.getSrcPrimaryKeyValues(), deleteEdgeRequest.getDstPrimaryKeyValues());
+            return ApiUtil.createSuccessResponse("Edge deleted successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("{\"error\": \"Failed to delete edge\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edge");
         }
     }
 
@@ -172,15 +141,116 @@ public class GrootController implements V1Api {
             @RequestBody(required = false) EdgeRequest edgeRequest) {
         try {
             if (edgeRequest == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\": \"Request body must not be null\"}");
+                return ApiUtil.createErrorResponse(HttpStatus.BAD_REQUEST, "Request body must not be null");
             }
             long si = edgeManagementService.updateEdge(edgeRequest);
-            return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"Edge updated successfully\", \"snapshot id\": " + si + "}");
+            return ApiUtil.createSuccessResponse("Edge updated successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"Failed to update edge\"}");
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edge");
         }
     }
+
+    @Override
+    @PostMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createVertexType(
+            @PathVariable("graph_id") String graphId,
+            @RequestBody @Validated CreateVertexType createVertexType) {
+        try {
+            System.out.println("createVertexType: " + createVertexType);
+            schemaManagementService.createVertexType(graphId, createVertexType);
+            return ApiUtil.createSuccessResponse("Vertex type created successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create vertex type");
+        }
+    }
+
+    @Override
+    @DeleteMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> deleteVertexTypeByName(
+            @PathVariable("graph_id") String graphId,
+            @RequestParam(value = "type_name", required = true) String typeName) {
+        try {
+            schemaManagementService.deleteVertexType(graphId, typeName);
+            return ApiUtil.createSuccessResponse("Vertex type deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex type");
+        }
+    }
+
+    @Override
+    @PostMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createEdgeType(
+            @PathVariable("graph_id") String graphId,
+            @RequestBody @Validated CreateEdgeType createEdgeType) {
+        try {
+            schemaManagementService.createEdgeType(graphId, createEdgeType);
+            return ApiUtil.createSuccessResponse("Edge type created successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create edge type");
+        }
+    }
+
+    @Override
+    @DeleteMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> deleteEdgeTypeByName(
+            @PathVariable("graph_id") String graphId,
+            @RequestParam(value = "type_name", required = true) String typeName,
+            @RequestParam(value = "source_vertex_type", required = true) String sourceVertexType,
+            @RequestParam(value = "destination_vertex_type", required = true) String destinationVertexType) {
+        try {
+            schemaManagementService.deleteEdgeType(graphId, typeName, sourceVertexType, destinationVertexType);
+            return ApiUtil.createSuccessResponse("Edge type deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edge type");
+        }
+    }
+
+    @Override
+    @PostMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> importSchema(
+            @PathVariable("graph_id") String graphId,
+            @RequestBody @Validated CreateGraphSchemaRequest createGraphSchemaRequest) {
+        try {
+            schemaManagementService.importSchema(graphId, createGraphSchemaRequest);
+            return ApiUtil.createSuccessResponse("Schema imported successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to import schema");
+        }
+    }
+  
+
+    @Override
+    @GetMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetGraphSchemaResponse> getSchema(
+            @PathVariable("graph_id") String graphId) {
+        try {
+            GetGraphSchemaResponse response = schemaManagementService.getSchema(graphId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @Override
+    @DeleteMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> deleteSchema(
+            @PathVariable("graph_id") String graphId) {
+        try {
+            schemaManagementService.dropSchema(graphId);
+            return ApiUtil.createSuccessResponse("Schema deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete schema");
+        }
+    }
+
 
 
 }

@@ -22,7 +22,7 @@ import javax.annotation.Generated;
 
 @Schema(name = "EdgeMapping_destination_vertex_mappings_inner", description = "Mapping column to the primary key of destination vertex")
 @JsonTypeName("EdgeMapping_destination_vertex_mappings_inner")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-19T17:10:03.937738+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
 public class EdgeMappingDestinationVertexMappingsInner {
 
   private EdgeMappingSourceVertexMappingsInnerColumn column;

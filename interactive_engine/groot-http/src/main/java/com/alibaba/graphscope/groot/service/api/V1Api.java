@@ -6,10 +6,13 @@
 package com.alibaba.graphscope.groot.service.api;
 
 import com.alibaba.graphscope.groot.service.models.APIResponseWithCode;
+import com.alibaba.graphscope.groot.service.models.CreateEdgeType;
 import com.alibaba.graphscope.groot.service.models.CreateGraphRequest;
 import com.alibaba.graphscope.groot.service.models.CreateGraphResponse;
+import com.alibaba.graphscope.groot.service.models.CreateGraphSchemaRequest;
 import com.alibaba.graphscope.groot.service.models.CreateProcedureRequest;
 import com.alibaba.graphscope.groot.service.models.CreateProcedureResponse;
+import com.alibaba.graphscope.groot.service.models.CreateVertexType;
 import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeData;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
@@ -54,7 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-19T17:10:03.937738+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
 @Validated
 @Tag(name = "GraphService/EdgeManagement", description = "EdgeManagement")
 public interface V1Api {
@@ -303,6 +306,53 @@ public interface V1Api {
 
 
     /**
+     * POST /v1/graph/{graph_id}/schema/edge
+     * Create a edge type
+     *
+     * @param graphId  (required)
+     * @param createEdgeType  (optional)
+     * @return Successful created the edge type (status code 200)
+     *         or  (status code 400)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "createEdgeType",
+        description = "Create a edge type",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successful created the edge type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = "/v1/graph/{graph_id}/schema/edge",
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    
+    default ResponseEntity<String> createEdgeType(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "CreateEdgeType", description = "") @Valid @RequestBody(required = false) CreateEdgeType createEdgeType
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
      * POST /v1/graph
      * Create a new graph
      *
@@ -407,6 +457,53 @@ public interface V1Api {
 
 
     /**
+     * POST /v1/graph/{graph_id}/schema/vertex
+     * Create a vertex type
+     *
+     * @param graphId  (required)
+     * @param createVertexType  (required)
+     * @return Successful created a vertex type (status code 200)
+     *         or  (status code 400)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "createVertexType",
+        description = "Create a vertex type",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successful created a vertex type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = "/v1/graph/{graph_id}/schema/vertex",
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    
+    default ResponseEntity<String> createVertexType(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "CreateVertexType", description = "", required = true) @Valid @RequestBody CreateVertexType createVertexType
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
      * DELETE /v1/graph/{graph_id}/edge : Remove edge from the graph
      * Remove the edge from current graph. 
      *
@@ -453,6 +550,54 @@ public interface V1Api {
         @NotNull @Parameter(name = "src_label", description = "The label name of src vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "src_label", required = true) String srcLabel,
         @NotNull @Parameter(name = "dst_label", description = "The label name of dst vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "dst_label", required = true) String dstLabel,
         @Parameter(name = "DeleteEdgeRequest", description = "The primary key values of the src and dst vertices.", required = true) @Valid @RequestBody DeleteEdgeRequest deleteEdgeRequest
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * DELETE /v1/graph/{graph_id}/schema/edge/{type_name}
+     * Delete edge type by name
+     *
+     * @param graphId  (required)
+     * @param typeName  (required)
+     * @param sourceVertexType  (required)
+     * @param destinationVertexType  (required)
+     * @return Successful deleted the edge type (status code 200)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "deleteEdgeTypeByName",
+        description = "Delete edge type by name",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successful deleted the edge type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.DELETE,
+        value = "/v1/graph/{graph_id}/schema/edge/{type_name}",
+        produces = { "application/json" }
+    )
+    
+    default ResponseEntity<String> deleteEdgeTypeByName(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.PATH) @PathVariable("type_name") String typeName,
+        @NotNull @Parameter(name = "source_vertex_type", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "source_vertex_type", required = true) String sourceVertexType,
+        @NotNull @Parameter(name = "destination_vertex_type", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "destination_vertex_type", required = true) String destinationVertexType
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -601,6 +746,48 @@ public interface V1Api {
 
 
     /**
+     * DELETE /v1/graph/{graph_id}/schema
+     * Delete schema by graph id
+     *
+     * @param graphId The id of graph to delete (required)
+     * @return successful operation (status code 200)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "deleteSchema",
+        description = "Delete schema by graph id",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "successful operation", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.DELETE,
+        value = "/v1/graph/{graph_id}/schema",
+        produces = { "application/json" }
+    )
+    
+    default ResponseEntity<String> deleteSchema(
+        @Parameter(name = "graph_id", description = "The id of graph to delete", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
      * DELETE /v1/graph/{graph_id}/vertex : Remove vertex from the graph
      * Remove the vertex from the specified graph. 
      *
@@ -643,6 +830,50 @@ public interface V1Api {
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
         @NotNull @Parameter(name = "label", description = "The label name of querying vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "label", required = true) String label,
         @Parameter(name = "Property", description = "The primary key values of the vertex to delete.", required = true) @Valid @RequestBody List<@Valid Property> property
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * DELETE /v1/graph/{graph_id}/schema/vertex/{type_name}
+     * Delete vertex type by name
+     *
+     * @param graphId  (required)
+     * @param typeName  (required)
+     * @return Successful deleted the vertex type (status code 200)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "deleteVertexTypeByName",
+        description = "Delete vertex type by name",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successful deleted the vertex type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.DELETE,
+        value = "/v1/graph/{graph_id}/schema/vertex/{type_name}",
+        produces = { "application/json" }
+    )
+    
+    default ResponseEntity<String> deleteVertexTypeByName(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.PATH) @PathVariable("type_name") String typeName
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -905,8 +1136,9 @@ public interface V1Api {
      * GET /v1/graph/{graph_id}/schema
      * Get schema by graph id
      *
-     * @param graphId The id of graph to delete (required)
+     * @param graphId The id of graph to get schema (required)
      * @return successful operation (status code 200)
+     *         or  (status code 500)
      */
     @Operation(
         operationId = "getSchema",
@@ -915,7 +1147,8 @@ public interface V1Api {
         responses = {
             @ApiResponse(responseCode = "200", description = "successful operation", content = {
                 @Content(mediaType = "application/json", schema = @Schema(implementation = GetGraphSchemaResponse.class))
-            })
+            }),
+            @ApiResponse(responseCode = "500", description = "")
         }
     )
     @RequestMapping(
@@ -925,7 +1158,7 @@ public interface V1Api {
     )
     
     default ResponseEntity<GetGraphSchemaResponse> getSchema(
-        @Parameter(name = "graph_id", description = "The id of graph to delete", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId
+        @Parameter(name = "graph_id", description = "The id of graph to get schema", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -1021,6 +1254,52 @@ public interface V1Api {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
                     String exampleString = "{ \"values\" : [ { \"name\" : \"id\", \"value\" : \"\" }, { \"name\" : \"id\", \"value\" : \"\" } ], \"label\" : \"person\" }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * POST /v1/graph/{graph_id}/schema : Import graph schema
+     *
+     * @param graphId  (required)
+     * @param createGraphSchemaRequest  (required)
+     * @return Successful imported the graph schema (status code 200)
+     *         or  (status code 400)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "importSchema",
+        summary = "Import graph schema",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successful imported the graph schema", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = "/v1/graph/{graph_id}/schema",
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    
+    default ResponseEntity<String> importSchema(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "CreateGraphSchemaRequest", description = "", required = true) @Valid @RequestBody CreateGraphSchemaRequest createGraphSchemaRequest
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
                     ApiUtil.setExampleResponse(request, "application/json", exampleString);
                     break;
                 }
