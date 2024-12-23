@@ -25,7 +25,7 @@ from gscoordinator.version import __version__
 
 def convert_to_configini(graph, ds_manager, config):
     # for bulk loader to connect to groot
-    gremlin_interface = graph.gremlin_interface
+    groot_endpoints = graph.groot_endpoints
     # column mapping config
     column_mapping_config = {}
     # project
@@ -112,12 +112,12 @@ def convert_to_configini(graph, ds_manager, config):
     # custom_config
     custom_config = {
         "separatr": "\\\\|",  # fixed
-        "graphEndpoint": gremlin_interface["grpc_endpoint"],
+        "graphEndpoint": groot_endpoints["grpc_endpoint"],
         "project": project,
         "outputTable": output_table,
         "columnMappingConfig": json.dumps(column_mapping_config),
-        "authUsername": gremlin_interface["username"],
-        "authPassword": gremlin_interface["password"],
+        "authUsername": groot_endpoints["username"],
+        "authPassword": groot_endpoints["password"],
         "dataSinkType": "volume",
         "odpsVolumeProject": project,
         # "-" is not allowed

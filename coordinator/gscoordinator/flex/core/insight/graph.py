@@ -25,6 +25,8 @@ from dateutil import tz
 from gremlin_python.driver.client import Client
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
+from neo4j import GraphDatabase
+from neo4j import Session as Neo4jSession
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import CREATION_TIME
@@ -61,14 +63,14 @@ class GrootGraph(object):
         )
         self._g = self._conn.g()
         self._schema = self._g.schema().to_dict()
-        self._gremlin_interface = {
+        self._endpoints = {
             "gremlin_endpoint": gremlin_endpoint,
             "grpc_endpoint": grpc_endpoint,
             "username": GROOT_USERNAME,
             "password": GROOT_PASSWORD,
         }
         if cypher_endpoint:
-            self._gremlin_interface["cypher_endpoint"] = cypher_endpoint
+            self._endpoints["cypher_endpoint"] = cypher_endpoint
             
         # kubernetes
         if CLUSTER_TYPE == "KUBERNETES":
@@ -97,29 +99,43 @@ class GrootGraph(object):
             ]
             gremlin_endpoint = "ws://{0}/gremlin".format(endpoints[1])
             grpc_endpoint = endpoints[0]
-            cypher_endpoint = "neo4j://{0}:{1}".format(pod.status.pod_ip, GROOT_CYPHER_PORT)
             conn = graphscope.conn(
                 grpc_endpoint, gremlin_endpoint, GROOT_USERNAME, GROOT_PASSWORD
             )
             g = conn.g()
+            
+            cypher_raw_endpoint = "{0}:{1}".format(pod.status.pod_ip, GROOT_CYPHER_PORT)
+            cypher_endpoint = "neo4j://{0}".format(cypher_raw_endpoint)
+            try:
+                driver = GraphDatabase.driver(cypher_endpoint, auth=None)
+                sess = driver.session()
+            except Exception as e:
+                logger.warn(f"Cypher endpoint is not available: {str(e)}")
+                cypher_endpoint = None
+            else:
+                endpoints.append(cypher_raw_endpoint)
+                logger.info(f"Cypher endpoint is available: {cypher_endpoint}")
+                sess.close()
+                driver.close()
+            
         except Exception as e:
             logger.warn(f"Failed to fetch frontend endpoints: {str(e)}")
         else:
             if (
-                gremlin_endpoint != self._gremlin_interface["gremlin_endpoint"]
-                or grpc_endpoint != self._gremlin_interface["grpc_endpoint"]
-                or cypher_endpoint != self._gremlin_interface["cypher_endpoint"]
+                gremlin_endpoint != self._endpoints["gremlin_endpoint"]
+                or grpc_endpoint != self._endpoints["grpc_endpoint"]
             ):
                 self._conn = conn
                 self._g = g
                 self._schema = self._g.schema().to_dict()
-                self._gremlin_interface = {
+                self._endpoints = {
                     "gremlin_endpoint": gremlin_endpoint,
                     "grpc_endpoint": grpc_endpoint,
                     "username": GROOT_USERNAME,
                     "password": GROOT_PASSWORD,
-                    "cypher_endpoint": cypher_endpoint,
                 }
+                if cypher_endpoint:
+                    self._endpoints["cypher_endpoint"] = cypher_endpoint
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
 
     def __del__(self):
@@ -138,8 +154,8 @@ class GrootGraph(object):
         return self._name
 
     @property
-    def gremlin_interface(self):
-        return self._gremlin_interface
+    def groot_endpoints(self):
+        return self._endpoints
 
     @property
     def schema(self):
@@ -276,7 +292,6 @@ def get_groot_graph_from_local():
     host = get_internal_ip()
     grpc_endpoint = f"{host}:{GROOT_GRPC_PORT}"
     gremlin_endpoint = f"ws://{host}:{GROOT_GREMLIN_PORT}/gremlin"
-    cypher_endpoint = f"neo4j://{host}:${GROOT_CYPHER_PORT}"
     client = Client(
         gremlin_endpoint, "g", username=GROOT_USERNAME, password=GROOT_PASSWORD
     )
@@ -292,6 +307,19 @@ def get_groot_graph_from_local():
             client.close()
             break
         time.sleep(5)
+    # test whether cypher endpoint is ready
+    try:
+        cypher_endpoint = f"neo4j://{host}:${GROOT_CYPHER_PORT}"
+        driver = GraphDatabase.driver(cypher_endpoint, auth=None)
+        sess = driver.session()
+    except Exception as e:
+        logger.warn(f"Cypher endpoint is not available: {str(e)}")
+        cypher_endpoint = None
+    else:
+        logger.info(f"Cypher endpoint is available: {cypher_endpoint}")
+        sess.close()
+        driver.close()    
+    
     # groot graph
     return GrootGraph(
         name=INSTANCE_NAME,

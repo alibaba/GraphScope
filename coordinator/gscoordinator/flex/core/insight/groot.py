@@ -99,16 +99,16 @@ class GrootClient(object):
             raise RuntimeError(f"Graph {graph_id} not exist.")
 
     def list_service_status(self) -> List[dict]:
-        gremlin_interface = self._graph.gremlin_interface
+        groot_endpoints = self._graph.groot_endpoints
         return [
             {
                 "graph_id": self._graph.id,
                 "status": "Running",
                 "start_time": CREATION_TIME,
                 "sdk_endpoints": {
-                    "gremlin": gremlin_interface["gremlin_endpoint"],
-                    "cypher": gremlin_interface["cypher_endpoint"],
-                    "grpc": gremlin_interface["grpc_endpoint"],
+                    "gremlin": groot_endpoints["gremlin_endpoint"],
+                    "cypher": groot_endpoints["cypher_endpoint"],
+                    "grpc": groot_endpoints["grpc_endpoint"],
                 },
             }
         ]
@@ -285,12 +285,12 @@ class GrootClient(object):
 
     def gremlin_service_available(self) -> bool:
         try:
-            gremlin_interface = self._graph.gremlin_interface
+            groot_endpoints = self._graph.groot_endpoints
             client = Client(
-                gremlin_interface["gremlin_endpoint"],
+                groot_endpoints["gremlin_endpoint"],
                 "g",
-                username=gremlin_interface["username"],
-                password=gremlin_interface["password"],
+                username=groot_endpoints["username"],
+                password=groot_endpoints["password"],
             )
             client.submit(
                 "g.with('evaluationTimeout', 5000).V().limit(1)"
