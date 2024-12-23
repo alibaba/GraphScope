@@ -100,18 +100,20 @@ class GrootClient(object):
 
     def list_service_status(self) -> List[dict]:
         groot_endpoints = self._graph.groot_endpoints
-        return [
+        res =  [
             {
                 "graph_id": self._graph.id,
                 "status": "Running",
                 "start_time": CREATION_TIME,
                 "sdk_endpoints": {
                     "gremlin": groot_endpoints["gremlin_endpoint"],
-                    "cypher": groot_endpoints["cypher_endpoint"],
                     "grpc": groot_endpoints["grpc_endpoint"],
                 },
             }
         ]
+        if "cypher_endpoint" in res[0]:
+            res[0]["sdk_endpoints"]["cypher"] = groot_endpoints["cypher_endpoint"]
+        return res
 
     def create_graph(self, graph: dict) -> dict:
         raise RuntimeError("Create graph is not supported yet.")
