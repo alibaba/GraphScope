@@ -125,6 +125,7 @@ class GrootGraph(object):
             if (
                 gremlin_endpoint != self._endpoints["gremlin_endpoint"]
                 or grpc_endpoint != self._endpoints["grpc_endpoint"]
+                or cypher_endpoint != self._endpoints.get("cypher_endpoint")
             ):
                 self._conn = conn
                 self._g = g
@@ -349,7 +350,6 @@ def get_groot_graph_from_k8s():
     endpoints = [
         f"{pod.status.pod_ip}:{GROOT_GRPC_PORT}",
         f"{pod.status.pod_ip}:{GROOT_GREMLIN_PORT}",
-        f"{pod.status.pod_ip}:{GROOT_CYPHER_PORT}",
     ]
     # groot graph
     return GrootGraph(
@@ -357,7 +357,6 @@ def get_groot_graph_from_k8s():
         creation_time=creation_time,
         gremlin_endpoint="ws://{0}/gremlin".format(endpoints[1]),
         grpc_endpoint=endpoints[0],
-        cypher_endpoint="neo4j://{0}".format(endpoints[2]),
     )
 
 
