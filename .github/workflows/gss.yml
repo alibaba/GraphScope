@@ -79,6 +79,8 @@ jobs:
         . ${HOME}/.graphscope_env
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
+        rustup toolchain install 1.81.0
+        rustup default 1.81.0
         cd ${GITHUB_WORKSPACE}/interactive_engine
         mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
         mvn clean install -Pgroot-data-load --quiet
