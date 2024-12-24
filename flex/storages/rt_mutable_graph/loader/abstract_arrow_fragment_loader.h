@@ -391,6 +391,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       std::unique_lock<std::mutex> lock(mtxs_[v_label_id]);
       _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
     }
+    // We guarantee that the size of the table is not less than the size of the
+    // indexer outside the function.
     for (size_t j = 0; j < property_cols.size(); ++j) {
       auto array = property_cols[j];
       auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
@@ -455,6 +457,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             },
             idx);
       }
+
+      std::atomic<size_t> offset(0);
       for (unsigned idx = 0;
            idx <
            std::min(static_cast<unsigned>(8 * record_batch_supplier_vec.size()),
@@ -462,6 +466,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
            ++idx) {
         work_threads.emplace_back(
             [&](int i) {
+              // It is possible that the inserted data will exceed the size of
+              // the table, so we need to resize the table.
+              // basic_fragment_loader_.GetVertexTable(v_label_id).resize(vids.size());
+              auto& vtable = basic_fragment_loader_.GetVertexTable(v_label_id);
               while (true) {
                 std::shared_ptr<arrow::RecordBatch> batch{nullptr};
                 auto ret = queue.Get(batch);
@@ -477,6 +485,23 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 auto other_columns_array = columns;
                 other_columns_array.erase(other_columns_array.begin() +
                                           primary_key_ind);
+
+                offset.fetch_add(primary_key_column->length());
+                size_t local_offset = offset.load();
+                size_t cur_row_num = std::max(vtable.row_num(), 1ul);
+                while (cur_row_num <
+                       local_offset + primary_key_column->length()) {
+                  cur_row_num *= 2;
+                }
+                if (cur_row_num > vtable.row_num()) {
+                  std::unique_lock<std::mutex> lock(mtxs_[v_label_id]);
+                  if (cur_row_num > vtable.row_num()) {
+                    LOG(INFO) << "Resize vertex table from " << vtable.row_num()
+                              << " to " << cur_row_num
+                              << ", local_offset: " << local_offset;
+                    vtable.resize(cur_row_num);
+                  }
+                }
 
                 addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
                                         other_columns_array);
@@ -587,6 +612,22 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer_builder);
     const auto& indexer = basic_fragment_loader_.GetLFIndexer(v_label_id);
 
+    auto& vtable = basic_fragment_loader_.GetVertexTable(v_label_id);
+    size_t total_row_num = 0;
+    for (auto& batch : batchs) {
+      for (auto& b : batch) {
+        total_row_num += b->num_rows();
+      }
+    }
+    if (total_row_num > vtable.row_num()) {
+      std::unique_lock<std::mutex> lock(mtxs_[v_label_id]);
+      if (total_row_num > vtable.row_num()) {
+        LOG(INFO) << "Resize vertex table from " << vtable.row_num() << " to "
+                  << total_row_num;
+        vtable.resize(total_row_num);
+      }
+    }
+
     std::atomic<size_t> cur_batch_id(0);
     for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
       work_threads.emplace_back(
@@ -635,10 +676,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 auto array = other_columns_array[j];
                 auto chunked_array =
                     std::make_shared<arrow::ChunkedArray>(array);
-                set_properties_column(
-                    basic_fragment_loader_.GetVertexTable(v_label_id)
-                        .column_ptrs()[j],
-                    chunked_array, vids);
+                set_properties_column(vtable.column_ptrs()[j], chunked_array,
+                                      vids);
               }
             }
           },

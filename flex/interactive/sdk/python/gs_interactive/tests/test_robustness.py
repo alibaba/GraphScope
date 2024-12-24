@@ -290,3 +290,17 @@ def test_custom_pk_name(
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
     start_service_on_graph(interactive_session, "1")
+
+
+def test_x_csr_params(
+    interactive_session, neo4j_session, create_graph_with_x_csr_params
+):
+    print("[Test x csr params]")
+    import_data_to_full_modern_graph(
+        interactive_session, create_graph_with_x_csr_params
+    )
+    start_service_on_graph(interactive_session, create_graph_with_x_csr_params)
+    result = neo4j_session.run('MATCH (n: person) where n.name = "" return count(n);')
+    # expect return value 0
+    records = result.fetch(1)
+    assert len(records) == 1 and records[0]["$f0"] == 0
