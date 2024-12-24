@@ -833,7 +833,7 @@ impl InnerOpr {
 mod tests {
     use ahash::HashMap;
     use dyn_type::DateTimeFormats;
-    use ir_common::{expr_parse::str_to_expr_pb, generated::physical::physical_opr::operator};
+    use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
     use crate::apis::{DynDetails, Vertex};

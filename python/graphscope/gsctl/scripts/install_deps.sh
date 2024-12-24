@@ -54,7 +54,7 @@ get_os_version() {
     OS_VERSION=$(uname -r)
   fi
   if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* && "${PLATFORM}" != *"Darwin"* && "${PLATFORM}" != *"Aliyun"* ]];then
-    err "Only suppport on Ubuntu/CentOS/macOS/AliyunOS platform."
+    err "Only support on Ubuntu/CentOS/macOS/AliyunOS platform."
     exit 1
   fi
   if [[ "${PLATFORM}" == *"Ubuntu"* && "${OS_VERSION:0:2}" -lt "20" ]]; then
@@ -882,8 +882,8 @@ install_interactive_dependencies() {
   if ! command -v rustup &>/dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
-    rustup install 1.76.0
-    rustup default 1.76.0
+    rustup install 1.81.0
+    rustup default 1.81.0
     rustc --version
   fi
   # opentelemetry

@@ -27,6 +27,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 from gs_interactive.tests.conftest import call_procedure  # noqa: E402
 from gs_interactive.tests.conftest import create_procedure
 from gs_interactive.tests.conftest import delete_procedure
+from gs_interactive.tests.conftest import ensure_compiler_schema_ready
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
@@ -61,6 +62,9 @@ def test_query_on_vertex_only_graph(
     """
     print("[Query on vertex only graph]")
     start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_vertex_only_modern_graph
+    )
     run_cypher_test_suite(
         neo4j_session, create_vertex_only_modern_graph, vertex_only_cypher_queries
     )
@@ -68,6 +72,10 @@ def test_query_on_vertex_only_graph(
     start_service_on_graph(interactive_session, "1")
     import_data_to_vertex_only_modern_graph(
         interactive_session, create_vertex_only_modern_graph
+    )
+    start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_vertex_only_modern_graph
     )
     run_cypher_test_suite(
         neo4j_session, create_vertex_only_modern_graph, vertex_only_cypher_queries
@@ -83,11 +91,18 @@ def test_query_on_partial_graph(
     print("[Query on partial graph]")
     # start service on new graph
     start_service_on_graph(interactive_session, create_partial_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_partial_modern_graph
+    )
     # try to query on the graph
     run_cypher_test_suite(neo4j_session, create_partial_modern_graph, cypher_queries)
     start_service_on_graph(interactive_session, "1")
     import_data_to_partial_modern_graph(
         interactive_session, create_partial_modern_graph
+    )
+    start_service_on_graph(interactive_session, create_partial_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_partial_modern_graph
     )
     run_cypher_test_suite(neo4j_session, create_partial_modern_graph, cypher_queries)
 
@@ -100,10 +115,17 @@ def test_query_on_full_modern_graph(
     """
     print("[Query on full modern graph]")
     start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     # try to query on the graph
     run_cypher_test_suite(neo4j_session, create_modern_graph, cypher_queries)
     start_service_on_graph(interactive_session, "1")
     import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     run_cypher_test_suite(neo4j_session, create_modern_graph, cypher_queries)
 
 
@@ -129,6 +151,9 @@ def test_service_switching(
     )
     print("Procedure id: ", a_proc_id)
     start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     call_procedure(neo4j_session, create_modern_graph, a_proc_id)
 
     # create procedure on graph_b_id
@@ -139,6 +164,9 @@ def test_service_switching(
         "MATCH(n: person) return count(n);",
     )
     start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_vertex_only_modern_graph
+    )
     call_procedure(neo4j_session, create_vertex_only_modern_graph, b_proc_id)
 
 
@@ -156,6 +184,9 @@ def test_procedure_creation(interactive_session, neo4j_session, create_modern_gr
     )
     print("Procedure id: ", a_proc_id)
     start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     call_procedure(neo4j_session, create_modern_graph, a_proc_id)
 
     # create procedure with name containing space,
@@ -202,6 +233,9 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         )
     # Call the builtin procedure
     start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     call_procedure(
         neo4j_session,
         create_modern_graph,
@@ -259,6 +293,10 @@ def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
 def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_graph):
     print("[Test call procedure in cypher]")
     import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
     result = neo4j_session.run(
         'MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;'
     )
@@ -276,6 +314,9 @@ def test_custom_pk_name(
         interactive_session, create_graph_with_custom_pk_name
     )
     start_service_on_graph(interactive_session, create_graph_with_custom_pk_name)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_with_custom_pk_name
+    )
     result = neo4j_session.run(
         "MATCH (n: person) where n.custom_id = 4 return n.custom_id;"
     )
@@ -289,7 +330,6 @@ def test_custom_pk_name(
     )
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
-    start_service_on_graph(interactive_session, "1")
 
 
 def test_x_csr_params(

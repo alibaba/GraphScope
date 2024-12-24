@@ -1,0 +1,6 @@
+g.V().match(
+  __.as('p').hasLabel('PERSON').out('KNOWS').hasLabel('PERSON').as('f')
+).select('f').as('f').limit(1000).
+match(
+  __.as('f').out('ISLOCATEDIN').as('p')
+).count()
