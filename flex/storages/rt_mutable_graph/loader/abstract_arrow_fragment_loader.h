@@ -378,7 +378,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   void addVertexBatchFromArray(
       label_t v_label_id, IdIndexer<KEY_T, vid_t>& indexer,
       std::shared_ptr<arrow::Array>& primary_key_col,
-      const std::vector<std::shared_ptr<arrow::Array>>& property_cols) {
+      const std::vector<std::shared_ptr<arrow::Array>>& property_cols,
+      std::shared_mutex& rw_mutex) {
     size_t row_num = primary_key_col->length();
     auto col_num = property_cols.size();
     for (size_t i = 0; i < col_num; ++i) {
@@ -393,12 +394,15 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     }
     // We guarantee that the size of the table is not less than the size of the
     // indexer outside the function.
-    for (size_t j = 0; j < property_cols.size(); ++j) {
-      auto array = property_cols[j];
-      auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
-      set_properties_column(
-          basic_fragment_loader_.GetVertexTable(v_label_id).column_ptrs()[j],
-          chunked_array, vids);
+    {
+      std::shared_lock<std::shared_mutex> lock(rw_mutex);
+      for (size_t j = 0; j < property_cols.size(); ++j) {
+        auto array = property_cols[j];
+        auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
+        set_properties_column(
+            basic_fragment_loader_.GetVertexTable(v_label_id).column_ptrs()[j],
+            chunked_array, vids);
+      }
     }
 
     VLOG(10) << "Insert rows: " << row_num;
@@ -459,6 +463,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       }
 
       std::atomic<size_t> offset(0);
+      std::shared_mutex rw_mutex;
       for (unsigned idx = 0;
            idx <
            std::min(static_cast<unsigned>(8 * record_batch_supplier_vec.size()),
@@ -494,7 +499,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                   cur_row_num *= 2;
                 }
                 if (cur_row_num > vtable.row_num()) {
-                  std::unique_lock<std::mutex> lock(mtxs_[v_label_id]);
+                  std::unique_lock<std::shared_mutex> lock(rw_mutex);
                   if (cur_row_num > vtable.row_num()) {
                     LOG(INFO) << "Resize vertex table from " << vtable.row_num()
                               << " to " << cur_row_num
@@ -504,7 +509,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 }
 
                 addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
-                                        other_columns_array);
+                                        other_columns_array, rw_mutex);
               }
             },
             idx);
