@@ -119,6 +119,8 @@ RTAny::RTAny(const Any& val) {
   } else if (val.type == PropertyType::Bool()) {
     type_ = RTAnyType::kBoolValue;
     value_.b_val = val.AsBool();
+  } else if (val.type == PropertyType::Empty()) {
+    type_ = RTAnyType::kNull;
   } else {
     LOG(FATAL) << "Any value: " << val.to_string()
                << ", type = " << val.type.type_enum;
@@ -354,6 +356,8 @@ std::string_view RTAny::as_string() const {
   if (type_ == RTAnyType::kStringValue) {
     return value_.str_val;
   } else if (type_ == RTAnyType::kUnknown) {
+    return std::string_view();
+  } else if (type_ == RTAnyType::kNull) {
     return std::string_view();
   } else {
     LOG(FATAL) << "unexpected type" << static_cast<int>(type_.type_enum_);
