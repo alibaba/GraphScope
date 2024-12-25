@@ -14,6 +14,7 @@ import com.alibaba.graphscope.groot.service.models.CreateProcedureRequest;
 import com.alibaba.graphscope.groot.service.models.CreateProcedureResponse;
 import com.alibaba.graphscope.groot.service.models.CreateVertexType;
 import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
+import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeData;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.GetGraphResponse;
@@ -22,7 +23,6 @@ import com.alibaba.graphscope.groot.service.models.GetGraphStatisticsResponse;
 import com.alibaba.graphscope.groot.service.models.GetProcedureResponse;
 import com.alibaba.graphscope.groot.service.models.JobResponse;
 import com.alibaba.graphscope.groot.service.models.JobStatus;
-import com.alibaba.graphscope.groot.service.models.Property;
 import com.alibaba.graphscope.groot.service.models.SchemaMapping;
 import com.alibaba.graphscope.groot.service.models.ServiceStatus;
 import com.alibaba.graphscope.groot.service.models.StartServiceRequest;
@@ -57,7 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-25T20:15:37.362177+08:00[Asia/Shanghai]")
 @Validated
 @Tag(name = "GraphService/EdgeManagement", description = "EdgeManagement")
 public interface V1Api {
@@ -462,7 +462,7 @@ public interface V1Api {
      *
      * @param graphId  (required)
      * @param createVertexType  (required)
-     * @return Successful created a vertex type (status code 200)
+     * @return Successfully created the vertex type (status code 200)
      *         or  (status code 400)
      *         or  (status code 500)
      */
@@ -471,7 +471,7 @@ public interface V1Api {
         description = "Create a vertex type",
         tags = { "AdminService/GraphManagement" },
         responses = {
-            @ApiResponse(responseCode = "200", description = "Successful created a vertex type", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully created the vertex type", content = {
                 @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
             }),
             @ApiResponse(responseCode = "400", description = ""),
@@ -508,10 +508,7 @@ public interface V1Api {
      * Remove the edge from current graph. 
      *
      * @param graphId  (required)
-     * @param edgeLabel The label name of edge. (required)
-     * @param srcLabel The label name of src vertex. (required)
-     * @param dstLabel The label name of dst vertex. (required)
-     * @param deleteEdgeRequest The primary key values of the src and dst vertices. (required)
+     * @param deleteEdgeRequest The label and primary key values of the src and dst vertices, and the edge label. (required)
      * @return Successfully delete edge (status code 200)
      *         or Invalid input edge (status code 400)
      *         or Edge not exists or Graph not exits (status code 404)
@@ -546,10 +543,7 @@ public interface V1Api {
     
     default ResponseEntity<String> deleteEdge(
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
-        @NotNull @Parameter(name = "edge_label", description = "The label name of edge.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "edge_label", required = true) String edgeLabel,
-        @NotNull @Parameter(name = "src_label", description = "The label name of src vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "src_label", required = true) String srcLabel,
-        @NotNull @Parameter(name = "dst_label", description = "The label name of dst vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "dst_label", required = true) String dstLabel,
-        @Parameter(name = "DeleteEdgeRequest", description = "The primary key values of the src and dst vertices.", required = true) @Valid @RequestBody DeleteEdgeRequest deleteEdgeRequest
+        @Parameter(name = "DeleteEdgeRequest", description = "The label and primary key values of the src and dst vertices, and the edge label.", required = true) @Valid @RequestBody DeleteEdgeRequest deleteEdgeRequest
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -566,36 +560,38 @@ public interface V1Api {
 
 
     /**
-     * DELETE /v1/graph/{graph_id}/schema/edge/{type_name}
-     * Delete edge type by name
+     * DELETE /v1/graph/{graph_id}/schema/edge
+     * Delete an edge type by name
      *
      * @param graphId  (required)
      * @param typeName  (required)
      * @param sourceVertexType  (required)
      * @param destinationVertexType  (required)
-     * @return Successful deleted the edge type (status code 200)
+     * @return Successfully deleted the edge type (status code 200)
+     *         or  (status code 400)
      *         or  (status code 500)
      */
     @Operation(
         operationId = "deleteEdgeTypeByName",
-        description = "Delete edge type by name",
+        description = "Delete an edge type by name",
         tags = { "AdminService/GraphManagement" },
         responses = {
-            @ApiResponse(responseCode = "200", description = "Successful deleted the edge type", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted the edge type", content = {
                 @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
             }),
+            @ApiResponse(responseCode = "400", description = ""),
             @ApiResponse(responseCode = "500", description = "")
         }
     )
     @RequestMapping(
         method = RequestMethod.DELETE,
-        value = "/v1/graph/{graph_id}/schema/edge/{type_name}",
+        value = "/v1/graph/{graph_id}/schema/edge",
         produces = { "application/json" }
     )
     
     default ResponseEntity<String> deleteEdgeTypeByName(
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
-        @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.PATH) @PathVariable("type_name") String typeName,
+        @NotNull @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "type_name", required = true) String typeName,
         @NotNull @Parameter(name = "source_vertex_type", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "source_vertex_type", required = true) String sourceVertexType,
         @NotNull @Parameter(name = "destination_vertex_type", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "destination_vertex_type", required = true) String destinationVertexType
     ) {
@@ -792,8 +788,7 @@ public interface V1Api {
      * Remove the vertex from the specified graph. 
      *
      * @param graphId  (required)
-     * @param label The label name of querying vertex. (required)
-     * @param property The primary key values of the vertex to delete. (required)
+     * @param deleteVertexRequest The label and primary key values of the vertex to be deleted. (required)
      * @return Successfully delete vertex (status code 200)
      *         or Invalid input vertex (status code 400)
      *         or Vertex not exists or Graph not exits. (status code 404)
@@ -828,8 +823,7 @@ public interface V1Api {
     
     default ResponseEntity<String> deleteVertex(
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
-        @NotNull @Parameter(name = "label", description = "The label name of querying vertex.", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "label", required = true) String label,
-        @Parameter(name = "Property", description = "The primary key values of the vertex to delete.", required = true) @Valid @RequestBody List<@Valid Property> property
+        @Parameter(name = "DeleteVertexRequest", description = "The label and primary key values of the vertex to be deleted.", required = true) @Valid @RequestBody DeleteVertexRequest deleteVertexRequest
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -846,34 +840,36 @@ public interface V1Api {
 
 
     /**
-     * DELETE /v1/graph/{graph_id}/schema/vertex/{type_name}
-     * Delete vertex type by name
+     * DELETE /v1/graph/{graph_id}/schema/vertex
+     * Delete a vertex type by name
      *
      * @param graphId  (required)
      * @param typeName  (required)
-     * @return Successful deleted the vertex type (status code 200)
+     * @return Successfully deleted the vertex type (status code 200)
+     *         or  (status code 400)
      *         or  (status code 500)
      */
     @Operation(
         operationId = "deleteVertexTypeByName",
-        description = "Delete vertex type by name",
+        description = "Delete a vertex type by name",
         tags = { "AdminService/GraphManagement" },
         responses = {
-            @ApiResponse(responseCode = "200", description = "Successful deleted the vertex type", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted the vertex type", content = {
                 @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
             }),
+            @ApiResponse(responseCode = "400", description = ""),
             @ApiResponse(responseCode = "500", description = "")
         }
     )
     @RequestMapping(
         method = RequestMethod.DELETE,
-        value = "/v1/graph/{graph_id}/schema/vertex/{type_name}",
+        value = "/v1/graph/{graph_id}/schema/vertex",
         produces = { "application/json" }
     )
     
     default ResponseEntity<String> deleteVertexTypeByName(
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
-        @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.PATH) @PathVariable("type_name") String typeName
+        @NotNull @Parameter(name = "type_name", description = "", required = true, in = ParameterIn.QUERY) @Valid @RequestParam(value = "type_name", required = true) String typeName
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -1692,6 +1688,53 @@ public interface V1Api {
 
 
     /**
+     * PUT /v1/graph/{graph_id}/schema/edge
+     * Update an edge type to add more properties
+     *
+     * @param graphId  (required)
+     * @param createEdgeType  (required)
+     * @return Successfully updated the edge type (status code 200)
+     *         or  (status code 400)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "updateEdgeType",
+        description = "Update an edge type to add more properties",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated the edge type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.PUT,
+        value = "/v1/graph/{graph_id}/schema/edge",
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    
+    default ResponseEntity<String> updateEdgeType(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "CreateEdgeType", description = "", required = true) @Valid @RequestBody CreateEdgeType createEdgeType
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
      * PUT /v1/graph/{graph_id}/procedure/{procedure_id}
      * Update procedure on a graph by id
      *
@@ -1789,6 +1832,53 @@ public interface V1Api {
     default ResponseEntity<String> updateVertex(
         @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
         @Parameter(name = "VertexRequest", description = "") @Valid @RequestBody(required = false) VertexRequest vertexRequest
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "\"Response string\"";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * PUT /v1/graph/{graph_id}/schema/vertex
+     * Update a vertex type to add more properties
+     *
+     * @param graphId  (required)
+     * @param createVertexType  (required)
+     * @return Successfully updated the vertex type (status code 200)
+     *         or  (status code 400)
+     *         or  (status code 500)
+     */
+    @Operation(
+        operationId = "updateVertexType",
+        description = "Update a vertex type to add more properties",
+        tags = { "AdminService/GraphManagement" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated the vertex type", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+            }),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.PUT,
+        value = "/v1/graph/{graph_id}/schema/vertex",
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    
+    default ResponseEntity<String> updateVertexType(
+        @Parameter(name = "graph_id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("graph_id") String graphId,
+        @Parameter(name = "CreateVertexType", description = "", required = true) @Valid @RequestBody CreateVertexType createVertexType
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.openapitools.jackson.nullable.JsonNullable;
 
@@ -108,8 +109,7 @@ public class DtoConverter {
         vertexType.setTypeName(vertexLabel.getLabel());
         vertexType.setTypeId(vertexLabel.getId());
         vertexType.setProperties(convertToDtoProperties(vertexLabel.getProperties()));
-        // TODO: groot does not differentiate primary key and non-primary key properties
-        // vertexType.setPrimaryKeys(xxx);
+        vertexType.setPrimaryKeys(vertexLabel.getProperties().stream().filter(p -> p.isPrimaryKey()).map(p -> p.getName()).collect(Collectors.toList()));
         return vertexType;
     }
 

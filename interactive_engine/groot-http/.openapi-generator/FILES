@@ -20,6 +20,7 @@ src/main/java/com/alibaba/graphscope/groot/service/models/CreatePropertyMeta.jav
 src/main/java/com/alibaba/graphscope/groot/service/models/CreateVertexType.java
 src/main/java/com/alibaba/graphscope/groot/service/models/DateType.java
 src/main/java/com/alibaba/graphscope/groot/service/models/DeleteEdgeRequest.java
+src/main/java/com/alibaba/graphscope/groot/service/models/DeleteVertexRequest.java
 src/main/java/com/alibaba/graphscope/groot/service/models/EdgeData.java
 src/main/java/com/alibaba/graphscope/groot/service/models/EdgeMapping.java
 src/main/java/com/alibaba/graphscope/groot/service/models/EdgeMappingDestinationVertexMappingsInner.java
@@ -30,7 +31,6 @@ src/main/java/com/alibaba/graphscope/groot/service/models/EdgeRequest.java
 src/main/java/com/alibaba/graphscope/groot/service/models/EdgeStatistics.java
 src/main/java/com/alibaba/graphscope/groot/service/models/FixedChar.java
 src/main/java/com/alibaba/graphscope/groot/service/models/FixedCharChar.java
-src/main/java/com/alibaba/graphscope/groot/service/models/GSDataType.java
 src/main/java/com/alibaba/graphscope/groot/service/models/GetEdgeType.java
 src/main/java/com/alibaba/graphscope/groot/service/models/GetGraphResponse.java
 src/main/java/com/alibaba/graphscope/groot/service/models/GetGraphSchemaResponse.java

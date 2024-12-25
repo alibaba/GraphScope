@@ -4,20 +4,15 @@ import com.alibaba.graphscope.groot.service.models.CreateEdgeType;
 import com.alibaba.graphscope.groot.service.models.CreateGraphSchemaRequest;
 import com.alibaba.graphscope.groot.service.models.CreateVertexType;
 import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
+import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
-import com.alibaba.graphscope.groot.service.models.Property;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
-
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 
 import com.alibaba.graphscope.groot.service.api.ApiUtil;
 import com.alibaba.graphscope.groot.service.api.V1Api;
 
 import java.util.List;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +24,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,7 +38,8 @@ public class GrootController implements V1Api {
     private final SchemaManagementService schemaManagementService;
 
     @Autowired
-    public GrootController(VertexManagementService vertexService, EdgeManagementService edgeService, SchemaManagementService schemaManagementService) {
+    public GrootController(VertexManagementService vertexService, EdgeManagementService edgeService,
+            SchemaManagementService schemaManagementService) {
         this.vertexManagementService = vertexService;
         this.edgeManagementService = edgeService;
         this.schemaManagementService = schemaManagementService;
@@ -71,10 +66,10 @@ public class GrootController implements V1Api {
     @DeleteMapping(value = "/{graph_id}/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertex(
             @PathVariable("graph_id") String graphId,
-            @RequestParam(value = "label", required = true) String label,
-            @RequestBody(required = true) List<Property> primaryKeyValues) {
+            @RequestBody(required = true) DeleteVertexRequest deleteVertexRequest) {
         try {
-            long si = vertexManagementService.deleteVertex(label, primaryKeyValues);
+            long si = vertexManagementService.deleteVertex(deleteVertexRequest.getLabel(),
+                    deleteVertexRequest.getPrimaryKeyValues());
             return ApiUtil.createSuccessResponse("Vertex deleted successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
@@ -120,12 +115,10 @@ public class GrootController implements V1Api {
     @DeleteMapping(value = "/{graph_id}/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdge(
             @PathVariable("graph_id") String graphId,
-            @RequestParam(value = "edge_label", required = true) String label,
-            @RequestParam(value = "src_label", required = true) String srcLabel,
-            @RequestParam(value = "dst_label", required = true) String dstLabel,
             @RequestBody(required = true) DeleteEdgeRequest deleteEdgeRequest) {
         try {
-            long si = edgeManagementService.deleteEdge(label, srcLabel, dstLabel,
+            long si = edgeManagementService.deleteEdge(deleteEdgeRequest.getEdgeLabel(),
+                    deleteEdgeRequest.getSrcLabel(), deleteEdgeRequest.getDstLabel(),
                     deleteEdgeRequest.getSrcPrimaryKeyValues(), deleteEdgeRequest.getDstPrimaryKeyValues());
             return ApiUtil.createSuccessResponse("Edge deleted successfully", si);
         } catch (Exception e) {
@@ -157,7 +150,6 @@ public class GrootController implements V1Api {
             @PathVariable("graph_id") String graphId,
             @RequestBody @Validated CreateVertexType createVertexType) {
         try {
-            System.out.println("createVertexType: " + createVertexType);
             schemaManagementService.createVertexType(graphId, createVertexType);
             return ApiUtil.createSuccessResponse("Vertex type created successfully");
         } catch (Exception e) {
@@ -177,6 +169,20 @@ public class GrootController implements V1Api {
         } catch (Exception e) {
             e.printStackTrace();
             return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex type");
+        }
+    }
+
+    @Override
+    @PutMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateVertexType(
+            @PathVariable("graph_id") String graphId,
+            @RequestBody @Validated CreateVertexType updateVertexType) {
+        try {
+            schemaManagementService.updateVertexType(graphId, updateVertexType);
+            return ApiUtil.createSuccessResponse("Vertex type updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertex type");
         }
     }
 
@@ -211,6 +217,20 @@ public class GrootController implements V1Api {
     }
 
     @Override
+    @PutMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateEdgeType(
+            @PathVariable("graph_id") String graphId,
+            @RequestBody @Validated CreateEdgeType updateEdgeType) {
+        try {
+            schemaManagementService.updateEdgeType(graphId, updateEdgeType);
+            return ApiUtil.createSuccessResponse("Edge type updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edge type");
+        }
+    }
+
+    @Override
     @PostMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> importSchema(
             @PathVariable("graph_id") String graphId,
@@ -223,7 +243,6 @@ public class GrootController implements V1Api {
             return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to import schema");
         }
     }
-  
 
     @Override
     @GetMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -250,7 +269,5 @@ public class GrootController implements V1Api {
             return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete schema");
         }
     }
-
-
 
 }

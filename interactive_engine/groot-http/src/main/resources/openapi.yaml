@@ -256,6 +256,40 @@ paths:
       x-tags:
       - tag: AdminService/GraphManagement
   /v1/graph/{graph_id}/schema/vertex:
+    delete:
+      description: Delete a vertex type by name
+      operationId: deleteVertexTypeByName
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the vertex type
+        "400":
+          $ref: '#/components/responses/400'
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - AdminService/GraphManagement
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
     post:
       description: Create a vertex type
       operationId: createVertexType
@@ -279,7 +313,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
-          description: Successful created a vertex type
+          description: Successfully created the vertex type
         "400":
           $ref: '#/components/responses/400'
         "500":
@@ -290,10 +324,9 @@ paths:
       x-accepts: application/json
       x-tags:
       - tag: AdminService/GraphManagement
-  /v1/graph/{graph_id}/schema/vertex/{type_name}:
-    delete:
-      description: Delete vertex type by name
-      operationId: deleteVertexTypeByName
+    put:
+      description: Update a vertex type to add more properties
+      operationId: updateVertexType
       parameters:
       - explode: false
         in: path
@@ -302,20 +335,71 @@ paths:
         schema:
           type: string
         style: simple
-      - explode: false
-        in: path
-        name: type_name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
         required: true
-        schema:
-          type: string
-        style: simple
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
-          description: Successful deleted the vertex type
+          description: Successfully updated the vertex type
+        "400":
+          $ref: '#/components/responses/400'
+        "500":
+          $ref: '#/components/responses/500'
+      tags:
+      - AdminService/GraphManagement
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: AdminService/GraphManagement
+  /v1/graph/{graph_id}/schema/edge:
+    delete:
+      description: Delete an edge type by name
+      operationId: deleteEdgeTypeByName
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the edge type
+        "400":
+          $ref: '#/components/responses/400'
         "500":
           $ref: '#/components/responses/500'
       tags:
@@ -323,7 +407,6 @@ paths:
       x-accepts: application/json
       x-tags:
       - tag: AdminService/GraphManagement
-  /v1/graph/{graph_id}/schema/edge:
     post:
       description: Create a edge type
       operationId: createEdgeType
@@ -357,10 +440,9 @@ paths:
       x-accepts: application/json
       x-tags:
       - tag: AdminService/GraphManagement
-  /v1/graph/{graph_id}/schema/edge/{type_name}:
-    delete:
-      description: Delete edge type by name
-      operationId: deleteEdgeTypeByName
+    put:
+      description: Update an edge type to add more properties
+      operationId: updateEdgeType
       parameters:
       - explode: false
         in: path
@@ -369,38 +451,26 @@ paths:
         schema:
           type: string
         style: simple
-      - explode: false
-        in: path
-        name: type_name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
         required: true
-        schema:
-          type: string
-        style: simple
-      - explode: true
-        in: query
-        name: source_vertex_type
-        required: true
-        schema:
-          type: string
-        style: form
-      - explode: true
-        in: query
-        name: destination_vertex_type
-        required: true
-        schema:
-          type: string
-        style: form
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
-          description: Successful deleted the edge type
+          description: Successfully updated the edge type
+        "400":
+          $ref: '#/components/responses/400'
         "500":
           $ref: '#/components/responses/500'
       tags:
       - AdminService/GraphManagement
+      x-content-type: application/json
       x-accepts: application/json
       x-tags:
       - tag: AdminService/GraphManagement
@@ -883,22 +953,12 @@ paths:
         schema:
           type: string
         style: simple
-      - description: The label name of querying vertex.
-        explode: true
-        in: query
-        name: label
-        required: true
-        schema:
-          type: string
-        style: form
       requestBody:
         content:
           application/json:
             schema:
-              items:
-                $ref: '#/components/schemas/Property'
-              type: array
-        description: The primary key values of the vertex to delete.
+              $ref: '#/components/schemas/delete_vertex_request'
+        description: The label and primary key values of the vertex to be deleted.
         required: true
       responses:
         "200":
@@ -1163,39 +1223,13 @@ paths:
         schema:
           type: string
         style: simple
-      - description: The label name of edge.
-        example: created
-        explode: true
-        in: query
-        name: edge_label
-        required: true
-        schema:
-          type: string
-        style: form
-      - description: The label name of src vertex.
-        example: person
-        explode: true
-        in: query
-        name: src_label
-        required: true
-        schema:
-          type: string
-        style: form
-      - description: The label name of dst vertex.
-        example: software
-        explode: true
-        in: query
-        name: dst_label
-        required: true
-        schema:
-          type: string
-        style: form
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/delete_edge_request'
-        description: The primary key values of the src and dst vertices.
+        description: "The label and primary key values of the src and dst vertices,\
+          \ and the edge label."
         required: true
       responses:
         "200":
@@ -2961,13 +2995,38 @@ components:
       - edge_request
       - vertex_request
       type: object
+    delete_vertex_request:
+      properties:
+        label:
+          description: The label name of the vertex to delete.
+          type: string
+        primary_key_values:
+          description: The primary key values for locating the vertex.
+          items:
+            $ref: '#/components/schemas/Property'
+          type: array
+      type: object
     delete_edge_request:
       properties:
+        edge_label:
+          description: The label name of the edge.
+          example: created
+          type: string
+        src_label:
+          description: The label name of the source vertex.
+          example: person
+          type: string
+        dst_label:
+          description: The label name of the destination vertex.
+          example: software
+          type: string
         src_primary_key_values:
+          description: Primary key values for the source vertex.
           items:
             $ref: '#/components/schemas/Property'
           type: array
         dst_primary_key_values:
+          description: Primary key values for the destination vertex.
           items:
             $ref: '#/components/schemas/Property'
           type: array
