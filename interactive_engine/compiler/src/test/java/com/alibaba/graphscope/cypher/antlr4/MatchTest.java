@@ -714,6 +714,24 @@ public class MatchTest {
                 after.explain().trim());
     }
 
+    @Test
+    public void special_label_name_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval("Match (n:`@person`)-[e:`contains`]->(n2) Return n", builder).build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                        + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[@person]}],"
+                        + " alias=[n2], opt=[END])\n"
+                        + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[contains]}],"
+                        + " alias=[e], startAlias=[n], opt=[OUT])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[@person]}],"
+                        + " alias=[n], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
     // the return column order should align with the query given
     @Test
     public void aggregate_column_order_test() {
