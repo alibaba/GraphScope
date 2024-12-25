@@ -104,7 +104,7 @@ public class SchemaSpecManager {
         } catch (Exception e) {
             logger.warn(
                     "can not convert from {} to {} due to some unexpected exception:",
-                    source.getType(),
+                    source == null ? null : source.getType(),
                     target,
                     e);
             return null;
