@@ -111,7 +111,7 @@ class GrootClient(object):
                 },
             }
         ]
-        if "cypher_endpoint" in res[0]:
+        if "cypher_endpoint" in groot_endpoints and groot_endpoints["cypher_endpoint"]:
             res[0]["sdk_endpoints"]["cypher"] = groot_endpoints["cypher_endpoint"]
         return res
 
