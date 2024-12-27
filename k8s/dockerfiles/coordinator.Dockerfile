@@ -36,9 +36,16 @@ FROM ubuntu:22.04 AS coordinator
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
-    apt-get install -y sudo python3-pip openmpi-bin curl tzdata netcat && \
+    apt-get install -y sudo python3-pip openmpi-bin curl locales tzdata netcat && \
+    locale-gen en_US.UTF-8 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
+
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 

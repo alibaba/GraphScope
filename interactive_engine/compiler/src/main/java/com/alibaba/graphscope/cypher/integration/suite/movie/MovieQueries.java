@@ -399,4 +399,10 @@ public class MovieQueries {
         List<String> expected = Arrays.asList("Record<{typeA: \"Person\", typeC: \"Movie\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_movie_query29_test() {
+        String query = "MATCH(a)-[r]->(b) where r.rating is null return count(r) as count;";
+        List<String> expected = Arrays.asList("Record<{count: 249}>");
+        return new QueryContext(query, expected);
+    }
 }

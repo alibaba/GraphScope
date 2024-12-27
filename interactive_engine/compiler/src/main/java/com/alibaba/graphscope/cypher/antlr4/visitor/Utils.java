@@ -24,20 +24,21 @@ import com.alibaba.graphscope.grammar.CypherGSParser;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
     public static SourceConfig sourceConfig(CypherGSParser.OC_NodePatternContext ctx) {
-        String alias = (ctx.oC_Variable() != null) ? ctx.oC_Variable().getText() : null;
+        String alias = getAliasName(ctx.oC_Variable());
         LabelConfig config = labelConfig(ctx.oC_NodeLabels());
         // source
         return new SourceConfig(GraphOpt.Source.VERTEX, config, alias);
     }
 
     public static GetVConfig getVConfig(CypherGSParser.OC_NodePatternContext ctx) {
-        String alias = (ctx.oC_Variable() != null) ? ctx.oC_Variable().getText() : null;
+        String alias = getAliasName(ctx.oC_Variable());
         LabelConfig config = labelConfig(ctx.oC_NodeLabels());
         // getV
         return new GetVConfig(getVOpt(ctx), config, alias);
@@ -50,7 +51,7 @@ public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
 
     public static ExpandConfig expandConfig(
             CypherGSParser.OC_RelationshipDetailContext ctx, GraphOpt.Expand opt) {
-        String alias = (ctx.oC_Variable() != null) ? ctx.oC_Variable().getText() : null;
+        String alias = getAliasName(ctx.oC_Variable());
         LabelConfig config = labelConfig(ctx.oC_RelationshipTypes());
         return new ExpandConfig(opt, config, alias);
     }
@@ -63,7 +64,7 @@ public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
             config = new LabelConfig(false);
             for (CypherGSParser.OC_LabelNameContext ctx1 : ctx.oC_LabelName()) {
                 if (ctx1 == null) continue;
-                config.addLabel(ctx1.getText());
+                config.addLabel(getLabelName(ctx1));
             }
         }
         return config;
@@ -77,7 +78,7 @@ public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
             config = new LabelConfig(false);
             for (CypherGSParser.OC_RelTypeNameContext ctx1 : ctx.oC_RelTypeName()) {
                 if (ctx1 == null) continue;
-                config.addLabel(ctx1.getText());
+                config.addLabel(getLabelName(ctx1));
             }
         }
         return config;
@@ -132,5 +133,17 @@ public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
             }
         }
         return filters;
+    }
+
+    public static @Nullable String getAliasName(CypherGSParser.OC_VariableContext ctx) {
+        return ctx == null ? null : (String) LiteralVisitor.INSTANCE.visit(ctx);
+    }
+
+    public static String getLabelName(CypherGSParser.OC_LabelNameContext ctx) {
+        return (String) LiteralVisitor.INSTANCE.visit(ctx);
+    }
+
+    public static String getLabelName(CypherGSParser.OC_RelTypeNameContext ctx) {
+        return (String) LiteralVisitor.INSTANCE.visit(ctx);
     }
 }

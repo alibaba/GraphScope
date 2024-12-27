@@ -253,7 +253,7 @@
 
     <neo4j.version>4.4.0</neo4j.version>
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
-    <interactive.sdk.version>0.4.2</interactive.sdk.version>
+    <interactive.sdk.version>0.4.3</interactive.sdk.version>
     <interactive.sdk.classifier>no-gaia-ir</interactive.sdk.classifier>
   </properties>
 

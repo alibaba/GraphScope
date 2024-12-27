@@ -16,15 +16,16 @@
 # limitations under the License.
 #
 
+from urllib3.exceptions import MaxRetryError
+from urllib3.exceptions import ProtocolError
+
 from gs_interactive.api_response import ApiResponse
+from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
 from gs_interactive.exceptions import ApiException
 from gs_interactive.exceptions import BadRequestException
 from gs_interactive.exceptions import ForbiddenException
 from gs_interactive.exceptions import NotFoundException
 from gs_interactive.exceptions import ServiceException
-from urllib3.exceptions import MaxRetryError
-
-from gs_interactive.client.generated.interactive_pb2 import Code as StatusCode
 from gs_interactive.models.api_response_with_code import APIResponseWithCode
 
 
@@ -107,6 +108,8 @@ class Status:
             else:
                 return Status(StatusCode.INTERNAL_ERROR, exception.body)
         elif isinstance(exception, MaxRetryError):
+            return Status(StatusCode.INTERNAL_ERROR, exception)
+        elif isinstance(exception, ProtocolError):
             return Status(StatusCode.INTERNAL_ERROR, exception)
         return Status(
             StatusCode.UNKNOWN, "Unknown Error from exception " + exception.body
