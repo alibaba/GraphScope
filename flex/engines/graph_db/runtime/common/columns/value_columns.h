@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/runtime/common/columns/i_context_column.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 
+#include <string_view>
 #include <vector>
 
 namespace gs {
