@@ -51,8 +51,7 @@ public abstract class Utils {
         Map<String, GraphVertex> vertexMap = Maps.newHashMap();
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
-        GSDataTypeConvertor<DataType> typeConvertor =
-                GSDataTypeConvertor.Factory.create(DataType.class, null);
+        GSDataTypeConvertor<DataType> typeConvertor = new GSDataTypeConvertor.Groot();
         builderGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(

@@ -172,7 +172,7 @@ public class StoredProcedureMeta {
 
         private static Map<String, Object> createProduceMetaMap(StoredProcedureMeta meta) {
             GSDataTypeConvertor<RelDataType> typeConvertor =
-                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
+                    new GSDataTypeConvertor.Calcite(typeFactory);
             return ImmutableMap.of(
                     Config.NAME.getKey(),
                     meta.name,
@@ -217,7 +217,7 @@ public class StoredProcedureMeta {
     public static class Deserializer {
         public static StoredProcedureMeta perform(InputStream inputStream) throws IOException {
             GSDataTypeConvertor<RelDataType> typeConvertor =
-                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
+                    new GSDataTypeConvertor.Calcite(typeFactory);
             Yaml yaml = new Yaml();
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(

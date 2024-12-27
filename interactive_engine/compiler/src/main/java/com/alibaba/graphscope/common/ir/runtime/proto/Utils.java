@@ -16,15 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
+import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphPathType;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gaia.proto.*;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
 import com.google.common.base.Preconditions;
@@ -274,54 +271,13 @@ public abstract class Utils {
         }
     }
 
-    public static final Common.DataType protoBasicDataType(RelDataType basicType) {
-        // hack ways: convert interval type to int64 to avoid complexity
-        if (basicType instanceof IntervalSqlType) return Common.DataType.INT64;
-        if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
-        switch (basicType.getSqlTypeName()) {
-            case NULL:
-                return Common.DataType.NONE;
-            case BOOLEAN:
-                return Common.DataType.BOOLEAN;
-            case INTEGER:
-                return Common.DataType.INT32;
-            case BIGINT:
-                return Common.DataType.INT64;
-            case CHAR:
-                return Common.DataType.STRING;
-            case DECIMAL:
-            case FLOAT:
-            case DOUBLE:
-                return Common.DataType.DOUBLE;
-            case MULTISET:
-            case ARRAY:
-                RelDataType elementType = basicType.getComponentType();
-                switch (elementType.getSqlTypeName()) {
-                    case INTEGER:
-                        return Common.DataType.INT32_ARRAY;
-                    case BIGINT:
-                        return Common.DataType.INT64_ARRAY;
-                    case CHAR:
-                        return Common.DataType.STRING_ARRAY;
-                    case DECIMAL:
-                    case FLOAT:
-                    case DOUBLE:
-                        return Common.DataType.DOUBLE_ARRAY;
-                    default:
-                        throw new UnsupportedOperationException(
-                                "array of element type "
-                                        + elementType.getSqlTypeName()
-                                        + " is unsupported yet");
-                }
-            case DATE:
-                return Common.DataType.DATE32;
-            case TIME:
-                return Common.DataType.TIME32;
-            case TIMESTAMP:
-                return Common.DataType.TIMESTAMP;
-            default:
-                throw new UnsupportedOperationException(
-                        "basic type " + basicType.getSqlTypeName() + " is unsupported yet");
+    public static final com.alibaba.graphscope.proto.type.Common.DataType protoBasicDataType(
+            RelDataType basicType) {
+        try {
+            GSDataTypeConvertor convertor = new GSDataTypeConvertor.Calcite(null);
+            return convertor.convert(basicType).getProtoDesc();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

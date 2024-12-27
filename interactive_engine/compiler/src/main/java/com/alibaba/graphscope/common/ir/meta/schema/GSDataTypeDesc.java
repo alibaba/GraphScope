@@ -18,11 +18,18 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
+import com.alibaba.graphscope.proto.type.Common;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.util.JsonFormat;
+
 import java.util.Map;
 
 public class GSDataTypeDesc {
     // support more format of GSDataTypeDesc, i.e. JSON, proto, etc.
     private final Map<String, Object> yamlDesc;
+
+    // flex type in proto format
+    private Common.DataType protoDesc;
 
     public GSDataTypeDesc(Map<String, Object> yamlDesc) {
         this.yamlDesc = yamlDesc;
@@ -30,6 +37,15 @@ public class GSDataTypeDesc {
 
     public Map<String, Object> getYamlDesc() {
         return yamlDesc;
+    }
+
+    public Common.DataType getProtoDesc() throws Exception {
+        if (protoDesc != null) return protoDesc;
+        Common.DataType.Builder protoBuilder = Common.DataType.newBuilder();
+        String jsonDesc = new ObjectMapper().writeValueAsString(yamlDesc);
+        JsonFormat.parser().merge(jsonDesc, protoBuilder);
+        protoDesc = protoBuilder.build();
+        return protoDesc;
     }
 
     public String toString() {
