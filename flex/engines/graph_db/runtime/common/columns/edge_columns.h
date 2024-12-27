@@ -79,7 +79,8 @@ static inline void set_edge_data(EdgePropVecBase* col, size_t idx,
     dynamic_cast<EdgePropVec<Date>*>(col)->set(idx,
                                                Date(edge_data.value.i64_val));
   } else {
-    // LOG(FATAL) << "not support for " << edge_data.type;
+    LOG(FATAL) << "not support for "
+               << static_cast<int>(edge_data.type.type_enum_);
   }
 }
 
