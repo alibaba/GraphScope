@@ -7,7 +7,7 @@ from gscoordinator.flex.models.error import Error  # noqa: E501
 from gscoordinator.flex.models.upload_file_response import UploadFileResponse  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -22,4 +22,4 @@ def upload_file(filestorage=None):  # noqa: E501
 
     :rtype: Union[UploadFileResponse, Tuple[UploadFileResponse, int], Tuple[UploadFileResponse, int, Dict[str, str]]
     """
-    return client_wrapper.upload_file(filestorage)
+    return get_client_wrapper().upload_file(filestorage)

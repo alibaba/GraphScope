@@ -374,7 +374,8 @@ public class GraphIOProcessor {
                                             new PathExpandRange(offset, fetch),
                                             innerGetVTypes,
                                             pxd.getResultOpt(),
-                                            pxd.getPathOpt());
+                                            pxd.getPathOpt(),
+                                            expandEdge.getElementDetails().isOptional());
                             expandEdge =
                                     (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(

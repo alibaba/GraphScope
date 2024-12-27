@@ -73,9 +73,8 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
                                 .orElse(settings.resultIterationBatchSize);
         this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
-        this.responseStreamIterator =
-                new StreamIterator<>(
-                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
+        int capacity = FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs);
+        this.responseStreamIterator = new StreamIterator<>(capacity);
     }
 
     @Override
@@ -109,7 +108,9 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 responseProcessor.process(responseStreamIterator.next());
             }
             responseProcessor.finish();
-            statusCallback.getQueryLogger().info("[compile]: process results success");
+            statusCallback
+                    .getQueryLogger()
+                    .info("[query][response]: processed and sent all responses to the client");
         } catch (Throwable t) {
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor

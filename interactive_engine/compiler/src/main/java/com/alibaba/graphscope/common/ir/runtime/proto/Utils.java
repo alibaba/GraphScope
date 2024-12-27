@@ -36,6 +36,7 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -564,6 +565,10 @@ public abstract class Utils {
                 return GraphAlgebraPhysical.PathExpand.PathOpt.SIMPLE;
             case TRAIL:
                 return GraphAlgebraPhysical.PathExpand.PathOpt.TRAIL;
+            case ANY_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ANY_SHORTEST;
+            case ALL_SHORTEST:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ALL_SHORTEST;
             default:
                 throw new UnsupportedOperationException(
                         "opt " + opt + " in path is unsupported yet");
@@ -775,5 +780,33 @@ public abstract class Utils {
             }
         }
         tagColumns.keySet().removeAll(removeKeys);
+    }
+
+    public static final StoredProcedure.Query.Builder protoProcedure(
+            RexNode procedure, RexToProtoConverter converter) {
+        RexCall procedureCall = (RexCall) procedure;
+        StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
+        SqlOperator operator = procedureCall.getOperator();
+        builder.setQueryName(Common.NameOrId.newBuilder().setName(operator.getName()).build());
+        List<RexNode> operands = procedureCall.getOperands();
+        for (int i = 0; i < operands.size(); ++i) {
+            // param name is omitted
+            StoredProcedure.Argument.Builder paramBuilder =
+                    StoredProcedure.Argument.newBuilder().setParamInd(i);
+            OuterExpression.ExprOpr protoValue = operands.get(i).accept(converter).getOperators(0);
+            switch (protoValue.getItemCase()) {
+                case VAR:
+                    paramBuilder.setVar(protoValue.getVar());
+                    break;
+                case CONST:
+                    paramBuilder.setConst(protoValue.getConst());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "cannot set value=" + protoValue + " to any parameter in procedure");
+            }
+            builder.addArguments(paramBuilder);
+        }
+        return builder;
     }
 }

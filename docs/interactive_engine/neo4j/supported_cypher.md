@@ -115,6 +115,8 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | User Defined Functions | get start node from an edge | startNode(edge) | gs.function.startNode(edge) | <input type="checkbox" disabled checked /> |   |
 | User Defined Functions | get end node from an edge | endNode(edge) | gs.function.endNode(edge) | <input type="checkbox" disabled checked /> |   |
 | User Defined Functions | convert integer value to datetime | datetime(1287230400000) | gs.function.datetime(1287230400000) | <input type="checkbox" disabled checked /> |   |
+| Path Modifier | get any shortest path between two endpoints | SHORTEST | SHORTESTPATH | <input type="checkbox" disabled checked /> |   |
+| Path Modifier | get all shortest paths between two endpoints | ALL SHORTEST | ALL SHORTESTPATH | <input type="checkbox" disabled checked /> |
 
 ## Clause
 A notable limitation for now is that we do not

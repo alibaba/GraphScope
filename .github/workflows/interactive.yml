@@ -24,8 +24,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-interactive:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Build Interactive
+      env:
+        GIE_HOME: ${{ github.workspace }}/interactive_engine/
+        HOME: /home/graphscope/
+      run: |
+        . /home/graphscope/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/
+        git submodule update --init
+        cd ${GITHUB_WORKSPACE}/flex
+        mkdir build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope && sudo make -j$(nproc)
+        # package the build artifacts
+        cd .. && tar -zcf build.tar.gz build
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
+        path: |
+          ${{ github.workspace }}/flex/build.tar.gz
+
+
   test-hqps-engine:
     runs-on: ubuntu-20.04
+    needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -58,10 +102,20 @@ jobs:
         cmake ..
         make -j$(nproc)
         make install
+    
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
 
     - name: Setup tmate session
       if: false
       uses: mxschmitt/action-tmate@v3
+
+    - name: Extract build artifacts
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Build
       env:
@@ -70,11 +124,6 @@ jobs:
       run: |
         . /home/graphscope/.graphscope_env
         cd ${GITHUB_WORKSPACE}/
-        git submodule update --init
-        cd ${GITHUB_WORKSPACE}/flex
-        mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
-        sudo make install
 
         # cargo
         . /home/graphscope/.cargo/env
@@ -175,7 +224,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
 
     - name: Sample Query test
       env:
@@ -400,6 +449,7 @@ jobs:
 
   test-flex:
     runs-on: ubuntu-20.04
+    needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -416,14 +466,15 @@ jobs:
         make -j$(nproc)
         make install
 
-    - name: Build
-      env:
-        HOME: /home/graphscope/
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
+
+    - name: Extract build artifacts
       run: |
-        cd ${GITHUB_WORKSPACE}/flex
-        git submodule update --init
-        mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
+        cd ${GITHUB_WORKSPACE}
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
 
     - name: Test GRIN on mutable csr 
       run: |
@@ -553,4 +604,16 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+    
+    - name: Test graph loading with different delimiter
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/modern_graph_tab_delimiter/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        sed -i 's/|/\\t/g' ${BULK_LOAD_FILE}
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/

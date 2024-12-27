@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -58,5 +59,10 @@ public class VolcanoPlannerX extends VolcanoPlanner {
         RelOptCost relCost = mq.getNonCumulativeCost(rel);
         if (relCost == null) return null;
         return cost.plus(relCost);
+    }
+
+    @Override
+    public void registerSchema(RelOptSchema schema) {
+        // do nothing
     }
 }

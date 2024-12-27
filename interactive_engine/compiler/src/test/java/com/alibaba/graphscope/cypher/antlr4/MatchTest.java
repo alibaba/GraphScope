@@ -25,6 +25,8 @@ import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -54,7 +56,7 @@ public class MatchTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
-                        "schema/modern.json",
+                        "config/modern/graph.yaml",
                         "statistics/modern_statistics.json",
                         optimizer.getGlogueHolder());
     }
@@ -606,5 +608,109 @@ public class MatchTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[person], opt=[VERTEX])",
                 after3.explain().trim());
+    }
+
+    @Test
+    public void procedure_shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(builder, irMeta);
+        LogicalPlan logicalPlan =
+                logicalPlanVisitor.visit(
+                        new CypherAntlr4Parser()
+                                .parse(
+                                        "MATCH\n"
+                                            + "(person1:person {id:"
+                                            + " $person1Id})-[:knows]->(person2:person {id:"
+                                            + " $person2Id})\n"
+                                            + "CALL shortestPath.dijkstra.stream(\n"
+                                            + "  person1, person2, 'KNOWS', 'BOTH', 'weight', 5)\n"
+                                            + "WITH person1, person2, totalCost\n"
+                                            + "WHERE person1.id <> $person2Id\n"
+                                            + "Return person1.id AS person1Id, totalCost AS"
+                                            + " totalWeight;"));
+        RelNode after =
+                optimizer.optimize(
+                        logicalPlan.getRegularQuery(), new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(person1Id=[person1.id], totalWeight=[totalCost],"
+                    + " isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[<>(person1.id, ?1)])\n"
+                    + "    GraphLogicalProject(person1=[person1], person2=[person2],"
+                    + " totalCost=[totalCost], isAppend=[false])\n"
+                    + "      GraphProcedureCall(procedure=[shortestPath.dijkstra.stream(person1,"
+                    + " person2, _UTF-8'KNOWS', _UTF-8'BOTH', _UTF-8'weight', 5)])\n"
+                    + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], fusedFilter=[[=(_.id, ?1)]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[_], startAlias=[person1], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void shortest_path_test() {
+        // convert 'shortestpath' modifier to 'path_opt=[ANY_SHORTEST]' in IR, and 'all
+        // shortestpath' to 'path_opt=[ALL_SHORTEST]'
+        RelNode rel =
+                Utils.eval(
+                                "MATCH"
+                                    + " shortestPath((person1:person)-[path:knows*1..5]->(person2:person))"
+                                    + " Return count(person1)")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person1], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person2], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[path])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[person1], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                rel.explain().trim());
+    }
+
+    @Test
+    public void optional_shortest_path_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval(
+                                "Match (p1: person {id: $id1})\n"
+                                        + "Optional Match shortestPath((p1:person {id:"
+                                        + " $id1})-[k:knows*1..5]->(p2:person {id: $id2}))\n"
+                                        + "WITH\n"
+                                        + "CASE WHEN k is null then -1\n"
+                                        + "ELSE length(k)\n"
+                                        + "END as len\n"
+                                        + "RETURN len;",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(len=[len], isAppend=[false])\n"
+                    + "  GraphLogicalProject(len=[CASE(IS NULL(k), -(1), k.~len)],"
+                    + " isAppend=[false])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p2], fusedFilter=[[=(_.id, ?1)]], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[4], path_opt=[ANY_SHORTEST], result_opt=[ALL_V_E],"
+                    + " alias=[k], start_alias=[p1], optional=[true])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[p1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
     }
 }

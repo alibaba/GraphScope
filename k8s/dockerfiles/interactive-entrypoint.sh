@@ -32,6 +32,9 @@ function usage() {
                 -c, --enable-coordinator: Launch the Interactive service along
                  with Coordinator. Must enable this option if you want to use
                  `gsctl` command-line tool.
+                -p, --port-mapping: Specify the port mapping for the interactive.
+                  The format is container_port:host_port, multiple mappings are
+                  separated by comma. For example, 8080:8081,7777:7778
 EOF
 }
 
@@ -90,6 +93,16 @@ function launch_service() {
 }
 
 function launch_coordinator() {
+  local host_ports=()
+  local container_ports=()
+  if [ -n "$1" ]; then
+    IFS=',' read -ra port_mappings <<< "$1"
+    for port_mapping in "${port_mappings[@]}"; do
+      IFS=':' read -ra ports <<< "$port_mapping"
+      container_ports+=(${ports[0]})
+      host_ports+=(${ports[1]})
+    done
+  fi
   if $ENABLE_COORDINATOR;
   then
     coordinator_config_file="/tmp/coordinator-config.yaml"
@@ -102,6 +115,19 @@ launcher_type: hosts
 session:
   instance_id: demo
 EOF
+
+    if [ ${#host_ports[@]} -gt 0 ]; then
+      echo "interactive:" >> $coordinator_config_file
+      echo "  port_mapping:" >> $coordinator_config_file
+      for i in "${!host_ports[@]}"; do
+        echo "    ${container_ports[$i]}: ${host_ports[$i]}" >> $coordinator_config_file
+      done
+    fi
+    # i.e
+    # interactive:
+    #   port_mapping:
+    #     8080: 8081
+    #     7777: 7778
     python3 -m gscoordinator --config-file $coordinator_config_file
   fi
 }
@@ -126,6 +152,15 @@ while [[ $# -gt 0 ]]; do
       ENABLE_COORDINATOR=true
       shift
       ;;
+    -p | --port-mapping)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -p requires an argument." >&2
+        exit 1
+      fi
+      PORT_MAPPING=$1
+      shift
+      ;;
     -h | --help)
       usage
       exit 0
@@ -141,4 +176,4 @@ done
 
 prepare_workspace $WORKSPACE
 launch_service $WORKSPACE
-launch_coordinator
+launch_coordinator $PORT_MAPPING

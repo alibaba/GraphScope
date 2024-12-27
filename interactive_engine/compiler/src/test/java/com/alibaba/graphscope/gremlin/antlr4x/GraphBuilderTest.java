@@ -28,6 +28,8 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -40,6 +42,7 @@ import com.google.protobuf.util.JsonFormat;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
@@ -84,6 +87,36 @@ public class GraphBuilderTest {
         GraphBuilderVisitor visitor = new GraphBuilderVisitor(builder);
         ParseTree parseTree = new GremlinAntlr4Parser().parse(query);
         return visitor.visit(parseTree).build();
+    }
+
+    @Test
+    public void g_V_elementMap_test() {
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMeta irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                eval(
+                        "g.V(72057594037928268).as(\"a\").outE(\"KNOWS\").as(\"b\").inV().as(\"c\").select('a',"
+                            + " \"b\").by(elementMap())",
+                        builder);
+        RelDataType projectType = node.getRowType().getFieldList().get(0).getType();
+        RelDataType bValueType = projectType.getValueType();
+        Assert.assertTrue(bValueType instanceof ArbitraryMapType);
+        GraphLabelType labelType =
+                (GraphLabelType)
+                        ((ArbitraryMapType) bValueType)
+                                .getKeyValueTypeMap().values().stream()
+                                        .filter(k -> k.getValue() instanceof GraphLabelType)
+                                        .findFirst()
+                                        .get()
+                                        .getValue();
+        // make sure the inferred type contains the label type
+        Assert.assertTrue(
+                labelType.getLabelsEntry().stream().anyMatch(k -> k.getLabel().equals("KNOWS")));
     }
 
     @Test

@@ -96,8 +96,11 @@ pub enum GraphPath {
 impl GraphPath {
     pub fn new<E: Into<VertexOrEdge>>(
         entry: E, path_opt: pb::path_expand::PathOpt, result_opt: pb::path_expand::ResultOpt,
-    ) -> Self {
-        match result_opt {
+    ) -> Result<Self, ParsePbError> {
+        if let pb::path_expand::PathOpt::AnyShortest | pb::path_expand::PathOpt::AllShortest = path_opt {
+            return Err(ParsePbError::Unsupported("unsupported path type of shortest path".to_string()));
+        }
+        let path = match result_opt {
             pb::path_expand::ResultOpt::EndV => match path_opt {
                 pb::path_expand::PathOpt::Arbitrary => GraphPath::EndV((entry.into(), 1)),
                 pb::path_expand::PathOpt::Simple => {
@@ -106,13 +109,20 @@ impl GraphPath {
                     GraphPath::SimpleEndV((entry, vec![id], 1))
                 }
                 pb::path_expand::PathOpt::Trail => GraphPath::TrailAllPath(vec![entry.into()]),
+                pb::path_expand::PathOpt::AnyShortest | pb::path_expand::PathOpt::AllShortest => {
+                    unreachable!()
+                }
             },
             pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
                 pb::path_expand::PathOpt::Arbitrary => GraphPath::AllPath(vec![entry.into()]),
                 pb::path_expand::PathOpt::Simple => GraphPath::SimpleAllPath(vec![entry.into()]),
                 pb::path_expand::PathOpt::Trail => GraphPath::TrailAllPath(vec![entry.into()]),
+                pb::path_expand::PathOpt::AnyShortest | pb::path_expand::PathOpt::AllShortest => {
+                    unreachable!()
+                }
             },
-        }
+        };
+        Ok(path)
     }
 
     // append an entry and return the flag of whether the entry has been appended or not.

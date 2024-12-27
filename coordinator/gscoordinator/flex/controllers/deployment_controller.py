@@ -11,7 +11,7 @@ from gscoordinator.flex.models.running_deployment_info import RunningDeploymentI
 from gscoordinator.flex.models.running_deployment_status import RunningDeploymentStatus  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -24,7 +24,7 @@ def get_deployment_info():  # noqa: E501
 
     :rtype: Union[RunningDeploymentInfo, Tuple[RunningDeploymentInfo, int], Tuple[RunningDeploymentInfo, int, Dict[str, str]]
     """
-    return client_wrapper.get_deployment_info()
+    return get_client_wrapper().get_deployment_info()
 
 
 @handle_api_exception()
@@ -42,7 +42,7 @@ def get_deployment_pod_log(pod_name, component, from_cache):  # noqa: E501
 
     :rtype: Union[GetPodLogResponse, Tuple[GetPodLogResponse, int], Tuple[GetPodLogResponse, int, Dict[str, str]]
     """
-    return client_wrapper.get_deployment_pod_log(pod_name, component, from_cache)
+    return get_client_wrapper().get_deployment_pod_log(pod_name, component, from_cache)
 
 
 @handle_api_exception()
@@ -54,7 +54,7 @@ def get_deployment_resource_usage():  # noqa: E501
 
     :rtype: Union[GetResourceUsageResponse, Tuple[GetResourceUsageResponse, int], Tuple[GetResourceUsageResponse, int, Dict[str, str]]
     """
-    return client_wrapper.get_deployment_resource_usage()
+    return get_client_wrapper().get_deployment_resource_usage()
 
 
 @handle_api_exception()
@@ -66,7 +66,7 @@ def get_deployment_status():  # noqa: E501
 
     :rtype: Union[RunningDeploymentStatus, Tuple[RunningDeploymentStatus, int], Tuple[RunningDeploymentStatus, int, Dict[str, str]]
     """
-    return client_wrapper.get_deployment_status()
+    return get_client_wrapper().get_deployment_status()
 
 
 @handle_api_exception()
@@ -78,4 +78,4 @@ def get_storage_usage():  # noqa: E501
 
     :rtype: Union[GetStorageUsageResponse, Tuple[GetStorageUsageResponse, int], Tuple[GetStorageUsageResponse, int, Dict[str, str]]
     """
-    return client_wrapper.get_storage_usage()
+    return get_client_wrapper().get_storage_usage()

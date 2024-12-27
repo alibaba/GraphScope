@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.exception.ExternalStorageErrorException;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.exception.InternalException;
@@ -223,12 +224,15 @@ public class StoreService {
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
-        int maxRetry = 10;
+        int maxRetry = 5;
         for (Map<Integer, OperationBatch> partitionToBatch : dataBatch) {
             while (!shouldStop && partitionToBatch.size() != 0 && maxRetry > 0) {
                 partitionToBatch = writeStore(snapshotId, partitionToBatch, hasDdl);
                 maxRetry--;
             }
+        }
+        if (maxRetry == 0) {
+            throw new ExternalStorageErrorException("batchWrite failed after 5 attempts");
         }
         return hasDdl.get();
     }

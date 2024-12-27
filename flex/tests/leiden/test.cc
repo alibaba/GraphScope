@@ -22,6 +22,7 @@
 #include "include/RBConfigurationVertexPartition.h"
 #include "include/RBERVertexPartition.h"
 #include "include/SignificanceVertexPartition.h"
+#include "include/SurpriseVertexPartition.h"
 
 #include <glog/logging.h>
 #include "flex/engines/graph_db/database/graph_db.h"
@@ -88,7 +89,11 @@ int main(int argc, char** argv) {
 
   Graph graph(&g);
 
-  CPMVertexPartition part(&graph, 0.5 /* resolution */);
+  // CPMVertexPartition part(&graph, 0.0001);
+  // SignificanceVertexPartition part(&graph);
+  ModularityVertexPartition part(&graph);
+  // RBERVertexPartition part(&graph, 0.02);
+  // SurpriseVertexPartition part(&graph);
 
   Optimiser o;
 

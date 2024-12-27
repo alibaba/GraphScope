@@ -86,10 +86,13 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     @Override
     public @Nullable RelDataType leastRestrictive(List<RelDataType> types) {
         if (types.stream().anyMatch(t -> t instanceof GraphLabelType)) {
+            // union all labels
+            List<GraphLabelType.Entry> unionLabels = Lists.newArrayList();
             for (RelDataType type : types) {
                 if (!(type instanceof GraphLabelType)) return null;
+                unionLabels.addAll(((GraphLabelType) type).getLabelsEntry());
             }
-            return types.get(0);
+            return new GraphLabelType(unionLabels.stream().distinct().collect(Collectors.toList()));
         }
         if (types.stream().anyMatch(t -> t instanceof ArbitraryMapType)) {
             return leastRestrictiveForArbitraryMapType(types);

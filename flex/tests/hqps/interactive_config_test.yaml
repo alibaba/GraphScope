@@ -1,6 +1,6 @@
 log_level: INFO
 verbose_level: 10
-default_graph: sls
+default_graph: iccv
 compute_engine:
   type: hiactor
   workers:

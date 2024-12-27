@@ -114,8 +114,6 @@ public class QueryStatusCallback {
     private void fillLogDetail(JsonObject logJson, String errorMsg) {
         try {
             if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
-                // todo(siyuan): the invocation of the function can cause Exception when serializing
-                // a gremlin vertex to json format
                 fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis());
             }
         } catch (Throwable t) {

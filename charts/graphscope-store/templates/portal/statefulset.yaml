@@ -115,6 +115,8 @@ spec:
               value: {{ .Values.portal.runtimePath | quote }}
             - name: STUDIO_WRAPPER_ENDPOINT
               value: {{ .Values.portal.studioWrapperEndpoint | quote }}
+            - name: BASEID
+              value: {{ .Values.portal.baseId | quote }}
             - name: SOLUTION
               value: "GRAPHSCOPE_INSIGHT"
             {{- range $key, $value := .Values.env }}

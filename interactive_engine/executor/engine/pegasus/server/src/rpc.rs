@@ -82,8 +82,10 @@ impl FromStream<Vec<u8>> for RpcSink {
     fn on_next(&mut self, resp: Vec<u8>) -> FnResult<()> {
         // todo: use bytes to alleviate copy & allocate cost;
         let res = pb::JobResponse { job_id: self.job_id, resp };
-        self.tx.send(Ok(res)).ok();
-        Ok(())
+        debug!("rpc send response for job {}", self.job_id);
+        self.tx
+            .send(Ok(res))
+            .map_err(|e| Box::new(e) as Box<dyn Error + Send>)
     }
 }
 
@@ -115,7 +117,11 @@ impl FromStreamExt<Vec<u8>> for RpcSink {
             Status::unknown(format!("{:?}", server_error))
         };
 
-        self.tx.send(Err(status)).ok();
+        if let Err(e) = self.tx.send(Err(status)) {
+            error!("rpc send error failure for job {}: {:?}", self.job_id, e);
+        } else {
+            info!("rpc send error success for job {}", self.job_id);
+        }
     }
 }
 
@@ -124,8 +130,14 @@ impl Drop for RpcSink {
         let before_sub = self.peers.fetch_sub(1, Ordering::SeqCst);
         if before_sub == 1 {
             if !self.had_error.load(Ordering::SeqCst) {
-                self.tx.send(Err(Status::ok("ok"))).ok();
+                if let Err(e) = self.tx.send(Err(Status::ok("ok"))) {
+                    error!("rpc send complete failure for job {}: {:?}", self.job_id, e);
+                } else {
+                    info!("rpc send complete success for job {}", self.job_id);
+                }
             }
+        } else {
+            debug!("rpc send success for job {}, {} left;", self.job_id, before_sub - 1);
         }
     }
 }

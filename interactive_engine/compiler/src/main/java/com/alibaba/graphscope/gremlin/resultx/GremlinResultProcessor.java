@@ -59,9 +59,8 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
         this.statusCallback = statusCallback;
         this.timeoutConfig = timeoutConfig;
         this.reducer = Maps.newLinkedHashMap();
-        this.recordStreamIterator =
-                new StreamIterator<>(
-                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
+        int capacity = FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs);
+        this.recordStreamIterator = new StreamIterator<>(capacity);
     }
 
     @Override
@@ -93,6 +92,9 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
                 processRecord(recordStreamIterator.next());
             }
             finishRecord();
+            statusCallback
+                    .getQueryLogger()
+                    .info("[query][response]: processed and sent all responses to the client");
         } catch (Throwable t) {
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor

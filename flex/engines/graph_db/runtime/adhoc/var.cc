@@ -183,7 +183,6 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
               getter_ =
                   std::make_shared<VertexIdVertexAccessor<std::string_view>>(
                       txn);
-            } else if (type_ == RTAnyType::kI32Value) {
               getter_ = std::make_shared<VertexIdVertexAccessor<int32_t>>(txn);
             } else if (type_ == RTAnyType::kI64Value) {
               getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(txn);
@@ -197,30 +196,27 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
           }
         } else if (pt.has_label()) {
           getter_ = std::make_shared<VertexLabelVertexAccessor>();
-        } else {
-          LOG(FATAL) << "xxx, " << pt.item_case();
+          LOG(FATAL) << "not support";
         }
-      } else {
-        LOG(FATAL) << "not support";
-      }
-    } else if (var_type == VarType::kEdgeVar) {
-      if (pb.has_property()) {
-        auto& pt = pb.property();
-        if (pt.has_key()) {
-          auto name = pt.key().name();
-          getter_ = create_edge_property_edge_accessor(txn, name, type_);
-        } else if (pt.has_label()) {
-          getter_ = create_edge_label_edge_accessor();
-        } else if (pt.has_id()) {
-          getter_ = create_edge_global_id_edge_accessor();
+      } else if (var_type == VarType::kEdgeVar) {
+        if (pb.has_property()) {
+          auto& pt = pb.property();
+          if (pt.has_key()) {
+            auto name = pt.key().name();
+            getter_ = create_edge_property_edge_accessor(txn, name, type_);
+          } else if (pt.has_label()) {
+            getter_ = create_edge_label_edge_accessor();
+          } else if (pt.has_id()) {
+            getter_ = create_edge_global_id_edge_accessor();
+          } else {
+            LOG(FATAL) << "not support";
+          }
         } else {
           LOG(FATAL) << "not support";
         }
       } else {
         LOG(FATAL) << "not support";
       }
-    } else {
-      LOG(FATAL) << "not support";
     }
   }
 }

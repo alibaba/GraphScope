@@ -8,7 +8,7 @@ from gscoordinator.flex.models.service_status import ServiceStatus  # noqa: E501
 from gscoordinator.flex.models.start_service_request import StartServiceRequest  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -22,7 +22,7 @@ def get_service_status_by_id(graph_id):  # noqa: E501
 
     :rtype: Union[ServiceStatus, Tuple[ServiceStatus, int], Tuple[ServiceStatus, int, Dict[str, str]]
     """
-    return client_wrapper.get_service_status_by_id(graph_id)
+    return get_client_wrapper().get_service_status_by_id(graph_id)
 
 
 @handle_api_exception()
@@ -34,7 +34,7 @@ def list_service_status():  # noqa: E501
 
     :rtype: Union[List[ServiceStatus], Tuple[List[ServiceStatus], int], Tuple[List[ServiceStatus], int, Dict[str, str]]
     """
-    return client_wrapper.list_service_status()
+    return get_client_wrapper().list_service_status()
 
 
 @handle_api_exception()
@@ -46,7 +46,7 @@ def restart_service():  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.restart_service()
+    return get_client_wrapper().restart_service()
 
 
 @handle_api_exception()
@@ -62,7 +62,7 @@ def start_service(start_service_request=None):  # noqa: E501
     """
     if connexion.request.is_json:
         start_service_request = StartServiceRequest.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.start_service(start_service_request)
+    return get_client_wrapper().start_service(start_service_request)
 
 
 @handle_api_exception()
@@ -74,4 +74,4 @@ def stop_service():  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.stop_service()
+    return get_client_wrapper().stop_service()

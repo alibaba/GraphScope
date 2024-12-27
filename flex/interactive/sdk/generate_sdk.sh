@@ -30,7 +30,7 @@ DEVELOPER_NAME="GraphScope Team"
 LICENSE_NAME="Apache-2.0"
 LICENSE_URL="https://www.apache.org/licenses/LICENSE-2.0.html"
 LOG_LEVEL="error"
-
+export OPENAPI_GENERATOR_VERSION=7.2.0
 
 #get current bash scrip's directory
 CUR_DIR=$(cd `dirname $0`; pwd)
@@ -129,7 +129,6 @@ function install_generator() {
     curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli
     chmod u+x ~/bin/openapitools/openapi-generator-cli
     export PATH=$PATH:~/bin/openapitools/
-    export OPENAPI_GENERATOR_VERSION=7.2.0
   fi
   # on ubuntu apt-get jq on mac brew install jq
 

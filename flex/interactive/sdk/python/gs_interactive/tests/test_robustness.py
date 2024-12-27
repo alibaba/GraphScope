@@ -18,6 +18,7 @@
 
 import os
 import sys
+from time import sleep
 
 import pytest
 
@@ -250,3 +251,42 @@ def test_list_jobs(interactive_session, create_vertex_only_modern_graph):
 
     resp = interactive_session.list_jobs()
     assert resp.is_ok() and len(resp.get_value()) > 0
+
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON", reason="Only works on proto"
+)
+def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_graph):
+    print("[Test call procedure in cypher]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    result = neo4j_session.run(
+        'MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;'
+    )
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 8
+
+
+def test_custom_pk_name(
+    interactive_session, neo4j_session, create_graph_with_custom_pk_name
+):
+    print("[Test custom pk name]")
+    import_data_to_full_modern_graph(
+        interactive_session, create_graph_with_custom_pk_name
+    )
+    start_service_on_graph(interactive_session, create_graph_with_custom_pk_name)
+    result = neo4j_session.run(
+        "MATCH (n: person) where n.custom_id = 4 return n.custom_id;"
+    )
+    records = result.fetch(10)
+    for record in records:
+        print(record)
+    assert len(records) == 1
+
+    result = neo4j_session.run(
+        "MATCH (n:person)-[e]-(v:person) where v.custom_id = 1 return count(e);"
+    )
+    records = result.fetch(1)
+    assert len(records) == 1 and records[0]["$f0"] == 2
+    start_service_on_graph(interactive_session, "1")

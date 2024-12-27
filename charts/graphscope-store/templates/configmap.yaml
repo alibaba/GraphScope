@@ -116,6 +116,7 @@ data:
 
     sudo chown -R graphscope:graphscope {{ .Values.storeDataPath }} || true
     sudo chown -R graphscope:graphscope /etc/groot || true
+    sudo chown -R graphscope:graphscope /var/log/graphscope || true
 
     [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
     ordinal=${BASH_REMATCH[1]}
@@ -180,7 +181,12 @@ data:
       export GRPC_PORT=${GROOT_GRPC_PORT}
       export GREMLIN_PORT=${GROOT_GREMLIN_PORT}
       echo "${HOST} ${GRPC_PORT} ${GREMLIN_PORT}"
-      python3 -c 'import base64;import os;from gremlin_python.driver.client import Client;ip=os.getenv("HOST");gremlin_port=os.getenv("GREMLIN_PORT");graph_url=f"ws://{ip}:{gremlin_port}/gremlin";username=os.getenv("GROOT_USERNAME");password=base64.b64decode(os.getenv("GROOT_PASSWORD")).decode("utf-8");client = Client(graph_url, "g", username=username, password=password); ret = client.submit("g.V().limit(1)").all().result(); client.close();' && break
+      cmd="nc -zv ${HOST} ${GREMLIN_PORT}"
+      res=$(eval $cmd 2>&1)
+      if [[ $res == *succeeded* ]]; then
+        # Expected Output is <Connection to localhost (::1) 8182 port [tcp/*] succeeded!>
+        break
+      fi
       sleep 3
     done
 

@@ -295,6 +295,9 @@ portal:
   ## Request for data loading
   ##
   studioWrapperEndpoint: ""
+  ##
+  ## baseId is the id used for creating odps dataloading job
+  baseId: ""
   ## @param hostIPC Specify if host IPC should be enabled for pods
   ##
   hostIPC: false
@@ -594,6 +597,27 @@ graphPhysicalOpt: ffi
 queryExecutionTimeoutMs: 600000
 graphPlannerJoinMinPatternSize: 5
 graphPlannerCboGlogueSize: 3
+
+## Log Persistence parameters
+##
+logPersistence:
+  ## Enable persistence using Persistent Volume Claims. If false, use emptyDir
+  enabled: false
+  ## Existing PVC to hold the log data. If not provided, a new PVC will be created.
+  existingClaim: ""
+  ## Persistent Volume storage class
+  storageClass: ""
+  ## Persistent Volume access modes
+  accessModes:
+  - ReadWriteOnce
+  ## Persistent Volume size
+  size: 1Gi
+  ## Persistent Volume annotations
+  annotations: {}
+  ## Persistent Volume labels
+  selector: {}
+  ## mountPath for the Persistent Volume
+  mountPath: "/var/log/graphscope"
 
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"

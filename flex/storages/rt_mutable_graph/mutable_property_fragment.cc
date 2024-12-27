@@ -191,12 +191,11 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           schema_.get_vertex_storage_strategies(v_label_name), true);
     }
 
+    // We will reserve the at least 4096 slots for each vertex label
     size_t vertex_capacity =
-        schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
-    if (build_empty_graph) {
+        std::max(lf_indexers_[i].capacity(), (size_t) 4096);
+    if (vertex_capacity >= lf_indexers_[i].size()) {
       lf_indexers_[i].reserve(vertex_capacity);
-    } else {
-      vertex_capacity = lf_indexers_[i].capacity();
     }
     vertex_data_[i].resize(vertex_capacity);
     vertex_capacities[i] = vertex_capacity;
@@ -495,6 +494,40 @@ const CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;
   return ie_[index];
+}
+
+std::shared_ptr<ColumnBase> MutablePropertyFragment::get_vertex_property_column(
+    uint8_t label, const std::string& prop) const {
+  return vertex_data_[label].get_column(prop);
+}
+
+std::shared_ptr<RefColumnBase> MutablePropertyFragment::get_vertex_id_column(
+    uint8_t label) const {
+  if (lf_indexers_[label].get_type() == PropertyType::kInt64) {
+    return std::make_shared<TypedRefColumn<int64_t>>(
+        dynamic_cast<const TypedColumn<int64_t>&>(
+            lf_indexers_[label].get_keys()));
+  } else if (lf_indexers_[label].get_type() == PropertyType::kInt32) {
+    return std::make_shared<TypedRefColumn<int32_t>>(
+        dynamic_cast<const TypedColumn<int32_t>&>(
+            lf_indexers_[label].get_keys()));
+  } else if (lf_indexers_[label].get_type() == PropertyType::kUInt64) {
+    return std::make_shared<TypedRefColumn<uint64_t>>(
+        dynamic_cast<const TypedColumn<uint64_t>&>(
+            lf_indexers_[label].get_keys()));
+  } else if (lf_indexers_[label].get_type() == PropertyType::kUInt32) {
+    return std::make_shared<TypedRefColumn<uint32_t>>(
+        dynamic_cast<const TypedColumn<uint32_t>&>(
+            lf_indexers_[label].get_keys()));
+  } else if (lf_indexers_[label].get_type() == PropertyType::kStringView) {
+    return std::make_shared<TypedRefColumn<std::string_view>>(
+        dynamic_cast<const TypedColumn<std::string_view>&>(
+            lf_indexers_[label].get_keys()));
+  } else {
+    LOG(ERROR) << "Unsupported vertex id type: "
+               << lf_indexers_[label].get_type();
+    return nullptr;
+  }
 }
 
 }  // namespace gs

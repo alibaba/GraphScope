@@ -16,9 +16,7 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.graphscope.groot.wal.LogEntry;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,6 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class KafkaProcessor {
@@ -56,7 +56,11 @@ public class KafkaProcessor {
     private volatile boolean shouldStop = true;
     List<OperationType> typesDDL;
 
-    BlockingQueue<ConsumerRecord<LogEntry, LogEntry>> queue;
+    BlockingQueue<ConsumerRecord<LogEntry, LogEntry>> writeQueue;
+    BlockingQueue<ReadLogEntry> replayQueue;
+
+    private AtomicBoolean replayInProgress;
+    private AtomicLong latestSnapshotId;
 
     public KafkaProcessor(
             Configs configs,
@@ -76,7 +80,10 @@ public class KafkaProcessor {
         offsetsPersistIntervalMs = CoordinatorConfig.OFFSETS_PERSIST_INTERVAL_MS.get(configs);
 
         int queueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
-        queue = new ArrayBlockingQueue<>(queueSize);
+        writeQueue = new ArrayBlockingQueue<>(queueSize);
+        replayQueue = new ArrayBlockingQueue<>(queueSize);
+        latestSnapshotId = new AtomicLong(-1);
+        replayInProgress = new AtomicBoolean(false);
     }
 
     public void start() {
@@ -203,20 +210,24 @@ public class KafkaProcessor {
         // -1 stands for poll from latest
         try (LogReader reader = logService.createReader(storeId, -1)) {
             while (!shouldStop) {
-                ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
-                for (ConsumerRecord<LogEntry, LogEntry> record : records) {
-                    queue.add(record);
+                try {
+                    ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
+                    for (ConsumerRecord<LogEntry, LogEntry> record : records) {
+                        writeQueue.put(record);
+                    }
+                } catch (InterruptedException e) {
+                    throw new InternalException(e);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
-        } catch (IOException e) {
-            throw new InternalException(e);
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
-    private void processRecord(ConsumerRecord<LogEntry, LogEntry> record) {
+    private void processRecord(long offset, LogEntry logEntry) {
         int partitionCount = metaService.getPartitionCount();
-        long offset = record.offset();
-        LogEntry logEntry = record.value();
         OperationBatch operationBatch = logEntry.getOperationBatch();
         if (isSecondary) { // only catch up the schema updates
             operationBatch = Utils.extractOperations(operationBatch, typesDDL);
@@ -228,7 +239,7 @@ public class KafkaProcessor {
         StoreDataBatch.Builder builder =
                 StoreDataBatch.newBuilder()
                         .requestId("")
-                        .queueId(storeId)
+                        .queueId(0)
                         .snapshotId(snapshotId)
                         .traceId(operationBatch.getTraceId())
                         .offset(offset);
@@ -263,11 +274,14 @@ public class KafkaProcessor {
             logger.warn("It may not be expected to replay from the 0 offset, skipped");
             return;
         }
+
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, replayFrom)) {
+            //            replayInProgress.set(true);
             ConsumerRecord<LogEntry, LogEntry> record;
             while ((record = logReader.readNextRecord()) != null) {
-                queue.put(record);
+                //                writeQueue.put(new ReadLogEntry(record.offset(), record.value()));
+                writeQueue.put(record);
                 replayCount++;
                 if (replayCount % 10000 == 0) {
                     logger.info("replayed {} records", replayCount);
@@ -276,17 +290,44 @@ public class KafkaProcessor {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        //        } finally {
+        //            replayInProgress.set(false);
+        //        }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
     }
 
     private void processRecords() {
-        while (true) {
-            try {
-                ConsumerRecord<LogEntry, LogEntry> record = queue.take();
-                processRecord(record);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        try {
+            while (true) {
+                long offset;
+                LogEntry logEntry;
+                if (replayInProgress.get() || !replayQueue.isEmpty()) {
+                    if (replayQueue.isEmpty()) {
+                        Thread.sleep(10);
+                        continue;
+                    }
+                    ReadLogEntry readLogEntry = replayQueue.take();
+                    offset = readLogEntry.getOffset();
+                    logEntry = readLogEntry.getLogEntry();
+                    logEntry.setSnapshotId(latestSnapshotId.get());
+                    //                    logger.info("polled from replay queue, offset {}, id {}",
+                    // offset, logEntry.getSnapshotId());
+
+                } else {
+                    ConsumerRecord<LogEntry, LogEntry> record = writeQueue.take();
+                    offset = record.offset();
+                    logEntry = record.value();
+                    latestSnapshotId.set(logEntry.getSnapshotId());
+                    //                    logger.info("polled from write queue, offset {}, id {}",
+                    // offset, latestSnapshotId.get());
+
+                }
+                processRecord(offset, logEntry);
             }
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
     }
 
@@ -304,5 +345,55 @@ public class KafkaProcessor {
         types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         types.add(OperationType.MARKER); // For advance ID
         return types;
+    }
+
+    private List<OperationType> prepareDMLTypes() {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.OVERWRITE_VERTEX);
+        types.add(OperationType.UPDATE_VERTEX);
+        types.add(OperationType.DELETE_VERTEX);
+        types.add(OperationType.OVERWRITE_EDGE);
+        types.add(OperationType.UPDATE_EDGE);
+        types.add(OperationType.DELETE_EDGE);
+        types.add(OperationType.CLEAR_VERTEX_PROPERTIES);
+        types.add(OperationType.CLEAR_EDGE_PROPERTIES);
+        types.add(OperationType.ADD_VERTEX_TYPE_PROPERTIES);
+        types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
+        return types;
+    }
+
+    public List<Long> replayDMLRecordsFrom(long offset, long timestamp) throws IOException {
+        List<OperationType> types = prepareDMLTypes();
+        logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
+        // Note this clear is necessary, as those records would be a subset of record range in
+        // new reader
+        replayInProgress.set(true);
+        writeQueue.clear();
+        long batchSnapshotId;
+        int replayCount = 0;
+        try (LogReader logReader = this.logService.createReader(storeId, offset, timestamp)) {
+            ReadLogEntry readLogEntry;
+            batchSnapshotId = latestSnapshotId.get();
+            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
+                LogEntry logEntry = readLogEntry.getLogEntry();
+                OperationBatch batch = Utils.extractOperations(logEntry.getOperationBatch(), types);
+                if (batch.getOperationCount() == 0) {
+                    continue;
+                }
+                ReadLogEntry entry =
+                        new ReadLogEntry(readLogEntry.getOffset(), batchSnapshotId, batch);
+                replayQueue.put(entry);
+                replayCount++;
+                if (replayCount % 10000 == 0) {
+                    logger.info("replayed {} records", replayCount);
+                }
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            replayInProgress.set(false);
+        }
+        logger.info("replay DML records finished. total replayed [{}] records", replayCount);
+        return List.of(batchSnapshotId + 1);
     }
 }

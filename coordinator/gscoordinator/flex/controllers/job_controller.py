@@ -10,7 +10,7 @@ from gscoordinator.flex.models.error import Error  # noqa: E501
 from gscoordinator.flex.models.job_status import JobStatus  # noqa: E501
 from gscoordinator.flex import util
 
-from gscoordinator.flex.core import client_wrapper
+from gscoordinator.flex.core import get_client_wrapper
 from gscoordinator.flex.core import handle_api_exception
 
 
@@ -27,7 +27,7 @@ def delete_job_by_id(job_id, delete_scheduler=None):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return client_wrapper.delete_job_by_id(job_id, delete_scheduler)
+    return get_client_wrapper().delete_job_by_id(job_id, delete_scheduler)
 
 
 @handle_api_exception()
@@ -45,7 +45,7 @@ def get_dataloading_job_config(graph_id, dataloading_job_config):  # noqa: E501
     """
     if connexion.request.is_json:
         dataloading_job_config = DataloadingJobConfig.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.get_dataloading_job_config(graph_id, dataloading_job_config)
+    return get_client_wrapper().get_dataloading_job_config(graph_id, dataloading_job_config)
 
 
 @handle_api_exception()
@@ -59,7 +59,7 @@ def get_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[JobStatus, Tuple[JobStatus, int], Tuple[JobStatus, int, Dict[str, str]]
     """
-    return client_wrapper.get_job_by_id(job_id)
+    return get_client_wrapper().get_job_by_id(job_id)
 
 
 @handle_api_exception()
@@ -71,7 +71,7 @@ def list_jobs():  # noqa: E501
 
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
     """
-    return client_wrapper.list_jobs()
+    return get_client_wrapper().list_jobs()
 
 
 @handle_api_exception()
@@ -89,4 +89,4 @@ def submit_dataloading_job(graph_id, dataloading_job_config):  # noqa: E501
     """
     if connexion.request.is_json:
         dataloading_job_config = DataloadingJobConfig.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.submit_dataloading_job(graph_id, dataloading_job_config)
+    return get_client_wrapper().submit_dataloading_job(graph_id, dataloading_job_config)

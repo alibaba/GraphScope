@@ -259,9 +259,8 @@ void GraphDB::Close() {
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
-ReadTransaction GraphDB::GetReadTransaction() {
-  uint32_t ts = version_manager_.acquire_read_timestamp();
-  return {graph_, version_manager_, ts};
+ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
+  return contexts_[thread_id].session.GetReadTransaction();
 }
 
 InsertTransaction GraphDB::GetInsertTransaction(int thread_id) {
@@ -306,7 +305,12 @@ const Schema& GraphDB::schema() const { return graph_.schema(); }
 
 std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
     uint8_t label, const std::string& col_name) const {
-  return graph_.get_vertex_table(label).get_column(col_name);
+  return graph_.get_vertex_property_column(label, col_name);
+}
+
+std::shared_ptr<RefColumnBase> GraphDB::get_vertex_id_column(
+    uint8_t label) const {
+  return graph_.get_vertex_id_column(label);
 }
 
 AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {

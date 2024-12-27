@@ -81,6 +81,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                             b.put("graph.query.cache", queryCache);
                             b.put("graph.planner", graphPlanner);
                             b.put("graph.meta", meta);
+                            b.put("graph.query.logger", statusCallback.getQueryLogger());
                         })
                 .withResult(
                         o -> {
@@ -95,7 +96,14 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                 GraphPlanner.Summary summary = value.summary;
                                 statusCallback
                                         .getQueryLogger()
-                                        .debug("ir plan {}", summary.getPhysicalPlan().explain());
+                                        .info(
+                                                "logical IR plan \n\n {} \n\n",
+                                                summary.getLogicalPlan().explain());
+                                statusCallback
+                                        .getQueryLogger()
+                                        .debug(
+                                                "physical IR plan {}",
+                                                summary.getPhysicalPlan().explain());
                                 ResultSchema resultSchema =
                                         new ResultSchema(summary.getLogicalPlan());
                                 GremlinResultProcessor listener =
@@ -118,7 +126,11 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                                     summary.getLogicalPlan(),
                                                     summary.getPhysicalPlan()),
                                             listener,
-                                            timeoutConfig);
+                                            timeoutConfig,
+                                            statusCallback.getQueryLogger());
+                                    statusCallback
+                                            .getQueryLogger()
+                                            .info("[query][submitted]: physical IR submitted");
                                 }
                                 // request results from remote engine in a blocking way
                                 listener.request();

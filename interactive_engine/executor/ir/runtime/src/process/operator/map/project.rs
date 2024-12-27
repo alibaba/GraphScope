@@ -1570,7 +1570,8 @@ mod tests {
             Vertex::new(vids[0], None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllV,
-        );
+        )
+        .unwrap();
         for i in 1..vids.len() {
             path.append(Vertex::new(vids[i], None, details.clone()));
         }
@@ -1583,7 +1584,8 @@ mod tests {
             Vertex::new(vids[0], None, details.clone()),
             pb::path_expand::PathOpt::Simple,
             pb::path_expand::ResultOpt::AllV,
-        );
+        )
+        .unwrap();
         for i in 1..vids.len() {
             path.append(Vertex::new(vids[i], None, details.clone()));
         }
@@ -1708,7 +1710,8 @@ mod tests {
             Vertex::new(1, None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllVE,
-        );
+        )
+        .unwrap();
         sub_path1.append(Edge::new(12, None, 1, 2, details.clone()));
         sub_path1.append(Vertex::new(2, None, details.clone()));
         // sub_path2: [3 <- 2]
@@ -1716,7 +1719,8 @@ mod tests {
             Vertex::new(3, None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllVE,
-        );
+        )
+        .unwrap();
         sub_path2.append(Edge::new(23, None, 2, 3, details.clone()));
         sub_path2.append(Vertex::new(2, None, details.clone()));
         // concat path: [1 -> 2 <- 3]
@@ -1724,7 +1728,8 @@ mod tests {
             Vertex::new(1, None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllVE,
-        );
+        )
+        .unwrap();
         concat_path.append(Edge::new(12, None, 1, 2, details.clone()));
         concat_path.append(Vertex::new(2, None, details.clone()));
         concat_path.append(Edge::new(23, None, 2, 3, details.clone()));
@@ -1811,7 +1816,8 @@ mod tests {
         let vertex1 = init_vertex1();
         let vertex2 = init_vertex2();
         let mut path =
-            GraphPath::new(vertex1, pb::path_expand::PathOpt::Arbitrary, pb::path_expand::ResultOpt::AllV);
+            GraphPath::new(vertex1, pb::path_expand::PathOpt::Arbitrary, pb::path_expand::ResultOpt::AllV)
+                .unwrap();
         path.append(vertex2);
         Record::new(path, None)
     }

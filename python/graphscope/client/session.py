@@ -1331,8 +1331,11 @@ class Session(object):
         num_clients=1,
         manifest_path=None,
         client_folder_path="./",
+        return_pyg_remote_backend=False,
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
+        from graphscope.learning.gs_feature_store import GsFeatureStore
+        from graphscope.learning.gs_graph_store import GsGraphStore
         from graphscope.learning.utils import fill_params_in_yaml
         from graphscope.learning.utils import read_folder_files_content
 
@@ -1380,6 +1383,12 @@ class Session(object):
         g = GLTorchGraph(endpoints)
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
+
+        if return_pyg_remote_backend:
+            feature_store = GsFeatureStore(config)
+            graph_store = GsGraphStore(config)
+            return g, feature_store, graph_store
+
         return g
 
     def nx(self):
@@ -1682,6 +1691,7 @@ def graphlearn_torch(
     num_clients=1,
     manifest_path=None,
     client_folder_path="./",
+    return_pyg_remote_backend=False,
 ):
     assert graph is not None, "graph cannot be None"
     assert (
@@ -1699,4 +1709,5 @@ def graphlearn_torch(
         num_clients,
         manifest_path,
         client_folder_path,
+        return_pyg_remote_backend,
     )  # pylint: disable=protected-access

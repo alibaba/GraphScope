@@ -19,7 +19,7 @@ if __name__ == "__main__":
     expected = {}
     expected_cluster_map = {}
     with open(actual_file, 'r') as f:
-        reader = csv.reader(f,delimiter=' ')
+        reader = csv.reader(f,delimiter='\t')
         for row in reader:
             vertex_id = int(row[0])
             cluster_id = int(row[1])
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print("Finished reading actual file, vertices count: ", len(actual), " num clusters ", len(actual_cluster_map), " min cluster size, max cluster size: ", min(actual_cluster_map.values()), max(actual_cluster_map.values()))
 
     with open(expected_file, 'r') as f:
-        reader = csv.reader(f, delimiter='\t')
+        reader = csv.reader(f, delimiter=',')
         for row in reader:
             vertex_id = int(row[0])
             cluster_id = int(row[1])
