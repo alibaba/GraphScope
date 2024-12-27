@@ -499,9 +499,7 @@ class OptionalBDSLEdgeColumn : public IEdgeColumn {
            std::get<1>(edges_[idx]) != std::numeric_limits<vid_t>::max();
   }
 
-  std::vector<LabelTriplet> get_labels() const override {
-    return {label_};
-  }
+  std::vector<LabelTriplet> get_labels() const override { return {label_}; }
 
   EdgeColumnType edge_column_type() const override {
     return EdgeColumnType::kBDSL;
