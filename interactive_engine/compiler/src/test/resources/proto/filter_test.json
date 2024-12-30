@@ -46,7 +46,8 @@
               "nodeType": {
                 "dataType": {
                   "string": {
-                    "longText": {
+                    "char": {
+                      "fixedLength": 5
                     }
                   }
                 }

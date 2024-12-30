@@ -16,7 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
-import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
+import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeDesc;
+import com.alibaba.graphscope.common.ir.meta.schema.IrDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
@@ -274,7 +275,7 @@ public abstract class Utils {
     public static final com.alibaba.graphscope.proto.type.Common.DataType protoBasicDataType(
             RelDataType basicType) {
         try {
-            GSDataTypeConvertor convertor = new GSDataTypeConvertor.Calcite(null);
+            IrDataTypeConvertor<GSDataTypeDesc> convertor = new IrDataTypeConvertor.Flex(null);
             return convertor.convert(basicType).getProtoDesc();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -312,6 +313,7 @@ public abstract class Utils {
                                 SqlTypeName.INTEGER,
                                 SqlTypeName.BIGINT,
                                 SqlTypeName.CHAR,
+                                SqlTypeName.VARCHAR,
                                 SqlTypeName.DECIMAL,
                                 SqlTypeName.FLOAT,
                                 SqlTypeName.DOUBLE);

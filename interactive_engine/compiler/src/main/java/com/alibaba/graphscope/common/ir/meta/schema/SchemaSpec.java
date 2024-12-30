@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.Map;
@@ -36,19 +37,19 @@ public class SchemaSpec {
         this.content = content;
     }
 
-    public GraphSchema convert() throws JacksonException {
+    public GraphSchema convert(RelDataTypeFactory typeFactory) throws JacksonException {
         switch (type) {
             case IR_CORE_IN_JSON:
-                return Utils.buildSchemaFromJson(content);
+                return Utils.buildSchemaFromJson(content, typeFactory);
             case FLEX_IN_YAML:
-                return Utils.buildSchemaFromYaml(content);
+                return Utils.buildSchemaFromYaml(content, typeFactory);
             case FLEX_IN_JSON:
             default:
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode rootNode = mapper.readTree(content);
                 Map rootMap = mapper.convertValue(rootNode, Map.class);
                 Yaml yaml = new Yaml();
-                return Utils.buildSchemaFromYaml(yaml.dump(rootMap));
+                return Utils.buildSchemaFromYaml(yaml.dump(rootMap), typeFactory);
         }
     }
 

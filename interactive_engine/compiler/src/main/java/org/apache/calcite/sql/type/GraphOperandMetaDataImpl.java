@@ -39,25 +39,38 @@ public class GraphOperandMetaDataImpl extends GraphFamilyOperandTypeChecker
         implements SqlOperandMetadata {
     private final Function<RelDataTypeFactory, List<RelDataType>> paramTypesFactory;
     private final IntFunction<String> paramNameFn;
+    private final Predicate<Integer> allowCast;
 
-    GraphOperandMetaDataImpl(
+    public GraphOperandMetaDataImpl(
             List<RelDataTypeFamily> expectedFamilies,
             Function<@Nullable RelDataTypeFactory, List<RelDataType>> paramTypesFactory,
             IntFunction<String> paramNameFn,
             Predicate<Integer> optional) {
+        this(expectedFamilies, paramTypesFactory, paramNameFn, optional, i -> false);
+    }
+
+    public GraphOperandMetaDataImpl(
+            List<RelDataTypeFamily> expectedFamilies,
+            Function<@Nullable RelDataTypeFactory, List<RelDataType>> paramTypesFactory,
+            IntFunction<String> paramNameFn,
+            Predicate<Integer> optional,
+            Predicate<Integer> allowCast) {
         super(expectedFamilies, optional);
         this.paramTypesFactory = Objects.requireNonNull(paramTypesFactory, "paramTypesFactory");
         this.paramNameFn = paramNameFn;
+        this.allowCast = allowCast;
     }
 
     @Override
     protected Collection<SqlTypeName> getAllowedTypeNames(
             RelDataTypeFactory typeFactory, SqlTypeFamily family, int iFormalOperand) {
+        boolean allowCast = this.allowCast.test(iFormalOperand);
+        if (allowCast) {
+            return family.getTypeNames();
+        }
         List<RelDataType> paramsAllowedTypes = paramTypes(typeFactory);
         if (paramsAllowedTypes.size() > iFormalOperand) {
             return ImmutableList.of(paramsAllowedTypes.get(iFormalOperand).getSqlTypeName());
-        } else if (expectedFamilies.get(iFormalOperand) instanceof SqlTypeFamily) {
-            return ((SqlTypeFamily) expectedFamilies.get(iFormalOperand)).getTypeNames();
         }
         throw new IllegalArgumentException(
                 "cannot find allowed type for type index="
