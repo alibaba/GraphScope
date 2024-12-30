@@ -24,6 +24,9 @@ import com.google.protobuf.util.JsonFormat;
 
 import java.util.Map;
 
+/**
+ * flex type specification
+ */
 public class GSDataTypeDesc {
     // support more format of GSDataTypeDesc, i.e. JSON, proto, etc.
     private final Map<String, Object> yamlDesc;
