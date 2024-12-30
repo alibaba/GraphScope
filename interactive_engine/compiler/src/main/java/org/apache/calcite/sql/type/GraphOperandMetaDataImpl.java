@@ -64,6 +64,10 @@ public class GraphOperandMetaDataImpl extends GraphFamilyOperandTypeChecker
     @Override
     protected Collection<SqlTypeName> getAllowedTypeNames(
             RelDataTypeFactory typeFactory, SqlTypeFamily family, int iFormalOperand) {
+        // by default, the types in the same type family are not allowed to cast among each other,
+        // i.e. int32 to int64, char to varchar
+        // set the allowCast to true to enable the cast, see
+        // 'test/resources/config/modern/graph.yaml' for more usage
         boolean allowCast = this.allowCast.test(iFormalOperand);
         if (allowCast) {
             return family.getTypeNames();
