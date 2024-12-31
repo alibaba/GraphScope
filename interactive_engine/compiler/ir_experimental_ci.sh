@@ -77,6 +77,9 @@ unset DISTRIBUTED_ENV
 
 
 # Test5: run cypher movie tests on experimental store via calcite-based ir
+# start engine service and load movie graph
+cd ${base_dir}/../executor/ir/target/release && DATA_PATH=/tmp/gstest/movie_graph_exp_bin RUST_LOG=info ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config &
+sleep 5s
 # restart compiler service
 cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json graph.planner.opt=CBO graph.statistics:=./src/test/resources/statistics/movie_statistics.json graph.physical.opt=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule &
 sleep 10s
