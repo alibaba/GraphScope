@@ -386,7 +386,10 @@ public interface IrDataTypeConvertor<T> {
                                             "component_type",
                                             componentType,
                                             "max_length",
-                                            Integer.MAX_VALUE));
+                                            from.getPrecision()
+                                                            == RelDataType.PRECISION_NOT_SPECIFIED
+                                                    ? Integer.MAX_VALUE
+                                                    : from.getPrecision()));
                     break;
                 case MAP:
                     Map<String, Object> keyType;
