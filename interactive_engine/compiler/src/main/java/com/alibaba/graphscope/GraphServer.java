@@ -210,8 +210,8 @@ public class GraphServer {
             case "rust-mcsr":
                 testGraph = TestGraphFactory.RUST_MCSR;
                 break;
-            case "cpp-mcsr":
-                logger.info("using cpp-mcsr as test graph");
+            case "native-mcsr":
+                logger.info("using native-mcsr as test graph");
                 testGraph = TestGraphFactory.CPP_MCSR;
                 break;
             default:

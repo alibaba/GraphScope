@@ -38,6 +38,9 @@ public class YamlConfigs extends Configs {
                         (Configs configs) -> configs.get("compiler.planner.is_on"))
                 .put("graph.planner.opt", (Configs configs) -> configs.get("compiler.planner.opt"))
                 .put(
+                        "graph.planner.cbo.glogue.size",
+                        (Configs configs) -> configs.get("compiler.planner.cbo.glogue.size"))
+                .put(
                         "graph.planner.rules",
                         (Configs configs) -> {
                             String rules = configs.get("compiler.planner.rules");
@@ -81,7 +84,7 @@ public class YamlConfigs extends Configs {
                             if (configs.get("compute_engine.store.type") != null) {
                                 return configs.get("compute_engine.store.type");
                             } else {
-                                return "cpp-mcsr";
+                                return "native-mcsr";
                             }
                         })
                 .put(
