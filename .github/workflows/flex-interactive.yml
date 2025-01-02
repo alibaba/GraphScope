@@ -54,7 +54,8 @@ jobs:
     - name: Test gsctl
       env:
         CYPHER_PORT: 7688
-        COORDINATOR_PORT: 8081
+        COORDINATOR_PORT: 8080
+        COORDINATOR_ENDPOINT: "http://127.0.0.1:8080"
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
