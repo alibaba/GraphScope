@@ -52,11 +52,14 @@ jobs:
       if: false
 
     - name: Test gsctl
+      env:
+        CYPHER_PORT: 7688
+        COORDINATOR_PORT: 8081
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
-        # launch service: 8080 for coordinator http port; 7687 for cypher port;
-        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port 7688 --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
@@ -67,8 +70,8 @@ jobs:
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
 
         # test coordinator
-        res=`curl http://127.0.0.1:8080/api/v1/service`
-        echo $res | grep 7688 || exit 1
+        res=`curl http://127.0.0.1:${COORDINATOR_PORT}/api/v1/service`
+        echo $res | grep ${CYPHER_PORT} || exit 1
 
         # destroy instance
         gsctl instance destroy --type interactive -y
