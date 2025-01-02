@@ -18,14 +18,19 @@
 
 import hashlib
 import json
+import logging
+
+from urllib3.exceptions import ProtocolError
 
 from gscoordinator.flex.core.config import BASEID
 from gscoordinator.version import __version__
 
+logger = logging.getLogger("graphscope")
+
 
 def convert_to_configini(graph, ds_manager, config):
     # for bulk loader to connect to groot
-    gremlin_interface = graph.gremlin_interface
+    groot_endpoints = graph.groot_endpoints
     # column mapping config
     column_mapping_config = {}
     # project
@@ -112,12 +117,12 @@ def convert_to_configini(graph, ds_manager, config):
     # custom_config
     custom_config = {
         "separatr": "\\\\|",  # fixed
-        "graphEndpoint": gremlin_interface["grpc_endpoint"],
+        "graphEndpoint": groot_endpoints["grpc_endpoint"],
         "project": project,
         "outputTable": output_table,
         "columnMappingConfig": json.dumps(column_mapping_config),
-        "authUsername": gremlin_interface["username"],
-        "authPassword": gremlin_interface["password"],
+        "authUsername": groot_endpoints["username"],
+        "authPassword": groot_endpoints["password"],
         "dataSinkType": "volume",
         "odpsVolumeProject": project,
         # "-" is not allowed
@@ -136,3 +141,30 @@ def convert_to_configini(graph, ds_manager, config):
         "customConfig": custom_config,
     }
     return configini
+
+def test_cypher_endpoint(host : str, port : int):
+    """
+    Test if the cypher endpoint is available, if not return None, otherwise return the cypher endpoint
+    Note that we send http request to check if the cypher endpoint is available, not submitting a cypher query,
+    the reason is that the cypher query may raise exceptions in case of other errors.
+    """
+    cypher_endpoint = f"neo4j://{host}:{port}"
+    try:
+        import requests
+        response = requests.get(f"http://{host}:{port}")
+        response.raise_for_status()
+    except (requests.exceptions.ConnectionError) as e:
+        if (e.args != None and len(e.args) > 0):
+            # Sending http request to cypher endpoint should fail with ProtocolError
+            if isinstance(e.args[0], ProtocolError):
+                logger.debug("Cypher endpoint is available: {cypher_endpoint}")
+            else:
+                cypher_endpoint = None
+                logger.debug(f"Cypher endpoint is not available: {str(e)}")
+    except Exception as e:
+        logger.debug(f"Cypher endpoint is not available: {str(e)}")
+        cypher_endpoint = None
+        return cypher_endpoint
+    else:
+        logger.error("Should not reach here")
+    return cypher_endpoint

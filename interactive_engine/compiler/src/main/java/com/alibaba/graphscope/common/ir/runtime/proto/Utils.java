@@ -296,15 +296,14 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
                 RelDataType elementType = basicType.getComponentType();
-                switch (elementType.getSqlTypeName()) {
-                    case INTEGER:
+                Common.DataType dataType = protoBasicDataType(elementType);
+                switch (dataType) {
+                    case INT32:
                         return Common.DataType.INT32_ARRAY;
-                    case BIGINT:
+                    case INT64:
                         return Common.DataType.INT64_ARRAY;
-                    case CHAR:
+                    case STRING:
                         return Common.DataType.STRING_ARRAY;
-                    case DECIMAL:
-                    case FLOAT:
                     case DOUBLE:
                         return Common.DataType.DOUBLE_ARRAY;
                     default:

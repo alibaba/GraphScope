@@ -143,12 +143,11 @@ RTAny edge_to_rt_any(const results::Edge& edge) {
                              std::get<2>(edge_triplet_tuple)};
   if (properties.size() == 0) {
     return RTAny::from_edge(
-        std::tuple{label_triplet, src_vid, dst_vid, Any(), Direction::kOut});
+        {label_triplet, src_vid, dst_vid, Any(), Direction::kOut});
   } else if (properties.size() == 1) {
     LOG(FATAL) << "Not implemented.";
-    return RTAny::from_edge(std::tuple{label_triplet, src_vid, dst_vid,
-                                       property_to_any(properties[0]),
-                                       Direction::kOut});
+    return RTAny::from_edge({label_triplet, src_vid, dst_vid,
+                             property_to_any(properties[0]), Direction::kOut});
   } else {
     std::vector<Any> props;
     for (auto& prop : properties) {
@@ -157,7 +156,7 @@ RTAny edge_to_rt_any(const results::Edge& edge) {
     Any any;
     any.set_record(props);
     return RTAny::from_edge(
-        std::tuple{label_triplet, src_vid, dst_vid, any, Direction::kOut});
+        {label_triplet, src_vid, dst_vid, any, Direction::kOut});
   }
 }  // namespace runtime
 
