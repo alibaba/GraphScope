@@ -137,9 +137,17 @@ static bl::result<Context> scan_vertices_no_expr_impl(
     std::vector<int64_t> gids;
     for (size_t i = 0; i < input_ids.size(); i++) {
       if (input_ids[i].type != PropertyType::Int64()) {
-        RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id");
+        if (input_ids[i].type == PropertyType::Int32()) {
+          LOG(WARNING) << "Implicitly convert int32 to int64 when scan vertex "
+                          "with global id";
+          gids.push_back(input_ids[i].AsInt32());
+        } else {
+          RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id, but got" +
+                                   input_ids[i].type.ToString());
+        }
+      } else {
+        gids.push_back(input_ids[i].AsInt64());
       }
-      gids.push_back(input_ids[i].AsInt64());
     }
     return Scan::filter_gids(
         txn, scan_params, [](label_t, vid_t) { return true; }, gids);
