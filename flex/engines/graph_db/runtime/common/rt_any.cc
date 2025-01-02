@@ -490,13 +490,6 @@ bool RTAny::operator==(const RTAny& other) const {
     return value_.vertex == other.value_.vertex;
   } else if (type_ == RTAnyType::kDate32) {
     return value_.i64_val == other.value_.i64_val;
-  }
-
-  if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
-    return value_.i64_val == other.value_.i32_val;
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
-    return value_.i32_val == other.value_.i64_val;
   } else if (type_ == RTAnyType::kF64Value) {
     return value_.f64_val == other.value_.f64_val;
   }
