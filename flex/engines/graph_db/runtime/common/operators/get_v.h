@@ -113,7 +113,7 @@ class GetV {
       if (opt == VOpt::kStart) {
         input_edge_list.foreach_edge(
             [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                const Any& edata, Direction dir) {
+                const EdgeData& edata, Direction dir) {
               if (pred(label.src_label, src, index)) {
                 builder.push_back_opt(src);
                 shuffle_offset.push_back(index);
@@ -122,7 +122,7 @@ class GetV {
       } else if (opt == VOpt::kEnd) {
         input_edge_list.foreach_edge(
             [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                const Any& edata, Direction dir) {
+                const EdgeData& edata, Direction dir) {
               if (pred(label.dst_label, dst, index)) {
                 builder.push_back_opt(dst);
                 shuffle_offset.push_back(index);
@@ -159,7 +159,7 @@ class GetV {
         if (opt == VOpt::kStart) {
           input_edge_list.foreach_edge([&](size_t index,
                                            const LabelTriplet& label, vid_t src,
-                                           vid_t dst, const Any& edata,
+                                           vid_t dst, const EdgeData& edata,
                                            Direction dir) {
             if (std::find(labels.begin(), labels.end(), label.src_label) !=
                 labels.end()) {
@@ -170,7 +170,7 @@ class GetV {
         } else if (opt == VOpt::kEnd) {
           input_edge_list.foreach_edge([&](size_t index,
                                            const LabelTriplet& label, vid_t src,
-                                           vid_t dst, const Any& edata,
+                                           vid_t dst, const EdgeData& edata,
                                            Direction dir) {
             if (std::find(labels.begin(), labels.end(), label.dst_label) !=
                 labels.end()) {
@@ -196,7 +196,7 @@ class GetV {
           CHECK(params.opt == VOpt::kOther);
           input_edge_list.foreach_edge([&](size_t index,
                                            const LabelTriplet& label, vid_t src,
-                                           vid_t dst, const Any& edata,
+                                           vid_t dst, const EdgeData& edata,
                                            Direction dir) {
             if (dir == Direction::kOut) {
               builder.push_back_vertex(std::make_pair(label.dst_label, dst));
@@ -212,7 +212,7 @@ class GetV {
           SLVertexColumnBuilder builder(type.src_label);
           input_edge_list.foreach_edge(
               [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& edata, Direction dir) {
+                  const EdgeData& edata, Direction dir) {
                 if (dir == Direction::kOut) {
                   builder.push_back_opt(dst);
                   shuffle_offset.push_back(index);
@@ -237,7 +237,7 @@ class GetV {
           SLVertexColumnBuilder builder(labels[0]);
           input_edge_list.foreach_edge(
               [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& edata, Direction dir) {
+                  const EdgeData& edata, Direction dir) {
                 if (dir == Direction::kOut) {
                   if (label.dst_label == labels[0]) {
                     builder.push_back_opt(dst);
@@ -257,7 +257,7 @@ class GetV {
           MLVertexColumnBuilder builder;
           input_edge_list.foreach_edge([&](size_t index,
                                            const LabelTriplet& label, vid_t src,
-                                           vid_t dst, const Any& edata,
+                                           vid_t dst, const EdgeData& edata,
                                            Direction dir) {
             if (dir == Direction::kOut) {
               if (std::find(labels.begin(), labels.end(), label.dst_label) !=
@@ -286,7 +286,7 @@ class GetV {
         CHECK(params.opt == VOpt::kOther);
         input_edge_list.foreach_edge(
             [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                const Any& edata, Direction dir) {
+                const EdgeData& edata, Direction dir) {
               if (dir == Direction::kOut) {
                 builder.push_back_vertex(std::make_pair(label.dst_label, dst));
               } else {
@@ -303,7 +303,7 @@ class GetV {
           SLVertexColumnBuilder builder(vlabel);
           input_edge_list.foreach_edge(
               [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& edata, Direction dir) {
+                  const EdgeData& edata, Direction dir) {
                 if (dir == Direction::kOut) {
                   if (label.dst_label == vlabel) {
                     builder.push_back_opt(dst);
@@ -327,7 +327,7 @@ class GetV {
           MLVertexColumnBuilder builder;
           input_edge_list.foreach_edge([&](size_t index,
                                            const LabelTriplet& label, vid_t src,
-                                           vid_t dst, const Any& edata,
+                                           vid_t dst, const EdgeData& edata,
                                            Direction dir) {
             if (dir == Direction::kOut) {
               if (labels[label.dst_label]) {

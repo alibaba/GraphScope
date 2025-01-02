@@ -731,4 +731,22 @@ public class MatchTest {
                         + " alias=[n], opt=[VERTEX])",
                 after.explain().trim());
     }
+
+    // the return column order should align with the query given
+    @Test
+    public void aggregate_column_order_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval("Match (n:person) Return count(n), n, sum(n.age)", builder).build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f1=[$f1], n=[n], $f2=[$f2], isAppend=[false])\n"
+                    + "  GraphLogicalAggregate(keys=[{variables=[n], aliases=[n]}],"
+                    + " values=[[{operands=[n], aggFunction=COUNT, alias='$f1', distinct=false},"
+                    + " {operands=[n.age], aggFunction=SUM, alias='$f2', distinct=false}]])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[n], opt=[VERTEX])",
+                after.explain().trim());
+    }
 }

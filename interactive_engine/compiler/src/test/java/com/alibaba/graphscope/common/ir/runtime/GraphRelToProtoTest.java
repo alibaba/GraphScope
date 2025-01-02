@@ -27,12 +27,7 @@ import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuild
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
-import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
-import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1235,6 +1230,24 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/partitioned_intersect_test_2.json"),
                     plan.explain().trim());
         }
+    }
+
+    @Test
+    public void collect_labels_test() {
+        Configs configs = getMockCBOConfig();
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMeta irMeta = getMockCBOMeta(optimizer);
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (n:PERSON) Return collect(labels(n));", builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(configs, irMeta, new LogicalPlan(after));
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/collect_labels.json"),
+                protoBuilder.build().explain().trim());
     }
 
     private Configs getMockCBOConfig() {

@@ -49,6 +49,9 @@ const RTAnyType RTAnyType::kNull = RTAnyType(RTAnyType::RTAnyTypeImpl::kNull);
 const RTAnyType RTAnyType::kTuple = RTAnyType(RTAnyType::RTAnyTypeImpl::kTuple);
 const RTAnyType RTAnyType::kList = RTAnyType(RTAnyType::RTAnyTypeImpl::kList);
 const RTAnyType RTAnyType::kMap = RTAnyType(RTAnyType::RTAnyTypeImpl::kMap);
+const RTAnyType RTAnyType::kEmpty = RTAnyType(RTAnyType::RTAnyTypeImpl::kEmpty);
+const RTAnyType RTAnyType::kRecordView =
+    RTAnyType(RTAnyType::RTAnyTypeImpl::kRecordView);
 RTAny List::get(size_t idx) const { return impl_->get(idx); }
 RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
   switch (dt.type_case()) {
@@ -110,6 +113,27 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
   return RTAnyType::kUnknown;
 }
 
+PropertyType rt_type_to_property_type(RTAnyType type) {
+  switch (type.type_enum_) {
+  case RTAnyType::RTAnyTypeImpl::kEmpty:
+    return PropertyType::kEmpty;
+  case RTAnyType::RTAnyTypeImpl::kI64Value:
+    return PropertyType::kInt64;
+  case RTAnyType::RTAnyTypeImpl::kI32Value:
+    return PropertyType::kInt32;
+  case RTAnyType::RTAnyTypeImpl::kF64Value:
+    return PropertyType::kDouble;
+  case RTAnyType::RTAnyTypeImpl::kBoolValue:
+    return PropertyType::kBool;
+  case RTAnyType::RTAnyTypeImpl::kStringValue:
+    return PropertyType::kString;
+  case RTAnyType::RTAnyTypeImpl::kDate32:
+    return PropertyType::kDate;
+  default:
+    LOG(FATAL) << "not support for " << static_cast<int>(type.type_enum_);
+  }
+}
+
 RTAny::RTAny() : type_(RTAnyType::kUnknown), value_() {}
 RTAny::RTAny(RTAnyType type) : type_(type) {}
 
@@ -137,6 +161,32 @@ RTAny::RTAny(const Any& val) {
   } else {
     LOG(FATAL) << "Any value: " << val.to_string()
                << ", type = " << val.type.type_enum;
+  }
+}
+
+RTAny::RTAny(const EdgeData& val) {
+  if (val.type == RTAnyType::kI64Value) {
+    type_ = RTAnyType::kI64Value;
+    value_.i64_val = val.value.i64_val;
+  } else if (val.type == RTAnyType::kStringValue) {
+    type_ = RTAnyType::kStringValue;
+    value_.str_val =
+        std::string_view(val.value.str_val.data(), val.value.str_val.size());
+  } else if (val.type == RTAnyType::kI32Value) {
+    type_ = RTAnyType::kI32Value;
+    value_.i32_val = val.value.i32_val;
+  } else if (val.type == RTAnyType::kF64Value) {
+    type_ = RTAnyType::kF64Value;
+    value_.f64_val = val.value.f64_val;
+  } else if (val.type == RTAnyType::kBoolValue) {
+    type_ = RTAnyType::kBoolValue;
+    value_.b_val = val.value.b_val;
+  } else if (val.type == RTAnyType::kDate32) {
+    type_ = RTAnyType::kDate32;
+    value_.i64_val = val.value.i64_val;
+  } else {
+    LOG(FATAL) << "Any value: " << val.to_string()
+               << ", type = " << static_cast<int>(val.type.type_enum_);
   }
 }
 
@@ -215,8 +265,7 @@ RTAny RTAny::from_vertex(const std::pair<label_t, vid_t>& v) {
   return ret;
 }
 
-RTAny RTAny::from_edge(
-    const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& v) {
+RTAny RTAny::from_edge(const EdgeRecord& v) {
   RTAny ret;
   ret.type_ = RTAnyType::kEdge;
   ret.value_.edge = v;
@@ -356,8 +405,7 @@ const std::pair<label_t, vid_t>& RTAny::as_vertex() const {
   CHECK(type_ == RTAnyType::kVertex);
   return value_.vertex;
 }
-const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& RTAny::as_edge()
-    const {
+const EdgeRecord& RTAny::as_edge() const {
   CHECK(type_ == RTAnyType::kEdge);
   return value_.edge;
 }
@@ -631,6 +679,23 @@ void sink_vertex(const gs::ReadTransaction& txn,
   }
 }
 
+static void sink_edge_data(const EdgeData& any, common::Value* value) {
+  if (any.type == RTAnyType::kI64Value) {
+    value->set_i64(any.value.i64_val);
+  } else if (any.type == RTAnyType::kStringValue) {
+    value->set_str(any.value.str_val.data(), any.value.str_val.size());
+  } else if (any.type == RTAnyType::kI32Value) {
+    value->set_i32(any.value.i32_val);
+  } else if (any.type == RTAnyType::kF64Value) {
+    value->set_f64(any.value.f64_val);
+  } else if (any.type == RTAnyType::kBoolValue) {
+    value->set_boolean(any.value.b_val);
+  } else {
+    LOG(FATAL) << "Any value: " << any.to_string()
+               << ", type = " << static_cast<int>(any.type.type_enum_);
+  }
+}
+
 void RTAny::sink(const gs::ReadTransaction& txn, int id,
                  results::Column* col) const {
   col->mutable_name_or_id()->set_id(id);
@@ -690,9 +755,9 @@ void RTAny::sink(const gs::ReadTransaction& txn, int id,
     if (prop_names.size() == 1) {
       auto props = e->add_properties();
       props->mutable_key()->set_name(prop_names[0]);
-      sink_any(prop, e->mutable_properties(0)->mutable_value());
+      sink_edge_data(prop, e->mutable_properties(0)->mutable_value());
     } else if (prop_names.size() > 1) {
-      auto rv = prop.AsRecordView();
+      auto rv = prop.as<RecordView>();
       if (rv.size() != prop_names.size()) {
         LOG(ERROR) << "record view size not match with prop names";
       }
@@ -816,6 +881,27 @@ std::string RTAny::to_string() const {
   }
 }
 
+std::shared_ptr<EdgePropVecBase> EdgePropVecBase::make_edge_prop_vec(
+    PropertyType type) {
+  if (type == PropertyType::Int64()) {
+    return std::make_shared<EdgePropVec<int64_t>>();
+  } else if (type == PropertyType::StringView()) {
+    return std::make_shared<EdgePropVec<std::string_view>>();
+  } else if (type == PropertyType::Date()) {
+    return std::make_shared<EdgePropVec<Date>>();
+  } else if (type == PropertyType::Int32()) {
+    return std::make_shared<EdgePropVec<int32_t>>();
+  } else if (type == PropertyType::Double()) {
+    return std::make_shared<EdgePropVec<double>>();
+  } else if (type == PropertyType::Bool()) {
+    return std::make_shared<EdgePropVec<bool>>();
+  } else if (type == PropertyType::Empty()) {
+    return std::make_shared<EdgePropVec<grape::EmptyType>>();
+  } else {
+    LOG(FATAL) << "not support for " << type;
+    return nullptr;
+  }
+}
 }  // namespace runtime
 
 }  // namespace gs

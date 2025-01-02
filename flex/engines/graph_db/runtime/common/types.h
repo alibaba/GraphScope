@@ -56,6 +56,7 @@ enum class JoinKind {
 };
 
 struct LabelTriplet {
+  LabelTriplet() = default;
   LabelTriplet(label_t src, label_t dst, label_t edge)
       : src_label(src), dst_label(dst), edge_label(edge) {}
 
