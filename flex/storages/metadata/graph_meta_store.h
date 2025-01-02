@@ -39,6 +39,7 @@ using JobId = std::string;
 struct Parameter {
   std::string name;
   PropertyType type;
+  bool allow_cast{false};
 
   std::string ToJson() const;
 };
