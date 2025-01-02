@@ -28,12 +28,14 @@ from kubernetes import config as kube_config
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import CREATION_TIME
+from gscoordinator.flex.core.config import GROOT_CYPHER_PORT
 from gscoordinator.flex.core.config import GROOT_GREMLIN_PORT
 from gscoordinator.flex.core.config import GROOT_GRPC_PORT
 from gscoordinator.flex.core.config import GROOT_PASSWORD
 from gscoordinator.flex.core.config import GROOT_USERNAME
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import NAMESPACE
+from gscoordinator.flex.core.insight.utils import test_cypher_endpoint
 from gscoordinator.flex.core.scheduler import schedule
 from gscoordinator.flex.core.utils import data_type_to_groot
 from gscoordinator.flex.core.utils import get_internal_ip
@@ -46,7 +48,7 @@ logger = logging.getLogger("graphscope")
 class GrootGraph(object):
     """Graph class for GraphScope store"""
 
-    def __init__(self, name, creation_time, gremlin_endpoint, grpc_endpoint):
+    def __init__(self, name, creation_time, gremlin_endpoint, grpc_endpoint, cypher_endpoint = None):
         self._id = "1"
         self._name = name
 
@@ -60,12 +62,14 @@ class GrootGraph(object):
         )
         self._g = self._conn.g()
         self._schema = self._g.schema().to_dict()
-        self._gremlin_interface = {
+        self._endpoints = {
             "gremlin_endpoint": gremlin_endpoint,
             "grpc_endpoint": grpc_endpoint,
             "username": GROOT_USERNAME,
             "password": GROOT_PASSWORD,
         }
+        self._endpoints["cypher_endpoint"] = cypher_endpoint
+            
         # kubernetes
         if CLUSTER_TYPE == "KUBERNETES":
             self._api_client = resolve_api_client()
@@ -97,22 +101,27 @@ class GrootGraph(object):
                 grpc_endpoint, gremlin_endpoint, GROOT_USERNAME, GROOT_PASSWORD
             )
             g = conn.g()
+            cypher_endpoint = test_cypher_endpoint(pod.status.pod_ip, GROOT_CYPHER_PORT)
+            
         except Exception as e:
             logger.warn(f"Failed to fetch frontend endpoints: {str(e)}")
         else:
             if (
-                gremlin_endpoint != self._gremlin_interface["gremlin_endpoint"]
-                or grpc_endpoint != self._gremlin_interface["grpc_endpoint"]
+                gremlin_endpoint != self._endpoints["gremlin_endpoint"]
+                or grpc_endpoint != self._endpoints["grpc_endpoint"]
+                or cypher_endpoint != self._endpoints.get("cypher_endpoint")
             ):
                 self._conn = conn
                 self._g = g
                 self._schema = self._g.schema().to_dict()
-                self._gremlin_interface = {
+                self._endpoints = {
                     "gremlin_endpoint": gremlin_endpoint,
                     "grpc_endpoint": grpc_endpoint,
                     "username": GROOT_USERNAME,
                     "password": GROOT_PASSWORD,
                 }
+                if cypher_endpoint:
+                    self._endpoints["cypher_endpoint"] = cypher_endpoint
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
 
     def __del__(self):
@@ -131,8 +140,8 @@ class GrootGraph(object):
         return self._name
 
     @property
-    def gremlin_interface(self):
-        return self._gremlin_interface
+    def groot_endpoints(self):
+        return self._endpoints
 
     @property
     def schema(self):
@@ -284,12 +293,16 @@ def get_groot_graph_from_local():
             client.close()
             break
         time.sleep(5)
+    # test whether cypher endpoint is ready
+    cypher_endpoint = test_cypher_endpoint(host, GROOT_CYPHER_PORT)
+    
     # groot graph
     return GrootGraph(
         name=INSTANCE_NAME,
         creation_time=CREATION_TIME,
         gremlin_endpoint=gremlin_endpoint,
         grpc_endpoint=grpc_endpoint,
+        cypher_endpoint=cypher_endpoint,
     )
 
 
