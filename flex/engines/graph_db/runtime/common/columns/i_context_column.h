@@ -192,6 +192,12 @@ class IContextColumn {
     return nullptr;
   }
 
+  virtual std::shared_ptr<IContextColumn> optional_shuffle(
+      const std::vector<size_t>& offsets) const {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+    return nullptr;
+  }
+
   virtual std::shared_ptr<IContextColumn> union_col(
       std::shared_ptr<IContextColumn> other) const {
     LOG(FATAL) << "not implemented for " << this->column_info();
@@ -214,6 +220,20 @@ class IContextColumn {
 
   virtual void generate_dedup_offset(std::vector<size_t>& offsets) const {
     LOG(FATAL) << "not implemented for " << this->column_info();
+  }
+
+  virtual std::pair<std::shared_ptr<IContextColumn>,
+                    std::vector<std::vector<size_t>>>
+  generate_aggregate_offset() const {
+    LOG(INFO) << "not implemented for " << this->column_info();
+    std::shared_ptr<IContextColumn> col(nullptr);
+    return std::make_pair(col, std::vector<std::vector<size_t>>());
+  }
+
+  virtual bool order_by_limit(bool asc, size_t limit,
+                              std::vector<size_t>& offsets) const {
+    LOG(INFO) << "order by limit not implemented for " << this->column_info();
+    return false;
   }
 };
 
