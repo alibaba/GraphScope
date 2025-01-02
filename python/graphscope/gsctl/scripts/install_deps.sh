@@ -293,7 +293,7 @@ install_boost() {
   pushd "${tempdir}" || exit
   directory="boost_1_75_0"
   file="${directory}.tar.gz"
-  url="https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source"
+  url="https://archives.boost.io/release/1.75.0/source"
   url=$(set_to_cn_url ${url})
   download_and_untar "${url}" "${file}" "${directory}"
   pushd ${directory} || exit
