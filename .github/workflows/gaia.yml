@@ -52,6 +52,12 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.81.0
+        override: true
+
     - name: Rust Format Check
       run: |
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
