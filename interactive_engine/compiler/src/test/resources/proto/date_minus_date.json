@@ -12,15 +12,27 @@
         }
       },
       "nodeType": {
-        "dataType": "DATE32"
+        "dataType": {
+          "temporal": {
+            "date32": {
+            }
+          }
+        }
       }
     },
     "nodeType": {
-      "dataType": "DATE32"
+      "dataType": {
+        "temporal": {
+          "date32": {
+          }
+        }
+      }
     }
   }, {
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     },
     "dateTimeMinus": {
       "interval": "MILLISECOND"
@@ -36,25 +48,39 @@
         }
       },
       "nodeType": {
-        "dataType": "DATE32"
+        "dataType": {
+          "temporal": {
+            "date32": {
+            }
+          }
+        }
       }
     },
     "nodeType": {
-      "dataType": "DATE32"
+      "dataType": {
+        "temporal": {
+          "date32": {
+          }
+        }
+      }
     }
   }, {
     "brace": "RIGHT_BRACE"
   }, {
     "arith": "DIV",
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "const": {
       "i32": 1000
     },
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }]
 }

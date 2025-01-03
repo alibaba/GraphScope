@@ -22,42 +22,76 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "firstName"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "lastName"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "gender"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "birthday"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "creationDate"
               },
-              "type": "DATE32"
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "locationIP"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "browserUsed"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }]
           }]
         }
@@ -95,7 +129,9 @@
               "propId": {
                 "name": "creationDate"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }]
           }, {
             "label": {
@@ -106,7 +142,9 @@
               "propId": {
                 "name": "creationDate"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }]
           }]
         }
@@ -138,42 +176,76 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "imageFile"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "creationDate"
               },
-              "type": "DATE32"
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "locationIP"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "browserUsed"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "language"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "content"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "length"
               },
-              "type": "INT32"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }]
           }, {
             "label": {
@@ -183,32 +255,56 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "creationDate"
               },
-              "type": "DATE32"
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "browserUsed"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "content"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "locationIP"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "length"
               },
-              "type": "INT32"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }]
           }]
         }
@@ -277,17 +373,29 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "url"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }]
                   }]
                 }
@@ -349,17 +457,29 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "url"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }]
                   }]
                 }
@@ -389,42 +509,76 @@
                     "propId": {
                       "name": "id"
                     },
-                    "type": "INT64"
+                    "type": {
+                      "primitiveType": "DT_SIGNED_INT64"
+                    }
                   }, {
                     "propId": {
                       "name": "firstName"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "lastName"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "gender"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "birthday"
                     },
-                    "type": "INT64"
+                    "type": {
+                      "primitiveType": "DT_SIGNED_INT64"
+                    }
                   }, {
                     "propId": {
                       "name": "creationDate"
                     },
-                    "type": "DATE32"
+                    "type": {
+                      "temporal": {
+                        "date32": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "locationIP"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "browserUsed"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }]
                 }]
               }
@@ -437,7 +591,9 @@
     },
     "metaData": [{
       "type": {
-        "dataType": "INT64"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT64"
+        }
       },
       "alias": 6
     }]

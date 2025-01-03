@@ -44,7 +44,7 @@ public class ProjectTest {
         Assert.assertEquals("[a]", project.getProjects().toString());
         Assert.assertEquals(
                 "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)], properties=[BIGINT id,"
-                        + " CHAR(1) name, INTEGER age]) a)",
+                        + " VARCHAR name, INTEGER age]) a)",
                 project.getRowType().toString());
     }
 

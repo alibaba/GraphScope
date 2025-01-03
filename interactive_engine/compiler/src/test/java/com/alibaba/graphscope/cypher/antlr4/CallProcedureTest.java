@@ -30,7 +30,7 @@ public class CallProcedureTest {
                 Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)", "config/modern/graph.yaml");
         Assert.assertEquals("ldbc_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
         Assert.assertEquals(
-                "RecordType(CHAR(1) name)", logicalPlan.getProcedureCall().getType().toString());
+                "RecordType(VARCHAR name)", logicalPlan.getProcedureCall().getType().toString());
     }
 
     // test procedure with invalid parameter types

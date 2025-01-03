@@ -2,7 +2,9 @@
   "operators": [{
     "logical": "NOT",
     "nodeType": {
-      "dataType": "BOOLEAN"
+      "dataType": {
+        "primitiveType": "DT_BOOL"
+      }
     }
   }, {
     "brace": "LEFT_BRACE"
@@ -14,23 +16,41 @@
         }
       },
       "nodeType": {
-        "dataType": "STRING"
+        "dataType": {
+          "string": {
+            "longText": {
+            }
+          }
+        }
       }
     },
     "nodeType": {
-      "dataType": "STRING"
+      "dataType": {
+        "string": {
+          "longText": {
+          }
+        }
+      }
     }
   }, {
     "logical": "REGEX",
     "nodeType": {
-      "dataType": "BOOLEAN"
+      "dataType": {
+        "primitiveType": "DT_BOOL"
+      }
     }
   }, {
     "const": {
       "str": ".*mar.*"
     },
     "nodeType": {
-      "dataType": "STRING"
+      "dataType": {
+        "string": {
+          "char": {
+            "fixedLength": 7
+          }
+        }
+      }
     }
   }, {
     "brace": "RIGHT_BRACE"

@@ -21,17 +21,26 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "name"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "age"
               },
-              "type": "INT32"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }]
           }]
         }
@@ -51,7 +60,12 @@
               }
             },
             "nodeType": {
-              "dataType": "STRING"
+              "dataType": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }
           },
           "alias": 1
@@ -70,17 +84,26 @@
                     "propId": {
                       "name": "id"
                     },
-                    "type": "INT64"
+                    "type": {
+                      "primitiveType": "DT_SIGNED_INT64"
+                    }
                   }, {
                     "propId": {
                       "name": "name"
                     },
-                    "type": "STRING"
+                    "type": {
+                      "string": {
+                        "longText": {
+                        }
+                      }
+                    }
                   }, {
                     "propId": {
                       "name": "age"
                     },
-                    "type": "INT32"
+                    "type": {
+                      "primitiveType": "DT_SIGNED_INT32"
+                    }
                   }]
                 }]
               }
@@ -93,12 +116,19 @@
     },
     "metaData": [{
       "type": {
-        "dataType": "STRING"
+        "dataType": {
+          "string": {
+            "longText": {
+            }
+          }
+        }
       },
       "alias": 1
     }, {
       "type": {
-        "dataType": "INT64"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT64"
+        }
       },
       "alias": 2
     }]

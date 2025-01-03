@@ -21,17 +21,26 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "name"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "age"
               },
-              "type": "INT32"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }]
           }]
         }
@@ -84,7 +93,9 @@
               "propId": {
                 "name": "weight"
               },
-              "type": "DOUBLE"
+              "type": {
+                "primitiveType": "DT_DOUBLE"
+              }
             }]
           }]
         }

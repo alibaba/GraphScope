@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.impl.*;
-import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.Iterator;
@@ -41,7 +41,8 @@ public abstract class Utils {
      * @param schemaYaml
      * @return
      */
-    public static final GraphSchema buildSchemaFromYaml(String schemaYaml) {
+    public static final GraphSchema buildSchemaFromYaml(
+            String schemaYaml, RelDataTypeFactory typeFactory) {
         Yaml yaml = new Yaml();
         Map<String, Object> yamlAsMap = yaml.load(schemaYaml);
         Map<String, Object> schemaMap =
@@ -51,9 +52,9 @@ public abstract class Utils {
         Map<String, GraphVertex> vertexMap = Maps.newHashMap();
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
-        GSDataTypeConvertor<DataType> typeConvertor =
-                GSDataTypeConvertor.Factory.create(DataType.class, null);
-        builderGraphElementFromYaml(
+        IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
+                new IrDataTypeConvertor.Flex(typeFactory);
+        buildGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(
                                 schemaMap.get("vertex_types"),
@@ -64,7 +65,7 @@ public abstract class Utils {
                 propNameToIdMap,
                 typeConvertor);
         if (schemaMap.get("edge_types") != null) {
-            builderGraphElementFromYaml(
+            buildGraphElementFromYaml(
                     (List)
                             Objects.requireNonNull(
                                     schemaMap.get("edge_types"),
@@ -78,13 +79,13 @@ public abstract class Utils {
         return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
     }
 
-    public static final void builderGraphElementFromYaml(
+    public static final void buildGraphElementFromYaml(
             List elementList,
             String type,
             Map<String, GraphVertex> vertexMap,
             Map<String, GraphEdge> edgeMap,
             Map<String, Integer> propNameToIdMap,
-            GSDataTypeConvertor<DataType> typeConvertor) {
+            IrDataTypeConvertor<GSDataTypeDesc> typeConvertor) {
         int curVertexTypeId = 0;
         int curEdgeTypeId = 0;
         for (Object element : elementList) {
@@ -146,13 +147,20 @@ public abstract class Utils {
                             }
                             curPropertyId = propertyId++;
                             propNameToIdMap.put(propertyName, curPropertyId);
+                            Object propertyType = propertyMap.get("property_type");
+                            if (!(propertyType instanceof Map)) {
+                                throw new IllegalArgumentException(
+                                        "invalid property type ["
+                                                + propertyType
+                                                + "] in flex yaml config");
+                            }
                             propertyList.add(
-                                    new DefaultGraphProperty(
+                                    new IrGraphProperty(
                                             curPropertyId,
                                             propertyName,
-                                            toDataType(
-                                                    propertyMap.get("property_type"),
-                                                    typeConvertor)));
+                                            typeConvertor.convert(
+                                                    new GSDataTypeDesc(
+                                                            (Map<String, Object>) propertyType))));
                         }
                     }
                 }
@@ -188,26 +196,35 @@ public abstract class Utils {
         }
     }
 
-    public static DataType toDataType(Object type, GSDataTypeConvertor<DataType> typeConvertor) {
-        return typeConvertor.convert(new GSDataTypeDesc((Map<String, Object>) type));
-    }
-
     /**
      * build {@link GraphSchema} from schema json (in ir core format)
      * @param schemaJson
      * @return
      */
-    public static final GraphSchema buildSchemaFromJson(String schemaJson) {
+    public static final GraphSchema buildSchemaFromJson(
+            String schemaJson, RelDataTypeFactory typeFactory) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode jsonNode = mapper.readTree(schemaJson);
             Map<String, GraphVertex> vertexMap = Maps.newHashMap();
             Map<String, GraphEdge> edgeMap = Maps.newHashMap();
             Map<String, Integer> propNameToIdMap = Maps.newHashMap();
+            IrDataTypeConvertor<Integer> typeConvertor =
+                    new IrDataTypeConvertor.IrCoreOrdinal(typeFactory);
             buildGraphElementFromJson(
-                    jsonNode.get("entities"), "VERTEX", vertexMap, edgeMap, propNameToIdMap);
+                    jsonNode.get("entities"),
+                    "VERTEX",
+                    vertexMap,
+                    edgeMap,
+                    propNameToIdMap,
+                    typeConvertor);
             buildGraphElementFromJson(
-                    jsonNode.get("relations"), "EDGE", vertexMap, edgeMap, propNameToIdMap);
+                    jsonNode.get("relations"),
+                    "EDGE",
+                    vertexMap,
+                    edgeMap,
+                    propNameToIdMap,
+                    typeConvertor);
             return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -219,7 +236,8 @@ public abstract class Utils {
             String type,
             Map<String, GraphVertex> vertexMap,
             Map<String, GraphEdge> edgeMap,
-            Map<String, Integer> propNameToIdMap) {
+            Map<String, Integer> propNameToIdMap,
+            IrDataTypeConvertor<Integer> typeConvertor) {
         Objects.requireNonNull(elementList);
         Iterator var1 = elementList.iterator();
 
@@ -240,7 +258,7 @@ public abstract class Utils {
                 propNameToIdMap.put(propName, propId);
                 int propTypeId = column.get("data_type").asInt();
                 GraphProperty property =
-                        new DefaultGraphProperty(propId, propName, toDataType(propTypeId));
+                        new IrGraphProperty(propId, propName, typeConvertor.convert(propTypeId));
                 propertyList.add(property);
                 boolean isPrimaryKey = column.get("is_primary_key").asBoolean();
                 if (isPrimaryKey) {
@@ -265,40 +283,6 @@ public abstract class Utils {
                         label,
                         new DefaultGraphVertex(labelId, label, propertyList, primaryKeyList));
             }
-        }
-    }
-
-    public static final DataType toDataType(int ordinal) {
-        switch (ordinal) {
-            case 0:
-                return DataType.BOOL;
-            case 1:
-                return DataType.INT;
-            case 2:
-                return DataType.LONG;
-            case 3:
-                return DataType.DOUBLE;
-            case 4:
-                return DataType.STRING;
-            case 5:
-                return DataType.BYTES;
-            case 6:
-                return DataType.INT_LIST;
-            case 7:
-                return DataType.LONG_LIST;
-            case 8:
-                return DataType.DOUBLE_LIST;
-            case 9:
-                return DataType.STRING_LIST;
-            case 12:
-                return DataType.DATE;
-            case 13:
-                return DataType.TIME32;
-            case 14:
-                return DataType.TIMESTAMP;
-            default:
-                throw new UnsupportedOperationException(
-                        "convert from ir core type " + ordinal + " to DataType is unsupported yet");
         }
     }
 

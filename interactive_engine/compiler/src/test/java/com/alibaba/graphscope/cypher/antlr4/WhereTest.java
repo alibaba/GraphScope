@@ -266,7 +266,7 @@ public class WhereTest {
                             .contains(
                                     "invalid property lookup operation, cannot get property or"
                                             + " extract interval from expr=[creationDate,"
-                                            + " type=CHAR(1)]"));
+                                            + " type=VARCHAR]"));
             return;
         }
         Assert.fail("should have thrown exceptions for property 'name' is not a date type");

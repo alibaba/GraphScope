@@ -20,17 +20,26 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "name"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "age"
               },
-              "type": "INT32"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }]
           }]
         }
@@ -67,7 +76,12 @@
               }
             },
             "nodeType": {
-              "dataType": "STRING"
+              "dataType": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }
           },
           "order": "ASC"

@@ -28,7 +28,9 @@
               "propId": {
                 "name": "weight"
               },
-              "type": "DOUBLE"
+              "type": {
+                "primitiveType": "DT_DOUBLE"
+              }
             }]
           }]
         }

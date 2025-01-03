@@ -12,7 +12,12 @@
             }
           },
           "nodeType": {
-            "dataType": "STRING"
+            "dataType": {
+              "string": {
+                "longText": {
+                }
+              }
+            }
           }
         }],
         "rightKeys": [{
@@ -25,7 +30,12 @@
             }
           },
           "nodeType": {
-            "dataType": "STRING"
+            "dataType": {
+              "string": {
+                "longText": {
+                }
+              }
+            }
           }
         }],
         "leftPlan": {
@@ -51,17 +61,26 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "age"
                       },
-                      "type": "INT32"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT32"
+                      }
                     }]
                   }]
                 }
@@ -96,7 +115,9 @@
                       "propId": {
                         "name": "weight"
                       },
-                      "type": "DOUBLE"
+                      "type": {
+                        "primitiveType": "DT_DOUBLE"
+                      }
                     }]
                   }]
                 }
@@ -127,17 +148,26 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "age"
                       },
-                      "type": "INT32"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT32"
+                      }
                     }]
                   }]
                 }
@@ -170,22 +200,39 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "lang"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "creationDate"
                       },
-                      "type": "DATE32"
+                      "type": {
+                        "temporal": {
+                          "date32": {
+                          }
+                        }
+                      }
                     }]
                   }]
                 }
@@ -223,7 +270,9 @@
                       "propId": {
                         "name": "weight"
                       },
-                      "type": "DOUBLE"
+                      "type": {
+                        "primitiveType": "DT_DOUBLE"
+                      }
                     }]
                   }]
                 }
@@ -253,17 +302,26 @@
                       "propId": {
                         "name": "id"
                       },
-                      "type": "INT64"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT64"
+                      }
                     }, {
                       "propId": {
                         "name": "name"
                       },
-                      "type": "STRING"
+                      "type": {
+                        "string": {
+                          "longText": {
+                          }
+                        }
+                      }
                     }, {
                       "propId": {
                         "name": "age"
                       },
-                      "type": "INT32"
+                      "type": {
+                        "primitiveType": "DT_SIGNED_INT32"
+                      }
                     }]
                   }]
                 }

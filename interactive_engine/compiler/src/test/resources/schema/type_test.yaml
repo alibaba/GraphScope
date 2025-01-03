@@ -1,0 +1,37 @@
+name: type_test # then must have a modern dir under ${data} directory
+schema:
+  vertex_types:
+    - type_name: person
+      type_id: 0
+      x_csr_params:
+        max_vertex_num: 100
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: name1
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: name2
+          property_type:
+            string:
+              char:
+                fixed_length: 255
+        - property_id: 3
+          property_name: name3
+          property_type:
+            string:
+              var_char:
+                max_length: 255
+        - property_id: 4
+          property_name: value1
+          property_type:
+            decimal:
+              precision: 4
+              scale: 2
+      primary_keys:
+        - id

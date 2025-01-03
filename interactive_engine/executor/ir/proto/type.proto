@@ -20,8 +20,8 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "DataType";
 
 import "common.proto";
+import "basic_type.proto";
 import "google/protobuf/wrappers.proto";
-
 
 // GraphDataType, including structured data types of vertices or edges.
 message GraphDataType {
