@@ -9,8 +9,8 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -632,9 +632,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.30.0/index.html">
                 
-                  v0.29.0
+                  v0.30.0
                 
               </a></dd>
             
@@ -709,29 +709,62 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">StrictBytes</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">StrictStr</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Annotated</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">StrictBytes</span><span class="p">,</span> <span class="n">StrictStr</span>
 
-<span class="kn">from</span> <span class="nn">gs_interactive.client.status</span> <span class="kn">import</span> <span class="n">Status</span><span class="p">,</span> <span class="n">StatusCode</span>
-
-<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="o">*</span>
-
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">AdminServiceGraphManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">AdminServiceJobManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">AdminServiceProcedureManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">AdminServiceServiceManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">GraphServiceEdgeManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">GraphServiceVertexManagementApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">QueryServiceApi</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.api</span> <span class="kn">import</span> <span class="n">UtilsApi</span>
 <span class="kn">from</span> <span class="nn">gs_interactive.api_client</span> <span class="kn">import</span> <span class="n">ApiClient</span>
 <span class="kn">from</span> <span class="nn">gs_interactive.client.generated.results_pb2</span> <span class="kn">import</span> <span class="n">CollectiveResults</span>
 <span class="kn">from</span> <span class="nn">gs_interactive.client.result</span> <span class="kn">import</span> <span class="n">Result</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.status</span> <span class="kn">import</span> <span class="n">Status</span><span class="p">,</span> <span class="n">StatusCode</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.status</span> <span class="kn">import</span> <span class="n">Status</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.status</span> <span class="kn">import</span> <span class="n">StatusCode</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.utils</span> <span class="kn">import</span> <span class="n">InputFormat</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.utils</span> <span class="kn">import</span> <span class="n">append_format_byte</span>
 <span class="kn">from</span> <span class="nn">gs_interactive.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.utils</span> <span class="kn">import</span> <span class="n">append_format_byte</span><span class="p">,</span> <span class="n">InputFormat</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.generated.results_pb2</span> <span class="kn">import</span> <span class="n">CollectiveResults</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">CreateGraphRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">CreateGraphResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">CreateProcedureRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">CreateProcedureResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">EdgeRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">GetGraphResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">GetGraphSchemaResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">GetGraphStatisticsResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">GetProcedureResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">JobResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">JobStatus</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">QueryRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">SchemaMapping</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">ServiceStatus</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">StartServiceRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">StopServiceRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">UpdateProcedureRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">UploadFileResponse</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">VertexData</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">VertexEdgeRequest</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="n">VertexRequest</span>
+
 
 <span class="k">class</span> <span class="nc">EdgeInterface</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@abstractmethod</span>
@@ -757,9 +790,7 @@ MathJax = {
     <span class="k">def</span> <span class="nf">get_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
-        <span class="n">edge_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-            <span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of edge.&quot;</span><span class="p">)</span>
-        <span class="p">],</span>
+        <span class="n">edge_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of edge.&quot;</span><span class="p">)],</span>
         <span class="n">src_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
             <span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of src vertex.&quot;</span><span class="p">)</span>
         <span class="p">],</span>
@@ -810,7 +841,7 @@ MathJax = {
         <span class="n">primary_key_value</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
             <span class="n">Any</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The primary key value of vertex.&quot;</span><span class="p">)</span>
         <span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">VertexRequest</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">VertexData</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@abstractmethod</span>
@@ -928,7 +959,7 @@ MathJax = {
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@abstractmethod</span>
@@ -975,15 +1006,15 @@ MathJax = {
 <span class="sd">    The default session implementation for Interactive SDK.</span>
 <span class="sd">    It provides the implementation of all service APIs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
 <div class="viewcode-block" id="DefaultSession.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">admin_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stored_proc_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new session using the specified admin_uri and stored_proc_uri.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            admin_uri (str): the uri for the admin service.</span>
-<span class="sd">            stored_proc_uri (str, optional): the uri for the stored procedure service. If not provided,</span>
-<span class="sd">                the uri will be read from the service status.</span>
+<span class="sd">            stored_proc_uri (str, optional): the uri for the stored procedure service.</span>
+<span class="sd">                If not provided,the uri will be read from the service status.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">(</span><span class="n">Configuration</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">admin_uri</span><span class="p">))</span>
 
@@ -1017,7 +1048,6 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="n">exc_type</span><span class="o">=</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="o">=</span><span class="n">exc_val</span><span class="p">,</span> <span class="n">traceback</span><span class="o">=</span><span class="n">exc_tb</span><span class="p">)</span>
 
     <span class="c1"># implementations of the methods from the interfaces</span>
-    <span class="c1">################ Vertex Interfaces ##########</span>
 <div class="viewcode-block" id="DefaultSession.add_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_vertex">[docs]</a>    <span class="k">def</span> <span class="nf">add_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
@@ -1028,11 +1058,12 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">add_vertex_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_edge_request</span><span class="p">)</span>
+            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">add_vertex_with_http_info</span><span class="p">(</span>
+                <span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_edge_request</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
-        
 
     <span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1051,18 +1082,19 @@ MathJax = {
         <span class="n">primary_key_value</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
             <span class="n">Any</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The primary key value of vertex.&quot;</span><span class="p">)</span>
         <span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">VertexRequest</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">VertexData</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a vertex from the specified graph with primary key value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">get_vertex_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">primary_key_value</span><span class="p">)</span>
+            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">get_vertex_with_http_info</span><span class="p">(</span>
+                <span class="n">graph_id</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">primary_key_value</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="DefaultSession.update_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex">[docs]</a>    <span class="k">def</span> <span class="nf">update_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">vertex_request</span><span class="p">:</span> <span class="n">VertexRequest</span>
@@ -1070,23 +1102,28 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update a vertex in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">update_vertex_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_request</span><span class="p">)</span>
+            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span><span class="o">.</span><span class="n">update_vertex_with_http_info</span><span class="p">(</span>
+                <span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_request</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="c1">################ Edge Interfaces ##########</span>
-<div class="viewcode-block" id="DefaultSession.add_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="DefaultSession.add_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an edge to the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span><span class="o">.</span><span class="n">add_edge_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">)</span>
+            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span><span class="o">.</span><span class="n">add_edge_with_http_info</span><span class="p">(</span>
+                <span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_request</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
@@ -1112,9 +1149,7 @@ MathJax = {
 <div class="viewcode-block" id="DefaultSession.get_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_edge">[docs]</a>    <span class="k">def</span> <span class="nf">get_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
-        <span class="n">edge_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-            <span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of edge.&quot;</span><span class="p">)</span>
-        <span class="p">],</span>
+        <span class="n">edge_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of edge.&quot;</span><span class="p">)],</span>
         <span class="n">src_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
             <span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of src vertex.&quot;</span><span class="p">)</span>
         <span class="p">],</span>
@@ -1131,11 +1166,16 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an edge from the specified graph with primary key value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span><span class="o">.</span><span class="n">get_edge_with_http_info</span><span class="p">(</span>
-                <span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_label</span><span class="p">,</span> <span class="n">src_label</span><span class="p">,</span> <span class="n">src_primary_key_value</span><span class="p">,</span> <span class="n">dst_label</span><span class="p">,</span> <span class="n">dst_primary_key_value</span>
+                <span class="n">graph_id</span><span class="p">,</span>
+                <span class="n">edge_label</span><span class="p">,</span>
+                <span class="n">src_label</span><span class="p">,</span>
+                <span class="n">src_primary_key_value</span><span class="p">,</span>
+                <span class="n">dst_label</span><span class="p">,</span>
+                <span class="n">dst_primary_key_value</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1147,20 +1187,21 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update an edge in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span><span class="o">.</span><span class="n">update_edge_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">)</span>
+            <span class="n">api_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span><span class="o">.</span><span class="n">update_edge_with_http_info</span><span class="p">(</span>
+                <span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_request</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">api_response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="c1">################ Graph Interfaces ##########</span>
 <div class="viewcode-block" id="DefaultSession.create_graph"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_graph">[docs]</a>    <span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">CreateGraphRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CreateGraphResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new graph with the specified graph request.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span><span class="o">.</span><span class="n">create_graph_with_http_info</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -1176,7 +1217,8 @@ MathJax = {
 <span class="sd">        Parameters:</span>
 <span class="sd">            graph_id (str): The ID of the graph whose schema is to be retrieved.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            Result[GetGraphSchemaResponse]: The result containing the schema of the specified graph.</span>
+<span class="sd">            Result[GetGraphSchemaResponse]: The result containing the schema of</span>
+<span class="sd">                the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1192,7 +1234,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the meta information of a specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span><span class="o">.</span><span class="n">get_graph_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">)</span>
@@ -1207,7 +1249,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the statistics of a specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span><span class="o">.</span><span class="n">get_graph_statistic_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">)</span>
@@ -1222,7 +1264,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete a graph with the specified graph id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span><span class="o">.</span><span class="n">delete_graph_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">)</span>
@@ -1234,7 +1276,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all graphs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span><span class="o">.</span><span class="n">list_graphs_with_http_info</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -1249,7 +1291,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Submit a bulk loading job to the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="c1"># First try to upload the input files if they are specified with a starting @</span>
         <span class="c1"># return a new schema_mapping with the uploaded files</span>
@@ -1266,14 +1308,13 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="c1">################ Procedure Interfaces ##########</span>
 <div class="viewcode-block" id="DefaultSession.create_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_procedure">[docs]</a>    <span class="k">def</span> <span class="nf">create_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">procedure</span><span class="p">:</span> <span class="n">CreateProcedureRequest</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CreateProcedureResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new procedure in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_procedure_api</span><span class="o">.</span><span class="n">create_procedure_with_http_info</span><span class="p">(</span>
@@ -1305,7 +1346,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all procedures in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_procedure_api</span><span class="o">.</span><span class="n">list_procedures_with_http_info</span><span class="p">(</span><span class="n">graph_id</span><span class="p">)</span>
@@ -1334,7 +1375,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a procedure in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_procedure_api</span><span class="o">.</span><span class="n">get_procedure_with_http_info</span><span class="p">(</span>
@@ -1350,14 +1391,17 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h</span>
+            <span class="c1"># gs_interactive currently support four type of inputformat,</span>
+            <span class="c1"># see flex/engines/graph_db/graph_db_session.h</span>
             <span class="c1"># Here we add byte of value 1 to denote the input format is in json format</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_api</span><span class="o">.</span><span class="n">call_proc_with_http_info</span><span class="p">(</span>
-                <span class="n">graph_id</span> <span class="o">=</span> <span class="n">graph_id</span><span class="p">,</span> 
-                <span class="n">body</span><span class="o">=</span><span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CYPHER_JSON</span><span class="p">)</span>
+                <span class="n">graph_id</span><span class="o">=</span><span class="n">graph_id</span><span class="p">,</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">append_format_byte</span><span class="p">(</span>
+                    <span class="n">params</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CYPHER_JSON</span>
+                <span class="p">),</span>
             <span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">CollectiveResults</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
@@ -1372,12 +1416,15 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the current graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h</span>
+            <span class="c1"># gs_interactive currently support four type of inputformat,</span>
+            <span class="c1"># see flex/engines/graph_db/graph_db_session.h</span>
             <span class="c1"># Here we add byte of value 1 to denote the input format is in json format</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_api</span><span class="o">.</span><span class="n">call_proc_current_with_http_info</span><span class="p">(</span>
-                <span class="n">body</span> <span class="o">=</span> <span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CYPHER_JSON</span><span class="p">)</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">append_format_byte</span><span class="p">(</span>
+                    <span class="n">params</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CYPHER_JSON</span>
+                <span class="p">)</span>
             <span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">CollectiveResults</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
@@ -1392,14 +1439,15 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the specified graph with raw bytes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">graph_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;graph_id&quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h</span>
+            <span class="c1"># gs_interactive currently support four type of inputformat,</span>
+            <span class="c1"># see flex/engines/graph_db/graph_db_session.h</span>
             <span class="c1"># Here we add byte of value 1 to denote the input format is in encoder/decoder format</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_api</span><span class="o">.</span><span class="n">call_proc_with_http_info</span><span class="p">(</span>
-                <span class="n">graph_id</span> <span class="o">=</span> <span class="n">graph_id</span><span class="p">,</span> 
-                <span class="n">body</span> <span class="o">=</span> <span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CPP_ENCODER</span><span class="p">)</span>
+                <span class="n">graph_id</span><span class="o">=</span><span class="n">graph_id</span><span class="p">,</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CPP_ENCODER</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1409,23 +1457,23 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the current graph with raw bytes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h</span>
+            <span class="c1"># gs_interactive currently support four type of inputformat,</span>
+            <span class="c1"># see flex/engines/graph_db/graph_db_session.h</span>
             <span class="c1"># Here we add byte of value 1 to denote the input format is in encoder/decoder format</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_api</span><span class="o">.</span><span class="n">call_proc_current_with_http_info</span><span class="p">(</span>
-                <span class="n">body</span> <span class="o">=</span> <span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CPP_ENCODER</span><span class="p">)</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">append_format_byte</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">InputFormat</span><span class="o">.</span><span class="n">CPP_ENCODER</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="c1">################ QueryService Interfaces ##########</span>
 <div class="viewcode-block" id="DefaultSession.get_service_status"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_service_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_service_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">ServiceStatus</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status of the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_api</span><span class="o">.</span><span class="n">get_service_status_with_http_info</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -1442,7 +1490,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Start the service on a specified graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_api</span><span class="o">.</span><span class="n">start_service_with_http_info</span><span class="p">(</span>
                 <span class="n">start_service_request</span>
@@ -1451,13 +1499,16 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.stop_service"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.stop_service">[docs]</a>    <span class="k">def</span> <span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="DefaultSession.stop_service"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.stop_service">[docs]</a>    <span class="k">def</span> <span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_api</span><span class="o">.</span><span class="n">stop_service_with_http_info</span><span class="p">()</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">StopServiceRequest</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">graph_id</span><span class="p">:</span>
+                <span class="n">req</span><span class="o">.</span><span class="n">graph_id</span> <span class="o">=</span> <span class="n">graph_id</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_api</span><span class="o">.</span><span class="n">stop_service_with_http_info</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
@@ -1466,19 +1517,18 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Restart the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_api</span><span class="o">.</span><span class="n">restart_service_with_http_info</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="c1">################ Job Interfaces ##########</span>
 <div class="viewcode-block" id="DefaultSession.get_job"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_job">[docs]</a>    <span class="k">def</span> <span class="nf">get_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">JobStatus</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status of a job with the specified job id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;job_id&quot;</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_api</span><span class="o">.</span><span class="n">get_job_by_id_with_http_info</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
@@ -1490,7 +1540,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all jobs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_api</span><span class="o">.</span><span class="n">list_jobs_with_http_info</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -1501,7 +1551,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Cancel a job with the specified job id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_param_str</span><span class="p">(</span><span class="s2">&quot;job_id&quot;</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_api</span><span class="o">.</span><span class="n">delete_job_by_id_with_http_info</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
@@ -1515,7 +1565,7 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Upload a file to the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;uploading file: &quot;</span><span class="p">,</span> <span class="n">filestorage</span><span class="p">)</span>
             <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_utils_api</span><span class="o">.</span><span class="n">upload_file_with_http_info</span><span class="p">(</span><span class="n">filestorage</span><span class="p">)</span>
@@ -1532,8 +1582,10 @@ MathJax = {
 
     <span class="k">def</span> <span class="nf">trim_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
-    
-    <span class="k">def</span> <span class="nf">preprocess_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">preprocess_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span>
+    <span class="p">):</span>
         <span class="n">root_dir_marked_with_at</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">location</span> <span class="ow">and</span> <span class="n">location</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">):</span>
             <span class="n">root_dir_marked_with_at</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1544,20 +1596,22 @@ MathJax = {
                 <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">):</span>
                     <span class="nb">print</span><span class="p">(</span>
                         <span class="s2">&quot;Root location given without @, but the input file starts with @&quot;</span>
-                        <span class="o">+</span> <span class="nb">input</span> <span class="o">+</span> <span class="s2">&quot;, index: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                        <span class="o">+</span> <span class="nb">input</span>
+                        <span class="o">+</span> <span class="s2">&quot;, index: &quot;</span>
+                        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                         <span class="n">Status</span><span class="p">(</span>
                             <span class="n">StatusCode</span><span class="o">.</span><span class="n">BAD_REQUEST</span><span class="p">,</span>
                             <span class="s2">&quot;Root location given without @, but the input file starts with @&quot;</span>
-                            <span class="o">+</span> <span class="nb">input</span> <span class="o">+</span> <span class="s2">&quot;, index: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                            <span class="o">+</span> <span class="nb">input</span>
+                            <span class="o">+</span> <span class="s2">&quot;, index: &quot;</span>
+                            <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                         <span class="p">),</span>
                         <span class="n">new_inputs</span><span class="p">,</span>
                     <span class="p">)</span>
             <span class="k">if</span> <span class="n">location</span><span class="p">:</span>
-                <span class="n">new_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">location</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">trim_path</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="n">new_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">trim_path</span><span class="p">(</span><span class="nb">input</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">new_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">ok</span><span class="p">(</span><span class="n">new_inputs</span><span class="p">)</span>
@@ -1574,7 +1628,9 @@ MathJax = {
         <span class="k">if</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">vertex_mappings</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">vertex_mapping</span> <span class="ow">in</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">vertex_mappings</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">vertex_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
-                    <span class="n">preprocess_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_inputs</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">vertex_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">)</span>
+                    <span class="n">preprocess_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_inputs</span><span class="p">(</span>
+                        <span class="n">location</span><span class="p">,</span> <span class="n">vertex_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">schema_mapping</span>
+                    <span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">preprocess_result</span><span class="o">.</span><span class="n">is_ok</span><span class="p">():</span>
                         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">preprocess_result</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">)</span>
                     <span class="n">vertex_mapping</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">preprocess_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
@@ -1582,7 +1638,9 @@ MathJax = {
         <span class="k">if</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">edge_mappings</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">edge_mapping</span> <span class="ow">in</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">edge_mappings</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">edge_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
-                    <span class="n">preprocess_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_inputs</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">edge_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">)</span>
+                    <span class="n">preprocess_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_inputs</span><span class="p">(</span>
+                        <span class="n">location</span><span class="p">,</span> <span class="n">edge_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">schema_mapping</span>
+                    <span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">preprocess_result</span><span class="o">.</span><span class="n">is_ok</span><span class="p">():</span>
                         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">preprocess_result</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">)</span>
                     <span class="n">edge_mapping</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">preprocess_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
@@ -1605,8 +1663,9 @@ MathJax = {
         <span class="bp">self</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">SchemaMapping</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        For each input file in schema_mapping, if the file starts with @, upload the file to the server</span>
-<span class="sd">        and replace the path with the path returned from the server.</span>
+<span class="sd">        For each input file in schema_mapping, if the file starts with @,</span>
+<span class="sd">        upload the file to the server, and replace the path with the</span>
+<span class="sd">        path returned from the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">vertex_mappings</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">vertex_mapping</span> <span class="ow">in</span> <span class="n">schema_mapping</span><span class="o">.</span><span class="n">vertex_mappings</span><span class="p">:</span>
@@ -1634,8 +1693,9 @@ MathJax = {
 <span class="sd">        for input files in schema_mapping. Replace the path to the uploaded file with the</span>
 <span class="sd">        path returned from the server.</span>
 
-<span class="sd">        The @ can be added to the beginning of data_source.location in schema_mapping.loading_config</span>
-<span class="sd">        or added to each file in vertex_mappings and edge_mappings.</span>
+<span class="sd">        The @ can be added to the beginning of data_source.location</span>
+<span class="sd">        in schema_mapping.loading_config,or added to each file in vertex_mappings</span>
+<span class="sd">        and edge_mappings.</span>
 
 <span class="sd">        1. location: @/path/to/dir</span>
 <span class="sd">            inputs:</span>
@@ -1657,7 +1717,8 @@ MathJax = {
 <span class="sd">            inputs:</span>
 <span class="sd">                - @/path/to/file1</span>
 <span class="sd">                - @/path/to/file2</span>
-<span class="sd">        Among the above 4 cases, only the 1, 3, 5 case are valid, for 2,4 the file will not be uploaded</span>
+<span class="sd">        Among the above 4 cases, only the 1, 3, 5 case are valid,</span>
+<span class="sd">        for 2,4 the file will not be uploaded</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">check_mixup_res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_file_mixup</span><span class="p">(</span><span class="n">schema_mapping</span><span class="p">)</span>
@@ -1672,7 +1733,7 @@ MathJax = {
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;new schema_mapping: &quot;</span><span class="p">,</span> <span class="n">upload_res</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">ok</span><span class="p">(</span><span class="n">upload_res</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="DefaultSession.ensure_param_str"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.ensure_param_str">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_param_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+<div class="viewcode-block" id="DefaultSession.ensure_param_str"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.ensure_param_str">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_param_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Ensure the param is a string, otherwise raise an exception</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1680,7 +1741,12 @@ MathJax = {
             <span class="c1"># User may input the graph_id as int, convert it to string</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
                 <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;param should be a string, param_name: &quot;</span> <span class="o">+</span> <span class="n">param_name</span> <span class="o">+</span> <span class="s2">&quot;, param: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;param should be a string, param_name: &quot;</span>
+                <span class="o">+</span> <span class="n">param_name</span>
+                <span class="o">+</span> <span class="s2">&quot;, param: &quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">param</span></div></div>
 </pre></div>
         </article>
