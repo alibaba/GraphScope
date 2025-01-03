@@ -20,22 +20,22 @@ import com.alibaba.graphscope.gremlin.Utils;
 
 import org.apache.tinkerpop.gremlin.server.AbstractChannelizer;
 import org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer;
-import org.apache.tinkerpop.gremlin.server.handler.HttpGremlinEndpointHandler;
 import org.apache.tinkerpop.gremlin.server.handler.OpSelectorHandler;
 import org.apache.tinkerpop.gremlin.server.handler.WsAndHttpChannelizerHandler;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 
 // config the channelizer in conf/gremlin-server.yaml to set the IrOpSelectorHandler as the default
 public class IrWsAndHttpChannelizer extends WsAndHttpChannelizer {
-    private WsAndHttpChannelizerHandler handler;
 
     @Override
     public void init(ServerGremlinExecutor serverGremlinExecutor) {
         super.init(serverGremlinExecutor);
-        this.handler = new WsAndHttpChannelizerHandler();
-        this.handler.init(
+        WsAndHttpChannelizerHandler handler =
+                Utils.getFieldValue(WsAndHttpChannelizer.class, this, "handler");
+        // reset http handler for gremlin request
+        handler.init(
                 serverGremlinExecutor,
-                new HttpGremlinEndpointHandler(
+                new IrHttpGremlinHandler(
                         this.serializers, this.gremlinExecutor, this.graphManager, this.settings));
         OpSelectorHandler irOpSelectorHandler =
                 new IrOpSelectorHandler(
