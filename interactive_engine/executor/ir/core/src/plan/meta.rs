@@ -471,7 +471,25 @@ impl JsonIO for Schema {
     }
 }
 
-// Helper function to convert int32 to the appropriate DataType structure
+// Helper function to convert the previous enum data_type to the new data_type structure
+// Previous enum data_type:
+// enum DataType {
+//   BOOLEAN = 0;
+//   INT32 = 1;
+//   INT64 = 2 ;
+//   DOUBLE = 3;
+//   STRING = 4;
+//   BYTES = 5;
+//   INT32_ARRAY = 6;
+//   INT64_ARRAY = 7;
+//   DOUBLE_ARRAY = 8;
+//   STRING_ARRAY = 9;
+//   PAIR_ARRAY = 10;
+//   NONE = 11;
+//   DATE32 = 12;
+//   TIME32 = 13;
+//   TIMESTAMP = 14;
+// }
 fn convert_data_type(data_type_int: i64) -> serde_json::Value {
     use serde_json::json;
     match data_type_int {
@@ -489,6 +507,9 @@ fn convert_data_type(data_type_int: i64) -> serde_json::Value {
         7 => json!({ "array": { "component_type": { "primitive_type": "DT_SIGNED_INT64" } } }), // INT64_ARRAY
         8 => json!({ "array": { "component_type": { "primitive_type": "DT_DOUBLE" } } }), // DOUBLE_ARRAY
         9 => json!({ "array": { "component_type": { "string": { "long_text": {} } } } }), // STRING_ARRAY
+
+        // None type mapping
+        11 => json!({ "primitive_type": "DT_NULL" }), // NONE
 
         // Temporal types mapping
         12 => json!({ "temporal": { "date32": {} } }), // DATE32
