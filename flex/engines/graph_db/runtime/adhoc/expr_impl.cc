@@ -466,7 +466,11 @@ static RTAny parse_param(const common::DynamicParam& param,
       if (dt.temporal().item_case() == common::Temporal::kDate32) {
         int64_t val = std::stoll(input.at(name));
         return RTAny::from_int64(val);
-      } else {
+      } else if (dt.temporal().item_case() == common::Temporal::kTimestamp) {
+        int64_t val = std::stoll(input.at(name));
+        return RTAny::from_int64(val);
+      }
+      else {
         LOG(FATAL) << "not support type: " << dt.temporal().DebugString();
       }
     } else if (dt.item_case() == common::DataType::ItemCase::kString) {

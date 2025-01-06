@@ -79,6 +79,8 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
     case ::common::DataType::kTemporal: {
       if (ddt.temporal().item_case() == ::common::Temporal::kDate32) {
         return RTAnyType::kDate32;
+      } else if (ddt.temporal().item_case() == ::common::Temporal::kTimestamp) {
+        return RTAnyType::kDate32;
       } else {
         LOG(FATAL) << "unrecoginized temporal type - "
                    << ddt.temporal().DebugString();

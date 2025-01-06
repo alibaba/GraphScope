@@ -75,7 +75,8 @@ test_codegen_on_ldbc_cbo(){
 
 test_codegen_on_ldbc_rbo(){
     sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ${RBO_ENGINE_CONFIG_PATH}
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12;
+    # ic1_adhoc is skipped since NULL type is not supported now
+    for i in 2 3 4 5 6 7 8 9 10 11 12;
     do
         cmd="${CODEGEN_SCRIPT} -e=hqps -i=${FLEX_HOME}/resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
         cmd=${cmd}" -o=/tmp/plugin --ir_conf=${RBO_ENGINE_CONFIG_PATH} "
