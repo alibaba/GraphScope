@@ -106,6 +106,13 @@ public abstract class GraphOperandTypes {
                         parameters.stream().map(p -> p.getDataType()).collect(Collectors.toList()),
                 i -> parameters.get(i).getName(),
                 i -> false,
-                i -> parameters.get(i).allowCast());
+                i -> {
+                    boolean allowCast = parameters.get(i).allowCast();
+                    if (allowCast) return true;
+                    // loose the type checking for string type
+                    SqlTypeFamily typeFamily =
+                            parameters.get(i).getDataType().getSqlTypeName().getFamily();
+                    return typeFamily == SqlTypeFamily.CHARACTER;
+                });
     }
 }

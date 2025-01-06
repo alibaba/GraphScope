@@ -33,17 +33,14 @@ stored_procedures:
         type:
           string:
             long_text:
-        allow_cast: true
       - name: direction
         type:
           string:
             long_text:
-        allow_cast: true
       - name: property
         type:
           string:
             long_text:
-        allow_cast: true
       - name: iterations
         type:
           primitive_type: DT_SIGNED_INT32
