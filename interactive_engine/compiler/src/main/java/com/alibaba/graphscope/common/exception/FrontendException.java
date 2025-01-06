@@ -65,7 +65,7 @@ public class FrontendException extends RuntimeException {
         StringBuilder sb = new StringBuilder();
         sb.append("ErrorCode: ").append(errorCode.name()).append("\n");
         String msg = super.getMessage();
-        if (!msg.endsWith("\n")) {
+        if (msg == null || !msg.endsWith("\n")) {
             msg += "\n";
         }
         sb.append("Message: ").append(msg);
