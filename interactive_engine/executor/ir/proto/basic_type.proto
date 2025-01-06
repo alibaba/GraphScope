@@ -13,6 +13,7 @@ enum PrimitiveType {
     DT_BOOL = 5;
     DT_FLOAT = 6;
     DT_DOUBLE = 7;
+    DT_NULL = 8; // denote the type of 'null' value
 }
 
 message Decimal { // precision=4 scale=2 : 23.12
