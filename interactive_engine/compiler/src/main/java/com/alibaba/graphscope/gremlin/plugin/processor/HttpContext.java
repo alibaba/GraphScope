@@ -28,7 +28,6 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -83,13 +82,6 @@ public class HttpContext extends Context {
         try {
             if (finalResponse.compareAndSet(
                     false, responseMessage.getStatus().getCode().isFinalResponse())) {
-                if (responseMessage.getStatus().getCode() == ResponseStatusCode.SUCCESS) {
-                    Object data = responseMessage.getResult().getData();
-                    if (!keepAlive && ObjectUtils.isEmpty(data)) {
-                        this.getChannelHandlerContext().close();
-                        return;
-                    }
-                }
                 ByteBuf byteBuf =
                         Unpooled.wrappedBuffer(
                                 serializer
