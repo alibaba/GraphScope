@@ -55,7 +55,7 @@ jobs:
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope && sudo make -j$(nproc)
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG && sudo make -j$(nproc)
         # package the build artifacts
         cd .. && tar -zcf build.tar.gz build
     
