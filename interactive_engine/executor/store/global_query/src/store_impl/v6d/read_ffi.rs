@@ -971,51 +971,181 @@ impl PropertyType {
     }
 
     pub fn from_common_data_type(raw_type: common_pb::DataType) -> Self {
-        match raw_type {
-            common_pb::DataType::Boolean => PropertyType::Bool,
-            common_pb::DataType::Int32 => PropertyType::Int,
-            common_pb::DataType::Int64 => PropertyType::Long,
-            common_pb::DataType::Double => PropertyType::Double,
-            common_pb::DataType::String => PropertyType::String,
-            common_pb::DataType::Bytes => PropertyType::Bytes,
-            common_pb::DataType::Int32Array => PropertyType::IntList,
-            common_pb::DataType::Int64Array => PropertyType::LongList,
-            common_pb::DataType::DoubleArray => PropertyType::DoubleList,
-            common_pb::DataType::StringArray => PropertyType::StringList,
-            common_pb::DataType::Date32 => PropertyType::Date32,
-            common_pb::DataType::Time32 => PropertyType::Time32MS,
-            common_pb::DataType::Timestamp => PropertyType::TimestampNS,
-            _ => {
-                unimplemented!("Unsupported data type {:?}", raw_type)
+        if let Some(item) = raw_type.item.as_ref() {
+            match item {
+                common_pb::data_type::Item::PrimitiveType(primitive) => {
+                    let primitive_type: common_pb::PrimitiveType =
+                        unsafe { std::mem::transmute(*primitive) };
+                    match primitive_type {
+                        common_pb::PrimitiveType::DtAny => PropertyType::Bytes,
+                        common_pb::PrimitiveType::DtSignedInt32 => PropertyType::Int,
+                        common_pb::PrimitiveType::DtUnsignedInt32 => PropertyType::Int,
+                        common_pb::PrimitiveType::DtSignedInt64 => PropertyType::Long,
+                        common_pb::PrimitiveType::DtUnsignedInt64 => PropertyType::Long,
+                        common_pb::PrimitiveType::DtBool => PropertyType::Bool,
+                        common_pb::PrimitiveType::DtFloat => PropertyType::Float,
+                        common_pb::PrimitiveType::DtDouble => PropertyType::Double,
+                    }
+                }
+                common_pb::data_type::Item::String(string) => match string.item.as_ref() {
+                    Some(common_pb::string::Item::Char(_char)) => {
+                        if _char.fixed_length == 1 {
+                            PropertyType::Char
+                        } else {
+                            PropertyType::String
+                        }
+                    }
+                    _ => PropertyType::String,
+                },
+                common_pb::data_type::Item::Temporal(temporal) => match temporal.item.as_ref() {
+                    Some(common_pb::temporal::Item::Date32(_date32)) => PropertyType::Date32,
+                    Some(common_pb::temporal::Item::Time32(_time32)) => PropertyType::Time32MS,
+                    Some(common_pb::temporal::Item::Timestamp(_timestamp)) => PropertyType::TimestampMS,
+                    _ => {
+                        unimplemented!("Unsupported data type {:?}", temporal)
+                    }
+                },
+                common_pb::data_type::Item::Array(array) => {
+                    if let Some(component_type) = array.component_type.as_ref() {
+                        match component_type.item.as_ref() {
+                            Some(common_pb::data_type::Item::PrimitiveType(primitive)) => {
+                                let primitive_type: common_pb::PrimitiveType =
+                                    unsafe { std::mem::transmute(*primitive) };
+                                match primitive_type {
+                                    common_pb::PrimitiveType::DtSignedInt32
+                                    | common_pb::PrimitiveType::DtUnsignedInt32 => PropertyType::IntList,
+                                    common_pb::PrimitiveType::DtSignedInt64
+                                    | common_pb::PrimitiveType::DtUnsignedInt64 => PropertyType::LongList,
+                                    common_pb::PrimitiveType::DtFloat => PropertyType::FloatList,
+                                    common_pb::PrimitiveType::DtDouble => PropertyType::DoubleList,
+                                    _ => {
+                                        unimplemented!("Unsupported data type {:?}", primitive_type)
+                                    }
+                                }
+                            }
+                            Some(common_pb::data_type::Item::String(_string)) => PropertyType::StringList,
+                            _ => {
+                                unimplemented!("Unsupported data type {:?}", component_type)
+                            }
+                        }
+                    } else {
+                        unimplemented!("empty array component_type {:?}", array)
+                    }
+                }
+                _ => unimplemented!("Unsupported data type {:?}", item),
             }
+        } else {
+            unimplemented!("empty data type item {:?}", raw_type)
         }
     }
     pub fn to_common_data_type(&self) -> common_pb::DataType {
         match *self {
-            PropertyType::Bool => common_pb::DataType::Boolean,
-            PropertyType::Int => common_pb::DataType::Int32,
-            PropertyType::Long => common_pb::DataType::Int64,
-            PropertyType::Double => common_pb::DataType::Double,
-            PropertyType::String => common_pb::DataType::String,
-            PropertyType::Bytes => common_pb::DataType::Bytes,
-            PropertyType::IntList => common_pb::DataType::Int32Array,
-            PropertyType::LongList => common_pb::DataType::Int64Array,
-            PropertyType::DoubleList => common_pb::DataType::DoubleArray,
-            PropertyType::StringList => common_pb::DataType::StringArray,
-            PropertyType::Date32 => common_pb::DataType::Date32,
-            PropertyType::Date64 => common_pb::DataType::Timestamp,
-            PropertyType::Time32S => common_pb::DataType::Time32,
-            PropertyType::Time32MS => common_pb::DataType::Time32,
-            PropertyType::Time32US => common_pb::DataType::Time32,
-            PropertyType::Time32NS => common_pb::DataType::Time32,
-            PropertyType::Time64S => common_pb::DataType::Time32,
-            PropertyType::Time64MS => common_pb::DataType::Time32,
-            PropertyType::Time64US => common_pb::DataType::Time32,
-            PropertyType::Time64NS => common_pb::DataType::Time32,
-            PropertyType::TimestampS => common_pb::DataType::Timestamp,
-            PropertyType::TimestampMS => common_pb::DataType::Timestamp,
-            PropertyType::TimestampUS => common_pb::DataType::Timestamp,
-            PropertyType::TimestampNS => common_pb::DataType::Timestamp,
+            PropertyType::Bool => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtBool as i32,
+                )),
+            },
+            PropertyType::Char => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::String(common_pb::String {
+                    item: Some(common_pb::string::Item::Char(common_pb::string::Char { fixed_length: 1 })),
+                })),
+            },
+            PropertyType::Int => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtSignedInt32 as i32,
+                )),
+            },
+            PropertyType::Long => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtSignedInt64 as i32,
+                )),
+            },
+            PropertyType::Float => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtFloat as i32,
+                )),
+            },
+            PropertyType::Double => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtDouble as i32,
+                )),
+            },
+            PropertyType::String => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::String(common_pb::String {
+                    item: Some(common_pb::string::Item::LongText(common_pb::string::LongText {})),
+                })),
+            },
+            PropertyType::Bytes => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::PrimitiveType(
+                    common_pb::PrimitiveType::DtAny as i32,
+                )),
+            },
+            PropertyType::IntList => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Array(Box::new(common_pb::Array {
+                    component_type: Some(Box::new(common_pb::DataType {
+                        item: Some(common_pb::data_type::Item::PrimitiveType(
+                            common_pb::PrimitiveType::DtSignedInt32 as i32,
+                        )),
+                    })),
+                    // max_length is not used
+                    max_length: 1024,
+                }))),
+            },
+            PropertyType::LongList => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Array(Box::new(common_pb::Array {
+                    component_type: Some(Box::new(common_pb::DataType {
+                        item: Some(common_pb::data_type::Item::PrimitiveType(
+                            common_pb::PrimitiveType::DtSignedInt64 as i32,
+                        )),
+                    })),
+                    max_length: 1024,
+                }))),
+            },
+            PropertyType::FloatList => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Array(Box::new(common_pb::Array {
+                    component_type: Some(Box::new(common_pb::DataType {
+                        item: Some(common_pb::data_type::Item::PrimitiveType(
+                            common_pb::PrimitiveType::DtFloat as i32,
+                        )),
+                    })),
+                    max_length: 1024,
+                }))),
+            },
+            PropertyType::DoubleList => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Array(Box::new(common_pb::Array {
+                    component_type: Some(Box::new(common_pb::DataType {
+                        item: Some(common_pb::data_type::Item::PrimitiveType(
+                            common_pb::PrimitiveType::DtDouble as i32,
+                        )),
+                    })),
+                    max_length: 1024,
+                }))),
+            },
+            PropertyType::StringList => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Array(Box::new(common_pb::Array {
+                    component_type: Some(Box::new(common_pb::DataType {
+                        item: Some(common_pb::data_type::Item::String(common_pb::String {
+                            item: Some(common_pb::string::Item::LongText(common_pb::string::LongText {})),
+                        })),
+                    })),
+                    max_length: 1024,
+                }))),
+            },
+            PropertyType::Date32 => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Temporal(common_pb::Temporal {
+                    item: Some(common_pb::temporal::Item::Date32(common_pb::temporal::Date32 {})),
+                })),
+            },
+            PropertyType::Time32MS => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Temporal(common_pb::Temporal {
+                    item: Some(common_pb::temporal::Item::Time32(common_pb::temporal::Time32 {})),
+                })),
+            },
+            PropertyType::TimestampMS => common_pb::DataType {
+                item: Some(common_pb::data_type::Item::Temporal(common_pb::Temporal {
+                    item: Some(common_pb::temporal::Item::Timestamp(common_pb::temporal::Timestamp {})),
+                })),
+            },
             _ => {
                 unimplemented!("Unsupported data type {:?}", *self)
             }
