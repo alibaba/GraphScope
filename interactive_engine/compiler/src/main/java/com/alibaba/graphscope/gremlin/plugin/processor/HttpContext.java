@@ -23,13 +23,16 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.driver.ser.MessageTextSerializer;
-import org.apache.tinkerpop.gremlin.driver.ser.SerializationException;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.GraphManager;
@@ -48,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class HttpContext extends Context {
     private final Pair<String, MessageTextSerializer<?>> serializer;
     private final boolean keepAlive;
-    private final AtomicReference<Boolean> headerSent;
+    private final AtomicReference<Boolean> finalResponse;
 
     public HttpContext(
             RequestMessage requestMessage,
@@ -68,7 +71,7 @@ public class HttpContext extends Context {
                 scheduledExecutorService);
         this.serializer = Objects.requireNonNull(serializer);
         this.keepAlive = keepAlive;
-        this.headerSent = new AtomicReference<>(false);
+        this.finalResponse = new AtomicReference<>(false);
     }
 
     /**
@@ -78,31 +81,32 @@ public class HttpContext extends Context {
     @Override
     public void writeAndFlush(final ResponseMessage responseMessage) {
         try {
-            // send header once
-            if (!headerSent.compareAndSet(false, true)) {
-                FullHttpResponse chunkedResponse =
-                        new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-                chunkedResponse.headers().set(HttpHeaderNames.CONTENT_TYPE, serializer.getValue0());
-                chunkedResponse
-                        .headers()
-                        .set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-                this.getChannelHandlerContext().writeAndFlush(chunkedResponse);
+            if (finalResponse.compareAndSet(
+                    false, responseMessage.getStatus().getCode().isFinalResponse())) {
+                if (responseMessage.getStatus().getCode() == ResponseStatusCode.SUCCESS) {
+                    Object data = responseMessage.getResult().getData();
+                    if (!keepAlive && ObjectUtils.isEmpty(data)) {
+                        this.getChannelHandlerContext().close();
+                        return;
+                    }
+                }
+                ByteBuf byteBuf =
+                        Unpooled.wrappedBuffer(
+                                serializer
+                                        .getValue1()
+                                        .serializeResponseAsString(responseMessage)
+                                        .getBytes(StandardCharsets.UTF_8));
+                FullHttpResponse response =
+                        new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, byteBuf);
+                ChannelFuture channelFuture =
+                        this.getChannelHandlerContext().writeAndFlush(response);
+                ResponseStatusCode statusCode = responseMessage.getStatus().getCode();
+                if (!keepAlive && statusCode.isFinalResponse()) {
+                    channelFuture.addListener(ChannelFutureListener.CLOSE);
+                }
             }
-            ByteBuf byteBuf =
-                    Unpooled.wrappedBuffer(
-                            serializer
-                                    .getValue1()
-                                    .serializeResponseAsString(responseMessage)
-                                    .getBytes(StandardCharsets.UTF_8));
-            FullHttpResponse response =
-                    new DefaultFullHttpResponse(
-                            HttpVersion.HTTP_1_1, HttpResponseStatus.OK, byteBuf);
-            ChannelFuture channelFuture = this.getChannelHandlerContext().writeAndFlush(response);
-            ResponseStatusCode statusCode = responseMessage.getStatus().getCode();
-            if (!keepAlive && statusCode.isFinalResponse()) {
-                channelFuture.addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (SerializationException e) {
+        } catch (Exception e) {
             HttpHandlerUtils.sendError(
                     this.getChannelHandlerContext(),
                     HttpResponseStatus.INTERNAL_SERVER_ERROR,
