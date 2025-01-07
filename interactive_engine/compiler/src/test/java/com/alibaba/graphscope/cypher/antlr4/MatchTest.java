@@ -263,7 +263,7 @@ public class MatchTest {
                 Utils.evalLogicalPlan(
                         "Match (n:person {name: $name}) Where n.age = $age Return n.id;");
         Assert.assertEquals(
-                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                "[Parameter{name='name', dataType=VARCHAR}, Parameter{name='age',"
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
         Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
@@ -285,10 +285,10 @@ public class MatchTest {
                         "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"
                                 + " n.name;");
         Assert.assertEquals(
-                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                "[Parameter{name='name', dataType=VARCHAR}, Parameter{name='age',"
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
-        Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
+        Assert.assertEquals("RecordType(BIGINT id, VARCHAR name)", plan.getOutputType().toString());
     }
 
     @Test

@@ -86,7 +86,7 @@ public class ExpressionTest {
     @Test
     public void variable_4_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
-        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
+        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.VARCHAR);
         Assert.assertEquals("_.name", node.toString());
     }
 

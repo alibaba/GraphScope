@@ -72,20 +72,29 @@ class OrderByOpBuilder {
         ss << ".then(";
       }
       std::string cmp_type;
-      switch (data_type) {
-      case common::DataType::BOOLEAN:
-      case common::DataType::INT32:
-      case common::DataType::INT64:
-      case common::DataType::STRING: {
+      switch (data_type.item_case()) {
+      case common::DataType::kPrimitiveType: {
+        switch (data_type.primitive_type()) {
+        case common::PrimitiveType::DT_BOOL:
+        case common::PrimitiveType::DT_SIGNED_INT32:
+        case common::PrimitiveType::DT_SIGNED_INT64:
+          cmp_type = "cmp";
+          break;
+        case common::PrimitiveType::DT_DOUBLE: {
+          cmp_type = "partial_cmp";
+          break;
+        }
+        default:
+          LOG(FATAL) << "Unsupported type "
+                     << static_cast<int32_t>(data_type.primitive_type());
+        }
+      }
+      case common::DataType::kString: {
         cmp_type = "cmp";
         break;
       }
-      case common::DataType::DOUBLE: {
-        cmp_type = "partial_cmp";
-        break;
-      }
       default:
-        LOG(FATAL) << "Unsupported type " << data_type;
+        LOG(FATAL) << "Unsupported type " << data_type.DebugString();
       }
       std::string reverse_str;
       if (ordering_pair_[i].order() == algebra::OrderBy_OrderingPair_Order::
