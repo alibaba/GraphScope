@@ -83,7 +83,6 @@ function do_gen_python() {
 
 function do_gen_spring() {
     echo "Generating Spring API"
-    # TODO: make output path to groot-client path
     OUTPUT_PATH="${CUR_DIR}/../../../interactive_engine/groot-http" 
     GROOT_PACKAGE_NAME="com.alibaba.graphscope.groot"
     GROOT_ARTIFACT_ID="groot-http"
