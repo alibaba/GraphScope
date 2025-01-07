@@ -16,6 +16,7 @@
 #include "flex/engines/graph_db/runtime/common/operators/scan.h"
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/proto_generated_gie/basic_type.pb.h"
 namespace gs {
 
 namespace runtime {
@@ -137,9 +138,17 @@ static bl::result<Context> scan_vertices_no_expr_impl(
     std::vector<int64_t> gids;
     for (size_t i = 0; i < input_ids.size(); i++) {
       if (input_ids[i].type != PropertyType::Int64()) {
-        RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id");
+        if (input_ids[i].type == PropertyType::Int32()) {
+          LOG(WARNING) << "Implicitly convert int32 to int64 when scan vertex "
+                          "with global id";
+          gids.push_back(input_ids[i].AsInt32());
+        } else {
+          RETURN_BAD_REQUEST_ERROR("Expect int64 type for global id, but got" +
+                                   input_ids[i].type.ToString());
+        }
+      } else {
+        gids.push_back(input_ids[i].AsInt64());
       }
-      gids.push_back(input_ids[i].AsInt64());
     }
     return Scan::filter_gids(
         txn, scan_params, [](label_t, vid_t) { return true; }, gids);
@@ -202,22 +211,28 @@ bool parse_idx_predicate(const algebra::IndexPredicate& predicate,
     const common::DynamicParam& p = triplet.param();
     if (p.data_type().type_case() == common::IrDataType::TypeCase::kDataType) {
       auto dt = p.data_type().data_type();
-      if (dt == common::DataType::INT64) {
-        std::string name = p.name();
-        std::string value = params.at(name);
-        int64_t v = std::stoll(value);
-        oids.emplace_back(v);
-      } else if (dt == common::DataType::STRING) {
+      if (dt.item_case() == common::DataType::ItemCase::kPrimitiveType) {
+        if (dt.primitive_type() == common::PrimitiveType::DT_SIGNED_INT64) {
+          std::string name = p.name();
+          std::string value = params.at(name);
+          int64_t v = std::stoll(value);
+          oids.emplace_back(v);
+        } else if (dt.primitive_type() ==
+                   common::PrimitiveType::DT_SIGNED_INT32) {
+          std::string name = p.name();
+          std::string value = params.at(name);
+          int32_t v = std::stoi(value);
+          oids.emplace_back(v);
+        } else {
+          LOG(FATAL) << "unsupported primary key type" << dt.DebugString();
+          return false;
+        }
+      } else if (dt.item_case() == common::DataType::ItemCase::kString) {
         std::string name = p.name();
         std::string value = params.at(name);
         oids.emplace_back(Any::From(value));
-      } else if (dt == common::DataType::INT32) {
-        std::string name = p.name();
-        std::string value = params.at(name);
-        int32_t v = std::stoi(value);
-        oids.emplace_back(v);
       } else {
-        LOG(FATAL) << "unsupported primary key type" << dt;
+        LOG(FATAL) << "unsupported primary key type" << dt.item_case();
         return false;
       }
     }

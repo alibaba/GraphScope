@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import os
 import warnings
 
 # Disable warnings
@@ -219,6 +220,8 @@ modern_graph_vertex_only = {
 
 class TestE2EInteractive(object):
     def setup_class(self):
+        if "COORDINATOR_ENDPOINT" in os.environ:
+            COORDINATOR_ENDPOINT = os.environ["COORDINATOR_ENDPOINT"]
         self.deployment_info = connect_coordinator(COORDINATOR_ENDPOINT)
 
     def test_deployment_info(self):

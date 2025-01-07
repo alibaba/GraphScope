@@ -16,7 +16,7 @@ option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
-option(ENABLE_OTEL "Whether to enable otel" OFF)
+option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -165,7 +165,7 @@ endif ()
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
-if (ENABLE_OTEL)
+if (BUILD_WITH_OTEL)
     find_package(opentelemetry-cpp CONFIG)
     if (OPENTELEMETRY_CPP_FOUND)
         message(STATUS "opentelemetry-cpp found")

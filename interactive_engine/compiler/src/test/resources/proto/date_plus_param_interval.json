@@ -7,16 +7,31 @@
         }
       },
       "nodeType": {
-        "dataType": "DATE32"
+        "dataType": {
+          "temporal": {
+            "date32": {
+            }
+          }
+        }
       }
     },
     "nodeType": {
-      "dataType": "DATE32"
+      "dataType": {
+        "temporal": {
+          "date32": {
+          }
+        }
+      }
     }
   }, {
     "arith": "ADD",
     "nodeType": {
-      "dataType": "DATE32"
+      "dataType": {
+        "temporal": {
+          "date32": {
+          }
+        }
+      }
     }
   }, {
     "brace": "LEFT_BRACE"
@@ -24,27 +39,37 @@
     "param": {
       "name": "year",
       "dataType": {
-        "dataType": "INT64"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT64"
+        }
       }
     },
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "arith": "ADD",
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "param": {
       "name": "month",
       "index": 1,
       "dataType": {
-        "dataType": "INT64"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT64"
+        }
       }
     },
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "brace": "RIGHT_BRACE"

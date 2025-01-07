@@ -302,7 +302,7 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     SqlKind.OTHER,
                     ReturnTypes.ARG0,
                     null,
-                    GraphOperandTypes.operandMetadata(
+                    new GraphOperandMetaDataImpl(
                             ImmutableList.of(
                                     GraphTypeFamily.PATH,
                                     SqlTypeFamily.IGNORE,
@@ -325,7 +325,7 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     SqlKind.OTHER,
                     ReturnTypes.ARG2.andThen(SqlTypeTransforms.TO_ARRAY),
                     null,
-                    GraphOperandTypes.operandMetadata(
+                    new GraphOperandMetaDataImpl(
                             ImmutableList.of(
                                     GraphTypeFamily.PATH, SqlTypeFamily.IGNORE, SqlTypeFamily.ANY),
                             typeFactory -> ImmutableList.of(),

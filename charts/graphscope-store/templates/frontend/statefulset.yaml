@@ -97,6 +97,8 @@ spec:
           env:
             - name: ROLE
               value: "frontend"
+            - name: STORE_COUNT
+              value: "{{ .Values.store.replicaCount }}"
             - name: POD_IP
               valueFrom:
                 fieldRef:

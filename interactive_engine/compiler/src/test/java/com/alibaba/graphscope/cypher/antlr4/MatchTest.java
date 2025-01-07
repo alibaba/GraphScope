@@ -263,7 +263,7 @@ public class MatchTest {
                 Utils.evalLogicalPlan(
                         "Match (n:person {name: $name}) Where n.age = $age Return n.id;");
         Assert.assertEquals(
-                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                "[Parameter{name='name', dataType=VARCHAR}, Parameter{name='age',"
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
         Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
@@ -285,10 +285,10 @@ public class MatchTest {
                         "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"
                                 + " n.name;");
         Assert.assertEquals(
-                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                "[Parameter{name='name', dataType=VARCHAR}, Parameter{name='age',"
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
-        Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
+        Assert.assertEquals("RecordType(BIGINT id, VARCHAR name)", plan.getOutputType().toString());
     }
 
     @Test
@@ -711,6 +711,42 @@ public class MatchTest {
                     + " alias=[k], start_alias=[p1], optional=[true])\n"
                     + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[p1], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void special_label_name_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval("Match (n:`@person`)-[e:`contains`]->(n2) Return n", builder).build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                        + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[@person]}],"
+                        + " alias=[n2], opt=[END])\n"
+                        + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[contains]}],"
+                        + " alias=[e], startAlias=[n], opt=[OUT])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[@person]}],"
+                        + " alias=[n], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    // the return column order should align with the query given
+    @Test
+    public void aggregate_column_order_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                Utils.eval("Match (n:person) Return count(n), n, sum(n.age)", builder).build();
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f1=[$f1], n=[n], $f2=[$f2], isAppend=[false])\n"
+                    + "  GraphLogicalAggregate(keys=[{variables=[n], aliases=[n]}],"
+                    + " values=[[{operands=[n], aggFunction=COUNT, alias='$f1', distinct=false},"
+                    + " {operands=[n.age], aggFunction=SUM, alias='$f2', distinct=false}]])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[n], opt=[VERTEX])",
                 after.explain().trim());
     }
 }

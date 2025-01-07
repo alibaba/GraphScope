@@ -224,7 +224,9 @@ static void BuildExprFromPredicate(BuildingContext& ctx,
                                    std::string& func_construct_params_str,
                                    std::string& property_selectors_str) {
   auto expr_builder = ExprBuilder(ctx);
-  expr_builder.set_return_type(common::DataType::BOOLEAN);
+  common::DataType type;
+  type.set_primitive_type(common::PrimitiveType::DT_BOOL);
+  expr_builder.set_return_type(type);
   expr_builder.AddAllExprOpr(expr.operators());
   std::string expr_code;
   std::vector<codegen::ParamConst> func_call_param_const;
