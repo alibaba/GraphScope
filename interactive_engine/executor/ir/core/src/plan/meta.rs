@@ -407,9 +407,117 @@ impl JsonIO for Schema {
     where
         Self: Sized,
     {
-        let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
-        let schema = Schema::from(schema_pb);
-        Ok(schema)
+        let mut json_value: serde_json::Value = serde_json::from_reader(reader)?;
+
+        // Process the data_type field to convert enum (int32) to new data_type structure
+        if let Some(obj) = json_value.as_object_mut() {
+            if let Some(entities) = obj
+                .get_mut("entities")
+                .and_then(|v| v.as_array_mut())
+            {
+                for entity in entities {
+                    if let Some(entity_obj) = entity.as_object_mut() {
+                        if let Some(columns) = entity_obj
+                            .get_mut("columns")
+                            .and_then(|v| v.as_array_mut())
+                        {
+                            for column in columns {
+                                if let Some(column_obj) = column.as_object_mut() {
+                                    if let Some(data_type_value) = column_obj.get("data_type") {
+                                        if let Some(data_type_int) = data_type_value.as_i64() {
+                                            column_obj.insert(
+                                                "data_type".to_string(),
+                                                convert_data_type(data_type_int),
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if let Some(relations) = obj
+                .get_mut("relations")
+                .and_then(|v| v.as_array_mut())
+            {
+                for relation in relations {
+                    if let Some(relation_obj) = relation.as_object_mut() {
+                        if let Some(columns) = relation_obj
+                            .get_mut("columns")
+                            .and_then(|v| v.as_array_mut())
+                        {
+                            for column in columns {
+                                if let Some(column_obj) = column.as_object_mut() {
+                                    if let Some(data_type_value) = column_obj.get("data_type") {
+                                        if let Some(data_type_int) = data_type_value.as_i64() {
+                                            column_obj.insert(
+                                                "data_type".to_string(),
+                                                convert_data_type(data_type_int),
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let schema_pb: schema_pb::Schema = serde_json::from_value(json_value)?;
+        Ok(Schema::from(schema_pb))
+    }
+}
+
+// Helper function to convert the previous enum data_type to the new data_type structure
+// Previous enum data_type:
+// enum DataType {
+//   BOOLEAN = 0;
+//   INT32 = 1;
+//   INT64 = 2 ;
+//   DOUBLE = 3;
+//   STRING = 4;
+//   BYTES = 5;
+//   INT32_ARRAY = 6;
+//   INT64_ARRAY = 7;
+//   DOUBLE_ARRAY = 8;
+//   STRING_ARRAY = 9;
+//   PAIR_ARRAY = 10;
+//   NONE = 11;
+//   DATE32 = 12;
+//   TIME32 = 13;
+//   TIMESTAMP = 14;
+// }
+fn convert_data_type(data_type_int: i64) -> serde_json::Value {
+    use serde_json::json;
+    match data_type_int {
+        // Primitive types mapping
+        0 => json!({ "primitive_type": "DT_BOOL" }), // BOOLEAN
+        1 => json!({ "primitive_type": "DT_SIGNED_INT32" }), // INT32
+        2 => json!({ "primitive_type": "DT_SIGNED_INT64" }), // INT64
+        3 => json!({ "primitive_type": "DT_DOUBLE" }), // DOUBLE
+
+        // String type mapping
+        4 => json!({ "string": { "long_text": {} } }), // STRING
+
+        // Array types mapping
+        6 => json!({ "array": { "component_type": { "primitive_type": "DT_SIGNED_INT32" } } }), // INT32_ARRAY
+        7 => json!({ "array": { "component_type": { "primitive_type": "DT_SIGNED_INT64" } } }), // INT64_ARRAY
+        8 => json!({ "array": { "component_type": { "primitive_type": "DT_DOUBLE" } } }), // DOUBLE_ARRAY
+        9 => json!({ "array": { "component_type": { "string": { "long_text": {} } } } }), // STRING_ARRAY
+
+        // None type mapping
+        11 => json!({ "primitive_type": "DT_NULL" }), // NONE
+
+        // Temporal types mapping
+        12 => json!({ "temporal": { "date32": {} } }), // DATE32
+        13 => json!({ "temporal": { "time32": {} } }), // TIME32
+        14 => json!({ "temporal": { "timestamp": {} } }), // TIMESTAMP
+
+        // Other types handling (default to a NONE-like type if applicable)
+        _ => json!({ "primitive_type": "DT_ANY" }), // NONE or unsupported types
     }
 }
 

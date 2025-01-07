@@ -79,6 +79,8 @@ RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
     case ::common::DataType::kTemporal: {
       if (ddt.temporal().item_case() == ::common::Temporal::kDate32) {
         return RTAnyType::kDate32;
+      } else if (ddt.temporal().item_case() == ::common::Temporal::kTimestamp) {
+        return RTAnyType::kDate32;
       } else {
         LOG(FATAL) << "unrecoginized temporal type - "
                    << ddt.temporal().DebugString();
@@ -454,10 +456,14 @@ int RTAny::numerical_cmp(const RTAny& other) const {
   switch (type_.type_enum_) {
   case RTAnyType::RTAnyTypeImpl::kI64Value:
     switch (other.type_.type_enum_) {
-    case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return value_.i64_val - other.value_.i32_val;
-    case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return value_.i64_val - other.value_.f64_val;
+    case RTAnyType::RTAnyTypeImpl::kI32Value: {
+      auto res = value_.i64_val - other.value_.i32_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
+    case RTAnyType::RTAnyTypeImpl::kF64Value: {
+      auto res = value_.i64_val - other.value_.f64_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
     default:
       LOG(FATAL) << "not support for "
                  << static_cast<int>(other.type_.type_enum_);
@@ -465,10 +471,14 @@ int RTAny::numerical_cmp(const RTAny& other) const {
     break;
   case RTAnyType::RTAnyTypeImpl::kI32Value:
     switch (other.type_.type_enum_) {
-    case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return value_.i32_val - other.value_.i64_val;
-    case RTAnyType::RTAnyTypeImpl::kF64Value:
-      return value_.i32_val - other.value_.f64_val;
+    case RTAnyType::RTAnyTypeImpl::kI64Value: {
+      auto res = value_.i32_val - other.value_.i64_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
+    case RTAnyType::RTAnyTypeImpl::kF64Value: {
+      auto res = value_.i32_val - other.value_.f64_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
     default:
       LOG(FATAL) << "not support for "
                  << static_cast<int>(other.type_.type_enum_);
@@ -476,10 +486,14 @@ int RTAny::numerical_cmp(const RTAny& other) const {
     break;
   case RTAnyType::RTAnyTypeImpl::kF64Value:
     switch (other.type_.type_enum_) {
-    case RTAnyType::RTAnyTypeImpl::kI64Value:
-      return value_.f64_val - other.value_.i64_val;
-    case RTAnyType::RTAnyTypeImpl::kI32Value:
-      return value_.f64_val - other.value_.i32_val;
+    case RTAnyType::RTAnyTypeImpl::kI64Value: {
+      auto res = value_.f64_val - other.value_.i64_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
+    case RTAnyType::RTAnyTypeImpl::kI32Value: {
+      auto res = value_.f64_val - other.value_.i32_val;
+      return res > 0 ? 1 : (res == 0 ? 0 : -1);
+    }
     default:
       LOG(FATAL) << "not support for " << static_cast<int>(type_.type_enum_);
     }
@@ -539,13 +553,6 @@ bool RTAny::operator==(const RTAny& other) const {
     return value_.vertex == other.value_.vertex;
   } else if (type_ == RTAnyType::kDate32) {
     return value_.i64_val == other.value_.i64_val;
-  }
-
-  if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
-    return value_.i64_val == other.value_.i32_val;
-  } else if (type_ == RTAnyType::kI32Value &&
-             other.type_ == RTAnyType::kI64Value) {
-    return value_.i32_val == other.value_.i64_val;
   } else if (type_ == RTAnyType::kF64Value) {
     return value_.f64_val == other.value_.f64_val;
   }

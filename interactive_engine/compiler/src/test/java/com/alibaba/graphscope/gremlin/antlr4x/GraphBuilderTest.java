@@ -23,6 +23,8 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
@@ -1851,5 +1853,37 @@ public class GraphBuilderTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[software,"
                         + " person]}], alias=[a], opt=[VERTEX])",
                 after3.explain().trim());
+    }
+
+    @Test
+    public void union_valueMap_test() {
+        Configs configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                        + " ExpandGetVFusionRule"));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMeta irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node1 =
+                eval(
+                        "g.V().hasLabel(\"PERSON\").has(\"id\","
+                            + " 1816).union(outE(\"LIKES\").limit(10).as('a').inV().as('b').select('a','b').by(valueMap(\"creationDate\")),"
+                            + " outE(\"KNOWS\").limit(10).as('c').inV().as('d').select('c','d').by(valueMap(\"creationDate\")))",
+                        builder);
+        RelNode after1 = optimizer.optimize(node1, new GraphIOProcessor(builder, irMeta));
+        GraphLogicalProject project = (GraphLogicalProject) after1;
+        RexNode expr = project.getProjects().get(0);
+        RexGraphVariable var = (RexGraphVariable) expr;
+        Assert.assertEquals(2, var.getAliasId());
     }
 }

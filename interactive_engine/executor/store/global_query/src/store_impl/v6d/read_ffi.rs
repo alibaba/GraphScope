@@ -985,6 +985,9 @@ impl PropertyType {
                         common_pb::PrimitiveType::DtBool => PropertyType::Bool,
                         common_pb::PrimitiveType::DtFloat => PropertyType::Float,
                         common_pb::PrimitiveType::DtDouble => PropertyType::Double,
+                        _ => {
+                            unimplemented!("Unsupported data type {:?}", primitive_type)
+                        }
                     }
                 }
                 common_pb::data_type::Item::String(string) => match string.item.as_ref() {

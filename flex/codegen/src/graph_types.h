@@ -85,6 +85,22 @@ static codegen::DataType primitive_type_to_data_type(
   }
 }
 
+static codegen::DataType temporal_type_to_data_type(
+    const common::Temporal& type) {
+  switch (type.item_case()) {
+  case common::Temporal::ItemCase::kDate:
+    return codegen::DataType::kDate;
+  case common::Temporal::ItemCase::kTime:
+    return codegen::DataType::kTime;
+  case common::Temporal::kTimestamp:
+    return codegen::DataType::kTimeStamp;
+  default:
+    throw std::runtime_error(
+        "unknown temporal type when converting temporal type to data type:" +
+        std::to_string(static_cast<int>(type.item_case())));
+  }
+}
+
 static codegen::DataType common_data_type_pb_2_data_type(
     const common::DataType& data_type) {
   switch (data_type.item_case()) {
@@ -95,7 +111,7 @@ static codegen::DataType common_data_type_pb_2_data_type(
   case common::DataType::ItemCase::kString:
     return codegen::DataType::kString;
   case common::DataType::ItemCase::kTemporal:
-    LOG(FATAL) << "Not support temporal type";
+    return temporal_type_to_data_type(data_type.temporal());
   case common::DataType::ItemCase::kArray:
   case common::DataType::ItemCase::kMap:
     LOG(FATAL) << "Not support array or map type";

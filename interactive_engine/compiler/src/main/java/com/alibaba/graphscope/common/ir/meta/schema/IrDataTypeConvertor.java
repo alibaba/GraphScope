@@ -198,6 +198,8 @@ public interface IrDataTypeConvertor<T> {
             Object value;
             if ((value = typeMap.get("primitive_type")) != null) {
                 switch (value.toString()) {
+                    case "DT_NULL":
+                        return typeFactory.createSqlType(SqlTypeName.NULL);
                     case "DT_ANY":
                         // any type
                         return typeFactory.createSqlType(SqlTypeName.ANY);
@@ -324,6 +326,9 @@ public interface IrDataTypeConvertor<T> {
             SqlTypeName typeName = from.getSqlTypeName();
             Map<String, Object> yamlDesc;
             switch (typeName) {
+                case NULL:
+                    yamlDesc = ImmutableMap.of("primitive_type", "DT_NULL");
+                    break;
                 case INTEGER:
                     yamlDesc = ImmutableMap.of("primitive_type", "DT_SIGNED_INT32");
                     break;
