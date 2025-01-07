@@ -392,8 +392,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       std::unique_lock<std::mutex> lock(mtxs_[v_label_id]);
       _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
     }
-    // We guarantee that the size of the table is not less than the size of the
-    // indexer outside the function.
     {
       std::shared_lock<std::shared_mutex> lock(rw_mutex);
       for (size_t j = 0; j < property_cols.size(); ++j) {

@@ -351,6 +351,23 @@ def create_graph_with_custom_pk_name(interactive_session):
 
 
 @pytest.fixture(scope="function")
+def create_graph_with_var_char_property(interactive_session):
+    modern_graph_custom_pk_name = copy.deepcopy(modern_graph_full)
+    for vertex_type in modern_graph_custom_pk_name["schema"]["vertex_types"]:
+        # replace each string property with var_char
+        for prop in vertex_type["properties"]:
+            if prop["property_type"]:
+                if "string" in prop["property_type"]:
+                    prop["property_type"]["string"] = {"var_char": {"max_length": 2}}
+    create_graph_request = CreateGraphRequest.from_dict(modern_graph_custom_pk_name)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
 def create_graph_with_x_csr_params(interactive_session):
     modern_graph_x_csr_params = modern_graph_full.copy()
     for vertex_type in modern_graph_x_csr_params["schema"]["vertex_types"]:
