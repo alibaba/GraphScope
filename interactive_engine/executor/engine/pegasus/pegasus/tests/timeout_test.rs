@@ -157,7 +157,7 @@ fn timeout_caused_by_large_job() {
                 .input_from(vec![0u32])?
                 .map(move |i| {
                     if worker_id != 0 {
-                        std::thread::sleep(Duration::from_millis(3000));
+                        std::thread::sleep(Duration::from_millis(2000));
                     }
                     Ok(i)
                 })?
