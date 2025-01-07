@@ -157,6 +157,8 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 !flex/interactive/sdk/python/gs_interactive/client/generated/__init__.py
 !flex/interactive/sdk/python/gs_interactive/models/long_text.py
 
+interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
+interactive_engine/groot-http/.openapi-generator/
 
 **/.cache/
 
