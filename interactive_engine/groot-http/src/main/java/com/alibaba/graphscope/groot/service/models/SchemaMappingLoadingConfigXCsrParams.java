@@ -21,7 +21,7 @@ import javax.annotation.Generated;
 
 @Schema(name = "SchemaMapping_loading_config_x_csr_params", description = "mutable_csr specific parameters")
 @JsonTypeName("SchemaMapping_loading_config_x_csr_params")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T12:01:45.705446+08:00[Asia/Shanghai]")
 public class SchemaMappingLoadingConfigXCsrParams {
 
   private Integer parallelism;

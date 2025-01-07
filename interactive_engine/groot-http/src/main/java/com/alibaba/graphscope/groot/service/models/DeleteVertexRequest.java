@@ -24,7 +24,7 @@ import javax.annotation.Generated;
  */
 
 @JsonTypeName("delete_vertex_request")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T10:36:33.439661+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T12:01:45.705446+08:00[Asia/Shanghai]")
 public class DeleteVertexRequest {
 
   private String label;

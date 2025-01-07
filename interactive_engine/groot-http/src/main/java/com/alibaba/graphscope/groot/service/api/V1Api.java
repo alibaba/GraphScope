@@ -57,7 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-25T20:15:37.362177+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T12:01:45.705446+08:00[Asia/Shanghai]")
 @Validated
 @Tag(name = "GraphService/EdgeManagement", description = "EdgeManagement")
 public interface V1Api {

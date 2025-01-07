@@ -21,7 +21,7 @@ import javax.annotation.Generated;
 
 @Schema(name = "BaseVertexType_x_csr_params", description = "Used for storage optimization")
 @JsonTypeName("BaseVertexType_x_csr_params")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T12:01:45.705446+08:00[Asia/Shanghai]")
 public class BaseVertexTypeXCsrParams {
 
   private Integer maxVertexNum;

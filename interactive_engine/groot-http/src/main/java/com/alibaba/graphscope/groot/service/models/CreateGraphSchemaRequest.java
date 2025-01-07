@@ -23,7 +23,7 @@ import javax.annotation.Generated;
  * CreateGraphSchemaRequest
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-12-23T19:19:20.896381+08:00[Asia/Shanghai]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2025-01-07T12:01:45.705446+08:00[Asia/Shanghai]")
 public class CreateGraphSchemaRequest {
 
   @Valid
