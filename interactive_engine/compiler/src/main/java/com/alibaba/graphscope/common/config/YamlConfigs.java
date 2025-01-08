@@ -69,6 +69,15 @@ public class YamlConfigs extends Configs {
                             return configs.get("compiler.meta.reader.statistics.uri");
                         })
                 .put(
+                        "graph.functions",
+                        (Configs configs) -> {
+                            String functions = System.getProperty("graph.functions");
+                            if (functions != null) {
+                                return functions;
+                            }
+                            return configs.get("compiler.meta.reader.functions.uri");
+                        })
+                .put(
                         "graph.meta.schema.fetch.interval.ms",
                         (Configs configs) -> configs.get("compiler.meta.reader.schema.interval"))
                 .put(
