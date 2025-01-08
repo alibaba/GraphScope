@@ -935,7 +935,7 @@ paths:
       summary: Update vertex's property
       operationId: update_vertex
       description: |
-        Remove the vertex from the specified graph.
+        Update the vertex with the provided properties to the specified graph.
       parameters:
         - name: graph_id
           in : path
@@ -1050,7 +1050,7 @@ paths:
     post:
       tags:
         - GraphService/VertexManagement
-      summary: Add vertex to the graph
+      summary: Add a batch of vertices to the graph
       operationId: add_vertices
       parameters:
         - name: graph_id
@@ -1059,7 +1059,7 @@ paths:
           schema:
             type: string
       description: |
-        Add the provided vertex to the specified graph.
+        Add the provided vertices to the specified graph.
       requestBody:
         required: true
         content:
@@ -1124,10 +1124,10 @@ paths:
     put:
       tags:
         - GraphService/VertexManagement
-      summary: Update vertex's property
+      summary: Update vertices' properties
       operationId: update_vertices
       description: |
-        Remove the vertex from the specified graph.
+        Update the vertices with the provided properties to the specified graph.
       parameters:
         - name: graph_id
           in : path
@@ -1187,10 +1187,10 @@ paths:
     delete:
       tags:
         - GraphService/VertexManagement
-      summary: Remove vertex from the graph
+      summary: Remove vertices from the graph
       operationId: delete_vertices
       description: |
-        Remove the vertex from the specified graph.
+        Remove the vertices from the specified graph.
       parameters:
         - name: graph_id
           in : path
@@ -1527,10 +1527,10 @@ paths:
     post:
       tags:
         - GraphService/EdgeManagement
-      summary: Add edge to the graph
+      summary: Add a batch of edges to the graph
       operationId: add_edges
       description: |
-        Add the edge to graph.
+        Add the edges to graph.
       parameters:
         - name: graph_id
           in : path
@@ -1595,10 +1595,10 @@ paths:
     put:
       tags:
         - GraphService/EdgeManagement
-      summary: Update edge's property
+      summary: Update edges' properties
       operationId: update_edges
       description: |
-        Update the edge on the running graph.
+        Update the edges on the running graph.
       parameters:
         - name: graph_id
           in : path
@@ -1662,10 +1662,10 @@ paths:
     delete:
       tags:
         - GraphService/EdgeManagement
-      summary: Remove edge from the graph
+      summary: Remove edges from the graph
       operationId: delete_edges
       description: |
-        Remove the edge from current graph.
+        Remove the edges from current graph.
       parameters:
         - name: graph_id
           in : path
@@ -1722,7 +1722,7 @@ paths:
     post:
       tags:
         - GraphService/VertexManagement
-      summary: Add vertex and/or edge to the graph
+      summary: Add vertices and edges to the graph
       operationId: add_vertices_edges
       parameters:
         - name: graph_id

@@ -29,6 +29,8 @@ import com.alibaba.graphscope.groot.service.models.TimeStampType;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 import com.alibaba.graphscope.groot.service.models.BaseEdgeTypeVertexTypePairRelationsInner;
 import com.alibaba.graphscope.groot.service.models.DateType;
+import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
+import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
@@ -41,9 +43,10 @@ public class DtoConverter {
         return new Vertex(label, propertyMap);
     }
 
-    public static Vertex convertToVertex(String label, List<Property> pkValues) {
-        Map<String, String> propertyMap = convertToPropertyMap(pkValues);
-        return new Vertex(label, propertyMap);
+    public static Vertex convertToVertex(DeleteVertexRequest deleteVertexRequest) {
+        String label = deleteVertexRequest.getLabel();
+        Map<String, String> primaryKeyValues = convertToPropertyMap(deleteVertexRequest.getPrimaryKeyValues());
+        return new Vertex(label, primaryKeyValues);
     }
 
     public static Edge convertToEdge(EdgeRequest edgeRequest) {
@@ -56,11 +59,13 @@ public class DtoConverter {
         return new Edge(label, srcLabel, dstLabel, srcPkMap, dstPkMap, propertyMap);
     }
 
-    public static Edge convertToEdge(String edgeLabel, String srcLabel, String dstLabel, List<Property> srcPkValues,
-            List<Property> dstPkValues) {
-        Map<String, String> srcPkMap = convertToPropertyMap(srcPkValues);
-        Map<String, String> dstPkMap = convertToPropertyMap(dstPkValues);
-        return new Edge(edgeLabel, srcLabel, dstLabel, srcPkMap, dstPkMap);
+    public static Edge convertToEdge(DeleteEdgeRequest deleteEdgeRequest) {
+        String label = deleteEdgeRequest.getEdgeLabel();
+        String srcLabel = deleteEdgeRequest.getSrcLabel();
+        String dstLabel = deleteEdgeRequest.getDstLabel();
+        Map<String, String> srcPkMap = convertToPropertyMap(deleteEdgeRequest.getSrcPrimaryKeyValues());
+        Map<String, String> dstPkMap = convertToPropertyMap(deleteEdgeRequest.getDstPrimaryKeyValues());
+        return new Edge(label, srcLabel, dstLabel, srcPkMap, dstPkMap);
     }
 
     public static DataTypePb convertToDataTypePb(GSDataType dataType) {

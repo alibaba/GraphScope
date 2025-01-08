@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
+import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
-import com.alibaba.graphscope.groot.service.models.Property;
 
 @Service
 public class EdgeManagementService {
@@ -38,17 +38,34 @@ public class EdgeManagementService {
         }
     }
 
-    public long deleteEdge(String edgeLabel, String srcLabel, String dstLabel, List<Property> srcPkValues,
-            List<Property> dstPkValues) {
-        Edge edge = DtoConverter.convertToEdge(edgeLabel, srcLabel, dstLabel, srcPkValues, dstPkValues);
+    public long deleteEdge(DeleteEdgeRequest deleteEdgeRequest) {
+        Edge edge = DtoConverter.convertToEdge(deleteEdgeRequest);
         // TODO: deleteEdge will only delete the first edge that matches the given parameters
         // e.g., if we have multiple edges from v1 to v2 with the same edge label, only one of them will be deleted
         return grootClient.deleteEdge(edge);
+    }
+
+    public long deleteEdges(List<DeleteEdgeRequest> edgeRequests) {
+        List<Edge> edges = new ArrayList<>();
+        for (DeleteEdgeRequest edgeRequest : edgeRequests) {
+            Edge edge = DtoConverter.convertToEdge(edgeRequest);
+            edges.add(edge);
+        }
+        return grootClient.deleteEdges(edges);
     }
 
     public long updateEdge(EdgeRequest edgeRequest) {
         Edge edge = DtoConverter.convertToEdge(edgeRequest);
         // TODO: updateEdge will add a new edge even if it already exists
         return grootClient.updateEdge(edge);
+    }
+
+    public long updateEdges(List<EdgeRequest> edgeRequests) {
+        List<Edge> edges = new ArrayList<>();
+        for (EdgeRequest edgeRequest : edgeRequests) {
+            Edge edge = DtoConverter.convertToEdge(edgeRequest);
+            edges.add(edge);
+        }
+        return grootClient.updateEdges(edges);
     }
 }
