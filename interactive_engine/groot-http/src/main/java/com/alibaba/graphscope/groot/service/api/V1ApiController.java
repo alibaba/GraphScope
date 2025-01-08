@@ -369,4 +369,19 @@ public class V1ApiController implements V1Api {
         }
     }
 
+
+    @Override
+    @PostMapping(value = "/{graph_id}/flush", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> remoteFlush(
+            @PathVariable("graph_id") String graphId,
+            @RequestParam(value = "snapshot_id", required = true) Long snapshotId) {
+        try {
+            boolean res = vertexManagementService.remoteFlush(snapshotId);
+            return ApiUtil.createSuccessResponse("Snapshot flushed successfully: " + res, snapshotId.longValue());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to flush snapshot");
+        }
+    }
+
 }

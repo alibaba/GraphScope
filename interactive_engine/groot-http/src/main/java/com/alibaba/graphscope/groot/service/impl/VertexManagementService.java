@@ -80,4 +80,8 @@ public class VertexManagementService {
         return grootClient.addVerticesAndEdges(vertices, edges);
     }
 
+
+    public boolean remoteFlush(long snapshotId) {
+        return grootClient.remoteFlush(snapshotId);
+    }
 }

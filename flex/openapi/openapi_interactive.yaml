@@ -407,6 +407,35 @@ paths:
           $ref: "#/components/responses/400"
         500:
           $ref: "#/components/responses/500"
+  
+  /v1/graph/{graph_id}/flush:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      description: Flush Snapshot Id to see if it becomes available
+      operationId: remoteFlush
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: snapshot_id
+          in: query
+          required: true
+          schema:
+            type: long
+      responses:
+        '200':
+          description: Successful flush snapshot id, return if the snapshot id becomes available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
  
   /v1/graph/{graph_id}/statistics:
     get:
