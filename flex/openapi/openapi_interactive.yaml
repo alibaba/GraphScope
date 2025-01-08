@@ -875,9 +875,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/VertexRequest'
+              $ref: '#/components/schemas/VertexRequest'
             example:
                 - label: "person"
                   primary_key_values: 
@@ -1010,16 +1008,204 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                label:
-                  type: string
-                  description: The label name of the vertex to delete.
-                primary_key_values:
-                  type: array
-                  description: The primary key values for locating the vertex.
-                  items:
-                    $ref: '#/components/schemas/Property'
+              $ref: '#/components/schemas/DeleteVertexRequest'
+      responses:
+        '200':
+          description: Successfully delete vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully delete vertex"
+        '400':
+          description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
+        '404':
+          description: Vertex not exists or Graph not exits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+
+  /v1/graph/{graph_id}/vertex/bulk:
+    post:
+      tags:
+        - GraphService/VertexManagement
+      summary: Add vertex to the graph
+      operationId: add_vertices
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      description: |
+        Add the provided vertex to the specified graph.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/VertexRequest'
+            example:
+                - label: "person"
+                  primary_key_values:
+                    id: 2
+                  properties:
+                    age: 24
+                    name: "Cindy"
+
+      responses:
+        '200':
+          description: Successfully created vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully created vertex"
+        '400':
+          description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
+        '409':
+          description: Vertex already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Vertex already exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+    put:
+      tags:
+        - GraphService/VertexManagement
+      summary: Update vertex's property
+      operationId: update_vertices
+      description: |
+        Remove the vertex from the specified graph.
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/VertexRequest'
+            example:
+                - label: "person"
+                  primary_key_values:
+                    id: 2
+                  properties:
+                    age: 24
+                    name: "Cindy"
+      responses:
+        '200':
+          description: Successfully update vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully updated vertex"
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
+        '404':
+          description: Vertex not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Vertex not exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+    delete:
+      tags:
+        - GraphService/VertexManagement
+      summary: Remove vertex from the graph
+      operationId: delete_vertices
+      description: |
+        Remove the vertex from the specified graph.
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The label and primary key values of the vertex to be deleted.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeleteVertexRequest'
       responses:
         '200':
           description: Successfully delete vertex
@@ -1203,9 +1389,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/EdgeRequest'
+              $ref: '#/components/schemas/EdgeRequest'
             example:
               - src_label: "person"
                 dst_label: "software"
@@ -1301,30 +1485,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                edge_label:
-                  type: string
-                  description: The label name of the edge.
-                  example: created
-                src_label:
-                  type: string
-                  description: The label name of the source vertex.
-                  example: person
-                dst_label:
-                  type: string
-                  description: The label name of the destination vertex.
-                  example: software
-                src_primary_key_values:
-                  type: array
-                  description: Primary key values for the source vertex.
-                  items:
-                    $ref: '#/components/schemas/Property'
-                dst_primary_key_values:
-                  type: array
-                  description: Primary key values for the destination vertex.
-                  items:
-                    $ref: '#/components/schemas/Property'
+              $ref: '#/components/schemas/DeleteEdgeRequest'
       responses:
         '200':
           description: Successfully delete edge
@@ -1361,6 +1522,286 @@ paths:
               example:
                 code: 103
                 message: "Internal error"
+
+  /v1/graph/{graph_id}/edge/bulk:
+    post:
+      tags:
+        - GraphService/EdgeManagement
+      summary: Add edge to the graph
+      operationId: add_edges
+      description: |
+        Add the edge to graph.
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
+            example:
+              - src_label: "person"
+                dst_label: "software"
+                edge_label: "created"
+                src_pk_name: "id"
+                src_pk_value: 1
+                dst_pk_name: "id"
+                dst_pk_value: 3
+                properties:
+                  - name: "weight"
+                    value: 0.2
+      responses:
+        '200':
+          description: Successfully insert the edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfuly create edge"
+        '400':
+          description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
+        '409':
+          description: edge already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Edge already exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+    put:
+      tags:
+        - GraphService/EdgeManagement
+      summary: Update edge's property
+      operationId: update_edges
+      description: |
+        Update the edge on the running graph.
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
+            example:
+              src_label: "person"
+              dst_label: "software"
+              edge_label: "created"
+              src_pk_name: "id"
+              src_pk_value: 1
+              dst_pk_name: "id"
+              dst_pk_value: 3
+              properties:
+                - name: "weight"
+                  value: 0.3
+      responses:
+        '200':
+          description: Successfully update edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully update edge"
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
+        '404':
+          description: Edge not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+    delete:
+      tags:
+        - GraphService/EdgeManagement
+      summary: Remove edge from the graph
+      operationId: delete_edges
+      description: |
+        Remove the edge from current graph.
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The label and primary key values of the src and dst vertices, and the edge label.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeleteEdgeRequest'
+      responses:
+        '200':
+          description: Successfully delete edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully delete edge"
+        '400':
+          description: Invalid input edge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input edge schema"
+        '404':
+          description: Edge not exists or Graph not exits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Edge not exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+  
+  /v1/graph/{graph_id}/vertex-edge/bulk:
+    post:
+      tags:
+        - GraphService/VertexManagement
+      summary: Add vertex and/or edge to the graph
+      operationId: add_vertices_edges
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+      description: |
+        Add the provided vertex to the specified graph.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexEdgeRequest'
+            example:
+              vertex_request:
+                - label: "person"
+                  primary_key_value: 2
+                  properties:
+                    age: 24
+                    name: "Cindy"
+              edge_request:
+                - src_label: "person"
+                  dst_label: "software"
+                  edge_label: "created"
+                  src_pk_name: "id"
+                  src_pk_value: 1
+                  dst_pk_name: "id"
+                  dst_pk_value: 3
+                  properties:
+                    - name: "weight"
+                      value: 0.2
+      responses:
+        '200':
+          description: Successfully created vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example:
+                message: "Successfully created vertex"
+        '400':
+          description: Invalid input vertex
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 101
+                message: "Invalid input vertex schema"
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 4
+                message: "Graph not found"
+        '409':
+          description: Vertex already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 102
+                message: "Vertex already exists"
+        '500':
+          description: Server internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponseWithCode'
+              example:
+                code: 103
+                message: "Internal error"
+
   /v1/graph/{graph_id}/query:
     post:
       tags:
@@ -1686,6 +2127,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Property'
+    DeleteVertexRequest:
+      x-body-name: delete_vertex_request
+      type: object
+      properties:
+        label:
+          type: string
+          description: The label name of the vertex.
+          example: person
+        primary_key_values:
+          type: array
+          description: Primary key values for the vertex.
+          items:
+            $ref: '#/components/schemas/Property'
     VertexData:
       x-body-name: vertex_data
       type: object
@@ -1756,6 +2210,32 @@ components:
             $ref: '#/components/schemas/Property'
         properties:
           type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    DeleteEdgeRequest:
+      x-body-name: delete_edge_request
+      type: object
+      properties:
+        edge_label:
+          type: string
+          description: The label name of the edge.
+          example: created
+        src_label:
+          type: string
+          description: The label name of the source vertex.
+          example: person
+        dst_label:
+          type: string
+          description: The label name of the destination vertex.
+          example: software
+        src_primary_key_values:
+          type: array
+          description: Primary key values for the source vertex.
+          items:
+            $ref: '#/components/schemas/Property'
+        dst_primary_key_values:
+          type: array
+          description: Primary key values for the destination vertex.
           items:
             $ref: '#/components/schemas/Property'
     QueryRequest:
