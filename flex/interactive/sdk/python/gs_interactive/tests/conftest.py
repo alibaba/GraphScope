@@ -817,7 +817,7 @@ def send_get_request(url, timeout):
     try:
         import requests
 
-        response = requests.get(url, timeout=timeout)
+        response = requests.get(url, timeout=timeout)  # noqa
     except requests.exceptions.Timeout:
         raise Exception("Got timeout exception when sending get request to ", url)
     except Exception as e:
