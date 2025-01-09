@@ -375,7 +375,7 @@ paths:
           in: query
           required: true
           schema:
-            type: long
+            type: integer
       responses:
         '200':
           description: Successful flush snapshot id, return if the snapshot id becomes available
@@ -404,7 +404,7 @@ paths:
           content:
             application/json:
               schema:
-                type: long
+                type: integer
         '400':
           $ref: "#/components/responses/400"
         '500':

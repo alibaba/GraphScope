@@ -325,7 +325,7 @@ public class V1ApiController implements V1Api {
     @PostMapping(value = "/{graph_id}/snapshot", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> flushSnapshotId(
             @PathVariable("graph_id") String graphId,
-            @RequestParam(value = "snapshot_id", required = true) Long snapshotId) {
+            @RequestParam(value = "snapshot_id", required = true) Integer snapshotId) {
         try {
             boolean res = schemaManagementService.remoteFlush(snapshotId);
             return ApiUtil.createSuccessResponse(
