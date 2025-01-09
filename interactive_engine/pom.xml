@@ -92,6 +92,23 @@
       </build>
     </profile>
     <profile>
+      <id>graphscope</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <rust.compile.target>v6d</rust.compile.target>
+      </properties>
+      <modules>
+        <module>assembly</module>
+        <module>common</module>
+        <module>executor</module>
+        <module>frontend</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>compiler</module>
+      </modules>
+    </profile>
+    <profile>
       <id>groot</id>
       <properties>
         <rust.compile.target>groot</rust.compile.target>
