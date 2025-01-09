@@ -404,6 +404,7 @@
                             <arguments>
                                 <argument>build_ir_core.sh</argument>
                             </arguments>
+                            <skip>${skip.ir.core}</skip>
                         </configuration>
                     </execution>
                 </executions>

@@ -105,6 +105,8 @@ spec:
               value: {{ .Values.frontend.service.servicePort | quote }}
             - name: GROOT_GREMLIN_PORT
               value: {{ .Values.frontend.service.gremlinPort | quote }}
+            - name: GROOT_CYPHER_PORT
+              value: {{ .Values.frontend.service.cypherPort | quote }}
             - name: INSTANCE_NAME
               value: {{ .Release.Name | quote }}
             - name: NAMESPACE

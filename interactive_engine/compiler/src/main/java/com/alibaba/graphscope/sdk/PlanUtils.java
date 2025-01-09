@@ -64,7 +64,8 @@ public class PlanUtils {
                         configPath,
                         (Configs configs, IrMetaTracker tracker) ->
                                 new StaticIrMetaFetcher(
-                                        new StringMetaReader(schemaYaml, statsJson), tracker));
+                                        new StringMetaReader(schemaYaml, statsJson, configs),
+                                        tracker));
         GraphPlanner.PlannerInstance plannerInstance =
                 instance.getPlanner().instance(query, instance.getMeta());
         GraphPlanner.Summary summary = plannerInstance.plan();
@@ -86,16 +87,19 @@ public class PlanUtils {
     static class StringMetaReader implements IrMetaReader {
         private final String schemaYaml;
         private final String statsJson;
+        private final Configs configs;
 
-        public StringMetaReader(String schemaYaml, String statsJson) {
+        public StringMetaReader(String schemaYaml, String statsJson, Configs configs) {
             this.schemaYaml = schemaYaml;
             this.statsJson = statsJson;
+            this.configs = configs;
         }
 
         @Override
         public IrMeta readMeta() throws IOException {
             IrGraphSchema graphSchema =
                     new IrGraphSchema(
+                            configs,
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
                                             schemaYaml.getBytes(StandardCharsets.UTF_8)),

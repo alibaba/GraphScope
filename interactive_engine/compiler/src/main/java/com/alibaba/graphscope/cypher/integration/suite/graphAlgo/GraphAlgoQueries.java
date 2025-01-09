@@ -241,4 +241,10 @@ public class GraphAlgoQueries {
                                 + " 1}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_graph_algo_test14() {
+        String query = "MATCH(a) where elementId(a) in [0] return a.id;";
+        List<String> expected = Arrays.asList("Record<{id: 0}>");
+        return new QueryContext(query, expected);
+    }
 }

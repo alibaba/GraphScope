@@ -48,6 +48,7 @@ class LocalFileMetadataStore : public IMetaStore {
 
   static constexpr const char* METADATA_DIR = "METADATA";
   static constexpr const char* META_FILE_PREFIX = "META_";
+  static constexpr const char* CUR_ID_FILE_NAME = "CUR_ID";
 
   LocalFileMetadataStore(const std::string& path);
 
@@ -110,12 +111,15 @@ class LocalFileMetadataStore : public IMetaStore {
                           update_func_t update_func) override;
 
  private:
-  Result<meta_key_t> get_next_meta_key(const meta_kind_t& meta_kind) const;
+  Result<meta_key_t> get_next_meta_key(const meta_kind_t& meta_kind);
   std::string get_root_meta_dir() const;
   std::string get_meta_kind_dir(const meta_kind_t& meta_kind) const;
   std::string get_meta_file(const meta_kind_t& meta_kind,
                             const meta_key_t& meta_key) const;
-  int32_t get_max_id(const meta_kind_t& meta_kind) const;
+  /**
+   * For the specified meta_kind, increase the id and return the new id.
+   */
+  int32_t increase_and_get_id(const meta_kind_t& meta_kind);
   bool is_key_exist(const meta_kind_t& meta_kind,
                     const meta_key_t& meta_key) const;
 

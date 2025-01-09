@@ -60,12 +60,12 @@ class TestGenericMultiEdgeMatch():
     pass
 
 
-@pytest.mark.skip(reason="not supoort time object as attribute")
+@pytest.mark.skip(reason="not support time object as attribute")
 class TestTimeRespectingGraphMatcher(object):
     pass
 
 
-@pytest.mark.skip(reason="not supoort time object as attribute")
+@pytest.mark.skip(reason="not support time object as attribute")
 class TestDiTimeRespectingGraphMatcher(object):
     pass
 

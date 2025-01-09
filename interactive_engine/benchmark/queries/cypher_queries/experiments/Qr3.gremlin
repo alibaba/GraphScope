@@ -1,0 +1,1 @@
+g.V().hasLabel('FORUM').as('forum').out('CONTAINEROF').as('c1').in('REPLYOF').as('r1').out('HASCREATOR').as('h1').select('forum').out('HASMEMBER').as('h2').count()

@@ -85,6 +85,9 @@ public class YamlConfigs extends Configs {
                         (Configs configs) ->
                                 configs.get("compiler.meta.reader.statistics.interval"))
                 .put(
+                        "graph.meta.fetch.timeout.ms",
+                        (Configs configs) -> configs.get("compiler.meta.reader.timeout"))
+                .put(
                         "graph.store",
                         (Configs configs) -> {
                             if (configs.get("compute_engine.store.type") != null) {

@@ -6,16 +6,22 @@
         }
       },
       "nodeType": {
-        "dataType": "INT64"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT64"
+        }
       }
     },
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "logical": "WITHIN",
     "nodeType": {
-      "dataType": "BOOLEAN"
+      "dataType": {
+        "primitiveType": "DT_BOOL"
+      }
     }
   }, {
     "const": {
@@ -24,7 +30,9 @@
       }
     },
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }]
 }

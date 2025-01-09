@@ -1,0 +1,3 @@
+g.V().union(
+  has('PERSON', 'id', $id).out('4..5', 'KNOWS').hasLabel('PERSON'),
+  has('PERSON', 'id', $id).out('5..6', 'KNOWS').hasLabel('PERSON')).count()

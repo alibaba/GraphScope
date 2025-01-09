@@ -28,6 +28,8 @@ package com.alibaba.graphscope.gremlin.auth;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.FullHttpMessage;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeMap;
 
@@ -42,6 +44,7 @@ import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
 import org.apache.tinkerpop.gremlin.server.auth.Authenticator;
 import org.apache.tinkerpop.gremlin.server.authz.Authorizer;
 import org.apache.tinkerpop.gremlin.server.handler.AbstractAuthenticationHandler;
+import org.apache.tinkerpop.gremlin.server.handler.HttpHandlerUtils;
 import org.apache.tinkerpop.gremlin.server.handler.SaslAuthenticationHandler;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.slf4j.Logger;
@@ -50,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -205,9 +209,70 @@ public class IrAuthenticationHandler extends AbstractAuthenticationHandler {
                     ctx.writeAndFlush(error);
                 }
             }
+        } else if (msg instanceof FullHttpMessage) { // add Authentication for HTTP requests
+            FullHttpMessage request = (FullHttpMessage) msg;
+
+            if (!authenticator.requireAuthentication()) {
+                ctx.fireChannelRead(request);
+                return;
+            }
+
+            String errorMsg =
+                    "Invalid HTTP Header for Authentication. Expected format: 'Authorization: Basic"
+                            + " <Base64(user:password)>'";
+
+            if (!request.headers().contains("Authorization")) {
+                sendError(ctx, errorMsg, request);
+                return;
+            }
+
+            String authorizationHeader = request.headers().get("Authorization");
+            if (!authorizationHeader.startsWith("Basic ")) {
+                sendError(ctx, errorMsg, request);
+                return;
+            }
+
+            String authorization;
+            byte[] decodedUserPass;
+            try {
+                authorization = authorizationHeader.substring("Basic ".length());
+                decodedUserPass = BASE64_DECODER.decode(authorization);
+            } catch (Exception e) {
+                sendError(ctx, errorMsg, request);
+                return;
+            }
+
+            authorization = new String(decodedUserPass, Charset.forName("UTF-8"));
+            String[] split = authorization.split(":");
+            if (split.length != 2) {
+                sendError(
+                        ctx,
+                        "Invalid username or password after decoding the Base64 Authorization"
+                                + " header.",
+                        request);
+                return;
+            }
+
+            Map<String, String> credentials = new HashMap();
+            credentials.put("username", split[0]);
+            credentials.put("password", split[1]);
+            String address = ctx.channel().remoteAddress().toString();
+            if (address.startsWith("/") && address.length() > 1) {
+                address = address.substring(1);
+            }
+
+            credentials.put("address", address);
+
+            try {
+                AuthenticatedUser user = authenticator.authenticate(credentials);
+                ctx.channel().attr(StateKey.AUTHENTICATED_USER).set(user);
+                ctx.fireChannelRead(request);
+            } catch (AuthenticationException e) {
+                sendError(ctx, e.getMessage(), request);
+            }
         } else {
             logger.warn(
-                    "{} only processes RequestMessage instances - received {} - channel closing",
+                    "{} received invalid request message {} - channel closing",
                     this.getClass().getSimpleName(),
                     msg.getClass());
             ctx.close();
@@ -225,5 +290,18 @@ public class IrAuthenticationHandler extends AbstractAuthenticationHandler {
             return null;
 
         return ((InetSocketAddress) genericSocketAddr).getAddress();
+    }
+
+    private void sendError(
+            final ChannelHandlerContext ctx, String errorMsg, FullHttpMessage request) {
+        HttpHandlerUtils.sendError(ctx, HttpResponseStatus.UNAUTHORIZED, errorMsg, false);
+        if (request.refCnt() > 0) {
+            boolean fullyReleased = request.release();
+            if (!fullyReleased) {
+                logger.warn(
+                        "http request message was not fully released, may cause a"
+                                + " memory leak");
+            }
+        }
     }
 }

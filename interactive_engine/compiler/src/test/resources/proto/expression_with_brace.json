@@ -10,16 +10,22 @@
         }
       },
       "nodeType": {
-        "dataType": "INT32"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT32"
+        }
       }
     },
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }, {
     "arith": "SUB",
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }, {
     "brace": "LEFT_BRACE"
@@ -28,12 +34,16 @@
       "i32": 1
     },
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }, {
     "arith": "SUB",
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }, {
     "var": {
@@ -46,11 +56,15 @@
         }
       },
       "nodeType": {
-        "dataType": "INT32"
+        "dataType": {
+          "primitiveType": "DT_SIGNED_INT32"
+        }
       }
     },
     "nodeType": {
-      "dataType": "INT32"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT32"
+      }
     }
   }, {
     "brace": "RIGHT_BRACE"

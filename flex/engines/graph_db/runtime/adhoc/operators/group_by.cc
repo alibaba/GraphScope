@@ -413,6 +413,29 @@ std::shared_ptr<IContextColumn> string_to_list(
   return builder.finish();
 }
 
+template <typename T>
+std::shared_ptr<IContextColumn> scalar_to_list(
+    const Var& var, const std::vector<std::vector<size_t>>& to_aggregate) {
+  ListValueColumnBuilder<T> builder;
+  size_t col_size = to_aggregate.size();
+  builder.reserve(col_size);
+  std::vector<std::shared_ptr<ListImplBase>> impls;
+  for (size_t k = 0; k < col_size; ++k) {
+    auto& vec = to_aggregate[k];
+
+    std::vector<T> elem;
+    for (auto idx : vec) {
+      elem.push_back(TypedConverter<T>::to_typed(var.get(idx)));
+    }
+    auto impl = ListImpl<T>::make_list_impl(std::move(elem));
+    auto list = List::make_list(impl);
+    impls.emplace_back(impl);
+    builder.push_back_opt(list);
+  }
+  builder.set_list_impls(impls);
+  return builder.finish();
+}
+
 bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
     const AggFunc& func, const std::vector<std::vector<size_t>>& to_aggregate) {
   if (func.aggregate == AggrKind::kSum) {
@@ -497,6 +520,14 @@ bl::result<std::shared_ptr<IContextColumn>> apply_reduce(
       return tuple_to_list(var, to_aggregate);
     } else if (var.type() == RTAnyType::kStringValue) {
       return string_to_list(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kI32Value) {
+      return scalar_to_list<int32_t>(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kI64Value) {
+      return scalar_to_list<int64_t>(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kU64Value) {
+      return scalar_to_list<uint64_t>(var, to_aggregate);
+    } else if (var.type() == RTAnyType::kF64Value) {
+      return scalar_to_list<double>(var, to_aggregate);
     } else {
       LOG(FATAL) << "not support" << static_cast<int>(var.type().type_enum_);
     }
