@@ -162,30 +162,30 @@ public class DtoConverter {
     private static GSDataType convertToDtoDataType(DataTypePb dataType) {
         switch (dataType) {
             case INT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32, "PrimitiveType");
             case UINT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32, "PrimitiveType");
             case LONG:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64, "PrimitiveType");
             case ULONG:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64, "PrimitiveType");
             case BOOL:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL, "PrimitiveType");
             case FLOAT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.FLOAT);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.FLOAT, "PrimitiveType");
             case DOUBLE:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE, "PrimitiveType");
             case STRING:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING, "PrimitiveType");
             case DATE32:
-                TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString());
-                return new TemporalType(date);
+                TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
+                return new TemporalType(date, "TemporalType");
             case TIMESTAMP_MS:
                 // TODO: confirm the format of timestamp? should be int64 milliseconds since
                 // 1970-01-01 00:00:00.000000?
                 TemporalTypeTemporal timestamp =
-                        new TimeStampType("YYYY-MM-DD HH:MM:SS".toString());
-                return new TemporalType(timestamp);
+                        new TimeStampType("YYYY-MM-DD HH:MM:SS".toString(), "TimeStampType");
+                return new TemporalType(timestamp, "TemporalType");
             default:
                 throw new IllegalArgumentException("Unsupported data type: " + dataType);
         }

@@ -1541,6 +1541,7 @@ components:
       type: object
       required: 
         - primitive_type
+        - ref_type
       properties:
         primitive_type:
           type: string
@@ -1548,22 +1549,30 @@ components:
                  DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
                  # The DT_STRING is added for backward compatibility, it should be replaced by StringType
           example: DT_SIGNED_INT32
+        ref_type:
+          type: string
+          example: "PrimitiveType"
     LongText:
       x-body-name: long_text
       type: object
       additionalProperties: false 
       required:
         - long_text
+        - string_ref_type
       properties:
         long_text:
           type: string
           nullable: true
+        string_ref_type:
+          type: string
+          example: "LongText"
     FixedChar:
       x-body-name: fixed_char
       type: object
       additionalProperties: false 
       required:
         - char
+        - string_ref_type
       properties:
         char:
           type: object
@@ -1572,12 +1581,16 @@ components:
           properties:
             fixed_length:
               type: integer
+        string_ref_type:
+          type: string
+          example: "FixedChar"
     VarChar:
       x-body-name: var_char
       type: object
       additionalProperties: false 
       required:
         - var_char
+        - string_ref_type
       properties:
         var_char:
           type: object
@@ -1586,49 +1599,74 @@ components:
           properties:
             max_length:
               type: integer
+        string_ref_type:
+          type: string
+          example: "VarChar"
     StringType:
       x-body-name: string_type
       type: object
       required: 
         - string
+        - ref_type
       properties:
         string:
           oneOf:
             - $ref: '#/components/schemas/LongText'
             - $ref: '#/components/schemas/FixedChar'
             - $ref: '#/components/schemas/VarChar'
+          discriminator:
+            propertyName: string_ref_type
+        ref_type:
+          type: string
+          example: "StringType"
     TimeStampType:
       x-body-name: time_stamp_type
       type: object
       required:
         - timestamp
+        - temporal_ref_type
       properties:
         timestamp:
           type: string
+        temporal_ref_type:
+          type: string
+          example: "TimeStampType"
     DateType:
       x-body-name: date_type
       type: object
       required:
        - date32
+       - temporal_ref_type
       properties:
         date32:
           type: string
+        temporal_ref_type:
+          type: string
+          example: "DateType"
     TemporalType:
       x-body-name: temporal_type
       type: object
       required:
         - temporal
+        - ref_type
       properties:
         temporal:
           oneOf:
             - $ref: '#/components/schemas/TimeStampType'
             - $ref: '#/components/schemas/DateType'
+          discriminator:
+            propertyName: temporal_ref_type
+        ref_type:
+          type: string
+          example: "TemporalType"
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
         - $ref: '#/components/schemas/PrimitiveType'
         - $ref: '#/components/schemas/StringType'
         - $ref: '#/components/schemas/TemporalType'
+      discriminator:
+        propertyName: ref_type
     Property:
       x-body-name: property
       type: object
