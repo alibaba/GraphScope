@@ -226,8 +226,7 @@ class LouvainAppBase
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
       if (current_super_step <= 14 ||
-          std::fabs(actual_quality - ctx.prev_quality()) <
-              min_quality_improvement) {
+          (actual_quality - ctx.prev_quality()) <= min_quality_improvement) {
         // turn to sync community result
         ctx.compute_context().set_superstep(sync_result_step);
         syncCommunity(frag, ctx, messages);
