@@ -155,34 +155,6 @@ paths:
                 code: 103
                 message: "Internal error"
   /v1/graph/{graph_id}/schema:
-    post:
-      tags:
-        - AdminService/GraphManagement
-      summary: Import graph schema
-      operationId: import_schema
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateGraphSchemaRequest'
-        required: true
-      responses:
-        200:
-          description: Successful imported the graph schema
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-        400:
-          $ref: "#/components/responses/400"
-        500:
-          $ref: "#/components/responses/500"
     get:
       tags:
         - AdminService/GraphManagement
@@ -202,27 +174,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetGraphSchemaResponse'
-        500:
-          $ref: "#/components/responses/500"
-    delete:
-      tags:
-        - AdminService/GraphManagement
-      description: Delete schema by graph id
-      operationId: delete_schema
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-          description: The id of graph to delete
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
         500:
           $ref: "#/components/responses/500"
   /v1/graph/{graph_id}/schema/vertex:
@@ -408,12 +359,12 @@ paths:
         500:
           $ref: "#/components/responses/500"
   
-  /v1/graph/{graph_id}/flush:
+  /v1/graph/{graph_id}/snapshot:
     post:
       tags:
         - AdminService/GraphManagement
-      description: Flush Snapshot Id to see if it becomes available
-      operationId: remoteFlush
+      description: test if the snapshot id is available
+      operationId: flush_snapshot_id
       parameters:
         - name: graph_id
           in: path
@@ -432,6 +383,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+    get:
+      tags:
+        - AdminService/GraphManagement
+      description: Get the latest snapshot id
+      operationId: get_snapshot_id
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful get snapshot id
+          content:
+            application/json:
+              schema:
+                type: long
         '400':
           $ref: "#/components/responses/400"
         '500':
@@ -889,7 +862,7 @@ paths:
     post:
       tags:
         - GraphService/VertexManagement
-      summary: Add vertex to the graph
+      summary: Add vertex (and edge) to the graph
       operationId: add_vertex
       parameters:
         - name: graph_id
@@ -898,21 +871,31 @@ paths:
           schema:
             type: string
       description: |
-        Add the provided vertex to the specified graph.
+        Add the provided vertex (and edge) to the specified graph.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexRequest'
+              $ref: '#/components/schemas/VertexEdgeRequest'
             example:
+              vertex_request:
                 - label: "person"
-                  primary_key_values: 
-                    id: 2
+                  primary_key_value: 2
                   properties:
                     age: 24
                     name: "Cindy"
-
+              edge_request:
+                - src_label: "person"
+                  dst_label: "software"
+                  edge_label: "created"
+                  src_pk_name: "id"
+                  src_pk_value: 1
+                  dst_pk_name: "id"
+                  dst_pk_value: 3
+                  properties:
+                    - name: "weight"
+                      value: 0.2
       responses:
         '200':
           description: Successfully created vertex
@@ -975,7 +958,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexRequest'
+                type: array
+                items:
+                  $ref: '#/components/schemas/VertexRequest'
             example:
               label: "person"
               primary_key_value: 2
@@ -1025,201 +1010,6 @@ paths:
       operationId: delete_vertex
       description: |
         Remove the vertex from the specified graph.
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: The label and primary key values of the vertex to be deleted.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteVertexRequest'
-      responses:
-        '200':
-          description: Successfully delete vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully delete vertex"
-        '400':
-          description: Invalid input vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input vertex schema"
-        '404':
-          description: Vertex not exists or Graph not exits.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Vertex not exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-
-  /v1/graph/{graph_id}/vertex/bulk:
-    post:
-      tags:
-        - GraphService/VertexManagement
-      summary: Add a batch of vertices to the graph
-      operationId: add_vertices
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      description: |
-        Add the provided vertices to the specified graph.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/VertexRequest'
-            example:
-                - label: "person"
-                  primary_key_values:
-                    id: 2
-                  properties:
-                    age: 24
-                    name: "Cindy"
-
-      responses:
-        '200':
-          description: Successfully created vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully created vertex"
-        '400':
-          description: Invalid input vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input vertex schema"
-        '404':
-          description: Graph not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Graph not found"
-        '409':
-          description: Vertex already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 102
-                message: "Vertex already exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-    put:
-      tags:
-        - GraphService/VertexManagement
-      summary: Update vertices' properties
-      operationId: update_vertices
-      description: |
-        Update the vertices with the provided properties to the specified graph.
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/VertexRequest'
-            example:
-                - label: "person"
-                  primary_key_values:
-                    id: 2
-                  properties:
-                    age: 24
-                    name: "Cindy"
-      responses:
-        '200':
-          description: Successfully update vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully updated vertex"
-        '400':
-          description: Invalid input parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input vertex schema"
-        '404':
-          description: Vertex not exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Vertex not exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-    delete:
-      tags:
-        - GraphService/VertexManagement
-      summary: Remove vertices from the graph
-      operationId: delete_vertices
-      description: |
-        Remove the vertices from the specified graph.
       parameters:
         - name: graph_id
           in : path
@@ -1418,7 +1208,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
             example:
               - src_label: "person"
                 dst_label: "software"
@@ -1447,7 +1239,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
             example:
               src_label: "person"
               dst_label: "software"
@@ -1514,199 +1308,6 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteEdgeRequest'
-      responses:
-        '200':
-          description: Successfully delete edge
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully delete edge"
-        '400':
-          description: Invalid input edge
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input edge schema"
-        '404':
-          description: Edge not exists or Graph not exits
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Edge not exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-
-  /v1/graph/{graph_id}/edge/bulk:
-    post:
-      tags:
-        - GraphService/EdgeManagement
-      summary: Add a batch of edges to the graph
-      operationId: add_edges
-      description: |
-        Add the edges to graph.
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/EdgeRequest'
-            example:
-              - src_label: "person"
-                dst_label: "software"
-                edge_label: "created"
-                src_pk_name: "id"
-                src_pk_value: 1
-                dst_pk_name: "id"
-                dst_pk_value: 3
-                properties:
-                  - name: "weight"
-                    value: 0.2
-      responses:
-        '200':
-          description: Successfully insert the edge
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfuly create edge"
-        '400':
-          description: Invalid input edge
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input edge schema"
-        '409':
-          description: edge already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 102
-                message: "Edge already exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-    put:
-      tags:
-        - GraphService/EdgeManagement
-      summary: Update edges' properties
-      operationId: update_edges
-      description: |
-        Update the edges on the running graph.
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/EdgeRequest'
-            example:
-              src_label: "person"
-              dst_label: "software"
-              edge_label: "created"
-              src_pk_name: "id"
-              src_pk_value: 1
-              dst_pk_name: "id"
-              dst_pk_value: 3
-              properties:
-                - name: "weight"
-                  value: 0.3
-      responses:
-        '200':
-          description: Successfully update edge
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully update edge"
-        '400':
-          description: Invalid input parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input edge schema"
-        '404':
-          description: Edge not exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Edge not exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-    delete:
-      tags:
-        - GraphService/EdgeManagement
-      summary: Remove edges from the graph
-      operationId: delete_edges
-      description: |
-        Remove the edges from current graph.
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: The label and primary key values of the src and dst vertices, and the edge label.
-        required: true
-        content:
-          application/json:
-            schema:
               type: array
               items:
                 $ref: '#/components/schemas/DeleteEdgeRequest'
@@ -1737,90 +1338,6 @@ paths:
               example:
                 code: 4
                 message: "Edge not exists"
-        '500':
-          description: Server internal error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 103
-                message: "Internal error"
-  
-  /v1/graph/{graph_id}/vertex-edge/bulk:
-    post:
-      tags:
-        - GraphService/VertexManagement
-      summary: Add vertices and edges to the graph
-      operationId: add_vertices_edges
-      parameters:
-        - name: graph_id
-          in : path
-          required: true
-          schema:
-            type: string
-      description: |
-        Add the provided vertex to the specified graph.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VertexEdgeRequest'
-            example:
-              vertex_request:
-                - label: "person"
-                  primary_key_value: 2
-                  properties:
-                    age: 24
-                    name: "Cindy"
-              edge_request:
-                - src_label: "person"
-                  dst_label: "software"
-                  edge_label: "created"
-                  src_pk_name: "id"
-                  src_pk_value: 1
-                  dst_pk_name: "id"
-                  dst_pk_value: 3
-                  properties:
-                    - name: "weight"
-                      value: 0.2
-      responses:
-        '200':
-          description: Successfully created vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-              example:
-                message: "Successfully created vertex"
-        '400':
-          description: Invalid input vertex
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 101
-                message: "Invalid input vertex schema"
-        '404':
-          description: Graph not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 4
-                message: "Graph not found"
-        '409':
-          description: Vertex already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example:
-                code: 102
-                message: "Vertex already exists"
         '500':
           description: Server internal error
           content:
