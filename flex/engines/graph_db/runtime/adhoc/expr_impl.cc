@@ -16,6 +16,7 @@
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include <regex>
 #include <stack>
+#include "flex/proto_generated_gie/basic_type.pb.h"
 
 namespace gs {
 
@@ -444,21 +445,39 @@ static RTAny parse_param(const common::DynamicParam& param,
       common::IrDataType::TypeCase::kDataType) {
     common::DataType dt = param.data_type().data_type();
     const std::string& name = param.name();
-    if (dt == common::DataType::DATE32) {
-      int64_t val = std::stoll(input.at(name));
-      return RTAny::from_int64(val);
-    } else if (dt == common::DataType::STRING) {
+    if (dt.item_case() == common::DataType::ItemCase::kPrimitiveType) {
+      switch (dt.primitive_type()) {
+      case common::PrimitiveType::DT_SIGNED_INT32: {
+        int val = std::stoi(input.at(name));
+        return RTAny::from_int32(val);
+      }
+      case common::PrimitiveType::DT_SIGNED_INT64: {
+        int64_t val = std::stoll(input.at(name));
+        return RTAny::from_int64(val);
+      }
+      case common::PrimitiveType::DT_DOUBLE:
+        return RTAny::from_double(std::stod(input.at(name)));
+      case common::PrimitiveType::DT_BOOL:
+        return RTAny::from_bool(input.at(name) == "true");
+      default:
+        LOG(FATAL) << "not support type: " << dt.DebugString();
+      }
+    } else if (dt.item_case() == common::DataType::ItemCase::kTemporal) {
+      if (dt.temporal().item_case() == common::Temporal::kDate32) {
+        int64_t val = std::stoll(input.at(name));
+        return RTAny::from_int64(val);
+      } else if (dt.temporal().item_case() == common::Temporal::kTimestamp) {
+        int64_t val = std::stoll(input.at(name));
+        return RTAny::from_int64(val);
+      } else {
+        LOG(FATAL) << "not support type: " << dt.temporal().DebugString();
+      }
+    } else if (dt.item_case() == common::DataType::ItemCase::kString) {
       const std::string& val = input.at(name);
       return RTAny::from_string(val);
-    } else if (dt == common::DataType::INT32) {
-      int val = std::stoi(input.at(name));
-      return RTAny::from_int32(val);
-    } else if (dt == common::DataType::INT64) {
-      int64_t val = std::stoll(input.at(name));
-      return RTAny::from_int64(val);
+    } else {
+      LOG(FATAL) << "not support type: " << dt.DebugString();
     }
-
-    LOG(FATAL) << "not support type: " << common::DataType_Name(dt);
   }
   LOG(FATAL) << "graph data type not expected....";
   return RTAny();

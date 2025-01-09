@@ -1654,6 +1654,9 @@ components:
           example: param1
         type:
           $ref: '#/components/schemas/GSDataType'
+        allow_cast:
+          type: boolean
+          example: true
     VertexRequest:
       x-body-name: vertex_request
       type: object

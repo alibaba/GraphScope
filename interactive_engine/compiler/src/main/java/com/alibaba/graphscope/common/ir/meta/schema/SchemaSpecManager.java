@@ -81,7 +81,7 @@ public class SchemaSpecManager {
                             IrSchemaParser.getInstance()
                                     .parse(parent.getGraphSchema(), parent.isColumnId()));
                 case FLEX_IN_JSON:
-                    if (source.getType() == SchemaSpec.Type.FLEX_IN_YAML) {
+                    if (source != null && source.getType() == SchemaSpec.Type.FLEX_IN_YAML) {
                         Yaml yaml = new Yaml();
                         Map rootMap = yaml.load(source.getContent());
                         ObjectMapper mapper = new ObjectMapper();
@@ -91,7 +91,7 @@ public class SchemaSpecManager {
                     return null;
                 case FLEX_IN_YAML:
                 default:
-                    if (source.getType() == SchemaSpec.Type.FLEX_IN_JSON) {
+                    if (source != null && source.getType() == SchemaSpec.Type.FLEX_IN_JSON) {
                         ObjectMapper mapper = new ObjectMapper();
                         JsonNode rootNode = mapper.readTree(source.getContent());
                         Map rootMap = mapper.convertValue(rootNode, Map.class);

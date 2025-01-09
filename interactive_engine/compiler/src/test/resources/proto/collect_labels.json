@@ -22,42 +22,76 @@
               "propId": {
                 "name": "id"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "firstName"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "lastName"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "gender"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "birthday"
               },
-              "type": "INT64"
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
             }, {
               "propId": {
                 "name": "creationDate"
               },
-              "type": "DATE32"
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "locationIP"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }, {
               "propId": {
                 "name": "browserUsed"
               },
-              "type": "STRING"
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
             }]
           }]
         }
@@ -76,7 +110,9 @@
               }
             },
             "nodeType": {
-              "dataType": "INT32"
+              "dataType": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
             }
           }],
           "aggregate": "TO_LIST",
@@ -86,7 +122,14 @@
     },
     "metaData": [{
       "type": {
-        "dataType": "INT32_ARRAY"
+        "dataType": {
+          "array": {
+            "componentType": {
+              "primitiveType": "DT_SIGNED_INT32"
+            },
+            "maxLength": 2147483647
+          }
+        }
       },
       "alias": 1
     }]

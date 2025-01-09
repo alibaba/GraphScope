@@ -60,6 +60,7 @@ public class LocalIrMetaReader implements IrMetaReader {
                         : SchemaSpec.Type.IR_CORE_IN_JSON;
         IrGraphSchema graphSchema =
                 new IrGraphSchema(
+                        configs,
                         new SchemaInputStream(
                                 new FileInputStream(schemaPath.toFile()), schemaSpec));
         IrMeta irMeta =

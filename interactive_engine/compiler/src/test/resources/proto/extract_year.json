@@ -4,7 +4,9 @@
       "interval": "DAY"
     },
     "nodeType": {
-      "dataType": "INT64"
+      "dataType": {
+        "primitiveType": "DT_SIGNED_INT64"
+      }
     }
   }, {
     "var": {
@@ -14,11 +16,21 @@
         }
       },
       "nodeType": {
-        "dataType": "DATE32"
+        "dataType": {
+          "temporal": {
+            "date32": {
+            }
+          }
+        }
       }
     },
     "nodeType": {
-      "dataType": "DATE32"
+      "dataType": {
+        "temporal": {
+          "date32": {
+          }
+        }
+      }
     }
   }]
 }

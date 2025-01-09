@@ -41,7 +41,7 @@ public class YamlConfigTest {
         GraphStoredProcedures procedures = irMeta.getStoredProcedures();
         StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
         Assert.assertEquals(
-                "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
+                "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(VARCHAR name),"
                         + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
                         + " Parameter{name='maxDate', dataType=BIGINT}], option={type=x_cypher,"
                         + " query=MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate}"
@@ -80,17 +80,17 @@ public class YamlConfigTest {
         IrGraphSchema graphSchema = irMeta.getSchema();
         Assert.assertEquals(
                 "DefaultGraphVertex{labelId=0, label=person,"
-                        + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
-                        + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
-                        + " DefaultGraphProperty{id=2, name=age, dataType=INT}],"
+                        + " propertyList=[IrGraphProperty{id=0, name=id, dataType=LONG},"
+                        + " IrGraphProperty{id=1, name=name, dataType=STRING},"
+                        + " IrGraphProperty{id=2, name=age, dataType=INT}],"
                         + " primaryKeyList=[id]}",
                 graphSchema.getElement("person").toString());
         Assert.assertEquals(
                 "DefaultGraphVertex{labelId=1, label=software,"
-                        + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
-                        + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
-                        + " DefaultGraphProperty{id=2, name=lang, dataType=STRING},"
-                        + " DefaultGraphProperty{id=3, name=creationDate, dataType=DATE}],"
+                        + " propertyList=[IrGraphProperty{id=0, name=id, dataType=LONG},"
+                        + " IrGraphProperty{id=1, name=name, dataType=STRING},"
+                        + " IrGraphProperty{id=2, name=lang, dataType=STRING},"
+                        + " IrGraphProperty{id=3, name=creationDate, dataType=DATE}],"
                         + " primaryKeyList=[id]}",
                 graphSchema.getElement("software").toString());
     }
