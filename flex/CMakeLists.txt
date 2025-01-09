@@ -18,6 +18,9 @@ option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build op
 option(USE_STATIC_ARROW "Whether to use static arrow" ON) # Whether to link arrow statically, default is ON
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
 
+# Default args for flex building
+set(DEFAULT_SHARDING_MODE "exclusive" CACHE STRING "Default sharding mode for flex, see graph_db_service.h. To change to other options, cmake .. -DDEFAULT_SHARDING_MODE=coorperative")
+
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")

@@ -323,6 +323,7 @@ class DefaultSession(Session):
             stored_proc_uri (str, optional): the uri for the stored procedure service.
                 If not provided,the uri will be read from the service status.
         """
+        self._admin_uri = admin_uri
         self._client = ApiClient(Configuration(host=admin_uri))
 
         self._graph_api = AdminServiceGraphManagementApi(self._client)
@@ -353,6 +354,9 @@ class DefaultSession(Session):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.__exit__(exc_type=exc_type, exc_value=exc_val, traceback=exc_tb)
+
+    def admin_uri(self):
+        return self._admin_uri
 
     # implementations of the methods from the interfaces
     def add_vertex(

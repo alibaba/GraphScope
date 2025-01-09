@@ -136,6 +136,7 @@ class graph_db_http_handler {
 
  private:
   const uint16_t http_port_;
+  const int32_t shard_num_;
   seastar::httpd::http_server_control server_;
 
   std::atomic<bool> enable_adhoc_handlers_{false}, running_{false},

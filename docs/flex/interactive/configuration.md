@@ -82,6 +82,27 @@ compiler:
   query_timeout: 20000  # query timeout in milliseconds, default 20000
 ```
 
+#### Sharded Service
+
+The core query engine of Interactive is developed using [hiactor](https://github.com/alibaba/hiactor) which is based on [Seastar](https://github.com/scylladb/seastar). Seastar operates on a Share-nothing SMP architecture, where each core functions autonomously, without sharing memory, data structures, or CPU resources. Each Seastar core is commonly referred to as a shard.
+
+Leveraging the future-promise API and a Cooperative micro-task scheduler, the sharded service significantly boosts performance and throughput. However, this setup can also lead to potential issues: an incoming request might experience delays even if some shards are idle, due to the shard scheduling algorithm potentially routing it to a busy shard. This can be problematic in Interactive, which typically hosts two services—`QueryService` and `AdminService`. Crucially, `AdminService` must remain responsive even when `QueryService` is under heavy load.
+
+As discussed in [discussion-4409](https://github.com/alibaba/GraphScope/discussions/4409), one potential solution is to allocate different shards for handling distinct requests. This approach presents three scenarios:
+
+- **Routine Scenario**: Here, users may execute both complex and simple queries, thus dedicating a shard exclusively for admin requests. However, since this shard won’t process queries, overall system performance may decline.
+  
+- **Performance-Critical Scenario**: In this scenario, users aim for peak performance from Interactive. All shards are used to process query requests, with admin requests being handled concurrently by them. Consequently, there may be instances of request delays.
+
+By default, Interactive is configured for routine with the following:
+
+```yaml
+http_service:
+  sharding_mode: exclusive # In exclusive mode, a shard is exclusively reserved for admin requests. In cooperative mode, both query and admin requests can be processed by any shard.
+```
+
+By changing to `sharding_mode: cooperative`, you can fully utilize all the computational power for the QueryService.
+
 
 ##### Available Configurations
 
@@ -99,6 +120,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.FilterIntoJoinRule | N/A | A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join | 0.0.1 |
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
+| http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
 
 #### TODOs
 

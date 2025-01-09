@@ -28,7 +28,8 @@ namespace server {
 class InteractiveAdminService;
 class admin_http_handler {
  public:
-  admin_http_handler(uint16_t http_port);
+  admin_http_handler(uint16_t http_port, int32_t shard_num,
+                     int32_t exclusive_shard_id);
 
   void start();
   void stop();
@@ -38,6 +39,7 @@ class admin_http_handler {
 
  private:
   const uint16_t http_port_;
+  int32_t exclusive_shard_id_;  // -1 means not exclusive
   seastar::httpd::http_server_control server_;
 };
 
