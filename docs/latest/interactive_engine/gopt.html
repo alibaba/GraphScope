@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>GOpt: A Graph-Native Query Optimization Framework - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -784,8 +784,8 @@ MathJax = {
 <p>Follow the instructions of <a class="reference external" href="https://neo4j.com/docs/operations-manual/4.4/tools/neo4j-admin/">neo4j-admin</a> to load the movie dataset, the original CSV files have been included in the <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j</span></code> artifacts under the directory <code class="docutils literal notranslate"><span class="pre">import/movie</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">gopt</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">neo4j</span>
 
-<span class="nb">bin</span><span class="o">/</span><span class="n">neo4j</span><span class="o">-</span><span class="n">admin</span> <span class="kn">import</span> \
-    <span class="o">--</span><span class="n">database</span> <span class="n">movie</span> \
+<span class="nb">bin</span><span class="o">/</span><span class="n">neo4j</span><span class="o">-</span><span class="n">admin</span> <span class="kn">import</span><span class="w"> \</span>
+<span class="w">    </span><span class="o">--</span><span class="n">database</span> <span class="n">movie</span> \
     <span class="o">--</span><span class="nb">id</span><span class="o">-</span><span class="nb">type</span><span class="o">=</span><span class="n">INTEGER</span> \
     <span class="o">--</span><span class="n">ignore</span><span class="o">-</span><span class="n">empty</span><span class="o">-</span><span class="n">strings</span><span class="o">=</span><span class="n">true</span> \
     <span class="o">--</span><span class="n">bad</span><span class="o">-</span><span class="n">tolerance</span><span class="o">=</span><span class="mi">0</span> \

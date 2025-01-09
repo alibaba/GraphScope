@@ -20,12 +20,12 @@ json = "{}"
 # create an instance of CreateGraphRequest from a JSON string
 create_graph_request_instance = CreateGraphRequest.from_json(json)
 # print the JSON string representation of the object
-print(CreateGraphRequest.to_json())
+print CreateGraphRequest.to_json()
 
 # convert the object into a dict
 create_graph_request_dict = create_graph_request_instance.to_dict()
 # create an instance of CreateGraphRequest from a dict
-create_graph_request_from_dict = CreateGraphRequest.from_dict(create_graph_request_dict)
+create_graph_request_form_dict = create_graph_request.from_dict(create_graph_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of VertexMapping from a JSON string
 vertex_mapping_instance = VertexMapping.from_json(json)
 # print the JSON string representation of the object
-print(VertexMapping.to_json())
+print VertexMapping.to_json()
 
 # convert the object into a dict
 vertex_mapping_dict = vertex_mapping_instance.to_dict()
 # create an instance of VertexMapping from a dict
-vertex_mapping_from_dict = VertexMapping.from_dict(vertex_mapping_dict)
+vertex_mapping_form_dict = vertex_mapping.from_dict(vertex_mapping_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

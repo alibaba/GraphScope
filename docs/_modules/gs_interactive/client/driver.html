@@ -9,8 +9,8 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -632,9 +632,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.30.0/index.html">
                 
-                  v0.29.0
+                  v0.30.0
                 
               </a></dd>
             
@@ -710,26 +710,22 @@ MathJax = {
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 
-<span class="kn">from</span> <span class="nn">gremlin_python</span> <span class="kn">import</span> <span class="n">statics</span>
 <span class="kn">from</span> <span class="nn">gremlin_python.driver.client</span> <span class="kn">import</span> <span class="n">Client</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.driver.driver_remote_connection</span> <span class="kn">import</span> <span class="n">DriverRemoteConnection</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.process.graph_traversal</span> <span class="kn">import</span> <span class="n">__</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.process.strategies</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.structure.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
 <span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">GraphDatabase</span>
 <span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">Session</span> <span class="k">as</span> <span class="n">Neo4jSession</span>
 
-<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">DefaultSession</span><span class="p">,</span> <span class="n">Session</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">DefaultSession</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
 
 
 <div class="viewcode-block" id="Driver"><a class="viewcode-back" href="../../../flex/interactive/development/python/driver.html#gs_interactive.client.driver.Driver">[docs]</a><span class="k">class</span> <span class="nc">Driver</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The main entry point for the Interactive SDK. With the Interactive endpoints provided, you can create a Interactive Session to interact with the Interactive service,</span>
+<span class="sd">    The main entry point for the Interactive SDK. With the Interactive endpoints provided,</span>
+<span class="sd">    you can create a Interactive Session to interact with the Interactive service,</span>
 <span class="sd">    and create a Neo4j Session to interact with the Neo4j service.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
 <div class="viewcode-block" id="Driver.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/driver.html#gs_interactive.client.driver.Driver.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">admin_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -738,8 +734,8 @@ MathJax = {
         <span class="n">gremlin_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct a new driver using the specified endpoints. </span>
-<span class="sd">        If no endpoints are provided, the driver will read them from environment variables. </span>
+<span class="sd">        Construct a new driver using the specified endpoints.</span>
+<span class="sd">        If no endpoints are provided, the driver will read them from environment variables.</span>
 <span class="sd">        You will receive the endpoints after starting the Interactive service.</span>
 
 <span class="sd">        Args:</span>
@@ -764,7 +760,7 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neo4j_driver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_neo4j_driver</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
-    
+
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -789,21 +785,26 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_admin_endpoint</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INTERACTIVE_ADMIN_ENDPOINT&quot;</span><span class="p">)</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_admin_endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="p">),</span> <span class="s2">&quot;INTERACTIVE_ADMIN_ENDPOINT is not set, did you forget to export the environment variable after deploying Interactive? see https://graphscope.io/docs/latest/flex/interactive/installation&quot;</span>
+        <span class="p">),</span> <span class="s2">&quot;INTERACTIVE_ADMIN_ENDPOINT is not set, &quot;</span>
+        <span class="s2">&quot;did you forget to export the environment variable after deploying Interactive?&quot;</span>
+        <span class="s2">&quot; see https://graphscope.io/docs/latest/flex/interactive/installation&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stored_proc_endpoint</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INTERACTIVE_STORED_PROC_ENDPOINT&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_proc_endpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;INTERACTIVE_STORED_PROC_ENDPOINT is not set, will try to get it from service status endpoint&quot;</span>
+                <span class="s2">&quot;INTERACTIVE_STORED_PROC_ENDPOINT is not set,&quot;</span>
+                <span class="s2">&quot;will try to get it from service status endpoint&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_endpoint</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INTERACTIVE_CYPHER_ENDPOINT&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_endpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;INTERACTIVE_CYPHER_ENDPOINT is not set, will try to get it from service status endpoint&quot;</span>
+                <span class="s2">&quot;INTERACTIVE_CYPHER_ENDPOINT is not set,&quot;</span>
+                <span class="s2">&quot;will try to get it from service status endpoint&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_endpoint</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INTERACTIVE_GREMLIN_ENDPOINT&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_endpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint&quot;</span>
+                <span class="s2">&quot;INTERACTIVE_GREMLIN_ENDPOINT is not set,&quot;</span>
+                <span class="s2">&quot;will try to get it from service status endpoint&quot;</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Driver.session"><a class="viewcode-back" href="../../../flex/interactive/development/python/driver.html#gs_interactive.client.driver.Driver.session">[docs]</a>    <span class="k">def</span> <span class="nf">session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
@@ -826,7 +827,8 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a neo4j session with the specified endpoints.</span>
 <span class="sd">        Args:</span>
-<span class="sd">            config: a dictionary of configuration options. The same as the ones in neo4j.Driver.session</span>
+<span class="sd">            config: a dictionary of configuration options, the same as the ones</span>
+<span class="sd">                in neo4j.Driver.session</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNeo4jSessionImpl</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span></div>
 

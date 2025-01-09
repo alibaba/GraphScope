@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of UpdateProcedureRequest from a JSON string
 update_procedure_request_instance = UpdateProcedureRequest.from_json(json)
 # print the JSON string representation of the object
-print(UpdateProcedureRequest.to_json())
+print UpdateProcedureRequest.to_json()
 
 # convert the object into a dict
 update_procedure_request_dict = update_procedure_request_instance.to_dict()
 # create an instance of UpdateProcedureRequest from a dict
-update_procedure_request_from_dict = UpdateProcedureRequest.from_dict(update_procedure_request_dict)
+update_procedure_request_form_dict = update_procedure_request.from_dict(update_procedure_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

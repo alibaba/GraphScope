@@ -1,0 +1,30 @@
+# TemporalTypeTemporal
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**timestamp** | **str** |  | 
+**date32** | **str** |  | 
+
+## Example
+
+```python
+from graphscope.flex.rest.models.temporal_type_temporal import TemporalTypeTemporal
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of TemporalTypeTemporal from a JSON string
+temporal_type_temporal_instance = TemporalTypeTemporal.from_json(json)
+# print the JSON string representation of the object
+print(TemporalTypeTemporal.to_json())
+
+# convert the object into a dict
+temporal_type_temporal_dict = temporal_type_temporal_instance.to_dict()
+# create an instance of TemporalTypeTemporal from a dict
+temporal_type_temporal_from_dict = TemporalTypeTemporal.from_dict(temporal_type_temporal_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

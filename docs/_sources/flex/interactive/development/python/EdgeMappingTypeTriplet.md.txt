@@ -20,12 +20,12 @@ json = "{}"
 # create an instance of EdgeMappingTypeTriplet from a JSON string
 edge_mapping_type_triplet_instance = EdgeMappingTypeTriplet.from_json(json)
 # print the JSON string representation of the object
-print(EdgeMappingTypeTriplet.to_json())
+print EdgeMappingTypeTriplet.to_json()
 
 # convert the object into a dict
 edge_mapping_type_triplet_dict = edge_mapping_type_triplet_instance.to_dict()
 # create an instance of EdgeMappingTypeTriplet from a dict
-edge_mapping_type_triplet_from_dict = EdgeMappingTypeTriplet.from_dict(edge_mapping_type_triplet_dict)
+edge_mapping_type_triplet_form_dict = edge_mapping_type_triplet.from_dict(edge_mapping_type_triplet_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 
