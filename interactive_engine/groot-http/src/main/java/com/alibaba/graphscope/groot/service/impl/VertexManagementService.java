@@ -1,11 +1,5 @@
 package com.alibaba.graphscope.groot.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
@@ -13,6 +7,12 @@ import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class VertexManagementService {
@@ -79,5 +79,4 @@ public class VertexManagementService {
         }
         return grootClient.addVerticesAndEdges(vertices, edges);
     }
-
 }

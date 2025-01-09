@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletResponse;
+
 public class ApiUtil {
-    public static void setExampleResponse(NativeWebRequest req, String contentType, String example) {
+    public static void setExampleResponse(
+            NativeWebRequest req, String contentType, String example) {
         try {
             HttpServletResponse res = req.getNativeResponse(HttpServletResponse.class);
             res.setCharacterEncoding("UTF-8");
@@ -25,11 +27,13 @@ public class ApiUtil {
 
     public static ResponseEntity<String> createSuccessResponse(String message, long snapshotId) {
         return ResponseEntity.status(HttpStatus.OK)
-                             .body(String.format("{\"message\": \"%s\", \"snapshot id\": %d}", message, snapshotId));
+                .body(
+                        String.format(
+                                "{\"message\": \"%s\", \"snapshot id\": %d}", message, snapshotId));
     }
 
     public static ResponseEntity<String> createSuccessResponse(String message) {
-        return ResponseEntity.status(HttpStatus.OK).body(String.format("{\"message\": \"%s\"}", message));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(String.format("{\"message\": \"%s\"}", message));
     }
-
 }

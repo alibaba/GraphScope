@@ -1,23 +1,17 @@
 package com.alibaba.graphscope.groot.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.openapitools.jackson.nullable.JsonNullable;
-
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.EdgeLabel;
 import com.alibaba.graphscope.groot.sdk.schema.EdgeLabel.EdgeRelation;
-import com.alibaba.graphscope.groot.sdk.schema.Schema;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.groot.sdk.schema.VertexLabel;
+import com.alibaba.graphscope.groot.service.models.BaseEdgeTypeVertexTypePairRelationsInner;
+import com.alibaba.graphscope.groot.service.models.DateType;
+import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
+import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.GSDataType;
 import com.alibaba.graphscope.groot.service.models.GetEdgeType;
-import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
 import com.alibaba.graphscope.groot.service.models.GetPropertyMeta;
 import com.alibaba.graphscope.groot.service.models.GetVertexType;
 import com.alibaba.graphscope.groot.service.models.PrimitiveType;
@@ -27,25 +21,30 @@ import com.alibaba.graphscope.groot.service.models.TemporalType;
 import com.alibaba.graphscope.groot.service.models.TemporalTypeTemporal;
 import com.alibaba.graphscope.groot.service.models.TimeStampType;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
-import com.alibaba.graphscope.groot.service.models.BaseEdgeTypeVertexTypePairRelationsInner;
-import com.alibaba.graphscope.groot.service.models.DateType;
-import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
-import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
-import com.alibaba.graphscope.proto.groot.GraphDefPb;
+
+import org.openapitools.jackson.nullable.JsonNullable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DtoConverter {
     public static Vertex convertToVertex(VertexRequest vertexRequest) {
         String label = vertexRequest.getLabel();
         Map<String, String> propertyMap = convertToPropertyMap(vertexRequest.getProperties());
-        Map<String, String> primaryKeyValues = convertToPropertyMap(vertexRequest.getPrimaryKeyValues());
+        Map<String, String> primaryKeyValues =
+                convertToPropertyMap(vertexRequest.getPrimaryKeyValues());
         propertyMap.putAll(primaryKeyValues);
         return new Vertex(label, propertyMap);
     }
 
     public static Vertex convertToVertex(DeleteVertexRequest deleteVertexRequest) {
         String label = deleteVertexRequest.getLabel();
-        Map<String, String> primaryKeyValues = convertToPropertyMap(deleteVertexRequest.getPrimaryKeyValues());
+        Map<String, String> primaryKeyValues =
+                convertToPropertyMap(deleteVertexRequest.getPrimaryKeyValues());
         return new Vertex(label, primaryKeyValues);
     }
 
@@ -63,8 +62,10 @@ public class DtoConverter {
         String label = deleteEdgeRequest.getEdgeLabel();
         String srcLabel = deleteEdgeRequest.getSrcLabel();
         String dstLabel = deleteEdgeRequest.getDstLabel();
-        Map<String, String> srcPkMap = convertToPropertyMap(deleteEdgeRequest.getSrcPrimaryKeyValues());
-        Map<String, String> dstPkMap = convertToPropertyMap(deleteEdgeRequest.getDstPrimaryKeyValues());
+        Map<String, String> srcPkMap =
+                convertToPropertyMap(deleteEdgeRequest.getSrcPrimaryKeyValues());
+        Map<String, String> dstPkMap =
+                convertToPropertyMap(deleteEdgeRequest.getDstPrimaryKeyValues());
         return new Edge(label, srcLabel, dstLabel, srcPkMap, dstPkMap);
     }
 
@@ -89,7 +90,8 @@ public class DtoConverter {
                 case STRING:
                     return DataTypePb.STRING;
                 default:
-                    throw new IllegalArgumentException("Unsupported primitive type: " + primitiveType);
+                    throw new IllegalArgumentException(
+                            "Unsupported primitive type: " + primitiveType);
             }
         } else if (dataType instanceof StringType) {
             return DataTypePb.STRING;
@@ -97,11 +99,9 @@ public class DtoConverter {
             TemporalType temporalType = (TemporalType) dataType;
             TemporalTypeTemporal temporal = temporalType.getTemporal();
             if (temporal instanceof DateType) {
-                // TODO: confirm the date type
                 return DataTypePb.DATE32;
             } else if (temporal instanceof TimeStampType) {
-                // TODO: confirm the timestamp type
-                return DataTypePb.TIMESTAMP_S;
+                return DataTypePb.TIMESTAMP_MS;
             } else {
                 throw new IllegalArgumentException("Unsupported temporal type: " + temporalType);
             }
@@ -114,7 +114,11 @@ public class DtoConverter {
         vertexType.setTypeName(vertexLabel.getLabel());
         vertexType.setTypeId(vertexLabel.getId());
         vertexType.setProperties(convertToDtoProperties(vertexLabel.getProperties()));
-        vertexType.setPrimaryKeys(vertexLabel.getProperties().stream().filter(p -> p.isPrimaryKey()).map(p -> p.getName()).collect(Collectors.toList()));
+        vertexType.setPrimaryKeys(
+                vertexLabel.getProperties().stream()
+                        .filter(p -> p.isPrimaryKey())
+                        .map(p -> p.getName())
+                        .collect(Collectors.toList()));
         return vertexType;
     }
 
@@ -124,7 +128,8 @@ public class DtoConverter {
         edgeType.setTypeId(edgeLabel.getId());
         edgeType.setProperties(convertToDtoProperties(edgeLabel.getProperties()));
         for (EdgeRelation edgeRelation : edgeLabel.getRelations()) {
-            BaseEdgeTypeVertexTypePairRelationsInner pair = new BaseEdgeTypeVertexTypePairRelationsInner();
+            BaseEdgeTypeVertexTypePairRelationsInner pair =
+                    new BaseEdgeTypeVertexTypePairRelationsInner();
             pair.setSourceVertex(edgeRelation.getSrcLabel());
             pair.setDestinationVertex(edgeRelation.getDstLabel());
             edgeType.addVertexTypePairRelationsItem(pair);
@@ -171,15 +176,15 @@ public class DtoConverter {
             case DOUBLE:
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE);
             case STRING:
-                // TODO: confirm the string type
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING);
             case DATE32:
-                // TODO: confirm the date type
                 TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString());
                 return new TemporalType(date);
-            case TIMESTAMP_S:
-                // TODO: confirm the timestamp type
-                TemporalTypeTemporal timestamp = new TimeStampType("YYYY-MM-DD HH:MM:SS".toString());
+            case TIMESTAMP_MS:
+                // TODO: confirm the format of timestamp? should be int64 milliseconds since
+                // 1970-01-01 00:00:00.000000?
+                TemporalTypeTemporal timestamp =
+                        new TimeStampType("YYYY-MM-DD HH:MM:SS".toString());
                 return new TemporalType(timestamp);
             default:
                 throw new IllegalArgumentException("Unsupported data type: " + dataType);
@@ -189,5 +194,4 @@ public class DtoConverter {
     private static String extractValue(JsonNullable<Object> jsonNullable) {
         return jsonNullable.isPresent() ? jsonNullable.get().toString() : null;
     }
-
 }

@@ -14,10 +14,6 @@ import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
 import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 
-import java.util.List;
-
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,12 +22,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("${openapi.graphScopeInteractiveAPIV03.base-path:/v1/graph}")
@@ -42,7 +42,9 @@ public class V1ApiController implements V1Api {
     private final SchemaManagementService schemaManagementService;
 
     @Autowired
-    public V1ApiController(VertexManagementService vertexService, EdgeManagementService edgeService,
+    public V1ApiController(
+            VertexManagementService vertexService,
+            EdgeManagementService edgeService,
             SchemaManagementService schemaManagementService) {
         this.vertexManagementService = vertexService;
         this.edgeManagementService = edgeService;
@@ -50,7 +52,10 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @PostMapping(value = "/{graph_id}/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/{graph_id}/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addVertex(
             @PathVariable("graph_id") String graphId,
             @RequestBody @Valid VertexEdgeRequest vertexEdgeRequest) {
@@ -64,12 +69,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices and edges added successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add vertices and edges");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add vertices and edges");
         }
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/{graph_id}/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertex(
             @PathVariable("graph_id") String graphId,
             @RequestBody(required = true) List<DeleteVertexRequest> deleteVertexRequest) {
@@ -78,12 +87,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices deleted successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertices");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertices");
         }
     }
 
     @Override
-    @PutMapping(value = "/{graph_id}/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(
+            value = "/{graph_id}/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateVertex(
             @PathVariable("graph_id") String graphId,
             @RequestBody(required = false) List<VertexRequest> vertexRequest) {
@@ -92,12 +105,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices updated successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertices");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertices");
         }
     }
 
     @Override
-    @PostMapping(value = "/{graph_id}/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/{graph_id}/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addEdge(
             @PathVariable("graph_id") String graphId,
             @RequestBody(required = true) List<EdgeRequest> edgeRequest) {
@@ -106,12 +123,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edges added successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add edges");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add edges");
         }
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/{graph_id}/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdge(
             @PathVariable("graph_id") String graphId,
             @RequestBody(required = true) List<DeleteEdgeRequest> deleteEdgeRequest) {
@@ -120,12 +141,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edges deleted successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edges");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edges");
         }
     }
 
     @Override
-    @PutMapping(value = "/{graph_id}/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(
+            value = "/{graph_id}/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateEdge(
             @PathVariable("graph_id") String graphId,
             @RequestBody(required = false) List<EdgeRequest> edgeRequest) {
@@ -134,12 +159,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edges updated successfully", si);
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edges");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edges");
         }
     }
 
     @Override
-    @PostMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/{graph_id}/schema/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createVertexType(
             @PathVariable("graph_id") String graphId,
             @RequestBody @Validated CreateVertexType createVertexType) {
@@ -148,12 +177,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type created successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create vertex type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create vertex type");
         }
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/{graph_id}/schema/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertexTypeByName(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName) {
@@ -162,12 +195,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type deleted successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex type");
         }
     }
 
     @Override
-    @PutMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(
+            value = "/{graph_id}/schema/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateVertexType(
             @PathVariable("graph_id") String graphId,
             @RequestBody @Validated CreateVertexType updateVertexType) {
@@ -176,12 +213,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertex type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertex type");
         }
     }
 
     @Override
-    @PostMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/{graph_id}/schema/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createEdgeType(
             @PathVariable("graph_id") String graphId,
             @RequestBody @Validated CreateEdgeType createEdgeType) {
@@ -190,28 +231,38 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edge type created successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create edge type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create edge type");
         }
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/{graph_id}/schema/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdgeTypeByName(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName,
             @RequestParam(value = "source_vertex_type", required = true) String sourceVertexType,
-            @RequestParam(value = "destination_vertex_type", required = true) String destinationVertexType) {
+            @RequestParam(value = "destination_vertex_type", required = true)
+                    String destinationVertexType) {
         try {
-            schemaManagementService.deleteEdgeType(typeName, sourceVertexType, destinationVertexType);
+            schemaManagementService.deleteEdgeType(
+                    typeName, sourceVertexType, destinationVertexType);
             return ApiUtil.createSuccessResponse("Edge type deleted successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edge type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edge type");
         }
     }
 
     @Override
-    @PutMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(
+            value = "/{graph_id}/schema/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateEdgeType(
             @PathVariable("graph_id") String graphId,
             @RequestBody @Validated CreateEdgeType updateEdgeType) {
@@ -220,12 +271,16 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edge type updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edge type");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edge type");
         }
     }
 
     @Override
-    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateGraphResponse> createGraph(
             @RequestBody @Validated CreateGraphRequest createGraphRequest) {
         try {
@@ -255,14 +310,14 @@ public class V1ApiController implements V1Api {
 
     @Override
     @DeleteMapping(value = "/{graph_id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteGraph(
-            @PathVariable("graph_id") String graphId) {
+    public ResponseEntity<String> deleteGraph(@PathVariable("graph_id") String graphId) {
         try {
             schemaManagementService.dropSchema();
             return ApiUtil.createSuccessResponse("Graph schema deleted successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete graph");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete graph");
         }
     }
 
@@ -273,11 +328,12 @@ public class V1ApiController implements V1Api {
             @RequestParam(value = "snapshot_id", required = true) Long snapshotId) {
         try {
             boolean res = schemaManagementService.remoteFlush(snapshotId);
-            return ApiUtil.createSuccessResponse("Snapshot flushed successfully: " + res, snapshotId.longValue());
+            return ApiUtil.createSuccessResponse(
+                    "Snapshot flushed successfully: " + res, snapshotId.longValue());
         } catch (Exception e) {
             e.printStackTrace();
-            return ApiUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to flush snapshot");
+            return ApiUtil.createErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to flush snapshot");
         }
     }
-
 }

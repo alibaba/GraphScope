@@ -1,13 +1,5 @@
 package com.alibaba.graphscope.groot.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.crypto.Data;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.EdgeLabel;
 import com.alibaba.graphscope.groot.sdk.schema.Property;
@@ -22,6 +14,10 @@ import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
 import com.alibaba.graphscope.proto.GraphDefPb;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class SchemaManagementService {
@@ -39,7 +35,7 @@ public class SchemaManagementService {
         grootClient.submitSchema(schema);
     }
 
-    public void deleteVertexType( String vertexType) {
+    public void deleteVertexType(String vertexType) {
         VertexLabel.Builder vLabelBuilder = VertexLabel.newBuilder().setLabel(vertexType);
         Schema.Builder schema = Schema.newBuilder();
         schema.dropVertexLabel(vLabelBuilder);
@@ -47,14 +43,14 @@ public class SchemaManagementService {
     }
 
     public void updateVertexType(CreateVertexType updateVertexType) {
-        VertexLabel vLabel = createVertexLabel( updateVertexType);
+        VertexLabel vLabel = createVertexLabel(updateVertexType);
         Schema.Builder schema = Schema.newBuilder();
         schema.addVertexLabelProperties(vLabel);
         grootClient.submitSchema(schema);
     }
 
-    public void createEdgeType( CreateEdgeType createEdgeType) {
-        EdgeLabel eLabel = createEdgeLabel( createEdgeType);
+    public void createEdgeType(CreateEdgeType createEdgeType) {
+        EdgeLabel eLabel = createEdgeLabel(createEdgeType);
         Schema.Builder schema = Schema.newBuilder();
         schema.addEdgeLabel(eLabel);
         grootClient.submitSchema(schema);
@@ -67,8 +63,9 @@ public class SchemaManagementService {
         eKindBuilder.addRelation(srcVertexType, dstVertexType);
         Schema.Builder schema = Schema.newBuilder();
         schema.dropEdgeLabelOrKind(eKindBuilder);
-        GraphDefPb  grootGraphDefPb = grootClient.submitSchema(schema);
-        if (grootGraphDefPb.getEdgeKindsList().stream().noneMatch(edgeKind -> edgeKind.getEdgeLabel().equals(edgeType))) {
+        GraphDefPb grootGraphDefPb = grootClient.submitSchema(schema);
+        if (grootGraphDefPb.getEdgeKindsList().stream()
+                .noneMatch(edgeKind -> edgeKind.getEdgeLabel().equals(edgeType))) {
             // no more edgeKind with the given edge label, so we can delete it.
             EdgeLabel.Builder eLabelBuilder = EdgeLabel.newBuilder();
             eLabelBuilder.setLabel(edgeType);
@@ -79,7 +76,7 @@ public class SchemaManagementService {
     }
 
     public void updateEdgeType(CreateEdgeType updateEdgeType) {
-        EdgeLabel eLabel = createEdgeLabel( updateEdgeType);
+        EdgeLabel eLabel = createEdgeLabel(updateEdgeType);
         Schema.Builder schema = Schema.newBuilder();
         schema.addEdgeLabelProperties(eLabel);
         grootClient.submitSchema(schema);
@@ -92,7 +89,7 @@ public class SchemaManagementService {
             schema.addVertexLabel(vLabel);
         }
         for (CreateEdgeType edgeType : createSchema.getEdgeTypes()) {
-            EdgeLabel eLabel = createEdgeLabel( edgeType);
+            EdgeLabel eLabel = createEdgeLabel(edgeType);
             schema.addEdgeLabel(eLabel);
         }
         grootClient.submitSchema(schema);
@@ -120,7 +117,8 @@ public class SchemaManagementService {
         List<String> primaryKeys = createVertexType.getPrimaryKeys();
         for (CreatePropertyMeta prop : createVertexType.getProperties()) {
             DataTypePb dataType = DtoConverter.convertToDataTypePb(prop.getPropertyType());
-            Property.Builder property = Property.newBuilder().setName(prop.getPropertyName()).setDataType(dataType);
+            Property.Builder property =
+                    Property.newBuilder().setName(prop.getPropertyName()).setDataType(dataType);
             if (primaryKeys.contains(prop.getPropertyName())) {
                 property.setPrimaryKey();
             }
@@ -132,12 +130,14 @@ public class SchemaManagementService {
     private EdgeLabel createEdgeLabel(CreateEdgeType createEdgeType) {
         EdgeLabel.Builder eLabelBuilder = EdgeLabel.newBuilder();
         eLabelBuilder.setLabel(createEdgeType.getTypeName());
-        for (BaseEdgeTypeVertexTypePairRelationsInner pair : createEdgeType.getVertexTypePairRelations()) {
+        for (BaseEdgeTypeVertexTypePairRelationsInner pair :
+                createEdgeType.getVertexTypePairRelations()) {
             eLabelBuilder.addRelation(pair.getSourceVertex(), pair.getDestinationVertex());
         }
         for (CreatePropertyMeta prop : createEdgeType.getProperties()) {
             DataTypePb dataType = DtoConverter.convertToDataTypePb(prop.getPropertyType());
-            Property.Builder property = Property.newBuilder().setName(prop.getPropertyName()).setDataType(dataType);
+            Property.Builder property =
+                    Property.newBuilder().setName(prop.getPropertyName()).setDataType(dataType);
             eLabelBuilder.addProperty(property);
         }
         return eLabelBuilder.build();
