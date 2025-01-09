@@ -1,77 +1,33 @@
-# Using the Graph Planner JNI Interface for C++ Invocation
+# Graph Planner Interface by JNI and RESTful API
 
-Follow the steps below to get started with the Graph Planner JNI interface for c++ invocation.
+`GraphPlanner` is the primary entry point for GOpt’s query optimization and physical plan generation. Originally, it was tightly integrated into the Frontend service, where it optimized Cypher queries received via the Bolt protocol and generated execution plans for various backend engines.
 
-## Getting Started
-### Step 1: Build the Project
+To enhance its flexibility and ease of integration, `GraphPlanner` is now available as a standalone module, free from any dependencies on other Frontend modules. It supports both JNI and RESTful API interfaces, enabling lightweight and straightforward integration into diverse systems. Whether you are working on a native application or web-based services, `GraphPlanner` can seamlessly integrate into your architecture, providing efficient query optimization and physical plan generation across a wide range of use cases.
 
-Navigate to the project directory and build the package using Maven:
-```bash
-cd interactive_engine  
-mvn clean package -DskipTests -Pgraph-planner-jni 
-``` 
 
-### Step 2: Locate and Extract the Package
+## JNI API
 
-After the build completes, a tarball named `graph-planner-jni.tar.gz` will be available in the `assembly/target` directory. Extract the contents of the tarball:
+### Interface Overview
 
-```bash
-cd assembly/target  
-tar xvzf graph-planner-jni.tar.gz  
-cd graph-planner-jni  
-```
+We provide a c++ wrapper implementation `GraphPlannerWrapper` for the JNI interface. Here is a brief explanation of the logical interface provided by the `c++` class.
 
-### Step 3: Run the Example Binary
-
-To demonstrate the usage of the JNI interface, an example binary `test_graph_planner` is provided. Use the following command to execute it:
-
-```bash
-# bin/test_graph_planner <java class path> <jna lib path> <graph schema path> <graph statistics path> <query> <config path>  
-bin/test_graph_planner libs native ./conf/graph.yaml ./conf/modern_statistics.json "MATCH (n) RETURN n, COUNT(n);" ./conf/interactive_config_test.yaml 
-``` 
-
-The output includes the physical plan and result schema in YAML format. Below is an example of a result schema:
-
-```yaml
-schema:  
-  name: default  
-  description: default desc  
-  mode: READ  
-  extension: .so  
-  library: libdefault.so  
-  params: []  
-returns:  
-  - name: n  
-    type: {primitive_type: DT_UNKNOWN}  
-  - name: $f1  
-    type: {primitive_type: DT_SIGNED_INT64}  
-type: UNKNOWN  
-query: MATCH (n) RETURN n, COUNT(n);  
-```
-
-The `returns` field defines the result schema. Each entry’s name specifies the column name, and the order of each entry determines the column IDs.
-
-## Explanation
-
-Below is a brief explanation of the interface provided by the example:
-
-### Constructor
+Constructor:
 
 ```cpp
-/**  
- * @brief Constructs a new GraphPlannerWrapper object  
- * @param java_path Java class path  
- * @param jna_path JNA library path  
- * @param graph_schema_yaml Path to the graph schema file in YAML format (optional) 
+/**
+ * @brief Constructs a new GraphPlannerWrapper object
+ * @param java_path Java class path
+ * @param jna_path JNA library path
+ * @param graph_schema_yaml Path to the graph schema file in YAML format (optional)
  * @param graph_statistic_json Path to the graph statistics file in JSON format (optional)
- */  
-GraphPlannerWrapper(const std::string &java_path,  
-                    const std::string &jna_path,  
-                    const std::string &graph_schema_yaml = "",  
-                    const std::string &graph_statistic_json = "");  
+ */
+GraphPlannerWrapper(const std::string &java_path,
+                    const std::string &jna_path,
+                    const std::string &graph_schema_yaml = "",
+                    const std::string &graph_statistic_json = "");
 ```
 
-## Method
+Method:
 
 ```cpp
 /**
@@ -88,13 +44,69 @@ Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
                                       const std::string &graph_statistic_json)
 ```
 
-Here is a refined version of your documentation with improvements for clarity, consistency, and readability:
+### Getting Started
+Follow the steps below to get started with the Graph Planner interface for c++ invocation.
+
+#### Step 1: Build the Project
+
+Navigate to the project directory and build the package using Maven:
+```bash
+cd interactive_engine
+mvn clean package -DskipTests -Pgraph-planner-jni
+```
+
+#### Step 2: Locate and Extract the Package
+
+After the build completes, a tarball named `graph-planner-jni.tar.gz` will be available in the `assembly/target` directory. Extract the contents of the tarball:
+
+```bash
+cd assembly/target
+tar xvzf graph-planner-jni.tar.gz
+cd graph-planner-jni
+```
+
+#### Step 3: Run the Example Binary
+
+To demonstrate the usage of the JNI interface, an example binary `test_graph_planner` is provided. Use the following command to execute it:
+
+```bash
+# bin/test_graph_planner <java class path> <jna lib path> <graph schema path> <graph statistics path> <query> <config path>
+bin/test_graph_planner libs native ./conf/graph.yaml ./conf/modern_statistics.json "MATCH (n) RETURN n, COUNT(n);" ./conf/interactive_config_test.yaml
+```
+
+The output consists of the physical plan (in byte format) and the result schema (in YAML format). The physical plan adheres to the specifications defined in the [protobuf]().
+
+Below is an example of a result schema:
+
+```yaml
+schema:
+  name: default
+  description: default desc
+  mode: READ
+  extension: .so
+  library: libdefault.so
+  params: []
+returns:
+  - name: n
+    type: {primitive_type: DT_UNKNOWN}
+  - name: $f1
+    type: {primitive_type: DT_SIGNED_INT64}
+type: UNKNOWN
+query: MATCH (n) RETURN n, COUNT(n);
+```
+
+The `returns` field defines the structure of the data returned by backend engines. Each nested entry in the returns field includes three components: 
+- the column name, which specifies the name of the result column; 
+- the entry’s ordinal position, which determines the column ID; 
+- the type, which enforces the data type constraint for the column.
 
 ## Restful API
 
 We provide an alternative method to expose the interface as a RESTful API. Follow the steps below to access the interface via REST.
 
-### Step 1: Build the Project
+### Getting Started
+
+#### Step 1: Build the Project
 
 To build the project, run the following command:
 ```bash
@@ -103,7 +115,7 @@ cd interactive_engine
 mvn clean package -DskipTests -Pgraph-planner-jni -Dskip.native=true
 ```
 
-### Step 2: Locate and Extract the Package
+#### Step 2: Locate and Extract the Package
 
 Once the build completes, a tarball named graph-planner-jni.tar.gz will be available in the assembly/target directory. Extract the contents as follows:
 
@@ -113,7 +125,7 @@ tar xvzf graph-planner-jni.tar.gz
 cd graph-planner-jni
 ```
 
-### Step 3: Start the Graph Planner RESTful Service
+#### Step 3: Start the Graph Planner RESTful Service
 
 To start the service, run the following command:
 
@@ -121,7 +133,7 @@ To start the service, run the following command:
 java -cp ".:./libs/*" com.alibaba.graphscope.sdk.restful.GraphPlannerService --spring.config.location=./conf/application.yaml
 ```
 
-### Step 4: Access the RESTful API
+#### Step 4: Access the RESTful API by `Curl`
 
 To send a request to the RESTful API, use the following `curl` command:
 
@@ -155,14 +167,11 @@ The response contains two fields:
 
 You can decode these values into the required structures.
 
-Alternatively, you can run the following `Java` command to execute the same request:
+#### Step 4: Access the RESTful API by `Java` Sdk
 
-```bash
-java -cp ".:./libs/*" com.alibaba.graphscope.sdk.examples.TestGraphPlanner ./conf/interactive_config_test.yaml "Match (n) Return n;" ./conf/graph.yaml ./conf/modern_statistics.json
-```
+Alternatively, if you are a java-side user, we provide a java sdk example to guide you how to access the restful API and decode the response :
 
-Here’s an example of how to access the RESTful API and decode the response in Java code:
-```
+```java
 public static void main(String[] args) throws Exception {
     if (args.length < 4) {
         System.out.println("Usage: <configPath> <query> <schemaPath> <statsPath>");
@@ -218,4 +227,8 @@ private static String getResultSchemaYaml(JsonNode planNode) {
     return planNode.get("resultSchemaYaml").asText();
 }
 ```
-   
+
+Run the java sdk example with the following command:
+```bash
+java -cp ".:./libs/*" com.alibaba.graphscope.sdk.examples.TestGraphPlanner ./conf/interactive_config_test.yaml "Match (n) Return n;" ./conf/graph.yaml ./conf/modern_statistics.json
+```

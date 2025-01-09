@@ -74,6 +74,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine/tinkerpop_eco
    interactive_engine/neo4j_eco
    interactive_engine/gopt
+   interactive_engine/graph_planner
    interactive_engine/benchmark_tool
    .. interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
