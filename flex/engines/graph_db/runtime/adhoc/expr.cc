@@ -19,10 +19,10 @@ namespace gs {
 
 namespace runtime {
 
-Expr::Expr(const ReadTransaction& txn, const Context& ctx,
+Expr::Expr(const GraphReadInterface& graph, const Context& ctx,
            const std::map<std::string, std::string>& params,
            const common::Expression& expr, VarType var_type) {
-  expr_ = parse_expression(txn, ctx, params, expr, var_type);
+  expr_ = parse_expression(graph, ctx, params, expr, var_type);
 }
 
 RTAny Expr::eval_path(size_t idx) const {

@@ -16,15 +16,14 @@
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include <regex>
 #include <stack>
-#include "flex/proto_generated_gie/basic_type.pb.h"
 
 namespace gs {
 
 namespace runtime {
 
-VariableExpr::VariableExpr(const ReadTransaction& txn, const Context& ctx,
+VariableExpr::VariableExpr(const GraphReadInterface& graph, const Context& ctx,
                            const common::Variable& pb, VarType var_type)
-    : var_(txn, ctx, pb, var_type) {}
+    : var_(graph, ctx, pb, var_type) {}
 RTAny VariableExpr::eval_path(size_t idx) const { return var_.get(idx); }
 RTAny VariableExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   return var_.get_vertex(label, v, idx);
@@ -51,127 +50,72 @@ RTAnyType VariableExpr::type() const { return var_.type(); }
 
 LogicalExpr::LogicalExpr(std::unique_ptr<ExprBase>&& lhs,
                          std::unique_ptr<ExprBase>&& rhs, common::Logical logic)
-    : lhs_(std::move(lhs)), rhs_(std::move(rhs)), logic_(logic) {}
+    : lhs_(std::move(lhs)), rhs_(std::move(rhs)), logic_(logic) {
+  switch (logic) {
+  case common::Logical::LT: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs < rhs; };
+    break;
+  }
+  case common::Logical::GT: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return rhs < lhs; };
+    break;
+  }
+  case common::Logical::GE: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return !(lhs < rhs); };
+    break;
+  }
+  case common::Logical::LE: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return !(rhs < lhs); };
+    break;
+  }
+  case common::Logical::EQ: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs == rhs; };
+    break;
+  }
+  case common::Logical::NE: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return !(lhs == rhs); };
+    break;
+  }
+  case common::Logical::AND: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) {
+      return lhs.as_bool() && rhs.as_bool();
+    };
+    break;
+  }
+  case common::Logical::OR: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) {
+      return lhs.as_bool() || rhs.as_bool();
+    };
+    break;
+  }
+  case common::Logical::REGEX: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) {
+      auto lhs_str = std::string(lhs.as_string());
+      auto rhs_str = std::string(rhs.as_string());
+      return std::regex_match(lhs_str, std::regex(rhs_str));
+    };
+    break;
+  }
+  default: {
+    LOG(FATAL) << "not support..." << static_cast<int>(logic);
+    break;
+  }
+  }
+}
 
 RTAny LogicalExpr::eval_path(size_t idx) const {
-  if (logic_ == common::Logical::LT) {
-    bool ret = lhs_->eval_path(idx) < rhs_->eval_path(idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GT) {
-    bool ret = rhs_->eval_path(idx) < lhs_->eval_path(idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GE) {
-    bool ret = lhs_->eval_path(idx) < rhs_->eval_path(idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::LE) {
-    bool ret = rhs_->eval_path(idx) < lhs_->eval_path(idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::EQ) {
-    bool ret = (rhs_->eval_path(idx) == lhs_->eval_path(idx));
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::NE) {
-    bool ret = (rhs_->eval_path(idx) == lhs_->eval_path(idx));
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::AND) {
-    bool ret =
-        (rhs_->eval_path(idx).as_bool() && lhs_->eval_path(idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::OR) {
-    bool ret =
-        (rhs_->eval_path(idx).as_bool() || lhs_->eval_path(idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else {
-    LOG(FATAL) << "not support..." << static_cast<int>(logic_);
-  }
-  return RTAny::from_bool(false);
+  return RTAny::from_bool(op_(lhs_->eval_path(idx), rhs_->eval_path(idx)));
 }
 
 RTAny LogicalExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  if (logic_ == common::Logical::LT) {
-    bool ret =
-        lhs_->eval_vertex(label, v, idx) < rhs_->eval_vertex(label, v, idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GT) {
-    bool ret =
-        rhs_->eval_vertex(label, v, idx) < lhs_->eval_vertex(label, v, idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GE) {
-    bool ret =
-        lhs_->eval_vertex(label, v, idx) < rhs_->eval_vertex(label, v, idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::LE) {
-    bool ret =
-        rhs_->eval_vertex(label, v, idx) < lhs_->eval_vertex(label, v, idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::EQ) {
-    bool ret =
-        (rhs_->eval_vertex(label, v, idx) == lhs_->eval_vertex(label, v, idx));
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::NE) {
-    bool ret =
-        (rhs_->eval_vertex(label, v, idx) == lhs_->eval_vertex(label, v, idx));
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::AND) {
-    bool ret = (rhs_->eval_vertex(label, v, idx).as_bool() &&
-                lhs_->eval_vertex(label, v, idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::REGEX) {
-    std::string ret(lhs_->eval_vertex(label, v, idx).as_string());
-    std::string rhs(rhs_->eval_vertex(label, v, idx).as_string());
-    return RTAny::from_bool(std::regex_match(ret, std::regex(rhs)));
-
-  } else if (logic_ == common::Logical::OR) {
-    bool ret = (rhs_->eval_vertex(label, v, idx).as_bool() ||
-                lhs_->eval_vertex(label, v, idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else {
-    LOG(FATAL) << "not support..." << static_cast<int>(logic_);
-  }
-  return RTAny::from_bool(false);
+  return RTAny::from_bool(
+      op_(lhs_->eval_vertex(label, v, idx), rhs_->eval_vertex(label, v, idx)));
 }
 
 RTAny LogicalExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                              const Any& data, size_t idx) const {
-  if (logic_ == common::Logical::LT) {
-    bool ret = lhs_->eval_edge(label, src, dst, data, idx) <
-               rhs_->eval_edge(label, src, dst, data, idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GT) {
-    bool ret = rhs_->eval_edge(label, src, dst, data, idx) <
-               lhs_->eval_edge(label, src, dst, data, idx);
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::GE) {
-    bool ret = lhs_->eval_edge(label, src, dst, data, idx) <
-               rhs_->eval_edge(label, src, dst, data, idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::LE) {
-    bool ret = rhs_->eval_edge(label, src, dst, data, idx) <
-               lhs_->eval_edge(label, src, dst, data, idx);
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::EQ) {
-    bool ret = (rhs_->eval_edge(label, src, dst, data, idx) ==
-                lhs_->eval_edge(label, src, dst, data, idx));
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::NE) {
-    bool ret = (rhs_->eval_edge(label, src, dst, data, idx) ==
-                lhs_->eval_edge(label, src, dst, data, idx));
-    return RTAny::from_bool(!ret);
-  } else if (logic_ == common::Logical::AND) {
-    bool ret = (rhs_->eval_edge(label, src, dst, data, idx).as_bool() &&
-                lhs_->eval_edge(label, src, dst, data, idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else if (logic_ == common::Logical::REGEX) {
-    std::string ret(lhs_->eval_edge(label, src, dst, data, idx).as_string());
-    std::string rhs(rhs_->eval_edge(label, src, dst, data, idx).as_string());
-    return RTAny::from_bool(std::regex_match(ret, std::regex(rhs)));
-  } else if (logic_ == common::Logical::OR) {
-    bool ret = (rhs_->eval_edge(label, src, dst, data, idx).as_bool() ||
-                lhs_->eval_edge(label, src, dst, data, idx).as_bool());
-    return RTAny::from_bool(ret);
-  } else {
-    LOG(FATAL) << "not support..." << static_cast<int>(logic_);
-  }
-  return RTAny::from_bool(false);
+  return RTAny::from_bool(op_(lhs_->eval_edge(label, src, dst, data, idx),
+                              rhs_->eval_edge(label, src, dst, data, idx)));
 }
 
 RTAnyType LogicalExpr::type() const { return RTAnyType::kBoolValue; }
@@ -183,6 +127,17 @@ UnaryLogicalExpr::UnaryLogicalExpr(std::unique_ptr<ExprBase>&& expr,
 RTAny UnaryLogicalExpr::eval_path(size_t idx) const {
   if (logic_ == common::Logical::NOT) {
     return RTAny::from_bool(!expr_->eval_path(idx).as_bool());
+  } else if (logic_ == common::Logical::ISNULL) {
+    return RTAny::from_bool(expr_->eval_path(idx, 0).type() ==
+                            RTAnyType::kNull);
+  }
+  LOG(FATAL) << "not support" << static_cast<int>(logic_);
+  return RTAny::from_bool(false);
+}
+
+RTAny UnaryLogicalExpr::eval_path(size_t idx, int) const {
+  if (logic_ == common::Logical::NOT) {
+    return RTAny::from_bool(!expr_->eval_path(idx, 0).as_bool());
   } else if (logic_ == common::Logical::ISNULL) {
     return RTAny::from_bool(expr_->eval_path(idx, 0).type() ==
                             RTAnyType::kNull);
@@ -207,9 +162,6 @@ RTAny UnaryLogicalExpr::eval_edge(const LabelTriplet& label, vid_t src,
   if (logic_ == common::Logical::NOT) {
     return RTAny::from_bool(
         !expr_->eval_edge(label, src, dst, data, idx).as_bool());
-  } else if (logic_ == common::Logical::ISNULL) {
-    return RTAny::from_bool(
-        expr_->eval_edge(label, src, dst, data, idx, 0).is_null());
   }
   LOG(FATAL) << "not support" << static_cast<int>(logic_);
   return RTAny::from_bool(false);
@@ -219,44 +171,83 @@ RTAnyType UnaryLogicalExpr::type() const { return RTAnyType::kBoolValue; }
 
 ArithExpr::ArithExpr(std::unique_ptr<ExprBase>&& lhs,
                      std::unique_ptr<ExprBase>&& rhs, common::Arithmetic arith)
-    : lhs_(std::move(lhs)), rhs_(std::move(rhs)), arith_(arith) {}
+    : lhs_(std::move(lhs)), rhs_(std::move(rhs)), arith_(arith) {
+  switch (arith_) {
+  case common::Arithmetic::ADD: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs + rhs; };
+    break;
+  }
+  case common::Arithmetic::SUB: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs - rhs; };
+    break;
+  }
+  case common::Arithmetic::DIV: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs / rhs; };
+    break;
+  }
+  case common::Arithmetic::MOD: {
+    op_ = [](const RTAny& lhs, const RTAny& rhs) { return lhs % rhs; };
+    break;
+  }
+
+  default: {
+    LOG(FATAL) << "not support..." << static_cast<int>(arith);
+    break;
+  }
+  }
+}
 
 RTAny ArithExpr::eval_path(size_t idx) const {
-  switch (arith_) {
-  case common::Arithmetic::ADD:
-    return lhs_->eval_path(idx) + rhs_->eval_path(idx);
-  case common::Arithmetic::SUB:
-    return lhs_->eval_path(idx) - rhs_->eval_path(idx);
-  case common::Arithmetic::DIV:
-    return lhs_->eval_path(idx) / rhs_->eval_path(idx);
-  default:
-    LOG(FATAL) << "not support" << static_cast<int>(arith_);
-  }
-  return RTAny();
+  return op_(lhs_->eval_path(idx), rhs_->eval_path(idx));
 }
 
 RTAny ArithExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  switch (arith_) {
-  case common::Arithmetic::ADD:
-    return lhs_->eval_path(idx) + rhs_->eval_path(idx);
-  default:
-    LOG(FATAL) << "not support";
-  }
-  return RTAny();
+  return op_(lhs_->eval_vertex(label, v, idx),
+             rhs_->eval_vertex(label, v, idx));
 }
 
 RTAny ArithExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                            const Any& data, size_t idx) const {
-  switch (arith_) {
-  case common::Arithmetic::ADD:
-    return lhs_->eval_path(idx) + rhs_->eval_path(idx);
-  default:
-    LOG(FATAL) << "not support";
-  }
-  return RTAny();
+  return op_(lhs_->eval_edge(label, src, dst, data, idx),
+             rhs_->eval_edge(label, src, dst, data, idx));
 }
 
-RTAnyType ArithExpr::type() const { return lhs_->type(); }
+RTAnyType ArithExpr::type() const {
+  if (lhs_->type() == RTAnyType::kF64Value ||
+      rhs_->type() == RTAnyType::kF64Value) {
+    return RTAnyType::kF64Value;
+  }
+  if (lhs_->type() == RTAnyType::kI64Value ||
+      rhs_->type() == RTAnyType::kI64Value) {
+    return RTAnyType::kI64Value;
+  }
+  return lhs_->type();
+}
+
+DateMinusExpr::DateMinusExpr(std::unique_ptr<ExprBase>&& lhs,
+                             std::unique_ptr<ExprBase>&& rhs)
+    : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
+
+RTAny DateMinusExpr::eval_path(size_t idx) const {
+  auto lhs = lhs_->eval_path(idx).as_timestamp();
+  auto rhs = rhs_->eval_path(idx).as_timestamp();
+  return RTAny::from_int64(lhs.milli_second - rhs.milli_second);
+}
+
+RTAny DateMinusExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
+  auto lhs = lhs_->eval_vertex(label, v, idx).as_timestamp();
+  auto rhs = rhs_->eval_vertex(label, v, idx).as_timestamp();
+  return RTAny::from_int64(lhs.milli_second - rhs.milli_second);
+}
+
+RTAny DateMinusExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                               const Any& data, size_t idx) const {
+  auto lhs = lhs_->eval_edge(label, src, dst, data, idx).as_timestamp();
+  auto rhs = rhs_->eval_edge(label, src, dst, data, idx).as_timestamp();
+  return RTAny::from_int64(lhs.milli_second - rhs.milli_second);
+}
+
+RTAnyType DateMinusExpr::type() const { return RTAnyType::kI64Value; }
 
 ConstExpr::ConstExpr(const RTAny& val) : val_(val) {
   if (val_.type() == RTAnyType::kStringValue) {
@@ -274,10 +265,6 @@ RTAny ConstExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
 }
 
 RTAnyType ConstExpr::type() const { return val_.type(); }
-
-ExtractExpr::ExtractExpr(std::unique_ptr<ExprBase>&& expr,
-                         const common::Extract& extract)
-    : expr_(std::move(expr)), extract_(extract) {}
 
 static int32_t extract_year(int64_t ms) {
   auto micro_second = ms / 1000;
@@ -300,8 +287,7 @@ static int32_t extract_day(int64_t ms) {
   return tm.tm_mday;
 }
 
-static int32_t extract_time_from_milli_second(int64_t ms,
-                                              common::Extract extract) {
+int32_t extract_time_from_milli_second(int64_t ms, common::Extract extract) {
   if (extract.interval() == common::Extract::YEAR) {
     return extract_year(ms);
   } else if (extract.interval() == common::Extract::MONTH) {
@@ -313,27 +299,6 @@ static int32_t extract_time_from_milli_second(int64_t ms,
   }
   return 0;
 }
-
-RTAny ExtractExpr::eval_path(size_t idx) const {
-  auto ms = expr_->eval_path(idx).as_date32();
-  int32_t val = extract_time_from_milli_second(ms, extract_);
-  return RTAny::from_int32(val);
-}
-
-RTAny ExtractExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  auto ms = expr_->eval_vertex(label, v, idx).as_date32();
-  int32_t val = extract_time_from_milli_second(ms, extract_);
-  return RTAny::from_int32(val);
-}
-
-RTAny ExtractExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                             const Any& data, size_t idx) const {
-  auto ms = expr_->eval_edge(label, src, dst, data, idx).as_date32();
-  int32_t val = extract_time_from_milli_second(ms, extract_);
-  return RTAny::from_int32(val);
-}
-
-RTAnyType ExtractExpr::type() const { return RTAnyType::kI32Value; }
 
 CaseWhenExpr::CaseWhenExpr(
     std::vector<std::pair<std::unique_ptr<ExprBase>,
@@ -371,23 +336,19 @@ RTAny CaseWhenExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
 }
 
 RTAnyType CaseWhenExpr::type() const {
-  RTAnyType type;
-  bool null_able = false;
+  RTAnyType type(RTAnyType::kNull);
   if (when_then_exprs_.size() > 0) {
-    if (when_then_exprs_[0].second->type() == RTAnyType::kNull) {
-      null_able = true;
-    } else {
+    if (when_then_exprs_[0].second->type() != RTAnyType::kNull) {
       type = when_then_exprs_[0].second->type();
     }
   }
-  if (else_expr_->type() == RTAnyType::kNull) {
-    null_able = true;
-  } else {
+  if (else_expr_->type() != RTAnyType::kNull) {
     type = else_expr_->type();
   }
-  type.null_able_ = null_able;
   return type;
 }
+
+/**
 
 TupleExpr::TupleExpr(std::vector<std::unique_ptr<ExprBase>>&& exprs)
     : exprs_(std::move(exprs)) {}
@@ -417,7 +378,7 @@ RTAny TupleExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
   return RTAny::from_tuple(std::move(ret));
 }
 
-RTAnyType TupleExpr::type() const { return RTAnyType::kTuple; }
+RTAnyType TupleExpr::type() const { return RTAnyType::kTuple; }*/
 
 static RTAny parse_const_value(const common::Value& val) {
   switch (val.item_case()) {
@@ -439,45 +400,66 @@ static RTAny parse_const_value(const common::Value& val) {
   return RTAny();
 }
 
+template <size_t N, size_t I, typename... Args>
+struct TypedTupleBuilder {
+  std::unique_ptr<ExprBase> build_typed_tuple(
+      std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
+    switch (exprs[I - 1]->type()) {
+    case RTAnyType::kI32Value:
+      return TypedTupleBuilder<N, I - 1, int, Args...>().build_typed_tuple(
+          std::move(exprs));
+    case RTAnyType::kI64Value:
+      return TypedTupleBuilder<N, I - 1, int64_t, Args...>().build_typed_tuple(
+          std::move(exprs));
+    case RTAnyType::kF64Value:
+      return TypedTupleBuilder<N, I - 1, double, Args...>().build_typed_tuple(
+          std::move(exprs));
+    case RTAnyType::kStringValue:
+      return TypedTupleBuilder<N, I - 1, std::string_view, Args...>()
+          .build_typed_tuple(std::move(exprs));
+    default:
+      LOG(FATAL) << "not support";
+    }
+  }
+};
+
+template <size_t N, typename... Args>
+struct TypedTupleBuilder<N, 0, Args...> {
+  std::unique_ptr<ExprBase> build_typed_tuple(
+      std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
+    return std::make_unique<TypedTupleExpr<Args...>>(std::move(exprs));
+  }
+};
+
 static RTAny parse_param(const common::DynamicParam& param,
                          const std::map<std::string, std::string>& input) {
   if (param.data_type().type_case() ==
       common::IrDataType::TypeCase::kDataType) {
-    common::DataType dt = param.data_type().data_type();
+    auto type = parse_from_ir_data_type(param.data_type());
+
     const std::string& name = param.name();
-    if (dt.item_case() == common::DataType::ItemCase::kPrimitiveType) {
-      switch (dt.primitive_type()) {
-      case common::PrimitiveType::DT_SIGNED_INT32: {
-        int val = std::stoi(input.at(name));
-        return RTAny::from_int32(val);
-      }
-      case common::PrimitiveType::DT_SIGNED_INT64: {
-        int64_t val = std::stoll(input.at(name));
-        return RTAny::from_int64(val);
-      }
-      case common::PrimitiveType::DT_DOUBLE:
-        return RTAny::from_double(std::stod(input.at(name)));
-      case common::PrimitiveType::DT_BOOL:
-        return RTAny::from_bool(input.at(name) == "true");
-      default:
-        LOG(FATAL) << "not support type: " << dt.DebugString();
-      }
-    } else if (dt.item_case() == common::DataType::ItemCase::kTemporal) {
-      if (dt.temporal().item_case() == common::Temporal::kDate32) {
-        int64_t val = std::stoll(input.at(name));
-        return RTAny::from_int64(val);
-      } else if (dt.temporal().item_case() == common::Temporal::kTimestamp) {
-        int64_t val = std::stoll(input.at(name));
-        return RTAny::from_int64(val);
-      } else {
-        LOG(FATAL) << "not support type: " << dt.temporal().DebugString();
-      }
-    } else if (dt.item_case() == common::DataType::ItemCase::kString) {
+    if (type == RTAnyType::kDate32) {
+      Day val = Day(std::stoll(input.at(name)));
+      return RTAny::from_date32(val);
+    } else if (type == RTAnyType::kStringValue) {
       const std::string& val = input.at(name);
       return RTAny::from_string(val);
-    } else {
-      LOG(FATAL) << "not support type: " << dt.DebugString();
+    } else if (type == RTAnyType::kI32Value) {
+      int val = std::stoi(input.at(name));
+      return RTAny::from_int32(val);
+    } else if (type == RTAnyType::kI64Value) {
+      int64_t val = std::stoll(input.at(name));
+      return RTAny::from_int64(val);
+    } else if (type == RTAnyType::kTimestamp) {
+      Date val = Date(std::stoll(input.at(name)));
+      return RTAny::from_timestamp(val);
+    } else if (type == RTAnyType::kF64Value) {
+      double val = std::stod(input.at(name));
+      return RTAny::from_double(val);
     }
+
+    LOG(FATAL) << "not support type: "
+               << common::DataType_Name(param.data_type().data_type());
   }
   LOG(FATAL) << "graph data type not expected....";
   return RTAny();
@@ -498,9 +480,9 @@ static inline int get_proiority(const common::ExprOpr& opr) {
     case common::Logical::OR:
       return 12;
     case common::Logical::NOT:
-      return 2;
     case common::Logical::WITHIN:
     case common::Logical::WITHOUT:
+    case common::Logical::REGEX:
       return 2;
     case common::Logical::EQ:
     case common::Logical::NE:
@@ -510,8 +492,6 @@ static inline int get_proiority(const common::ExprOpr& opr) {
     case common::Logical::LT:
     case common::Logical::LE:
       return 6;
-    case common::Logical::REGEX:
-      return 2;
     default:
       return 16;
     }
@@ -529,17 +509,21 @@ static inline int get_proiority(const common::ExprOpr& opr) {
       return 16;
     }
   }
+  case common::ExprOpr::kDateTimeMinus:
+    return 4;
   default:
     return 16;
   }
   return 16;
 }
+
 static std::unique_ptr<ExprBase> parse_expression_impl(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphReadInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type);
+
 static std::unique_ptr<ExprBase> build_expr(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphReadInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     std::stack<common::ExprOpr>& opr_stack, VarType var_type) {
   while (!opr_stack.empty()) {
@@ -557,7 +541,7 @@ static std::unique_ptr<ExprBase> build_expr(
       return std::make_unique<ConstExpr>(parse_param(opr.param(), params));
     }
     case common::ExprOpr::kVar: {
-      return std::make_unique<VariableExpr>(txn, ctx, opr.var(), var_type);
+      return std::make_unique<VariableExpr>(graph, ctx, opr.var(), var_type);
     }
     case common::ExprOpr::kLogical: {
       if (opr.logical() == common::Logical::WITHIN) {
@@ -565,38 +549,58 @@ static std::unique_ptr<ExprBase> build_expr(
         opr_stack.pop();
         auto rhs = opr_stack.top();
         opr_stack.pop();
-        CHECK(lhs.has_var());
-        CHECK(rhs.has_const_());
-        auto key =
-            std::make_unique<VariableExpr>(txn, ctx, lhs.var(), var_type);
-        if (key->type() == RTAnyType::kI64Value) {
-          return std::make_unique<WithInExpr<int64_t>>(txn, ctx, std::move(key),
-                                                       rhs.const_());
-        } else if (key->type() == RTAnyType::kI32Value) {
-          return std::make_unique<WithInExpr<int32_t>>(txn, ctx, std::move(key),
-                                                       rhs.const_());
-        } else if (key->type() == RTAnyType::kStringValue) {
-          return std::make_unique<WithInExpr<std::string>>(
-              txn, ctx, std::move(key), rhs.const_());
+        assert(lhs.has_var());
+        if (rhs.has_const_()) {
+          auto key =
+              std::make_unique<VariableExpr>(graph, ctx, lhs.var(), var_type);
+          if (key->type() == RTAnyType::kI64Value) {
+            return std::make_unique<WithInExpr<int64_t>>(
+                graph, ctx, std::move(key), rhs.const_());
+          } else if (key->type() == RTAnyType::kI32Value) {
+            return std::make_unique<WithInExpr<int32_t>>(
+                graph, ctx, std::move(key), rhs.const_());
+          } else if (key->type() == RTAnyType::kStringValue) {
+            return std::make_unique<WithInExpr<std::string>>(
+                graph, ctx, std::move(key), rhs.const_());
+          } else {
+            LOG(FATAL) << "not support";
+          }
+        } else if (rhs.has_var()) {
+          auto key =
+              std::make_unique<VariableExpr>(graph, ctx, lhs.var(), var_type);
+          if (key->type() == RTAnyType::kVertex) {
+            auto val =
+                std::make_unique<VariableExpr>(graph, ctx, rhs.var(), var_type);
+            if (val->type() == RTAnyType::kList) {
+              return std::make_unique<VertexWithInListExpr>(
+                  graph, ctx, std::move(key), std::move(val));
+            } else if (val->type() == RTAnyType::kSet) {
+              return std::make_unique<VertexWithInSetExpr>(
+                  graph, ctx, std::move(key), std::move(val));
+            } else {
+              LOG(FATAL) << "not support";
+            }
+          }
+
         } else {
-          LOG(FATAL) << "not support";
+          LOG(FATAL) << "not support" << rhs.DebugString();
         }
       } else if (opr.logical() == common::Logical::NOT ||
                  opr.logical() == common::Logical::ISNULL) {
-        auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
+        auto lhs = build_expr(graph, ctx, params, opr_stack, var_type);
         return std::make_unique<UnaryLogicalExpr>(std::move(lhs),
                                                   opr.logical());
       } else {
-        auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
-        auto rhs = build_expr(txn, ctx, params, opr_stack, var_type);
+        auto lhs = build_expr(graph, ctx, params, opr_stack, var_type);
+        auto rhs = build_expr(graph, ctx, params, opr_stack, var_type);
         return std::make_unique<LogicalExpr>(std::move(lhs), std::move(rhs),
                                              opr.logical());
       }
       break;
     }
     case common::ExprOpr::kArith: {
-      auto lhs = build_expr(txn, ctx, params, opr_stack, var_type);
-      auto rhs = build_expr(txn, ctx, params, opr_stack, var_type);
+      auto lhs = build_expr(graph, ctx, params, opr_stack, var_type);
+      auto rhs = build_expr(graph, ctx, params, opr_stack, var_type);
       return std::make_unique<ArithExpr>(std::move(lhs), std::move(rhs),
                                          opr.arith());
     }
@@ -610,28 +614,56 @@ static std::unique_ptr<ExprBase> build_expr(
         auto when_expr = op.when_then_expressions(i).when_expression();
         auto then_expr = op.when_then_expressions(i).then_result_expression();
         when_then_exprs.emplace_back(
-            parse_expression_impl(txn, ctx, params, when_expr, var_type),
-            parse_expression_impl(txn, ctx, params, then_expr, var_type));
+            parse_expression_impl(graph, ctx, params, when_expr, var_type),
+            parse_expression_impl(graph, ctx, params, then_expr, var_type));
       }
       auto else_expr = parse_expression_impl(
-          txn, ctx, params, op.else_result_expression(), var_type);
+          graph, ctx, params, op.else_result_expression(), var_type);
       return std::make_unique<CaseWhenExpr>(std::move(when_then_exprs),
                                             std::move(else_expr));
     }
     case common::ExprOpr::kExtract: {
-      auto hs = build_expr(txn, ctx, params, opr_stack, var_type);
-      return std::make_unique<ExtractExpr>(std::move(hs), opr.extract());
+      auto hs = build_expr(graph, ctx, params, opr_stack, var_type);
+      if (hs->type() == RTAnyType::kI64Value) {
+        return std::make_unique<ExtractExpr<int64_t>>(std::move(hs),
+                                                      opr.extract());
+      } else if (hs->type() == RTAnyType::kDate32) {
+        return std::make_unique<ExtractExpr<Day>>(std::move(hs), opr.extract());
+      } else if (hs->type() == RTAnyType::kTimestamp) {
+        return std::make_unique<ExtractExpr<Date>>(std::move(hs),
+                                                   opr.extract());
+      } else {
+        LOG(FATAL) << "not support" << static_cast<int>(hs->type());
+      }
     }
     case common::ExprOpr::kVars: {
       auto op = opr.vars();
+
+      if (op.keys_size() == 3) {
+        std::array<std::unique_ptr<ExprBase>, 3> exprs;
+        for (int i = 0; i < op.keys_size(); ++i) {
+          exprs[i] =
+              std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type);
+        }
+        return TypedTupleBuilder<3, 3>().build_typed_tuple(std::move(exprs));
+      } else if (op.keys_size() == 2) {
+        std::array<std::unique_ptr<ExprBase>, 2> exprs;
+        for (int i = 0; i < op.keys_size(); ++i) {
+          exprs[i] =
+              std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type);
+        }
+        return TypedTupleBuilder<2, 2>().build_typed_tuple(std::move(exprs));
+      }
+      /**
       std::vector<std::unique_ptr<ExprBase>> exprs;
       for (int i = 0; i < op.keys_size(); ++i) {
         exprs.push_back(
-            std::make_unique<VariableExpr>(txn, ctx, op.keys(i), var_type));
+            std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type));
       }
-      return std::make_unique<TupleExpr>(std::move(exprs));
-      // LOG(FATAL) << "not support" << opr.DebugString();
-      // break;
+
+      return std::make_unique<TupleExpr>(std::move(exprs));*/
+      LOG(FATAL) << "not support" << opr.DebugString();
+      break;
     }
     case common::ExprOpr::kMap: {
       auto op = opr.map();
@@ -641,19 +673,43 @@ static std::unique_ptr<ExprBase> build_expr(
         auto key = op.key_vals(i).key();
         auto val = op.key_vals(i).val();
         auto any = parse_const_value(key);
-        CHECK(any.type() == RTAnyType::kStringValue);
+        assert(any.type() == RTAnyType::kStringValue);
         {
           auto str = any.as_string();
           keys_vec.push_back(std::string(str));
         }
         exprs.emplace_back(
-            std::make_unique<VariableExpr>(txn, ctx, val,
+            std::make_unique<VariableExpr>(graph, ctx, val,
                                            var_type));  // just for parse
       }
       if (exprs.size() > 0) {
         return std::make_unique<MapExpr>(std::move(keys_vec), std::move(exprs));
       }
       LOG(FATAL) << "not support" << opr.DebugString();
+    }
+    case common::ExprOpr::kUdfFunc: {
+      auto op = opr.udf_func();
+      std::string name = op.name();
+      auto expr =
+          parse_expression_impl(graph, ctx, params, op.parameters(0), var_type);
+      if (name == "gs.function.relationships") {
+        return std::make_unique<RelationshipsExpr>(std::move(expr));
+      } else if (name == "gs.function.nodes") {
+        return std::make_unique<NodesExpr>(std::move(expr));
+      } else if (name == "gs.function.startNode") {
+        return std::make_unique<StartNodeExpr>(std::move(expr));
+      } else if (name == "gs.function.endNode") {
+        return std::make_unique<EndNodeExpr>(std::move(expr));
+      } else if (name == "gs.function.toFloat") {
+        return std::make_unique<ToFloatExpr>(std::move(expr));
+      } else {
+        LOG(FATAL) << "not support udf" << opr.DebugString();
+      }
+    }
+    case common::ExprOpr::kDateTimeMinus: {
+      auto lhs = build_expr(graph, ctx, params, opr_stack, var_type);
+      auto rhs = build_expr(graph, ctx, params, opr_stack, var_type);
+      return std::make_unique<DateMinusExpr>(std::move(lhs), std::move(rhs));
     }
     default:
       LOG(FATAL) << "not support" << opr.DebugString();
@@ -663,7 +719,7 @@ static std::unique_ptr<ExprBase> build_expr(
   return nullptr;
 }
 static std::unique_ptr<ExprBase> parse_expression_impl(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphReadInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
   std::stack<common::ExprOpr> opr_stack;
@@ -679,7 +735,7 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
           opr_stack2.push(opr_stack.top());
           opr_stack.pop();
         }
-        CHECK(!opr_stack.empty());
+        assert(!opr_stack.empty());
         opr_stack.pop();
       } else if (brace == common::ExprOpr::Brace::ExprOpr_Brace_RIGHT_BRACE) {
         opr_stack.emplace(*it);
@@ -694,7 +750,8 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
       break;
     }
     case common::ExprOpr::kArith:
-    case common::ExprOpr::kLogical: {
+    case common::ExprOpr::kLogical:
+    case common::ExprOpr::kDateTimeMinus: {
       // unary operator
       if ((*it).logical() == common::Logical::NOT ||
           (*it).logical() == common::Logical::ISNULL) {
@@ -722,6 +779,11 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
       opr_stack2.push(*it);
       break;
     }
+    case common::ExprOpr::kUdfFunc: {
+      opr_stack2.push(*it);
+      break;
+    }
+
     default: {
       LOG(FATAL) << "not support" << (*it).DebugString();
       break;
@@ -732,13 +794,13 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
     opr_stack2.push(opr_stack.top());
     opr_stack.pop();
   }
-  return build_expr(txn, ctx, params, opr_stack2, var_type);
+  return build_expr(graph, ctx, params, opr_stack2, var_type);
 }
 std::unique_ptr<ExprBase> parse_expression(
-    const ReadTransaction& txn, const Context& ctx,
+    const GraphReadInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
-  return parse_expression_impl(txn, ctx, params, expr, var_type);
+  return parse_expression_impl(graph, ctx, params, expr, var_type);
 }
 
 }  // namespace runtime

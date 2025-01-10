@@ -208,6 +208,10 @@ struct __attribute__((packed)) Date {
     return milli_second < rhs.milli_second;
   }
 
+  bool operator==(const Date& rhs) const {
+    return milli_second == rhs.milli_second;
+  }
+
   int64_t milli_second;
 };
 

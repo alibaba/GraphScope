@@ -208,6 +208,8 @@ void InsertTransaction::clear() {
   timestamp_ = std::numeric_limits<timestamp_t>::max();
 }
 
+const Schema& InsertTransaction::schema() const { return graph_.schema(); }
+
 #define likely(x) __builtin_expect(!!(x), 1)
 
 bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,
