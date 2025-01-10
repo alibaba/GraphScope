@@ -19,6 +19,10 @@ import argparse
 import os
 import time
 
+
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../python/"))
+
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
@@ -38,15 +42,15 @@ test_graph_def = {
                 "properties": [
                     {
                         "property_name": "id",
-                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                        "property_type": {"type_name": "PrimitiveType", "primitive_type": "DT_SIGNED_INT64"},
                     },
                     {
                         "property_name": "name",
-                        "property_type": {"string": {"long_text": ""}},
+                        "property_type": {"type_name": "StringType", "string": {"long_text": ""}},
                     },
                     {
                         "property_name": "age",
-                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                        "property_type": {"type_name": "TimeStampType",  "primitive_type": "DT_SIGNED_INT32"},
                     },
                 ],
                 "primary_keys": ["id"],
@@ -65,7 +69,7 @@ test_graph_def = {
                 "properties": [
                     {
                         "property_name": "weight",
-                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                        "property_type": {"type_name": "PrimitiveType","primitive_type": "DT_DOUBLE"},
                     }
                 ],
                 "primary_keys": [],
