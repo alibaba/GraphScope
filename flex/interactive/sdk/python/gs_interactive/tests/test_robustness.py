@@ -18,6 +18,7 @@
 
 import os
 import sys
+import threading
 from time import sleep
 
 import pytest
@@ -28,6 +29,7 @@ from gs_interactive.tests.conftest import call_procedure  # noqa: E402
 from gs_interactive.tests.conftest import create_procedure
 from gs_interactive.tests.conftest import delete_procedure
 from gs_interactive.tests.conftest import ensure_compiler_schema_ready
+from gs_interactive.tests.conftest import import_data_to_full_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
@@ -35,6 +37,7 @@ from gs_interactive.tests.conftest import (
     import_data_to_vertex_only_modern_graph_no_wait,
 )
 from gs_interactive.tests.conftest import run_cypher_test_suite
+from gs_interactive.tests.conftest import send_get_request_periodically
 from gs_interactive.tests.conftest import start_service_on_graph
 from gs_interactive.tests.conftest import update_procedure
 
@@ -330,3 +333,34 @@ def test_custom_pk_name(
     )
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
+
+
+def test_complex_query(interactive_session, neo4j_session, create_graph_algo_graph):
+    """
+    Make sure that long-running queries won't block the admin service.
+    """
+    print("[Test complex query]")
+    import_data_to_full_graph_algo_graph(interactive_session, create_graph_algo_graph)
+    start_service_on_graph(interactive_session, create_graph_algo_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_algo_graph
+    )
+    # start a thread keep get service status, if the request timeout, raise error
+    ping_thread = threading.Thread(
+        target=send_get_request_periodically,
+        args=("{}/v1/service/status".format(interactive_session.admin_uri), 1, 1, 20),
+    )
+    ping_thread.start()
+    # Expect at least 10 seconds to finish
+    result = neo4j_session.run("MATCH(n)-[*1..5]-(t) return count(t);")
+    ping_thread_2 = threading.Thread(
+        target=send_get_request_periodically,
+        args=("{}/v1/service/status".format(interactive_session.admin_uri), 1, 1, 20),
+    )
+    ping_thread_2.start()
+
+    res = result.fetch(1)
+    assert res[0]["$f0"] == 9013634
+
+    ping_thread.join()
+    ping_thread_2.join()

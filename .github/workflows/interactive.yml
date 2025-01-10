@@ -404,6 +404,7 @@ jobs:
       matrix:
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
+        DEFAULT_SHARDING_MODE: ["exclusive", "cooperative"]
     steps:
     - uses: actions/checkout@v4
 
