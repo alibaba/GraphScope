@@ -1320,16 +1320,18 @@ components:
           $ref: '#/components/schemas/AnyValue'
     PrimitiveType:
       x-body-name: primitive_type
-      type: object
-      required: 
-        - primitive_type
-      properties:
-        primitive_type:
-          type: string
-          enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-                 DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
-                 # The DT_STRING is added for backward compatibility, it should be replaced by StringType
-          example: DT_SIGNED_INT32
+      allOf:
+        - $ref: '#/components/schemas/BaseGSDataType'
+        - type: object
+          required: 
+            - primitive_type
+          properties:
+            primitive_type:
+              type: string
+              enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
+                    DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
+                    # The DT_STRING is added for backward compatibility, it should be replaced by StringType
+              example: DT_SIGNED_INT32
     LongText:
       x-body-name: long_text
       type: object
@@ -1370,15 +1372,17 @@ components:
               type: integer
     StringType:
       x-body-name: string_type
-      type: object
-      required: 
-        - string
-      properties:
-        string:
-          oneOf:
-            - $ref: '#/components/schemas/LongText'
-            - $ref: '#/components/schemas/FixedChar'
-            - $ref: '#/components/schemas/VarChar'
+      allOf:
+        - $ref: '#/components/schemas/BaseGSDataType'
+        - type: object
+          required: 
+            - string
+          properties:
+            string:
+              oneOf:
+                - $ref: '#/components/schemas/LongText'
+                - $ref: '#/components/schemas/FixedChar'
+                - $ref: '#/components/schemas/VarChar'
     TimeStampType:
       x-body-name: time_stamp_type
       type: object
@@ -1397,14 +1401,26 @@ components:
           type: string
     TemporalType:
       x-body-name: temporal_type
+      allOf:
+        - $ref: '#/components/schemas/BaseGSDataType'
+        - type: object
+          required:
+            - temporal
+          properties:
+            temporal:
+              oneOf:
+                - $ref: '#/components/schemas/TimeStampType'
+                - $ref: '#/components/schemas/DateType'
+    BaseGSDataType:
+      x-body-name: base_gs_data_type
       type: object
       required:
-        - temporal
+        - type_name
       properties:
-        temporal:
-          oneOf:
-            - $ref: '#/components/schemas/TimeStampType'
-            - $ref: '#/components/schemas/DateType'
+        type_name:
+          type: string
+      discriminator:
+        propertyName: type_name
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
