@@ -267,21 +267,12 @@ public class GraphPlanner {
                             + " 'optional <extra_key_value_config_file>'");
         }
 
-        BufferedReader reader = new BufferedReader(new FileReader(args[1]));
-        StringBuilder builder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        String query = builder.toString();
-        reader.close();
+        String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
 
         Summary summary = generatePlan(args[0], query, IrMetaFetcherFactory.DEFAULT);
         // write physical plan to file
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
-        FileOutputStream fos = new FileOutputStream(args[2]);
-        fos.write(physicalPlan.getContent());
-        fos.close();
+        FileUtils.writeByteArrayToFile(new File(args[2]), physicalPlan.getContent());
 
         // write stored procedure meta to file
         LogicalPlan logicalPlan = summary.getLogicalPlan();
