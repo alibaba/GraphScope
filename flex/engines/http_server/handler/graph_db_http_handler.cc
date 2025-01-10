@@ -44,6 +44,7 @@ class query_dispatcher {
  public:
   query_dispatcher(uint32_t shard_num, uint32_t shard_concurrency)
       : shard_num_(shard_num),
+        extra_shard_id_(0),
 #if RANDOM_DISPATCHER
         rd_(),
         gen_(rd_()),
@@ -58,7 +59,8 @@ class query_dispatcher {
   inline int get_shard_id() {
     auto shard_id = hiactor::local_shard_id();
     if (shard_id >= shard_num_) {
-      return shard_id % shard_num_;
+      shard_id = extra_shard_id_;
+      extra_shard_id_ = (extra_shard_id_ + 1) % shard_num_;
     }
     return shard_id;
   }
@@ -75,6 +77,9 @@ class query_dispatcher {
 
  private:
   uint32_t shard_num_;
+  uint32_t extra_shard_id_;  // In exclusive mode, we need to dispatch the
+                             // request received on shard_id >= shard_num_ to
+                             // the extra_shard_id_, in a round-robin way.
 #if RANDOM_DISPATCHER
   std::random_device rd_;
   std::mt19937 gen_;
@@ -726,7 +731,7 @@ class adhoc_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
     return get_codegen_actors()[dst_shard_id][0]
         .do_codegen(query_param{std::move(req->content)})
-        .then([this, dst_executor, dst_shard_id
+        .then([dst_executor, dst_shard_id
 #ifdef HAVE_OPENTELEMETRY_CPP
                ,
                codegen_span = codegen_span, tracer = tracer, options = options,
@@ -850,25 +855,27 @@ class adhoc_query_handler : public StoppableHandler {
 ///////////////////////////graph_db_http_handler/////////////////////////////
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
-                                             int32_t shard_num,
+                                             int32_t all_shard_num,
+                                             int32_t query_shard_num,
                                              bool enable_adhoc_handlers)
     : http_port_(http_port),
-      shard_num_(shard_num),
+      all_shard_num_(all_shard_num),
+      query_shard_num_(query_shard_num),
       enable_adhoc_handlers_(enable_adhoc_handlers),
       running_(false),
       actors_running_(true) {
-  current_graph_query_handlers_.resize(shard_num);
-  all_graph_query_handlers_.resize(shard_num);
-  adhoc_query_handlers_.resize(shard_num);
-  vertex_handlers_.resize(shard_num);
-  edge_handlers_.resize(shard_num);
+  current_graph_query_handlers_.resize(all_shard_num_);
+  all_graph_query_handlers_.resize(all_shard_num_);
+  adhoc_query_handlers_.resize(all_shard_num_);
+  vertex_handlers_.resize(all_shard_num_);
+  edge_handlers_.resize(all_shard_num_);
   if (enable_adhoc_handlers_) {
-    adhoc_query_handler::get_executors().resize(shard_num);
-    adhoc_query_handler::get_codegen_actors().resize(shard_num);
+    adhoc_query_handler::get_executors().resize(all_shard_num_);
+    adhoc_query_handler::get_codegen_actors().resize(all_shard_num_);
   } else {
-    adhoc_runtime_query_handler::get_executors().resize(shard_num);
+    adhoc_runtime_query_handler::get_executors().resize(all_shard_num_);
   }
-  stored_proc_handler::get_executors().resize(shard_num);
+  stored_proc_handler::get_executors().resize(all_shard_num_);
 }
 
 graph_db_http_handler::~graph_db_http_handler() {
@@ -974,15 +981,17 @@ seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     // matches /v1/graph/current/query
     current_graph_query_handlers_[hiactor::local_shard_id()] =
-        new stored_proc_handler(shard_num_, ic_query_group_id, max_group_id,
-                                group_inc_step, shard_query_concurrency);
+        new stored_proc_handler(query_shard_num_, ic_query_group_id,
+                                max_group_id, group_inc_step,
+                                shard_query_concurrency);
     r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",
           current_graph_query_handlers_[hiactor::local_shard_id()]);
 
     // matches /v1/graph/{graph_id}/query
     all_graph_query_handlers_[hiactor::local_shard_id()] =
-        new stored_proc_handler(shard_num_, ic_query_group_id, max_group_id,
-                                group_inc_step, shard_query_concurrency);
+        new stored_proc_handler(query_shard_num_, ic_query_group_id,
+                                max_group_id, group_inc_step,
+                                shard_query_concurrency);
     auto rule_proc = new seastar::httpd::match_rule(
         all_graph_query_handlers_[hiactor::local_shard_id()]);
     rule_proc->add_str("/v1/graph")
@@ -990,9 +999,9 @@ seastar::future<> graph_db_http_handler::set_routes() {
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
     if (enable_adhoc_handlers_.load()) {
-      auto adhoc_query_handler_ =
-          new adhoc_query_handler(shard_num_, ic_adhoc_group_id, max_group_id,
-                                  group_inc_step, shard_adhoc_concurrency);
+      auto adhoc_query_handler_ = new adhoc_query_handler(
+          query_shard_num_, ic_adhoc_group_id, max_group_id, group_inc_step,
+          shard_adhoc_concurrency);
       adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
       // Add routes
       auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
@@ -1002,7 +1011,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
       r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     } else {
       auto adhoc_runtime_query_handler_ = new adhoc_runtime_query_handler(
-          shard_num_, ic_adhoc_group_id, max_group_id, group_inc_step,
+          query_shard_num_, ic_adhoc_group_id, max_group_id, group_inc_step,
           shard_adhoc_concurrency);
       adhoc_query_handlers_[hiactor::local_shard_id()] =
           adhoc_runtime_query_handler_;
@@ -1015,12 +1024,12 @@ seastar::future<> graph_db_http_handler::set_routes() {
       r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     }
     for (size_t i = 0; i < NUM_OPERATION; ++i) {
-      vertex_handlers_[hiactor::local_shard_id()][i] =
-          new stored_proc_handler(shard_num_, ic_query_group_id, max_group_id,
-                                  group_inc_step, shard_query_concurrency);
-      edge_handlers_[hiactor::local_shard_id()][i] =
-          new stored_proc_handler(shard_num_, ic_query_group_id, max_group_id,
-                                  group_inc_step, shard_query_concurrency);
+      vertex_handlers_[hiactor::local_shard_id()][i] = new stored_proc_handler(
+          query_shard_num_, ic_query_group_id, max_group_id, group_inc_step,
+          shard_query_concurrency);
+      edge_handlers_[hiactor::local_shard_id()][i] = new stored_proc_handler(
+          query_shard_num_, ic_query_group_id, max_group_id, group_inc_step,
+          shard_query_concurrency);
     }
 
     for (size_t i = 0; i < NUM_OPERATION; ++i) {

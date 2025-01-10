@@ -124,7 +124,7 @@ void GraphDBService::init(const ServiceConfig& config) {
   // NOTE that in sharding mode EXCLUSIVE, the last shard is reserved for admin
   //  requests.
   query_hdl_ = std::make_unique<graph_db_http_handler>(
-      config.query_port, config.get_cooperative_shard_num(),
+      config.query_port, config.shard_num, config.get_cooperative_shard_num(),
       config.enable_adhoc_handler);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
