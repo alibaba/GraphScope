@@ -71,7 +71,7 @@ To demonstrate the usage of the JNI interface, an example binary `test_graph_pla
 
 ```bash
 # bin/test_graph_planner <java class path> <jna lib path> <graph schema path> <graph statistics path> <query> <config path>
-bin/test_graph_planner libs native ./conf/graph.yaml ./conf/modern_statistics.json "MATCH (n) RETURN n, COUNT(n);" ./conf/interactive_config_test.yaml
+bin/test_graph_planner libs native ./conf/graph.yaml ./conf/modern_statistics.json "MATCH (n) RETURN n, COUNT(n);" ./conf/gs_interactive_hiactor.yaml
 ```
 
 The output consists of the physical plan (in byte format) and the result schema (in YAML format). The physical plan adheres to the specifications defined in the [protobuf]().
@@ -230,5 +230,5 @@ private static String getResultSchemaYaml(JsonNode planNode) {
 
 Run the java sdk example with the following command:
 ```bash
-java -cp ".:./libs/*" com.alibaba.graphscope.sdk.examples.TestGraphPlanner ./conf/interactive_config_test.yaml "Match (n) Return n;" ./conf/graph.yaml ./conf/modern_statistics.json
+java -cp ".:./libs/*" com.alibaba.graphscope.sdk.examples.TestGraphPlanner ./conf/gs_interactive_hiactor.yaml "Match (n) Return n;" ./conf/graph.yaml ./conf/modern_statistics.json
 ```

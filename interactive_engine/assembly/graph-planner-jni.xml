@@ -65,7 +65,7 @@
             <directory>${project.parent.basedir}/compiler/src/test/resources/config/</directory>
             <outputDirectory>conf</outputDirectory>
             <includes>
-                <include>interactive_config_test.yaml</include>
+                <include>gs_interactive_hiactor.yaml</include>
             </includes>
         </fileSet>
     </fileSets>
