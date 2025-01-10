@@ -155,6 +155,13 @@ void BasicFragmentLoader::AddVertexBatch(
         << ", props[i] size: " << props[i].size();
   }
   auto dst_columns = table.column_ptrs();
+  // The table.row_num() is initialized to x_csr_params.max_vertex_num, we
+  // should resize it to the actual number of vertices.
+  if (table.row_num() < vids.size()) {
+    VLOG(10) << "Resize vertex table from " << table.row_num() << " to "
+             << vids.size();
+    table.resize(vids.size());
+  }
   for (size_t j = 0; j < props.size(); ++j) {
     auto& cur_vec = props[j];
     for (size_t i = 0; i < vids.size(); ++i) {
