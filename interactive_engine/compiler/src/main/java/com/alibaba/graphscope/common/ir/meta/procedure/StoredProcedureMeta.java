@@ -363,7 +363,7 @@ public class StoredProcedureMeta {
         // option configurations.
         public static final com.alibaba.graphscope.common.config.Config<String> TYPE =
                 com.alibaba.graphscope.common.config.Config.stringConfig(
-                        "type", "UNKNOWN"); // cypher or native
+                        "type", "UNKNOWN"); // cypher or cpp
         public static final com.alibaba.graphscope.common.config.Config<String> QUERY =
                 com.alibaba.graphscope.common.config.Config.stringConfig("query", "UNKNOWN");
     }

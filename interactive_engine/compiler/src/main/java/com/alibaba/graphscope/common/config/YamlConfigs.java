@@ -93,7 +93,7 @@ public class YamlConfigs extends Configs {
                             if (configs.get("compute_engine.store.type") != null) {
                                 return configs.get("compute_engine.store.type");
                             } else {
-                                return "native-mcsr";
+                                return "cpp-mcsr";
                             }
                         })
                 .put(
