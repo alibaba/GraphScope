@@ -1332,44 +1332,60 @@ components:
                     DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
                     # The DT_STRING is added for backward compatibility, it should be replaced by StringType
               example: DT_SIGNED_INT32
+    BaseStringType:
+      x-body-name: base_string_type
+      type: object
+      required:
+        - string_type
+      properties:
+        string_type:
+          type: string
+      discriminator:
+        propertyName: string_type
     LongText:
       x-body-name: long_text
-      type: object
-      additionalProperties: false 
-      required:
-        - long_text
-      properties:
-        long_text:
-          type: string
-          nullable: true
+      allOf:
+        - $ref: '#/components/schemas/BaseStringType'
+        - type: object
+          additionalProperties: false 
+          required:
+            - long_text
+          properties:
+            long_text:
+              type: string
+              nullable: true
     FixedChar:
       x-body-name: fixed_char
-      type: object
-      additionalProperties: false 
-      required:
-        - char
-      properties:
-        char:
-          type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseStringType'
+        - type: object
+          additionalProperties: false 
           required:
-            - fixed_length
+            - char
           properties:
-            fixed_length:
-              type: integer
+            char:
+              type: object
+              required:
+                - fixed_length
+              properties:
+                fixed_length:
+                  type: integer
     VarChar:
       x-body-name: var_char
-      type: object
-      additionalProperties: false 
-      required:
-        - var_char
-      properties:
-        var_char:
-          type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseStringType'
+        - type: object
+          additionalProperties: false 
           required:
-            - max_length
+            - var_char
           properties:
-            max_length:
-              type: integer
+            var_char:
+              type: object
+              required:
+                - max_length
+              properties:
+                max_length:
+                  type: integer
     StringType:
       x-body-name: string_type
       allOf:
@@ -1383,22 +1399,36 @@ components:
                 - $ref: '#/components/schemas/LongText'
                 - $ref: '#/components/schemas/FixedChar'
                 - $ref: '#/components/schemas/VarChar'
+    BaseTemporalType:
+      x-body-name: base_temporal_type
+      type: object
+      required:
+        - temporal_type
+      properties:
+        temporal_type:
+          type: string
+      discriminator:
+        propertyName: temporal_type
     TimeStampType:
       x-body-name: time_stamp_type
-      type: object
-      required:
-        - timestamp
-      properties:
-        timestamp:
-          type: string
+      allOf: 
+        - $ref: '#/components/schemas/BaseTemporalType'
+        - type: object
+          required:
+            - timestamp
+          properties:
+            timestamp:
+              type: string
     DateType:
       x-body-name: date_type
-      type: object
-      required:
-       - date32
-      properties:
-        date32:
-          type: string
+      allOf:
+        - $ref: '#/components/schemas/BaseTemporalType'
+        - type: object
+          required:
+          - date32
+          properties:
+            date32:
+              type: string
     TemporalType:
       x-body-name: temporal_type
       allOf:
