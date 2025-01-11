@@ -19,10 +19,13 @@
 #include "flex/engines/graph_db/app/builtin/k_hop_neighbors.h"
 #include "flex/engines/graph_db/app/builtin/pagerank.h"
 #include "flex/engines/graph_db/app/builtin/shortest_path_among_three.h"
+#include "flex/engines/graph_db/app/cypher_read_app.h"
+#include "flex/engines/graph_db/app/cypher_write_app.h"
 #include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 #include "flex/utils/yaml_utils.h"
 
 #include "flex/third_party/httplib.h"
@@ -67,6 +70,8 @@ GraphDB& GraphDB::get() {
   static GraphDB db;
   return db;
 }
+
+QueryCache& GraphDB::getQueryCache() const { return query_cache_; }
 
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
@@ -232,6 +237,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
       }
     });
   }
+  query_cache_.cache.clear();
 
   return Result<bool>(true);
 }
@@ -428,6 +434,14 @@ void GraphDB::initApps(
       std::make_shared<HQPSAdhocWriteAppFactory>();
   app_factories_[Schema::ADHOC_READ_PLUGIN_ID] =
       std::make_shared<AdhocReadAppFactory>();
+
+  auto& parser = gs::runtime::PlanParser::get();
+  parser.init();
+
+  app_factories_[Schema::CYPHER_READ_PLUGIN_ID] =
+      std::make_shared<CypherReadAppFactory>();
+  app_factories_[Schema::CYPHER_WRITE_PLUGIN_ID] =
+      std::make_shared<CypherWriteAppFactory>();
 
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {

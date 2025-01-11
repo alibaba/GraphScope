@@ -20,21 +20,22 @@ protobuf_generate(APPEND_PATH
 
 
 ############################################ Generate Physical Plan Proto ############################################
-set(GIE_COMPILER_PROTO_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/../../interactive_engine/executor/ir/proto/)
+set(GIE_COMPILER_PROTO_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/proto/)
 set(GIE_COMPILER_PROTO_JOB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../interactive_engine/executor/engine/pegasus/server/proto/)
 # proto files of gie compiler
 set(CODE_GEN_PROTOBUF_FILES
-       ${GIE_COMPILER_PROTO_DIR}/algebra.proto
+        ${GIE_COMPILER_PROTO_DIR}/physical.proto
+        ${GIE_COMPILER_PROTO_DIR}/algebra.proto
         ${GIE_COMPILER_PROTO_DIR}/common.proto
         ${GIE_COMPILER_PROTO_DIR}/expr.proto
-        ${GIE_COMPILER_PROTO_DIR}/physical.proto
         ${GIE_COMPILER_PROTO_DIR}/results.proto
         ${GIE_COMPILER_PROTO_DIR}/schema.proto
         ${GIE_COMPILER_PROTO_DIR}/type.proto
         ${GIE_COMPILER_PROTO_DIR}/stored_procedure.proto
         ${GIE_COMPILER_PROTO_DIR}/basic_type.proto
+        ${GIE_COMPILER_PROTO_DIR}/cypher_write.proto  
         ${GIE_COMPILER_PROTO_JOB_DIR}/job_service.proto
-)
+) 
 
 #create directory first
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie)
@@ -53,7 +54,7 @@ add_library(flex_plan_proto SHARED ${PROTO_SRCS_GIE})
 target_include_directories(flex_plan_proto PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-target_link_libraries(flex_plan_proto PUBLIC ${Protobuf_LIBRARIES})
+#target_link_libraries(flex_plan_proto PUBLIC ${Protobuf_LIBRARIES})
 install_flex_target(flex_plan_proto)
 
 #install proto_generated_files
@@ -70,7 +71,18 @@ target_include_directories(flex_utils PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 # Link the static library of arrow, to save the trouble of linking the shared library of arrow
-target_link_libraries(flex_utils  ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${Protobuf_LIBRARIES})
+if (ARROW_SHARED_LIB)
+        target_link_libraries(flex_utils PRIVATE ${ARROW_SHARED_LIB})
+else()
+        target_link_libraries(flex_utils PRIVATE ${ARROW_STATIC_LIB})
+endif()
+
+target_link_libraries(flex_utils  PUBLIC  ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${Protobuf_LIBRARIES})
+
+
+find_package(mimalloc 1.8 REQUIRED)
+target_link_libraries(flex_utils PUBLIC mimalloc-static)
+
 install_flex_target(flex_utils)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

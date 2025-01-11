@@ -13,34 +13,40 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_GRAPH_DB_ADHOC_APP_H_
-#define ENGINES_GRAPH_DB_ADHOC_APP_H_
-
+#ifndef ENGINES_GRAPH_DB_CYPHER_WRITE_APP_H_
+#define ENGINES_GRAPH_DB_CYPHER_WRITE_APP_H_
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
+#include "flex/engines/graph_db/runtime/execute/pipeline.h"
+
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
-class AdhocReadApp : public ReadAppBase {
+class CypherWriteApp : public WriteAppBase {
  public:
-  AdhocReadApp() = default;
+  CypherWriteApp(const GraphDB& db) : db_(db) {}
 
   AppType type() const override { return AppType::kCypherAdhoc; }
 
-  bool Query(const GraphDBSession& graph, Decoder& input,
-             Encoder& output) override;
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+
+  const runtime::OprTimer& timer() const { return timer_; }
+  runtime::OprTimer& timer() { return timer_; }
 
  private:
+  const GraphDB& db_;
+  std::unordered_map<std::string, physical::PhysicalPlan> plan_cache_;
+  std::unordered_map<std::string, runtime::InsertPipeline> pipeline_cache_;
   runtime::OprTimer timer_;
 };
 
-class AdhocReadAppFactory : public AppFactoryBase {
+class CypherWriteAppFactory : public AppFactoryBase {
  public:
-  AdhocReadAppFactory() = default;
-  ~AdhocReadAppFactory() = default;
+  CypherWriteAppFactory() = default;
+  ~CypherWriteAppFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };
 
 }  // namespace gs
-#endif  // ENGINES_GRAPH_DB_ADHOC_APP_H_
+#endif  // ENGINES_GRAPH_DB_CYPHER_WRITE_APP_H_

@@ -39,22 +39,7 @@ std::vector<label_t> parse_tables(const algebra::QueryParams& query_params);
 std::vector<LabelTriplet> parse_label_triplets(
     const physical::PhysicalOpr_MetaData& meta);
 
-std::shared_ptr<IContextColumn> build_column(
-    const common::IrDataType& data_type, const Expr& expr, size_t row_num);
-
-std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
-                                                  size_t row_num);
-
 std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type);
-
-std::shared_ptr<IContextColumn> build_topN_column(
-    const common::IrDataType& data_type, const Expr& expr, size_t row_num,
-    size_t limit, bool asc, std::vector<size_t>& offsets);
-
-std::shared_ptr<IContextColumn> build_topN_property_column(
-    const GraphReadInterface& graph, std::shared_ptr<IContextColumn> col,
-    const std::string& property_name, size_t limit, bool asc,
-    std::vector<size_t>& offsets);
 
 bool vertex_property_topN(bool asc, size_t limit,
                           const std::shared_ptr<IVertexColumn>& col,

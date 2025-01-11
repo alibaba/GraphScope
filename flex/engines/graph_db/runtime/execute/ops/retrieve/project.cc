@@ -1114,8 +1114,7 @@ make_project_expr(const common::Expression& expr,
       return make_project_expr(expr, alias);
     } break;
     default: {
-      LOG(INFO) << "not support"
-                << common::DataType_Name(data_type.data_type());
+      LOG(INFO) << "not support" << data_type.data_type().DebugString();
       return std::nullopt;
     }
     }
@@ -1174,8 +1173,7 @@ make_project_expr(const common::Expression& expr,
   } break;
 
   default:
-    LOG(INFO) << "unexpected type"
-              << common::DataType_Name(data_type.data_type());
+    LOG(INFO) << "unexpected type" << data_type.data_type().DebugString();
     break;
   }
   return std::nullopt;

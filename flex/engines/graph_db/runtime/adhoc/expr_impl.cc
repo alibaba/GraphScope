@@ -459,7 +459,7 @@ static RTAny parse_param(const common::DynamicParam& param,
     }
 
     LOG(FATAL) << "not support type: "
-               << common::DataType_Name(param.data_type().data_type());
+               << param.data_type().data_type().DebugString();
   }
   LOG(FATAL) << "graph data type not expected....";
   return RTAny();

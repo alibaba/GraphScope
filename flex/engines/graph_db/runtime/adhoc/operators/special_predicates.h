@@ -75,8 +75,10 @@ inline bool is_pk_oid_exact_check(
     auto& p = expr.operators(2).param();
     auto name = p.name();
     // todo: check data type
-    if (p.data_type().data_type() != common::DataType::INT64 &&
-        p.data_type().data_type() != common::DataType::INT32) {
+    auto dtype = p.data_type().data_type();
+    if (dtype.item_case() != common::DataType::kPrimitiveType ||
+        (dtype.primitive_type() != common::PrimitiveType::DT_SIGNED_INT64 &&
+         dtype.primitive_type() != common::PrimitiveType::DT_SIGNED_INT32)) {
       return false;
     }
     value = [name](const std::map<std::string, std::string>& params) {
@@ -695,8 +697,14 @@ parse_special_vertex_predicate(const common::Expression& expr) {
     }
     std::string to_str = op6.param().name();
 
-    if (op2.param().data_type().data_type() !=
-        op6.param().data_type().data_type()) {
+    if (op2.param().data_type().data_type().item_case() !=
+        common::DataType::kPrimitiveType) {
+      return std::nullopt;
+    }
+    if ((op2.param().data_type().data_type().item_case() !=
+         op6.param().data_type().data_type().item_case()) ||
+        (op2.param().data_type().data_type().primitive_type() !=
+         op6.param().data_type().data_type().primitive_type())) {
       return std::nullopt;
     }
 

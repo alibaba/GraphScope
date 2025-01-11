@@ -67,12 +67,33 @@ struct GraphDBConfig {
   int memory_level;
 };
 
+struct QueryCache {
+  bool get(const std::string& key, std::string_view& value) {
+    std::shared_lock<std::shared_mutex> lock(mutex);
+    auto it = cache.find(key);
+    if (it != cache.end()) {
+      value = it->second;
+      return true;
+    }
+    return false;
+  }
+
+  void put(const std::string& key, const std::string_view& value) {
+    std::unique_lock<std::shared_mutex> lock(mutex);
+    cache[key] = value;
+  }
+  std::shared_mutex mutex;
+  std::unordered_map<std::string, std::string> cache;
+};
+
 class GraphDB {
  public:
   GraphDB();
   ~GraphDB();
 
   static GraphDB& get();
+
+  QueryCache& getQueryCache() const;
 
   /**
    * @brief Load the graph from data directory.
@@ -151,6 +172,8 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
+  std::string work_dir() const { return work_dir_; }
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -169,6 +192,8 @@ class GraphDB {
   size_t getExecutedQueryNum() const;
 
   friend class GraphDBSession;
+
+  mutable QueryCache query_cache_;
 
   std::string work_dir_;
   SessionLocalContext* contexts_;

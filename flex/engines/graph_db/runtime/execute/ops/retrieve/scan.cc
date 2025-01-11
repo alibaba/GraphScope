@@ -109,13 +109,13 @@ void parse_ids_from_idx_predicate(
   }
 
   case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    if (triplet.param().data_type().data_type() == common::DataType::INT32) {
+    auto type = parse_from_ir_data_type(triplet.param().data_type());
+    if (type == RTAnyType::kI32Value) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{
             static_cast<T>(std::stoi(params.at(triplet.param().name())))};
       };
-    } else if (triplet.param().data_type().data_type() ==
-               common::DataType::INT64) {
+    } else if (type == RTAnyType::kI64Value) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{
             static_cast<T>(std::stoll(params.at(triplet.param().name())))};
@@ -149,7 +149,8 @@ void parse_ids_from_idx_predicate(
   }
 
   case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    if (triplet.param().data_type().data_type() == common::DataType::STRING) {
+    auto type = parse_from_ir_data_type(triplet.param().data_type());
+    if (type == RTAnyType::kStringValue) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{params.at(triplet.param().name())};
       };
