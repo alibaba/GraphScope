@@ -656,8 +656,7 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
         label_(label),
         prop_type_(prop_type),
         prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)),
-        sub_types_(sub_types),
-        cap_(0) {}
+        sub_types_(sub_types) {}
   ~SDSLEdgeColumnBuilder() = default;
 
   void reserve(size_t size) override { edges_.reserve(size); }
@@ -686,7 +685,6 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
   PropertyType prop_type_;
   std::shared_ptr<EdgePropVecBase> prop_col_;
   std::vector<PropertyType> sub_types_;
-  size_t cap_;
 };
 
 template <typename T>

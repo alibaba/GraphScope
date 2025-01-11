@@ -26,7 +26,6 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class GraphDBSession;
 class VersionManager;
 template <typename EDATA_T>
 class AdjListView {
@@ -43,11 +42,11 @@ class AdjListView {
       }
     }
 
-    const_nbr_t& operator*() const { return *ptr_; }
+    inline const_nbr_t& operator*() const { return *ptr_; }
 
-    const_nbr_ptr_t operator->() const { return ptr_; }
+    inline const_nbr_ptr_t operator->() const { return ptr_; }
 
-    nbr_iterator& operator++() {
+    inline nbr_iterator& operator++() {
       ++ptr_;
       while (ptr_ != end_ && ptr_->get_timestamp() > timestamp_) {
         ++ptr_;
@@ -55,11 +54,11 @@ class AdjListView {
       return *this;
     }
 
-    bool operator==(const nbr_iterator& rhs) const {
+    inline bool operator==(const nbr_iterator& rhs) const {
       return (ptr_ == rhs.ptr_);
     }
 
-    bool operator!=(const nbr_iterator& rhs) const {
+    inline bool operator!=(const nbr_iterator& rhs) const {
       return (ptr_ != rhs.ptr_);
     }
 
@@ -75,14 +74,14 @@ class AdjListView {
   AdjListView(const slice_t& slice, timestamp_t timestamp)
       : edges_(slice), timestamp_(timestamp) {}
 
-  nbr_iterator begin() const {
+  inline nbr_iterator begin() const {
     return nbr_iterator(edges_.begin(), edges_.end(), timestamp_);
   }
-  nbr_iterator end() const {
+  inline nbr_iterator end() const {
     return nbr_iterator(edges_.end(), edges_.end(), timestamp_);
   }
 
-  int estimated_degree() const { return edges_.size(); }
+  inline int estimated_degree() const { return edges_.size(); }
 
  private:
   slice_t edges_;
@@ -97,7 +96,7 @@ class GraphView {
         timestamp_(timestamp),
         unsorted_since_(csr.unsorted_since()) {}
 
-  AdjListView<EDATA_T> get_edges(vid_t v) const {
+  inline AdjListView<EDATA_T> get_edges(vid_t v) const {
     return AdjListView<EDATA_T>(csr_.get_edges(v), timestamp_);
   }
 
@@ -166,6 +165,39 @@ class GraphView {
     }
   }
 
+  template <typename FUNC_T>
+  void foreach_edges_lt(vid_t v, const EDATA_T& max_value,
+                        const FUNC_T& func) const {
+    const auto& edges = csr_.get_edges(v);
+    auto ptr = edges.end() - 1;
+    auto end = edges.begin() - 1;
+    while (ptr != end) {
+      if (ptr->timestamp > timestamp_) {
+        --ptr;
+        continue;
+      }
+      if (ptr->timestamp < unsorted_since_) {
+        break;
+      }
+      if (ptr->data < max_value) {
+        func(*ptr);
+      }
+      --ptr;
+    }
+    if (ptr == end) {
+      return;
+    }
+    ptr = std::upper_bound(end + 1, ptr + 1, max_value,
+                           [](const EDATA_T& a, const MutableNbr<EDATA_T>& b) {
+                             return a < b.data;
+                           }) -
+          1;
+    while (ptr != end) {
+      func(*ptr);
+      --ptr;
+    }
+  }
+
   // iterate edges with data in [min_value, +inf)
   template <typename FUNC_T>
   void foreach_edges_ge(vid_t v, EDATA_T& min_value, const FUNC_T& func) const {
@@ -206,11 +238,11 @@ class SingleGraphView {
   SingleGraphView(const SingleMutableCsr<EDATA_T>& csr, timestamp_t timestamp)
       : csr_(csr), timestamp_(timestamp) {}
 
-  bool exist(vid_t v) const {
+  inline bool exist(vid_t v) const {
     return (csr_.get_edge(v).timestamp.load() <= timestamp_);
   }
 
-  const MutableNbr<EDATA_T>& get_edge(vid_t v) const {
+  inline const MutableNbr<EDATA_T>& get_edge(vid_t v) const {
     return csr_.get_edge(v);
   }
 
@@ -245,11 +277,11 @@ class SingleImmutableGraphView {
   SingleImmutableGraphView(const SingleImmutableCsr<EDATA_T>& csr)
       : csr_(csr) {}
 
-  bool exist(vid_t v) const {
+  inline bool exist(vid_t v) const {
     return (csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max());
   }
 
-  const ImmutableNbr<EDATA_T>& get_edge(vid_t v) const {
+  inline const ImmutableNbr<EDATA_T>& get_edge(vid_t v) const {
     return csr_.get_edge(v);
   }
 
@@ -277,8 +309,7 @@ class SingleImmutableGraphView<std::string_view> {
 
 class ReadTransaction {
  public:
-  ReadTransaction(const GraphDBSession& session,
-                  const MutablePropertyFragment& graph, VersionManager& vm,
+  ReadTransaction(const MutablePropertyFragment& graph, VersionManager& vm,
                   timestamp_t timestamp);
   ~ReadTransaction();
 
@@ -409,7 +440,7 @@ class ReadTransaction {
     return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
   }
 
-  const Schema& schema() const;
+  inline const Schema& schema() const { return graph_.schema(); }
 
   template <typename EDATA_T>
   GraphView<EDATA_T> GetOutgoingGraphView(label_t v_label,
@@ -461,12 +492,9 @@ class ReadTransaction {
     return SingleImmutableGraphView<EDATA_T>(*csr);
   }
 
-  const GraphDBSession& GetSession() const;
-
  private:
   void release();
 
-  const GraphDBSession& session_;
   const MutablePropertyFragment& graph_;
   VersionManager& vm_;
   timestamp_t timestamp_;

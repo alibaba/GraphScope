@@ -71,8 +71,6 @@ GraphDB& GraphDB::get() {
   return db;
 }
 
-QueryCache& GraphDB::getQueryCache() const { return query_cache_; }
-
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
                            bool enable_auto_compaction) {
@@ -231,12 +229,17 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
           timestamp_t ts = this->version_manager_.acquire_update_timestamp();
           auto txn = CompactTransaction(this->graph_, this->contexts_[0].logger,
                                         this->version_manager_, ts);
+          OutputCypherProfiles("./" + std::to_string(ts) + "_");
           txn.Commit();
           VLOG(10) << "Finish compaction";
         }
       }
     });
   }
+
+  unlink((work_dir_ + "/statistics.json").c_str());
+  unlink((work_dir_ + "/.compiler.yaml").c_str());
+  graph_.generateStatistics(work_dir_);
   query_cache_.cache.clear();
 
   return Result<bool>(true);
@@ -265,8 +268,9 @@ void GraphDB::Close() {
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
-ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
-  return contexts_[thread_id].session.GetReadTransaction();
+ReadTransaction GraphDB::GetReadTransaction() {
+  uint32_t ts = version_manager_.acquire_read_timestamp();
+  return {graph_, version_manager_, ts};
 }
 
 InsertTransaction GraphDB::GetInsertTransaction(int thread_id) {
@@ -302,21 +306,6 @@ void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
 }
 timestamp_t GraphDB::GetLastCompactionTimestamp() const {
   return last_compaction_ts_;
-}
-
-const MutablePropertyFragment& GraphDB::graph() const { return graph_; }
-MutablePropertyFragment& GraphDB::graph() { return graph_; }
-
-const Schema& GraphDB::schema() const { return graph_.schema(); }
-
-std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
-    uint8_t label, const std::string& col_name) const {
-  return graph_.get_vertex_property_column(label, col_name);
-}
-
-std::shared_ptr<RefColumnBase> GraphDB::get_vertex_id_column(
-    uint8_t label) const {
-  return graph_.get_vertex_id_column(label);
 }
 
 AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
@@ -514,6 +503,29 @@ size_t GraphDB::getExecutedQueryNum() const {
     ret += contexts_[i].session.query_num();
   }
   return ret;
+}
+
+QueryCache& GraphDB::getQueryCache() const { return query_cache_; }
+
+void GraphDB::OutputCypherProfiles(const std::string& prefix) {
+  runtime::OprTimer read_timer, write_timer;
+  int session_num = SessionNum();
+  for (int i = 0; i < session_num; ++i) {
+    auto read_app_ptr = GetSession(i).GetApp(Schema::CYPHER_READ_PLUGIN_ID);
+    auto casted_read_app = dynamic_cast<CypherReadApp*>(read_app_ptr);
+    if (casted_read_app) {
+      read_timer += casted_read_app->timer();
+    }
+
+    auto write_app_ptr = GetSession(i).GetApp(Schema::CYPHER_WRITE_PLUGIN_ID);
+    auto casted_write_app = dynamic_cast<CypherWriteApp*>(write_app_ptr);
+    if (casted_write_app) {
+      write_timer += casted_write_app->timer();
+    }
+  }
+
+  read_timer.output(prefix + "read_profile.log");
+  write_timer.output(prefix + "write_profile.log");
 }
 
 }  // namespace gs

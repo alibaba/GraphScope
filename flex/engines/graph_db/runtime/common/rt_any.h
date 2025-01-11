@@ -958,7 +958,7 @@ class SetImpl : public SetImplBase {
     return set_ == (dynamic_cast<const SetImpl<T>&>(p)).set_;
   }
 
-  void insert(const RTAny& val) {
+  void insert(const RTAny& val) override {
     set_.insert(TypedConverter<T>::to_typed(val));
   }
   void insert(const T& val) { set_.insert(val); }
@@ -989,7 +989,7 @@ class SetImpl<VertexRecord> : public SetImplBase {
     return set_ == (dynamic_cast<const SetImpl<VertexRecord>&>(p)).set_;
   }
 
-  void insert(const RTAny& val) {
+  void insert(const RTAny& val) override {
     insert(TypedConverter<VertexRecord>::to_typed(val));
   }
   void insert(VertexRecord val) {

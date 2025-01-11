@@ -779,7 +779,7 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
                                           const common::Variable& var,
                                           AggrKind kind, int alias) {
   if (!var.has_property() && var.has_tag()) {
-    int tag = var.tag().id();
+    int tag = var.has_tag() ? var.tag().id() : -1;
     auto col = ctx.get(tag);
     if (!col->is_optional()) {
       if (col->column_type() == ContextColumnType::kVertex) {
@@ -920,7 +920,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
     auto aggr_kind = parse_aggregate(func.aggregate());
     CHECK(func.vars_size() == 1);
     auto& var = func.vars(0);
-    CHECK(var.has_tag());
 
     int alias = func.has_alias() ? func.alias().value() : -1;
     reduces.emplace_back(
