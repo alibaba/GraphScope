@@ -80,8 +80,8 @@ endif()
 target_link_libraries(flex_utils  PUBLIC  ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${Protobuf_LIBRARIES})
 
 
-find_package(mimalloc 1.8 REQUIRED)
-target_link_libraries(flex_utils PUBLIC mimalloc-static)
+#find_package(mimalloc 1.8 REQUIRED)
+#target_link_libraries(flex_utils PUBLIC mimalloc-static)
 
 install_flex_target(flex_utils)
 
