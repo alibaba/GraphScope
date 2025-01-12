@@ -64,9 +64,13 @@ class MutablePropertyFragment {
 
   void Clear();
 
-  Table& get_vertex_table(label_t vertex_label);
+  inline Table& get_vertex_table(label_t vertex_label) {
+    return vertex_data_[vertex_label];
+  }
 
-  const Table& get_vertex_table(label_t vertex_label) const;
+  inline const Table& get_vertex_table(label_t vertex_label) const {
+    return vertex_data_[vertex_label];
+  }
 
   vid_t vertex_num(label_t vertex_label) const;
 
@@ -98,24 +102,70 @@ class MutablePropertyFragment {
                                                label_t neighbor_label,
                                                label_t edge_label) const;
 
-  CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                      label_t edge_label);
+  inline CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
+                             label_t edge_label) {
+    size_t index = label * vertex_label_num_ * edge_label_num_ +
+                   neighbor_label * edge_label_num_ + edge_label;
+    return oe_[index];
+  }
 
-  const CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                            label_t edge_label) const;
+  inline const CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
+                                   label_t edge_label) const {
+    size_t index = label * vertex_label_num_ * edge_label_num_ +
+                   neighbor_label * edge_label_num_ + edge_label;
+    return oe_[index];
+  }
 
-  CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                      label_t edge_label);
+  inline CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
+                             label_t edge_label) {
+    size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
+                   label * edge_label_num_ + edge_label;
+    return ie_[index];
+  }
 
-  const CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                            label_t edge_label) const;
+  inline const CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
+                                   label_t edge_label) const {
+    size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
+                   label * edge_label_num_ + edge_label;
+    return ie_[index];
+  }
 
   void loadSchema(const std::string& filename);
+  inline std::shared_ptr<ColumnBase> get_vertex_property_column(
+      uint8_t label, const std::string& prop) const {
+    return vertex_data_[label].get_column(prop);
+  }
 
-  std::shared_ptr<ColumnBase> get_vertex_property_column(
-      uint8_t label, const std::string& prop) const;
+  inline std::shared_ptr<RefColumnBase> get_vertex_id_column(
+      uint8_t label) const {
+    if (lf_indexers_[label].get_type() == PropertyType::kInt64) {
+      return std::make_shared<TypedRefColumn<int64_t>>(
+          dynamic_cast<const TypedColumn<int64_t>&>(
+              lf_indexers_[label].get_keys()));
+    } else if (lf_indexers_[label].get_type() == PropertyType::kInt32) {
+      return std::make_shared<TypedRefColumn<int32_t>>(
+          dynamic_cast<const TypedColumn<int32_t>&>(
+              lf_indexers_[label].get_keys()));
+    } else if (lf_indexers_[label].get_type() == PropertyType::kUInt64) {
+      return std::make_shared<TypedRefColumn<uint64_t>>(
+          dynamic_cast<const TypedColumn<uint64_t>&>(
+              lf_indexers_[label].get_keys()));
+    } else if (lf_indexers_[label].get_type() == PropertyType::kUInt32) {
+      return std::make_shared<TypedRefColumn<uint32_t>>(
+          dynamic_cast<const TypedColumn<uint32_t>&>(
+              lf_indexers_[label].get_keys()));
+    } else if (lf_indexers_[label].get_type() == PropertyType::kStringView) {
+      return std::make_shared<TypedRefColumn<std::string_view>>(
+          dynamic_cast<const TypedColumn<std::string_view>&>(
+              lf_indexers_[label].get_keys()));
+    } else {
+      LOG(ERROR) << "Unsupported vertex id type: "
+                 << lf_indexers_[label].get_type();
+      return nullptr;
+    }
+  }
 
-  std::shared_ptr<RefColumnBase> get_vertex_id_column(uint8_t label) const;
+  void generateStatistics(const std::string& work_dir) const;
 
   Schema schema_;
   std::vector<IndexerType> lf_indexers_;

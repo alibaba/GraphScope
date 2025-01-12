@@ -18,6 +18,7 @@
 
 #include <limits>
 
+#include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/allocators.h"
 #include "flex/utils/property/types.h"
@@ -50,6 +51,8 @@ class InsertTransaction {
 
   static void IngestWal(MutablePropertyFragment& graph, uint32_t timestamp,
                         char* data, size_t length, Allocator& alloc);
+
+  const Schema& schema() const;
 
  private:
   void clear();

@@ -19,10 +19,9 @@
 
 namespace gs {
 
-ReadTransaction::ReadTransaction(const GraphDBSession& session,
-                                 const MutablePropertyFragment& graph,
+ReadTransaction::ReadTransaction(const MutablePropertyFragment& graph,
                                  VersionManager& vm, timestamp_t timestamp)
-    : session_(session), graph_(graph), vm_(vm), timestamp_(timestamp) {}
+    : graph_(graph), vm_(vm), timestamp_(timestamp) {}
 ReadTransaction::~ReadTransaction() { release(); }
 
 timestamp_t ReadTransaction::timestamp() const { return timestamp_; }
@@ -127,15 +126,11 @@ ReadTransaction::edge_iterator ReadTransaction::GetInEdgeIterator(
           graph_.get_incoming_edges(label, u, neighbor_label, edge_label)};
 }
 
-const Schema& ReadTransaction::schema() const { return graph_.schema(); }
-
 void ReadTransaction::release() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
     vm_.release_read_timestamp();
     timestamp_ = std::numeric_limits<timestamp_t>::max();
   }
 }
-
-const GraphDBSession& ReadTransaction::GetSession() const { return session_; }
 
 }  // namespace gs

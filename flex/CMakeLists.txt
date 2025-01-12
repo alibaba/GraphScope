@@ -207,6 +207,7 @@ add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
 endif()
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/parallel-hashmap)
 
 macro(install_flex_target target)
     install(TARGETS ${target}

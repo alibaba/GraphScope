@@ -12,15 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "flex/engines/graph_db/app/adhoc_app.h"
-#include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
-#include "flex/engines/graph_db/runtime/adhoc/runtime.h"
+
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/sink.h"
+
+#include "flex/engines/graph_db/runtime/execute/pipeline.h"
+#include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 #include "flex/proto_generated_gie/physical.pb.h"
-
-#include <string>
-
-namespace bl = boost::leaf;
 
 namespace gs {
 
@@ -36,38 +34,15 @@ bool AdhocReadApp::Query(const GraphDBSession& graph, Decoder& input,
   }
 
   LOG(INFO) << "plan: " << plan.DebugString();
+  gs::runtime::GraphReadInterface gri(txn);
+  auto ctx =
+      runtime::PlanParser::get()
+          .parse_read_pipeline(graph.schema(), gs::runtime::ContextMeta(), plan)
+          .Execute(gri, runtime::Context(), {}, timer_);
 
-  gs::runtime::Context ctx;
-  gs::Status status = gs::Status::OK();
-  {
-    ctx = bl::try_handle_all(
-        [&plan, &txn]() { return runtime::runtime_eval(plan, txn, {}); },
-        [&ctx, &status](const gs::Status& err) {
-          status = err;
-          return ctx;
-        },
-        [&](const bl::error_info& err) {
-          status = gs::Status(
-              gs::StatusCode::INTERNAL_ERROR,
-              "BOOST LEAF Error: " + std::to_string(err.error().value()) +
-                  ", Exception: " + err.exception()->what());
-          return ctx;
-        },
-        [&]() {
-          status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-          return ctx;
-        });
-  }
+  // auto ctx = runtime::runtime_eval(plan, txn, {}, timer_);
 
-  if (!status.ok()) {
-    LOG(ERROR) << "Error: " << status.ToString();
-    // We encode the error message to the output, so that the client can
-    // get the error message.
-    output.put_string(status.ToString());
-    return false;
-  }
-
-  runtime::eval_sink(ctx, txn, output);
+  runtime::Sink::sink(ctx, txn, output);
 
   return true;
 }

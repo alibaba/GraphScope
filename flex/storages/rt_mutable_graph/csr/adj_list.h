@@ -74,14 +74,14 @@ class MutableAdjlist {
     nbr.timestamp.store(ts);
   }
 
-  slice_t get_edges() const {
+  inline slice_t get_edges() const {
     slice_t ret;
     ret.set_size(size_.load(std::memory_order_acquire));
     ret.set_begin(buffer_);
     return ret;
   }
 
-  mut_slice_t get_edges_mut() {
+  inline mut_slice_t get_edges_mut() {
     mut_slice_t ret;
     ret.set_size(size_.load());
     ret.set_begin(buffer_);

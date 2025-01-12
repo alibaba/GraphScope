@@ -97,9 +97,13 @@ class Table {
 
   void resize(size_t row_num);
 
-  Any at(size_t row_id, size_t col_id);
+  inline Any at(size_t row_id, size_t col_id) {
+    return column_ptrs_[col_id]->get(row_id);
+  }
 
-  Any at(size_t row_id, size_t col_id) const;
+  inline Any at(size_t row_id, size_t col_id) const {
+    return column_ptrs_[col_id]->get(row_id);
+  }
 
   void ingest(uint32_t index, grape::OutArchive& arc);
 

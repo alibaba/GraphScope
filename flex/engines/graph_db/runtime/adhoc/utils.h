@@ -18,6 +18,7 @@
 
 #include "flex/engines/graph_db/runtime/adhoc/expr.h"
 #include "flex/engines/graph_db/runtime/common/columns/i_context_column.h"
+#include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
 
@@ -29,6 +30,8 @@ namespace gs {
 
 namespace runtime {
 
+VOpt parse_opt(const physical::GetV_VOpt& opt);
+
 Direction parse_direction(const physical::EdgeExpand_Direction& dir);
 
 std::vector<label_t> parse_tables(const algebra::QueryParams& query_params);
@@ -36,18 +39,18 @@ std::vector<label_t> parse_tables(const algebra::QueryParams& query_params);
 std::vector<LabelTriplet> parse_label_triplets(
     const physical::PhysicalOpr_MetaData& meta);
 
-std::shared_ptr<IContextColumn> create_column(
-    const common::IrDataType& data_type);
-
-std::shared_ptr<IContextColumn> create_column_beta(RTAnyType type);
-
-std::shared_ptr<IContextColumn> build_column(
-    const common::IrDataType& data_type, const Expr& expr, size_t row_num);
-
-std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
-                                                  size_t row_num);
-
 std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type);
+
+bool vertex_property_topN(bool asc, size_t limit,
+                          const std::shared_ptr<IVertexColumn>& col,
+                          const GraphReadInterface& graph,
+                          const std::string& prop_name,
+                          std::vector<size_t>& offsets);
+
+bool vertex_id_topN(bool asc, size_t limit,
+                    const std::shared_ptr<IVertexColumn>& col,
+                    const GraphReadInterface& graph,
+                    std::vector<size_t>& offsets);
 
 }  // namespace runtime
 

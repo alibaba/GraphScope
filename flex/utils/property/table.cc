@@ -254,14 +254,6 @@ void Table::resize(size_t row_num) {
   }
 }
 
-Any Table::at(size_t row_id, size_t col_id) {
-  return columns_[col_id]->get(row_id);
-}
-
-Any Table::at(size_t row_id, size_t col_id) const {
-  return columns_[col_id]->get(row_id);
-}
-
 void Table::ingest(uint32_t index, grape::OutArchive& arc) {
   if (column_ptrs_.size() == 0) {
     return;

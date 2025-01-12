@@ -19,71 +19,39 @@
 #include "flex/proto_generated_gie/algebra.pb.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
-#include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
-#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+#include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/utils/app_utils.h"
 
 namespace gs {
 
 namespace runtime {
 
-bl::result<Context> eval_dedup(const algebra::Dedup& opr,
-                               const ReadTransaction& txn, Context&& ctx);
+class OprTimer;
 
-bl::result<Context> eval_group_by(const physical::GroupBy& opr,
-                                  const ReadTransaction& txn, Context&& ctx);
+Context eval_select(const algebra::Select& opr, const GraphReadInterface& graph,
+                    Context&& ctx,
+                    const std::map<std::string, std::string>& params,
+                    OprTimer& timer);
 
-bl::result<Context> eval_order_by(const algebra::OrderBy& opr,
-                                  const ReadTransaction& txn, Context&& ctx);
+bool tc_fusable(const physical::EdgeExpand& ee_opr0,
+                const physical::GroupBy& group_by_opr,
+                const physical::EdgeExpand& ee_opr1,
+                const physical::GetV& v_opr1,
+                const physical::EdgeExpand& ee_opr2,
+                const algebra::Select& select_opr);
 
-bl::result<Context> eval_path_expand_v(
-    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
-    const physical::PhysicalOpr_MetaData& meta, int alias);
-
-bl::result<Context> eval_path_expand_p(
-    const physical::PathExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
-    const physical::PhysicalOpr_MetaData& meta, int alias);
-
-bl::result<Context> eval_project(
-    const physical::Project& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
-    const std::vector<common::IrDataType>& data_types);
-
-bl::result<Context> eval_scan(const physical::Scan& scan_opr,
-                              const ReadTransaction& txn,
-                              const std::map<std::string, std::string>& params);
-
-bl::result<Context> eval_select(
-    const algebra::Select& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params);
-
-bl::result<Context> eval_edge_expand(
-    const physical::EdgeExpand& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params,
-    const physical::PhysicalOpr_MetaData& meta);
-
-bl::result<Context> eval_get_v(
-    const physical::GetV& opr, const ReadTransaction& txn, Context&& ctx,
-    const std::map<std::string, std::string>& params);
-
-bl::result<Context> eval_intersect(const ReadTransaction& txn,
-                                   const physical::Intersect& opr,
-                                   std::vector<Context>&& ctx);
-
-bl::result<Context> eval_join(const physical::Join& opr, Context&& ctx,
-                              Context&& ctx2);
-
-bl::result<Context> eval_limit(const algebra::Limit& opr, Context&& ctx);
-
-bl::result<Context> eval_procedure_call(const std::vector<int32_t>& alias,
-                                        const physical::ProcedureCall& opr,
-                                        const ReadTransaction& txn,
-                                        Context&& ctx);
-
-void eval_sink(const Context& ctx, const ReadTransaction& txn, Encoder& output);
+Context eval_tc(const physical::EdgeExpand& ee_opr0,
+                const physical::GroupBy& group_by_opr,
+                const physical::EdgeExpand& ee_opr1,
+                const physical::GetV& v_opr1,
+                const physical::EdgeExpand& ee_opr2,
+                const algebra::Select& select_opr,
+                const GraphReadInterface& graph, Context&& ctx,
+                const std::map<std::string, std::string>& params,
+                const physical::PhysicalOpr_MetaData& meta0,
+                const physical::PhysicalOpr_MetaData& meta1,
+                const physical::PhysicalOpr_MetaData& meta2);
 
 }  // namespace runtime
 

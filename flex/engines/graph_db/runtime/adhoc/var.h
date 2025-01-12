@@ -16,10 +16,9 @@
 #ifndef RUNTIME_ADHOC_VAR_H_
 #define RUNTIME_ADHOC_VAR_H_
 
-#include "flex/engines/graph_db/database/read_transaction.h"
-
 #include "flex/engines/graph_db/runtime/common/accessors.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/graph_interface.h"
 
 #include "flex/proto_generated_gie/expr.pb.h"
 
@@ -45,7 +44,7 @@ class VarGetterBase {
 
 class Var {
  public:
-  Var(const ReadTransaction& txn, const Context& ctx,
+  Var(const GraphReadInterface& graph, const Context& ctx,
       const common::Variable& pb, VarType var_type);
   ~Var();
 

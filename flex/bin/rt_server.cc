@@ -82,6 +82,16 @@ int main(int argc, char** argv) {
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
 
+  {
+    std::error_code ec;
+    std::filesystem::copy(graph_schema_path, data_path + "/.graph.yaml",
+                          std::filesystem::copy_options::overwrite_existing,
+                          ec);
+    if (ec) {
+      LOG(FATAL) << "Failed to copy graph schema file: " << ec.message();
+    }
+  }
+
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   if (!schema.ok()) {
     LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();

@@ -20,10 +20,12 @@
 #include <iostream>
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/runtime/adhoc/runtime.h"
+#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/sink.h"
+#include "flex/engines/graph_db/runtime/execute/plan_parser.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace bpo = boost::program_options;
-namespace bl = boost::leaf;
 
 std::string read_pb(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
@@ -78,27 +80,11 @@ void load_params(const std::string& filename,
 gs::runtime::Context eval_plan(
     const physical::PhysicalPlan& plan, gs::ReadTransaction& txn,
     const std::map<std::string, std::string>& params) {
-  gs::runtime::Context ctx;
-  {
-    ctx = bl::try_handle_all(
-        [&plan, &txn, &params]() {
-          return gs::runtime::runtime_eval(plan, txn, params);
-        },
-        [&ctx](const gs::Status& err) {
-          LOG(FATAL) << "Error in execution: " << err.error_message();
-          return ctx;
-        },
-        [&](const bl::error_info& err) {
-          LOG(FATAL) << "boost leaf error: " << err.error().value() << ", "
-                     << err.exception()->what();
-          return ctx;
-        },
-        [&]() {
-          LOG(FATAL) << "Unknown error in execution";
-          return ctx;
-        });
-  }
-  return ctx;
+  gs::runtime::GraphReadInterface gri(txn);
+  gs::runtime::OprTimer timer;
+  return gs::runtime::PlanParser::get()
+      .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(), plan)
+      .Execute(gri, gs::runtime::Context(), params, timer);
 }
 
 int main(int argc, char** argv) {
@@ -187,7 +173,7 @@ int main(int argc, char** argv) {
     auto& m = map[i % params_num];
     auto ctx = eval_plan(pb, txn, m);
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::Sink::sink(ctx, txn, output);
   }
   t1 += grape::GetCurrentTime();
 
@@ -197,7 +183,7 @@ int main(int argc, char** argv) {
     auto ctx = eval_plan(pb, txn, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::Sink::sink(ctx, txn, output);
   }
   t2 += grape::GetCurrentTime();
 
@@ -207,7 +193,7 @@ int main(int argc, char** argv) {
     auto ctx = eval_plan(pb, txn, m);
     outputs[i].clear();
     gs::Encoder output(outputs[i]);
-    gs::runtime::eval_sink(ctx, txn, output);
+    gs::runtime::Sink::sink(ctx, txn, output);
   }
   t3 += grape::GetCurrentTime();
 

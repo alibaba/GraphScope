@@ -29,7 +29,7 @@ bool Schema::IsBuiltinPlugin(const std::string& plugin_name) {
   return false;
 }
 
-Schema::Schema() : has_multi_props_edge_(false){};
+Schema::Schema() : has_multi_props_edge_(false) {};
 Schema::~Schema() = default;
 
 void Schema::Clear() {
@@ -68,6 +68,10 @@ void Schema::add_vertex_label(
   v_primary_keys_[v_label_id] = primary_key;
   max_vnum_[v_label_id] = max_vnum;
   v_descriptions_[v_label_id] = description;
+  for (size_t idx = 0; idx < property_types.size(); idx++) {
+    vprop_name_to_type_and_index_[v_label_id][property_names[idx]] =
+        std::make_pair(property_types[idx], idx);
+  }
 }
 
 void Schema::add_edge_label(const std::string& src_label,
@@ -181,6 +185,11 @@ const std::vector<StorageStrategy>& Schema::get_vertex_storage_strategies(
 size_t Schema::get_max_vnum(const std::string& label) const {
   label_t index = get_vertex_label_id(label);
   return max_vnum_[index];
+}
+
+const std::unordered_map<std::string, std::pair<PropertyType, uint8_t>>&
+Schema::get_vprop_name_to_type_and_index(label_t label) const {
+  return vprop_name_to_type_and_index_[label];
 }
 
 bool Schema::exist(const std::string& src_label, const std::string& dst_label,
@@ -409,6 +418,14 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
       break;
     }
   }
+  vprop_name_to_type_and_index_.clear();
+  vprop_name_to_type_and_index_.resize(vprop_names_.size());
+  for (size_t i = 0; i < vprop_names_.size(); i++) {
+    for (size_t j = 0; j < vprop_names_[i].size(); j++) {
+      vprop_name_to_type_and_index_[i][vprop_names_[i][j]] =
+          std::make_pair(vproperties_[i][j], j);
+    }
+  }
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -419,6 +436,7 @@ label_t Schema::vertex_label_to_index(const std::string& label) {
     vprop_storage_.resize(ret + 1);
     max_vnum_.resize(ret + 1);
     vprop_names_.resize(ret + 1);
+    vprop_name_to_type_and_index_.resize(ret + 1);
     v_primary_keys_.resize(ret + 1);
     v_descriptions_.resize(ret + 1);
   }

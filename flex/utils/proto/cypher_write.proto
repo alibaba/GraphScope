@@ -1,0 +1,150 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package cypher;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebraCypherWrite";
+
+import "common.proto";
+import "expr.proto";
+
+// Examples:
+// SET p.name = 'marko'; set property 'name' of node p to 'marko', if not exist, create it.
+// SET p = {name: 'Peter Smith', position: 'Entrepreneur'}; after replacing, the node p will extactly have two properties with the provided values.
+// SET p += {name: 'Peter Smith', position: 'Entrepreneur'}; after mutating, the original properties still exist, and two new properties are added.
+// SET n:PERSON; after mutating, the original labels still exist, and a new label is added.
+message Set {
+    message Item {
+        enum Kind {
+            // replace all existing properties on a node or relationship with those values provided in a literal or a map.
+            REPLACE_PROPERTY = 0;
+            // mutate properties from a map in a fine-grained fashion, it functions as follows:
+            // Any properties in the map that are not on the node or relationship will be added.
+            // Any properties not in the map that are on the node or relationship will be left as is.
+            // Any properties that are in both the map and the node or relationship will be replaced in the node or relationship.
+            MUTATE_PROPERTY = 1;
+            // mutate a label on a node
+            MUTATE_LABEL = 2;
+        }
+        Kind kind = 1;
+        common.Variable key = 2;
+        common.Expression value = 3;
+    }
+    repeated Item items = 1;
+}
+
+// Init data source from external input files.
+// Example1:
+// LOAD CSV FROM $csv_file AS row FIELDTERMINATOR '|'
+// WITH toInteger(row[1]) AS commentId,
+// CREATE (comment:Comment {commentId: commentId});
+
+// Example2:
+// LOAD CSV FROM $csv_file AS row FIELDTERMINATOR '|'
+// WITH toInteger(row[1]) AS id
+// MATCH (forum:Forum {id: id});
+message Load {
+    // define the specific way to init the data source.
+    // `Match` only matches existing node patterns in the graph and binds them, outputting only when vertices/edges specified in external files exist,
+    // while `CREATE` always creates new vertices/edges.
+    enum Kind {
+        MATCH = 0;
+        CREATE = 1;
+        // TODO: MERGE
+    }
+
+    // denote mappings between columns in the input data and the properties of the node or relationship
+    // follow data import specification in gs-interactive (https://graphscope.io/docs/flex/interactive/data_import)
+    message ColumnMappings {
+        message LoadingConfig {
+            message DataSource {
+                string scheme = 1;
+                string location = 2;
+            }
+
+            message Format {
+                message Metadata {
+                    string delimiter = 1;
+                    bool header_row = 2;
+                    bool quoting = 3;
+                    string quote_char = 4;
+                    bool double_quote = 5;
+                    string escape_char = 6;
+                    string block_size = 7;
+                }
+                Metadata metadata = 1;
+            }
+
+            DataSource data_source = 1;
+            Format format = 2;
+        }
+
+        LoadingConfig load_config = 1;
+
+        message ColumnMapping {
+            message Column {
+                int32 index = 1;
+                string name = 2;
+            }
+
+            Column column = 1;
+            common.Property property = 2;
+        }
+
+        message Input {
+            oneof input {
+            string path = 1;
+            common.DynamicParam dyn_path = 2;
+            }
+        }
+
+        message VertexMapping {
+            string type_name = 1;
+            repeated Input inputs = 2;
+            repeated ColumnMapping column_mappings = 3;
+        }
+
+        repeated VertexMapping vertex_mappings = 2;
+
+        message EdgeMapping {
+            message TypeTriplet {
+                string edge = 1;
+                string source_vertex = 2;
+                string destination_vertex = 3;
+            }
+            TypeTriplet type_triplet = 1;
+            repeated Input inputs = 2;
+            repeated ColumnMapping source_vertex_mappings = 3;
+            repeated ColumnMapping destination_vertex_mappings = 4;
+            repeated ColumnMapping column_mappings = 5;
+        }
+
+        repeated EdgeMapping edge_mappings = 3;
+    }
+
+    Kind kind = 1;
+    ColumnMappings mappings = 2;
+}
+
+// Examples:
+// MATCH (n:Person {name: 'Tom Hanks'}) DETACH DELETE n;
+// MATCH (n:Person {name: 'Laurence Fishburne'})-[r:ACTED_IN]->() DELETE r;
+message Delete {
+    // when deleting a node, delete all relationships connected to it if `detached` is true, otherwise only delete the node itself.
+    bool detached = 1;
+    repeated common.Expression keys = 2;
+}

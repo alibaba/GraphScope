@@ -15,9 +15,8 @@
 #ifndef RUNTIME_ADHOC_RUNTIME_EXPR_H_
 #define RUNTIME_ADHOC_RUNTIME_EXPR_H_
 
-#include "flex/engines/graph_db/database/read_transaction.h"
-
 #include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
+#include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 
 namespace gs {
@@ -26,7 +25,7 @@ namespace runtime {
 
 class Expr {
  public:
-  Expr(const ReadTransaction& txn, const Context& ctx,
+  Expr(const GraphReadInterface& graph, const Context& ctx,
        const std::map<std::string, std::string>& params,
        const common::Expression& expr, VarType var_type);
 
@@ -46,6 +45,10 @@ class Expr {
   }
 
   bool is_optional() const { return expr_->is_optional(); }
+
+  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
+    return expr_->get_list_impls();
+  }
 
  private:
   std::unique_ptr<ExprBase> expr_;
