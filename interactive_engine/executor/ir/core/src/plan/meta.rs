@@ -231,6 +231,14 @@ impl Schema {
             (false, 0)
         }
     }
+
+    pub(crate) fn get_entities(&self) -> &Vec<schema_pb::EntityMeta> {
+        self.entities.as_ref()
+    }
+
+    pub(crate) fn get_relations(&self) -> &Vec<schema_pb::RelationMeta> {
+        self.relations.as_ref()
+    }
 }
 
 impl From<Schema> for schema_pb::Schema {
