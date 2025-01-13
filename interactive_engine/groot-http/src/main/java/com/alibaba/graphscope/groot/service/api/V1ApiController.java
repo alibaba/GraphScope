@@ -69,7 +69,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices and edges added successfully", si);
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add vertices and edges: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to add vertices and edges: " + e.getMessage());
         }
     }
 
@@ -86,7 +87,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices deleted successfully", si);
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertices: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to delete vertices: " + e.getMessage());
         }
     }
 
@@ -103,7 +105,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertices updated successfully", si);
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertices: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to update vertices: " + e.getMessage());
         }
     }
 
@@ -171,7 +174,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type created successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create vertex type: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to create vertex type: " + e.getMessage());
         }
     }
 
@@ -188,7 +192,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type deleted successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete vertex type" + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to delete vertex type" + e.getMessage());
         }
     }
 
@@ -205,7 +210,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Vertex type updated successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update vertex type: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to update vertex type: " + e.getMessage());
         }
     }
 
@@ -222,7 +228,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edge type created successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create edge type: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to create edge type: " + e.getMessage());
         }
     }
 
@@ -243,7 +250,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edge type deleted successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete edge type: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to delete edge type: " + e.getMessage());
         }
     }
 
@@ -260,7 +268,8 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Edge type updated successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update edge type: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to update edge type: " + e.getMessage());
         }
     }
 
@@ -304,22 +313,23 @@ public class V1ApiController implements V1Api {
             return ApiUtil.createSuccessResponse("Graph schema deleted successfully");
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete graph schema: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to delete graph schema: " + e.getMessage());
         }
     }
 
     @Override
-    @PostMapping(value = "/{graph_id}/snapshot", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> flushSnapshotId(
+    @PostMapping(
+            value = "/{graph_id}/snapshot/{snapshot_id}/status",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Boolean> getSnapshotStatus(
             @PathVariable("graph_id") String graphId,
-            @RequestParam(value = "snapshot_id", required = true) Integer snapshotId) {
+            @PathVariable("snapshot_id") Integer snapshotId) {
         try {
             boolean res = schemaManagementService.remoteFlush(snapshotId);
-            return ApiUtil.createSuccessResponse(
-                    "Snapshot flushed successfully: " + res, snapshotId.longValue());
+            return ResponseEntity.status(HttpStatus.OK).body(res);
         } catch (Exception e) {
-            return ApiUtil.createErrorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to flush snapshot: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
         }
     }
 }

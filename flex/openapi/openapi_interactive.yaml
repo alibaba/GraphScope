@@ -359,12 +359,12 @@ paths:
         500:
           $ref: "#/components/responses/500"
   
-  /v1/graph/{graph_id}/snapshot:
-    post:
+  /v1/graph/{graph_id}/snapshot/{snapshot_id}/status:
+    get:
       tags:
         - AdminService/GraphManagement
-      description: test if the snapshot id is available
-      operationId: flush_snapshot_id
+      description: Get the status of a snapshot by id
+      operationId: get_snapshot_status
       parameters:
         - name: graph_id
           in: path
@@ -372,39 +372,17 @@ paths:
           schema:
             type: string
         - name: snapshot_id
-          in: query
+          in: path
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful flush snapshot id, return if the snapshot id becomes available
+          description: the status of a snapshot_id of whether it is available
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
-          $ref: "#/components/responses/400"
-        '500':
-          $ref: "#/components/responses/500"
-    get:
-      tags:
-        - AdminService/GraphManagement
-      description: Get the latest snapshot id
-      operationId: get_snapshot_id
-      parameters:
-        - name: graph_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful get snapshot id
-          content:
-            application/json:
-              schema:
-                type: integer
+                type: boolean
         '400':
           $ref: "#/components/responses/400"
         '500':

@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.service.models.Property;
 import com.alibaba.graphscope.groot.service.models.StringType;
 import com.alibaba.graphscope.groot.service.models.TemporalType;
 import com.alibaba.graphscope.groot.service.models.TemporalTypeAllOfTemporal;
-import com.alibaba.graphscope.groot.service.models.TemporalTypeTemporal;
 import com.alibaba.graphscope.groot.service.models.TimeStampType;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
@@ -163,13 +162,17 @@ public class DtoConverter {
     private static GSDataType convertToDtoDataType(DataTypePb dataType) {
         switch (dataType) {
             case INT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32, "PrimitiveType");
+                return new PrimitiveType(
+                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32, "PrimitiveType");
             case UINT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32, "PrimitiveType");
+                return new PrimitiveType(
+                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32, "PrimitiveType");
             case LONG:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64, "PrimitiveType");
+                return new PrimitiveType(
+                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64, "PrimitiveType");
             case ULONG:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64, "PrimitiveType");
+                return new PrimitiveType(
+                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64, "PrimitiveType");
             case BOOL:
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL, "PrimitiveType");
             case FLOAT:
@@ -179,7 +182,7 @@ public class DtoConverter {
             case STRING:
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING, "PrimitiveType");
             case DATE32:
-            TemporalTypeAllOfTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
+                TemporalTypeAllOfTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
                 return new TemporalType(date, "TemporalType");
             case TIMESTAMP_MS:
                 // TODO: confirm the format of timestamp? should be int64 milliseconds since
