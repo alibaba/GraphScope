@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.service.models.PrimitiveType;
 import com.alibaba.graphscope.groot.service.models.Property;
 import com.alibaba.graphscope.groot.service.models.StringType;
 import com.alibaba.graphscope.groot.service.models.TemporalType;
+import com.alibaba.graphscope.groot.service.models.TemporalTypeAllOfTemporal;
 import com.alibaba.graphscope.groot.service.models.TemporalTypeTemporal;
 import com.alibaba.graphscope.groot.service.models.TimeStampType;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
@@ -97,7 +98,7 @@ public class DtoConverter {
             return DataTypePb.STRING;
         } else if (dataType instanceof TemporalType) {
             TemporalType temporalType = (TemporalType) dataType;
-            TemporalTypeTemporal temporal = temporalType.getTemporal();
+            TemporalTypeAllOfTemporal temporal = temporalType.getTemporal();
             if (temporal instanceof DateType) {
                 return DataTypePb.DATE32;
             } else if (temporal instanceof TimeStampType) {
@@ -178,12 +179,12 @@ public class DtoConverter {
             case STRING:
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING, "PrimitiveType");
             case DATE32:
-                TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
+            TemporalTypeAllOfTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
                 return new TemporalType(date, "TemporalType");
             case TIMESTAMP_MS:
                 // TODO: confirm the format of timestamp? should be int64 milliseconds since
                 // 1970-01-01 00:00:00.000000?
-                TemporalTypeTemporal timestamp =
+                TemporalTypeAllOfTemporal timestamp =
                         new TimeStampType("YYYY-MM-DD HH:MM:SS".toString(), "TimeStampType");
                 return new TemporalType(timestamp, "TemporalType");
             default:
