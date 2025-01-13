@@ -275,7 +275,8 @@ public abstract class Utils {
     public static final com.alibaba.graphscope.proto.type.Common.DataType protoBasicDataType(
             RelDataType basicType) {
         try {
-            IrDataTypeConvertor<GSDataTypeDesc> convertor = new IrDataTypeConvertor.Flex(null);
+            IrDataTypeConvertor<GSDataTypeDesc> convertor =
+                    new IrDataTypeConvertor.Flex(null, true);
             return convertor.convert(basicType).getProtoDesc();
         } catch (Exception e) {
             throw new RuntimeException(e);

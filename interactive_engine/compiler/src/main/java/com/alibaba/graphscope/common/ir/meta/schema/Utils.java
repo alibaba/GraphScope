@@ -53,7 +53,7 @@ public abstract class Utils {
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
         IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
-                new IrDataTypeConvertor.Flex(typeFactory);
+                new IrDataTypeConvertor.Flex(typeFactory, true);
         buildGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(

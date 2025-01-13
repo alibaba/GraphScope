@@ -1,0 +1,325 @@
+{
+  "total_vertex_count": 37,
+  "total_edge_count": 64,
+  "vertex_type_statistics": [
+    {
+      "type_id": 0,
+      "type_name": "xzz@t5c",
+      "count": 2
+    },
+    {
+      "type_id": 1,
+      "type_name": "xzz@t5a",
+      "count": 1
+    },
+    {
+      "type_id": 2,
+      "type_name": "xzz@t5b",
+      "count": 2
+    },
+    {
+      "type_id": 3,
+      "type_name": "xzz@t2a",
+      "count": 2
+    },
+    {
+      "type_id": 4,
+      "type_name": "xzz@t2b",
+      "count": 2
+    },
+    {
+      "type_id": 5,
+      "type_name": "xzz@t3b",
+      "count": 2
+    },
+    {
+      "type_id": 6,
+      "type_name": "xzz@t3a",
+      "count": 2
+    },
+    {
+      "type_id": 7,
+      "type_name": "xzz@t4b",
+      "count": 1
+    },
+    {
+      "type_id": 8,
+      "type_name": "xzz@t4c",
+      "count": 1
+    },
+    {
+      "type_id": 9,
+      "type_name": "xzz@t6d",
+      "count": 2
+    },
+    {
+      "type_id": 10,
+      "type_name": "xzz@t6e",
+      "count": 2
+    },
+    {
+      "type_id": 11,
+      "type_name": "xzz@t3c",
+      "count": 2
+    },
+    {
+      "type_id": 12,
+      "type_name": "xzz@t6c",
+      "count": 1
+    },
+    {
+      "type_id": 13,
+      "type_name": "xzz@t6a",
+      "count": 2
+    },
+    {
+      "type_id": 14,
+      "type_name": "xzz@t6b",
+      "count": 4
+    },
+    {
+      "type_id": 15,
+      "type_name": "xzz@t5e",
+      "count": 2
+    },
+    {
+      "type_id": 16,
+      "type_name": "xzz@t4e",
+      "count": 1
+    },
+    {
+      "type_id": 17,
+      "type_name": "xzz@t4a",
+      "count": 1
+    },
+    {
+      "type_id": 18,
+      "type_name": "xzz@t5d",
+      "count": 2
+    },
+    {
+      "type_id": 19,
+      "type_name": "xzz@t4d",
+      "count": 1
+    },
+    {
+      "type_id": 20,
+      "type_name": "xzz@t1b",
+      "count": 1
+    },
+    {
+      "type_id": 21,
+      "type_name": "xzz@t1a",
+      "count": 1
+    }
+  ],
+  "edge_type_statistics": [
+    {
+      "type_id": 0,
+      "type_name": "test5",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t5a",
+          "destination_vertex": "xzz@t5b",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5a",
+          "destination_vertex": "xzz@t5c",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5a",
+          "destination_vertex": "xzz@t5d",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5a",
+          "destination_vertex": "xzz@t5e",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5b",
+          "destination_vertex": "xzz@t5b",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5c",
+          "destination_vertex": "xzz@t5c",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5d",
+          "destination_vertex": "xzz@t5d",
+          "count": 2
+        },
+        {
+          "source_vertex": "xzz@t5e",
+          "destination_vertex": "xzz@t5e",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5b",
+          "destination_vertex": "xzz@t5a",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t5d",
+          "destination_vertex": "xzz@t5a",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type_id": 1,
+      "type_name": "test2_1",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t2a",
+          "destination_vertex": "xzz@t2b",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "type_id": 2,
+      "type_name": "test3",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t3a",
+          "destination_vertex": "xzz@t3a",
+          "count": 2
+        },
+        {
+          "source_vertex": "xzz@t3a",
+          "destination_vertex": "xzz@t3b",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3a",
+          "destination_vertex": "xzz@t3c",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3b",
+          "destination_vertex": "xzz@t3a",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3b",
+          "destination_vertex": "xzz@t3b",
+          "count": 2
+        },
+        {
+          "source_vertex": "xzz@t3b",
+          "destination_vertex": "xzz@t3c",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3c",
+          "destination_vertex": "xzz@t3a",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3c",
+          "destination_vertex": "xzz@t3b",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t3c",
+          "destination_vertex": "xzz@t3c",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "type_id": 3,
+      "type_name": "test4",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t4a",
+          "destination_vertex": "xzz@t4b",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t4b",
+          "destination_vertex": "xzz@t4c",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t4c",
+          "destination_vertex": "xzz@t4d",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t4d",
+          "destination_vertex": "xzz@t4e",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t4e",
+          "destination_vertex": "xzz@t4a",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type_id": 4,
+      "type_name": "test6",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t6a",
+          "destination_vertex": "xzz@t6b",
+          "count": 4
+        },
+        {
+          "source_vertex": "xzz@t6b",
+          "destination_vertex": "xzz@t6c",
+          "count": 3
+        },
+        {
+          "source_vertex": "xzz@t6c",
+          "destination_vertex": "xzz@t6d",
+          "count": 2
+        },
+        {
+          "source_vertex": "xzz@t6d",
+          "destination_vertex": "xzz@t6e",
+          "count": 2
+        },
+        {
+          "source_vertex": "xzz@t6e",
+          "destination_vertex": "xzz@t6e",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type_id": 5,
+      "type_name": "test2_2",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t2a",
+          "destination_vertex": "xzz@t2b",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "type_id": 6,
+      "type_name": "test1",
+      "vertex_type_pair_statistics": [
+        {
+          "source_vertex": "xzz@t1a",
+          "destination_vertex": "xzz@t1b",
+          "count": 1
+        },
+        {
+          "source_vertex": "xzz@t1b",
+          "destination_vertex": "xzz@t1a",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,8 @@ import org.apache.calcite.sql.type.GraphInferTypes;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 public class GraphFunctions {
+    private static final Logger logger = LoggerFactory.getLogger(GraphFunctions.class);
     public static final String FUNCTION_PREFIX = "gs.function.";
     private final Map<String, FunctionMeta> functionMetaMap;
 
@@ -85,7 +88,7 @@ public class GraphFunctions {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            logger.warn("fail to load graph functions from configuration", e);
         }
     }
 

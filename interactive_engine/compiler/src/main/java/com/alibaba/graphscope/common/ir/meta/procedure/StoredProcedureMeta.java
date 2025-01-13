@@ -174,16 +174,18 @@ public class StoredProcedureMeta {
     }
 
     public static class Serializer {
-        public static void perform(StoredProcedureMeta meta, OutputStream outputStream)
+        public static void perform(
+                StoredProcedureMeta meta, OutputStream outputStream, boolean throwsOnFail)
                 throws IOException {
             Yaml yaml = new Yaml();
-            String mapStr = yaml.dump(createProduceMetaMap(meta));
+            String mapStr = yaml.dump(createProduceMetaMap(meta, throwsOnFail));
             outputStream.write(mapStr.getBytes(StandardCharsets.UTF_8));
         }
 
-        private static Map<String, Object> createProduceMetaMap(StoredProcedureMeta meta) {
+        private static Map<String, Object> createProduceMetaMap(
+                StoredProcedureMeta meta, boolean throwsOnFail) {
             IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
-                    new IrDataTypeConvertor.Flex(typeFactory);
+                    new IrDataTypeConvertor.Flex(typeFactory, throwsOnFail);
             return ImmutableMap.of(
                     Config.NAME.getKey(),
                     meta.name,
@@ -228,7 +230,7 @@ public class StoredProcedureMeta {
     public static class Deserializer {
         public static StoredProcedureMeta perform(InputStream inputStream) throws IOException {
             IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
-                    new IrDataTypeConvertor.Flex(typeFactory);
+                    new IrDataTypeConvertor.Flex(typeFactory, true);
             Yaml yaml = new Yaml();
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(

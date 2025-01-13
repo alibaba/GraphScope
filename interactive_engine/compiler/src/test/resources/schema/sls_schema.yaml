@@ -1,0 +1,748 @@
+name: modern_graph # then must have a modern dir under ${data} directory
+version: v0.1
+store_type: mutable_csr  # v6d, groot, gart
+description: xzz test t2 https://alidocs.dingtalk.com/i/nodes/G1DKw2zgV2KnvL4kFzx56elKJB5r9YAn
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: xzz@t5c
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 1
+      type_name: xzz@t5a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 2
+      type_name: xzz@t5b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 3
+      type_name: xzz@t2a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 4
+      type_name: xzz@t2b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 5
+      type_name: xzz@t3b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 6
+      type_name: xzz@t3a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 7
+      type_name: xzz@t4b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 8
+      type_name: xzz@t4c
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 9
+      type_name: xzz@t6d
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 10
+      type_name: xzz@t6e
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 11
+      type_name: xzz@t3c
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 12
+      type_name: xzz@t6c
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 13
+      type_name: xzz@t6a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 14
+      type_name: xzz@t6b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 15
+      type_name: xzz@t5e
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 16
+      type_name: xzz@t4e
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 17
+      type_name: xzz@t4a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 18
+      type_name: xzz@t5d
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 19
+      type_name: xzz@t4d
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 20
+      type_name: xzz@t1b
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+    - type_id: 21
+      type_name: xzz@t1a
+      description: A xzz test vertex type
+      properties:
+        - property_id: 0
+          property_name: __domain__
+          property_type:
+            string:
+              long_text:
+        - property_id: 1
+          property_name: __entity_type__
+          property_type:
+            string:
+              long_text:
+        - property_id: 2
+          property_name: __entity_id__
+          property_type:
+            string:
+              long_text:
+        - property_id: 3
+          property_name: __label__
+          property_type:
+            string:
+              long_text:
+      primary_keys:
+        - __entity_id__
+  edge_types:
+    - type_id: 0
+      type_name: test5
+      description: A test5 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t5a
+          destination_vertex: xzz@t5b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5a
+          destination_vertex: xzz@t5c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5a
+          destination_vertex: xzz@t5d
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5a
+          destination_vertex: xzz@t5e
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5b
+          destination_vertex: xzz@t5b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5c
+          destination_vertex: xzz@t5c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5d
+          destination_vertex: xzz@t5d
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5e
+          destination_vertex: xzz@t5e
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5b
+          destination_vertex: xzz@t5a
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t5c
+          destination_vertex: xzz@t5a
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 1
+      type_name: test2_1
+      description: A test2_1 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t2a
+          destination_vertex: xzz@t2b
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 2
+      type_name: test3
+      description: A test3 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t3a
+          destination_vertex: xzz@t3a
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3a
+          destination_vertex: xzz@t3b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3a
+          destination_vertex: xzz@t3c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3b
+          destination_vertex: xzz@t3a
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3b
+          destination_vertex: xzz@t3b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3b
+          destination_vertex: xzz@t3c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3c
+          destination_vertex: xzz@t3a
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3c
+          destination_vertex: xzz@t3b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t3c
+          destination_vertex: xzz@t3c
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 3
+      type_name: test4
+      description: A test4 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t4a
+          destination_vertex: xzz@t4b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t4b
+          destination_vertex: xzz@t4c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t4c
+          destination_vertex: xzz@t4d
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t4d
+          destination_vertex: xzz@t4e
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t4e
+          destination_vertex: xzz@t4a
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 4
+      type_name: test6
+      description: A test6 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t6a
+          destination_vertex: xzz@t6b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t6b
+          destination_vertex: xzz@t6c
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t6c
+          destination_vertex: xzz@t6d
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t6d
+          destination_vertex: xzz@t6e
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t6e
+          destination_vertex: xzz@t6e
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 5
+      type_name: test2_2
+      description: A test2_2 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t2a
+          destination_vertex: xzz@t2b
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
+    - type_id: 6
+      type_name: test1
+      description: A test1 edge type
+      vertex_type_pair_relations:
+        - source_vertex: xzz@t1a
+          destination_vertex: xzz@t1b
+          relation: MANY_TO_MANY
+        - source_vertex: xzz@t1b
+          destination_vertex: xzz@t1a
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: __type__
+          property_type:
+            string:
+              long_text:
