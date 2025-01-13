@@ -158,6 +158,17 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 !flex/interactive/sdk/python/gs_interactive/models/long_text.py
 
 
+interactive_engine/groot-http/.openapi-generator/
+interactive_engine/groot-http/src/test/
+interactive_engine/groot-http/src/main/resources/
+interactive_engine/groot-http/src/main/java/org/
+interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/api/
+interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
+interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/*.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/GSDataType.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/StringTypeString.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/TemporalTypeTemporal.java
+
 **/.cache/
 
 **/*.ci-friendly-pom.xml
