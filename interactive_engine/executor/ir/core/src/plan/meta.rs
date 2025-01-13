@@ -492,33 +492,36 @@ impl JsonIO for Schema {
 // }
 fn convert_data_type(data_type_int: i64) -> serde_json::Value {
     use serde_json::json;
-    match data_type_int {
+    let dt = match data_type_int {
         // Primitive types mapping
-        0 => json!({ "primitive_type": "DT_BOOL" }), // BOOLEAN
-        1 => json!({ "primitive_type": "DT_SIGNED_INT32" }), // INT32
-        2 => json!({ "primitive_type": "DT_SIGNED_INT64" }), // INT64
-        3 => json!({ "primitive_type": "DT_DOUBLE" }), // DOUBLE
+        0 => json!({ "PrimitiveType": 5 }), // BOOLEAN
+        1 => json!({ "PrimitiveType": 1 }), // INT32
+        2 => json!({ "PrimitiveType": 3 }), // INT64
+        3 => json!({ "PrimitiveType": 7 }), // DOUBLE
 
         // String type mapping
-        4 => json!({ "string": { "long_text": {} } }), // STRING
+        4 => json!({ "String": { "item": {"LongText": {}} } }), // STRING
 
         // Array types mapping
-        6 => json!({ "array": { "component_type": { "primitive_type": "DT_SIGNED_INT32" } } }), // INT32_ARRAY
-        7 => json!({ "array": { "component_type": { "primitive_type": "DT_SIGNED_INT64" } } }), // INT64_ARRAY
-        8 => json!({ "array": { "component_type": { "primitive_type": "DT_DOUBLE" } } }), // DOUBLE_ARRAY
-        9 => json!({ "array": { "component_type": { "string": { "long_text": {} } } } }), // STRING_ARRAY
+        6 => json!({ "Array": { "component_type": { "item": {"PrimitiveType": 1 } }} , "max_length": 1024}), // INT32_ARRAY
+        7 => json!({ "Array": { "component_type": { "item": {"PrimitiveType": 3 }} } , "max_length": 1024}), // INT64_ARRAY
+        8 => json!({ "Array": { "component_type": { "item": {"PrimitiveType": 7 }} } , "max_length": 1024}), // DOUBLE_ARRAY
+        9 => {
+            json!({ "Array": { "component_type": { "item": { "String": { "item": {"LongText": {}} } } } , "max_length": 1024} })
+        } // STRING_ARRAY
 
         // None type mapping
-        11 => json!({ "primitive_type": "DT_NULL" }), // NONE
+        11 => json!({ "PrimitiveType": 8 }), // NONE
 
         // Temporal types mapping
-        12 => json!({ "temporal": { "date32": {} } }), // DATE32
-        13 => json!({ "temporal": { "time32": {} } }), // TIME32
-        14 => json!({ "temporal": { "timestamp": {} } }), // TIMESTAMP
+        12 => json!({ "Temporal": { "item": {"Date32": {} }} }), // DATE32
+        13 => json!({ "Temporal": {"item": { "Time32": {} }} }), // TIME32
+        14 => json!({ "Temporal": { "item": {"Timestamp": {} }} }), // TIMESTAMP
 
         // Other types handling (default to a NONE-like type if applicable)
-        _ => json!({ "primitive_type": "DT_ANY" }), // NONE or unsupported types
-    }
+        _ => json!({ "PrimitiveType": 0 }), // NONE or unsupported types
+    };
+    json!({"item": dt})
 }
 
 /// To define the options of required columns by the computing node of the query plan.
