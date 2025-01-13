@@ -4944,4 +4944,22 @@ mod test {
                 .unwrap()
         );
     }
+
+    #[test]
+    fn test_data_type_conversion() {
+        let schema =
+            Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap();
+        for entity in schema.get_entities() {
+            let columns = &entity.columns;
+            for column in columns {
+                assert!(column.data_type.is_some());
+            }
+        }
+        for relation in schema.get_relations() {
+            let columns = &relation.columns;
+            for column in columns {
+                assert!(&column.data_type.is_some());
+            }
+        }
+    }
 }
