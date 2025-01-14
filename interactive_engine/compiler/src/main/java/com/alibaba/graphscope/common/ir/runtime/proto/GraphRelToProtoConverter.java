@@ -56,11 +56,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
@@ -1158,6 +1154,20 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(tableScan.getRowType())
                         .getLabelsEntry());
         addQueryFilters(paramsBuilder, tableScan.getFilters());
+        if (tableScan instanceof GraphLogicalSource) {
+            GraphLogicalSource source = (GraphLogicalSource) tableScan;
+            source.getParams()
+                    .getParams()
+                    .forEach(
+                            (k, v) -> {
+                                if (k.equalsIgnoreCase("range")) {
+                                    RangeParam rangeParam = (RangeParam) v;
+                                    GraphAlgebra.Range range =
+                                            buildRange(rangeParam.left, rangeParam.right);
+                                    paramsBuilder.setLimit(range);
+                                }
+                            });
+        }
         return paramsBuilder;
     }
 
