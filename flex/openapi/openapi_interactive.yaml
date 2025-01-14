@@ -1326,8 +1326,8 @@ components:
       properties:
         primitive_type:
           type: string
-          # enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-          #        DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
+          enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
+                 DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
                  # The DT_STRING is added for backward compatibility, it should be replaced by StringType
           example: DT_SIGNED_INT32
     LongText:
@@ -1387,6 +1387,7 @@ components:
       properties:
         timestamp:
           type: string
+          nullable: true
     DateType:
       x-body-name: date_type
       type: object
@@ -1395,6 +1396,7 @@ components:
       properties:
         date32:
           type: string
+          nullable: true
     TemporalType:
       x-body-name: temporal_type
       type: object
