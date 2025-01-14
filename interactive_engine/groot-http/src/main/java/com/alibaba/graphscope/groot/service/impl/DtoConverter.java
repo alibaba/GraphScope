@@ -162,17 +162,13 @@ public class DtoConverter {
     private static GSDataType convertToDtoDataType(DataTypePb dataType) {
         switch (dataType) {
             case INT:
-                return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32);
             case UINT:
-                return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32);
             case LONG:
-                return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64);
             case ULONG:
-                return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64);
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64);
             case BOOL:
                 return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL);
             case FLOAT:

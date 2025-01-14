@@ -36,8 +36,6 @@ public class StringTypeStringDeserializer extends JsonDeserializer<StringTypeStr
     public StringTypeString deserialize(JsonParser jp, DeserializationContext ctxt)
             throws IOException, JsonProcessingException {
         JsonNode node = jp.getCodec().readTree(jp);
-        System.out.println("StringTypeStringDeserializer");
-        System.out.println(node);
 
         if (node.has("var_char")) {
             System.out.println("var_char");

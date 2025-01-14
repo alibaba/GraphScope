@@ -180,11 +180,8 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(
-            value = "/{graph_id}/schema/vertex",
-            produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteVertexTypeByName(
+    @DeleteMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> deleteVertexType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName) {
         try {
@@ -234,11 +231,8 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(
-            value = "/{graph_id}/schema/edge",
-            produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteEdgeTypeByName(
+    @DeleteMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> deleteEdgeType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName,
             @RequestParam(value = "source_vertex_type", required = true) String sourceVertexType,
