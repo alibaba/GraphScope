@@ -223,6 +223,7 @@ class LouvainAppBase
       auto actual_quality =
           ctx.compute_context().template get_aggregated_value<double>(
               actual_quality_aggregator);
+      assert(actual_quality <= 1.0);
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
       if (current_super_step <= 14 ||
