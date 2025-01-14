@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "flex/engines/graph_db/runtime/adhoc/utils.h"
+#include "flex/engines/graph_db/runtime/utils/utils.h"
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 
@@ -82,36 +82,6 @@ std::vector<LabelTriplet> parse_label_triplets(
   return labels;
 }
 
-std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type) {
-  switch (type) {
-  case RTAnyType::kI64Value:
-    return std::make_shared<ValueColumnBuilder<int64_t>>();
-  case RTAnyType::kStringValue:
-    return std::make_shared<ValueColumnBuilder<std::string_view>>();
-  case RTAnyType::kVertex:
-    return std::make_shared<MLVertexColumnBuilder>();
-  case RTAnyType::kI32Value:
-    return std::make_shared<ValueColumnBuilder<int32_t>>();
-  case RTAnyType::kDate32:
-    return std::make_shared<ValueColumnBuilder<Day>>();
-  case RTAnyType::kTimestamp:
-    return std::make_shared<ValueColumnBuilder<Date>>();
-  case RTAnyType::kU64Value:
-    return std::make_shared<ValueColumnBuilder<uint64_t>>();
-  case RTAnyType::kBoolValue:
-    // fix me
-    return std::make_shared<ValueColumnBuilder<bool>>();
-  case RTAnyType::kEdge:
-    return std::make_shared<BDMLEdgeColumnBuilder>();
-  case RTAnyType::kStringSetValue:
-    return std::make_shared<ValueColumnBuilder<std::set<std::string>>>();
-  default:
-    LOG(FATAL) << "unsupport type: " << static_cast<int>(type);
-    break;
-  }
-  return nullptr;
-}
-
 template <typename T>
 bool vertex_property_topN_impl(bool asc, size_t limit,
                                const std::shared_ptr<IVertexColumn>& col,
@@ -175,6 +145,7 @@ bool vertex_id_topN_impl(bool asc, size_t limit,
   }
   return true;
 }
+
 bool vertex_id_topN(bool asc, size_t limit,
                     const std::shared_ptr<IVertexColumn>& col,
                     const GraphReadInterface& graph,
@@ -199,6 +170,7 @@ bool vertex_id_topN(bool asc, size_t limit,
     return false;
   }
 }
+
 bool vertex_property_topN(bool asc, size_t limit,
                           const std::shared_ptr<IVertexColumn>& col,
                           const GraphReadInterface& graph,
@@ -243,195 +215,6 @@ bool vertex_property_topN(bool asc, size_t limit,
     LOG(INFO) << "prop type not support..." << prop_types[0];
     return false;
   }
-}
-
-std::shared_ptr<IContextColumn> build_optional_column_beta(const Expr& expr,
-                                                           size_t row_num) {
-  switch (expr.type()) {
-  case RTAnyType::kI64Value: {
-    OptionalValueColumnBuilder<int64_t> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      auto v = expr.eval_path(i, 0);
-      if (v.is_null()) {
-        builder.push_back_null();
-      } else {
-        builder.push_back_opt(v.as_int64(), true);
-      }
-    }
-
-    return builder.finish();
-  } break;
-  case RTAnyType::kI32Value: {
-    OptionalValueColumnBuilder<int> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      auto v = expr.eval_path(i, 0);
-      if (v.is_null()) {
-        builder.push_back_null();
-      } else {
-        builder.push_back_opt(v.as_int32(), true);
-      }
-    }
-
-    return builder.finish();
-  } break;
-  case RTAnyType::kF64Value: {
-    OptionalValueColumnBuilder<double> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      auto v = expr.eval_path(i, 0);
-      if (v.is_null()) {
-        builder.push_back_null();
-      } else {
-        builder.push_back_opt(v.as_double(), true);
-      }
-    }
-
-    return builder.finish();
-  } break;
-  case RTAnyType::kMap: {
-    auto builder = expr.builder();
-    for (size_t i = 0; i < row_num; ++i) {
-      builder->push_back_elem(expr.eval_path(i, 0));
-    }
-    return builder->finish();
-  } break;
-  case RTAnyType::kTuple: {
-    OptionalValueColumnBuilder<Tuple> builder;
-    for (size_t i = 0; i < row_num; ++i) {
-      auto v = expr.eval_path(i, 0);
-      if (v.is_null()) {
-        builder.push_back_null();
-      } else {
-        builder.push_back_elem(v);
-      }
-    }
-    return builder.finish();
-  } break;
-  default: {
-    LOG(FATAL) << "not support" << static_cast<int>(expr.type());
-    break;
-  }
-  }
-  return nullptr;
-}
-
-std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
-                                                  size_t row_num) {
-  if (expr.is_optional()) {
-    return build_optional_column_beta(expr, row_num);
-  }
-  switch (expr.type()) {
-  case RTAnyType::kI64Value: {
-    ValueColumnBuilder<int64_t> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(expr.eval_path(i).as_int64());
-    }
-    return builder.finish();
-  } break;
-  case RTAnyType::kStringValue: {
-    ValueColumnBuilder<std::string_view> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(std::string(expr.eval_path(i).as_string()));
-    }
-    return builder.finish();
-  } break;
-  case RTAnyType::kDate32: {
-    ValueColumnBuilder<Day> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(expr.eval_path(i).as_date32());
-    }
-    return builder.finish();
-  } break;
-  case RTAnyType::kTimestamp: {
-    ValueColumnBuilder<Date> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(expr.eval_path(i).as_timestamp());
-    }
-  } break;
-  case RTAnyType::kVertex: {
-    MLVertexColumnBuilder builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_vertex(expr.eval_path(i).as_vertex());
-    }
-
-    return builder.finish();
-  } break;
-  case RTAnyType::kI32Value: {
-    ValueColumnBuilder<int> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(expr.eval_path(i).as_int32());
-    }
-
-    return builder.finish();
-  } break;
-  case RTAnyType::kF64Value: {
-    ValueColumnBuilder<double> builder;
-    builder.reserve(row_num);
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_opt(expr.eval_path(i).as_double());
-    }
-    return builder.finish();
-  } break;
-  case RTAnyType::kEdge: {
-    BDMLEdgeColumnBuilder builder;
-    for (size_t i = 0; i < row_num; ++i) {
-      builder.push_back_elem(expr.eval_path(i));
-    }
-    return builder.finish();
-  }
-  case RTAnyType::kTuple: {
-    if (expr.is_optional()) {
-      OptionalValueColumnBuilder<Tuple> builder;
-      for (size_t i = 0; i < row_num; ++i) {
-        auto v = expr.eval_path(i);
-        if (v.is_null()) {
-          builder.push_back_null();
-        } else {
-          builder.push_back_elem(v);
-        }
-      }
-      return builder.finish();
-    } else {
-      ValueColumnBuilder<Tuple> builder;
-      for (size_t i = 0; i < row_num; ++i) {
-        builder.push_back_elem(expr.eval_path(i));
-      }
-      return builder.finish();
-    }
-  }
-  case RTAnyType::kList: {
-    auto builder = expr.builder();
-    for (size_t i = 0; i < row_num; ++i) {
-      builder->push_back_elem(expr.eval_path(i));
-    }
-    // set impls
-    auto& list_builder = dynamic_cast<ListValueColumnBuilderBase&>(*builder);
-    if (!list_builder.impls_has_been_set()) {
-      list_builder.set_list_impls(expr.get_list_impls());
-    }
-    return builder->finish();
-  }
-  case RTAnyType::kMap: {
-    auto builder = expr.builder();
-    for (size_t i = 0; i < row_num; ++i) {
-      builder->push_back_elem(expr.eval_path(i));
-    }
-    return builder->finish();
-  }
-  default:
-    LOG(FATAL) << "not support - " << static_cast<int>(expr.type());
-    break;
-  }
-
-  return nullptr;
 }
 
 }  // namespace runtime

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RUNTIME_ADHOC_RUNTIME_H_
-#define RUNTIME_ADHOC_RUNTIME_H_
+#ifndef RUNTIME_UTILS_RUNTIME_H_
+#define RUNTIME_UTILS_RUNTIME_H_
 
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 
@@ -105,4 +105,4 @@ class OprTimer {
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_RUNTIME_H_
+#endif  // RUNTIME_UTILS_RUNTIME_H_

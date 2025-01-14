@@ -14,6 +14,10 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/vertex.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/get_v.h"
+#include "flex/engines/graph_db/runtime/utils/predicates.h"
+#include "flex/engines/graph_db/runtime/utils/special_predicates.h"
+#include "flex/engines/graph_db/runtime/utils/utils.h"
 
 namespace gs {
 namespace runtime {

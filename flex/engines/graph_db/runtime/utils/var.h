@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_ADHOC_VAR_H_
-#define RUNTIME_ADHOC_VAR_H_
+#ifndef RUNTIME_UTILS_VAR_H_
+#define RUNTIME_UTILS_VAR_H_
 
 #include "flex/engines/graph_db/runtime/common/accessors.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
@@ -70,4 +70,4 @@ class Var {
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_VAR_H_
+#endif  // RUNTIME_UTILS_VAR_H_

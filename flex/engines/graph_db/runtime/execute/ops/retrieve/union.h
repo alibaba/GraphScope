@@ -17,10 +17,6 @@
 #define RUNTIME_EXECUTE_RETRIEVE_OPS_UNION_H_
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
-#include "flex/engines/graph_db/runtime/execute/pipeline.h"
-
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/union.h"
-#include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 
 namespace gs {
 

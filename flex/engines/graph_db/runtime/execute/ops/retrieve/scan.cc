@@ -14,8 +14,8 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan.h"
-#include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/scan.h"
+#include "flex/engines/graph_db/runtime/utils/expr_impl.h"
 
 namespace gs {
 namespace runtime {
@@ -109,13 +109,14 @@ void parse_ids_from_idx_predicate(
   }
 
   case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    auto type = parse_from_ir_data_type(triplet.param().data_type());
-    if (type == RTAnyType::kI32Value) {
+    auto param_type = parse_from_ir_data_type(triplet.param().data_type());
+
+    if (param_type == RTAnyType::kI32Value) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{
             static_cast<T>(std::stoi(params.at(triplet.param().name())))};
       };
-    } else if (type == RTAnyType::kI64Value) {
+    } else if (param_type == RTAnyType::kI64Value) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{
             static_cast<T>(std::stoll(params.at(triplet.param().name())))};
@@ -149,8 +150,9 @@ void parse_ids_from_idx_predicate(
   }
 
   case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    auto type = parse_from_ir_data_type(triplet.param().data_type());
-    if (type == RTAnyType::kStringValue) {
+    auto param_type = parse_from_ir_data_type(triplet.param().data_type());
+
+    if (param_type == RTAnyType::kStringValue) {
       ids = [triplet](ParamsType params) {
         return std::vector<Any>{params.at(triplet.param().name())};
       };

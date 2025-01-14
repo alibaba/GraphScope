@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 #include "flex/engines/graph_db/runtime/common/accessors.h"
 #include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/i_context_column.h"

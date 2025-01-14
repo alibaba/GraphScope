@@ -18,12 +18,12 @@
 
 #include <set>
 
-#include "flex/engines/graph_db/runtime/adhoc/operators/special_predicates.h"
 #include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/edge_expand_impl.h"
+#include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 #include "glog/logging.h"
 
@@ -326,6 +326,91 @@ class EdgeExpand {
   static Context expand_vertex_without_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params);
+
+  template <typename T1, typename T2, typename T3>
+  static Context tc(
+      const GraphReadInterface& graph, Context&& ctx,
+      const std::array<std::tuple<label_t, label_t, label_t, Direction>, 3>&
+          labels,
+      int input_tag, int alias1, int alias2, bool LT, const std::string& val) {
+    std::shared_ptr<IVertexColumn> input_vertex_list =
+        std::dynamic_pointer_cast<IVertexColumn>(ctx.get(input_tag));
+    CHECK(input_vertex_list->vertex_column_type() == VertexColumnType::kSingle);
+    auto casted_input_vertex_list =
+        std::dynamic_pointer_cast<SLVertexColumn>(input_vertex_list);
+    label_t input_label = casted_input_vertex_list->label();
+    auto dir0 = std::get<3>(labels[0]);
+    auto dir1 = std::get<3>(labels[1]);
+    auto dir2 = std::get<3>(labels[2]);
+    auto d0_nbr_label = std::get<1>(labels[0]);
+    auto d0_e_label = std::get<2>(labels[0]);
+    auto csr0 = (dir0 == Direction::kOut)
+                    ? graph.GetOutgoingGraphView<T1>(input_label, d0_nbr_label,
+                                                     d0_e_label)
+                    : graph.GetIncomingGraphView<T1>(input_label, d0_nbr_label,
+                                                     d0_e_label);
+    auto d1_nbr_label = std::get<1>(labels[1]);
+    auto d1_e_label = std::get<2>(labels[1]);
+    auto csr1 = (dir1 == Direction::kOut)
+                    ? graph.GetOutgoingGraphView<T2>(input_label, d1_nbr_label,
+                                                     d1_e_label)
+                    : graph.GetIncomingGraphView<T2>(input_label, d1_nbr_label,
+                                                     d1_e_label);
+    auto d2_nbr_label = std::get<1>(labels[2]);
+    auto d2_e_label = std::get<2>(labels[2]);
+    auto csr2 = (dir2 == Direction::kOut)
+                    ? graph.GetOutgoingGraphView<T3>(d1_nbr_label, d2_nbr_label,
+                                                     d2_e_label)
+                    : graph.GetIncomingGraphView<T3>(d1_nbr_label, d2_nbr_label,
+                                                     d2_e_label);
+
+    T1 param = TypedConverter<T1>::typed_from_string(val);
+
+    SLVertexColumnBuilder builder1(d1_nbr_label);
+    SLVertexColumnBuilder builder2(d2_nbr_label);
+    std::vector<size_t> offsets;
+
+    size_t idx = 0;
+    static thread_local GraphReadInterface::vertex_array_t<bool> d0_set;
+    static thread_local std::vector<vid_t> d0_vec;
+
+    d0_set.Init(graph.GetVertexSet(d0_nbr_label), false);
+    for (auto v : casted_input_vertex_list->vertices()) {
+      if (LT) {
+        csr0.foreach_edges_lt(v, param, [&](vid_t u, const Date& date) {
+          d0_set[u] = true;
+          d0_vec.push_back(u);
+        });
+      } else {
+        csr0.foreach_edges_gt(v, param, [&](vid_t u, const Date& date) {
+          d0_set[u] = true;
+          d0_vec.push_back(u);
+        });
+      }
+      for (auto& e1 : csr1.get_edges(v)) {
+        auto nbr1 = e1.get_neighbor();
+        for (auto& e2 : csr2.get_edges(nbr1)) {
+          auto nbr2 = e2.get_neighbor();
+          if (d0_set[nbr2]) {
+            builder1.push_back_opt(nbr1);
+            builder2.push_back_opt(nbr2);
+            offsets.push_back(idx);
+          }
+        }
+      }
+      for (auto u : d0_vec) {
+        d0_set[u] = false;
+      }
+      d0_vec.clear();
+      ++idx;
+    }
+
+    std::shared_ptr<IContextColumn> col1 = builder1.finish();
+    std::shared_ptr<IContextColumn> col2 = builder2.finish();
+    ctx.set_with_reshuffle(alias1, col1, offsets);
+    ctx.set(alias2, col2);
+    return ctx;
+  }
 };
 
 }  // namespace runtime

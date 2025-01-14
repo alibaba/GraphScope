@@ -18,11 +18,6 @@
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
 
-#include "flex/engines/graph_db/runtime/adhoc/operators/special_predicates.h"
-#include "flex/engines/graph_db/runtime/adhoc/predicates.h"
-#include "flex/engines/graph_db/runtime/adhoc/utils.h"
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/get_v.h"
-
 namespace gs {
 namespace runtime {
 namespace ops {

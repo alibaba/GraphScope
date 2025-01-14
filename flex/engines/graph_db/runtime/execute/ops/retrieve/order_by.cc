@@ -14,9 +14,9 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/order_by.h"
-#include "flex/engines/graph_db/runtime/adhoc/utils.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/order_by.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/order_by_utils.h"
+#include "flex/engines/graph_db/runtime/utils/utils.h"
 
 namespace gs {
 namespace runtime {

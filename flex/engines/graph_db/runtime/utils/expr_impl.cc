@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
+#include "flex/engines/graph_db/runtime/utils/expr_impl.h"
 #include <regex>
 #include <stack>
 
@@ -458,8 +458,7 @@ static RTAny parse_param(const common::DynamicParam& param,
       return RTAny::from_double(val);
     }
 
-    LOG(FATAL) << "not support type: "
-               << param.data_type().data_type().DebugString();
+    LOG(FATAL) << "not support type: " << param.data_type().DebugString();
   }
   LOG(FATAL) << "graph data type not expected....";
   return RTAny();

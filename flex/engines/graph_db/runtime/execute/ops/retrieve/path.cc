@@ -14,7 +14,9 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/path.h"
-#include "flex/engines/graph_db/runtime/adhoc/predicates.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/path_expand.h"
+#include "flex/engines/graph_db/runtime/utils/predicates.h"
+#include "flex/engines/graph_db/runtime/utils/utils.h"
 
 namespace gs {
 namespace runtime {
@@ -270,27 +272,27 @@ class SPOrderByLimitOpr : public IReadOperator {
   gs::runtime::Context _invoke(const GraphReadInterface& graph, Context&& ctx,
                                std::unique_ptr<SPVertexPredicate>&& pred) {
     if (pred->type() == SPPredicateType::kPropertyEQ) {
-      auto casted_pred =
+      const auto& casted_pred =
           dynamic_cast<const VertexPropertyEQPredicateBeta<T>&>(*pred);
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);
     } else if (pred->type() == SPPredicateType::kPropertyLT) {
-      auto casted_pred =
+      const auto& casted_pred =
           dynamic_cast<const VertexPropertyLTPredicateBeta<T>&>(*pred);
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);
     } else if (pred->type() == SPPredicateType::kPropertyGT) {
-      auto casted_pred =
+      const auto& casted_pred =
           dynamic_cast<const VertexPropertyGTPredicateBeta<T>&>(*pred);
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);
     } else if (pred->type() == SPPredicateType::kPropertyLE) {
-      auto casted_pred =
+      const auto& casted_pred =
           dynamic_cast<const VertexPropertyLEPredicateBeta<T>&>(*pred);
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);
     } else if (pred->type() == SPPredicateType::kPropertyGE) {
-      auto casted_pred =
+      const auto& casted_pred =
           dynamic_cast<const VertexPropertyGEPredicateBeta<T>&>(*pred);
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);

@@ -15,7 +15,7 @@
 
 #ifndef RUNTIME_EXECUTE_RETRIEVE_OPS_ORDER_BY_UTILS_H_
 #define RUNTIME_EXECUTE_RETRIEVE_OPS_ORDER_BY_UTILS_H_
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
 namespace runtime {

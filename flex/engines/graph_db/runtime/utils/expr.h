@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RUNTIME_ADHOC_RUNTIME_EXPR_H_
-#define RUNTIME_ADHOC_RUNTIME_EXPR_H_
+#ifndef RUNTIME_UTILS_RUNTIME_EXPR_H_
+#define RUNTIME_UTILS_RUNTIME_EXPR_H_
 
-#include "flex/engines/graph_db/runtime/adhoc/expr_impl.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
+#include "flex/engines/graph_db/runtime/utils/expr_impl.h"
 
 namespace gs {
 
@@ -58,4 +58,4 @@ class Expr {
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_RUNTIME_EXPR_H_
+#endif  // RUNTIME_UTILS_RUNTIME_EXPR_H_

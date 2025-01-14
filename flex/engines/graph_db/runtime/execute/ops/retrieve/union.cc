@@ -14,6 +14,9 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/union.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/union.h"
+#include "flex/engines/graph_db/runtime/execute/pipeline.h"
+#include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 
 namespace gs {
 namespace runtime {

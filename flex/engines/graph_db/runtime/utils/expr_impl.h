@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_ADHOC_RUNTIME_EXPR_IMPL_H_
-#define RUNTIME_ADHOC_RUNTIME_EXPR_IMPL_H_
+#ifndef RUNTIME_UTILS_RUNTIME_EXPR_IMPL_H_
+#define RUNTIME_UTILS_RUNTIME_EXPR_IMPL_H_
 
 #include "flex/proto_generated_gie/expr.pb.h"
 
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
 
@@ -858,4 +858,4 @@ std::unique_ptr<ExprBase> parse_expression(
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_RUNTIME_EXPR_IMPL_H_
+#endif  // RUNTIME_UTILS_RUNTIME_EXPR_IMPL_H_

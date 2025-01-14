@@ -18,13 +18,13 @@
 
 #include <vector>
 
-#include "flex/engines/graph_db/runtime/adhoc/operators/special_predicates.h"
 #include "flex/engines/graph_db/runtime/common/columns/path_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/path_expand_impl.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
+#include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 namespace gs {
 

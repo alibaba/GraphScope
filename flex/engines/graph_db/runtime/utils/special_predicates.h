@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_ADHOC_OPERATORS_SPECIAL_PREDICATES_H_
-#define RUNTIME_ADHOC_OPERATORS_SPECIAL_PREDICATES_H_
+#ifndef RUNTIME_UTILS_SPECIAL_PREDICATES_H_
+#define RUNTIME_UTILS_SPECIAL_PREDICATES_H_
 
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
@@ -75,10 +75,8 @@ inline bool is_pk_oid_exact_check(
     auto& p = expr.operators(2).param();
     auto name = p.name();
     // todo: check data type
-    auto dtype = p.data_type().data_type();
-    if (dtype.item_case() != common::DataType::kPrimitiveType ||
-        (dtype.primitive_type() != common::PrimitiveType::DT_SIGNED_INT64 &&
-         dtype.primitive_type() != common::PrimitiveType::DT_SIGNED_INT32)) {
+    auto type_ = parse_from_ir_data_type(p.data_type());
+    if (type_ != RTAnyType::kI64Value && type_ != RTAnyType::kI32Value) {
       return false;
     }
     value = [name](const std::map<std::string, std::string>& params) {
@@ -247,6 +245,12 @@ class VertexPropertyLTPredicateBeta : public SPVertexPredicate {
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
+  VertexPropertyLTPredicateBeta(VertexPropertyLTPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
   ~VertexPropertyLTPredicateBeta() = default;
 
   inline SPPredicateType type() const override {
@@ -278,6 +282,12 @@ class VertexPropertyLEPredicateBeta : public SPVertexPredicate {
       columns_.emplace_back(graph.GetVertexColumn<T>(i, property_name));
     }
     target_str_ = target_str;
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
+  VertexPropertyLEPredicateBeta(VertexPropertyLEPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
@@ -315,6 +325,12 @@ class VertexPropertyGEPredicateBeta : public SPVertexPredicate {
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
+  VertexPropertyGEPredicateBeta(VertexPropertyGEPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
   ~VertexPropertyGEPredicateBeta() = default;
 
   inline SPPredicateType type() const override {
@@ -349,6 +365,12 @@ class VertexPropertyGTPredicateBeta : public SPVertexPredicate {
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
+  VertexPropertyGTPredicateBeta(VertexPropertyGTPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
   ~VertexPropertyGTPredicateBeta() = default;
 
   inline SPPredicateType type() const override {
@@ -380,6 +402,12 @@ class VertexPropertyEQPredicateBeta : public SPVertexPredicate {
       columns_.emplace_back(graph.GetVertexColumn<T>(i, property_name));
     }
     target_str_ = target_str;
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
+  VertexPropertyEQPredicateBeta(VertexPropertyEQPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
@@ -418,6 +446,12 @@ class VertexPropertyNEPredicateBeta : public SPVertexPredicate {
     target_ = TypedConverter<T>::typed_from_string(target_str_);
   }
 
+  VertexPropertyNEPredicateBeta(VertexPropertyNEPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    target_str_ = std::move(other.target_str_);
+    target_ = TypedConverter<T>::typed_from_string(target_str_);
+  }
+
   ~VertexPropertyNEPredicateBeta() = default;
 
   inline SPPredicateType type() const override {
@@ -451,6 +485,15 @@ class VertexPropertyBetweenPredicateBeta : public SPVertexPredicate {
     }
     from_str_ = from_str;
     to_str_ = to_str;
+    from_ = TypedConverter<T>::typed_from_string(from_str_);
+    to_ = TypedConverter<T>::typed_from_string(to_str_);
+  }
+
+  VertexPropertyBetweenPredicateBeta(
+      VertexPropertyBetweenPredicateBeta&& other) {
+    columns_ = std::move(other.columns_);
+    from_str_ = std::move(other.from_str_);
+    to_str_ = std::move(other.to_str_);
     from_ = TypedConverter<T>::typed_from_string(from_str_);
     to_ = TypedConverter<T>::typed_from_string(to_str_);
   }
@@ -697,18 +740,13 @@ parse_special_vertex_predicate(const common::Expression& expr) {
     }
     std::string to_str = op6.param().name();
 
-    if (op2.param().data_type().data_type().item_case() !=
-        common::DataType::kPrimitiveType) {
-      return std::nullopt;
-    }
-    if ((op2.param().data_type().data_type().item_case() !=
-         op6.param().data_type().data_type().item_case()) ||
-        (op2.param().data_type().data_type().primitive_type() !=
-         op6.param().data_type().data_type().primitive_type())) {
+    auto type = parse_from_ir_data_type(op2.param().data_type());
+    auto type1 = parse_from_ir_data_type(op6.param().data_type());
+
+    if (type != type1) {
       return std::nullopt;
     }
 
-    auto type = parse_from_ir_data_type(op2.param().data_type());
     if (type == RTAnyType::kI64Value) {
       return [property_name, from_str, to_str](
                  const GraphReadInterface& graph,
@@ -1085,4 +1123,4 @@ parse_special_edge_predicate(const common::Expression& expr) {
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_OPERATORS_SPECIAL_PREDICATES_H_
+#endif  // RUNTIME_UTILS_OPERATORS_SPECIAL_PREDICATES_H_

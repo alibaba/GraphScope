@@ -14,8 +14,8 @@
  */
 
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/edge_expand.h"
-#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/edge_expand_impl.h"
+#include "flex/engines/graph_db/runtime/utils/opr_timer.h"
 
 namespace gs {
 
@@ -795,6 +795,7 @@ Context EdgeExpand::expand_vertex_ep_gt(const GraphReadInterface& graph,
           }
         }
         SLVertexColumnBuilder builder(std::get<0>(label_dirs[0]));
+        size_t csr_idx = 0;
         std::vector<size_t> offsets;
         for (auto& csr : views) {
           size_t idx = 0;
@@ -805,6 +806,7 @@ Context EdgeExpand::expand_vertex_ep_gt(const GraphReadInterface& graph,
             });
             ++idx;
           }
+          ++csr_idx;
         }
         std::shared_ptr<IContextColumn> col = builder.finish();
         ctx.set_with_reshuffle(params.alias, col, offsets);

@@ -17,9 +17,6 @@
 #define RUNTIME_EXECUTE_RETRIEVE_OPS_JOIN_H_
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
-#include "flex/engines/graph_db/runtime/execute/pipeline.h"
-
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/join.h"
 
 namespace gs {
 

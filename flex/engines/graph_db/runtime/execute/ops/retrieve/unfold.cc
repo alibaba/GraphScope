@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/unfold.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/unfold.h"
 
 namespace gs {
 namespace runtime {

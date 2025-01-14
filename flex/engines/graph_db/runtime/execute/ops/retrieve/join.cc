@@ -14,6 +14,8 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/join.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/join.h"
+#include "flex/engines/graph_db/runtime/execute/pipeline.h"
 #include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 
 namespace gs {

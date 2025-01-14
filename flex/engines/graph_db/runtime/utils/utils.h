@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_ADHOC_UTILS_H_
-#define RUNTIME_ADHOC_UTILS_H_
+#ifndef RUNTIME_UTILS_UTILS_H_
+#define RUNTIME_UTILS_UTILS_H_
 
-#include "flex/engines/graph_db/runtime/adhoc/expr.h"
 #include "flex/engines/graph_db/runtime/common/columns/i_context_column.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/rt_any.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
+#include "flex/engines/graph_db/runtime/utils/expr.h"
 
 #include "flex/proto_generated_gie/algebra.pb.h"
 #include "flex/proto_generated_gie/physical.pb.h"
@@ -39,8 +39,6 @@ std::vector<label_t> parse_tables(const algebra::QueryParams& query_params);
 std::vector<LabelTriplet> parse_label_triplets(
     const physical::PhysicalOpr_MetaData& meta);
 
-std::shared_ptr<IContextColumnBuilder> create_column_builder(RTAnyType type);
-
 bool vertex_property_topN(bool asc, size_t limit,
                           const std::shared_ptr<IVertexColumn>& col,
                           const GraphReadInterface& graph,
@@ -56,4 +54,4 @@ bool vertex_id_topN(bool asc, size_t limit,
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_UTILS_H_
+#endif  // RUNTIME_UTILS_UTILS_H_

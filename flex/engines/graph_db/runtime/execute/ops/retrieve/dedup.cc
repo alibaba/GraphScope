@@ -14,6 +14,8 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/dedup.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/dedup.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
 namespace runtime {

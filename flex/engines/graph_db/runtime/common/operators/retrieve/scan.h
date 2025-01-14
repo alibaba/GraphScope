@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_COMMON_OPERATORS_SCAN_H_
-#define RUNTIME_COMMON_OPERATORS_SCAN_H_
+#ifndef RUNTIME_COMMON_OPERATORS_RETRIEVE_SCAN_H_
+#define RUNTIME_COMMON_OPERATORS_RETRIEVE_SCAN_H_
 
-#include "flex/engines/graph_db/runtime/adhoc/operators/special_predicates.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 namespace gs {
 
@@ -162,7 +162,7 @@ class Scan {
       const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& predicate, const std::vector<Any>& oids);
 
-   static Context find_vertex_with_id(const GraphReadInterface& graph,
+  static Context find_vertex_with_id(const GraphReadInterface& graph,
                                      label_t label, const Any& pk, int alias,
                                      bool scan_oid);
 
@@ -177,4 +177,4 @@ class Scan {
 
 }  // namespace gs
 
-#endif  // RUNTIME_COMMON_OPERATORS_SCAN_H_
+#endif  // RUNTIME_COMMON_OPERATORS_RETRIEVE_SCAN_H_

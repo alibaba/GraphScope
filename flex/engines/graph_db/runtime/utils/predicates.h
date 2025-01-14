@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RUNTIME_ADHOC_PREDICATES_H_
-#define RUNTIME_ADHOC_PREDICATES_H_
+#ifndef RUNTIME_UTILS_PREDICATES_H_
+#define RUNTIME_UTILS_PREDICATES_H_
 
-#include "flex/engines/graph_db/runtime/adhoc/expr.h"
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/utils/expr.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 #include "flex/proto_generated_gie/expr.pb.h"
 
 namespace gs {
@@ -108,4 +108,4 @@ struct DummyEdgePredicate {
 
 }  // namespace gs
 
-#endif  // RUNTIME_ADHOC_PREDICATES_H_
+#endif  // RUNTIME_UTILS_PREDICATES_H_

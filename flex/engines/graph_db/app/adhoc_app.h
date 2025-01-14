@@ -18,7 +18,7 @@
 
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
+#include "flex/engines/graph_db/runtime/utils/opr_timer.h"
 
 namespace gs {
 class AdhocReadApp : public ReadAppBase {

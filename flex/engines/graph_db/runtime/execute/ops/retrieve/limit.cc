@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/limit.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/limit.h"
 
 namespace gs {
 namespace runtime {

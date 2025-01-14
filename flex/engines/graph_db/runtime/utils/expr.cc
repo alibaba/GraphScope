@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/adhoc/expr.h"
+#include "flex/engines/graph_db/runtime/utils/expr.h"
 
 namespace gs {
 

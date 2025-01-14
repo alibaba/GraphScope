@@ -18,9 +18,6 @@
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
 
-#include "flex/engines/graph_db/runtime/adhoc/utils.h"
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/path_expand.h"
-
 namespace gs {
 
 namespace runtime {

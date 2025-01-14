@@ -18,8 +18,6 @@
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
 
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/unfold.h"
-
 namespace gs {
 
 namespace runtime {

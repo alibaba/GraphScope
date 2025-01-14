@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
+#include "flex/engines/graph_db/runtime/utils/opr_timer.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {

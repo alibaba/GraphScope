@@ -14,9 +14,9 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/group_by.h"
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/group_by.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
 namespace runtime {

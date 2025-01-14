@@ -18,9 +18,6 @@
 
 #include "flex/engines/graph_db/runtime/execute/operator.h"
 
-#include "flex/engines/graph_db/runtime/adhoc/var.h"
-#include "flex/engines/graph_db/runtime/common/operators/retrieve/dedup.h"
-
 namespace gs {
 
 namespace runtime {

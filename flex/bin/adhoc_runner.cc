@@ -20,9 +20,9 @@
 #include <iostream>
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/runtime/adhoc/opr_timer.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/sink.h"
 #include "flex/engines/graph_db/runtime/execute/plan_parser.h"
+#include "flex/engines/graph_db/runtime/utils/opr_timer.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
 namespace bpo = boost::program_options;
