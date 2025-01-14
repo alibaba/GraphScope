@@ -39,7 +39,7 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         vector.delete();
     }
 
