@@ -65,6 +65,10 @@ from gs_interactive.models import UploadFileResponse
 from gs_interactive.models import VertexData
 from gs_interactive.models import VertexEdgeRequest
 from gs_interactive.models import VertexRequest
+from gs_interactive.models import DeleteVertexRequest
+from gs_interactive.models import DeleteEdgeRequest
+from gs_interactive.models import CreateVertexType
+from gs_interactive.models import CreateEdgeType
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -78,18 +82,7 @@ class EdgeInterface(metaclass=ABCMeta):
     def delete_edge(
         self,
         graph_id: StrictStr,
-        src_label: Annotated[
-            StrictStr, Field(description="The label name of src vertex.")
-        ],
-        src_primary_key_value: Annotated[
-            Any, Field(description="The primary key value of src vertex.")
-        ],
-        dst_label: Annotated[
-            StrictStr, Field(description="The label name of dst vertex.")
-        ],
-        dst_primary_key_value: Annotated[
-            Any, Field(description="The primary key value of dst vertex.")
-        ],
+        delete_edge_request: Annotated[List[DeleteEdgeRequest], Field(description="The label and primary key values of the src and dst vertices, and the edge label.")],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -115,7 +108,7 @@ class EdgeInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_edge(
-        self, graph_id: StrictStr, edge_request: EdgeRequest
+        self, graph_id: StrictStr, edge_request: List[EdgeRequest],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -133,10 +126,7 @@ class VertexInterface(metaclass=ABCMeta):
     def delete_vertex(
         self,
         graph_id: StrictStr,
-        label: Annotated[StrictStr, Field(description="The label name of vertex.")],
-        primary_key_value: Annotated[
-            Any, Field(description="The primary key value of vertex.")
-        ],
+        delete_vertex_request: Annotated[List[DeleteVertexRequest], Field(description="The label and primary key values of the vertex to be deleted.")],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -153,7 +143,7 @@ class VertexInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self, graph_id: StrictStr, vertex_request: List[VertexRequest],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -199,6 +189,55 @@ class GraphInterface(metaclass=ABCMeta):
     ) -> Result[JobResponse]:
         raise NotImplementedError
 
+    @abstractmethod
+    def create_vertex_type(
+        self,
+        graph_id: StrictStr,
+        create_vertex_type: CreateVertexType,
+    ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_vertex_type(
+        self,
+        graph_id: StrictStr,
+        type_name: StrictStr,
+    ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_vertex_type(
+        self,
+        graph_id: StrictStr,
+        update_vertex_type: CreateVertexType,
+    ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_edge_type(
+        self,
+        graph_id: StrictStr,
+        create_edge_type: CreateEdgeType,
+    ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_edge_type(
+        self,
+        graph_id: StrictStr,
+        type_name: StrictStr,
+        source_vertex_type: StrictStr,
+        destination_vertex_type: StrictStr,
+    ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_edge_type(
+        self,
+        graph_id: StrictStr,
+        update_edge_type: CreateEdgeType,
+    ) -> Result[str]:
+        raise NotImplementedError
 
 class ProcedureInterface(metaclass=ABCMeta):
     @abstractmethod
@@ -375,12 +414,20 @@ class DefaultSession(Session):
     def delete_vertex(
         self,
         graph_id: StrictStr,
-        label: Annotated[StrictStr, Field(description="The label name of vertex.")],
-        primary_key_value: Annotated[
-            Any, Field(description="The primary key value of vertex.")
-        ],
+        delete_vertex_request: Annotated[List[DeleteVertexRequest], Field(description="The label and primary key values of the vertex to be deleted.")],
     ) -> Result[str]:
-        raise NotImplementedError
+        """
+        Delete a vertex from the specified graph with primary key value.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.delete_vertex_with_http_info(
+                graph_id, delete_vertex_request
+            )
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def get_vertex(
         self,
@@ -404,7 +451,7 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def update_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self, graph_id: StrictStr, vertex_request: List[VertexRequest],
     ) -> Result[str]:
         """
         Update a vertex in the specified graph.
@@ -438,20 +485,20 @@ class DefaultSession(Session):
     def delete_edge(
         self,
         graph_id: StrictStr,
-        src_label: Annotated[
-            StrictStr, Field(description="The label name of src vertex.")
-        ],
-        src_primary_key_value: Annotated[
-            Any, Field(description="The primary key value of src vertex.")
-        ],
-        dst_label: Annotated[
-            StrictStr, Field(description="The label name of dst vertex.")
-        ],
-        dst_primary_key_value: Annotated[
-            Any, Field(description="The primary key value of dst vertex.")
-        ],
+        delete_edge_request: Annotated[List[DeleteEdgeRequest], Field(description="The label and primary key values of the src and dst vertices, and the edge label.")],
     ) -> Result[str]:
-        raise NotImplementedError
+        """
+        Delete an edge from the specified graph with primary key value.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.delete_edge_with_http_info(
+                graph_id, delete_edge_request
+            )
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def get_edge(
         self,
@@ -489,7 +536,7 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def update_edge(
-        self, graph_id: StrictStr, edge_request: EdgeRequest
+        self, graph_id: StrictStr, edge_request: List[EdgeRequest]
     ) -> Result[str]:
         """
         Update an edge in the specified graph.
@@ -610,6 +657,116 @@ class DefaultSession(Session):
         try:
             response = self._graph_api.create_dataloading_job_with_http_info(
                 graph_id, schema_mapping
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def create_vertex_type(
+        self,
+        graph_id: StrictStr,
+        create_vertex_type: CreateVertexType,
+    ) -> Result[str]:
+        """
+        Create a new vertex type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.create_vertex_type_with_http_info(
+                graph_id, create_vertex_type
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def delete_vertex_type(
+        self,
+        graph_id: StrictStr,
+        type_name: StrictStr,
+    ) -> Result[str]:
+        """
+        Delete a vertex type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.delete_vertex_type_with_http_info(
+                graph_id, type_name
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def update_vertex_type(
+        self,
+        graph_id: StrictStr,
+        update_vertex_type: CreateVertexType,
+    ) -> Result[str]:
+        """
+        Update a vertex type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.update_vertex_type_with_http_info(
+                graph_id, update_vertex_type
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def create_edge_type(
+        self,
+        graph_id: StrictStr,
+        create_edge_type: CreateEdgeType,
+    ) -> Result[str]:
+        """
+        Create a new edge type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.create_edge_type_with_http_info(
+                graph_id, create_edge_type
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def delete_edge_type(
+        self,
+        graph_id: StrictStr,
+        type_name: StrictStr,
+        source_vertex_type: StrictStr,
+        destination_vertex_type: StrictStr,
+    ) -> Result[str]:
+        """
+        Delete a edge type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.delete_edge_type_with_http_info(
+                graph_id, type_name, source_vertex_type, destination_vertex_type
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def update_edge_type(
+        self,
+        graph_id: StrictStr,
+        update_edge_type: CreateEdgeType,
+    ) -> Result[str]:
+        """
+        Update a edge type in the specified graph.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.update_edge_type_with_http_info(
+                graph_id, update_edge_type
             )
             return Result.from_response(response)
         except Exception as e:
