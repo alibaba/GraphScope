@@ -186,9 +186,11 @@ public interface IrDataTypeConvertor<T> {
 
     class Flex implements IrDataTypeConvertor<GSDataTypeDesc> {
         private final RelDataTypeFactory typeFactory;
+        private final boolean throwsOnFail;
 
-        public Flex(RelDataTypeFactory typeFactory) {
+        public Flex(RelDataTypeFactory typeFactory, boolean throwsOnFail) {
             this.typeFactory = typeFactory;
+            this.throwsOnFail = throwsOnFail;
         }
 
         @Override
@@ -312,8 +314,11 @@ public interface IrDataTypeConvertor<T> {
                 // decimal type with precision and scale
                 return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
             }
-            throw new UnsupportedOperationException(
-                    "convert GSDataTypeDesc [" + from + "] to RelDataType is unsupported yet");
+            if (throwsOnFail) {
+                throw new UnsupportedOperationException(
+                        "convert GSDataTypeDesc [" + from + "] to RelDataType is unsupported yet");
+            }
+            return typeFactory.createSqlType(SqlTypeName.ANY);
         }
 
         @Override
@@ -326,6 +331,9 @@ public interface IrDataTypeConvertor<T> {
             SqlTypeName typeName = from.getSqlTypeName();
             Map<String, Object> yamlDesc;
             switch (typeName) {
+                case ANY:
+                    yamlDesc = ImmutableMap.of("primitive_type", "DT_ANY");
+                    break;
                 case NULL:
                     yamlDesc = ImmutableMap.of("primitive_type", "DT_NULL");
                     break;
@@ -420,10 +428,13 @@ public interface IrDataTypeConvertor<T> {
                                             "scale", from.getScale()));
                     break;
                 default:
-                    throw new UnsupportedOperationException(
-                            "convert RelDataType ["
-                                    + from
-                                    + "] to GSDataTypeDesc is unsupported yet");
+                    if (throwsOnFail) {
+                        throw new UnsupportedOperationException(
+                                "convert RelDataType ["
+                                        + from
+                                        + "] to GSDataTypeDesc is unsupported yet");
+                    }
+                    yamlDesc = ImmutableMap.of("primitive_type", "DT_ANY");
             }
             return new GSDataTypeDesc(yamlDesc);
         }

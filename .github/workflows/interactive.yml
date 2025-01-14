@@ -314,6 +314,28 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/
         mvn clean install -Pexperimental -DskipTests -q
 
+    - name: Test physical plan generation
+      run: |
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        cat > /tmp/physical_plan_gen_config.yaml <<EOF
+        compiler:
+          planner:
+            is_on: true
+            opt: CBO
+            rules:
+              - FilterIntoJoinRule
+              - FilterMatchRule
+              - NotMatchToAntiJoinRule
+          physical.opt.config: proto
+        EOF
+        echo "  meta.reader.schema.uri: ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml" >> /tmp/physical_plan_gen_config.yaml
+        echo "  meta.reader.statistics.uri: ${GITHUB_WORKSPACE}/interactive_engine/compiler/src/test/resources/statistics/modern_statistics.json" >> /tmp/physical_plan_gen_config.yaml
+        mvn clean install -DskipTests -Pgraph-planner-jni
+        INTERACTIVE_ENGINE_HOME=${GITHUB_WORKSPACE}/interactive_engine
+        ./target/native/test_graph_planner ${INTERACTIVE_ENGINE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar:${INTERACTIVE_ENGINE_HOME}/compiler/target/libs/ ${INTERACTIVE_ENGINE_HOME}/executor/ir/target/release/libir_core.so \
+           ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_ENGINE_HOME}/compiler/src/test/resources/statistics/modern_statistics.json \
+          "MATCH(n) return count(n);" /tmp/physical_plan_gen_config.yaml
+
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
