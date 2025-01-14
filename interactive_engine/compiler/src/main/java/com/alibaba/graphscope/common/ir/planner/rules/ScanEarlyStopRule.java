@@ -30,7 +30,8 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * fuse limit to source to stop scan at an early stage
+ * Pushes the limit operation down to the scan node.
+ * During the scan process, the scan stops as soon as the specified limit count is reached.
  */
 public class ScanEarlyStopRule extends RelRule {
     protected ScanEarlyStopRule(RelRule.Config config) {

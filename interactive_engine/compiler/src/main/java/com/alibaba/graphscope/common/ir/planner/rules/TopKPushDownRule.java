@@ -26,6 +26,15 @@ import org.apache.calcite.rel.rules.SortProjectTransposeRule;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * This rule pushes down topK operations to the project node and is based on Calcite's {@code SortProjectTransposeRule},
+ * leveraging the original rule wherever possible.
+ * However, in our more complex distributed scenario, deferring the execution of the project node
+ * can disrupt already sorted data.
+ * To address this, we modified the matching logic in {@code SortProjectTransposeRule}.
+ * Currently, the PushDown operation is applied only when the sort fields are empty,
+ * which means only the limit is pushed down to the project node.
+ */
 public class TopKPushDownRule extends SortProjectTransposeRule {
     protected TopKPushDownRule(Config config) {
         super(config);

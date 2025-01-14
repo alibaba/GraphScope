@@ -65,6 +65,9 @@ public class ScanEarlyStopTest {
         }
     }
 
+    // the rules are applied by 2 steps:
+    // 1. TopKPushDownRule: push down the limit operation to the project node
+    // 2. ScanEarlyStopRule: fuse the limit operation to the source node
     @Test
     public void scan_early_stop_0_test() {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
@@ -82,6 +85,11 @@ public class ScanEarlyStopTest {
                 after.explain().trim());
     }
 
+    // the rules are applied by 3 steps:
+    // 1. ScanFusionRule: transform the edge expansion to edge scan, i.e. (:PERSON)-[n:KNOWS]->(b)
+    // => ScanE(KNOWS)
+    // 2. TopKPushDownRule: push down the limit operation to the project node
+    // 2. ScanEarlyStopRule: fuse the limit operation to the source node
     @Test
     public void scan_early_stop_1_test() {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);

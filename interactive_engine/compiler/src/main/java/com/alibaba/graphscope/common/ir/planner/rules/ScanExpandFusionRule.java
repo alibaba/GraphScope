@@ -43,7 +43,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * transform scan(V) + expand(E) + getV + project(E) to scan(E) + project(E)
+ * This rule transforms edge expansion into edge scan wherever possible.
+ * For example, consider the following Cypher query:
+ * Match (a:PERSON)-[b:KNOWS]->(c:PERSON) Return b.name;
+ *
+ * Although the query involves Scan and GetV steps, their results are not directly utilized by subsequent
+ * project operations. The only effectively used data is the edge data produced by the Expand operation.
+ * In such cases, we can perform a fusion operation, transforming the pattern
+ * (a:PERSON)-[b:KNOWS]->(c:PERSON) into a scan operation on the KNOWS edge.
+ *
+ * It is important to note that whether fusion is feasible also depends on the label dependencies between
+ * nodes and edges. If the edge label is determined strictly by the triplet (src_label, edge_label, dst_label),
+ * fusion cannot be performed. For reference, consider the following query:
+ * Match (a:PERSON)-[b:LIKES]->(c:COMMENT) Return b.name;
  */
 public class ScanExpandFusionRule extends RelRule {
 
