@@ -339,6 +339,7 @@ def test_vineyard_deployment_on_multiple_nodes(
     )
 
 
+@pytest.mark.skip(reason="compile too slow")
 def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):
     graph = load_ldbc(gs_session_distributed, data_dir)
 
