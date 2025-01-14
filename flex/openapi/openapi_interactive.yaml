@@ -378,11 +378,11 @@ paths:
             type: integer
       responses:
         '200':
-          description: the status of a snapshot_id of whether it is available
+          description: the status of a snapshot_id 
           content:
             application/json:
               schema:
-                type: boolean
+                $ref: "#/components/schemas/SnapshotStatus"
         '400':
           $ref: "#/components/responses/400"
         '500':
@@ -2356,4 +2356,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EdgeRequest'
-
+    SnapshotStatus:
+      type: object
+      required:
+        - snapshot_id
+        - status
+      properties:
+        snapshot_id:
+          type: integer
+        status:
+          type: string
+          example: "AVAILABLE"

@@ -11,6 +11,7 @@ import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
+import com.alibaba.graphscope.groot.service.models.SnapshotStatus;
 import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 
@@ -313,17 +314,20 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @PostMapping(
+    @GetMapping(
             value = "/{graph_id}/snapshot/{snapshot_id}/status",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Boolean> getSnapshotStatus(
+    public ResponseEntity<SnapshotStatus> getSnapshotStatus(
             @PathVariable("graph_id") String graphId,
             @PathVariable("snapshot_id") Integer snapshotId) {
         try {
             boolean res = schemaManagementService.remoteFlush(snapshotId);
-            return ResponseEntity.status(HttpStatus.OK).body(res);
+            SnapshotStatus snapshotStatus = new SnapshotStatus();
+            snapshotStatus.setSnapshotId(snapshotId);
+            snapshotStatus.setStatus(res ? "AVAILABLE" : "UNAVAILABLE");
+            return ResponseEntity.status(HttpStatus.OK).body(snapshotStatus);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 }

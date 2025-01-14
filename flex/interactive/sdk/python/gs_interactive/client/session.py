@@ -26,6 +26,7 @@ from typing import Union
 from pydantic import Field
 from pydantic import StrictBytes
 from pydantic import StrictStr
+from pydantic import StrictInt
 from typing_extensions import Annotated
 
 from gs_interactive.api import AdminServiceGraphManagementApi
@@ -69,6 +70,7 @@ from gs_interactive.models import DeleteVertexRequest
 from gs_interactive.models import DeleteEdgeRequest
 from gs_interactive.models import CreateVertexType
 from gs_interactive.models import CreateEdgeType
+from gs_interactive.models import SnapshotStatus
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -237,6 +239,10 @@ class GraphInterface(metaclass=ABCMeta):
         graph_id: StrictStr,
         update_edge_type: CreateEdgeType,
     ) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_snapshot_status(self, graph_id: StrictStr, snapshot_id: StrictInt) -> SnapshotStatus:
         raise NotImplementedError
 
 class ProcedureInterface(metaclass=ABCMeta):
@@ -767,6 +773,20 @@ class DefaultSession(Session):
         try:
             response = self._graph_api.update_edge_type_with_http_info(
                 graph_id, update_edge_type
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def get_snapshot_status(self, graph_id: StrictStr, snapshot_id: StrictInt) -> SnapshotStatus:
+        """
+        Get the status of a snapshot with the specified snapshot id.
+        """
+
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            response = self._graph_api.get_snapshot_status_with_http_info(
+                graph_id, snapshot_id
             )
             return Result.from_response(response)
         except Exception as e:
