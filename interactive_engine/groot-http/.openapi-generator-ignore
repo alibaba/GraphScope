@@ -26,3 +26,6 @@ pom.xml
 src/main/java/com/alibaba/graphscope/groot/service/impl
 src/main/java/com/alibaba/graphscope/groot/service/api/ApiUtil.java
 src/main/java/com/alibaba/graphscope/groot/service/api/V1ApiController.java
+src/main/java/com/alibaba/graphscope/groot/service/models/GSDataType.java
+src/main/java/com/alibaba/graphscope/groot/service/models/StringTypeString.java
+src/main/java/com/alibaba/graphscope/groot/service/models/TemporalTypeTemporal.java

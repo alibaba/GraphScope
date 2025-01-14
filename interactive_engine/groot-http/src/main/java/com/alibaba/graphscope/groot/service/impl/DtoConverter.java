@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.service.models.PrimitiveType;
 import com.alibaba.graphscope.groot.service.models.Property;
 import com.alibaba.graphscope.groot.service.models.StringType;
 import com.alibaba.graphscope.groot.service.models.TemporalType;
-import com.alibaba.graphscope.groot.service.models.TemporalTypeAllOfTemporal;
+import com.alibaba.graphscope.groot.service.models.TemporalTypeTemporal;
 import com.alibaba.graphscope.groot.service.models.TimeStampType;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
@@ -97,7 +97,7 @@ public class DtoConverter {
             return DataTypePb.STRING;
         } else if (dataType instanceof TemporalType) {
             TemporalType temporalType = (TemporalType) dataType;
-            TemporalTypeAllOfTemporal temporal = temporalType.getTemporal();
+            TemporalTypeTemporal temporal = temporalType.getTemporal();
             if (temporal instanceof DateType) {
                 return DataTypePb.DATE32;
             } else if (temporal instanceof TimeStampType) {
@@ -163,33 +163,33 @@ public class DtoConverter {
         switch (dataType) {
             case INT:
                 return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32, "PrimitiveType");
+                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32);
             case UINT:
                 return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32, "PrimitiveType");
+                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT32);
             case LONG:
                 return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64, "PrimitiveType");
+                        PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64);
             case ULONG:
                 return new PrimitiveType(
-                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64, "PrimitiveType");
+                        PrimitiveType.PrimitiveTypeEnum.UNSIGNED_INT64);
             case BOOL:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL, "PrimitiveType");
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.BOOL);
             case FLOAT:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.FLOAT, "PrimitiveType");
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.FLOAT);
             case DOUBLE:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE, "PrimitiveType");
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE);
             case STRING:
-                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING, "PrimitiveType");
+                return new PrimitiveType(PrimitiveType.PrimitiveTypeEnum.STRING);
             case DATE32:
-                TemporalTypeAllOfTemporal date = new DateType("YYYY-MM-DD".toString(), "DateType");
-                return new TemporalType(date, "TemporalType");
+                TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString());
+                return new TemporalType(date);
             case TIMESTAMP_MS:
                 // TODO: confirm the format of timestamp? should be int64 milliseconds since
                 // 1970-01-01 00:00:00.000000?
-                TemporalTypeAllOfTemporal timestamp =
-                        new TimeStampType("YYYY-MM-DD HH:MM:SS".toString(), "TimeStampType");
-                return new TemporalType(timestamp, "TemporalType");
+                TemporalTypeTemporal timestamp =
+                        new TimeStampType("YYYY-MM-DD HH:MM:SS".toString());
+                return new TemporalType(timestamp);
             default:
                 throw new IllegalArgumentException("Unsupported data type: " + dataType);
         }

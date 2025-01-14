@@ -163,6 +163,10 @@ interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/*.java
 interactive_engine/groot-http/src/main/java/org/
 interactive_engine/groot-http/src/main/resources/
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/api/V1Api.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/GSDataType.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/StringTypeString.java
+!interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/TemporalTypeTemporal.java
+interactive_engine/groot-http/src/test/
 
 **/.cache/
 
