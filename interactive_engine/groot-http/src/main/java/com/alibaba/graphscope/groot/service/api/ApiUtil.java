@@ -29,7 +29,7 @@ public class ApiUtil {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
                         String.format(
-                                "{\"message\": \"%s\", \"snapshot id\": %d}", message, snapshotId));
+                                "{\"message\": \"%s\", \"snapshot_id\": %d}", message, snapshotId));
     }
 
     public static ResponseEntity<String> createSuccessResponse(String message) {
