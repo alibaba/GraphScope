@@ -179,7 +179,7 @@ class GraphView {
 
   template <typename FUNC_T>
   inline void foreach_edges_gt(vid_t v, const EDATA_T& min_value,
-                        const FUNC_T& func) const {
+                               const FUNC_T& func) const {
     const auto& edges = csr_->get_edges(v);
     auto ptr = edges.end() - 1;
     auto end = edges.begin() - 1;
@@ -207,7 +207,7 @@ class GraphView {
 
   template <typename FUNC_T>
   inline void foreach_edges_lt(vid_t v, const EDATA_T& max_value,
-                        const FUNC_T& func) const {
+                               const FUNC_T& func) const {
     const auto& edges = csr_->get_edges(v);
     auto ptr = edges.end() - 1;
     auto end = edges.begin() - 1;
@@ -255,7 +255,9 @@ class VertexArray {
     data_.resize(keys.size(), val);
   }
 
-  inline typename std::vector<T>::reference operator[](vid_t v) { return data_[v]; }
+  inline typename std::vector<T>::reference operator[](vid_t v) {
+    return data_[v];
+  }
   inline typename std::vector<T>::const_reference operator[](vid_t v) const {
     return data_[v];
   }
@@ -287,8 +289,8 @@ class GraphReadInterface {
   ~GraphReadInterface() {}
 
   template <typename PROP_T>
-  inline vertex_column_t<PROP_T> GetVertexColumn(label_t label,
-                                          const std::string& prop_name) const {
+  inline vertex_column_t<PROP_T> GetVertexColumn(
+      label_t label, const std::string& prop_name) const {
     return vertex_column_t<PROP_T>(
         txn_.get_vertex_property_column(label, prop_name));
   }
@@ -310,23 +312,23 @@ class GraphReadInterface {
   }
 
   inline edge_iterator_t GetOutEdgeIterator(label_t label, vid_t v,
-                                     label_t neighbor_label,
-                                     label_t edge_label) const {
+                                            label_t neighbor_label,
+                                            label_t edge_label) const {
     return edge_iterator_t(
         txn_.GetOutEdgeIterator(label, v, neighbor_label, edge_label));
   }
 
   inline edge_iterator_t GetInEdgeIterator(label_t label, vid_t v,
-                                    label_t neighbor_label,
-                                    label_t edge_label) const {
+                                           label_t neighbor_label,
+                                           label_t edge_label) const {
     return edge_iterator_t(
         txn_.GetInEdgeIterator(label, v, neighbor_label, edge_label));
   }
 
   template <typename EDATA_T>
   inline graph_view_t<EDATA_T> GetOutgoingGraphView(label_t v_label,
-                                             label_t neighbor_label,
-                                             label_t edge_label) const {
+                                                    label_t neighbor_label,
+                                                    label_t edge_label) const {
     auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
         txn_.graph().get_oe_csr(v_label, neighbor_label, edge_label));
     return graph_view_t<EDATA_T>(csr, txn_.timestamp());
@@ -334,8 +336,8 @@ class GraphReadInterface {
 
   template <typename EDATA_T>
   inline graph_view_t<EDATA_T> GetIncomingGraphView(label_t v_label,
-                                             label_t neighbor_label,
-                                             label_t edge_label) const {
+                                                    label_t neighbor_label,
+                                                    label_t edge_label) const {
     auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
         txn_.graph().get_ie_csr(v_label, neighbor_label, edge_label));
     return graph_view_t<EDATA_T>(csr, txn_.timestamp());
@@ -352,12 +354,13 @@ class GraphInsertInterface {
   GraphInsertInterface(gs::InsertTransaction& txn) : txn_(txn) {}
   ~GraphInsertInterface() {}
 
-  inline bool AddVertex(label_t label, const Any& id, const std::vector<Any>& props) {
+  inline bool AddVertex(label_t label, const Any& id,
+                        const std::vector<Any>& props) {
     return txn_.AddVertex(label, id, props);
   }
 
   inline bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
-               const Any& dst, label_t edge_label, const Any& prop) {
+                      const Any& dst, label_t edge_label, const Any& prop) {
     return txn_.AddEdge(src_label, src, dst_label, dst, edge_label, prop);
   }
 

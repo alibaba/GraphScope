@@ -22,7 +22,7 @@
 #define BYTE_SIZE(n) (((n) + 63ul) >> 3)
 
 #define WORD_INDEX(i) ((i) >> 6)
-#define BIT_OFFSET(i) ((i) & 0x3f)
+#define BIT_OFFSET(i) ((i) &0x3f)
 
 #define ROUND_UP(i) (((i) + 63ul) & (~63ul))
 #define ROUND_DOWN(i) ((i) & (~63ul))

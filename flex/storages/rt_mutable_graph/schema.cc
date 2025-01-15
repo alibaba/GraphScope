@@ -29,7 +29,7 @@ bool Schema::IsBuiltinPlugin(const std::string& plugin_name) {
   return false;
 }
 
-Schema::Schema() : has_multi_props_edge_(false) {};
+Schema::Schema() : has_multi_props_edge_(false){};
 Schema::~Schema() = default;
 
 void Schema::Clear() {
