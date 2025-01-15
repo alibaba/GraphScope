@@ -2,83 +2,12 @@
 
 #include <sys/wait.h>  // for waitpid()
 #include <unistd.h>    // for fork() and execvp()
-#include <zlib.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <thread>
 
 namespace gs {
-
-std::vector<unsigned char> base64_decode(const std::string& in) {
-  // Base64 decode implementation here
-  // You can use a library or implement your own for simplicity
-
-  // This is a simple base64 decode function, ensure to replace it.
-  // In production code, you would want to include error-checking.
-
-  static const std::string base64_chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "abcdefghijklmnopqrstuvwxyz"
-      "0123456789+/";
-
-  size_t in_len = in.size();
-  std::vector<unsigned char> buffer;
-
-  for (size_t i = 0; i < in_len;) {
-    uint32_t val = 0;
-    for (int j = 0; j < 4; ++j) {
-      if (i < in_len && in[i] != '=') {
-        val = (val << 6) + base64_chars.find(in[i]);
-      } else {
-        val <<= 6;
-      }
-      i++;
-    }
-    buffer.push_back((val >> 16) & 0xFF);
-    if (i > 2) {
-      buffer.push_back((val >> 8) & 0xFF);
-    }
-    if (i > 3) {
-      buffer.push_back(val & 0xFF);
-    }
-  }
-
-  return buffer;
-}
-
-std::string decompress(const std::string& compressed) {
-  unsigned char buffer[1024];
-  z_stream strm;
-  strm.zalloc = Z_NULL;
-  strm.zfree = Z_NULL;
-  strm.opaque = Z_NULL;
-  strm.avail_in = compressed.size();
-  auto vec = base64_decode(compressed);
-  strm.next_in = vec.data();
-
-  if (inflateInit(&strm) != Z_OK)
-    return "";
-
-  std::string result;
-
-  do {
-    strm.avail_out = sizeof(buffer);
-    strm.next_out = buffer;
-    int ret = inflate(&strm, Z_NO_FLUSH);
-
-    if (ret == Z_STREAM_ERROR || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
-      inflateEnd(&strm);
-      return "";
-    }
-
-    result.append(reinterpret_cast<char*>(buffer),
-                  sizeof(buffer) - strm.avail_out);
-  } while (strm.avail_out == 0);
-
-  inflateEnd(&strm);
-  return result;
-}
 
 std::string generate_compiler_config(const std::string& schema,
                                      const std::string& statistics,
@@ -160,7 +89,7 @@ bool generate_plan(
       std::string("-Djna.library.path=") + std::string(graphscope_dir) +
       "/interactive_engine/executor/ir/target/release/";
   const std::string schema_path = "-Dgraph.schema=" + compiler_yaml;
-  auto raw_query = query;  // decompress(query);
+  auto raw_query = query;
   {
     std::ofstream out(query_file);
     out << query;
