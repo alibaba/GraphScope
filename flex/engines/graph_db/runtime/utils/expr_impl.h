@@ -452,7 +452,6 @@ class DateMinusExpr : public ExprBase {
  private:
   std::unique_ptr<ExprBase> lhs_;
   std::unique_ptr<ExprBase> rhs_;
-  common::Arithmetic arith_;
 };
 
 class ConstExpr : public ExprBase {

@@ -66,7 +66,7 @@ struct Key : public KeyBase {
   Key(EXPR&& expr, const std::vector<std::pair<int, int>>& tag_alias)
       : expr(std::move(expr)), tag_alias_(tag_alias) {}
   std::pair<std::vector<size_t>, std::vector<std::vector<size_t>>> group(
-      const Context& ctx) {
+      const Context& ctx) override {
     size_t row_num = ctx.row_num();
     std::vector<std::vector<size_t>> groups;
     std::vector<size_t> offsets;
@@ -99,7 +99,7 @@ struct GKey : public KeyBase {
        const std::vector<std::pair<int, int>>& tag_alias)
       : exprs(std::move(exprs)), tag_alias_(tag_alias) {}
   std::pair<std::vector<size_t>, std::vector<std::vector<size_t>>> group(
-      const Context& ctx) {
+      const Context& ctx) override {
     size_t row_num = ctx.row_num();
     std::vector<std::vector<size_t>> groups;
     std::vector<size_t> offsets;
