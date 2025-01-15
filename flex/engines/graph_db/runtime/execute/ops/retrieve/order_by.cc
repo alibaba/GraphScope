@@ -88,7 +88,9 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> OrderByOprBuilder::Build(
     keys.emplace_back(pair.key(), asc);
   }
 
-  const auto [key, order] = keys[0];
+  const auto key = keys[0].first;
+  const auto order = keys[0].second;
+
   auto func = [key, order, upper](const Context& ctx)
       -> std::optional<std::function<std::optional<std::vector<size_t>>(
           const GraphReadInterface& graph, const Context& ctx)>> {
