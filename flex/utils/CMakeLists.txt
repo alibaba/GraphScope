@@ -24,10 +24,10 @@ set(GIE_COMPILER_PROTO_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/proto/)
 set(GIE_COMPILER_PROTO_JOB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../interactive_engine/executor/engine/pegasus/server/proto/)
 # proto files of gie compiler
 set(CODE_GEN_PROTOBUF_FILES
-        ${GIE_COMPILER_PROTO_DIR}/physical.proto
         ${GIE_COMPILER_PROTO_DIR}/algebra.proto
         ${GIE_COMPILER_PROTO_DIR}/common.proto
         ${GIE_COMPILER_PROTO_DIR}/expr.proto
+        ${GIE_COMPILER_PROTO_DIR}/physical.proto
         ${GIE_COMPILER_PROTO_DIR}/results.proto
         ${GIE_COMPILER_PROTO_DIR}/schema.proto
         ${GIE_COMPILER_PROTO_DIR}/type.proto
@@ -71,13 +71,7 @@ target_include_directories(flex_utils PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 # Link the static library of arrow, to save the trouble of linking the shared library of arrow
-if (ARROW_SHARED_LIB)
-        target_link_libraries(flex_utils PRIVATE ${ARROW_SHARED_LIB})
-else()
-        target_link_libraries(flex_utils PRIVATE ${ARROW_STATIC_LIB})
-endif()
-
-target_link_libraries(flex_utils  PUBLIC  ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${Protobuf_LIBRARIES})
+target_link_libraries(flex_utils PUBLIC ${Protobuf_LIBRARIES} ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
 
 
 #find_package(mimalloc 1.8 REQUIRED)
