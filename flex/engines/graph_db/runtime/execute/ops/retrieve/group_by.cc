@@ -1118,6 +1118,7 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
             return make_pair_reducer(graph, ctx, std::move(fst_var),
                                      std::move(snd_var), aggr_kind, alias);
           });
+      continue;
     }
     auto& var = func.vars(0);
 

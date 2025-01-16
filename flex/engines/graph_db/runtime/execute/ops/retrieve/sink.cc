@@ -64,8 +64,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SinkOprBuilder::Build(
       }
     }
   }
-  LOG(INFO) << plan.plan(op_idx - 1).opr().DebugString();
-  LOG(INFO) << plan.plan(op_idx - 2).opr().DebugString();
   return std::make_pair(std::make_unique<SinkOpr>(tag_ids), ctx_meta);
 }
 

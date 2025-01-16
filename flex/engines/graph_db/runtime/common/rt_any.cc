@@ -474,6 +474,8 @@ bool RTAny::operator<(const RTAny& other) const {
     return value_.f64_val < other.value_.f64_val;
   } else if (type_ == RTAnyType::kEdge) {
     return value_.edge < other.value_.edge;
+  } else if (type_ == RTAnyType::kVertex) {
+    return value_.vertex < other.value_.vertex;
   }
 
   LOG(FATAL) << "not support for " << static_cast<int>(type_);
