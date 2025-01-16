@@ -345,6 +345,8 @@ class GraphReadInterface {
 
   inline const Schema& schema() const { return txn_.schema(); }
 
+  const GraphDBSession& GetSession() const { return txn_.GetSession(); }
+
  private:
   const gs::ReadTransaction& txn_;
 };

@@ -23,6 +23,7 @@
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/limit.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/order_by.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/path.h"
+#include "flex/engines/graph_db/runtime/execute/ops/retrieve/procedure_call.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/project.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/select.h"
@@ -81,6 +82,8 @@ void PlanParser::init() {
   register_read_operator_builder(std::make_unique<ops::UnionOprBuilder>());
 
   register_read_operator_builder(std::make_unique<ops::SinkOprBuilder>());
+  register_read_operator_builder(
+      std::make_unique<ops::ProcedureCallOprBuilder>());
 
   register_write_operator_builder(std::make_unique<ops::LoadOprBuilder>());
   register_write_operator_builder(

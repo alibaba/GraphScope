@@ -40,8 +40,6 @@ bool AdhocReadApp::Query(const GraphDBSession& graph, Decoder& input,
           .parse_read_pipeline(graph.schema(), gs::runtime::ContextMeta(), plan)
           .Execute(gri, runtime::Context(), {}, timer_);
 
-  // auto ctx = runtime::runtime_eval(plan, txn, {}, timer_);
-
   runtime::Sink::sink(ctx, txn, output);
 
   return true;

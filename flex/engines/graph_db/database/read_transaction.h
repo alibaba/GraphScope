@@ -26,6 +26,7 @@
 namespace gs {
 
 class MutablePropertyFragment;
+class GraphDBSession;
 class VersionManager;
 template <typename EDATA_T>
 class AdjListView {
@@ -309,7 +310,8 @@ class SingleImmutableGraphView<std::string_view> {
 
 class ReadTransaction {
  public:
-  ReadTransaction(const MutablePropertyFragment& graph, VersionManager& vm,
+  ReadTransaction(const GraphDBSession& session,
+                  const MutablePropertyFragment& graph, VersionManager& vm,
                   timestamp_t timestamp);
   ~ReadTransaction();
 
@@ -492,9 +494,11 @@ class ReadTransaction {
     return SingleImmutableGraphView<EDATA_T>(*csr);
   }
 
+  const GraphDBSession& GetSession() const;
+
  private:
   void release();
-
+  const GraphDBSession& session_;
   const MutablePropertyFragment& graph_;
   VersionManager& vm_;
   timestamp_t timestamp_;
