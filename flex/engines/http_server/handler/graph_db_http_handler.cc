@@ -57,12 +57,9 @@ class query_dispatcher {
   }
 
   inline int get_shard_id() {
-    auto shard_id = hiactor::local_shard_id();
-    if (shard_id >= shard_num_) {
-      shard_id = extra_shard_id_;
-      extra_shard_id_ = (extra_shard_id_ + 1) % shard_num_;
-    }
-    return shard_id;
+    return hiactor::local_shard_id() >= shard_num_
+               ? (extra_shard_id_++) % shard_num_
+               : hiactor::local_shard_id();
   }
 
   inline int get_executor_idx() {

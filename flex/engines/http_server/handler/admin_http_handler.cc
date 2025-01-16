@@ -697,13 +697,10 @@ void admin_http_handler::start() {
       *seastar::alien::internal::default_instance, 0, [this] {
         return server_.start()
             .then([this] {
-              LOG(INFO) << "set admin routes on shard: "
-                        << hiactor::local_shard_id();
               return set_routes();
             })
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
-              LOG(INFO) << "print port on shard: " << hiactor::local_shard_id();
               fmt::print(
                   "HQPS admin http handler is listening on port {} ...\n",
                   http_port_);

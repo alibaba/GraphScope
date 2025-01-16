@@ -47,15 +47,8 @@ ServiceConfig::ServiceConfig()
       enable_bolt(false),
       metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
-      verbose_level(DEFAULT_VERBOSE_LEVEL) {
-#ifdef DEFAULT_SHARDING_MODE
-  VLOG(10) << "Set default sharding mode to: " << DEFAULT_SHARDING_MODE;
-  set_sharding_mode(DEFAULT_SHARDING_MODE);
-#else
-  VLOG(10) << "No default sharding mode is set, use cooperative mode.";
-  set_sharding_mode("exclusive");
-#endif
-}
+      verbose_level(DEFAULT_VERBOSE_LEVEL),
+      sharding_mode(DEFAULT_SHARDING_MODE) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";

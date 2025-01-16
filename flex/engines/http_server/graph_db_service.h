@@ -45,6 +45,7 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_VERBOSE_LEVEL = 0;
   static constexpr const uint32_t DEFAULT_LOG_LEVEL =
       0;  // 0 = INFO, 1 = WARNING, 2 = ERROR, 3 = FATAL
+  static constexpr const ShardingMode DEFAULT_SHARDING_MODE = ShardingMode::EXCLUSIVE;
 
   // Those has default value
   uint32_t bolt_port;
@@ -83,6 +84,7 @@ struct ServiceConfig {
   ServiceConfig();
 
   void set_sharding_mode(const std::string& mode) {
+    VLOG(10) << "Set sharding mode: " << mode;
     if (mode == "exclusive") {
       sharding_mode = ShardingMode::EXCLUSIVE;
     } else if (mode == "cooperative") {
