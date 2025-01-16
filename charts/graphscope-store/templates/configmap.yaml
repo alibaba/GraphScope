@@ -139,6 +139,7 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
+    export GROOT_HTTP_PORT={{ .Values.frontend.service.httpPort }}
 
     export OTEL_SDK_DISABLED={{ not .Values.otel.enabled }}
 

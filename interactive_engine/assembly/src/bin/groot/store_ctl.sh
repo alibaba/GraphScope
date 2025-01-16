@@ -31,6 +31,7 @@ _setup_env() {
 
 	export GROOT_LOGBACK_FILE=${GROOT_LOGBACK_FILE:-${GROOT_HOME}/conf/logback.xml}
 	export GROOT_CONF_FILE=${GROOT_CONF_FILE:-${GROOT_HOME}/conf/groot.config}
+	export GROOT_HTTP_PORT=${GROOT_HTTP_PORT:-8080}
 	export LOG_NAME=${LOG_NAME:-graphscope-store}
 	export LOG_DIR=${LOG_DIR:-/var/log/graphscope}
 	export LOG_MAX_FILE_SIZE=${LOG_MAX_FILE_SIZE:-100MB}
@@ -86,6 +87,7 @@ start_http_server() {
 		-Dconfig.file="${GROOT_CONF_FILE}" \
 		-Dlog.dir="${LOG_DIR}" \
 		-Dlog.name="${LOG_NAME}-http" \
+		-Dserver.port="${GROOT_HTTP_PORT}" \
 		-jar "${GROOT_HOME}/lib/groot-http-0.0.1-SNAPSHOT.jar" \
 		"$@" # > >(tee -a "${LOG_DIR}/${LOG_NAME}-http.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}-http.err" >&2)
 }

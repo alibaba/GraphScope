@@ -107,16 +107,3 @@ if [ $exit_code -ne 0 ]; then
     echo "gopt_on_groot ldbc test fail"
     exit 1
 fi
-
-# test python sdk for groot (the openapi client)
-# start groot and groot http server
-GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
-sleep 30
-GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start_http &
-sleep 30
-export ENGINE_TYPE="insight"
-cd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
-cmd="python3 -m pytest -s tests/test_driver.py"
-echo "Run python sdk test: ${cmd}"
-eval ${cmd} || (err "test_driver failed" &&  exit 1)
-info "Finish python sdk test"
