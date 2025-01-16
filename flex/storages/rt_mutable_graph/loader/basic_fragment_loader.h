@@ -56,10 +56,6 @@ class BasicFragmentLoader {
 
   void LoadFragment();
 
-  // props vector is column_num X batch_size
-  void AddVertexBatch(label_t v_label, const std::vector<vid_t>& vids,
-                      const std::vector<std::vector<Any>>& props);
-
   inline void SetVertexProperty(label_t v_label, size_t col_ind, vid_t vid,
                                 Any&& prop) {
     auto& table = vertex_data_[v_label];

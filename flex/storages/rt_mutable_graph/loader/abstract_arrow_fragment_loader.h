@@ -489,8 +489,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 other_columns_array.erase(other_columns_array.begin() +
                                           primary_key_ind);
 
-                offset.fetch_add(primary_key_column->length());
-                size_t local_offset = offset.load();
+                auto local_offset =
+                    offset.fetch_add(primary_key_column->length());
                 size_t cur_row_num = std::max(vtable.row_num(), 1ul);
                 while (cur_row_num <
                        local_offset + primary_key_column->length()) {
