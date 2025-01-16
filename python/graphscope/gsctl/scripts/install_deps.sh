@@ -903,7 +903,15 @@ install_interactive_dependencies() {
   fi
   # opentelemetry
   if [[ "${OS_PLATFORM}" != *"Darwin"* ]]; then
-    install_opentelemetry
+    # opentelemetry expect libprotoc >= 3.13.0, see https://github.com/open-telemetry/opentelemetry-cpp/discussions/2223
+    proto_version=$(protoc --version | awk '{print $2}')
+    major_version=$(echo ${proto_version} | cut -d'.' -f1)
+    minor_version=$(echo ${proto_version} | cut -d'.' -f2)
+    if [[ ${major_version} -lt 3 ]] || [[ ${major_version} -eq 3 && ${minor_version} -lt 13 ]]; then
+      warning "OpenTelemetry requires protoc >= 3.13, current version is ${proto_version}, please upgrade it."
+    else
+      install_opentelemetry
+    fi
   fi
 }
 
