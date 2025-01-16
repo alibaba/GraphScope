@@ -2,6 +2,7 @@
 set -x
 BASE_DIR=$(cd "$(dirname "$0")"; pwd)
 declare -r COMPILER_DIR=${BASE_DIR}/../compiler
+declare -r FLEX_HOME=${BASE_DIR}/../../flex
 declare -r DATA_IMPORT_SCRIPT_DIR=${BASE_DIR}/../groot-server/src/main/resources
 declare -r CONFIG_FILE="/tmp/groot.config"
 declare -r METADATA_DIR="/tmp/groot/meta"
@@ -106,3 +107,16 @@ if [ $exit_code -ne 0 ]; then
     echo "gopt_on_groot ldbc test fail"
     exit 1
 fi
+
+# test python sdk for groot (the openapi client)
+# start groot and groot http server
+GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
+# sleep 30
+cd ${GROOT_DIR}/lib && java -jar groot-http-0.0.1-SNAPSHOT.jar &
+sleep 30
+export ENGINE_TYPE="insight"
+cd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
+cmd="python3 -m pytest -s tests/test_driver.py"
+echo "Run python sdk test: ${cmd}"
+eval ${cmd} || (err "test_driver failed" &&  exit 1)
+info "Finish python sdk test"

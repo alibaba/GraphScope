@@ -11,6 +11,7 @@ import com.alibaba.graphscope.groot.service.models.DeleteEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.DeleteVertexRequest;
 import com.alibaba.graphscope.groot.service.models.EdgeRequest;
 import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
+import com.alibaba.graphscope.groot.service.models.ServiceStatus;
 import com.alibaba.graphscope.groot.service.models.SnapshotStatus;
 import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
@@ -35,7 +36,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("${openapi.graphScopeInteractiveAPIV03.base-path:/v1/graph}")
+@RequestMapping("${openapi.graphScopeInteractiveAPIV03.base-path:/v1}")
 public class V1ApiController implements V1Api {
 
     private final VertexManagementService vertexManagementService;
@@ -54,7 +55,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PostMapping(
-            value = "/{graph_id}/vertex",
+            value = "/graph/{graph_id}/vertex",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addVertex(
@@ -77,7 +78,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @DeleteMapping(
-            value = "/{graph_id}/vertex",
+            value = "/graph/{graph_id}/vertex",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertex(
@@ -95,7 +96,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PutMapping(
-            value = "/{graph_id}/vertex",
+            value = "/graph/{graph_id}/vertex",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateVertex(
@@ -113,7 +114,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PostMapping(
-            value = "/{graph_id}/edge",
+            value = "/graph/{graph_id}/edge",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addEdge(
@@ -130,7 +131,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @DeleteMapping(
-            value = "/{graph_id}/edge",
+            value = "/graph/{graph_id}/edge",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdge(
@@ -147,7 +148,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PutMapping(
-            value = "/{graph_id}/edge",
+            value = "/graph/{graph_id}/edge",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateEdge(
@@ -164,7 +165,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PostMapping(
-            value = "/{graph_id}/schema/vertex",
+            value = "/graph/{graph_id}/schema/vertex",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createVertexType(
@@ -181,7 +182,7 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/graph/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertexType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName) {
@@ -197,7 +198,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PutMapping(
-            value = "/{graph_id}/schema/vertex",
+            value = "/graph/{graph_id}/schema/vertex",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateVertexType(
@@ -215,7 +216,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PostMapping(
-            value = "/{graph_id}/schema/edge",
+            value = "/graph/{graph_id}/schema/edge",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createEdgeType(
@@ -232,7 +233,7 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/graph/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdgeType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName,
@@ -252,7 +253,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PutMapping(
-            value = "/{graph_id}/schema/edge",
+            value = "/graph/{graph_id}/schema/edge",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateEdgeType(
@@ -270,7 +271,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @PostMapping(
-            value = "",
+            value = "/graph",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateGraphResponse> createGraph(
@@ -288,7 +289,7 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @GetMapping(value = "/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/graph/{graph_id}/schema", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGraphSchemaResponse> getSchema(
             @PathVariable("graph_id") String graphId) {
         try {
@@ -301,7 +302,7 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(value = "/{graph_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/graph/{graph_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteGraph(@PathVariable("graph_id") String graphId) {
         try {
             schemaManagementService.dropSchema();
@@ -315,7 +316,7 @@ public class V1ApiController implements V1Api {
 
     @Override
     @GetMapping(
-            value = "/{graph_id}/snapshot/{snapshot_id}/status",
+            value = "/graph/{graph_id}/snapshot/{snapshot_id}/status",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SnapshotStatus> getSnapshotStatus(
             @PathVariable("graph_id") String graphId,
@@ -326,6 +327,22 @@ public class V1ApiController implements V1Api {
             snapshotStatus.setSnapshotId(snapshotId);
             snapshotStatus.setStatus(res ? "AVAILABLE" : "UNAVAILABLE");
             return ResponseEntity.status(HttpStatus.OK).body(snapshotStatus);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @Override
+    @GetMapping(value = "/service/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ServiceStatus> getServiceStatus() {
+        try {
+            // The default port for hqps is 8080 and for gremlin is 12312
+            // todo: get the actual port from configuration
+            ServiceStatus serviceStatus = new ServiceStatus();
+            serviceStatus.setStatus("OK");
+            serviceStatus.setHqpsPort(8080);
+            serviceStatus.setGremlinPort(12312);
+            return ResponseEntity.status(HttpStatus.OK).body(serviceStatus);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
