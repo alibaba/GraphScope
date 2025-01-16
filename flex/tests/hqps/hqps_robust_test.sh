@@ -96,7 +96,7 @@ start_engine_service(){
 
 run_robust_test(){
     pushd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
-    cmd="python3 -m pytest -s tests/test_robustness.py -k test_x_csr_params"
+    cmd="python3 -m pytest -s tests/test_robustness.py"
     echo "Run robust test with command: ${cmd}"
     eval ${cmd} || (err "Run robust test failed"; exit 1)
     info "Run robust test success"
@@ -122,8 +122,8 @@ export INTERACTIVE_GREMLIN_ENDPOINT=ws://localhost:${GREMLIN_PORT}/gremlin
 
 run_robust_test
 kill_service 
-#sleep 5
-#start_engine_service $CBO_ENGINE_CONFIG_PATH
-#run_additional_robust_test
+sleep 5
+start_engine_service $CBO_ENGINE_CONFIG_PATH
+run_additional_robust_test
 
-#kill_service
+kill_service
