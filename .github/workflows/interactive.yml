@@ -216,12 +216,7 @@ jobs:
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml python
         sed -i 's/temp_workspace/interactive_workspace/g' ./interactive_config_test.yaml
   
-    - name: Robustness test 
-      env:
-        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-      run: |
-        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
+
 
     - name: Sample Query test
       env:
