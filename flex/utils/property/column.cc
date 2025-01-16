@@ -22,6 +22,33 @@
 
 namespace gs {
 
+std::string_view truncate_utf8(std::string_view str, size_t length) {
+  if (str.size() <= length) {
+    return str;
+  }
+  size_t byte_count = 0;
+
+  for (const char* p = str.data(); *p && byte_count < length;) {
+    unsigned char ch = *p;
+    size_t char_length = 0;
+    if ((ch & 0x80) == 0) {
+      char_length = 1;
+    } else if ((ch & 0xE0) == 0xC0) {
+      char_length = 2;
+    } else if ((ch & 0xF0) == 0xE0) {
+      char_length = 3;
+    } else if ((ch & 0xF8) == 0xF0) {
+      char_length = 4;
+    }
+    if (byte_count + char_length > length) {
+      break;
+    }
+    p += char_length;
+    byte_count += char_length;
+  }
+  return str.substr(0, byte_count);
+}
+
 template <typename T>
 class TypedEmptyColumn : public ColumnBase {
  public:
@@ -169,11 +196,14 @@ std::shared_ptr<ColumnBase> CreateColumn(
       return std::make_shared<DayColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<DefaultStringMapColumn>(strategy);
-    } else if (type == PropertyType::kStringView) {
-      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      // We must check is varchar first, because in implementation of
+      // PropertyType::operator==(const PropertyType& other), we string_view is
+      // equal to varchar.
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
+    } else if (type == PropertyType::kStringView) {
+      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kRecordView) {
       return std::make_shared<RecordViewColumn>(sub_types);
     } else {

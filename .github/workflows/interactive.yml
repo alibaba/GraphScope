@@ -219,6 +219,7 @@ jobs:
     - name: Robustness test 
       env:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
