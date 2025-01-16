@@ -32,9 +32,11 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
         plan_cache_[query] = plan;
       } else {
         const std::string statistics = db_.work_dir() + "/statistics.json";
-        const std::string& compiler_yaml = db_.work_dir() + "/.graph.yaml";
+        const std::string& compiler_yaml = db_.work_dir() + "/graph.yaml";
+        const std::string& tmp_dir = db_.work_dir() + "/runtime/tmp/";
         for (int i = 0; i < 3; ++i) {
-          if (!generate_plan(query, statistics, compiler_yaml, plan_cache_)) {
+          if (!generate_plan(query, statistics, compiler_yaml, tmp_dir,
+                             plan_cache_)) {
             LOG(ERROR) << "Generate plan failed for query: " << query;
           } else {
             query_cache.put(query, plan_cache_[query].SerializeAsString());
@@ -49,13 +51,10 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
                    db_.schema(), gs::runtime::ContextMeta(), plan));
   }
 
-  // LOG(INFO) << "plan: " << plan.DebugString();
-
   gs::runtime::GraphReadInterface gri(txn);
   auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(), params,
                                                timer_);
 
-  // runtime::eval_sink_encoder(ctx, gri, output);
   runtime::Sink::sink_encoder(ctx, gri, output);
   return true;
 }

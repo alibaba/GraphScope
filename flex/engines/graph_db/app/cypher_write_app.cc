@@ -19,10 +19,10 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
   auto query = std::string(query_str.data(), query_str.size());
   if (!pipeline_cache_.count(query)) {
     if (plan_cache_.count(query)) {
-      // LOG(INFO) << "Hit cache for query ";
     } else {
       const std::string statistics = db_.work_dir() + "/statistics.json";
-      const std::string& compiler_yaml = db_.work_dir() + "/.graph.yaml";
+      const std::string& compiler_yaml = db_.work_dir() + "/graph.yaml";
+      const std::string& tmp_dir = db_.work_dir() + "/runtime/tmp/";
 
       auto& query_cache = db_.getQueryCache();
       std::string_view plan_str;
@@ -34,7 +34,8 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
         plan_cache_[query] = plan;
       } else {
         for (int i = 0; i < 3; ++i) {
-          if (!generate_plan(query, statistics, compiler_yaml, plan_cache_)) {
+          if (!generate_plan(query, statistics, compiler_yaml, tmp_dir,
+                             plan_cache_)) {
             LOG(ERROR) << "Generate plan failed for query: " << query;
           } else {
             query_cache.put(query, plan_cache_[query].SerializeAsString());

@@ -34,9 +34,8 @@ int main(int argc, char** argv) {
                                       bpo::value<uint32_t>()->default_value(1),
                                       "shard number of actor system")(
       "http-port,p", bpo::value<uint16_t>()->default_value(10000),
-      "http port of query handler")("graph-config,g", bpo::value<std::string>(),
-                                    "graph schema config file")(
-      "data-path,d", bpo::value<std::string>(), "data directory path")(
+      "http port of query handler")("data-path,d", bpo::value<std::string>(),
+                                    "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
       "warmup graph data")("memory-level,m",
                            bpo::value<int>()->default_value(1));
@@ -62,14 +61,8 @@ int main(int argc, char** argv) {
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
 
-  std::string graph_schema_path = "";
   std::string data_path = "";
 
-  if (!vm.count("graph-config")) {
-    LOG(ERROR) << "graph-config is required";
-    return -1;
-  }
-  graph_schema_path = vm["graph-config"].as<std::string>();
   if (!vm.count("data-path")) {
     LOG(ERROR) << "data-path is required";
     return -1;
@@ -81,17 +74,7 @@ int main(int argc, char** argv) {
 
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
-
-  {
-    std::error_code ec;
-    std::filesystem::copy(graph_schema_path, data_path + "/.graph.yaml",
-                          std::filesystem::copy_options::overwrite_existing,
-                          ec);
-    if (ec) {
-      LOG(FATAL) << "Failed to copy graph schema file: " << ec.message();
-    }
-  }
-
+  std::string graph_schema_path = data_path + "/graph.yaml";
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   if (!schema.ok()) {
     LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();

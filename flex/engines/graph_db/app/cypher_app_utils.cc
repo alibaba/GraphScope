@@ -76,7 +76,7 @@ void generate_compiler_configs(const std::string& graph_yaml,
 
 bool generate_plan(
     const std::string& query, const std::string& statistics,
-    const std::string& compiler_yaml,
+    const std::string& compiler_yaml, const std::string& tmp_dir,
     std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache) {
   // dump query to file
   const char* graphscope_dir = getenv("GRAPHSCOPE_DIR");
@@ -90,11 +90,10 @@ bool generate_plan(
   std::stringstream ss;
   ss << id;
   std::string thread_id = ss.str();
-
   const std::string compiler_config_path =
-      "/tmp/compiler_config_" + thread_id + ".yaml";
-  const std::string query_file = "/tmp/temp" + thread_id + ".cypher";
-  const std::string output_file = "/tmp/temp" + thread_id + ".pb";
+      tmp_dir + "/compiler_config_" + thread_id + ".yaml";
+  const std::string query_file = tmp_dir + "/temp" + thread_id + ".cypher";
+  const std::string output_file = tmp_dir + "/temp" + thread_id + ".pb";
   const std::string jar_path = std::string(graphscope_dir) +
                                "/interactive_engine/compiler/target/"
                                "compiler-0.0.1-SNAPSHOT.jar:" +
