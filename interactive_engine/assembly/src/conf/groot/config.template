@@ -31,7 +31,7 @@ log4rs.config=LOG4RS_CONFIG
 neo4j.bolt.server.disabled=true
 
 pegasus.worker.num=2
-pegasus.hosts=localhost:8080
+pegasus.hosts=localhost:1234
 
 kafka.test.cluster.enable=true
 collect.statistics=false

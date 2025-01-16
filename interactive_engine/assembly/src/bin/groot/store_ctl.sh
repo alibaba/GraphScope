@@ -17,6 +17,8 @@ usage() {
   Commands:
 
     start            Start individual groot server. If no arguments given, start all servers as local deployment
+
+	start_http       Start groot http server
 END
 }
 
@@ -77,6 +79,17 @@ start_server() {
 		"$@" # > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
+# start groot http server
+start_http_server() {
+	_setup_env
+	java -Dlogback.configurationFile="${GROOT_LOGBACK_FILE}" \
+		-Dconfig.file="${GROOT_CONF_FILE}" \
+		-Dlog.dir="${LOG_DIR}" \
+		-Dlog.name="${LOG_NAME}-http" \
+		-jar "${GROOT_HOME}/lib/groot-http-0.0.1-SNAPSHOT.jar" \
+		"$@" # > >(tee -a "${LOG_DIR}/${LOG_NAME}-http.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}-http.err" >&2)
+}
+
 # parse argv
 while test $# -ne 0; do
 	arg=$1
@@ -88,6 +101,10 @@ while test $# -ne 0; do
 		;;
 	start)
 		start_server "$@"
+		exit
+		;;
+	start_http)
+		start_http_server "$@"
 		exit
 		;;
 	*)

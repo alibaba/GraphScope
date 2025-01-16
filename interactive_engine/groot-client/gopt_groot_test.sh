@@ -111,8 +111,8 @@ fi
 # test python sdk for groot (the openapi client)
 # start groot and groot http server
 GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
-# sleep 30
-cd ${GROOT_DIR}/lib && java -jar groot-http-0.0.1-SNAPSHOT.jar &
+sleep 30
+GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start_http &
 sleep 30
 export ENGINE_TYPE="insight"
 cd ${FLEX_HOME}/interactive/sdk/python/gs_interactive

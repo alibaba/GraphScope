@@ -173,7 +173,7 @@ data:
     export RUST_BACKTRACE=1
     if [ "$ROLE" = "frontend" ]; then
       echo "Starting groot-http Spring Boot service..."
-      java -jar ${GRAPHSCOPE_HOME}/groot/lib/groot-http-0.0.1-SNAPSHOT.jar > /var/log/graphscope/groot-http.log 2>&1 &
+      ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start_http &
     fi
     ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
   portal_setup.sh: |-
