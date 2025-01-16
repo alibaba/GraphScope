@@ -39,13 +39,6 @@ MODERN_GRAPH_DATA_DIR = os.path.abspath(
 )
 print("MODERN_GRAPH_DATA_DIR: ", MODERN_GRAPH_DATA_DIR)
 
-# check whether GS_TEST_DIR is set
-if "GS_TEST_DIR" not in os.environ:
-    raise Exception("GS_TEST_DIR is not set")
-
-GS_TEST_DIR = os.environ["GS_TEST_DIR"]
-NEW_GRAPH_ALGO_SOURCE_DIR = os.path.join(GS_TEST_DIR, "flex/new_graph_algo")
-
 modern_graph_full = {
     "name": "full_graph",
     "description": "This is a test graph",
@@ -470,7 +463,9 @@ new_graph_algo = {
     },
 }
 
-
+"""
+Replace the source location with the real location
+"""
 new_graph_algo_import_config = {
     "graph": "graph_algo",
     "loading_config": {
@@ -491,14 +486,14 @@ new_graph_algo_import_config = {
     "vertex_mappings": [
         {
             "type_name": "Challenge",
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Challenge.csv"],
+            "inputs": ["Challenge.csv"],
         },
-        {"type_name": "Task", "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Task.csv"]},
+        {"type_name": "Task", "inputs": ["Task.csv"]},
         {
             "type_name": "Solution",
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Solution.csv"],
+            "inputs": ["Solution.csv"],
         },
-        {"type_name": "Paper", "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Paper.csv"]},
+        {"type_name": "Paper", "inputs": ["Paper.csv"]},
     ],
     "edge_mappings": [
         {
@@ -507,7 +502,7 @@ new_graph_algo_import_config = {
                 "source_vertex": "Challenge",
                 "destination_vertex": "Solution",
             },
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Challenge_Solvedby_Solution.csv"],
+            "inputs": ["Challenge_Solvedby_Solution.csv"],
             "column_mappings": [],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "source"}, "property": "id"}
@@ -522,7 +517,7 @@ new_graph_algo_import_config = {
                 "source_vertex": "Paper",
                 "destination_vertex": "Paper",
             },
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Paper_Cite_Paper.csv"],
+            "inputs": ["Paper_Cite_Paper.csv"],
             "column_mappings": [],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "source"}, "property": "id"}
@@ -537,7 +532,7 @@ new_graph_algo_import_config = {
                 "source_vertex": "Paper",
                 "destination_vertex": "Challenge",
             },
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Paper_Has_Challenge.csv"],
+            "inputs": ["Paper_Has_Challenge.csv"],
             "column_mappings": [],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "source"}, "property": "id"}
@@ -552,7 +547,7 @@ new_graph_algo_import_config = {
                 "source_vertex": "Paper",
                 "destination_vertex": "Task",
             },
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Paper_WorkOn_Task.csv"],
+            "inputs": ["Paper_WorkOn_Task.csv"],
             "column_mappings": [],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "source"}, "property": "id"}
@@ -567,7 +562,7 @@ new_graph_algo_import_config = {
                 "source_vertex": "Paper",
                 "destination_vertex": "Solution",
             },
-            "inputs": [f"{NEW_GRAPH_ALGO_SOURCE_DIR}/Paper_Use_Solution.csv"],
+            "inputs": ["Paper_Use_Solution.csv"],
             "column_mappings": [],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "source"}, "property": "id"}
@@ -726,7 +721,17 @@ def import_data_to_full_modern_graph(sess: Session, graph_id: str):
 
 
 def import_data_to_new_graph_algo_graph(sess: Session, graph_id: str):
-    schema_mapping = SchemaMapping.from_dict(new_graph_algo_import_config)
+    # check whether GS_TEST_DIR is set
+    if "GS_TEST_DIR" not in os.environ:
+        raise Exception("GS_TEST_DIR is not set")
+
+    GS_TEST_DIR = os.environ["GS_TEST_DIR"]
+    NEW_GRAPH_ALGO_SOURCE_DIR = os.path.join(GS_TEST_DIR, "flex/new_graph_algo")
+    import_config = copy.deepcopy(new_graph_algo_import_config)
+    import_config["loading_config"]["data_source"][
+        "location"
+    ] = NEW_GRAPH_ALGO_SOURCE_DIR
+    schema_mapping = SchemaMapping.from_dict(import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
     assert resp.is_ok()
     job_id = resp.get_value().job_id
