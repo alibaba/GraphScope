@@ -341,7 +341,8 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(preprocess_schema_str.status()));
   }
-  auto request = gs::CreateGraphMetaRequest::FromJson(preprocess_schema_str.value());
+  auto request =
+      gs::CreateGraphMetaRequest::FromJson(preprocess_schema_str.value());
   if (!request.ok()) {
     LOG(ERROR) << "Fail to parse graph meta: "
                << request.status().error_message();

@@ -696,9 +696,7 @@ void admin_http_handler::start() {
   auto fut = seastar::alien::submit_to(
       *seastar::alien::internal::default_instance, 0, [this] {
         return server_.start()
-            .then([this] {
-              return set_routes();
-            })
+            .then([this] { return set_routes(); })
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
               fmt::print(
