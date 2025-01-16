@@ -70,6 +70,22 @@ void Encoder::put_byte_at(size_t pos, uint8_t v) {
 void Encoder::put_string(const std::string& v) {
   size_t size = buf_.size();
   int len = v.size();
+  buf_.resize(size + sizeof(int) + len);
+  memcpy(&buf_[size], &len, sizeof(int));
+  memcpy(&buf_[size + 4], v.data(), len);
+}
+
+void Encoder::put_string_view(const std::string_view& v) {
+  size_t size = buf_.size();
+  int len = v.size();
+  buf_.resize(size + sizeof(int) + len);
+  memcpy(&buf_[size], &len, sizeof(int));
+  memcpy(&buf_[size + 4], v.data(), len);
+}
+
+void Encoder::put_var_len_string(const std::string& v) {
+  size_t size = buf_.size();
+  int len = v.size();
   if (len < (1 << 7)) {
     buf_.resize(size + sizeof(uint8_t) + len);
     buf_[size] = static_cast<char>((len << 1) | 1);
@@ -100,7 +116,7 @@ void Encoder::put_string(const std::string& v) {
   }
 }
 
-void Encoder::put_string_view(const std::string_view& v) {
+void Encoder::put_var_len_string_view(const std::string_view& v) {
   size_t size = buf_.size();
   int len = v.size();
   if (len < (1 << 7)) {

@@ -99,9 +99,6 @@ bool generate_plan(
                                "compiler-0.0.1-SNAPSHOT.jar:" +
                                std::string(graphscope_dir) +
                                "/interactive_engine/compiler/target/libs/*";
-  const std::string djna_path =
-      std::string("-Djna.library.path=") + std::string(graphscope_dir) +
-      "/interactive_engine/executor/ir/target/release/";
   const std::string schema_path = "-Dgraph.schema=" + compiler_yaml;
   auto raw_query = query;
   {
@@ -123,13 +120,11 @@ bool generate_plan(
           "java",
           "-cp",
           jar_path.c_str(),
-          schema_path.c_str(),
-          djna_path.c_str(),
           "com.alibaba.graphscope.common.ir.tools.GraphPlanner",
           compiler_config_path.c_str(),
           query_file.c_str(),
           output_file.c_str(),
-          "/tmp/temp.cypher.yaml",
+          "temp.cypher.yaml",
           nullptr  // execvp expects a null-terminated array
       };
       execvp(args[0], const_cast<char* const*>(args));
