@@ -196,6 +196,20 @@ class Schema {
                                           const std::string& dst_label,
                                           const std::string& label) const;
 
+  inline EdgeStrategy get_outgoing_edge_strategy(label_t src_label,
+                                                 label_t dst_label,
+                                                 label_t label) const {
+    uint32_t index = generate_edge_label(src_label, dst_label, label);
+    return oe_strategy_.at(index);
+  }
+
+  inline EdgeStrategy get_incoming_edge_strategy(label_t src_label,
+                                                 label_t dst_label,
+                                                 label_t label) const {
+    uint32_t index = generate_edge_label(src_label, dst_label, label);
+    return ie_strategy_.at(index);
+  }
+
   bool outgoing_edge_mutable(const std::string& src_label,
                              const std::string& dst_label,
                              const std::string& label) const;

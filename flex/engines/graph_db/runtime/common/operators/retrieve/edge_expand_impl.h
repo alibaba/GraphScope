@@ -29,6 +29,31 @@
 namespace gs {
 namespace runtime {
 
+inline bool check_exist_special_edge(const GraphReadInterface& graph,
+                                     const std::vector<LabelTriplet>& labels,
+                                     Direction dir) {
+  for (auto& triplet : labels) {
+    if (graph.schema().exist(triplet.src_label, triplet.dst_label,
+                             triplet.edge_label)) {
+      if ((dir == Direction::kOut) || (dir == Direction::kBoth)) {
+        if (graph.schema().get_outgoing_edge_strategy(
+                triplet.src_label, triplet.dst_label, triplet.edge_label) !=
+            EdgeStrategy::kMultiple) {
+          return true;
+        }
+      }
+      if ((dir == Direction::kIn) || (dir == Direction::kBoth)) {
+        if (graph.schema().get_incoming_edge_strategy(
+                triplet.src_label, triplet.dst_label, triplet.edge_label) !=
+            EdgeStrategy::kMultiple) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 template <typename EDATA_T, typename PRED_T>
 std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
 expand_vertex_on_graph_view(
@@ -984,7 +1009,13 @@ expand_vertex_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
       }
     }
   }
-  if (sp) {
+  if (ed_types.empty()) {
+    LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
+    MLVertexColumnBuilder builder;
+    std::vector<size_t> offsets;
+    return std::make_pair(builder.finish(), std::move(offsets));
+  }
+  if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {
@@ -1096,7 +1127,12 @@ expand_vertex_impl(const GraphReadInterface& graph, const MLVertexColumn& input,
       break;
     }
   }
-  if (sp) {
+  if (ed_types.size() == 0) {
+    LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+  if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {
@@ -1201,7 +1237,12 @@ expand_vertex_impl(const GraphReadInterface& graph, const MSVertexColumn& input,
       break;
     }
   }
-  if (sp) {
+  if (ed_types.empty()) {
+    LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+  if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {

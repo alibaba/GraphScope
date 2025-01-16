@@ -162,6 +162,9 @@ RTAny UnaryLogicalExpr::eval_edge(const LabelTriplet& label, vid_t src,
   if (logic_ == common::Logical::NOT) {
     return RTAny::from_bool(
         !expr_->eval_edge(label, src, dst, data, idx).as_bool());
+  } else if (logic_ == common::Logical::ISNULL) {
+    return RTAny::from_bool(
+        expr_->eval_edge(label, src, dst, data, idx, 0).is_null());
   }
   LOG(FATAL) << "not support" << static_cast<int>(logic_);
   return RTAny::from_bool(false);

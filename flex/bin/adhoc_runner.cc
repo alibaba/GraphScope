@@ -15,6 +15,8 @@
 
 #include "grape/util.h"
 
+#include <sys/wait.h>  // for waitpid()
+#include <unistd.h>    // for fork() and execvp()
 #include <boost/program_options.hpp>
 #include <fstream>
 #include <iostream>
@@ -26,6 +28,109 @@
 #include "flex/proto_generated_gie/physical.pb.h"
 
 namespace bpo = boost::program_options;
+
+bool generate_plan(const std::string& query, const std::string& compiler_yaml,
+                   physical::PhysicalPlan& plan) {
+  // dump query to file
+  const char* graphscope_dir = getenv("GRAPHSCOPE_DIR");
+  if (graphscope_dir == nullptr) {
+    std::cerr << "GRAPHSCOPE_DIR is not set!" << std::endl;
+    graphscope_dir = "../../../GraphScope/";
+  }
+
+  auto id = std::this_thread::get_id();
+
+  std::stringstream ss;
+  ss << id;
+  std::string thread_id = ss.str();
+
+  const std::string compiler_config_path =
+      "/data/0110/GraphScope//flex/tests/hqps/interactive_config_test.yaml";
+  const std::string query_file = "/tmp/temp" + thread_id + ".cypher";
+  const std::string output_file = "/tmp/temp" + thread_id + ".pb";
+  const std::string jar_path = std::string(graphscope_dir) +
+                               "/interactive_engine/compiler/target/"
+                               "compiler-0.0.1-SNAPSHOT.jar:" +
+                               std::string(graphscope_dir) +
+                               "/interactive_engine/compiler/target/libs/*";
+  const std::string djna_path =
+      std::string("-Djna.library.path=") + std::string(graphscope_dir) +
+      "/interactive_engine/executor/ir/target/release/";
+  const std::string schema_path = "-Dgraph.schema=" + compiler_yaml;
+  auto raw_query = query;
+  {
+    std::ofstream out(query_file);
+    out << query;
+    out.close();
+  }
+
+  // call compiler to generate plan
+  {
+    pid_t pid = fork();
+
+    if (pid == -1) {
+      std::cerr << "Fork failed!" << std::endl;
+      return false;
+    } else if (pid == 0) {
+      const char* const args[] = {
+          "java",
+          "-cp",
+          jar_path.c_str(),
+          schema_path.c_str(),
+          djna_path.c_str(),
+          "com.alibaba.graphscope.common.ir.tools.GraphPlanner",
+          compiler_config_path.c_str(),
+          query_file.c_str(),
+          output_file.c_str(),
+          "/tmp/temp.cypher.yaml",
+          nullptr  // execvp expects a null-terminated array
+      };
+      execvp(args[0], const_cast<char* const*>(args));
+
+      std::cerr << "Exec failed!" << std::endl;
+      return false;
+    } else {
+      int status;
+      waitpid(pid, &status, 0);
+      if (WIFEXITED(status)) {
+        std::cout << "Child exited with status " << WEXITSTATUS(status)
+                  << std::endl;
+      }
+
+      {
+        std::ifstream file(output_file, std::ios::binary);
+
+        if (!file.is_open()) {
+          return false;
+        }
+
+        file.seekg(0, std::ios::end);
+        size_t size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        std::string buffer;
+        buffer.resize(size);
+
+        file.read(&buffer[0], size);
+
+        file.close();
+        if (!plan.ParseFromString(std::string(buffer))) {
+          return false;
+        }
+      }
+      // clean up temp files
+      {
+        unlink(output_file.c_str());
+        unlink(query_file.c_str());
+        // unlink(compiler_config_path.c_str());
+        //  unlink("/tmp/temp.cypher.yaml");
+        //  unlink("/tmp/temp.cypher.yaml_extra_config.yaml");
+      }
+    }
+  }
+
+  return true;
+}
 
 std::string read_pb(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
@@ -96,7 +201,6 @@ int main(int argc, char** argv) {
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "query-file,q", bpo::value<std::string>(), "query file")(
-      "params_file,p", bpo::value<std::string>(), "params file")(
       "query-num,n", bpo::value<int>()->default_value(0))(
       "output-file,o", bpo::value<std::string>(), "output file");
 
@@ -121,7 +225,6 @@ int main(int argc, char** argv) {
   std::string graph_schema_path = "";
   std::string data_path = "";
   std::string output_path = "";
-  int query_num = vm["query-num"].as<int>();
 
   if (!vm.count("graph-config")) {
     LOG(ERROR) << "graph-config is required";
@@ -154,67 +257,20 @@ int main(int argc, char** argv) {
 
   LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
   std::string req_file = vm["query-file"].as<std::string>();
-  std::string query = read_pb(req_file);
+  std::string q_str = read_pb(req_file);
+  physical::PhysicalPlan pb;
+
+  generate_plan(q_str, graph_schema_path, pb);
+  LOG(INFO) << pb.DebugString();
   auto txn = db.GetReadTransaction();
   std::vector<std::map<std::string, std::string>> map;
-  load_params(vm["params_file"].as<std::string>(), map);
-  size_t params_num = map.size();
 
-  physical::PhysicalPlan pb;
-  pb.ParseFromString(query);
+  std::vector<char> outputs;
 
-  if (query_num == 0) {
-    query_num = params_num;
-  }
-  std::vector<std::vector<char>> outputs(query_num);
-
-  double t1 = -grape::GetCurrentTime();
-  for (int i = 0; i < query_num; ++i) {
-    auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
-    gs::Encoder output(outputs[i]);
-    gs::runtime::Sink::sink(ctx, txn, output);
-  }
-  t1 += grape::GetCurrentTime();
-
-  double t2 = -grape::GetCurrentTime();
-  for (int i = 0; i < query_num; ++i) {
-    auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
-    outputs[i].clear();
-    gs::Encoder output(outputs[i]);
-    gs::runtime::Sink::sink(ctx, txn, output);
-  }
-  t2 += grape::GetCurrentTime();
-
-  double t3 = -grape::GetCurrentTime();
-  for (int i = 0; i < query_num; ++i) {
-    auto& m = map[i % params_num];
-    auto ctx = eval_plan(pb, txn, m);
-    outputs[i].clear();
-    gs::Encoder output(outputs[i]);
-    gs::runtime::Sink::sink(ctx, txn, output);
-  }
-  t3 += grape::GetCurrentTime();
-
-  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t1
-            << " s, avg " << t1 / static_cast<double>(query_num) * 1000000
-            << " us";
-  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t2
-            << " s, avg " << t2 / static_cast<double>(query_num) * 1000000
-            << " us";
-  LOG(INFO) << "Finished run " << query_num << " queries, elapsed " << t3
-            << " s, avg " << t3 / static_cast<double>(query_num) * 1000000
-            << " us";
-
-  if (!output_path.empty()) {
-    FILE* fout = fopen(output_path.c_str(), "a");
-    for (auto& output : outputs) {
-      fwrite(output.data(), sizeof(char), output.size(), fout);
-    }
-    fflush(fout);
-    fclose(fout);
-  }
+  std::map<std::string, std::string> mp;
+  auto ctx = eval_plan(pb, txn, mp);
+  gs::Encoder output(outputs);
+  gs::runtime::Sink::sink_beta(ctx, txn, output);
 
   return 0;
 }

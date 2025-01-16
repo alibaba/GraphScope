@@ -16,6 +16,7 @@
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/group_by.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/group_by.h"
+#include "flex/engines/graph_db/runtime/common/operators/retrieve/project.h"
 #include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
@@ -75,6 +76,73 @@ class GroupByOpr : public IReadOperator {
   std::vector<std::function<std::unique_ptr<ReducerBase>(
       const GraphReadInterface&, const Context&)>>
       aggrs_;
+};
+
+class GroupByOprBeta : public IReadOperator {
+ public:
+  GroupByOprBeta(std::function<std::vector<std::unique_ptr<ProjectExprBase>>(
+                     const GraphReadInterface& graph, const Context& ctx)>&&
+                     key_project_func,
+                 std::function<std::unique_ptr<KeyBase>(
+                     const GraphReadInterface&, const Context&)>&& key_fun,
+                 std::vector<std::function<std::unique_ptr<ReducerBase>(
+                     const GraphReadInterface&, const Context&)>>&& aggrs)
+      : key_project_func_(std::move(key_project_func)),
+        key_fun_(std::move(key_fun)),
+        aggrs_(std::move(aggrs)) {}
+
+  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
+                            const std::map<std::string, std::string>& params,
+                            gs::runtime::Context&& ctx,
+                            gs::runtime::OprTimer& timer) override {
+    auto key_project = key_project_func_(graph, ctx);
+    auto tmp = ctx;
+    auto ret = Project::project(std::move(tmp), std::move(key_project));
+    for (size_t i = 0; i < ret.col_num(); ++i) {
+      if (ret.get(i) != nullptr) {
+        ctx.set(i, ret.get(i));
+      }
+    }
+
+    auto key = key_fun_(graph, ctx);
+    std::vector<std::unique_ptr<ReducerBase>> reducers;
+    for (auto& aggr : aggrs_) {
+      reducers.push_back(aggr(graph, ctx));
+    }
+    return GroupBy::group_by(graph, std::move(ctx), std::move(key),
+                             std::move(reducers));
+  }
+
+ private:
+  std::function<std::vector<std::unique_ptr<ProjectExprBase>>(
+      const GraphReadInterface& graph, const Context& ctx)>
+      key_project_func_;
+  std::function<std::unique_ptr<KeyBase>(const GraphReadInterface&,
+                                         const Context&)>
+      key_fun_;
+  std::vector<std::function<std::unique_ptr<ReducerBase>(
+      const GraphReadInterface&, const Context&)>>
+      aggrs_;
+};
+
+template <typename T>
+struct TypedKeyCollector {
+  struct TypedKeyWrapper {
+    using V = T;
+    TypedKeyWrapper(Var&& expr) : expr(std::move(expr)) {}
+    V operator()(size_t idx) const {
+      return TypedConverter<T>::to_typed(expr.get(idx));
+    }
+    Var expr;
+  };
+
+  TypedKeyCollector(const Context& ctx) { builder.reserve(ctx.row_num()); }
+  void collect(const TypedKeyWrapper& expr, size_t idx) {
+    builder.push_back_opt(expr(idx));
+  }
+  auto get(const TypedKeyWrapper&) { return builder.finish(); }
+
+  ValueColumnBuilder<T> builder;
 };
 
 struct SLVertexWrapper {
@@ -275,9 +343,21 @@ struct KeyBuilder {
 };
 
 struct VarWrapper {
+  using V = RTAny;
   RTAny operator()(size_t idx) const { return vars.get(idx); }
   VarWrapper(Var&& vars) : vars(std::move(vars)) {}
   Var vars;
+};
+
+struct VarPairWrapper {
+  using V = std::pair<RTAny, RTAny>;
+  std::pair<RTAny, RTAny> operator()(size_t idx) const {
+    return std::make_pair(fst.get(idx), snd.get(idx));
+  }
+  VarPairWrapper(Var&& fst, Var&& snd)
+      : fst(std::move(fst)), snd(std::move(snd)) {}
+  Var fst;
+  Var snd;
 };
 
 template <typename T>
@@ -774,6 +854,63 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
                                                    alias);
   }
 }
+std::unique_ptr<ReducerBase> make_general_reducer(
+    const GraphReadInterface& graph, const Context& ctx, Var&& var,
+    AggrKind kind, int alias) {
+  if (kind == AggrKind::kCount) {
+    VarWrapper var_wrap(std::move(var));
+    if (!var.is_optional()) {
+      CountReducer<VarWrapper, false> r(std::move(var_wrap));
+      ValueCollector<int64_t> collector;
+      return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
+          std::move(r), std::move(collector), alias);
+    } else {
+      LOG(FATAL) << "not support optional count\n";
+    }
+  } else if (kind == AggrKind::kCountDistinct) {
+    VarWrapper var_wrap(std::move(var));
+    if (!var.is_optional()) {
+      CountDistinctReducer<VarWrapper, false> r(std::move(var_wrap));
+      ValueCollector<int64_t> collector;
+      return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
+          std::move(r), std::move(collector), alias);
+    } else {
+      LOG(FATAL) << "not support optional count\n";
+    }
+  } else {
+    LOG(FATAL) << "not support var reduce\n";
+  }
+}
+
+std::unique_ptr<ReducerBase> make_pair_reducer(const GraphReadInterface& graph,
+                                               const Context& ctx, Var&& fst,
+                                               Var&& snd, AggrKind kind,
+                                               int alias) {
+  if (kind == AggrKind::kCount) {
+    VarPairWrapper var_wrap(std::move(fst), std::move(snd));
+    if ((!fst.is_optional()) && (!snd.is_optional())) {
+      CountReducer<VarPairWrapper, false> r(std::move(var_wrap));
+      ValueCollector<int64_t> collector;
+      return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
+          std::move(r), std::move(collector), alias);
+    } else {
+      LOG(FATAL) << "not support optional count\n";
+    }
+  } else if (kind == AggrKind::kCountDistinct) {
+    VarPairWrapper var_wrap(std::move(fst), std::move(snd));
+    if (!fst.is_optional() && !snd.is_optional()) {
+      CountDistinctReducer<VarPairWrapper, false> r(std::move(var_wrap));
+      ValueCollector<int64_t> collector;
+      return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
+          std::move(r), std::move(collector), alias);
+    } else {
+      LOG(FATAL) << "not support optional count\n";
+    }
+  } else {
+    LOG(FATAL) << "not support var reduce\n";
+  }
+}
+
 std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
                                           const Context& ctx,
                                           const common::Variable& var,
@@ -847,6 +984,7 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
   } else if (var_.type() == RTAnyType::kTuple) {
     return make_reducer<Tuple>(graph, ctx, std::move(var_), kind, alias);
   } else {
+    return make_general_reducer(graph, ctx, std::move(var_), kind, alias);
     LOG(FATAL) << "unsupport" << static_cast<int>(var_.type());
     return nullptr;
   }
@@ -877,16 +1015,62 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
   auto opr = plan.plan(op_idx).opr().group_by();
   std::vector<std::pair<int, int>> mappings;
   std::vector<common::Variable> vars;
+  bool has_property = false;
 
   for (int i = 0; i < mappings_num; ++i) {
     auto& key = opr.mappings(i);
     CHECK(key.has_key());
     CHECK(key.has_alias());
-    CHECK(!key.key().has_property());
     int tag = key.key().has_tag() ? key.key().tag().id() : -1;
     int alias = key.has_alias() ? key.alias().value() : -1;
-    mappings.emplace_back(tag, alias);
+    if (key.key().has_property()) {
+      mappings.emplace_back(alias, alias);
+      has_property = true;
+    } else {
+      mappings.emplace_back(tag, alias);
+    }
     vars.emplace_back(key.key());
+  }
+  std::function<std::vector<std::unique_ptr<ProjectExprBase>>(
+      const GraphReadInterface&, const Context&)>
+      make_project_func = nullptr;
+  if (has_property) {
+    make_project_func = [vars, mappings](const GraphReadInterface& graph,
+                                         const Context& ctx)
+        -> std::vector<std::unique_ptr<ProjectExprBase>> {
+      std::vector<std::unique_ptr<ProjectExprBase>> exprs;
+      int idx = 0;
+      for (const auto& var : vars) {
+        auto alias = mappings[idx++].second;
+        Var var_(graph, ctx, var, VarType::kPathVar);
+        if (var_.type() == RTAnyType::kStringValue) {
+          TypedKeyCollector<std::string_view>::TypedKeyWrapper wrapper(
+              std::move(var_));
+          TypedKeyCollector<std::string_view> collector(ctx);
+          exprs.emplace_back(
+              std::make_unique<
+                  ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                  std::move(wrapper), std::move(collector), alias));
+        } else if (var_.type() == RTAnyType::kI64Value) {
+          TypedKeyCollector<int64_t>::TypedKeyWrapper wrapper(std::move(var_));
+          TypedKeyCollector<int64_t> collector(ctx);
+          exprs.emplace_back(
+              std::make_unique<
+                  ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                  std::move(wrapper), std::move(collector), alias));
+        } else if (var_.type() == RTAnyType::kI32Value) {
+          TypedKeyCollector<int32_t>::TypedKeyWrapper wrapper(std::move(var_));
+          TypedKeyCollector<int32_t> collector(ctx);
+          exprs.emplace_back(
+              std::make_unique<
+                  ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                  std::move(wrapper), std::move(collector), alias));
+        } else {
+          LOG(FATAL) << "unsupport" << static_cast<int>(var_.type());
+        }
+      }
+      return exprs;
+    };
   }
   auto make_key_func = [mappings = std::move(mappings), vars = std::move(vars)](
                            const GraphReadInterface& graph,
@@ -915,13 +1099,28 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
   std::vector<std::function<std::unique_ptr<ReducerBase>(
       const GraphReadInterface&, const Context&)>>
       reduces;
+
   for (int i = 0; i < func_num; ++i) {
     auto& func = opr.functions(i);
     auto aggr_kind = parse_aggregate(func.aggregate());
-    CHECK(func.vars_size() == 1);
+    int alias = func.has_alias() ? func.alias().value() : -1;
+
+    //    CHECK(func.vars_size() == 1);
+    if (func.vars_size() == 2) {
+      auto& fst = func.vars(0);
+      auto& snd = func.vars(1);
+      reduces.emplace_back(
+          [aggr_kind, alias, fst, snd](
+              const GraphReadInterface& graph,
+              const Context& ctx) -> std::unique_ptr<ReducerBase> {
+            Var fst_var(graph, ctx, fst, VarType::kPathVar);
+            Var snd_var(graph, ctx, snd, VarType::kPathVar);
+            return make_pair_reducer(graph, ctx, std::move(fst_var),
+                                     std::move(snd_var), aggr_kind, alias);
+          });
+    }
     auto& var = func.vars(0);
 
-    int alias = func.has_alias() ? func.alias().value() : -1;
     reduces.emplace_back(
         [alias, aggr_kind, var](
             const GraphReadInterface& graph,
@@ -929,9 +1128,17 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
           return make_reducer(graph, ctx, var, aggr_kind, alias);
         });
   }
-  return std::make_pair(std::make_unique<GroupByOpr>(std::move(make_key_func),
-                                                     std::move(reduces)),
-                        meta);
+  if (!has_property) {
+    return std::make_pair(std::make_unique<GroupByOpr>(std::move(make_key_func),
+                                                       std::move(reduces)),
+                          meta);
+  } else {
+    return std::make_pair(std::make_unique<GroupByOprBeta>(
+                              std::move(make_project_func),
+                              std::move(make_key_func), std::move(reduces)),
+
+                          meta);
+  }
 }
 
 }  // namespace ops

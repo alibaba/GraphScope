@@ -79,7 +79,12 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
       }
     }
   }
-  if (sp) {
+  if (ed_types.empty()) {
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+
+  if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {
@@ -177,7 +182,11 @@ expand_vertex_without_predicate_optional_impl(
   grape::DistinctSort(label_dirs);
   bool se = (label_dirs.size() == 1);
   bool sp = true;
-  if (sp) {
+  if (label_dirs.size() == 0) {
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+  if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {
@@ -271,7 +280,11 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
       break;
     }
   }
-  if (sp) {
+  if (ed_types.empty()) {
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+  if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {
@@ -379,7 +392,11 @@ expand_vertex_without_predicate_optional_impl(
       break;
     }
   }
-  if (sp) {
+  if (ed_types.size() == 0) {
+    MLVertexColumnBuilder builder;
+    return std::make_pair(builder.finish(), std::vector<size_t>());
+  }
+  if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       //      LOG(INFO) << "not implemented" << se;
@@ -458,7 +475,7 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
     MLVertexColumnBuilder builder;
     return std::make_pair(builder.finish(), std::vector<size_t>());
   }
-  if (sp) {
+  if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
       if (se) {

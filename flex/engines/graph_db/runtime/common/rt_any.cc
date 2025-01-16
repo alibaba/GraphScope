@@ -68,6 +68,8 @@ RTAny::RTAny(const Any& val) {
   } else if (val.type == PropertyType::Bool()) {
     type_ = RTAnyType::kBoolValue;
     value_.b_val = val.AsBool();
+  } else if (val.type == PropertyType::Empty()) {
+    type_ = RTAnyType::kNull;
   } else {
     LOG(FATAL) << "Any value: " << val.to_string()
                << ", type = " << val.type.type_enum;
@@ -134,6 +136,8 @@ RTAny::RTAny(const RTAny& rhs) : type_(rhs.type_) {
     value_.day = rhs.value_.day;
   } else if (type_ == RTAnyType::kTimestamp) {
     value_.date = rhs.value_.date;
+  } else if (type_ == RTAnyType::kEdge) {
+    value_.edge = rhs.value_.edge;
   } else {
     LOG(FATAL) << "unexpected type: " << static_cast<int>(type_);
   }
@@ -468,6 +472,8 @@ bool RTAny::operator<(const RTAny& other) const {
     return value_.date < other.value_.date;
   } else if (type_ == RTAnyType::kF64Value) {
     return value_.f64_val < other.value_.f64_val;
+  } else if (type_ == RTAnyType::kEdge) {
+    return value_.edge < other.value_.edge;
   }
 
   LOG(FATAL) << "not support for " << static_cast<int>(type_);
