@@ -14,7 +14,6 @@
  */
 
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/app/adhoc_app.h"
 #include "flex/engines/graph_db/app/builtin/count_vertices.h"
 #include "flex/engines/graph_db/app/builtin/k_hop_neighbors.h"
 #include "flex/engines/graph_db/app/builtin/pagerank.h"

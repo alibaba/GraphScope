@@ -9,13 +9,10 @@ namespace gs {
 
 bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
                           Encoder& output) {
-  auto txn = graph.GetReadTransaction();
-  std::string_view _bytes = input.get_bytes();
-  uint8_t type = static_cast<uint8_t>(_bytes.back());
-  std::string_view bytes = std::string_view(_bytes.data(), _bytes.size() - 1);
+  std::string_view r_bytes = input.get_bytes();
+  uint8_t type = static_cast<uint8_t>(r_bytes.back());
+  std::string_view bytes = std::string_view(r_bytes.data(), r_bytes.size() - 1);
   if (type == Schema::ADHOC_READ_PLUGIN_ID) {
-    auto txn = graph.GetReadTransaction();
-
     physical::PhysicalPlan plan;
     if (!plan.ParseFromString(std::string(bytes))) {
       LOG(ERROR) << "Parse plan failed...";
@@ -23,6 +20,8 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     }
 
     LOG(INFO) << "plan: " << plan.DebugString();
+    auto txn = graph.GetReadTransaction();
+
     gs::runtime::GraphReadInterface gri(txn);
     auto ctx = runtime::PlanParser::get()
                    .parse_read_pipeline(graph.schema(),
@@ -69,6 +68,7 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
           query, runtime::PlanParser::get().parse_read_pipeline(
                      db_.schema(), gs::runtime::ContextMeta(), plan));
     }
+    auto txn = graph.GetReadTransaction();
 
     gs::runtime::GraphReadInterface gri(txn);
     auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(),
