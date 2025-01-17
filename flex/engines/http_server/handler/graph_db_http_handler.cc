@@ -296,9 +296,8 @@ class stored_proc_handler : public StoppableHandler {
     if (req->content.size() > 0) {
       // read last byte and get the format info from the byte.
       last_byte = req->content.back();
-      if (last_byte >
-          static_cast<uint8_t>(
-              gs::GraphDBSession::InputFormat::kCypherProtoProcedure)) {
+      if (last_byte > static_cast<uint8_t>(
+                          gs::GraphDBSession::InputFormat::kCypherString)) {
         LOG(ERROR) << "Unsupported request format: " << (int) last_byte;
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
@@ -339,7 +338,10 @@ class stored_proc_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
     ](auto&& output) {
           if (last_byte == static_cast<uint8_t>(
-                               gs::GraphDBSession::InputFormat::kCppEncoder)) {
+                               gs::GraphDBSession::InputFormat::kCppEncoder) ||
+              last_byte ==
+                  static_cast<uint8_t>(
+                      gs::GraphDBSession::InputFormat::kCypherString)) {
             return seastar::make_ready_future<query_param>(
                 std::move(output.content));
           } else {

@@ -9,7 +9,8 @@ namespace gs {
 bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
                            Encoder& output) {
   auto txn = graph.GetInsertTransaction();
-  std::string_view bytes = input.get_bytes();
+  std::string_view r_bytes = input.get_bytes();
+  std::string_view bytes = std::string_view(r_bytes.data(), r_bytes.size() - 1);
 
   size_t sep = bytes.find_first_of("&?");
   auto query_str = bytes.substr(0, sep);

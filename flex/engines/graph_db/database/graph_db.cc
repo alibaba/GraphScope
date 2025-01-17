@@ -420,10 +420,12 @@ void GraphDB::initApps(
   app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
       std::make_shared<HQPSAdhocWriteAppFactory>();
   app_factories_[Schema::ADHOC_READ_PLUGIN_ID] =
-      std::make_shared<AdhocReadAppFactory>();
+      std::make_shared<CypherReadAppFactory>();
 
   auto& parser = gs::runtime::PlanParser::get();
   parser.init();
+  app_factories_[Schema::ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<CypherReadAppFactory>();
 
   app_factories_[Schema::CYPHER_READ_PLUGIN_ID] =
       std::make_shared<CypherReadAppFactory>();
