@@ -27,7 +27,7 @@ namespace runtime {
 
 class Intersect {
  public:
-    static Context intersect(Context&& ctx, std::vector<Context>&& ctxs, int key);
+  static Context intersect(Context&& ctx, std::vector<Context>&& ctxs, int key);
 };
 
 }  // namespace runtime
