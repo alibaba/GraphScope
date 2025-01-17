@@ -36,6 +36,7 @@ data:
 
     ## Frontend Config
     frontend.service.port={{ .Values.frontend.service.servicePort }}
+    frontend.service.httpPort={{ .Values.frontend.service.httpPort }}
     frontend.server.id=INDEX
     frontend.server.num={{ .Values.frontend.replicaCount }}
 
@@ -139,7 +140,6 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
-    export GROOT_HTTP_PORT={{ .Values.frontend.service.httpPort }}
 
     export OTEL_SDK_DISABLED={{ not .Values.otel.enabled }}
 

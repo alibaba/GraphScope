@@ -29,3 +29,5 @@ src/main/java/com/alibaba/graphscope/groot/service/api/V1ApiController.java
 src/main/java/com/alibaba/graphscope/groot/service/models/GSDataType.java
 src/main/java/com/alibaba/graphscope/groot/service/models/StringTypeString.java
 src/main/java/com/alibaba/graphscope/groot/service/models/TemporalTypeTemporal.java
+src/main/resources/application.properties
+src/main/java/com/alibaba/graphscope/groot/OpenApiGeneratorApplication.java

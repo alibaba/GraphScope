@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
 import com.alibaba.graphscope.groot.service.models.VertexRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,8 @@ public class V1ApiController implements V1Api {
     private final VertexManagementService vertexManagementService;
     private final EdgeManagementService edgeManagementService;
     private final SchemaManagementService schemaManagementService;
+
+    @Autowired private Environment env;
 
     @Autowired
     public V1ApiController(
@@ -182,7 +185,9 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(value = "/graph/{graph_id}/schema/vertex", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/graph/{graph_id}/schema/vertex",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteVertexType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName) {
@@ -233,7 +238,9 @@ public class V1ApiController implements V1Api {
     }
 
     @Override
-    @DeleteMapping(value = "/graph/{graph_id}/schema/edge", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(
+            value = "/graph/{graph_id}/schema/edge",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteEdgeType(
             @PathVariable("graph_id") String graphId,
             @RequestParam(value = "type_name", required = true) String typeName,
@@ -340,8 +347,14 @@ public class V1ApiController implements V1Api {
             // todo: get the actual port from configuration
             ServiceStatus serviceStatus = new ServiceStatus();
             serviceStatus.setStatus("OK");
-            serviceStatus.setHqpsPort(8080);
-            serviceStatus.setGremlinPort(12312);
+            int hqpsPort = env.getProperty("frontend.service.httpPort", Integer.class, 8080);
+            int gremlinPort = env.getProperty("gremlin.server.port", Integer.class, 12312);
+            serviceStatus.setHqpsPort(hqpsPort);
+            serviceStatus.setGremlinPort(gremlinPort);
+            if (env.getProperty("neo4j.bolt.server.disabled", Boolean.class, false)) {
+                int neo4jBoltPort = env.getProperty("neo4j.bolt.server.port", Integer.class, 7687);
+                serviceStatus.setBoltPort(neo4jBoltPort);
+            }
             return ResponseEntity.status(HttpStatus.OK).body(serviceStatus);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

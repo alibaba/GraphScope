@@ -73,10 +73,6 @@
             <groupId>com.alibaba.graphscope</groupId>
             <artifactId>groot-client</artifactId>
         </dependency>
-            <dependency>
-            <groupId>com.alibaba.graphscope</groupId>
-            <artifactId>interactive-common</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>

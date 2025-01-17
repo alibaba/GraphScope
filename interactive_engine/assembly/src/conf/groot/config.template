@@ -25,6 +25,7 @@ kafka.topic=groot
 
 ## Frontend Config
 gremlin.server.port=12312
+frontend.service.httpPort=8080
 
 log4rs.config=LOG4RS_CONFIG
 

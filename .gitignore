@@ -159,7 +159,6 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
 interactive_engine/groot-http/.openapi-generator/
-interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/*.java
 interactive_engine/groot-http/src/main/java/org/
 interactive_engine/groot-http/src/main/resources/
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/api/V1Api.java
@@ -167,6 +166,7 @@ interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service
 !interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/StringTypeString.java
 !interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/TemporalTypeTemporal.java
 interactive_engine/groot-http/src/test/
+interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/RFC3339DateFormat.java
 
 **/.cache/
 
