@@ -45,18 +45,6 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish());
     } else if (params.tables.size() > 1) {
-#if 0
-      MLVertexColumnBuilder builder;
-
-      for (auto label : params.tables) {
-        auto vertices = graph.GetVertexSet(label);
-        for (auto vid : vertices) {
-          if (predicate(label, vid)) {
-            builder.push_back_vertex({label, vid});
-          }
-        }
-      }
-#else
       MSVertexColumnBuilder builder;
 
       for (auto label : params.tables) {
@@ -68,7 +56,6 @@ class Scan {
           }
         }
       }
-#endif
       ctx.set(params.alias, builder.finish());
     }
     return ctx;
