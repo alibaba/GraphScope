@@ -38,6 +38,9 @@ public class YamlConfigs extends Configs {
                         (Configs configs) -> configs.get("compiler.planner.is_on"))
                 .put("graph.planner.opt", (Configs configs) -> configs.get("compiler.planner.opt"))
                 .put(
+                        "graph.planner.cbo.glogue.size",
+                        (Configs configs) -> configs.get("compiler.planner.cbo.glogue.size"))
+                .put(
                         "graph.planner.rules",
                         (Configs configs) -> {
                             String rules = configs.get("compiler.planner.rules");
@@ -64,6 +67,15 @@ public class YamlConfigs extends Configs {
                                 return statistics;
                             }
                             return configs.get("compiler.meta.reader.statistics.uri");
+                        })
+                .put(
+                        "graph.functions",
+                        (Configs configs) -> {
+                            String functions = System.getProperty("graph.functions");
+                            if (functions != null) {
+                                return functions;
+                            }
+                            return configs.get("compiler.meta.reader.functions.uri");
                         })
                 .put(
                         "graph.meta.schema.fetch.interval.ms",

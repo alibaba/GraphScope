@@ -1408,9 +1408,10 @@ struct convert<gs::PropertyType> {
           if (config["string"]["var_char"]["max_length"]) {
             property_type = gs::PropertyType::Varchar(
                 config["string"]["var_char"]["max_length"].as<int32_t>());
+          } else {
+            property_type = gs::PropertyType::Varchar(
+                gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
           }
-          property_type = gs::PropertyType::Varchar(
-              gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
         } else {
           LOG(ERROR) << "Unrecognized string type";
         }
