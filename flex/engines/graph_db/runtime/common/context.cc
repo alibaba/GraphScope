@@ -21,15 +21,13 @@ namespace gs {
 
 namespace runtime {
 
-Context::Context()
-    : head(nullptr), prev_context(nullptr), offset_ptr(nullptr) {}
+Context::Context() : head(nullptr), offset_ptr(nullptr) {}
 
 void Context::clear() {
   columns.clear();
   head.reset();
   offset_ptr = nullptr;
   tag_ids.clear();
-  prev_context = nullptr;
 }
 
 void Context::set(int alias, std::shared_ptr<IContextColumn> col) {
@@ -117,66 +115,21 @@ void Context::optional_reshuffle(const std::vector<size_t>& offsets) {
 }
 
 std::shared_ptr<IContextColumn> Context::get(int alias) {
-  if (prev_context == nullptr) {
-    if (alias == -1) {
-      return head;
-    }
-    CHECK(static_cast<size_t>(alias) < columns.size());
-    return columns[alias];
-  } else {
-    std::shared_ptr<IContextColumn> ptr{nullptr};
-    // find in the current context
-    if (alias == -1) {
-      ptr = head;
-    } else {
-      if (static_cast<size_t>(alias) < columns.size()) {
-        ptr = columns[alias];
-      }
-    }
-    if (ptr == nullptr) {
-      auto ptr = prev_context->get(alias);
-      if ((ptr != nullptr) && ptr->size() != offset_ptr->size()) {
-        ptr = ptr->shuffle(offset_ptr->data());
-      }
-      set(alias, ptr);
-      return ptr;
-    } else {
-      return ptr;
-    }
+  if (alias == -1) {
+    return head;
   }
+  CHECK(static_cast<size_t>(alias) < columns.size());
+  return columns[alias];
 }
 
 const std::shared_ptr<IContextColumn> Context::get(int alias) const {
-  if (prev_context == nullptr) {
-    if (alias == -1) {
-      assert(head != nullptr);
-      return head;
-    }
-    CHECK(static_cast<size_t>(alias) < columns.size());
-    // return nullptr if the column is not set
-    return columns[alias];
-  } else {
-    std::shared_ptr<IContextColumn> ptr{nullptr};
-    // find in the current context
-    if (alias == -1) {
-      ptr = head;
-    } else {
-      if (static_cast<size_t>(alias) < columns.size()) {
-        ptr = columns[alias];
-      }
-    }
-    if (ptr == nullptr) {
-      auto ptr = prev_context->get(alias);
-      if ((ptr != nullptr) && ptr->size() != offset_ptr->size()) {
-        ptr = ptr->shuffle(offset_ptr->data());
-      }
-      // ???
-      // set(alias, ptr);
-      return ptr;
-    } else {
-      return ptr;
-    }
+  if (alias == -1) {
+    assert(head != nullptr);
+    return head;
   }
+  CHECK(static_cast<size_t>(alias) < columns.size());
+  // return nullptr if the column is not set
+  return columns[alias];
 }
 
 void Context::remove(int alias) {
@@ -203,9 +156,6 @@ size_t Context::row_num() const {
   }
   if (head != nullptr) {
     return head->size();
-  }
-  if (prev_context != nullptr) {
-    return prev_context->row_num();
   }
   return 0;
 }
@@ -254,11 +204,9 @@ void Context::show(const GraphReadInterface& graph) const {
   }
 }
 
-void Context::set_prev_context(Context* prev_context) {
-  this->prev_context = prev_context;
-  CHECK(prev_context != this);
+void Context::gen_offset() {
   ValueColumnBuilder<size_t> builder;
-  size_t prev_row_num = prev_context->row_num();
+  size_t prev_row_num = row_num();
   builder.reserve(prev_row_num);
   for (size_t i = 0; i < prev_row_num; ++i) {
     builder.push_back_opt(i);

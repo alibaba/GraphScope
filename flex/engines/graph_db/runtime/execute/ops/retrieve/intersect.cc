@@ -33,8 +33,8 @@ class IntersectOpr : public IReadOperator {
                             gs::runtime::OprTimer& timer) override {
     std::vector<gs::runtime::Context> ctxs;
     for (auto& plan : sub_plans_) {
-      Context n_ctx;
-      n_ctx.set_prev_context(&ctx);
+      Context n_ctx(ctx);
+      n_ctx.gen_offset();
       ctxs.push_back(plan.Execute(graph, std::move(n_ctx), params, timer));
     }
     return Intersect::intersect(std::move(ctx), std::move(ctxs), key_);

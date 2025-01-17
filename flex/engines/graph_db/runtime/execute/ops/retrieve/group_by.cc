@@ -1091,7 +1091,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
         key_vars.emplace_back(VarWrapper(std::move(var_)));
       }
       key = std::make_unique<GKey<VarWrapper>>(std::move(key_vars), mappings);
-      // make_general_key(graph, ctx, mappings);
     }
     return key;
   };
@@ -1104,8 +1103,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
     auto& func = opr.functions(i);
     auto aggr_kind = parse_aggregate(func.aggregate());
     int alias = func.has_alias() ? func.alias().value() : -1;
-
-    //    CHECK(func.vars_size() == 1);
     if (func.vars_size() == 2) {
       auto& fst = func.vars(0);
       auto& snd = func.vars(1);

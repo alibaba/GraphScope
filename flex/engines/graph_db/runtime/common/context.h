@@ -57,7 +57,7 @@ class Context {
 
   size_t col_num() const;
 
-  void set_prev_context(Context* prev_context);
+  void gen_offset();
 
   Context union_ctx(const Context& ctx) const;
 
@@ -66,7 +66,6 @@ class Context {
 
   // for intersect
   const ValueColumn<size_t>& get_offsets() const;
-  Context* prev_context;
   std::shared_ptr<ValueColumn<size_t>> offset_ptr;
   std::vector<int> tag_ids;
 };
