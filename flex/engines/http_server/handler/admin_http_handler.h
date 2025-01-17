@@ -28,7 +28,7 @@ namespace server {
 class InteractiveAdminService;
 class admin_http_handler {
  public:
-  admin_http_handler(uint16_t http_port, int32_t shard_num,
+  admin_http_handler(uint16_t http_port, 
                      int32_t exclusive_shard_id);
 
   void start();

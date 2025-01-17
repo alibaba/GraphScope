@@ -30,27 +30,6 @@
 
 namespace server {
 
-struct AdminRequestDispatcher {
-  AdminRequestDispatcher(int32_t exclusive_shard_id, uint32_t shard_concurrency)
-      : shard_concurrency_(shard_concurrency),
-        cur_executor_id_(0),
-        exclusive_shard_id_(exclusive_shard_id) {}
-
-  inline uint32_t get_dst_shard() {
-    return exclusive_shard_id_ == -1 ? hiactor::local_shard_id()
-                                     : exclusive_shard_id_;
-  }
-
-  inline uint32_t get_dst_executor() {
-    auto idx = cur_executor_id_;
-    cur_executor_id_ = (cur_executor_id_ + 1) % shard_concurrency_;
-    return idx;
-  }
-  uint32_t shard_concurrency_;
-  uint32_t cur_executor_id_;
-  int32_t exclusive_shard_id_;
-};
-
 // Only returns success if all results are success
 // But currently, only one file uploading is supported.
 admin_query_result generate_final_result(
@@ -90,24 +69,18 @@ inline bool parse_multipart_boundary(const seastar::sstring& content_type,
 
 class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
-
   admin_file_upload_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
                                  int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actor_refs = get_admin_actors();
-    CHECK(admin_actor_refs.size() > hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actor_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_file_upload_handler_impl() override = default;
@@ -115,10 +88,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
   seastar::future<server::payload<std::vector<gs::Result<seastar::sstring>>>>
   upload_file(std::vector<std::pair<seastar::sstring, seastar::sstring>>&&
                   file_name_and_contents,
-              size_t cur_ind,
+              size_t cur_ind, uint32_t dst_executor,
               std::vector<gs::Result<seastar::sstring>>&& results) {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
     if (cur_ind >= file_name_and_contents.size()) {
       VLOG(10) << "Successfully uploaded " << file_name_and_contents.size()
                << " files.";
@@ -126,10 +97,10 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
           server::payload<std::vector<gs::Result<seastar::sstring>>>>(
           std::move(results));
     } else {
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .upload_file(
               query_param{std::move(file_name_and_contents[cur_ind].second)})
-          .then_wrapped([this, cur_ind,
+          .then_wrapped([this, dst_executor, cur_ind,
                          file_name_and_contents =
                              std::move(file_name_and_contents),
                          results =
@@ -149,17 +120,19 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
             }
             results.emplace_back(result_val);
             return upload_file(std::move(file_name_and_contents), cur_ind + 1,
-                               std::move(results));
+                               dst_executor, std::move(results));
           });
     }
   }
 
   seastar::future<server::payload<gs::Result<seastar::sstring>>> upload_files(
       std::vector<std::pair<seastar::sstring, seastar::sstring>>&&
-          file_name_and_contents) {
+          file_name_and_contents,
+      uint32_t dst_executor) {
     // upload each file in chain
     std::vector<gs::Result<seastar::sstring>> results;
-    return upload_file(std::move(file_name_and_contents), 0, std::move(results))
+    return upload_file(std::move(file_name_and_contents), 0, dst_executor,
+                       std::move(results))
         .then([](auto&& results) {
           auto final_res = generate_final_result(results);
           return seastar::make_ready_future<admin_query_result>(
@@ -202,6 +175,9 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "POST") {
@@ -215,7 +191,7 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
           file_name_and_contents =
               parse_multipart_form_data(req->content, boundary);
       // upload for each file
-      return upload_files(std::move(file_name_and_contents))
+      return upload_files(std::move(file_name_and_contents), dst_executor)
           .then_wrapped([rep = std::move(rep)](
                             seastar::future<admin_query_result>&& fut) mutable {
             return return_reply_with_result(std::move(rep), std::move(fut));
@@ -228,7 +204,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
 /**
@@ -236,23 +213,17 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
  */
 class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
   admin_http_graph_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
                                 int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actors_refs = get_admin_actors();
-    CHECK(admin_actors_refs.size() >= hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actors_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_http_graph_handler_impl() override = default;
@@ -261,8 +232,9 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     auto& method = req->_method;
     if (method == "POST") {
       if (path.find("dataloading") != seastar::sstring::npos) {
@@ -273,7 +245,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
           auto graph_id = trim_slash(req->param.at("graph_id"));
           LOG(INFO) << "Graph id: " << graph_id;
           auto pair = std::make_pair(graph_id, std::move(req->content));
-          return get_admin_actors()[dst_shard][dst_executor]
+          return admin_actor_refs_[dst_executor]
               .run_graph_loading(graph_management_param{std::move(pair)})
               .then_wrapped(
                   [rep = std::move(rep)](
@@ -284,7 +256,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
         }
       } else {
         LOG(INFO) << "Route to creating graph";
-        return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .run_create_graph(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -298,7 +270,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
         auto graph_id = trim_slash(req->param.at("graph_id"));
         if (path.find("schema") != seastar::sstring::npos) {
           // get graph schema
-          return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+          return admin_actor_refs_[dst_executor]
               .run_get_graph_schema(query_param{std::move(graph_id)})
               .then_wrapped(
                   [rep = std::move(rep)](
@@ -307,7 +279,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
                                                     std::move(fut));
                   });
         } else if (path.find("statistics") != seastar::sstring::npos) {
-          return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+          return admin_actor_refs_[dst_executor]
               .run_get_graph_statistic(query_param{std::move(graph_id)})
               .then_wrapped(
                   [rep = std::move(rep)](
@@ -317,7 +289,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
                   });
         } else {
           // Get the metadata of graph.
-          return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+          return admin_actor_refs_[dst_executor]
               .run_get_graph_meta(query_param{std::move(graph_id)})
               .then_wrapped(
                   [rep = std::move(rep)](
@@ -327,7 +299,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
                   });
         }
       } else {
-        return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .run_list_graphs(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -341,7 +313,7 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
         return new_bad_request_reply(std::move(rep), "graph_id not given");
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
-      return get_admin_actors()[dispatcher_.get_dst_shard()][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .run_delete_graph(query_param{std::move(graph_id)})
           .then_wrapped([rep = std::move(rep)](
                             seastar::future<admin_query_result>&& fut) mutable {
@@ -355,29 +327,24 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
 class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
   admin_http_procedure_handler_impl(uint32_t group_id,
                                     uint32_t shard_concurrency,
                                     int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actors_refs = get_admin_actors();
-    CHECK(admin_actors_refs.size() >= hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actors_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_http_procedure_handler_impl() override = default;
@@ -386,8 +353,9 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     if (req->_method == "GET") {
       // get graph_id param
@@ -401,7 +369,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
 
         LOG(INFO) << "Get procedure for: " << graph_id << ", " << procedure_id;
         auto pair = std::make_pair(graph_id, procedure_id);
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .get_procedure_by_procedure_name(
                 procedure_query_param{std::move(pair)})
             .then_wrapped(
@@ -413,7 +381,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       } else {
         // get all procedures.
         LOG(INFO) << "Get all procedures for: " << graph_id;
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .get_procedures_by_graph_name(query_param{std::move(graph_id)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -428,7 +396,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       LOG(INFO) << "Creating procedure for: " << graph_id;
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .create_procedure(create_procedure_query_param{
               std::make_pair(graph_id, std::move(req->content))})
           .then_wrapped([rep = std::move(rep)](
@@ -446,7 +414,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       auto procedure_id = trim_slash(req->param.at("procedure_id"));
       LOG(INFO) << "Deleting procedure for: " << graph_id << ", "
                 << procedure_id;
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .delete_procedure(
               procedure_query_param{std::make_pair(graph_id, procedure_id)})
           .then_wrapped([rep = std::move(rep)](
@@ -462,7 +430,7 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       auto graph_id = trim_slash(req->param.at("graph_id"));
       auto procedure_id = trim_slash(req->param.at("procedure_id"));
       LOG(INFO) << "Update procedure for: " << graph_id << ", " << procedure_id;
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .update_procedure(update_procedure_query_param{
               std::make_tuple(graph_id, procedure_id, req->content)})
           .then_wrapped([rep = std::move(rep)](
@@ -477,30 +445,24 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
 // Handling request for node and service management
 class admin_http_service_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
-
   admin_http_service_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
                                   int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actor_refs = get_admin_actors();
-    CHECK(admin_actor_refs.size() >= hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actor_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_http_service_handler_impl() override = default;
@@ -509,8 +471,9 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     auto& method = req->_method;
     if (method == "POST") {
       // Then param[action] should exists
@@ -521,7 +484,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       LOG(INFO) << "POST with action: " << action;
 
       if (action == "start" || action == "restart") {
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .start_service(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -530,7 +493,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
                                                   std::move(fut));
                 });
       } else if (action == "stop") {
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .stop_service(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -543,7 +506,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
             std::move(rep), std::string("Unsupported action: ") + action);
       }
     } else {
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .service_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](
                             seastar::future<admin_query_result>&& fut) mutable {
@@ -554,28 +517,23 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
 class admin_http_node_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
   admin_http_node_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
                                int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actor_refs = get_admin_actors();
-    CHECK(admin_actor_refs.size() >= hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actor_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_http_node_handler_impl() override = default;
@@ -584,13 +542,14 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
     auto& method = req->_method;
     if (method == "GET") {
       LOG(INFO) << "GET with action: status";
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .node_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](
                             seastar::future<admin_query_result>&& fut) mutable {
@@ -604,29 +563,23 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
 class admin_http_job_handler_impl : public seastar::httpd::handler_base {
  public:
-  static std::vector<std::vector<admin_actor_ref>>& get_admin_actors() {
-    static std::vector<std::vector<admin_actor_ref>> admin_actors_refs;
-    return admin_actors_refs;
-  }
-
   admin_http_job_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
                               int32_t exclusive_shard_id)
-      : shard_concurrency_(shard_concurrency),
-        dispatcher_(exclusive_shard_id, shard_concurrency) {
-    auto& admin_actor_refs = get_admin_actors();
-    CHECK(admin_actor_refs.size() >= hiactor::local_shard_id());
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      admin_actor_refs[hiactor::local_shard_id()].emplace_back(
-          builder.build_ref<admin_actor_ref>(i));
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
     }
   }
   ~admin_http_job_handler_impl() override = default;
@@ -635,13 +588,14 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_shard = dispatcher_.get_dst_shard();
-    auto dst_executor = dispatcher_.get_dst_executor();
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     auto& method = req->_method;
     if (method == "GET") {
       if (req->param.exists("job_id")) {
         auto job_id = trim_slash(req->param.at("job_id"));
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .get_job(query_param{std::move(job_id)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -650,7 +604,7 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
                                                   std::move(fut));
                 });
       } else {
-        return get_admin_actors()[dst_shard][dst_executor]
+        return admin_actor_refs_[dst_executor]
             .list_jobs(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -664,7 +618,7 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
         return new_bad_request_reply(std::move(rep), "job_id not given");
       }
       auto job_id = trim_slash(req->param.at("job_id"));
-      return get_admin_actors()[dst_shard][dst_executor]
+      return admin_actor_refs_[dst_executor]
           .cancel_job(query_param{std::move(job_id)})
           .then_wrapped([rep = std::move(rep)](
                             seastar::future<admin_query_result>&& fut) mutable {
@@ -678,19 +632,13 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  AdminRequestDispatcher dispatcher_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
-admin_http_handler::admin_http_handler(uint16_t http_port, int32_t shard_num,
+admin_http_handler::admin_http_handler(uint16_t http_port,
                                        int32_t exclusive_shard_id)
-    : http_port_(http_port), exclusive_shard_id_(exclusive_shard_id) {
-  admin_file_upload_handler_impl::get_admin_actors().resize(shard_num);
-  admin_http_graph_handler_impl::get_admin_actors().resize(shard_num);
-  admin_http_procedure_handler_impl::get_admin_actors().resize(shard_num);
-  admin_http_service_handler_impl::get_admin_actors().resize(shard_num);
-  admin_http_node_handler_impl::get_admin_actors().resize(shard_num);
-  admin_http_job_handler_impl::get_admin_actors().resize(shard_num);
-}
+    : http_port_(http_port), exclusive_shard_id_(exclusive_shard_id) {}
 
 void admin_http_handler::start() {
   auto fut = seastar::alien::submit_to(
