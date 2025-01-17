@@ -134,7 +134,8 @@ bool is_running_graph(const seastar::sstring& graph_id) {
   return running_graph_res.value() == graph_id_str;
 }
 
-//We could create a scope_builder to create actors on any shard from the current shard.
+// We could create a scope_builder to create actors on any shard from the
+// current shard.
 hiactor::scope_builder create_builder(uint32_t exec_shard_id,
                                       uint32_t group_id) {
   hiactor::scope_builder builder;
@@ -486,7 +487,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
     } else {
       // If current shard is cooperative, we construct executors run on this
       // shard.
-      auto builder = create_builder(StoppableHandler::shard_id(), 
+      auto builder = create_builder(StoppableHandler::shard_id(),
                                     StoppableHandler::cur_group_id_);
       for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
         executor_refs[StoppableHandler::shard_id()].emplace_back(
@@ -664,17 +665,17 @@ class adhoc_query_handler : public StoppableHandler {
       size_t forwarding_shard = 0;
       for (unsigned i = 0; i < shard_concurrency; ++i) {
         auto builder =
-            create_builder((forwarding_shard++) % cooperative_shard_num, 
+            create_builder((forwarding_shard++) % cooperative_shard_num,
                            StoppableHandler::cur_group_id_);
         executor_refs[StoppableHandler::shard_id()].emplace_back(
             builder.build_ref<executor_ref>(i));
       }
       codegen_actor_refs[StoppableHandler::shard_id()].emplace_back(
-          create_builder((forwarding_shard++) % cooperative_shard_num, 
+          create_builder((forwarding_shard++) % cooperative_shard_num,
                          StoppableHandler::cur_group_id_)
               .build_ref<codegen_actor_ref>(0));
     } else {
-      auto builder = create_builder(StoppableHandler::shard_id(), 
+      auto builder = create_builder(StoppableHandler::shard_id(),
                                     StoppableHandler::cur_group_id_);
       for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
         executor_refs[StoppableHandler::shard_id()].emplace_back(

@@ -218,7 +218,8 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
                                            : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
@@ -339,7 +340,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
                                            : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
@@ -457,7 +459,8 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
                                            : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
@@ -528,7 +531,8 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
                                            : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
@@ -574,7 +578,8 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
                                            : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
