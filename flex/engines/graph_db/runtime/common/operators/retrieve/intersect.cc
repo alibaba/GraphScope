@@ -23,86 +23,6 @@ namespace gs {
 
 namespace runtime {
 
-static void ensure_sorted(std::shared_ptr<ValueColumn<size_t>> idx_col,
-                          std::shared_ptr<IContextColumn> val_col) {
-  auto& idx_col_ref = *idx_col;
-  size_t row_num = idx_col_ref.size();
-  for (size_t k = 1; k < row_num; ++k) {
-    CHECK_GE(idx_col_ref.get_value(k), idx_col_ref.get_value(k - 1));
-  }
-}
-
-Context Intersect::intersect(Context&& ctx,
-                             std::vector<std::tuple<Context, int, int>>&& ctxs,
-                             int alias) {
-  std::vector<std::pair<std::shared_ptr<ValueColumn<size_t>>,
-                        std::shared_ptr<IContextColumn>>>
-      cols;
-  for (auto& c : ctxs) {
-    auto& this_ctx = std::get<0>(c);
-    int idx_col = std::get<1>(c);
-    int value_col = std::get<2>(c);
-    cols.emplace_back(
-        std::dynamic_pointer_cast<ValueColumn<size_t>>(this_ctx.get(idx_col)),
-        this_ctx.get(value_col));
-  }
-  for (auto& pair : cols) {
-    ensure_sorted(pair.first, pair.second);
-  }
-  if (cols.size() == 2) {
-    auto& idx_col0 = *cols[0].first;
-    auto& idx_col1 = *cols[1].first;
-
-    size_t rn0 = idx_col0.size();
-    size_t rn1 = idx_col1.size();
-
-    CHECK(cols[0].second->column_type() == cols[1].second->column_type());
-    if (cols[0].second->column_type() == ContextColumnType::kVertex) {
-      auto vlist0_ptr =
-          std::dynamic_pointer_cast<IVertexColumn>(cols[0].second);
-      auto vlist1_ptr =
-          std::dynamic_pointer_cast<IVertexColumn>(cols[1].second);
-      if (vlist0_ptr->vertex_column_type() == VertexColumnType::kSingle &&
-          vlist1_ptr->vertex_column_type() == VertexColumnType::kSingle) {
-        auto& vlist0 = *std::dynamic_pointer_cast<SLVertexColumn>(vlist0_ptr);
-        auto& vlist1 = *std::dynamic_pointer_cast<SLVertexColumn>(vlist1_ptr);
-
-        std::vector<size_t> shuffle_offsets;
-        SLVertexColumnBuilder builder(*vlist0.get_labels_set().begin());
-
-        size_t idx0 = 0, idx1 = 0;
-        std::set<vid_t> lhs_set;
-        while (idx0 < rn0 && idx1 < rn1) {
-          if (idx_col0.get_value(idx0) < idx_col1.get_value(idx1)) {
-            ++idx0;
-          } else if (idx_col0.get_value(idx0) > idx_col1.get_value(idx1)) {
-            ++idx1;
-          } else {
-            lhs_set.clear();
-            size_t common_index = idx_col0.get_value(idx0);
-            while (idx_col0.get_value(idx0) == common_index) {
-              lhs_set.insert(vlist0.get_vertex(idx0).vid_);
-              ++idx0;
-            }
-            while (idx_col1.get_value(idx1) == common_index) {
-              vid_t cur_v = vlist1.get_vertex(idx1).vid_;
-              if (lhs_set.find(cur_v) != lhs_set.end()) {
-                shuffle_offsets.push_back(common_index);
-                builder.push_back_opt(cur_v);
-              }
-              ++idx1;
-            }
-          }
-        }
-
-        ctx.set_with_reshuffle(alias, builder.finish(), shuffle_offsets);
-        return ctx;
-      }
-    }
-  }
-
-  LOG(FATAL) << "not support";
-}
 static Context left_outer_intersect(Context&& ctx, Context&& ctx0,
                                     Context&& ctx1, int key) {
   // specifically, this function is called when the first context is not
@@ -222,18 +142,19 @@ static Context left_outer_intersect(Context&& ctx, Context&& ctx0,
   ctx1.optional_reshuffle(shuffle_offsets_1);
   ctx.reshuffle(ctx0.get_offsets().data());
   for (size_t i = 0; i < ctx0.col_num() || i < ctx1.col_num(); ++i) {
-    if (i < ctx0.col_num()) {
-      if (ctx0.columns[i] != nullptr) {
-        ctx.set(i, ctx0.get(i));
+    if (i >= ctx.col_num() || ctx.get(i) == nullptr) {
+      std::shared_ptr<IContextColumn> col(nullptr);
+      if (i < ctx0.col_num()) {
+        if (ctx0.get(i) != nullptr) {
+          col = ctx0.get(i);
+        }
       }
-    }
-    if (i < ctx1.col_num()) {
-      if ((i >= ctx.col_num() || ctx.get(i) == nullptr) &&
-          ctx1.columns[i] != nullptr) {
-        ctx.set(i, ctx1.get(i));
+      if (col == nullptr && i < ctx1.col_num()) {
+        if (ctx1.get(i) != nullptr) {
+          col = ctx1.get(i);
+        }
       }
-    } else if (i >= ctx.col_num()) {
-      ctx.set(i, nullptr);
+      ctx.set(i, col);
     }
   }
   return ctx;
@@ -317,17 +238,19 @@ static Context intersect_impl(Context&& ctx, std::vector<Context>&& ctxs,
       ctx.reshuffle(ctxs[0].get_offsets().data());
 
       for (size_t i = 0; i < ctxs[0].col_num() || i < ctxs[1].col_num(); ++i) {
-        if (i < ctxs[0].col_num()) {
-          if (ctxs[0].columns[i] != nullptr) {
-            ctx.set(i, ctxs[0].get(i));
+        if (i >= ctx.col_num() || ctx.get(i) == nullptr) {
+          std::shared_ptr<IContextColumn> col(nullptr);
+          if (i < ctxs[0].col_num()) {
+            if (ctxs[0].get(i) != nullptr) {
+              col = ctxs[0].get(i);
+            }
           }
-        }
-        if (i < ctxs[1].col_num()) {
-          if (ctxs[1].columns[i] != nullptr) {
-            ctx.set(i, ctxs[1].get(i));
+          if (col == nullptr && i < ctxs[1].col_num()) {
+            if (ctxs[1].get(i) != nullptr) {
+              col = ctxs[1].get(i);
+            }
           }
-        } else if (i > ctx.col_num()) {
-          ctx.set(i, nullptr);
+          ctx.set(i, col);
         }
       }
       return ctx;

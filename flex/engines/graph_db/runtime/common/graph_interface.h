@@ -33,11 +33,11 @@ using gs::vid_t;
 template <typename PROP_T>
 class VertexColumn {
  public:
-  VertexColumn(const std::shared_ptr<ColumnBase>& column) {
+  VertexColumn(const std::shared_ptr<TypedRefColumn<PROP_T>>& column) {
     if (column == nullptr) {
       column_ = nullptr;
     } else {
-      column_ = dynamic_cast<const TypedColumn<PROP_T>*>(column.get());
+      column_ = column;
     }
   }
   VertexColumn() : column_(nullptr) {}
@@ -47,7 +47,7 @@ class VertexColumn {
   inline bool is_null() const { return column_ == nullptr; }
 
  private:
-  const TypedColumn<PROP_T>* column_;
+  std::shared_ptr<TypedRefColumn<PROP_T>> column_;
 };
 
 class VertexSet {
@@ -292,7 +292,7 @@ class GraphReadInterface {
   inline vertex_column_t<PROP_T> GetVertexColumn(
       label_t label, const std::string& prop_name) const {
     return vertex_column_t<PROP_T>(
-        txn_.get_vertex_property_column(label, prop_name));
+        txn_.get_vertex_ref_property_column<PROP_T>(label, prop_name));
   }
 
   inline vertex_set_t GetVertexSet(label_t label) const {

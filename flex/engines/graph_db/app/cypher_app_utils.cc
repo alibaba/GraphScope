@@ -79,10 +79,13 @@ bool generate_plan(
     const std::string& compiler_yaml, const std::string& tmp_dir,
     std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache) {
   // dump query to file
-  const char* graphscope_dir = getenv("GRAPHSCOPE_DIR");
-  if (graphscope_dir == nullptr) {
-    std::cerr << "GRAPHSCOPE_DIR is not set!" << std::endl;
-    graphscope_dir = "../../../GraphScope/";
+  const char* compiler_jar = getenv("COMPILER_JAR");
+  if (compiler_jar == nullptr) {
+    std::cerr << "COMPILER_JAR is not set!" << std::endl;
+    compiler_jar =
+        "../../interactive_engine/compiler/target/"
+        "compiler-0.0.1-SNAPSHOT.jar:../../interactive_engine/compiler/target/"
+        "libs/*";
   }
 
   auto id = std::this_thread::get_id();
@@ -94,11 +97,7 @@ bool generate_plan(
       tmp_dir + "/compiler_config_" + thread_id + ".yaml";
   const std::string query_file = tmp_dir + "/temp" + thread_id + ".cypher";
   const std::string output_file = tmp_dir + "/temp" + thread_id + ".pb";
-  const std::string jar_path = std::string(graphscope_dir) +
-                               "/interactive_engine/compiler/target/"
-                               "compiler-0.0.1-SNAPSHOT.jar:" +
-                               std::string(graphscope_dir) +
-                               "/interactive_engine/compiler/target/libs/*";
+  const std::string jar_path = compiler_jar;
   const std::string schema_path = "-Dgraph.schema=" + compiler_yaml;
   auto raw_query = query;
   {
