@@ -350,3 +350,19 @@ Design of GOpt
 
 ### Detailed Introduction
 A comprehensive introduction to GOpt will be provided in subsequent sections. Please stay tuned for detailed updates and information.
+
+#### Rules 
+
+**ScanEarlyStopRule**: Pushes the limit operation down to the scan node. During the scan process, the scan stops as soon as the specified limit count is reached.
+   
+**ScanExpandFusionRule**: This rule transforms edge expansion into edge scan wherever possible. For example, consider the following Cypher query:
+```cypher
+Match (a:PERSON)-[b:KNOWS]->(c:PERSON) Return b.name;
+```
+Although the query involves Scan and GetV steps, their results are not directly utilized by subsequent project operations. The only effectively used data is the edge data produced by the Expand operation. In such cases, we can perform a fusion operation, transforming the pattern
+`(a:PERSON)-[b:KNOWS]->(c:PERSON)` into a scan operation on the KNOWS edge. It is important to note that whether fusion is feasible also depends on the label dependencies between nodes and edges. If the edge label is determined strictly by the triplet (src_label, edge_label, dst_label), fusion cannot be performed. For example, consider the following query:
+```cypher
+Match (a:PERSON)-[b:LIKES]->(c:COMMENT) Return b.name;
+```
+
+**TopKPushDownRule**: This rule pushes down topK operations to the project node and is based on Calcite's [SortProjectTransposeRule](https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/rules/SortProjectTransposeRule.html), leveraging the original rule wherever possible. However, in our more complex distributed scenario, deferring the execution of the project node can disrupt already sorted data. To address this, we modified the matching logic in `SortProjectTransposeRule`. Currently, the PushDown operation is applied only when the sort fields are empty, which means only the limit is pushed down to the project node.
