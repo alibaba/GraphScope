@@ -45,6 +45,7 @@ class query_dispatcher {
   query_dispatcher(uint32_t shard_num, uint32_t shard_concurrency)
       : shard_num_(shard_num),
         extra_shard_id_(0),
+        my_shard_id_(hiactor::local_shard_id()),
 #if RANDOM_DISPATCHER
         rd_(),
         gen_(rd_()),
@@ -57,9 +58,8 @@ class query_dispatcher {
   }
 
   inline int get_shard_id() {
-    return hiactor::local_shard_id() >= shard_num_
-               ? (extra_shard_id_++) % shard_num_
-               : hiactor::local_shard_id();
+    return my_shard_id_ >= shard_num_ ? (extra_shard_id_++) % shard_num_
+                                      : my_shard_id_;
   }
 
   inline int get_executor_idx() {
@@ -77,6 +77,7 @@ class query_dispatcher {
   uint32_t extra_shard_id_;  // In exclusive mode, we need to dispatch the
                              // request received on shard_id >= shard_num_ to
                              // the extra_shard_id_, in a round-robin way.
+  uint32_t my_shard_id_;
 #if RANDOM_DISPATCHER
   std::random_device rd_;
   std::mt19937 gen_;
