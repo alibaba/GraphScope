@@ -50,9 +50,6 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
         runtime::PlanParser::get().parse_write_pipeline(db_.schema(), plan));
   } else {
   }
-  // const auto& plan = plan_cache_[query];
-
-  // LOG(INFO) << "plan: " << plan.DebugString();
 
   gs::runtime::GraphInsertInterface gri(txn);
   auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::WriteContext(),

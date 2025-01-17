@@ -289,19 +289,17 @@ class EdgeExpand {
       ctx.set_with_reshuffle(params.alias, pair.first, pair.second);
       return ctx;
     } else {
-      LOG(FATAL) << "unexpected to reach here...";
-      return ctx;
+      LOG(FATAL) << "not support vertex column type "
+                 << static_cast<int>(input_vertex_list_type);
     }
   }
 
-  static Context expand_vertex_ep_lt(const GraphReadInterface& graph,
-                                     Context&& ctx,
-                                     const EdgeExpandParams& params,
-                                     const std::string& ep_val);
-  static Context expand_vertex_ep_gt(const GraphReadInterface& graph,
-                                     Context&& ctx,
-                                     const EdgeExpandParams& params,
-                                     const std::string& ep_val);
+  static std::optional<Context> expand_vertex_ep_lt(
+      const GraphReadInterface& graph, Context&& ctx,
+      const EdgeExpandParams& params, const std::string& ep_val);
+  static std::optional<Context> expand_vertex_ep_gt(
+      const GraphReadInterface& graph, Context&& ctx,
+      const EdgeExpandParams& params, const std::string& ep_val);
   template <typename PRED_T>
   struct SPVPWrapper {
     SPVPWrapper(const PRED_T& pred) : pred_(pred) {}

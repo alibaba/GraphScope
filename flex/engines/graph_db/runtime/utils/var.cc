@@ -43,7 +43,7 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
     } else if (pb.has_property() && pb.property().has_label()) {
       type_ = RTAnyType::kI64Value;
     } else {
-      LOG(FATAL) << "not support";
+      LOG(FATAL) << "not support" << pb.DebugString();
     }
   }
 
@@ -76,7 +76,7 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         } else if (pt.has_label()) {
           getter_ = create_vertex_label_path_accessor(ctx, tag);
         } else {
-          LOG(FATAL) << "xxx, " << pt.item_case();
+          LOG(FATAL) << "not support for " << pt.DebugString();
         }
       } else {
         getter_ = std::make_shared<VertexPathAccessor>(ctx, tag);
@@ -98,11 +98,10 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         } else if (pt.has_label()) {
           getter_ = create_edge_label_path_accessor(ctx, tag);
         } else {
-          LOG(FATAL) << "not support...";
+          LOG(FATAL) << "parse failed for " << pt.DebugString();
         }
       } else {
         getter_ = std::make_shared<EdgeIdPathAccessor>(ctx, tag);
-        // LOG(FATAL) << "not support for edge column - " << tag;
       }
     } else if (ctx.get(tag)->column_type() == ContextColumnType::kPath) {
       if (pb.has_property()) {
@@ -146,7 +145,7 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         } else if (pt.has_label()) {
           getter_ = std::make_shared<VertexLabelVertexAccessor>();
         } else {
-          LOG(FATAL) << "xxx, " << pt.item_case();
+          LOG(FATAL) << "not support for " << pt.DebugString();
         }
       } else {
         getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(graph);
@@ -158,13 +157,13 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
           auto name = pt.key().name();
           getter_ = create_edge_property_edge_accessor(graph, name, type_);
         } else {
-          LOG(FATAL) << "not support";
+          LOG(FATAL) << "parse failed for " << pt.DebugString();
         }
       } else {
-        LOG(FATAL) << "not support";
+        LOG(FATAL) << "not support" << pb.DebugString();
       }
     } else {
-      LOG(FATAL) << "not support";
+      LOG(FATAL) << "not support for " << pb.DebugString();
     }
   }
 }

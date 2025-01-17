@@ -167,8 +167,6 @@ bool generate_plan(
         unlink(output_file.c_str());
         unlink(query_file.c_str());
         unlink(compiler_config_path.c_str());
-        // unlink("/tmp/temp.cypher.yaml");
-        // unlink("/tmp/temp.cypher.yaml_extra_config.yaml");
       }
     }
   }

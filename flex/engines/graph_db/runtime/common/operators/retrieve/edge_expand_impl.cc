@@ -196,7 +196,6 @@ expand_vertex_without_predicate_optional_impl(
             std::get<1>(label_dirs[0]), std::get<2>(label_dirs[0]),
             DummyPredicate<grape::EmptyType>());
       } else {
-        //        LOG(FATAL) << "not implemented";
         return expand_vertex_np_me_sp_optional<
             grape::EmptyType, DummyPredicate<grape::EmptyType>>(
             graph, input, label_dirs, DummyPredicate<grape::EmptyType>());
@@ -270,8 +269,6 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
   bool sp = true;
   if (ed_types.size() == 0) {
     MLVertexColumnBuilder builder;
-    //    LOG(FATAL) << "no edge property type in an edge(vertex) expand,
-    //    fallback";
     return std::make_pair(builder.finish(), std::vector<size_t>());
   }
   for (size_t k = 1; k < ed_types.size(); ++k) {
@@ -382,8 +379,6 @@ expand_vertex_without_predicate_optional_impl(
   bool sp = true;
   if (ed_types.size() == 0) {
     MLVertexColumnBuilder builder;
-    //    LOG(FATAL) << "no edge property type in an edge(vertex) expand,
-    //    fallback";
     return std::make_pair(builder.finish(), std::vector<size_t>());
   }
   for (size_t k = 1; k < ed_types.size(); ++k) {
@@ -399,12 +394,8 @@ expand_vertex_without_predicate_optional_impl(
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
-      //      LOG(INFO) << "not implemented" << se;
       if (se) {
         LOG(FATAL) << "not implemented";
-        // return expand_vertex_np_se_optional<grape::EmptyType,
-        //                                     DummyPredicate<grape::EmptyType>>(
-        //   graph, input, label_dirs, DummyPredicate<grape::EmptyType>());
       } else {
         return expand_vertex_np_me_sp_optional<
             grape::EmptyType, DummyPredicate<grape::EmptyType>>(
