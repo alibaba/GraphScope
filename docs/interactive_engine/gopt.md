@@ -349,9 +349,10 @@ Design of GOpt
 :::
 
 ### Detailed Introduction
-A comprehensive introduction to GOpt will be provided in subsequent sections. Please stay tuned for detailed updates and information.
 
-#### Rules 
+#### Rules
+
+Rules play a pivotal role in GOpt’s optimization framework, enabling efficient and effective query transformations. Below is an outline of some key rules implemented in GOpt:
 
 **ScanEarlyStopRule**: Pushes the limit operation down to the scan node. During the scan process, the scan stops as soon as the specified limit count is reached.
    
