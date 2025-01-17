@@ -254,16 +254,25 @@ class EdgeExpandEWithSPredOpr : public IReadOperator {
       const EdgeExpandParams& eep,
       const std::function<std::unique_ptr<SPEdgePredicate>(
           const GraphReadInterface&,
-          const std::map<std::string, std::string>&)>& sp_edge_pred)
-      : eep_(eep), sp_edge_pred_(sp_edge_pred) {}
+          const std::map<std::string, std::string>&)>& sp_edge_pred,
+      const common::Expression& pred)
+      : eep_(eep), sp_edge_pred_(sp_edge_pred), pred_(pred) {}
 
   gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
                             const std::map<std::string, std::string>& params,
                             gs::runtime::Context&& ctx,
                             gs::runtime::OprTimer& timer) override {
     auto pred = sp_edge_pred_(graph, params);
-    return EdgeExpand::expand_edge_with_special_edge_predicate(
-        graph, std::move(ctx), eep_, *pred);
+    if (pred) {
+      auto ret = EdgeExpand::expand_edge_with_special_edge_predicate(
+          graph, std::move(ctx), eep_, *pred);
+      if (ret.has_value()) {
+        return ret.value();
+      }
+    }
+    GeneralEdgePredicate gpred(graph, ctx, params, pred_);
+    return EdgeExpand::expand_edge<GeneralEdgePredicate>(graph, std::move(ctx),
+                                                         eep_, gpred);
   }
 
  private:
@@ -271,6 +280,7 @@ class EdgeExpandEWithSPredOpr : public IReadOperator {
   std::function<std::unique_ptr<SPEdgePredicate>(
       const GraphReadInterface&, const std::map<std::string, std::string>&)>
       sp_edge_pred_;
+  common::Expression pred_;
 };
 
 class EdgeExpandEWithGPredOpr : public IReadOperator {
@@ -361,16 +371,26 @@ class EdgeExpandVWithSPVertexPredOpr : public IReadOperator {
       const EdgeExpandParams& eep,
       const std::function<std::unique_ptr<SPVertexPredicate>(
           const GraphReadInterface&,
-          const std::map<std::string, std::string>&)>& sp_vertex_pred)
-      : eep_(eep), sp_vertex_pred_(sp_vertex_pred) {}
+          const std::map<std::string, std::string>&)>& sp_vertex_pred,
+      const common::Expression& pred)
+      : eep_(eep), sp_vertex_pred_(sp_vertex_pred), pred_(pred) {}
 
   gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
                             const std::map<std::string, std::string>& params,
                             gs::runtime::Context&& ctx,
                             gs::runtime::OprTimer& timer) override {
     auto pred = sp_vertex_pred_(graph, params);
-    return EdgeExpand::expand_vertex_with_special_vertex_predicate(
-        graph, std::move(ctx), eep_, *pred);
+    if (pred) {
+      auto ret = EdgeExpand::expand_vertex_with_special_vertex_predicate(
+          graph, std::move(ctx), eep_, *pred);
+      if (ret.has_value()) {
+        return ret.value();
+      }
+    }
+    GeneralVertexPredicate v_pred(graph, ctx, params, pred_);
+    VertexPredicateWrapper vpred(v_pred);
+    return EdgeExpand::expand_vertex<VertexPredicateWrapper>(
+        graph, std::move(ctx), eep_, v_pred);
   }
 
  private:
@@ -378,6 +398,7 @@ class EdgeExpandVWithSPVertexPredOpr : public IReadOperator {
   std::function<std::unique_ptr<SPVertexPredicate>(
       const GraphReadInterface&, const std::map<std::string, std::string>&)>
       sp_vertex_pred_;
+  common::Expression pred_;
 };
 
 class EdgeExpandVWithGPVertexPredOpr : public IReadOperator {
@@ -486,9 +507,10 @@ EdgeExpandOprBuilder::Build(const gs::Schema& schema,
       auto sp_edge_pred =
           parse_special_edge_predicate(query_params.predicate());
       if (sp_edge_pred.has_value()) {
-        return std::make_pair(std::make_unique<EdgeExpandEWithSPredOpr>(
-                                  eep, sp_edge_pred.value()),
-                              meta);
+        return std::make_pair(
+            std::make_unique<EdgeExpandEWithSPredOpr>(eep, sp_edge_pred.value(),
+                                                      query_params.predicate()),
+            meta);
       } else {
         return std::make_pair(std::make_unique<EdgeExpandEWithGPredOpr>(
                                   eep, query_params.predicate()),
@@ -607,9 +629,10 @@ EdgeExpandGetVOprBuilder::Build(const gs::Schema& schema,
       auto sp_vertex_pred =
           parse_special_vertex_predicate(v_opr.params().predicate());
       if (sp_vertex_pred.has_value()) {
-        return std::make_pair(std::make_unique<EdgeExpandVWithSPVertexPredOpr>(
-                                  eep, *sp_vertex_pred),
-                              meta);
+        return std::make_pair(
+            std::make_unique<EdgeExpandVWithSPVertexPredOpr>(
+                eep, *sp_vertex_pred, v_opr.params().predicate()),
+            meta);
       } else {
         return std::make_pair(std::make_unique<EdgeExpandVWithGPVertexPredOpr>(
                                   eep, v_opr.params().predicate()),

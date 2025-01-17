@@ -246,7 +246,7 @@ class EdgeExpand {
     LOG(FATAL) << "not support";
   }
 
-  static Context expand_edge_with_special_edge_predicate(
+  static std::optional<Context> expand_edge_with_special_edge_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPEdgePredicate& pred);
 
@@ -317,7 +317,7 @@ class EdgeExpand {
     const PRED_T& pred_;
   };
 
-  static Context expand_vertex_with_special_vertex_predicate(
+  static std::optional<Context> expand_vertex_with_special_vertex_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPVertexPredicate& pred);
 

@@ -532,7 +532,7 @@ Context EdgeExpand::expand_vertex_without_predicate(
 }
 
 template <typename T>
-static Context _expand_edge_with_special_edge_predicate(
+static std::optional<Context> _expand_edge_with_special_edge_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPEdgePredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyGT) {
@@ -560,16 +560,18 @@ static Context _expand_edge_with_special_edge_predicate(
         graph, std::move(ctx), params,
         dynamic_cast<const EdgePropertyGEPredicate<T>&>(pred));
   } else {
-    LOG(FATAL) << "not support edge property type "
+    LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.type());
   }
+  return std::nullopt;
 }
 
-Context EdgeExpand::expand_edge_with_special_edge_predicate(
+std::optional<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPEdgePredicate& pred) {
   if (params.is_optional) {
-    LOG(FATAL) << "not support optional edge expand";
+    LOG(ERROR) << "not support optional edge expand";
+    return std::nullopt;
   }
   if (pred.data_type() == RTAnyType::kI64Value) {
     return _expand_edge_with_special_edge_predicate<int64_t>(
@@ -590,10 +592,11 @@ Context EdgeExpand::expand_edge_with_special_edge_predicate(
     return _expand_edge_with_special_edge_predicate<double>(
         graph, std::move(ctx), params, pred);
   } else {
-    LOG(FATAL) << "not support edge property type "
+    LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.data_type());
+    return std::nullopt;
   }
-  return Context();
+  return std::nullopt;
 }
 
 template <typename T, typename VERTEX_COL_T>
@@ -907,7 +910,7 @@ std::optional<Context> EdgeExpand::expand_vertex_ep_gt(
 }
 
 template <typename T>
-static Context _expand_vertex_with_special_vertex_predicate(
+static std::optional<Context> _expand_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPVertexPredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyEQ) {
@@ -947,16 +950,18 @@ static Context _expand_vertex_with_special_vertex_predicate(
         EdgeExpand::SPVPWrapper(
             dynamic_cast<const VertexPropertyBetweenPredicateBeta<T>&>(pred)));
   } else {
-    LOG(FATAL) << "not support vertex property type "
+    LOG(ERROR) << "not support vertex property type "
                << static_cast<int>(pred.type());
+    return std::nullopt;
   }
 }
 
-Context EdgeExpand::expand_vertex_with_special_vertex_predicate(
+std::optional<Context> EdgeExpand::expand_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPVertexPredicate& pred) {
   if (params.is_optional) {
-    LOG(FATAL) << "not support optional edge expand";
+    LOG(ERROR) << "not support optional edge expand";
+    return std::nullopt;
   }
 
   if (pred.data_type() == RTAnyType::kI64Value) {
@@ -978,8 +983,7 @@ Context EdgeExpand::expand_vertex_with_special_vertex_predicate(
     return _expand_vertex_with_special_vertex_predicate<Day>(
         graph, std::move(ctx), params, pred);
   }
-  LOG(FATAL) << static_cast<int>(pred.type()) << "not impl";
-  return ctx;
+  return std::nullopt;
 }
 
 }  // namespace runtime
