@@ -215,29 +215,6 @@ struct _KeyBuilder {
                                           std::move(exprs));
           return _KeyBuilder<I - 1, SLVertexWrapper, EXPR...>::make_sp_key(
               ctx, tag_alias, std::move(new_exprs));
-        } else if (vertex_col->vertex_column_type() ==
-                   VertexColumnType::kMultiple) {
-          auto typed_vertex_col =
-              std::dynamic_pointer_cast<MLVertexColumn>(vertex_col);
-          MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
-              *typed_vertex_col);
-          auto new_exprs = std::tuple_cat(std::make_tuple(std::move(wrapper)),
-                                          std::move(exprs));
-          return _KeyBuilder<I - 1,
-                             MLVertexWrapper<decltype(*typed_vertex_col)>,
-                             EXPR...>::make_sp_key(ctx, tag_alias,
-                                                   std::move(new_exprs));
-        } else {
-          auto typed_vertex_col =
-              std::dynamic_pointer_cast<MSVertexColumn>(vertex_col);
-          MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
-              *typed_vertex_col);
-          auto new_exprs = std::tuple_cat(std::make_tuple(std::move(wrapper)),
-                                          std::move(exprs));
-          return _KeyBuilder<I - 1,
-                             MLVertexWrapper<decltype(*typed_vertex_col)>,
-                             EXPR...>::make_sp_key(ctx, tag_alias,
-                                                   std::move(new_exprs));
         }
 
       } else if (col->column_type() == ContextColumnType::kValue) {
@@ -257,15 +234,6 @@ struct _KeyBuilder {
           return _KeyBuilder<I - 1, ValueWrapper<int32_t>,
                              EXPR...>::make_sp_key(ctx, tag_alias,
                                                    std::move(new_exprs));
-        } else if (col->elem_type() == RTAnyType::kStringValue) {
-          ValueWrapper<std::string_view> wrapper(
-              *dynamic_cast<const ValueColumn<std::string_view>*>(col.get()));
-          auto new_exprs = std::tuple_cat(std::make_tuple(std::move(wrapper)),
-                                          std::move(exprs));
-          return _KeyBuilder<I - 1, ValueWrapper<std::string_view>,
-                             EXPR...>::make_sp_key(ctx, tag_alias,
-                                                   std::move(new_exprs));
-
         } else {
           return nullptr;
         }
@@ -290,27 +258,6 @@ struct KeyBuilder {
         auto new_exprs = std::make_tuple<SLVertexWrapper>(std::move(wrapper));
         return _KeyBuilder<I - 1, SLVertexWrapper>::make_sp_key(
             ctx, tag_alias, std::move(new_exprs));
-      } else if (vertex_col->vertex_column_type() ==
-                 VertexColumnType::kMultiple) {
-        auto typed_vertex_col =
-            std::dynamic_pointer_cast<MLVertexColumn>(vertex_col);
-        MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(*typed_vertex_col);
-        auto new_exprs =
-            std::make_tuple<MLVertexWrapper<decltype(*typed_vertex_col)>>(
-                std::move(wrapper));
-        return _KeyBuilder<I - 1,
-                           MLVertexWrapper<decltype(*typed_vertex_col)>>::
-            make_sp_key(ctx, tag_alias, std::move(new_exprs));
-      } else {
-        auto typed_vertex_col =
-            std::dynamic_pointer_cast<MSVertexColumn>(vertex_col);
-        MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(*typed_vertex_col);
-        auto new_exprs =
-            std::make_tuple<MLVertexWrapper<decltype(*typed_vertex_col)>>(
-                std::move(wrapper));
-        return _KeyBuilder<I - 1,
-                           MLVertexWrapper<decltype(*typed_vertex_col)>>::
-            make_sp_key(ctx, tag_alias, std::move(new_exprs));
       }
     } else if (col->column_type() == ContextColumnType::kValue) {
       if (col->elem_type() == RTAnyType::kI64Value) {
@@ -326,13 +273,6 @@ struct KeyBuilder {
         auto new_exprs =
             std::make_tuple<ValueWrapper<int32_t>>(std::move(wrapper));
         return _KeyBuilder<I - 1, ValueWrapper<int32_t>>::make_sp_key(
-            ctx, tag_alias, std::move(new_exprs));
-      } else if (col->elem_type() == RTAnyType::kStringValue) {
-        ValueWrapper<std::string_view> wrapper(
-            *dynamic_cast<const ValueColumn<std::string_view>*>(col.get()));
-        auto new_exprs =
-            std::make_tuple<ValueWrapper<std::string_view>>(std::move(wrapper));
-        return _KeyBuilder<I - 1, ValueWrapper<std::string_view>>::make_sp_key(
             ctx, tag_alias, std::move(new_exprs));
       } else {
         return nullptr;
@@ -1076,11 +1016,7 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
                            const GraphReadInterface& graph,
                            const Context& ctx) -> std::unique_ptr<KeyBase> {
     std::unique_ptr<KeyBase> key = nullptr;
-    if (mappings.size() == 3) {
-      key = KeyBuilder<3>::make_sp_key(ctx, mappings);
-    } else if (mappings.size() == 2) {
-      key = KeyBuilder<2>::make_sp_key(ctx, mappings);
-    } else if (mappings.size() == 1) {
+    if (mappings.size() == 1) {
       key = KeyBuilder<1>::make_sp_key(ctx, mappings);
     }
     if (key == nullptr) {

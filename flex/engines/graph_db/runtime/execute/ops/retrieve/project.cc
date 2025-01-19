@@ -1457,11 +1457,6 @@ ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
                               std::move(exprs), index_set, order_by_pairs,
                               lower, upper, first_tuple),
                           ret_meta);
-    /*return std::make_pair(
-        std::make_unique<ProjectOrderByOpr>(
-            plan.plan(op_idx).opr().project(),
-            plan.plan(op_idx + 1).opr().order_by(), data_types),
-        ret_meta);*/
   } else {
     return std::make_pair(nullptr, ContextMeta());
   }
