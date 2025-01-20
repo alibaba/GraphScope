@@ -24,7 +24,7 @@ aggregated (collapse_graph) and the method is reiterated on that graph.
 class  Optimiser
 {
   public:
-    Optimiser();
+    Optimiser(Graph* graph);
     double optimise_partition(MutableVertexPartition* partition);
     double optimise_partition(MutableVertexPartition* partition, vector<bool> const& is_membership_fixed);
     double optimise_partition(MutableVertexPartition* partition, vector<bool> const& is_membership_fixed, size_t max_comm_size);
@@ -69,7 +69,9 @@ class  Optimiser
     double merge_nodes_constrained(vector<MutableVertexPartition*> partitions, vector<double> layer_weights, int consider_comms, MutableVertexPartition* constrained_partition);
     double merge_nodes_constrained(vector<MutableVertexPartition*> partitions, vector<double> layer_weights, int consider_comms, MutableVertexPartition* constrained_partition, size_t max_comm_size);
 
-    inline void set_rng_seed(size_t seed) { igraph_rng_seed(&rng, seed); };
+    inline void set_rng_seed(size_t seed) { 
+      // igraph_rng_seed(&rng, seed); 
+      };
 
     virtual ~Optimiser();
 
@@ -94,7 +96,7 @@ class  Optimiser
   private:
     void print_settings();
 
-    igraph_rng_t rng;
+    IGraphProxyRNG* rng;
 };
 
 template <class T> T* Optimiser::find_partition(Graph* graph)

@@ -13,6 +13,7 @@ add_library(libleidenalg STATIC
   CPMVertexPartition.cpp
   RBConfigurationVertexPartition.cpp
   RBERVertexPartition.cpp
+  GraphProxy.cc
 
 )
 target_link_libraries(libleidenalg

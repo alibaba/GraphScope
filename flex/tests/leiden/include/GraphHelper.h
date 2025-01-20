@@ -18,6 +18,8 @@ using std::cerr;
 using std::endl;
 //#endif
 
+#include "flex/tests/leiden/include/GraphProxy.h"
+
 class MutableVertexPartition;
 
 using std::deque;
@@ -41,48 +43,46 @@ T sum(vector<T> vec) {
   return sum_of_elems;
 };
 
-class Exception : public std::exception {
- public:
-  Exception(const char* str) { this->str = str; }
-
-  virtual const char* what() const throw() { return this->str; }
-
- private:
-  const char* str;
-};
-
-inline size_t get_random_int(size_t from, size_t to, igraph_rng_t* rng) {
-  return igraph_rng_get_integer(rng, from, to);
-};
-
-void shuffle(vector<size_t>& v, igraph_rng_t* rng);
+void shuffle(vector<size_t>& v, IGraphProxyRNG* rng);
 
 class Graph {
  public:
-  Graph(igraph_t* graph, vector<double> const& edge_weights,
+  // Graph(igraph_t* graph, vector<double> const& edge_weights,
+  //       vector<double> const& node_sizes,
+  //       vector<double> const& node_self_weights, int correct_self_loops);
+  // Graph(igraph_t* graph, vector<double> const& edge_weights,
+  //       vector<double> const& node_sizes,
+  //       vector<double> const& node_self_weights);
+  // Graph(igraph_t* graph, vector<double> const& edge_weights,
+  //       vector<double> const& node_sizes, int correct_self_loops);
+  // Graph(igraph_t* graph, vector<double> const& edge_weights,
+  //       vector<double> const& node_sizes);
+  // Graph(igraph_t* graph, int correct_self_loops);
+  // Graph(igraph_t* graph);
+  Graph(IGraphProxy* graph, vector<double> const& edge_weights,
         vector<double> const& node_sizes,
         vector<double> const& node_self_weights, int correct_self_loops);
-  Graph(igraph_t* graph, vector<double> const& edge_weights,
+  Graph(IGraphProxy* graph, vector<double> const& edge_weights,
         vector<double> const& node_sizes,
         vector<double> const& node_self_weights);
-  Graph(igraph_t* graph, vector<double> const& edge_weights,
+  Graph(IGraphProxy* graph, vector<double> const& edge_weights,
         vector<double> const& node_sizes, int correct_self_loops);
-  Graph(igraph_t* graph, vector<double> const& edge_weights,
+  Graph(IGraphProxy* graph, vector<double> const& edge_weights,
         vector<double> const& node_sizes);
-  Graph(igraph_t* graph, int correct_self_loops);
-  Graph(igraph_t* graph);
+  Graph(IGraphProxy* graph, int correct_self_loops);
+  Graph(IGraphProxy* graph);
   Graph();
   ~Graph();
 
-  static Graph* GraphFromEdgeWeights(igraph_t* graph,
+  static Graph* GraphFromEdgeWeights(IGraphProxy* graph,
                                      vector<double> const& edge_weights,
                                      int correct_self_loops);
-  static Graph* GraphFromEdgeWeights(igraph_t* graph,
+  static Graph* GraphFromEdgeWeights(IGraphProxy* graph,
                                      vector<double> const& edge_weights);
-  static Graph* GraphFromNodeSizes(igraph_t* graph,
+  static Graph* GraphFromNodeSizes(IGraphProxy* graph,
                                    vector<double> const& node_sizes,
                                    int correct_self_loops);
-  static Graph* GraphFromNodeSizes(igraph_t* graph,
+  static Graph* GraphFromNodeSizes(IGraphProxy* graph,
                                    vector<double> const& node_sizes);
 
   int has_self_loops();
@@ -94,16 +94,18 @@ class Graph {
   vector<size_t> const& get_neighbour_edges(size_t v, igraph_neimode_t mode);
   vector<size_t> const& get_neighbours(size_t v, igraph_neimode_t mode);
   size_t get_random_neighbour(size_t v, igraph_neimode_t mode,
-                              igraph_rng_t* rng);
+                              IGraphProxyRNG* rng);
 
-  inline size_t get_random_node(igraph_rng_t* rng) {
+  inline size_t get_random_node(IGraphProxyRNG* rng) {
     return get_random_int(0, this->vcount() - 1, rng);
   };
 
-  inline const igraph_t* get_igraph() { return this->_graph; };
+  inline IGraphProxyRNG* create_rng() { return this->_graph->create_rng(); };
 
-  inline size_t vcount() { return igraph_vcount(this->_graph); };
-  inline size_t ecount() { return igraph_ecount(this->_graph); };
+  inline const IGraphProxy* get_igraph() { return this->_graph; };
+
+  inline size_t vcount() { return this->_graph->vertex_num(); };
+  inline size_t ecount() { return this->_graph->edge_num(); };
   inline double total_weight() { return this->_total_weight; };
   inline double total_size() { return this->_total_size; };
   inline int is_directed() { return this->_is_directed; };
@@ -120,8 +122,10 @@ class Graph {
   };
 
   inline void edge(size_t eid, size_t& from, size_t& to) {
-    from = IGRAPH_FROM(this->get_igraph(), eid);
-    to = IGRAPH_TO(this->get_igraph(), eid);
+    // from = IGRAPH_FROM(this->get_igraph(), eid);
+    from = get_source_vid_from_eid(eid);
+    // to = IGRAPH_TO(this->get_igraph(), eid);
+    to = get_dst_vid_from_eid(eid);
   }
 
   inline vector<size_t> edge(size_t e) {
@@ -137,14 +141,7 @@ class Graph {
   };
 
   inline size_t degree(size_t v, igraph_neimode_t mode) {
-    if (mode == IGRAPH_IN || !this->is_directed())
-      return this->_degree_in[v];
-    else if (mode == IGRAPH_OUT)
-      return this->_degree_out[v];
-    else if (mode == IGRAPH_ALL)
-      return this->_degree_all[v];
-    else
-      throw Exception("Incorrect mode specified.");
+    return this->_graph->degree(v, mode);
   };
 
   inline double strength(size_t v, igraph_neimode_t mode) {
@@ -159,16 +156,12 @@ class Graph {
  protected:
   int _remove_graph;
 
-  const igraph_t* _graph;
-  igraph_vector_int_t _temp_igraph_vector;
+  const IGraphProxy* _graph;
+  // igraph_vector_int_t _temp_igraph_vector;
 
   // Utility variables to easily access the strength of each node
   vector<double> _strength_in;
   vector<double> _strength_out;
-
-  vector<size_t> _degree_in;
-  vector<size_t> _degree_out;
-  vector<size_t> _degree_all;
 
   vector<double> _edge_weights;       // Used for the weight of the edges.
   vector<double> _node_sizes;         // Used for the size of the nodes.

@@ -35,22 +35,22 @@ vertex_mappings:
           index: 2
           name: age
         property: age
-  - type_name: software
-    inputs:
-      - software.csv
-    column_mappings:
-      - column:
-          index: 0      # can be omitted if the index is the same as the property index
-          name: id    # can be omitted if the name is not known or header_row is set to true.
-        property: id  # must align with the schema
-      - column:
-          index: 1
-          name: name
-        property: name
-      - column:
-          index: 2
-          name: lang
-        property: lang
+  # - type_name: software
+  #   inputs:
+  #     - software.csv
+  #   column_mappings:
+  #     - column:
+  #         index: 0      # can be omitted if the index is the same as the property index
+  #         name: id    # can be omitted if the name is not known or header_row is set to true.
+  #       property: id  # must align with the schema
+  #     - column:
+  #         index: 1
+  #         name: name
+  #       property: name
+  #     - column:
+  #         index: 2
+  #         name: lang
+  #       property: lang
 edge_mappings:
   - type_triplet:
       edge: knows
@@ -71,22 +71,22 @@ edge_mappings:
           index: 2
           name: weight
         property: weight
-  - type_triplet:
-      edge: created
-      source_vertex: person
-      destination_vertex: software
-    inputs:
-      -  person_created_software.csv
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
-    column_mappings:
-      - column:
-          index: 2
-          name: weight
-        property: weight
+  # - type_triplet:
+  #     edge: created
+  #     source_vertex: person
+  #     destination_vertex: software
+  #   inputs:
+  #     -  person_created_software.csv
+  #   source_vertex_mappings:
+  #     - column:
+  #         index: 0
+  #         name: id
+  #   destination_vertex_mappings:
+  #     - column:
+  #         index: 1
+  #         name: id
+  #   column_mappings:
+  #     - column:
+  #         index: 2
+  #         name: weight
+  #       property: weight

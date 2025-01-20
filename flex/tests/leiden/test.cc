@@ -81,13 +81,14 @@ int main(int argc, char** argv) {
   auto& sess = db.GetSession(0);
 
   graph_db_to_igraph(&g, sess);
+  IGraphProxy* proxy = new IGraphGraphProxy(&g);
 
   LOG(INFO) << "Graph created, vcount: " << igraph_vcount(&g)
             << ", ecount: " << igraph_ecount(&g);
 
   double t = -grape::GetCurrentTime();
 
-  Graph graph(&g);
+  Graph graph(proxy);
 
   // CPMVertexPartition part(&graph, 0.0001);
   // SignificanceVertexPartition part(&graph);
@@ -95,7 +96,7 @@ int main(int argc, char** argv) {
   // RBERVertexPartition part(&graph, 0.02);
   // SurpriseVertexPartition part(&graph);
 
-  Optimiser o;
+  Optimiser o(&graph);
 
   o.optimise_partition(&part);
 

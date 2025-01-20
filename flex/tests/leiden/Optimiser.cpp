@@ -13,7 +13,7 @@
         RAND_NEIGH_COMM -- Consider a random community among the neighbours
                            for improvement.
 ****************************************************************************/
-Optimiser::Optimiser() {
+Optimiser::Optimiser(Graph* graph) {
   this->consider_comms = Optimiser::ALL_NEIGH_COMMS;
   this->optimise_routine = Optimiser::MOVE_NODES;
   this->refine_consider_comms = Optimiser::ALL_NEIGH_COMMS;
@@ -22,11 +22,14 @@ Optimiser::Optimiser() {
   this->consider_empty_community = true;
   this->max_comm_size = 0;
 
-  igraph_rng_init(&rng, &igraph_rngtype_mt19937);
-  igraph_rng_seed(&rng, time(NULL));
+  // igraph_rng_init(rng, &igraph_rngtype_mt19937);
+  // igraph_rng_seed(rng, time(NULL));
+  rng = graph->create_rng();
 }
 
-Optimiser::~Optimiser() { igraph_rng_destroy(&rng); }
+Optimiser::~Optimiser() {
+  // igraph_rng_destroy(rng);
+}
 
 void Optimiser::print_settings() {
   cerr << "Consider communities method:\t" << this->consider_comms << endl;
@@ -609,7 +612,7 @@ double Optimiser::move_nodes(vector<MutableVertexPartition*> partitions,
     if (!is_membership_fixed[v])
       nodes.push_back(v);
   }
-  shuffle(nodes, &rng);
+  shuffle(nodes, rng);
   deque<size_t> vertex_order(nodes.begin(), nodes.end());
 
   // Initialize the degree vector
@@ -655,16 +658,16 @@ double Optimiser::move_nodes(vector<MutableVertexPartition*> partitions,
     } else if (consider_comms == RAND_COMM) {
       /****************************RAND COMM***********************************/
       size_t rand_comm =
-          partitions[0]->membership(graphs[0]->get_random_node(&rng));
+          partitions[0]->membership(graphs[0]->get_random_node(rng));
       // No need to check if random_comm is already added, we only add one comm
       comms.push_back(rand_comm);
       comm_added[rand_comm] = true;
     } else if (consider_comms == RAND_NEIGH_COMM) {
       /****************************RAND NEIGH COMM*****************************/
-      size_t rand_layer = get_random_int(0, nb_layers - 1, &rng);
+      size_t rand_layer = get_random_int(0, nb_layers - 1, rng);
       if (graphs[rand_layer]->degree(v, IGRAPH_ALL) > 0) {
         size_t rand_comm = partitions[0]->membership(
-            graphs[rand_layer]->get_random_neighbour(v, IGRAPH_ALL, &rng));
+            graphs[rand_layer]->get_random_neighbour(v, IGRAPH_ALL, rng));
         // No need to check if random_comm is already added, we only add one
         // comm
         comms.push_back(rand_comm);
@@ -880,7 +883,7 @@ double Optimiser::merge_nodes(vector<MutableVertexPartition*> partitions,
       vertex_order.push_back(v);
 
   // But if we use a random order, we shuffle this order.
-  shuffle(vertex_order, &rng);
+  shuffle(vertex_order, rng);
 
   vector<bool> comm_added(partitions[0]->n_communities(), false);
   vector<size_t> comms;
@@ -926,7 +929,7 @@ double Optimiser::merge_nodes(vector<MutableVertexPartition*> partitions,
         /****************************RAND
          * COMM***********************************/
         size_t rand_comm =
-            partitions[0]->membership(graphs[0]->get_random_node(&rng));
+            partitions[0]->membership(graphs[0]->get_random_node(rng));
         // No need to check if random_comm is already added, we only add one
         // comm
         comms.push_back(rand_comm);
@@ -934,13 +937,13 @@ double Optimiser::merge_nodes(vector<MutableVertexPartition*> partitions,
       } else if (consider_comms == RAND_NEIGH_COMM) {
         /****************************RAND NEIGH
          * COMM*****************************/
-        size_t rand_layer = get_random_int(0, nb_layers - 1, &rng);
+        size_t rand_layer = get_random_int(0, nb_layers - 1, rng);
         size_t k = graphs[rand_layer]->degree(v, IGRAPH_ALL);
         if (k > 0) {
           // Make sure there is also a probability not to move the node
-          if (get_random_int(0, k, &rng) > 0) {
+          if (get_random_int(0, k, rng) > 0) {
             size_t rand_comm = partitions[0]->membership(
-                graphs[rand_layer]->get_random_neighbour(v, IGRAPH_ALL, &rng));
+                graphs[rand_layer]->get_random_neighbour(v, IGRAPH_ALL, rng));
             // No need to check if random_comm is already added, we only add one
             // comm
             comms.push_back(rand_comm);
@@ -1098,7 +1101,7 @@ double Optimiser::move_nodes_constrained(
   vector<bool> is_node_stable(n, false);
   // But if we use a random order, we shuffle this order.
   vector<size_t> nodes = range(n);
-  shuffle(nodes, &rng);
+  shuffle(nodes, rng);
   deque<size_t> vertex_order(nodes.begin(), nodes.end());
 
   vector<vector<size_t>> constrained_comms =
@@ -1155,7 +1158,7 @@ double Optimiser::move_nodes_constrained(
       /****************************RAND COMM***********************************/
       size_t v_constrained_comm = constrained_partition->membership(v);
       size_t random_idx = get_random_int(
-          0, constrained_comms[v_constrained_comm].size() - 1, &rng);
+          0, constrained_comms[v_constrained_comm].size() - 1, rng);
       size_t rand_comm = constrained_comms[v_constrained_comm][random_idx];
       // No need to check if random_comm is already added, we only add one comm
       comms.push_back(rand_comm);
@@ -1175,7 +1178,7 @@ double Optimiser::move_nodes_constrained(
       }
       if (all_neigh_comms_incl_dupes.size() > 0) {
         size_t random_idx =
-            get_random_int(0, all_neigh_comms_incl_dupes.size() - 1, &rng);
+            get_random_int(0, all_neigh_comms_incl_dupes.size() - 1, rng);
         size_t rand_comm = all_neigh_comms_incl_dupes[random_idx];
         // No need to check if random_comm is already added, we only add one
         // comm
@@ -1348,7 +1351,7 @@ double Optimiser::merge_nodes_constrained(
   vector<size_t> vertex_order = range(n);
 
   // But if we use a random order, we shuffle this order.
-  shuffle(vertex_order, &rng);
+  shuffle(vertex_order, rng);
 
   vector<vector<size_t>> constrained_comms =
       constrained_partition->get_communities();
@@ -1400,7 +1403,7 @@ double Optimiser::merge_nodes_constrained(
          * COMM***********************************/
         size_t v_constrained_comm = constrained_partition->membership(v);
         size_t random_idx = get_random_int(
-            0, constrained_comms[v_constrained_comm].size() - 1, &rng);
+            0, constrained_comms[v_constrained_comm].size() - 1, rng);
         size_t rand_comm = constrained_comms[v_constrained_comm][random_idx];
         // No need to check if random_comm is already added, we only add one
         // comm
@@ -1423,8 +1426,8 @@ double Optimiser::merge_nodes_constrained(
         size_t k = all_neigh_comms_incl_dupes.size();
         if (k > 0) {
           // Make sure there is also a probability not to move the node
-          if (get_random_int(0, k, &rng) > 0) {
-            size_t random_idx = get_random_int(0, k - 1, &rng);
+          if (get_random_int(0, k, rng) > 0) {
+            size_t random_idx = get_random_int(0, k - 1, rng);
             size_t rand_comm = all_neigh_comms_incl_dupes[random_idx];
             // No need to check if random_comm is already added, we only add one
             // comm
