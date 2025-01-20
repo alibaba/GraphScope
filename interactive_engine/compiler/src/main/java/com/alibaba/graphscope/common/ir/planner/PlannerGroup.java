@@ -152,13 +152,19 @@ public class PlannerGroup {
             config.getRules()
                     .forEach(
                             k -> {
-                                if (k.equals(ExpandGetVFusionRule.class.getSimpleName())) {
+                                if (k.equals(ScanExpandFusionRule.class.getSimpleName())) {
+                                    ruleConfigs.add(ScanExpandFusionRule.Config.DEFAULT);
+                                } else if (k.equals(ExpandGetVFusionRule.class.getSimpleName())) {
                                     ruleConfigs.add(
                                             ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config
                                                     .DEFAULT);
                                     ruleConfigs.add(
                                             ExpandGetVFusionRule.PathBaseExpandGetVFusionRule.Config
                                                     .DEFAULT);
+                                } else if (k.equals(TopKPushDownRule.class.getSimpleName())) {
+                                    ruleConfigs.add(TopKPushDownRule.Config.DEFAULT);
+                                } else if (k.equals(ScanEarlyStopRule.class.getSimpleName())) {
+                                    ruleConfigs.add(ScanEarlyStopRule.Config.DEFAULT);
                                 }
                             });
             ruleConfigs.forEach(

@@ -17,8 +17,10 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.QueryParams;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -26,6 +28,7 @@ import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexNode;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -34,15 +37,18 @@ import java.util.Objects;
 public class GraphLogicalSource extends AbstractBindableTableScan {
     private final GraphOpt.Source opt;
     private @Nullable RexNode uniqueKeyFilters;
+    private final QueryParams params;
 
     protected GraphLogicalSource(
             GraphOptCluster cluster,
             List<RelHint> hints,
             GraphOpt.Source opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
+            @Nullable String alias,
+            QueryParams params) {
         super(cluster, hints, tableConfig, alias);
         this.opt = opt;
+        this.params = Objects.requireNonNull(params);
     }
 
     public static GraphLogicalSource create(
@@ -51,7 +57,27 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
             GraphOpt.Source opt,
             TableConfig tableConfig,
             @Nullable String alias) {
-        return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias);
+        return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias, new QueryParams());
+    }
+
+    public static GraphLogicalSource create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            GraphOpt.Source opt,
+            TableConfig tableConfig,
+            @Nullable String alias,
+            QueryParams params,
+            RexNode uniqueKeyFilters,
+            ImmutableList<RexNode> filters) {
+        GraphLogicalSource source =
+                new GraphLogicalSource(cluster, hints, opt, tableConfig, alias, params);
+        if (uniqueKeyFilters != null) {
+            source.setUniqueKeyFilters(uniqueKeyFilters);
+        }
+        if (ObjectUtils.isNotEmpty(filters)) {
+            source.setFilters(filters);
+        }
+        return source;
     }
 
     public GraphOpt.Source getOpt() {
@@ -62,7 +88,8 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
                 .item("opt", getOpt())
-                .itemIf("uniqueKeyFilters", uniqueKeyFilters, uniqueKeyFilters != null);
+                .itemIf("uniqueKeyFilters", uniqueKeyFilters, uniqueKeyFilters != null)
+                .itemIf("params", params.getParams(), !params.getParams().isEmpty());
     }
 
     @Override
@@ -79,5 +106,9 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
 
     public @Nullable RexNode getUniqueKeyFilters() {
         return uniqueKeyFilters;
+    }
+
+    public QueryParams getParams() {
+        return params;
     }
 }

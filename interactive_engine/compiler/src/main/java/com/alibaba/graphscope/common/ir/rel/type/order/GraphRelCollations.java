@@ -24,6 +24,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Util;
@@ -62,7 +63,7 @@ public abstract class GraphRelCollations {
 
         @Override
         public RelTraitDef getTraitDef() {
-            return null;
+            return RelCollationTraitDef.INSTANCE;
         }
 
         @Override
