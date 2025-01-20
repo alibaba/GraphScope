@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['walcontentunit_1758',['WalContentUnit',['../structgs_1_1WalContentUnit.html',1,'gs']]],
-  ['walheader_1759',['WalHeader',['../structgs_1_1WalHeader.html',1,'gs']]],
-  ['walsparser_1760',['WalsParser',['../classgs_1_1WalsParser.html',1,'gs']]],
-  ['walwriter_1761',['WalWriter',['../classgs_1_1WalWriter.html',1,'gs']]],
-  ['writeappbase_1762',['WriteAppBase',['../classgs_1_1WriteAppBase.html',1,'gs']]]
+  ['versionmanager_1810',['VersionManager',['../classgs_1_1VersionManager.html',1,'gs']]],
+  ['vertex_5fiterator_1811',['vertex_iterator',['../classgs_1_1UpdateTransaction_1_1vertex__iterator.html',1,'gs::UpdateTransaction::vertex_iterator'],['../classgs_1_1ReadTransaction_1_1vertex__iterator.html',1,'gs::ReadTransaction::vertex_iterator']]],
+  ['vertex_5frange_1812',['vertex_range',['../structgs_1_1ServerApp_1_1vertex__range.html',1,'gs::ServerApp']]],
+  ['vertexdata_1813',['VertexData',['../structgs_1_1VertexData.html',1,'gs']]]
 ];

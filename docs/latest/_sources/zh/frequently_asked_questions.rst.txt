@@ -69,7 +69,7 @@
 
     - ``vineyard_shared_mem``: 存储数据集的内存。我们发现将其设置为数据集在磁盘上的大小的 5 倍通常是一个合理的值。 它相当于 graphscope 的 helm chart 中的 ``vineyard.shared_mem``。
 
-    - ``k8s_engine_mem`: ``engine`` 容器的内存大小。一般将其设置为 ``vineyard_shared_mem`` 的同样大小。它相当于 graphscope 的 helm chart 中的 ``engines.resources.memory.requests`` 和 ``engines.resources.memory.requests``。
+    - ``k8s_engine_mem``: ``engine`` 容器的内存大小。一般将其设置为 ``vineyard_shared_mem`` 的同样大小。它相当于 graphscope 的 helm chart 中的 ``engines.resources.memory.requests`` 和 ``engines.resources.memory.requests``。
 
 10. 导致在 Apple M1 python3.8 环境下安装 GraphScope 失败的原因可能有哪些？
 
