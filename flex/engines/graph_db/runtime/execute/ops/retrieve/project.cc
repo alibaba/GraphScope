@@ -1276,9 +1276,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
 
   return std::make_pair(
       std::make_unique<ProjectOpr>(std::move(exprs), is_append), ret_meta);
-  // return std::make_pair(std::make_unique<ProjectOpr>(
-  //                         plan.plan(op_idx).opr().project(), data_types),
-  //                   ret_meta);
 }
 
 class ProjectOrderByOprBeta : public IReadOperator {

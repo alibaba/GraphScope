@@ -628,8 +628,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ScanOprBuilder::Build(
         std::vector<std::function<std::vector<Any>(ParamsType)>> oids;
         for (auto& table : scan_params.tables) {
           const auto& pks = schema.get_vertex_primary_key(table);
-          // const auto& [type, _, __] = pks[0];
-
           const auto& [type, _, __] = pks[0];
           auto type_impl = static_cast<int>(type.type_enum);
           if (types.find(type_impl) == types.end()) {

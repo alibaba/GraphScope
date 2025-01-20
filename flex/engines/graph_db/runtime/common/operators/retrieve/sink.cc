@@ -18,7 +18,7 @@
 namespace gs {
 
 namespace runtime {
-// TODO: Implement the sink function
+
 void Sink::sink(const Context& ctx, const GraphReadInterface& graph,
                 Encoder& output) {
   size_t row_num = ctx.row_num();
