@@ -54,11 +54,14 @@ struct SLPropertyExpr {
     auto labels = column.get_labels_set();
     auto& label = *labels.begin();
     property = graph.GetVertexColumn<T>(label, property_name);
+    is_optional_ = property.is_null();
   }
   inline T operator()(size_t idx) const {
     auto v = column.get_vertex(idx);
     return property.get_view(v.vid_);
   }
+  bool is_optional() const { return is_optional_; }
+  bool is_optional_;
   const VertexColoumn& column;
   GraphReadInterface::vertex_column_t<T> property;
 };
@@ -72,16 +75,23 @@ struct MLPropertyExpr {
     auto labels = vertex.get_labels_set();
     int label_num = graph.schema().vertex_label_num();
     property.resize(label_num);
+    is_optional_ = false;
     for (auto label : labels) {
       property[label] = graph.GetVertexColumn<T>(label, property_name);
+      if (property[label].is_null()) {
+        is_optional_ = true;
+      }
     }
   }
+  bool is_optional() const { return is_optional_; }
   inline T operator()(size_t idx) const {
     auto v = vertex.get_vertex(idx);
     return property[v.label_].get_view(v.vid_);
   }
   const VertexColoumn& vertex;
   std::vector<GraphReadInterface::vertex_column_t<T>> property;
+
+  bool is_optional_;
 };
 
 template <typename EXPR>
@@ -104,6 +114,9 @@ std::unique_ptr<ProjectExprBase> create_sl_property_expr(
   case RTAnyType::kI32Value: {
     auto expr =
         SLPropertyExpr<VertexColumn, int32_t>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<ProjectExpr<SLPropertyExpr<VertexColumn, int32_t>,
                                         decltype(collector)>>(std::move(expr),
@@ -112,6 +125,9 @@ std::unique_ptr<ProjectExprBase> create_sl_property_expr(
   case RTAnyType::kI64Value: {
     auto expr =
         SLPropertyExpr<VertexColumn, int64_t>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<ProjectExpr<SLPropertyExpr<VertexColumn, int64_t>,
                                         decltype(collector)>>(std::move(expr),
@@ -120,6 +136,9 @@ std::unique_ptr<ProjectExprBase> create_sl_property_expr(
   case RTAnyType::kF64Value: {
     auto expr =
         SLPropertyExpr<VertexColumn, double>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<
         ProjectExpr<SLPropertyExpr<VertexColumn, double>, decltype(collector)>>(
@@ -129,12 +148,19 @@ std::unique_ptr<ProjectExprBase> create_sl_property_expr(
     auto expr = SLPropertyExpr<VertexColumn, std::string_view>(graph, column,
                                                                property_name);
     PropertyValueCollector<decltype(expr)> collector(ctx);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
+
     return std::make_unique<ProjectExpr<
         SLPropertyExpr<VertexColumn, std::string_view>, decltype(collector)>>(
         std::move(expr), collector, alias);
   }
   case RTAnyType::kDate32: {
     auto expr = SLPropertyExpr<VertexColumn, Day>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<
         ProjectExpr<SLPropertyExpr<VertexColumn, Day>, decltype(collector)>>(
@@ -144,6 +170,9 @@ std::unique_ptr<ProjectExprBase> create_sl_property_expr(
     auto expr =
         SLPropertyExpr<VertexColumn, Date>(graph, column, property_name);
     PropertyValueCollector<decltype(expr)> collector(ctx);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     return std::make_unique<
         ProjectExpr<SLPropertyExpr<VertexColumn, Date>, decltype(collector)>>(
         std::move(expr), collector, alias);
@@ -163,6 +192,9 @@ std::unique_ptr<ProjectExprBase> create_ml_property_expr(
   case RTAnyType::kI32Value: {
     auto expr =
         MLPropertyExpr<VertexColumn, int32_t>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<ProjectExpr<MLPropertyExpr<VertexColumn, int32_t>,
                                         decltype(collector)>>(std::move(expr),
@@ -171,6 +203,9 @@ std::unique_ptr<ProjectExprBase> create_ml_property_expr(
   case RTAnyType::kI64Value: {
     auto expr =
         MLPropertyExpr<VertexColumn, int64_t>(graph, column, property_name);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     PropertyValueCollector<decltype(expr)> collector(ctx);
     return std::make_unique<ProjectExpr<MLPropertyExpr<VertexColumn, int64_t>,
                                         decltype(collector)>>(std::move(expr),
@@ -180,6 +215,9 @@ std::unique_ptr<ProjectExprBase> create_ml_property_expr(
   case RTAnyType::kDate32: {
     auto expr = MLPropertyExpr<VertexColumn, Day>(graph, column, property_name);
     PropertyValueCollector<decltype(expr)> collector(ctx);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     return std::make_unique<
         ProjectExpr<MLPropertyExpr<VertexColumn, Day>, decltype(collector)>>(
         std::move(expr), collector, alias);
@@ -188,6 +226,9 @@ std::unique_ptr<ProjectExprBase> create_ml_property_expr(
     auto expr =
         MLPropertyExpr<VertexColumn, Date>(graph, column, property_name);
     PropertyValueCollector<decltype(expr)> collector(ctx);
+    if (expr.is_optional()) {
+      return nullptr;
+    }
     return std::make_unique<
         ProjectExpr<MLPropertyExpr<VertexColumn, Date>, decltype(collector)>>(
         std::move(expr), collector, alias);
