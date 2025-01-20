@@ -50,6 +50,10 @@ class Encoder {
 
   void put_string_view(const std::string_view& v);
 
+  void put_var_len_string(const std::string& v);
+
+  void put_var_len_string_view(const std::string_view& v);
+
   void put_small_string(const std::string& v);
 
   void put_small_string_view(const std::string_view& v);

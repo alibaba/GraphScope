@@ -532,11 +532,13 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     locks_[src].unlock();
   }
 
-  slice_t get_edges(vid_t v) const override {
+  inline slice_t get_edges(vid_t v) const override {
     return adj_lists_[v].get_edges();
   }
 
-  mut_slice_t get_edges_mut(vid_t i) { return adj_lists_[i].get_edges_mut(); }
+  inline mut_slice_t get_edges_mut(vid_t i) {
+    return adj_lists_[i].get_edges_mut();
+  }
 
   void close() override {
     if (locks_ != nullptr) {
@@ -642,11 +644,11 @@ class MutableCsr<std::string_view>
     csr_.put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const override {
+  inline slice_t get_edges(vid_t i) const override {
     return slice_t(csr_.get_edges(i), column_);
   }
 
-  mut_slice_t get_edges_mut(vid_t i) {
+  inline mut_slice_t get_edges_mut(vid_t i) {
     return mut_slice_t(csr_.get_edges_mut(i), column_);
   }
 
@@ -726,11 +728,11 @@ class MutableCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
     csr_.put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const override {
+  inline slice_t get_edges(vid_t i) const override {
     return slice_t(csr_.get_edges(i), table_);
   }
 
-  mut_slice_t get_edges_mut(vid_t i) {
+  inline mut_slice_t get_edges_mut(vid_t i) {
     return mut_slice_t(csr_.get_edges_mut(i), table_);
   }
 
@@ -918,7 +920,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     nbr_list_[src].timestamp.store(ts);
   }
 
-  slice_t get_edges(vid_t v) const override {
+  inline slice_t get_edges(vid_t v) const override {
     slice_t ret;
     ret.set_size(nbr_list_[v].timestamp.load() ==
                          std::numeric_limits<timestamp_t>::max()
@@ -930,7 +932,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     return ret;
   }
 
-  mut_slice_t get_edges_mut(vid_t i) {
+  inline mut_slice_t get_edges_mut(vid_t i) {
     mut_slice_t ret;
     ret.set_size(nbr_list_[i].timestamp.load() ==
                          std::numeric_limits<timestamp_t>::max()
@@ -942,7 +944,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     return ret;
   }
 
-  const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
+  inline const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
   void close() override { nbr_list_.reset(); }
 
@@ -1029,17 +1031,17 @@ class SingleMutableCsr<std::string_view>
     put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const override {
+  inline slice_t get_edges(vid_t i) const override {
     auto ret = csr_.get_edges(i);
     return slice_t(ret, column_);
   }
 
-  mut_slice_t get_edges_mut(vid_t i) {
+  inline mut_slice_t get_edges_mut(vid_t i) {
     auto ret = csr_.get_edges_mut(i);
     return mut_slice_t(ret, column_);
   }
 
-  MutableNbr<std::string_view> get_edge(vid_t i) const {
+  inline MutableNbr<std::string_view> get_edge(vid_t i) const {
     MutableNbr<std::string_view> nbr;
     auto nbr_tmp = csr_.get_edge(i);
     nbr.neighbor = nbr_tmp.neighbor;
@@ -1131,12 +1133,12 @@ class SingleMutableCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
     put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const override {
+  inline slice_t get_edges(vid_t i) const override {
     auto ret = csr_.get_edges(i);
     return slice_t(ret, table_);
   }
 
-  mut_slice_t get_edges_mut(vid_t i) {
+  inline mut_slice_t get_edges_mut(vid_t i) {
     auto ret = csr_.get_edges_mut(i);
     return mut_slice_t(ret, table_);
   }
@@ -1152,7 +1154,7 @@ class SingleMutableCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
     Table table_;
   };
 
-  RecordNbr get_edge(vid_t i) const {
+  inline RecordNbr get_edge(vid_t i) const {
     auto nbr = csr_.get_edge(i);
     return RecordNbr(&nbr, table_);
   }
@@ -1225,7 +1227,7 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::numeric_limits<timestamp_t>::max();
   }
 
-  slice_t get_edges(vid_t v) const override { return slice_t::empty(); }
+  inline slice_t get_edges(vid_t v) const override { return slice_t::empty(); }
 
   void close() override {}
 };
@@ -1282,7 +1284,9 @@ class EmptyCsr<std::string_view>
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
 
-  slice_t get_edges(vid_t v) const override { return slice_t::empty(column_); }
+  inline slice_t get_edges(vid_t v) const override {
+    return slice_t::empty(column_);
+  }
 
   void close() override {}
 
@@ -1341,7 +1345,9 @@ class EmptyCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
         MutableNbrSliceMut<RecordView>::empty(table_));
   }
 
-  slice_t get_edges(vid_t v) const override { return slice_t::empty(table_); }
+  inline slice_t get_edges(vid_t v) const override {
+    return slice_t::empty(table_);
+  }
 
   void close() override {}
 

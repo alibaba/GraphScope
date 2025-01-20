@@ -199,7 +199,7 @@ class TypedColumn : public ColumnBase {
     set_value(index, AnyConverter<T>::from_any(value));
   }
 
-  T get_view(size_t index) const {
+  inline T get_view(size_t index) const {
     return index < basic_size_ ? basic_buffer_.get(index)
                                : extra_buffer_.get(index - basic_size_);
   }
@@ -327,7 +327,11 @@ class TypedColumn<grape::EmptyType> : public ColumnBase {
 
   void set_any(size_t index, const Any& value) override {}
 
+  void set_value(size_t index, const grape::EmptyType& value) {}
+
   Any get(size_t index) const override { return Any(); }
+
+  grape::EmptyType get_view(size_t index) const { return grape::EmptyType(); }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {}
 
@@ -541,7 +545,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
-  std::string_view get_view(size_t idx) const {
+  inline std::string_view get_view(size_t idx) const {
     return idx < basic_size_ ? basic_buffer_.get(idx)
                              : extra_buffer_.get(idx - basic_size_);
   }

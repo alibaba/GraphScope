@@ -487,6 +487,19 @@ install_zlib() {
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
 }
 
+install_mimalloc() {
+  pushd "${tempdir}" || exit
+  git clone https://github.com/microsoft/mimalloc -b v1.8.9
+  cd mimalloc
+  mkdir -p build && cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${install_prefix}"
+  make -j$(nproc)
+  make install
+  popd || exit
+  rm -rf "${tempdir:?}/mimalloc"
+}
+
 # opentelemetry
 install_opentelemetry() {
   pushd "${tempdir}" || exit
@@ -867,12 +880,14 @@ install_interactive_dependencies() {
     install_boost
     # hiactor is only supported on ubuntu
     install_hiactor
+    install_mimalloc
     ${SUDO} sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
     ${SUDO} sysctl -p /etc/sysctl.conf
   else
     ${SUDO} yum install -y ${INTERACTIVE_CENTOS[*]}
     install_arrow
     install_boost
+    install_mimalloc
   fi
   # libgrape-lite
   install_libgrape_lite "v0.3.2"
