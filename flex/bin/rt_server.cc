@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
                                     "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
       "warmup graph data")("memory-level,m",
-                           bpo::value<int>()->default_value(1));
+                           bpo::value<int>()->default_value(1))(
+      "sharding-mode", bpo::value<std::string>()->default_value("cooperative"));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -99,6 +100,7 @@ int main(int argc, char** argv) {
   service_config.query_port = http_port;
   service_config.start_admin_service = false;
   service_config.start_compiler = false;
+  service_config.set_sharding_mode(vm["sharding-mode"].as<std::string>());
   server::GraphDBService::get().init(service_config);
   server::GraphDBService::get().run_and_wait_for_exit();
 

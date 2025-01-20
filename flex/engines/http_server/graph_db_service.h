@@ -36,6 +36,7 @@ namespace server {
 /* Stored service configuration, read from interactive_config.yaml
  */
 struct ServiceConfig {
+  enum class ShardingMode { EXCLUSIVE, COOPERATIVE };
   static constexpr const uint32_t DEFAULT_SHARD_NUM = 1;
   static constexpr const uint32_t DEFAULT_QUERY_PORT = 10000;
   static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
@@ -44,6 +45,8 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_VERBOSE_LEVEL = 0;
   static constexpr const uint32_t DEFAULT_LOG_LEVEL =
       0;  // 0 = INFO, 1 = WARNING, 2 = ERROR, 3 = FATAL
+  static constexpr const ShardingMode DEFAULT_SHARDING_MODE =
+      ShardingMode::EXCLUSIVE;
 
   // Those has default value
   uint32_t bolt_port;
@@ -67,12 +70,40 @@ struct ServiceConfig {
   // If we found GLOG_v in the environment, we will at the first place.
   int log_level;
   int verbose_level;
+  ShardingMode sharding_mode;  // exclusive or cooperative. With exclusive mode,
+                               // we will reserve one shard for only processing
+                               // admin requests, and the other shards for
+                               // processing query requests. With cooperative
+                               // mode, all shards will process both admin and
+                               // query requests. With only one shard available,
+                               // the sharding mode must be cooperative.
 
   // Those has not default value
   std::string default_graph;
   std::string engine_config_path;  // used for codegen.
 
   ServiceConfig();
+
+  void set_sharding_mode(const std::string& mode) {
+    VLOG(10) << "Set sharding mode: " << mode;
+    if (mode == "exclusive") {
+      sharding_mode = ShardingMode::EXCLUSIVE;
+    } else if (mode == "cooperative") {
+      sharding_mode = ShardingMode::COOPERATIVE;
+    } else {
+      LOG(FATAL) << "Invalid sharding mode: " << mode;
+    }
+  }
+
+  int32_t get_exclusive_shard_id() const {
+    return sharding_mode == ShardingMode::EXCLUSIVE ? shard_num - 1 : -1;
+  }
+
+  int32_t get_cooperative_shard_num() const {
+    return sharding_mode == ShardingMode::EXCLUSIVE
+               ? std::max((int32_t) shard_num - 1, 1)
+               : shard_num;  // shard_num >= 1
+  }
 };
 
 class GraphDBService {
@@ -240,6 +271,20 @@ struct convert<server::ServiceConfig> {
       } else {
         LOG(INFO) << "admin_port not found, use default value "
                   << service_config.admin_port;
+      }
+      if (http_service_node["sharding_mode"]) {
+        auto sharding_mode =
+            http_service_node["sharding_mode"].as<std::string>();
+        if (sharding_mode != "exclusive" && sharding_mode != "cooperative") {
+          LOG(ERROR) << "Unsupported sharding mode: " << sharding_mode;
+          return false;
+        }
+        if (sharding_mode == "exclusive" && service_config.shard_num == 1) {
+          LOG(ERROR) << "exclusive sharding mode requires at least 2 shards";
+          return false;
+        }
+        service_config.set_sharding_mode(sharding_mode);
+        VLOG(1) << "sharding_mode: " << sharding_mode;
       }
     } else {
       LOG(ERROR) << "Fail to find http_service configuration";
