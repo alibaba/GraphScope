@@ -176,7 +176,7 @@ class FilterOidsWithoutPredOpr : public IReadOperator {
     std::vector<Any> oids = oids_(params);
     if (params_.tables.size() == 1 && oids.size() == 1) {
       return Scan::find_vertex_with_oid(graph, params_.tables[0], oids[0],
-                                        params_.alias);
+                                        params_.alias, params_.limit);
     }
     return Scan::filter_oids(
         graph, params_, [](label_t, vid_t) { return true; }, oids);
@@ -230,7 +230,7 @@ class FilterGidsWithoutPredOpr : public IReadOperator {
     }
     if (params_.tables.size() == 1 && gids.size() == 1) {
       return Scan::find_vertex_with_gid(graph, params_.tables[0], gids[0],
-                                        params_.alias);
+                                        params_.alias, params_.limit);
     }
     return Scan::filter_gids(
         graph, params_, [](label_t, vid_t) { return true; }, gids);
@@ -566,6 +566,16 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ScanOprBuilder::Build(
 
   ScanParams scan_params;
   scan_params.alias = scan_opr.has_alias() ? scan_opr.alias().value() : -1;
+  if (scan_opr.params().has_limit()) {
+    auto& limit_range = scan_opr.params().limit();
+    if (limit_range.lower() != 0) {
+      LOG(FATAL) << "Scan with lower limit expect 0, but got "
+                 << limit_range.lower();
+    }
+    scan_params.limit = limit_range.upper();
+  } else {
+    scan_params.limit = std::numeric_limits<int32_t>::max();
+  }
   for (auto& table : scan_opr.params().tables()) {
     // bug here, exclude invalid vertex label id
     if (schema.vertex_label_num() <= table.id()) {
