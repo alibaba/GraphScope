@@ -290,7 +290,7 @@ namespace gs
       return plan;
     }
 
-    plan.error_code = error_code;
+    plan.error_code = env->GetStringUTFChars(error_code, NULL);
 
     if (error_code != "OK") {
         jmethodID get_full_msg = env->GetMethodID(
@@ -299,7 +299,7 @@ namespace gs
         jstring full_msg = (jstring)env->CallObjectMethod(jni_plan, get_full_msg);
 
         if (full_msg != NULL) {
-            plan.full_message = full_msg;
+            plan.full_message = env->GetStringUTFChars(full_msg, NULL);
         }
 
         env->DeleteLocalRef(error_code);
