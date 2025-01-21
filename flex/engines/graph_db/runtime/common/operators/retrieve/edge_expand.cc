@@ -151,6 +151,50 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
 
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       return ctx;
+    } else if (params.dir == Direction::kIn) {
+      auto& input_vertex_list =
+          *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+      if (input_vertex_list.is_optional()) {
+        LOG(ERROR) << "not support optional vertex column as input currently";
+        RETURN_UNSUPPORTED_ERROR(
+            "not support optional vertex column as input currently");
+      }
+      auto& triplet = params.labels[0];
+      auto props = graph.schema().get_edge_properties(
+          triplet.src_label, triplet.dst_label, triplet.edge_label);
+      PropertyType pt = PropertyType::kEmpty;
+      if (!props.empty()) {
+        pt = props[0];
+      }
+      if (props.size() > 1) {
+        pt = PropertyType::kRecordView;
+      }
+      OptionalSDSLEdgeColumnBuilder builder(Direction::kIn, triplet, pt);
+      foreach_vertex(input_vertex_list,
+                     [&](size_t index, label_t label, vid_t v) {
+                       if (label == triplet.dst_label) {
+                         auto ie_iter = graph.GetInEdgeIterator(
+                             label, v, triplet.src_label, triplet.edge_label);
+                         bool has_edge = false;
+                         while (ie_iter.IsValid()) {
+                           auto nbr = ie_iter.GetNeighbor();
+                           builder.push_back_opt(nbr, v, ie_iter.GetData());
+                           shuffle_offset.push_back(index);
+                           ie_iter.Next();
+                           has_edge = true;
+                         }
+                         if (!has_edge) {
+                           builder.push_back_null();
+                           shuffle_offset.push_back(index);
+                         }
+                       } else {
+                         builder.push_back_null();
+                         shuffle_offset.push_back(index);
+                       }
+                     });
+
+      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      return ctx;
     }
   }
   LOG(ERROR) << "not support" << params.labels.size() << " "

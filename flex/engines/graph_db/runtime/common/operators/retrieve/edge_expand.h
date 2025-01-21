@@ -244,6 +244,43 @@ class EdgeExpand {
             });
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
+      } else if (params.dir == Direction::kIn) {
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
+        for (auto& triplet : params.labels) {
+          auto& props = graph.schema().get_edge_properties(
+              triplet.src_label, triplet.dst_label, triplet.edge_label);
+          PropertyType pt = PropertyType::kEmpty;
+          if (!props.empty()) {
+            pt = props[0];
+          }
+          label_props.emplace_back(triplet, pt);
+        }
+        SDMLEdgeColumnBuilder builder(Direction::kIn, label_props);
+
+        foreach_vertex(
+            input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+              for (auto& label_prop : label_props) {
+                auto& triplet = label_prop.first;
+                if (label != triplet.dst_label)
+                  continue;
+                auto ie_iter = graph.GetInEdgeIterator(
+                    label, v, triplet.src_label, triplet.edge_label);
+                while (ie_iter.IsValid()) {
+                  auto nbr = ie_iter.GetNeighbor();
+                  if (pred(triplet, nbr, v, ie_iter.GetData(), Direction::kIn,
+                           index)) {
+                    assert(ie_iter.GetData().type == label_prop.second);
+                    builder.push_back_opt(triplet, nbr, v, ie_iter.GetData());
+                    shuffle_offset.push_back(index);
+                  }
+                  ie_iter.Next();
+                }
+              }
+            });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
       }
     }
     LOG(ERROR) << "expand edge not support";
@@ -264,7 +301,7 @@ class EdgeExpand {
                                            const EdgeExpandParams& params,
                                            const PRED_T& pred) {
     if (params.is_optional) {
-      LOG(ERROR) << "not support optional edge expand";
+      LOG(ERROR) << "not support optional edge expand with predicate";
       RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
     }
     std::shared_ptr<IVertexColumn> input_vertex_list =
@@ -294,8 +331,11 @@ class EdgeExpand {
       ctx.set_with_reshuffle(params.alias, pair.first, pair.second);
       return ctx;
     } else {
-      LOG(FATAL) << "not support vertex column type "
+      LOG(ERROR) << "not support vertex column type "
                  << static_cast<int>(input_vertex_list_type);
+      RETURN_UNSUPPORTED_ERROR(
+          "not support vertex column type " +
+          std::to_string(static_cast<int>(input_vertex_list_type)));
     }
   }
 
