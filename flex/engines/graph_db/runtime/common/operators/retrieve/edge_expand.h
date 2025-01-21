@@ -250,7 +250,7 @@ class EdgeExpand {
     RETURN_UNSUPPORTED_ERROR("expand edge not support");
   }
 
-  static std::optional<Context> expand_edge_with_special_edge_predicate(
+  static bl::result<Context> expand_edge_with_special_edge_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPEdgePredicate& pred);
 
@@ -299,10 +299,10 @@ class EdgeExpand {
     }
   }
 
-  static std::optional<Context> expand_vertex_ep_lt(
+  static bl::result<Context> expand_vertex_ep_lt(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const std::string& ep_val);
-  static std::optional<Context> expand_vertex_ep_gt(
+  static bl::result<Context> expand_vertex_ep_gt(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const std::string& ep_val);
   template <typename PRED_T>
@@ -322,7 +322,7 @@ class EdgeExpand {
     const PRED_T& pred_;
   };
 
-  static std::optional<Context> expand_vertex_with_special_vertex_predicate(
+  static bl::result<Context> expand_vertex_with_special_vertex_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPVertexPredicate& pred);
 

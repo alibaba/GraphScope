@@ -46,9 +46,9 @@ class InsertPipeline {
       : operators_(std::move(operators)) {}
   ~InsertPipeline() = default;
 
-  WriteContext Execute(GraphInsertInterface& graph, WriteContext&& ctx,
-                       const std::map<std::string, std::string>& params,
-                       OprTimer& timer);
+  bl::result<WriteContext> Execute(
+      GraphInsertInterface& graph, WriteContext&& ctx,
+      const std::map<std::string, std::string>& params, OprTimer& timer);
 
  private:
   std::vector<std::unique_ptr<IInsertOperator>> operators_;

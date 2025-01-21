@@ -31,11 +31,15 @@ bl::result<Context> ReadPipeline::Execute(
   return ctx;
 }
 
-WriteContext InsertPipeline::Execute(
+bl::result<WriteContext> InsertPipeline::Execute(
     GraphInsertInterface& graph, WriteContext&& ctx,
     const std::map<std::string, std::string>& params, OprTimer& timer) {
   for (auto& opr : operators_) {
-    ctx = opr->Eval(graph, params, std::move(ctx), timer);
+    auto ctx_res = opr->Eval(graph, params, std::move(ctx), timer);
+    if (!ctx_res) {
+      return ctx_res;
+    }
+    ctx = std::move(ctx_res.value());
   }
   return ctx;
 }

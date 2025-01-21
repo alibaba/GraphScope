@@ -579,7 +579,8 @@ static bl::result<Context> _expand_edge_with_special_edge_predicate(
     LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.type());
   }
-  return std::nullopt;
+  RETURN_UNSUPPORTED_ERROR("not support edge property type " +
+                           std::to_string(static_cast<int>(pred.type())));
 }
 
 bl::result<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
@@ -587,7 +588,7 @@ bl::result<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
     const EdgeExpandParams& params, const SPEdgePredicate& pred) {
   if (params.is_optional) {
     LOG(ERROR) << "not support optional edge expand";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
   }
   if (pred.data_type() == RTAnyType::kI64Value) {
     return _expand_edge_with_special_edge_predicate<int64_t>(
@@ -610,9 +611,11 @@ bl::result<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
   } else {
     LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.data_type());
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR(
+        "not support edge property type " +
+        std::to_string(static_cast<int>(pred.data_type())));
   }
-  return std::nullopt;
+  RETURN_UNSUPPORTED_ERROR("not support edge property type");
 }
 
 template <typename T, typename VERTEX_COL_T>
@@ -661,7 +664,7 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
     const EdgeExpandParams& params, const std::string& ep_val) {
   if (params.is_optional) {
     LOG(ERROR) << "not support optional edge expand";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
   }
   std::shared_ptr<IVertexColumn> input_vertex_list =
       std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
@@ -721,7 +724,7 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
     }
     if (!sp) {
       LOG(ERROR) << "not support edge type";
-      return std::nullopt;
+      RETURN_UNSUPPORTED_ERROR("not support edge type");
     }
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Date()) {
@@ -734,11 +737,11 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
           casted_input_vertex_list.get(), params.alias);
     } else {
       LOG(ERROR) << "not support edge type";
-      return std::nullopt;
+      RETURN_UNSUPPORTED_ERROR("not support edge type");
     }
   } else {
     LOG(ERROR) << "not support vertex column type";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support vertex column type");
   }
 }
 
@@ -829,7 +832,7 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
     const EdgeExpandParams& params, const std::string& ep_val) {
   if (params.is_optional) {
     LOG(ERROR) << "not support optional edge expand";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
   }
   std::shared_ptr<IVertexColumn> input_vertex_list =
       std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
@@ -889,7 +892,7 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
     }
     if (!sp) {
       LOG(ERROR) << "not support multiple edge types";
-      return std::nullopt;
+      RETURN_UNSUPPORTED_ERROR("not support multiple edge types");
     }
     const PropertyType& ed_type = ed_types[0];
     if (se) {
@@ -903,7 +906,7 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
             casted_input_vertex_list.get(), params.alias);
       } else {
         LOG(ERROR) << "not support edge type" << ed_type.ToString();
-        return std::nullopt;
+        RETURN_UNSUPPORTED_ERROR("not support edge type " + ed_type.ToString());
       }
     } else {
       if (ed_type == PropertyType::Date()) {
@@ -916,12 +919,12 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
             casted_input_vertex_list.get(), params.alias);
       } else {
         LOG(ERROR) << "not support edge type" << ed_type.ToString();
-        return std::nullopt;
+        RETURN_UNSUPPORTED_ERROR("not support edge type " + ed_type.ToString());
       }
     }
   } else {
     LOG(ERROR) << "unexpected to reach here...";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("unexpected to reach here...");
   }
 }
 
@@ -968,7 +971,8 @@ static bl::result<Context> _expand_vertex_with_special_vertex_predicate(
   } else {
     LOG(ERROR) << "not support vertex property type "
                << static_cast<int>(pred.type());
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support vertex property type " +
+                             std::to_string(static_cast<int>(pred.type())));
   }
 }
 
@@ -977,7 +981,7 @@ bl::result<Context> EdgeExpand::expand_vertex_with_special_vertex_predicate(
     const EdgeExpandParams& params, const SPVertexPredicate& pred) {
   if (params.is_optional) {
     LOG(ERROR) << "not support optional edge expand";
-    return std::nullopt;
+    RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
   }
 
   if (pred.data_type() == RTAnyType::kI64Value) {
@@ -999,7 +1003,10 @@ bl::result<Context> EdgeExpand::expand_vertex_with_special_vertex_predicate(
     return _expand_vertex_with_special_vertex_predicate<Day>(
         graph, std::move(ctx), params, pred);
   }
-  return std::nullopt;
+  LOG(ERROR) << "not support vertex property type "
+             << static_cast<int>(pred.data_type());
+  RETURN_UNSUPPORTED_ERROR("not support vertex property type " +
+                           std::to_string(static_cast<int>(pred.data_type())));
 }
 
 }  // namespace runtime

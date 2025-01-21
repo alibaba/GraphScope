@@ -171,7 +171,7 @@ class EdgeExpandVWithEPGTOpr : public IReadOperator {
     std::string param_value = params.at(param_);
     auto ret = EdgeExpand::expand_vertex_ep_gt(graph, std::move(ctx), eep_,
                                                param_value);
-    if (ret.has_value()) {
+    if (ret) {
       return ret.value();
     }
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
@@ -198,7 +198,7 @@ class EdgeExpandVWithEPLTOpr : public IReadOperator {
     std::string param_value = params.at(param_);
     auto ret = EdgeExpand::expand_vertex_ep_lt(graph, std::move(ctx), eep_,
                                                param_value);
-    if (ret.has_value()) {
+    if (ret) {
       return ret.value();
     }
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
@@ -266,7 +266,7 @@ class EdgeExpandEWithSPredOpr : public IReadOperator {
     if (pred) {
       auto ret = EdgeExpand::expand_edge_with_special_edge_predicate(
           graph, std::move(ctx), eep_, *pred);
-      if (ret.has_value()) {
+      if (ret) {
         return ret.value();
       }
     }
@@ -383,7 +383,7 @@ class EdgeExpandVWithSPVertexPredOpr : public IReadOperator {
     if (pred) {
       auto ret = EdgeExpand::expand_vertex_with_special_vertex_predicate(
           graph, std::move(ctx), eep_, *pred);
-      if (ret.has_value()) {
+      if (ret) {
         return ret.value();
       }
     }

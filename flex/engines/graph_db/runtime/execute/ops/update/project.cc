@@ -25,7 +25,7 @@ class ProjectInsertOpr : public IInsertOperator {
           const std::map<std::string, std::string>&)>>& exprs)
       : exprs_(exprs) {}
 
-  gs::runtime::WriteContext Eval(
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -137,10 +137,12 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
               return std::make_unique<PairsSndGetter>(tag, alias);
             });
       } else {
-        LOG(FATAL) << "not support for " << m.expr().DebugString();
+        LOG(ERROR) << "not support for " << m.expr().DebugString();
+        return nullptr;
       }
     } else {
-      LOG(FATAL) << "not support for " << m.expr().DebugString();
+      LOG(ERROR) << "not support for " << m.expr().DebugString();
+      return nullptr;
     }
   }
 

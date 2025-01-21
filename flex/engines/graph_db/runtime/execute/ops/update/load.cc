@@ -41,7 +41,7 @@ class LoadSingleEdgeOpr : public IInsertOperator {
         dst_pk_type(dst_pk_type),
         edge_prop_type(edge_prop_type) {}
 
-  gs::runtime::WriteContext Eval(
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -71,7 +71,7 @@ class LoadSingleVertexOpr : public IInsertOperator {
         properties(properties),
         edges(edges) {}
 
-  gs::runtime::WriteContext Eval(
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -97,7 +97,7 @@ class LoadOpr : public IInsertOperator {
           edge_mappings)
       : vertex_mappings_(vertex_mappings), edge_mappings_(edge_mappings) {}
 
-  gs::runtime::WriteContext Eval(
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {

@@ -54,9 +54,10 @@ class IInsertOperator {
  public:
   virtual ~IInsertOperator() = default;
 
-  virtual WriteContext Eval(GraphInsertInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            WriteContext&& ctx, OprTimer& timer) = 0;
+  virtual bl::result<WriteContext> Eval(
+      GraphInsertInterface& graph,
+      const std::map<std::string, std::string>& params, WriteContext&& ctx,
+      OprTimer& timer) = 0;
 };
 
 class IInsertOperatorBuilder {

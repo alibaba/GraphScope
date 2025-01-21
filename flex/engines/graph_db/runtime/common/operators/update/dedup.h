@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -24,9 +25,9 @@ namespace runtime {
 
 class Dedup {
  public:
-  static WriteContext dedup(const GraphInsertInterface& graph,
-                            WriteContext&& ctx,
-                            const std::vector<size_t>& cols);
+  static bl::result<WriteContext> dedup(const GraphInsertInterface& graph,
+                                        WriteContext&& ctx,
+                                        const std::vector<size_t>& cols);
 };
 
 }  // namespace runtime

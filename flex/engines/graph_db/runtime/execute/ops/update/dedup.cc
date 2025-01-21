@@ -24,7 +24,7 @@ class DedupInsertOpr : public IInsertOperator {
  public:
   DedupInsertOpr(const std::vector<size_t>& keys) : keys(keys) {}
 
-  gs::runtime::WriteContext Eval(
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -46,7 +46,10 @@ std::unique_ptr<IInsertOperator> DedupInsertOprBuilder::Build(
     CHECK(key.has_tag());
     tag = key.tag().id();
     keys.emplace_back(tag);
-    CHECK(!key.has_property()) << "dedup not support property";
+    if (key.has_property()) {
+      LOG(ERROR) << "dedup not support property";
+      return nullptr;
+    }
   }
   return std::make_unique<DedupInsertOpr>(keys);
 }
