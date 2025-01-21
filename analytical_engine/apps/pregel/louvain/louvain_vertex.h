@@ -68,7 +68,7 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
 
   size_t edge_size() {
     if (!this->use_fake_edges()) {
-      return this->incoming_edges().Size() + this->outgoing_edges().Size();
+      return this->outgoing_edges().Size();
     } else {
       return this->fake_edges().size();
     }
@@ -88,11 +88,6 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
 
   edata_t get_edge_value(const vid_t& dst_id) {
     if (!this->use_fake_edges()) {
-      for (auto& edge : this->incoming_edges()) {
-        if (this->fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
-          return static_cast<edata_t>(edge.get_data());
-        }
-      }
       for (auto& edge : this->outgoing_edges()) {
         if (this->fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
           return static_cast<edata_t>(edge.get_data());
@@ -117,12 +112,6 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   edata_t get_edge_values(const std::set<vid_t>& dst_ids) {
     edata_t ret = 0;
     if (!this->use_fake_edges()) {
-      for (auto& edge : this->incoming_edges()) {
-        auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
-        if (dst_ids.find(gid) != dst_ids.end()) {
-          ret += static_cast<edata_t>(edge.get_data());
-        }
-      }
       for (auto& edge : this->outgoing_edges()) {
         auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
         if (dst_ids.find(gid) != dst_ids.end()) {

@@ -152,6 +152,16 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  {
+    std::error_code ec;
+    std::filesystem::copy(graph_schema_path, data_dir_path / "graph.yaml",
+                          std::filesystem::copy_options::overwrite_existing,
+                          ec);
+    if (ec) {
+      LOG(FATAL) << "Failed to copy graph schema file: " << ec.message();
+    }
+  }
+
   work_dir = data_dir_path.string();
 
   // Register handlers for SIGKILL, SIGINT, SIGTERM, SIGSEGV, SIGABRT

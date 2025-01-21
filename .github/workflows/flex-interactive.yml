@@ -8,6 +8,7 @@ on:
     branches:
       - main
     paths:
+      - 'k8s/**'
       - 'flex/**'
       - 'coordinator/gscoordinator/flex/**'
       - 'python/graphscope/gsctl/**'
@@ -16,6 +17,7 @@ on:
     branches:
       - main
     paths:
+      - 'k8s/**'
       - 'flex/**'
       - 'coordinator/gscoordinator/flex/**'
       - 'python/graphscope/gsctl/**'

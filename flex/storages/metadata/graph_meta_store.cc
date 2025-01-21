@@ -624,14 +624,10 @@ Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
 
-  Result<std::string> real_json_str =
-      preprocess_and_check_schema_json_string(json_str);
-
   CreateGraphMetaRequest request;
   rapidjson::Document json(rapidjson::kObjectType);
-  if (json.Parse(real_json_str.value().c_str()).HasParseError()) {
-    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: "
-               << real_json_str.value();
+  if (json.Parse(json_str.c_str()).HasParseError()) {
+    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << json_str;
     return request;
   }
   if (json.HasMember("version")) {

@@ -20,6 +20,9 @@ compiler:
       - NotMatchToAntiJoinRule
       - ExtendIntersectRule
       - ExpandGetVFusionRule
+      - ScanExpandFusionRule
+      - TopKPushDownRule
+      - ScanEarlyStopRule # This rule must be placed after TopKPushDownRule and ScanExpandFusionRule
   meta:
     reader:
       schema:

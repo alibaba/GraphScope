@@ -80,8 +80,8 @@ bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
     if (added_vertices_.find(std::make_pair(src_label, src)) ==
         added_vertices_.end()) {
       std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
-                 << "] not found...";
+      VLOG(1) << "Source vertex " << label_name << "[" << src.to_string()
+              << "] not found...";
       return false;
     }
   }
@@ -89,8 +89,8 @@ bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
     if (added_vertices_.find(std::make_pair(dst_label, dst)) ==
         added_vertices_.end()) {
       std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "["
-                 << dst.to_string() << "] not found...";
+      VLOG(1) << "Destination vertex " << label_name << "[" << dst.to_string()
+              << "] not found...";
       return false;
     }
   }
@@ -207,6 +207,8 @@ void InsertTransaction::clear() {
 
   timestamp_ = std::numeric_limits<timestamp_t>::max();
 }
+
+const Schema& InsertTransaction::schema() const { return graph_.schema(); }
 
 #define likely(x) __builtin_expect(!!(x), 1)
 

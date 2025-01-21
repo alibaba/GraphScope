@@ -41,7 +41,7 @@ bool HQPSAdhocReadApp::Query(const GraphDBSession& graph, Decoder& input,
                << input.size();
     return false;
   }
-  std::string_view str_view(input.data(), input.size());
+  std::string_view str_view(input.data(), input.size() - 1);
   std::string input_lib_path = std::string(str_view);
   auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
   auto app_wrapper = loadAdhocQuery(input_lib_path, app_factory, graph.db());

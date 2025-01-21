@@ -260,12 +260,12 @@ class MutableNbrSlice {
   ~MutableNbrSlice() = default;
 
   void set_size(int size) { size_ = size; }
-  int size() const { return size_; }
+  inline int size() const { return size_; }
 
   void set_begin(const_nbr_ptr_t ptr) { ptr_ = ptr; }
 
-  const_nbr_ptr_t begin() const { return ptr_; }
-  const_nbr_ptr_t end() const { return ptr_ + size_; }
+  inline const_nbr_ptr_t begin() const { return ptr_; }
+  inline const_nbr_ptr_t end() const { return ptr_ + size_; }
 
   static MutableNbrSlice empty() {
     MutableNbrSlice ret;
