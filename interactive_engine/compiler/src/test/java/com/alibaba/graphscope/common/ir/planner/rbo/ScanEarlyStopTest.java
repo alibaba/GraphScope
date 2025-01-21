@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -104,5 +105,19 @@ public class ScanEarlyStopTest {
                     + " fusedFilter=[[>(_.creationDate, ?0)]], opt=[EDGE], params=[{range=<0,"
                     + " 10>}])",
                 after.explain().trim());
+    }
+
+    @Test
+    public void scan_early_stop_2_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (:PERSON)-[n:KNOWS]->(b) Where n.creationDate > $date Return"
+                                        + " n Limit 0",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        LogicalPlan plan = new LogicalPlan(after);
+        Assert.assertTrue(plan.isReturnEmpty());
     }
 }
