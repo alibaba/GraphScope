@@ -223,4 +223,6 @@ public class Utils {
             return sw.toString();
         }
     }
+
+    public static final int PATH_EXPAND_MAX_HOPS = 10;
 }

@@ -89,7 +89,10 @@ public class PrimitiveCountEstimator {
         PathExpandRange range = edge.getElementDetails().getRange();
         if (range != null) {
             minHop = range.getOffset();
-            maxHop = range.getOffset() + range.getFetch() - 1;
+            maxHop =
+                    Math.min(
+                            com.alibaba.graphscope.common.ir.tools.Utils.PATH_EXPAND_MAX_HOPS,
+                            range.getOffset() + range.getFetch() - 1);
         }
         double sum = 0.0d;
         for (int hop = minHop; hop <= maxHop; ++hop) {
