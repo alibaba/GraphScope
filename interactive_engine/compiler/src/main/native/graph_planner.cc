@@ -279,6 +279,38 @@ namespace gs
       return plan;
     }
 
+    jmethodID get_error_code = env->GetMethodID(
+       env->GetObjectClass(jni_plan), "getErrorCode", "()Ljava/lang/String;");
+
+    jstring error_code = (jstring)env->CallObjectMethod(jni_plan, get_error_code);
+
+    if (error_code == NULL)
+    {
+      std::cerr << "Fail to get error code from compiled plan." << std::endl;
+      return plan;
+    }
+
+    plan.error_code = error_code;
+
+    if (error_code != "OK") {
+        jmethodID get_full_msg = env->GetMethodID(
+           env->GetObjectClass(jni_plan), "getFullMessage", "()Ljava/lang/String;");
+
+        jstring full_msg = (jstring)env->CallObjectMethod(jni_plan, get_full_msg);
+
+        if (full_msg != NULL) {
+            plan.full_message = full_msg;
+        }
+
+        env->DeleteLocalRef(error_code);
+        env->DeleteLocalRef(full_msg);
+        env->DeleteLocalRef(param1);
+        env->DeleteLocalRef(param2);
+        env->DeleteLocalRef(jni_plan);
+
+        return plan;
+    }
+
     jmethodID method1 = env->GetMethodID(
         env->GetObjectClass(jni_plan), "getPhysicalBytes", "()[B");
     jmethodID method2 = env->GetMethodID(
@@ -308,6 +340,7 @@ namespace gs
     // remove new added jni objects
     env->DeleteLocalRef(res2);
     env->DeleteLocalRef(jni_plan);
+    env->DeleteLocalRef(error_code);
 
     return plan;
   }

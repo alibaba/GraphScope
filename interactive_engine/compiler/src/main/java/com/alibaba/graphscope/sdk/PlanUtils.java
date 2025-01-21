@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.sdk;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
@@ -34,6 +35,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
@@ -57,31 +59,40 @@ public class PlanUtils {
      * @throws Exception
      */
     public static GraphPlan compilePlan(
-            String configPath, String query, String schemaYaml, String statsJson) throws Exception {
-        long startTime = System.currentTimeMillis();
-        GraphPlanerInstance instance =
-                GraphPlanerInstance.getInstance(
-                        configPath,
-                        (Configs configs, IrMetaTracker tracker) ->
-                                new StaticIrMetaFetcher(
-                                        new StringMetaReader(schemaYaml, statsJson, configs),
-                                        tracker));
-        GraphPlanner.PlannerInstance plannerInstance =
-                instance.getPlanner().instance(query, instance.getMeta());
-        GraphPlanner.Summary summary = plannerInstance.plan();
-        LogicalPlan logicalPlan = summary.getLogicalPlan();
-        PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
-        StoredProcedureMeta procedureMeta =
-                new StoredProcedureMeta(
-                        new Configs(ImmutableMap.of()),
-                        query,
-                        logicalPlan.getOutputType(),
-                        logicalPlan.getDynamicParams());
-        ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
-        StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        logger.info("compile plan cost: {} ms", elapsedTime);
-        return new GraphPlan(physicalPlan.getContent(), new String(metaStream.toByteArray()));
+            String configPath, String query, String schemaYaml, String statsJson) {
+        try {
+            long startTime = System.currentTimeMillis();
+            GraphPlanerInstance instance =
+                    GraphPlanerInstance.getInstance(
+                            configPath,
+                            (Configs configs, IrMetaTracker tracker) ->
+                                    new StaticIrMetaFetcher(
+                                            new StringMetaReader(schemaYaml, statsJson, configs),
+                                            tracker));
+            GraphPlanner.PlannerInstance plannerInstance =
+                    instance.getPlanner().instance(query, instance.getMeta());
+            GraphPlanner.Summary summary = plannerInstance.plan();
+            LogicalPlan logicalPlan = summary.getLogicalPlan();
+            PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
+            StoredProcedureMeta procedureMeta =
+                    new StoredProcedureMeta(
+                            new Configs(ImmutableMap.of()),
+                            query,
+                            logicalPlan.getOutputType(),
+                            logicalPlan.getDynamicParams());
+            ByteArrayOutputStream metaStream = new ByteArrayOutputStream();
+            StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            logger.info("compile plan cost: {} ms", elapsedTime);
+            return new GraphPlan(
+                    Code.OK, null, physicalPlan.getContent(), new String(metaStream.toByteArray()));
+        } catch (Throwable t) {
+            if (t instanceof FrontendException) {
+                return new GraphPlan(
+                        ((FrontendException) t).getErrorCode(), t.getMessage(), null, null);
+            }
+            return new GraphPlan(Code.UNRECOGNIZED, t.getMessage(), null, null);
+        }
     }
 
     static class StringMetaReader implements IrMetaReader {

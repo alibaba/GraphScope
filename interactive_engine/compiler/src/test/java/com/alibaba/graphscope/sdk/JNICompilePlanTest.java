@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.sdk;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -49,5 +50,33 @@ public class JNICompilePlanTest {
                 "MATCH (src)-[e:test6*4..5]->(dest) WHERE src.__domain__ = 'xzz' RETURN"
                         + " src.__entity_id__ AS sId, dest.__entity_id__ AS dId;";
         PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+    }
+
+    @Test
+    public void vertex_label_not_found_test() {
+        String query =
+                "MATCH (src)-[e:calls*2..3]->(dest)\n"
+                        + "          WHERE dest.__domain__ = 'apm'\n"
+                        + "          RETURN src, dest, dest.__entity_type__";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("LABEL_NOT_FOUND", plan.errorCode);
+    }
+
+    @Test
+    public void edge_label_not_found_test() {
+        String query =
+                "MATCH (src:`acs@acs.vpc.vswitch`)-[e1]->(n1)<-[e2]-(n2)-[e3]->(n3)\n"
+                    + "WHERE src <> n2 AND n1.__entity_type__ <> n3.__entity_type__ AND NOT"
+                    + " (src)<-[e1:`related_to`]-(n1)\n"
+                    + "RETURN src, e1.__type__, n1, e2.__type__, n2, e3.__type__, n3";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("LABEL_NOT_FOUND", plan.errorCode);
+    }
+
+    @Test
+    public void schema_type_test() {
+        String query = "Match (src:`xzz@t1a`)-[:test2_2]-(dst:`xzz@t1b`) return src, dst";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("TYPE_INFERENCE_FAILED", plan.errorCode);
     }
 }
