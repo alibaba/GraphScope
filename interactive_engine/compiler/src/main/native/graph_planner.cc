@@ -292,7 +292,7 @@ namespace gs
 
     plan.error_code = env->GetStringUTFChars(error_code, NULL);
 
-    if (error_code != "OK") {
+    if (plan.error_code != "OK") {
         jmethodID get_full_msg = env->GetMethodID(
            env->GetObjectClass(jni_plan), "getFullMessage", "()Ljava/lang/String;");
 
