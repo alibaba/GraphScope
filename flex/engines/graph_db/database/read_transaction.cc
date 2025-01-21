@@ -127,8 +127,6 @@ ReadTransaction::edge_iterator ReadTransaction::GetInEdgeIterator(
           graph_.get_incoming_edges(label, u, neighbor_label, edge_label)};
 }
 
-const Schema& ReadTransaction::schema() const { return graph_.schema(); }
-
 void ReadTransaction::release() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
     vm_.release_read_timestamp();

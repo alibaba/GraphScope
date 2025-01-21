@@ -100,5 +100,8 @@ public class YamlConfigTest {
         YamlConfigs configs =
                 new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
         Assert.assertEquals("UTF-8", FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
+        Assert.assertEquals(
+                "./src/main/resources/conf/graph_functions.yaml",
+                GraphConfig.GRAPH_FUNCTIONS_URI.get(configs));
     }
 }

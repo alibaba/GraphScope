@@ -19,21 +19,6 @@ namespace gs {
 
 namespace runtime {
 
-std::shared_ptr<IContextColumn> SDSLEdgeColumn::dup() const {
-  std::vector<PropertyType> sub_types;
-  if (prop_type_ == PropertyType::kRecordView) {
-    sub_types = std::dynamic_pointer_cast<TypedColumn<RecordView>>(prop_col_)
-                    ->sub_types();
-  }
-  SDSLEdgeColumnBuilder builder(dir_, label_, prop_type_, sub_types);
-  builder.reserve(edges_.size());
-  for (size_t i = 0; i < edges_.size(); ++i) {
-    auto e = get_edge(i);
-    builder.push_back_opt(e.src_, e.dst_, e.prop_);
-  }
-  return builder.finish();
-}
-
 std::shared_ptr<IContextColumn> SDSLEdgeColumn::shuffle(
     const std::vector<size_t>& offsets) const {
   std::vector<PropertyType> sub_types;
@@ -48,7 +33,6 @@ std::shared_ptr<IContextColumn> SDSLEdgeColumn::shuffle(
   if (prop_type_ == PropertyType::kEmpty) {
     for (auto off : offsets) {
       const auto& e = edges_[off];
-
       builder.push_back_endpoints(e.first, e.second);
     }
   } else {
@@ -109,16 +93,6 @@ std::shared_ptr<IContextColumn> SDSLEdgeColumnBuilder::finish() {
   return ret;
 }
 
-std::shared_ptr<IContextColumn> BDSLEdgeColumn::dup() const {
-  BDSLEdgeColumnBuilder builder(label_, prop_type_);
-  builder.reserve(size());
-  for (size_t i = 0; i < size(); ++i) {
-    auto e = get_edge(i);
-    builder.push_back_opt(e.src_, e.dst_, e.prop_, e.dir_);
-  }
-  return builder.finish();
-}
-
 std::shared_ptr<IContextColumn> BDSLEdgeColumn::shuffle(
     const std::vector<size_t>& offsets) const {
   BDSLEdgeColumnBuilder builder(label_, prop_type_);
@@ -168,17 +142,6 @@ std::shared_ptr<IContextColumn> BDSLEdgeColumnBuilder::finish() {
   return ret;
 }
 
-std::shared_ptr<IContextColumn> SDMLEdgeColumn::dup() const {
-  SDMLEdgeColumnBuilder builder(dir_, edge_labels_);
-  builder.reserve(edges_.size());
-  for (auto& e : edges_) {
-    auto idx = std::get<0>(e);
-    builder.push_back_opt(idx, std::get<1>(e), std::get<2>(e),
-                          prop_cols_[idx]->get(std::get<3>(e)));
-  }
-  return builder.finish();
-}
-
 std::shared_ptr<IContextColumn> SDMLEdgeColumn::shuffle(
     const std::vector<size_t>& offsets) const {
   SDMLEdgeColumnBuilder builder(dir_, edge_labels_);
@@ -200,18 +163,6 @@ std::shared_ptr<IContextColumn> SDMLEdgeColumnBuilder::finish() {
   ret->edges_.swap(edges_);
   ret->prop_cols_.swap(prop_cols_);
   return ret;
-}
-
-std::shared_ptr<IContextColumn> BDMLEdgeColumn::dup() const {
-  BDMLEdgeColumnBuilder builder(labels_);
-  builder.reserve(edges_.size());
-  for (auto& e : edges_) {
-    auto idx = std::get<0>(e);
-    auto dir = std::get<4>(e) ? Direction::kOut : Direction::kIn;
-    builder.push_back_opt(idx, std::get<1>(e), std::get<2>(e),
-                          prop_cols_[idx]->get(std::get<3>(e)), dir);
-  }
-  return builder.finish();
 }
 
 std::shared_ptr<IContextColumn> BDMLEdgeColumn::shuffle(
@@ -246,15 +197,6 @@ std::shared_ptr<IContextColumn> OptionalBDSLEdgeColumn::shuffle(
   for (size_t idx = 0; idx < new_row_num; ++idx) {
     size_t off = offsets[idx];
     const auto& e = get_edge(off);
-    builder.push_back_opt(e.src_, e.dst_, e.prop_, e.dir_);
-  }
-  return builder.finish();
-}
-std::shared_ptr<IContextColumn> OptionalBDSLEdgeColumn::dup() const {
-  OptionalBDSLEdgeColumnBuilder builder(label_, prop_type_);
-  builder.reserve(edges_.size());
-  for (size_t i = 0; i < edges_.size(); ++i) {
-    auto e = get_edge(i);
     builder.push_back_opt(e.src_, e.dst_, e.prop_, e.dir_);
   }
   return builder.finish();
@@ -294,16 +236,6 @@ std::shared_ptr<IContextColumn> OptionalSDSLEdgeColumn::shuffle(
   for (size_t idx = 0; idx < new_row_num; ++idx) {
     size_t off = offsets[idx];
     const auto& e = get_edge(off);
-    builder.push_back_opt(e.src_, e.dst_, e.prop_);
-  }
-  return builder.finish();
-}
-
-std::shared_ptr<IContextColumn> OptionalSDSLEdgeColumn::dup() const {
-  OptionalSDSLEdgeColumnBuilder builder(dir_, label_, prop_type_);
-  builder.reserve(edges_.size());
-  for (size_t i = 0; i < edges_.size(); ++i) {
-    auto e = get_edge(i);
     builder.push_back_opt(e.src_, e.dst_, e.prop_);
   }
   return builder.finish();
