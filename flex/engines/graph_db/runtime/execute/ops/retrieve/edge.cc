@@ -317,8 +317,13 @@ class EdgeExpandVWithExactVertexOpr : public IReadOperator {
     std::string param_value = params.at(pk_);
     int64_t oid = std::stoll(param_value);
     vid_t vid = std::numeric_limits<vid_t>::max();
-    CHECK(graph.GetVertexIndex(pk_label_, oid, vid))
-        << "vertex not found with label " << pk_label_ << " and oid " << oid;
+    if (!graph.GetVertexIndex(pk_label_, oid, vid)) {
+      LOG(ERROR) << "vertex not found with label " << pk_label_ << " and oid "
+                 << oid;
+      RETURN_UNSUPPORTED_ERROR("vertex not found with label " +
+                               std::to_string(static_cast<int>(pk_label_)) +
+                               " and oid " + std::to_string(oid));
+    }
     ExactVertexPredicate v_pred(pk_label_, vid);
     if (query_params_.has_predicate()) {
       GeneralEdgePredicate e_pred(graph, ctx, params,
@@ -469,7 +474,10 @@ EdgeExpandOprBuilder::Build(const gs::Schema& schema,
   int v_tag = opr.has_v_tag() ? opr.v_tag().value() : -1;
   Direction dir = parse_direction(opr.direction());
   bool is_optional = opr.is_optional();
-  CHECK(opr.has_params());
+  if (!opr.has_params()) {
+    LOG(ERROR) << "EdgeExpandOprBuilder::Build: query_params is empty";
+    return std::make_pair(nullptr, ContextMeta());
+  }
   const auto& query_params = opr.params();
   EdgeExpandParams eep;
   eep.v_tag = v_tag;
@@ -543,13 +551,27 @@ EdgeExpandGetVOprBuilder::Build(const gs::Schema& schema,
     int v_tag = ee_opr.has_v_tag() ? ee_opr.v_tag().value() : -1;
     Direction dir = parse_direction(ee_opr.direction());
     bool is_optional = ee_opr.is_optional();
-    CHECK(ee_opr.has_params());
+    if (!ee_opr.has_params()) {
+      LOG(ERROR) << "EdgeExpandGetVOprBuilder::Build: query_params is empty"
+                 << ee_opr.DebugString();
+      return std::make_pair(nullptr, ContextMeta());
+    }
     const auto& query_params = ee_opr.params();
-    CHECK(ee_opr.expand_opt() ==
-              physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_EDGE ||
-          ee_opr.expand_opt() ==
-              physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX);
-    CHECK(!query_params.has_predicate());
+    if (ee_opr.expand_opt() !=
+            physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_EDGE &&
+        ee_opr.expand_opt() !=
+            physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
+      LOG(ERROR)
+          << "EdgeExpandGetVOprBuilder::Build: expand_opt is not EDGE or VERTEX"
+          << ee_opr.DebugString();
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if (query_params.has_predicate()) {
+      LOG(ERROR)
+          << "EdgeExpandGetVOprBuilder::Build: query_params has predicate"
+          << query_params.predicate().DebugString();
+      return std::make_pair(nullptr, ContextMeta());
+    }
 
     EdgeExpandParams eep;
     eep.v_tag = v_tag;

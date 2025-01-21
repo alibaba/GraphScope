@@ -400,9 +400,16 @@ SPOrderByLimitOprBuilder::Build(const gs::Schema& schema,
     ContextMeta ret_meta = ctx_meta;
     ret_meta.set(vertex_alias);
     ret_meta.set(path_len_alias);
-    CHECK(opr.has_start_tag());
+    if (!opr.has_start_tag()) {
+      LOG(ERROR) << "Shortest path with order by limit must have start tag";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     int start_tag = opr.start_tag().value();
-    CHECK(!opr.is_optional());
+    if (opr.is_optional()) {
+      LOG(ERROR) << "Currently only support non-optional shortest path with "
+                    "order by limit";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     ShortestPathParams spp;
     spp.start_tag = start_tag;
     spp.dir = parse_direction(opr.base().edge_expand().direction());
@@ -411,7 +418,10 @@ SPOrderByLimitOprBuilder::Build(const gs::Schema& schema,
     spp.hop_lower = opr.hop_range().lower();
     spp.hop_upper = opr.hop_range().upper();
     spp.labels = parse_label_triplets(plan.plan(op_idx).meta_data(0));
-    CHECK(spp.labels.size() == 1) << "only support one label triplet";
+    if (spp.labels.size() != 1) {
+      LOG(ERROR) << "only support one label triplet";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     const auto& get_v_opr = plan.plan(op_idx + 2).opr().vertex();
     if (get_v_opr.has_params() && get_v_opr.params().has_predicate()) {
       auto sp_vertex_pred =
@@ -531,8 +541,16 @@ class ASPOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Any oid = oid_getter_(params);
     vid_t vid;
-    CHECK(graph.GetVertexIndex(aspp_.labels[0].dst_label, oid, vid))
-        << "vertex not found";
+    if (!graph.GetVertexIndex(aspp_.labels[0].dst_label, oid, vid)) {
+      LOG(ERROR) << "vertex not found "
+                 << static_cast<int>(aspp_.labels[0].dst_label) << " "
+                 << oid.AsString();
+      RETURN_UNSUPPORTED_ERROR(
+          "vertex not found" +
+          std::to_string(static_cast<int>(aspp_.labels[0].dst_label)) + " " +
+          oid.AsString());
+    }
+
     auto v = std::make_pair(aspp_.labels[0].dst_label, vid);
     return PathExpand::all_shortest_paths_with_given_source_and_dest(
         graph, std::move(ctx), aspp_, v);
@@ -556,8 +574,15 @@ class SSSDSPOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Any vertex = oid_getter_(params);
     vid_t vid;
-    CHECK(graph.GetVertexIndex(spp_.labels[0].dst_label, vertex, vid))
-        << "vertex not found";
+    if (!graph.GetVertexIndex(spp_.labels[0].dst_label, vertex, vid)) {
+      LOG(ERROR) << "vertex not found" << spp_.labels[0].dst_label << " "
+                 << vertex.AsString();
+      RETURN_UNSUPPORTED_ERROR(
+          "vertex not found" +
+          std::to_string(static_cast<int>(spp_.labels[0].dst_label)) + " " +
+          vertex.AsString());
+    }
+
     auto v = std::make_pair(spp_.labels[0].dst_label, vid);
 
     return PathExpand::single_source_single_dest_shortest_path(
@@ -590,9 +615,15 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SPOprBuilder::Build(
     ret_meta.set(alias);
 
     const auto& opr = plan.plan(op_idx).opr().path();
-    CHECK(opr.has_start_tag());
+    if (!opr.has_start_tag()) {
+      LOG(ERROR) << "Shortest path must have start tag";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     int start_tag = opr.start_tag().value();
-    CHECK(!opr.is_optional());
+    if (opr.is_optional()) {
+      LOG(ERROR) << "Currently only support non-optional shortest path";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     ShortestPathParams spp;
     spp.start_tag = start_tag;
     spp.dir = parse_direction(opr.base().edge_expand().direction());
@@ -685,11 +716,22 @@ PathExpandVOprBuilder::Build(const gs::Schema& schema,
     ContextMeta ret_meta = ctx_meta;
     ret_meta.set(alias);
     int start_tag = opr.has_start_tag() ? opr.start_tag().value() : -1;
-    CHECK(opr.path_opt() ==
-          physical::PathExpand_PathOpt::PathExpand_PathOpt_ARBITRARY);
-    CHECK(!opr.is_optional());
+    if (opr.path_opt() !=
+        physical::PathExpand_PathOpt::PathExpand_PathOpt_ARBITRARY) {
+      LOG(ERROR) << "Currently only support arbitrary path expand";
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if (opr.is_optional()) {
+      LOG(ERROR) << "Currently only support non-optional path expand without "
+                    "predicate";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     Direction dir = parse_direction(opr.base().edge_expand().direction());
-    CHECK(!opr.base().edge_expand().is_optional());
+    if (opr.base().edge_expand().is_optional()) {
+      LOG(ERROR) << "Currently only support non-optional path expand without "
+                    "predicate";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     const algebra::QueryParams& query_params =
         opr.base().edge_expand().params();
     PathExpandParams pep;
@@ -699,9 +741,16 @@ PathExpandVOprBuilder::Build(const gs::Schema& schema,
     pep.hop_upper = opr.hop_range().upper();
     pep.start_tag = start_tag;
     pep.labels = parse_label_triplets(plan.plan(op_idx).meta_data(0));
-    CHECK(opr.base().edge_expand().expand_opt() ==
-          physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX);
-    CHECK(!query_params.has_predicate());
+    if (opr.base().edge_expand().expand_opt() !=
+        physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
+      LOG(ERROR) << "Currently only support vertex expand";
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if (query_params.has_predicate()) {
+      LOG(ERROR) << "Currently only support non-optional path expand without "
+                    "predicate";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     return std::make_pair(std::make_unique<PathExpandVOpr>(pep), ret_meta);
   } else {
     return std::make_pair(nullptr, ContextMeta());
@@ -735,15 +784,29 @@ PathExpandOprBuilder::Build(const gs::Schema& schema,
   ContextMeta ret_meta = ctx_meta;
   ret_meta.set(alias);
 
-  CHECK(opr.has_start_tag());
+  if (!opr.has_start_tag()) {
+    LOG(ERROR) << "PathExpandOpr must have start tag";
+    return std::make_pair(nullptr, ContextMeta());
+  }
   int start_tag = opr.start_tag().value();
-  CHECK(opr.path_opt() ==
-        physical::PathExpand_PathOpt::PathExpand_PathOpt_ARBITRARY);
+  if (opr.path_opt() !=
+      physical::PathExpand_PathOpt::PathExpand_PathOpt_ARBITRARY) {
+    LOG(ERROR) << "Currently only support arbitrary path expand";
+    return std::make_pair(nullptr, ContextMeta());
+  }
 
-  CHECK(!opr.is_optional());
+  if (opr.is_optional()) {
+    LOG(ERROR) << "Currently only support non-optional path expand without "
+                  "predicate";
+    return std::make_pair(nullptr, ContextMeta());
+  }
 
   Direction dir = parse_direction(opr.base().edge_expand().direction());
-  CHECK(!opr.base().edge_expand().is_optional());
+  if (opr.base().edge_expand().is_optional()) {
+    LOG(ERROR) << "Currently only support non-optional path expand without "
+                  "predicate";
+    return std::make_pair(nullptr, ContextMeta());
+  }
   const algebra::QueryParams& query_params = opr.base().edge_expand().params();
   PathExpandParams pep;
   pep.alias = alias;
@@ -752,7 +815,11 @@ PathExpandOprBuilder::Build(const gs::Schema& schema,
   pep.hop_upper = opr.hop_range().upper();
   pep.start_tag = start_tag;
   pep.labels = parse_label_triplets(plan.plan(op_idx).meta_data(0));
-  CHECK(!query_params.has_predicate());
+  if (query_params.has_predicate()) {
+    LOG(ERROR) << "Currently only support non-optional path expand without "
+                  "predicate";
+    return std::make_pair(nullptr, ContextMeta());
+  }
   return std::make_pair(std::make_unique<PathExpandOpr>(pep), ret_meta);
 }
 

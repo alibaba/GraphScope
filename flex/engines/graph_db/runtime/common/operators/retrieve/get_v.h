@@ -61,7 +61,10 @@ class GetV {
       const GraphReadInterface& graph, Context&& ctx, const GetVParams& params,
       const PRED_T& pred) {
     auto column = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(params.tag));
-    CHECK(column != nullptr);
+    if (column == nullptr) {
+      LOG(ERROR) << "column is nullptr";
+      RETURN_BAD_REQUEST_ERROR("column is nullptr");
+    }
 
     std::vector<size_t> shuffle_offset;
     if (column->edge_column_type() == EdgeColumnType::kBDSL) {
@@ -193,7 +196,12 @@ class GetV {
       }
       // params tables size may be 0
       if (params.tables.size() == 1) {
-        CHECK(output_vertex_label == params.tables[0]);
+        if (output_vertex_label != params.tables[0]) {
+          LOG(ERROR) << "output_vertex_label != params.tables[0]"
+                     << static_cast<int>(output_vertex_label) << " "
+                     << static_cast<int>(params.tables[0]);
+          RETURN_BAD_REQUEST_ERROR("output_vertex_label != params.tables[0]");
+        }
       }
       SLVertexColumnBuilder builder(output_vertex_label);
       if (opt == VOpt::kStart) {
@@ -363,7 +371,12 @@ class GetV {
           *std::dynamic_pointer_cast<BDMLEdgeColumn>(column);
       if (params.tables.size() == 0) {
         MLVertexColumnBuilder builder;
-        CHECK(params.opt == VOpt::kOther);
+        if (params.opt != VOpt::kOther) {
+          LOG(ERROR) << "not support GetV opt " << static_cast<int>(params.opt);
+          RETURN_UNSUPPORTED_ERROR(
+              "not support GetV opt " +
+              std::to_string(static_cast<int>(params.opt)));
+        }
         input_edge_list.foreach_edge(
             [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
                 const EdgeData& edata, Direction dir) {

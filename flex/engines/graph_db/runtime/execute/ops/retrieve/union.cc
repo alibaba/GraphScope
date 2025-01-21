@@ -52,8 +52,12 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> UnionOprBuilder::Build(
   std::vector<ContextMeta> sub_metas;
   for (int i = 0; i < plan.plan(op_idx).opr().union_().sub_plans_size(); ++i) {
     auto& sub_plan = plan.plan(op_idx).opr().union_().sub_plans(i);
-    auto pair = PlanParser::get().parse_read_pipeline_with_meta(
+    auto pair_res = PlanParser::get().parse_read_pipeline_with_meta(
         schema, ctx_meta, sub_plan);
+    if (!pair_res) {
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    auto pair = std::move(pair_res.value());
     sub_plans.emplace_back(std::move(pair.first));
     sub_metas.push_back(pair.second);
   }

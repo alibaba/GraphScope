@@ -90,6 +90,7 @@ gs::runtime::Context eval_plan(
           return gs::runtime::PlanParser::get()
               .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
                                    plan)
+              .value()
               .Execute(gri, gs::runtime::Context(), params, timer);
         },
         [&ctx](const gs::Status& err) {

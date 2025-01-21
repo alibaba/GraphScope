@@ -56,8 +56,12 @@ IntersectOprBuilder::Build(const Schema& schema, const ContextMeta& ctx_meta,
   for (int i = 0; i < plan.plan(op_idx).opr().intersect().sub_plans_size();
        ++i) {
     auto& sub_plan = plan.plan(op_idx).opr().intersect().sub_plans(i);
-    sub_plans.push_back(
-        PlanParser::get().parse_read_pipeline(schema, ctx_meta, sub_plan));
+    auto sub_plan_res = PlanParser::get().parse_read_pipeline_with_meta(
+        schema, ctx_meta, sub_plan);
+    if (!sub_plan_res) {
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    sub_plans.push_back(std::move(sub_plan_res.value().first));
   }
   ContextMeta meta = ctx_meta;
   meta.set(plan.plan(op_idx).opr().intersect().key());

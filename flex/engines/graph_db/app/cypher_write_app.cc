@@ -46,9 +46,9 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
       }
     }
     const auto& plan = plan_cache_[query];
-    pipeline_cache_.emplace(
-        query,
-        runtime::PlanParser::get().parse_write_pipeline(db_.schema(), plan));
+    pipeline_cache_.emplace(query, runtime::PlanParser::get()
+                                       .parse_write_pipeline(db_.schema(), plan)
+                                       .value());
   } else {
   }
 

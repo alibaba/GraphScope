@@ -486,7 +486,9 @@ std::unique_ptr<ProjectExprBase> create_case_when_project(
     const std::shared_ptr<IVertexColumn>& vertex_col, PRED&& pred,
     const common::Value& then_value, const common::Value& else_value,
     int alias) {
-  CHECK(then_value.item_case() == else_value.item_case());
+  if (then_value.item_case() != else_value.item_case()) {
+    return nullptr;
+  }
   switch (then_value.item_case()) {
   case common::Value::kI32: {
     if (vertex_col->vertex_column_type() == VertexColumnType::kSingle) {
@@ -1298,7 +1300,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
       const auto& m = plan.plan(op_idx).opr().project().mappings(i);
       int alias = m.has_alias() ? m.alias().value() : -1;
       ret_meta.set(alias);
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
     }
@@ -1309,7 +1314,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
       int alias = m.has_alias() ? m.alias().value() : -1;
 
       ret_meta.set(alias);
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, std::nullopt));
     }

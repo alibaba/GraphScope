@@ -154,8 +154,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> VertexOprBuilder::Build(
   }
   VOpt opt = parse_opt(vertex.opt());
 
-  CHECK(vertex.has_params())
-      << "GetV should have params" << vertex.DebugString();
+  if (!vertex.has_params()) {
+    LOG(ERROR) << "GetV should have params" << vertex.DebugString();
+    return std::make_pair(nullptr, ContextMeta());
+  }
   GetVParams p;
   p.opt = opt;
   p.tag = tag;
@@ -206,7 +208,7 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> VertexOprBuilder::Build(
     }
   }
 
-  LOG(FATAL) << "not support" << vertex.DebugString();
+  LOG(ERROR) << "not support" << vertex.DebugString();
   return std::make_pair(nullptr, ContextMeta());
 }
 }  // namespace ops

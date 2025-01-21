@@ -168,9 +168,10 @@ static std::string get_opr_name(
 }
 #endif
 
-std::pair<ReadPipeline, ContextMeta> PlanParser::parse_read_pipeline_with_meta(
-    const gs::Schema& schema, const ContextMeta& ctx_meta,
-    const physical::PhysicalPlan& plan) {
+bl::result<std::pair<ReadPipeline, ContextMeta>>
+PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
+                                          const ContextMeta& ctx_meta,
+                                          const physical::PhysicalPlan& plan) {
   int opr_num = plan.plan_size();
   std::vector<std::unique_ptr<IReadOperator>> operators;
   ContextMeta cur_ctx_meta = ctx_meta;
@@ -210,25 +211,37 @@ std::pair<ReadPipeline, ContextMeta> PlanParser::parse_read_pipeline_with_meta(
         }
       }
     }
-    CHECK(i != old_i) << "Failed to parse plan at index " << i << ": "
-                      << get_opr_name(cur_op_kind);
+    if (i == old_i) {
+      LOG(ERROR) << "Failed to parse plan at index " << i << ": "
+                 << get_opr_name(cur_op_kind);
+      RETURN_UNSUPPORTED_ERROR("Failed to parse plan at index " +
+                               std::to_string(i) + ": " +
+                               get_opr_name(cur_op_kind));
+    }
   }
   return std::make_pair(ReadPipeline(std::move(operators)), cur_ctx_meta);
 }
 
-ReadPipeline PlanParser::parse_read_pipeline(
+bl::result<ReadPipeline> PlanParser::parse_read_pipeline(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan) {
-  return parse_read_pipeline_with_meta(schema, ctx_meta, plan).first;
+  auto ret = parse_read_pipeline_with_meta(schema, ctx_meta, plan);
+  if (!ret) {
+    RETURN_UNSUPPORTED_ERROR("Failed to parse read pipeline");
+  }
+  return std::move(ret.value().first);
 }
 
-InsertPipeline PlanParser::parse_write_pipeline(
+bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
     const gs::Schema& schema, const physical::PhysicalPlan& plan) {
   std::vector<std::unique_ptr<IInsertOperator>> operators;
   for (int i = 0; i < plan.plan_size(); ++i) {
     auto op_kind = plan.plan(i).opr().op_kind_case();
-    operators.emplace_back(
-        write_op_builders_.at(op_kind)->Build(schema, plan, i));
+    auto op = write_op_builders_.at(op_kind)->Build(schema, plan, i);
+    if (!op) {
+      RETURN_UNSUPPORTED_ERROR("Failed to parse write pipeline");
+    }
+    operators.emplace_back(std::move(op));
   }
   return InsertPipeline(std::move(operators));
 }

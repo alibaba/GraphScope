@@ -27,28 +27,34 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     gs::runtime::Context ctx;
     gs::Status status = gs::Status::OK();
     {
-      ctx = bl::try_handle_all(
-          [this, &plan, &txn, &gri]() {
-            return runtime::PlanParser::get()
-                .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
-                                     plan)
-                .Execute(gri, runtime::Context(), {}, timer_);
-          },
-          [&ctx, &status](const gs::Status& err) {
-            status = err;
-            return ctx;
-          },
-          [&](const bl::error_info& err) {
-            status = gs::Status(
-                gs::StatusCode::INTERNAL_ERROR,
-                "BOOST LEAF Error: " + std::to_string(err.error().value()) +
-                    ", Exception: " + err.exception()->what());
-            return ctx;
-          },
-          [&]() {
-            status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-            return ctx;
-          });
+      auto pipeline_res = runtime::PlanParser::get().parse_read_pipeline(
+          gri.schema(), gs::runtime::ContextMeta(), plan);
+      if (!pipeline_res) {
+        status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                            "Failed to parse read pipeline");
+      }
+      if (status.ok()) {
+        auto pipeline = std::move(pipeline_res.value());
+        ctx = bl::try_handle_all(
+            [this, &pipeline, &gri]() {
+              return pipeline.Execute(gri, runtime::Context(), {}, timer_);
+            },
+            [&status](const gs::Status& err) {
+              status = err;
+              return runtime::Context();
+            },
+            [&](const bl::error_info& err) {
+              status = gs::Status(
+                  gs::StatusCode::INTERNAL_ERROR,
+                  "BOOST LEAF Error: " + std::to_string(err.error().value()) +
+                      ", Exception: " + err.exception()->what());
+              return runtime::Context();
+            },
+            [&]() {
+              status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
+              return runtime::Context();
+            });
+      }
     }
 
     if (!status.ok()) {
@@ -96,8 +102,10 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
       }
       const auto& plan = plan_cache_[query];
       pipeline_cache_.emplace(
-          query, runtime::PlanParser::get().parse_read_pipeline(
-                     db_.schema(), gs::runtime::ContextMeta(), plan));
+          query, runtime::PlanParser::get()
+                     .parse_read_pipeline(db_.schema(),
+                                          gs::runtime::ContextMeta(), plan)
+                     .value());
     }
     auto txn = graph.GetReadTransaction();
 

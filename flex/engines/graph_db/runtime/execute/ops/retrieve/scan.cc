@@ -561,8 +561,14 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ScanOprBuilder::Build(
   }
   ret_meta.set(alias);
   auto scan_opr = plan.plan(op_idx).opr().scan();
-  CHECK(scan_opr.scan_opt() == physical::Scan::VERTEX);
-  CHECK(scan_opr.has_params());
+  if (scan_opr.scan_opt() != physical::Scan::VERTEX) {
+    LOG(ERROR) << "Currently only support scan vertex";
+    return std::make_pair(nullptr, ret_meta);
+  }
+  if (!scan_opr.has_params()) {
+    LOG(ERROR) << "Scan operator should have params";
+    return std::make_pair(nullptr, ret_meta);
+  }
 
   ScanParams scan_params;
   scan_params.alias = scan_opr.has_alias() ? scan_opr.alias().value() : -1;
@@ -575,7 +581,11 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ScanOprBuilder::Build(
   }
   if (scan_opr.has_idx_predicate()) {
     bool scan_oid = false;
-    CHECK(check_idx_predicate(scan_opr, scan_oid));
+    if (!check_idx_predicate(scan_opr, scan_oid)) {
+      LOG(ERROR) << "Index predicate is not supported"
+                 << scan_opr.DebugString();
+      return std::make_pair(nullptr, ret_meta);
+    }
     // only one label and without predicate
     if (scan_params.tables.size() == 1 && scan_oid &&
         (!scan_opr.params().has_predicate())) {

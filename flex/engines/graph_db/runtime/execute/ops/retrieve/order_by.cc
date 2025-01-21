@@ -73,15 +73,21 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> OrderByOprBuilder::Build(
     upper = std::min(upper, static_cast<int>(opr.limit().upper()));
   }
   int keys_num = opr.pairs_size();
-  CHECK_GE(keys_num, 1);
+  if (keys_num == 0) {
+    LOG(ERROR) << "keys_num should be greater than 0";
+    return std::make_pair(nullptr, ctx_meta);
+  }
   std::vector<std::pair<common::Variable, bool>> keys;
 
   for (int i = 0; i < keys_num; ++i) {
     const auto& pair = opr.pairs(i);
-    CHECK(pair.order() == algebra::OrderBy_OrderingPair_Order::
-                              OrderBy_OrderingPair_Order_ASC ||
-          pair.order() == algebra::OrderBy_OrderingPair_Order::
-                              OrderBy_OrderingPair_Order_DESC);
+    if (pair.order() != algebra::OrderBy_OrderingPair_Order::
+                            OrderBy_OrderingPair_Order_ASC &&
+        pair.order() != algebra::OrderBy_OrderingPair_Order::
+                            OrderBy_OrderingPair_Order_DESC) {
+      LOG(ERROR) << "order should be asc or desc";
+      return std::make_pair(nullptr, ctx_meta);
+    }
     bool asc =
         pair.order() ==
         algebra::OrderBy_OrderingPair_Order::OrderBy_OrderingPair_Order_ASC;
@@ -144,9 +150,6 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> OrderByOprBuilder::Build(
   return std::make_pair(std::make_unique<OrderByOprBeta>(
                             std::move(keys), lower, upper, std::move(func)),
                         ctx_meta);
-  // return std::make_pair(
-  //   std::make_unique<OrderByOpr>(plan.plan(op_idx).opr().order_by()),
-  // ctx_meta);
 }
 
 }  // namespace ops

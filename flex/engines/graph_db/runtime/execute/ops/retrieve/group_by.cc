@@ -964,8 +964,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
 
   for (int i = 0; i < mappings_num; ++i) {
     auto& key = opr.mappings(i);
-    CHECK(key.has_key());
-    CHECK(key.has_alias());
+    if (!key.has_key() || !key.has_alias()) {
+      LOG(ERROR) << "key should have key and alias";
+      return std::make_pair(nullptr, meta);
+    }
     int tag = key.key().has_tag() ? key.key().tag().id() : -1;
     int alias = key.has_alias() ? key.alias().value() : -1;
     if (key.key().has_property()) {
