@@ -722,8 +722,19 @@ void sink_vertex(const GraphReadInterface& graph, const VertexRecord& vertex,
                  results::Vertex* v) {
   v->mutable_label()->set_id(vertex.label_);
   v->set_id(encode_unique_vertex_id(vertex.label_, vertex.vid_));
-  //  TODO: add properties
   const auto& names = graph.schema().get_vertex_property_names(vertex.label_);
+  // Add primary keys first, since primary keys are also the properties of a
+  // vertex
+  auto& primary_key = graph.schema().get_vertex_primary_key(vertex.label_);
+  if (primary_key.size() > 1) {
+    LOG(ERROR) << "Currently only support single primary key";
+  }
+  auto pk_name = std::get<1>(primary_key[0]);
+  auto pk_prop = v->add_properties();
+  pk_prop->mutable_key()->set_name(pk_name);
+  sink_any(graph.GetVertexId(vertex.label_, vertex.vid_),
+           pk_prop->mutable_value());
+
   for (size_t i = 0; i < names.size(); ++i) {
     auto prop = v->add_properties();
     prop->mutable_key()->set_name(names[i]);
