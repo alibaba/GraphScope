@@ -19,7 +19,7 @@ namespace gs {
 
 namespace runtime {
 
-Context Limit::limit(Context&& ctx, size_t lower, size_t upper) {
+bl::result<Context> Limit::limit(Context&& ctx, size_t lower, size_t upper) {
   if (lower == 0 && static_cast<size_t>(upper) >= ctx.row_num()) {
     return std::move(ctx);
   }

@@ -395,14 +395,11 @@ class ProcedureCallOpr : public IReadOperator {
                    const physical::ProcedureCall& opr)
       : aliases_(aliases), opr_(opr) {}
 
-  Context Eval(const GraphReadInterface& txn,
-               const std::map<std::string, std::string>&, Context&& ctx,
-               OprTimer&) override {
+  bl::result<Context> Eval(const GraphReadInterface& txn,
+                           const std::map<std::string, std::string>&,
+                           Context&& ctx, OprTimer&) override {
     auto ret = eval_procedure_call(aliases_, opr_, txn, std::move(ctx));
-    if (!ret) {
-      LOG(ERROR) << "Failed to execute ProcedureCall operator";
-    }
-    return std::move(ret.value());
+    return ret;
   }
 
  private:

@@ -1243,10 +1243,10 @@ class ProjectOpr : public IReadOperator {
              bool is_append)
       : exprs_(exprs), is_append_(is_append) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     std::vector<std::unique_ptr<ProjectExprBase>> exprs;
     for (size_t i = 0; i < exprs_.size(); ++i) {
       exprs.push_back(exprs_[i](graph, params, ctx));
@@ -1337,10 +1337,10 @@ class ProjectOrderByOprBeta : public IReadOperator {
         upper_bound_(upper_bound),
         first_pair_(first_pair) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto cmp_func = [&](const Context& ctx) -> GeneralComparer {
       GeneralComparer cmp;
       for (const auto& pair : order_by_pairs_) {

@@ -23,12 +23,43 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     auto txn = graph.GetReadTransaction();
 
     gs::runtime::GraphReadInterface gri(txn);
-    auto ctx = runtime::PlanParser::get()
-                   .parse_read_pipeline(graph.schema(),
-                                        gs::runtime::ContextMeta(), plan)
-                   .Execute(gri, runtime::Context(), {}, timer_);
 
+    gs::runtime::Context ctx;
+    gs::Status status = gs::Status::OK();
+    {
+      ctx = bl::try_handle_all(
+          [this, &plan, &txn, &gri]() {
+            return runtime::PlanParser::get()
+                .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
+                                     plan)
+                .Execute(gri, runtime::Context(), {}, timer_);
+          },
+          [&ctx, &status](const gs::Status& err) {
+            status = err;
+            return ctx;
+          },
+          [&](const bl::error_info& err) {
+            status = gs::Status(
+                gs::StatusCode::INTERNAL_ERROR,
+                "BOOST LEAF Error: " + std::to_string(err.error().value()) +
+                    ", Exception: " + err.exception()->what());
+            return ctx;
+          },
+          [&]() {
+            status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
+            return ctx;
+          });
+    }
+
+    if (!status.ok()) {
+      LOG(ERROR) << "Error: " << status.ToString();
+      // We encode the error message to the output, so that the client can
+      // get the error message.
+      output.put_string(status.ToString());
+      return false;
+    }
     runtime::Sink::sink(ctx, txn, output);
+    return true;
   } else {
     size_t sep = bytes.find_first_of("&?");
     auto query_str = bytes.substr(0, sep);
@@ -74,7 +105,7 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(),
                                                  params, timer_);
 
-    runtime::Sink::sink_encoder(ctx, gri, output);
+    runtime::Sink::sink_encoder(ctx.value(), gri, output);
   }
   return true;
 }

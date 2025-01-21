@@ -269,8 +269,9 @@ class SPOrderByLimitOpr : public IReadOperator {
       : spp_(spp), limit_(limit), pred_(std::move(pred)) {}
 
   template <typename T>
-  gs::runtime::Context _invoke(const GraphReadInterface& graph, Context&& ctx,
-                               std::unique_ptr<SPVertexPredicate>&& pred) {
+  bl::result<gs::runtime::Context> _invoke(
+      const GraphReadInterface& graph, Context&& ctx,
+      std::unique_ptr<SPVertexPredicate>&& pred) {
     if (pred->type() == SPPredicateType::kPropertyEQ) {
       const auto& casted_pred =
           dynamic_cast<const VertexPropertyEQPredicateBeta<T>&>(*pred);
@@ -297,17 +298,19 @@ class SPOrderByLimitOpr : public IReadOperator {
       return PathExpand::single_source_shortest_path_with_order_by_length_limit(
           graph, std::move(ctx), spp_, casted_pred, limit_);
     } else {
-      LOG(FATAL) << "type not supported currently"
+      LOG(ERROR) << "type not supported currently"
                  << static_cast<int>(pred->type());
+      RETURN_UNSUPPORTED_ERROR("type not supported currently" +
+                               std::to_string(static_cast<int>(pred->type())));
     }
   }
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto sp_vertex_pred = pred_(graph, params);
-    Context ret;
+    bl::result<gs::runtime::Context> ret;
     if (sp_vertex_pred->data_type() == RTAnyType::kStringValue) {
       ret = _invoke<std::string_view>(graph, std::move(ctx),
                                       std::move(sp_vertex_pred));
@@ -320,8 +323,11 @@ class SPOrderByLimitOpr : public IReadOperator {
     } else if (sp_vertex_pred->data_type() == RTAnyType::kTimestamp) {
       ret = _invoke<Date>(graph, std::move(ctx), std::move(sp_vertex_pred));
     } else {
-      LOG(FATAL) << "type not supported currently"
+      LOG(ERROR) << "type not supported currently"
                  << static_cast<int>(sp_vertex_pred->data_type());
+      RETURN_UNSUPPORTED_ERROR(
+          "type not supported currently" +
+          std::to_string(static_cast<int>(sp_vertex_pred->data_type())));
     }
     return ret;
   }
@@ -339,10 +345,10 @@ class SPOrderByLimitWithOutPredOpr : public IReadOperator {
   SPOrderByLimitWithOutPredOpr(const ShortestPathParams& spp, int limit)
       : spp_(spp), limit_(limit) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return PathExpand::single_source_shortest_path_with_order_by_length_limit(
         graph, std::move(ctx), spp_, [](label_t, vid_t) { return true; },
         limit_);
@@ -359,10 +365,10 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
                              const common::Expression& pred)
       : spp_(spp), limit_(limit), pred_(pred) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Context tmp;
     auto v_pred =
         parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
@@ -439,10 +445,10 @@ class SPSPredOpr : public IReadOperator {
           pred)
       : spp_(spp), pred_(std::move(pred)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto sp_vertex_pred = pred_(graph, params);
     return PathExpand::
         single_source_shortest_path_with_special_vertex_predicate(
@@ -461,10 +467,10 @@ class SPGPredOpr : public IReadOperator {
   SPGPredOpr(const ShortestPathParams& spp, const common::Expression& pred)
       : spp_(spp), pred_(pred) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Context tmp;
     auto predicate =
         parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
@@ -484,10 +490,10 @@ class SPWithoutPredOpr : public IReadOperator {
  public:
   SPWithoutPredOpr(const ShortestPathParams& spp) : spp_(spp) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return PathExpand::single_source_shortest_path(
         graph, std::move(ctx), spp_, [](label_t, vid_t) { return true; });
   }
@@ -519,10 +525,10 @@ class ASPOpr : public IReadOperator {
     CHECK(is_pk_oid_exact_check(get_v_opr.params().predicate(), oid_getter_));
   }
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Any oid = oid_getter_(params);
     vid_t vid;
     CHECK(graph.GetVertexIndex(aspp_.labels[0].dst_label, oid, vid))
@@ -544,10 +550,10 @@ class SSSDSPOpr : public IReadOperator {
                 oid_getter)
       : spp_(spp), oid_getter_(oid_getter) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Any vertex = oid_getter_(params);
     vid_t vid;
     CHECK(graph.GetVertexIndex(spp_.labels[0].dst_label, vertex, vid))
@@ -651,10 +657,10 @@ class PathExpandVOpr : public IReadOperator {
  public:
   PathExpandVOpr(const PathExpandParams& pep) : pep_(pep) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return PathExpand::edge_expand_v(graph, std::move(ctx), pep_);
   }
 
@@ -706,10 +712,10 @@ class PathExpandOpr : public IReadOperator {
  public:
   PathExpandOpr(PathExpandParams pep) : pep_(pep) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return PathExpand::edge_expand_p(graph, std::move(ctx), pep_);
   }
 

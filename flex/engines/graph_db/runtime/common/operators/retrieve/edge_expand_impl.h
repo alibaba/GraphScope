@@ -288,7 +288,6 @@ expand_vertex_np_me_sp_optional(
   }
   if (single_nbr_label) {
     OptionalSLVertexColumnBuilder builder(nbr_labels[0]);
-#if 1
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t v) {
       if (!input.has_value(idx)) {
         builder.push_back_null();
@@ -318,8 +317,7 @@ expand_vertex_np_me_sp_optional(
       }
       ++idx;
     });
-#else
-#endif
+
     col = builder.finish();
   } else {
     OptionalMLVertexColumnBuilder builder;
@@ -831,8 +829,6 @@ expand_vertex_np_me_sp(
     col = builder.finish();
   } else {
     MLVertexColumnBuilder builder;
-    // not optimized for ms vertex column access
-    //    LOG(INFO) << "not optimized for ms vertex column access";
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
       size_t csr_idx = 0;
       for (auto& view : views[l]) {

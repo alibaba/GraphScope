@@ -19,7 +19,7 @@ namespace gs {
 
 namespace runtime {
 
-Context Unfold::unfold(Context&& ctxs, int key, int alias) {
+bl::result<Context> Unfold::unfold(Context&& ctxs, int key, int alias) {
   auto col = ctxs.get(key);
   CHECK(col->elem_type() == RTAnyType::kList);
   auto list_col = std::dynamic_pointer_cast<ListValueColumnBase>(col);

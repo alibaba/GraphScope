@@ -44,10 +44,10 @@ class SelectIdNeOpr : public IReadOperator {
  public:
   SelectIdNeOpr(const common::Expression& expr) : expr_(expr) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto tag = expr_.operators(0).var().tag().id();
     auto col = ctx.get(tag);
     if ((!col->is_optional()) &&
@@ -90,10 +90,10 @@ class SelectOprBeta : public IReadOperator {
  public:
   SelectOprBeta(const common::Expression& expr) : expr_(expr) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Expr expr(graph, ctx, params, expr_, VarType::kPathVar);
     if (!expr.is_optional()) {
       return Select::select(std::move(ctx), ExprWrapper(std::move(expr)));

@@ -30,9 +30,9 @@ class ReadPipeline {
       : operators_(std::move(operators)) {}
   ~ReadPipeline() = default;
 
-  Context Execute(const GraphReadInterface& graph, Context&& ctx,
-                  const std::map<std::string, std::string>& params,
-                  OprTimer& timer);
+  bl::result<Context> Execute(const GraphReadInterface& graph, Context&& ctx,
+                              const std::map<std::string, std::string>& params,
+                              OprTimer& timer);
 
  private:
   std::vector<std::unique_ptr<IReadOperator>> operators_;

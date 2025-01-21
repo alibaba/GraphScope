@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/runtime/common/columns/path_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 namespace runtime {
@@ -48,7 +49,7 @@ inline std::vector<label_t> extract_labels(
         output_labels.push_back(label.dst_label);
       }
     } else {
-      LOG(FATAL) << "not support" << static_cast<int>(opt);
+      LOG(ERROR) << "not support" << static_cast<int>(opt);
     }
   }
   return output_labels;
@@ -56,7 +57,7 @@ inline std::vector<label_t> extract_labels(
 class GetV {
  public:
   template <typename PRED_T>
-  static Context get_vertex_from_edges_optional_impl(
+  static bl::result<Context> get_vertex_from_edges_optional_impl(
       const GraphReadInterface& graph, Context&& ctx, const GetVParams& params,
       const PRED_T& pred) {
     auto column = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(params.tag));
@@ -127,13 +128,17 @@ class GetV {
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       return ctx;
     }
-    LOG(FATAL) << "not support" << static_cast<int>(column->edge_column_type());
-    return ctx;
+    LOG(ERROR) << "Unsupported edge column type: "
+               << static_cast<int>(column->edge_column_type());
+    RETURN_UNSUPPORTED_ERROR(
+        "Unsupported edge column type: " +
+        std::to_string(static_cast<int>(column->edge_column_type())));
   }
+
   template <typename PRED_T>
-  static Context get_vertex_from_edges(const GraphReadInterface& graph,
-                                       Context&& ctx, const GetVParams& params,
-                                       const PRED_T& pred) {
+  static bl::result<Context> get_vertex_from_edges(
+      const GraphReadInterface& graph, Context&& ctx, const GetVParams& params,
+      const PRED_T& pred) {
     std::vector<size_t> shuffle_offset;
     auto col = ctx.get(params.tag);
     if (col->column_type() == ContextColumnType::kPath) {
@@ -149,13 +154,20 @@ class GetV {
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       return ctx;
     }
-
     auto column = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(params.tag));
+    if (!column) {
+      LOG(ERROR) << "Unsupported column type: "
+                 << static_cast<int>(col->column_type());
+      RETURN_UNSUPPORTED_ERROR(
+          "Unsupported column type: " +
+          std::to_string(static_cast<int>(col->column_type())));
+    }
+
     if (column->is_optional()) {
       return get_vertex_from_edges_optional_impl(graph, std::move(ctx), params,
                                                  pred);
     }
-    CHECK(column != nullptr);
+
     if (column->edge_column_type() == EdgeColumnType::kSDSL) {
       auto& input_edge_list =
           *std::dynamic_pointer_cast<SDSLEdgeColumn>(column);
@@ -175,7 +187,9 @@ class GetV {
       } else if (opt == VOpt::kEnd) {
         output_vertex_label = edge_label.dst_label;
       } else {
-        LOG(FATAL) << "not support";
+        LOG(ERROR) << "not support GetV opt " << static_cast<int>(opt);
+        RETURN_UNSUPPORTED_ERROR("not support GetV opt " +
+                                 std::to_string(static_cast<int>(opt)));
       }
       // params tables size may be 0
       if (params.tables.size() == 1) {
@@ -200,8 +214,6 @@ class GetV {
                 shuffle_offset.push_back(index);
               }
             });
-      } else {
-        LOG(FATAL) << "not support";
       }
       ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
       return ctx;
@@ -246,8 +258,6 @@ class GetV {
                   shuffle_offset.push_back(index);
                 }
               });
-        } else {
-          LOG(FATAL) << "not support";
         }
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
@@ -259,7 +269,13 @@ class GetV {
         auto type = input_edge_list.get_labels()[0];
         if (type.src_label != type.dst_label) {
           MLVertexColumnBuilder builder;
-          CHECK(params.opt == VOpt::kOther);
+          if (params.opt != VOpt::kOther) {
+            LOG(ERROR) << "not support GetV opt "
+                       << static_cast<int>(params.opt);
+            RETURN_UNSUPPORTED_ERROR(
+                "not support GetV opt " +
+                std::to_string(static_cast<int>(params.opt)));
+          }
           input_edge_list.foreach_edge(
               [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
                   const EdgeData& edata, Direction dir) {
@@ -411,15 +427,17 @@ class GetV {
       }
     }
 
-    LOG(FATAL) << "not support" << static_cast<int>(column->edge_column_type());
-    return ctx;
+    LOG(ERROR) << "Unsupported edge column type: "
+               << static_cast<int>(column->edge_column_type());
+    RETURN_UNSUPPORTED_ERROR(
+        "Unsupported edge column type: " +
+        std::to_string(static_cast<int>(column->edge_column_type())));
   }
 
   template <typename PRED_T>
-  static Context get_vertex_from_vertices(const GraphReadInterface& graph,
-                                          Context&& ctx,
-                                          const GetVParams& params,
-                                          const PRED_T& pred) {
+  static bl::result<Context> get_vertex_from_vertices(
+      const GraphReadInterface& graph, Context&& ctx, const GetVParams& params,
+      const PRED_T& pred) {
     std::shared_ptr<IVertexColumn> input_vertex_list_ptr =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.tag));
     const IVertexColumn& input_vertex_list = *input_vertex_list_ptr;

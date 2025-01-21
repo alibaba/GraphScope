@@ -23,9 +23,9 @@ class SinkOpr : public IReadOperator {
  public:
   SinkOpr(const std::vector<int>& tag_ids) : tag_ids_(tag_ids) {}
 
-  Context Eval(const GraphReadInterface& graph,
-               const std::map<std::string, std::string>& params, Context&& ctx,
-               OprTimer& timer) override {
+  bl::result<Context> Eval(const GraphReadInterface& graph,
+                           const std::map<std::string, std::string>& params,
+                           Context&& ctx, OprTimer& timer) override {
     ctx.tag_ids = tag_ids_;
     return ctx;
   }

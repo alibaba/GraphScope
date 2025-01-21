@@ -20,6 +20,7 @@
 
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/utils/opr_timer.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
@@ -31,9 +32,10 @@ class IReadOperator {
  public:
   virtual ~IReadOperator() = default;
 
-  virtual Context Eval(const GraphReadInterface& graph,
-                       const std::map<std::string, std::string>& params,
-                       Context&& ctx, OprTimer& timer) = 0;
+  virtual bl::result<Context> Eval(
+      const GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params, Context&& ctx,
+      OprTimer& timer) = 0;
 };
 
 class IReadOperatorBuilder {

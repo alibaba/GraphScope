@@ -30,10 +30,10 @@ class GetVFromVerticesWithLabelWithInOpr : public IReadOperator {
                                      const std::set<label_t>& labels)
       : opr_(opr), v_params_(p), labels_set_(labels) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto input_vertex_list_ptr =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(v_params_.tag));
     CHECK(input_vertex_list_ptr) << ctx.get(v_params_.tag)->column_info();
@@ -71,10 +71,10 @@ class GetVFromVerticesWithPKExactOpr : public IReadOperator {
         exact_pk_label_(exact_pk_label),
         exact_pk_(exact_pk) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     int64_t pk = std::stoll(params.at(exact_pk_));
     vid_t index = std::numeric_limits<vid_t>::max();
     graph.GetVertexIndex(exact_pk_label_, pk, index);
@@ -96,10 +96,10 @@ class GetVFromVerticesWithPredicateOpr : public IReadOperator {
                                    const GetVParams& p)
       : opr_(opr), v_params_(p) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     GeneralVertexPredicate pred(graph, ctx, params, opr_.params().predicate());
     return GetV::get_vertex_from_vertices(graph, std::move(ctx), v_params_,
                                           pred);
@@ -115,10 +115,10 @@ class GetVFromEdgesWithPredicateOpr : public IReadOperator {
   GetVFromEdgesWithPredicateOpr(const physical::GetV& opr, const GetVParams& p)
       : opr_(opr), v_params_(p) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     if (opr_.params().has_predicate()) {
       GeneralVertexPredicate pred(graph, ctx, params,
                                   opr_.params().predicate());

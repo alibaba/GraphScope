@@ -27,15 +27,19 @@ class IntersectOpr : public IReadOperator {
                std::vector<ReadPipeline>&& sub_plans)
       : key_(intersect_opr.key()), sub_plans_(std::move(sub_plans)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     std::vector<gs::runtime::Context> ctxs;
     for (auto& plan : sub_plans_) {
       Context n_ctx(ctx);
       n_ctx.gen_offset();
-      ctxs.push_back(plan.Execute(graph, std::move(n_ctx), params, timer));
+      auto n_ctx_res = plan.Execute(graph, std::move(n_ctx), params, timer);
+      if (!n_ctx_res) {
+        return n_ctx_res;
+      }
+      ctxs.push_back(std::move(n_ctx_res.value()));
     }
     return Intersect::intersect(std::move(ctx), std::move(ctxs), key_);
   }

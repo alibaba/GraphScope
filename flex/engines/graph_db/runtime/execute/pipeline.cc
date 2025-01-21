@@ -18,11 +18,15 @@
 namespace gs {
 namespace runtime {
 
-Context ReadPipeline::Execute(const GraphReadInterface& graph, Context&& ctx,
-                              const std::map<std::string, std::string>& params,
-                              OprTimer& timer) {
+bl::result<Context> ReadPipeline::Execute(
+    const GraphReadInterface& graph, Context&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer) {
   for (auto& opr : operators_) {
-    ctx = opr->Eval(graph, params, std::move(ctx), timer);
+    auto ret = opr->Eval(graph, params, std::move(ctx), timer);
+    if (!ret) {
+      return ret;
+    }
+    ctx = std::move(ret.value());
   }
   return ctx;
 }

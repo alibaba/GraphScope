@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_RETRIEVE_UNION_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -24,7 +25,7 @@ namespace runtime {
 
 class Union {
  public:
-  static Context union_op(std::vector<Context>&& ctxs);
+  static bl::result<Context> union_op(std::vector<Context>&& ctxs);
 };
 
 }  // namespace runtime

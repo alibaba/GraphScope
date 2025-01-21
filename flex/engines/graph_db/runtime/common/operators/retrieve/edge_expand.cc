@@ -48,7 +48,7 @@ static std::vector<LabelTriplet> get_expand_label_set(
   return label_triplets;
 }
 
-static Context expand_edge_without_predicate_optional_impl(
+static bl::result<Context> expand_edge_without_predicate_optional_impl(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params) {
   std::vector<size_t> shuffle_offset;
@@ -59,8 +59,11 @@ static Context expand_edge_without_predicate_optional_impl(
         params.labels[0].src_label == params.labels[0].dst_label) {
       auto& input_vertex_list =
           *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
-      CHECK(!input_vertex_list.is_optional())
-          << "not support optional vertex column as input currently";
+      if (input_vertex_list.is_optional()) {
+        LOG(ERROR) << "not support optional vertex column as input currently";
+        RETURN_UNSUPPORTED_ERROR(
+            "not support optional vertex column as input currently");
+      }
       auto& triplet = params.labels[0];
       auto props = graph.schema().get_edge_properties(
           triplet.src_label, triplet.dst_label, triplet.edge_label);
@@ -107,8 +110,11 @@ static Context expand_edge_without_predicate_optional_impl(
     } else if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
           *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
-      CHECK(!input_vertex_list.is_optional())
-          << "not support optional vertex column as input currently";
+      if (input_vertex_list.is_optional()) {
+        LOG(ERROR) << "not support optional vertex column as input currently";
+        RETURN_UNSUPPORTED_ERROR(
+            "not support optional vertex column as input currently");
+      }
       auto& triplet = params.labels[0];
       auto props = graph.schema().get_edge_properties(
           triplet.src_label, triplet.dst_label, triplet.edge_label);
@@ -147,12 +153,14 @@ static Context expand_edge_without_predicate_optional_impl(
       return ctx;
     }
   }
-  LOG(FATAL) << "not support" << params.labels.size() << " "
+  LOG(ERROR) << "not support" << params.labels.size() << " "
              << (int) params.dir;
-  return ctx;
+  RETURN_UNSUPPORTED_ERROR("not support" +
+                           std::to_string(params.labels.size()) + " " +
+                           std::to_string((int) params.dir));
 }
 
-Context EdgeExpand::expand_edge_without_predicate(
+bl::result<Context> EdgeExpand::expand_edge_without_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, OprTimer& timer) {
   if (params.is_optional) {
@@ -463,11 +471,14 @@ Context EdgeExpand::expand_edge_without_predicate(
     }
   }
 
-  LOG(FATAL) << "not support";
-  return ctx;
+  LOG(ERROR) << "not support" << params.labels.size() << " "
+             << (int) params.dir;
+  RETURN_UNSUPPORTED_ERROR("not support" +
+                           std::to_string(params.labels.size()) + " " +
+                           std::to_string((int) params.dir));
 }
 
-Context EdgeExpand::expand_vertex_without_predicate(
+bl::result<Context> EdgeExpand::expand_vertex_without_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params) {
   std::shared_ptr<IVertexColumn> input_vertex_list =
@@ -517,7 +528,9 @@ Context EdgeExpand::expand_vertex_without_predicate(
     return ctx;
   } else if (input_vertex_list_type == VertexColumnType::kMultiSegment) {
     if (input_vertex_list->is_optional() || params.is_optional) {
-      LOG(FATAL) << "not support optional vertex column as input currently";
+      LOG(ERROR) << "not support optional vertex column as input currently";
+      RETURN_UNSUPPORTED_ERROR(
+          "not support optional vertex column as input currently");
     }
     auto casted_input_vertex_list =
         std::dynamic_pointer_cast<MSVertexColumn>(input_vertex_list);
@@ -526,13 +539,16 @@ Context EdgeExpand::expand_vertex_without_predicate(
     ctx.set_with_reshuffle(params.alias, pair.first, pair.second);
     return ctx;
   } else {
-    LOG(FATAL) << "not support vertex column type "
+    LOG(ERROR) << "not support vertex column type "
                << static_cast<int>(input_vertex_list_type);
+    RETURN_UNSUPPORTED_ERROR(
+        "not support vertex column type " +
+        std::to_string(static_cast<int>(input_vertex_list_type)));
   }
 }
 
 template <typename T>
-static std::optional<Context> _expand_edge_with_special_edge_predicate(
+static bl::result<Context> _expand_edge_with_special_edge_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPEdgePredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyGT) {
@@ -566,7 +582,7 @@ static std::optional<Context> _expand_edge_with_special_edge_predicate(
   return std::nullopt;
 }
 
-std::optional<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
+bl::result<Context> EdgeExpand::expand_edge_with_special_edge_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPEdgePredicate& pred) {
   if (params.is_optional) {
@@ -640,7 +656,7 @@ Context expand_vertex_ep_lt_ml_impl(
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }
-std::optional<Context> EdgeExpand::expand_vertex_ep_lt(
+bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const std::string& ep_val) {
   if (params.is_optional) {
@@ -808,7 +824,7 @@ Context expand_vertex_ep_gt_ml_impl(
   return ctx;
 }
 
-std::optional<Context> EdgeExpand::expand_vertex_ep_gt(
+bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const std::string& ep_val) {
   if (params.is_optional) {
@@ -910,7 +926,7 @@ std::optional<Context> EdgeExpand::expand_vertex_ep_gt(
 }
 
 template <typename T>
-static std::optional<Context> _expand_vertex_with_special_vertex_predicate(
+static bl::result<Context> _expand_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPVertexPredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyEQ) {
@@ -956,7 +972,7 @@ static std::optional<Context> _expand_vertex_with_special_vertex_predicate(
   }
 }
 
-std::optional<Context> EdgeExpand::expand_vertex_with_special_vertex_predicate(
+bl::result<Context> EdgeExpand::expand_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const EdgeExpandParams& params, const SPVertexPredicate& pred) {
   if (params.is_optional) {

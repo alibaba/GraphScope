@@ -32,10 +32,10 @@ class OrderByOprBeta : public IReadOperator {
           func)
       : keys_(std::move(keys)), lower_(lower), upper_(upper), func_(func) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     int keys_num = keys_.size();
     GeneralComparer cmp;
     for (int i = 0; i < keys_num; ++i) {

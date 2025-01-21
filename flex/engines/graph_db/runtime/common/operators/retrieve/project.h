@@ -103,7 +103,7 @@ struct ProjectExpr : public ProjectExprBase {
 
 class Project {
  public:
-  static Context project(
+  static bl::result<Context> project(
       Context&& ctx, const std::vector<std::unique_ptr<ProjectExprBase>>& exprs,
       bool is_append = false) {
     Context ret;
@@ -117,7 +117,7 @@ class Project {
   }
 
   template <typename Comparer>
-  static Context project_order_by_fuse(
+  static bl::result<Context> project_order_by_fuse(
       const GraphReadInterface& graph,
       const std::map<std::string, std::string>& params, Context&& ctx,
       const std::vector<std::function<std::unique_ptr<ProjectExprBase>(
@@ -131,6 +131,7 @@ class Project {
     upper = std::min(upper, ctx.row_num());
 
     Context ret;
+
     Context tmp(ctx);
     std::vector<int> alias;
     auto [fst_key, fst_idx, fst_asc] = first_key;
@@ -151,8 +152,12 @@ class Project {
         //}
       }
       auto cmp_ = cmp(ctx);
-      ctx = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_, lower,
-                                         upper);
+      auto ctx_res = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_,
+                                                  lower, upper);
+      if (!ctx_res) {
+        return ctx_res;
+      }
+      ctx = std::move(ctx_res.value());
     } else {
       for (size_t i : order_index) {
         auto expr = exprs[i](graph, params, ctx);
@@ -163,8 +168,12 @@ class Project {
         //}
       }
       auto cmp_ = cmp(ctx);
-      ctx = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_, lower,
-                                         upper);
+      auto ctx_res = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_,
+                                                  lower, upper);
+      if (!ctx_res) {
+        return ctx_res;
+      }
+      ctx = std::move(ctx_res.value());
     }
 
     for (int i : alias) {

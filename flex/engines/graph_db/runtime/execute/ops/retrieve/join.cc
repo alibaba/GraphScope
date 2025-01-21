@@ -31,18 +31,24 @@ class JoinOpr : public IReadOperator {
         right_pipeline_(std::move(right_pipeline)),
         params_(join_params) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     gs::runtime::Context ret_dup(ctx);
 
     auto left_ctx =
         left_pipeline_.Execute(graph, std::move(ctx), params, timer);
+    if (!left_ctx) {
+      return left_ctx;
+    }
     auto right_ctx =
         right_pipeline_.Execute(graph, std::move(ret_dup), params, timer);
-
-    return Join::join(std::move(left_ctx), std::move(right_ctx), params_);
+    if (!right_ctx) {
+      return right_ctx;
+    }
+    return Join::join(std::move(left_ctx.value()), std::move(right_ctx.value()),
+                      params_);
   }
 
  private:

@@ -19,8 +19,8 @@ namespace gs {
 
 namespace runtime {
 
-Context Dedup::dedup(const GraphReadInterface& graph, Context&& ctx,
-                     const std::vector<size_t>& cols) {
+bl::result<Context> Dedup::dedup(const GraphReadInterface& graph, Context&& ctx,
+                                 const std::vector<size_t>& cols) {
   size_t row_num = ctx.row_num();
   std::vector<size_t> offsets;
   if (cols.size() == 0) {
@@ -85,8 +85,9 @@ Context Dedup::dedup(const GraphReadInterface& graph, Context&& ctx,
   return ctx;
 }
 
-Context Dedup::dedup(const GraphReadInterface& graph, Context&& ctx,
-                     const std::vector<std::function<RTAny(size_t)>>& vars) {
+bl::result<Context> Dedup::dedup(
+    const GraphReadInterface& graph, Context&& ctx,
+    const std::vector<std::function<RTAny(size_t)>>& vars) {
   std::set<std::string> set;
   size_t row_num = ctx.row_num();
   std::vector<size_t> offsets;

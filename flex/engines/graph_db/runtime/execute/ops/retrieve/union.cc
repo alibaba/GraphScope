@@ -26,14 +26,18 @@ class UnionOpr : public IReadOperator {
   UnionOpr(std::vector<ReadPipeline>&& sub_plans)
       : sub_plans_(std::move(sub_plans)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     std::vector<gs::runtime::Context> ctxs;
     for (auto& plan : sub_plans_) {
       gs::runtime::Context n_ctx = ctx;
-      ctxs.push_back(plan.Execute(graph, std::move(n_ctx), params, timer));
+      auto ret = plan.Execute(graph, std::move(n_ctx), params, timer);
+      if (!ret) {
+        return ret;
+      }
+      ctxs.emplace_back(std::move(ret.value()));
     }
     return Union::union_op(std::move(ctxs));
   }

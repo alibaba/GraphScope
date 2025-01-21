@@ -70,10 +70,10 @@ class TCOpr : public IReadOperator {
     }
   }
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     const std::string& param_value = params.at(param_name_);
     return EdgeExpand::tc<T1, T2, T3>(graph, std::move(ctx), labels_,
                                       input_tag_, alias1_, alias2_, is_lt_,
