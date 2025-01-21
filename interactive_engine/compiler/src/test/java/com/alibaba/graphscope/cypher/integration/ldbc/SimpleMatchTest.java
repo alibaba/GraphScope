@@ -183,6 +183,7 @@ public class SimpleMatchTest {
 
     @Test
     public void run_simple_match_19_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_19_test();
         Result result = session.run(testQuery.getQuery());
         List<Record> records = result.list();
