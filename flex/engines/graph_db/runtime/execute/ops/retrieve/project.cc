@@ -1466,7 +1466,10 @@ ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
       if (alias == first_key) {
         first_idx = i;
       }
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
       if (order_by_keys.find(alias) != order_by_keys.end()) {
@@ -1480,17 +1483,23 @@ ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
     std::tuple<int, int, bool> first_tuple;
     for (int i = 0; i < pair_size; ++i) {
       const auto& pair = order_by_opr.pairs(i);
-      CHECK(pair.order() == algebra::OrderBy_OrderingPair_Order::
-                                OrderBy_OrderingPair_Order_ASC ||
-            pair.order() == algebra::OrderBy_OrderingPair_Order::
-                                OrderBy_OrderingPair_Order_DESC);
+      if (pair.order() != algebra::OrderBy_OrderingPair_Order::
+                              OrderBy_OrderingPair_Order_ASC &&
+          pair.order() != algebra::OrderBy_OrderingPair_Order::
+                              OrderBy_OrderingPair_Order_DESC) {
+        LOG(ERROR) << "order by order is not set" << pair.DebugString();
+        return std::make_pair(nullptr, ContextMeta());
+      }
       bool asc =
           pair.order() ==
           algebra::OrderBy_OrderingPair_Order::OrderBy_OrderingPair_Order_ASC;
       order_by_pairs.emplace_back(pair.key(), asc);
       if (i == 0) {
         first_tuple = std::make_tuple(first_key, first_idx, asc);
-        CHECK(!pair.key().has_property());
+        if (pair.key().has_property()) {
+          LOG(ERROR) << "key has property" << pair.DebugString();
+          return std::make_pair(nullptr, ContextMeta());
+        }
       }
     }
     int lower = 0;

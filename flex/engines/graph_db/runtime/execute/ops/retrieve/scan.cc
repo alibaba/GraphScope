@@ -57,7 +57,8 @@ static bool check_idx_predicate(const physical::Scan& scan_opr,
   } else if (key.has_id()) {
     scan_oid = false;
   } else {
-    LOG(FATAL) << "unexpected key case";
+    LOG(ERROR) << "Invalid key type" << key.DebugString();
+    return false;
   }
 
   if (triplet.cmp() != common::Logical::EQ &&

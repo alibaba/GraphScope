@@ -498,8 +498,13 @@ static Context default_left_outer_join(Context&& ctx, Context&& ctx2,
 
 bl::result<Context> Join::join(Context&& ctx, Context&& ctx2,
                                const JoinParams& params) {
-  CHECK(params.left_columns.size() == params.right_columns.size())
-      << "Join columns size mismatch";
+  if (params.left_columns.size() != params.right_columns.size()) {
+    LOG(ERROR) << "Join columns size mismatch";
+    RETURN_BAD_REQUEST_ERROR(
+        "Join columns size mismatch left size: " +
+        std::to_string(params.left_columns.size()) +
+        " right size: " + std::to_string(params.right_columns.size()));
+  }
 
   if (params.join_type == JoinKind::kSemiJoin ||
       params.join_type == JoinKind::kAntiJoin) {

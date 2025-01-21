@@ -632,9 +632,14 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SPOprBuilder::Build(
     spp.hop_lower = opr.hop_range().lower();
     spp.hop_upper = opr.hop_range().upper();
     spp.labels = parse_label_triplets(plan.plan(op_idx).meta_data(0));
-    CHECK(spp.labels.size() == 1) << "only support one label triplet";
-    CHECK(spp.labels[0].src_label == spp.labels[0].dst_label)
-        << "only support same src and dst label";
+    if (spp.labels.size() != 1) {
+      LOG(ERROR) << "only support one label triplet";
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if (spp.labels[0].src_label != spp.labels[0].dst_label) {
+      LOG(ERROR) << "only support same src and dst label";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     std::function<Any(const std::map<std::string, std::string>&)> oid_getter;
     if (vertex.has_params() && vertex.params().has_predicate() &&
         is_pk_oid_exact_check(vertex.params().predicate(), oid_getter)) {
