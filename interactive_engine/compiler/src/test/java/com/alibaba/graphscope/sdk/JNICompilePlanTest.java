@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.sdk;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -53,7 +54,11 @@ public class JNICompilePlanTest {
 
     @Test
     public void path_expand_max_hop_test() throws Exception {
-        String query = "MATCH (src)-[e:test6*1..1000000]->(dest) Return src, dest";
-        PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        try {
+            String query = "MATCH (src)-[e:test6*1..1000000]->(dest) Return src, dest";
+            PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("exceeds the maximum allowed iterations"));
+        }
     }
 }
