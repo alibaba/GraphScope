@@ -26,7 +26,7 @@ namespace runtime {
 struct ScanParams {
   int alias;
   std::vector<label_t> tables;
-  int32_t limit;  // -1 means no limit
+  int32_t limit;
 
   ScanParams() : alias(-1), limit(std::numeric_limits<int32_t>::max()) {}
 };
