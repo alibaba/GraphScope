@@ -21,7 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.Utils;
+import com.alibaba.graphscope.common.ir.tools.QueryExecutionValidator;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -848,7 +848,7 @@ public class GraphTypeInference {
         }
 
         public GraphPathType inferPathType() {
-            if (this.maxHop > Utils.PATH_EXPAND_MAX_HOPS) {
+            if (this.maxHop > QueryExecutionValidator.MAX_ITERATIONS) {
                 return this.pxdType;
             }
             recursive(startVType, new CompositePathType(Lists.newArrayList()), 0);

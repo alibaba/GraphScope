@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.meta.glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.tools.QueryExecutionValidator;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -89,32 +90,28 @@ public class PrimitiveCountEstimator {
         PathExpandRange range = edge.getElementDetails().getRange();
         if (range != null) {
             minHop = range.getOffset();
-            maxHop =
-                    Math.min(
-                            com.alibaba.graphscope.common.ir.tools.Utils.PATH_EXPAND_MAX_HOPS,
-                            range.getOffset() + range.getFetch() - 1);
+            maxHop = range.getOffset() + range.getFetch() - 1;
         }
-        double sum = 0.0d;
-        for (int hop = minHop; hop <= maxHop; ++hop) {
-            sum += estimate(edge, typeId, hop);
-        }
-        return sum;
-    }
-
-    public double estimate(PatternEdge edge, EdgeTypeId typeId, int hops) {
         PatternVertex srcVertex = new SinglePatternVertex(typeId.getSrcLabelId(), 0);
         PatternVertex dstVertex = new SinglePatternVertex(typeId.getDstLabelId(), 1);
-        if (hops == 0) {
-            return estimate(srcVertex);
-        }
         Pattern edgePattern = new Pattern();
         edgePattern.addVertex(srcVertex);
         edgePattern.addVertex(dstVertex);
         edgePattern.addEdge(
                 srcVertex, dstVertex, new SinglePatternEdge(srcVertex, dstVertex, typeId, 0));
         edgePattern.reordering();
-        return Math.pow(gq.getRowCount(edgePattern, false), hops)
-                / Math.pow(estimate(dstVertex), hops - 1);
+        double edgeCount = gq.getRowCount(edgePattern, false);
+        double dstVertexCount = estimate(dstVertex);
+        double sum = 0.0d;
+        int baseHop = Math.max(minHop, 1);
+        double baseHopCount = Math.pow(edgeCount, baseHop) / Math.pow(dstVertexCount, baseHop - 1);
+        for (int hop = baseHop, iters = 0;
+                hop <= maxHop && iters < QueryExecutionValidator.MAX_ITERATIONS;
+                ++hop, ++iters) {
+            sum += baseHopCount;
+            baseHopCount *= (edgeCount / dstVertexCount);
+        }
+        return sum;
     }
 
     private @Nullable PatternVertex getIntersectVertex(Pattern pattern) {

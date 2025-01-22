@@ -53,7 +53,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -103,8 +105,8 @@ public class GraphPlanner {
         GraphBuilder graphBuilder =
                 GraphBuilder.create(
                         graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
-
         LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+        new QueryExecutionValidator().validate(logicalPlan, true);
         return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta, queryLogger);
     }
 
