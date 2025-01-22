@@ -534,10 +534,10 @@ class ScanWithoutPredOpr : public IReadOperator {
   ScanWithoutPredOpr(const ScanParams& scan_params)
       : scan_params_(scan_params) {}
 
-  bl::result<gs::runtime::Context> Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
       return Scan::scan_vertex(graph, scan_params_,
                                [](label_t, vid_t) { return true; });
