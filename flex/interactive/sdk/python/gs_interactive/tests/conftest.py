@@ -61,7 +61,7 @@ modern_graph_full = {
                     },
                     {
                         "property_name": "age",
-                        "property_type": {"primitive_type": "DT_UNSIGNED_INT16"},
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
                     },
                 ],
                 "primary_keys": ["id"],
@@ -142,7 +142,7 @@ modern_graph_multiple_edge_properties = {
                     },
                     {
                         "property_name": "age",
-                        "property_type": {"primitive_type": "DT_UNSIGNED_INT8"},
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
                     },
                 ],
                 "primary_keys": ["id"],
@@ -200,7 +200,7 @@ modern_graph_multiple_edge_properties = {
                     },
                     {
                         "property_name": "since",
-                        "property_type": {"primitive_type": "DT_UNSIGNED_INT16"},
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
                     },
                 ],
                 "primary_keys": [],
