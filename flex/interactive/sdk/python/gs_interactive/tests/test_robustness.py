@@ -387,6 +387,10 @@ def test_x_csr_params(
     assert len(records) == 1 and records[0]["$f0"] == 3506
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON",
+    reason="var_char is only supported in proto",
+)
 def test_var_char_property(
     interactive_session, neo4j_session, create_graph_with_var_char_property
 ):
