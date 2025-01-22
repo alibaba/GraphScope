@@ -489,7 +489,7 @@ install_zlib() {
 
 install_mimalloc() {
   pushd "${tempdir}" || exit
-  git clone https://github.com/microsoft/mimalloc -b v1.8.9
+  git clone https://github.com/microsoft/mimalloc -b v1.8.6
   cd mimalloc
   mkdir -p build && cd build
   cmake .. -DCMAKE_BUILD_TYPE=Release \

@@ -20,7 +20,7 @@ namespace runtime {
 
 bl::result<Context> Scan::find_vertex_with_oid(const GraphReadInterface& graph,
                                                label_t label, const Any& oid,
-                                               int alias) {
+                                               int32_t alias) {
   SLVertexColumnBuilder builder(label);
   vid_t vid;
   if (graph.GetVertexIndex(label, oid, vid)) {
@@ -33,7 +33,7 @@ bl::result<Context> Scan::find_vertex_with_oid(const GraphReadInterface& graph,
 
 bl::result<Context> Scan::find_vertex_with_gid(const GraphReadInterface& graph,
                                                label_t label, int64_t gid,
-                                               int alias) {
+                                               int32_t alias) {
   SLVertexColumnBuilder builder(label);
   if (GlobalId::get_label_id(gid) == label) {
     builder.push_back_opt(GlobalId::get_vid(gid));

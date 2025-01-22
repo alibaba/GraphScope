@@ -145,15 +145,27 @@ public class GraphQueryExecutor extends FabricExecutor {
             statusCallback
                     .getQueryLogger()
                     .info("logical IR plan \n\n {} \n\n", planSummary.getLogicalPlan().explain());
-            statusCallback
-                    .getQueryLogger()
-                    .debug("physical IR plan {}", planSummary.getPhysicalPlan().explain());
-            if (planSummary.getLogicalPlan().isReturnEmpty()) {
-                return StatementResults.initial();
+            boolean returnEmpty = planSummary.getLogicalPlan().isReturnEmpty();
+            if (!returnEmpty) {
+                statusCallback
+                        .getQueryLogger()
+                        .debug("physical IR plan {}", planSummary.getPhysicalPlan().explain());
             }
             QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
             GraphPlanExecutor executor;
-            if (cacheValue.result != null && cacheValue.result.isCompleted) {
+            if (returnEmpty) {
+                executor =
+                        new GraphPlanExecutor() {
+                            @Override
+                            public void execute(
+                                    GraphPlanner.Summary summary,
+                                    IrMeta irMeta,
+                                    ExecutionResponseListener listener)
+                                    throws Exception {
+                                listener.onCompleted();
+                            }
+                        };
+            } else if (cacheValue.result != null && cacheValue.result.isCompleted) {
                 executor =
                         new GraphPlanExecutor() {
                             @Override
