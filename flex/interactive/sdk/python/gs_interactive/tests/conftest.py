@@ -61,7 +61,7 @@ modern_graph_full = {
                     },
                     {
                         "property_name": "age",
-                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                        "property_type": {"primitive_type": "DT_UNSIGNED_INT16"},
                     },
                 ],
                 "primary_keys": ["id"],
@@ -117,6 +117,91 @@ modern_graph_full = {
                         "property_name": "weight",
                         "property_type": {"primitive_type": "DT_DOUBLE"},
                     }
+                ],
+                "primary_keys": [],
+            },
+        ],
+    },
+}
+
+modern_graph_multiple_edge_properties = {
+    "name": "full_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_UNSIGNED_INT8"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "software",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "lang",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            },
+            {
+                "type_name": "created",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "software",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    },
+                    {
+                        "property_name": "since",
+                        "property_type": {"primitive_type": "DT_UNSIGNED_INT16"},
+                    },
                 ],
                 "primary_keys": [],
             },
@@ -888,6 +973,18 @@ def neo4j_session(interactive_driver):
 @pytest.fixture(scope="function")
 def create_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_full)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
+def create_modern_graph_multiple_edge_property(interactive_session):
+    create_graph_request = CreateGraphRequest.from_dict(
+        modern_graph_multiple_edge_properties
+    )
     resp = interactive_session.create_graph(create_graph_request)
     assert resp.is_ok()
     graph_id = resp.get_value().graph_id
