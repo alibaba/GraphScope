@@ -421,7 +421,8 @@ struct TypedTupleBuilder {
       return TypedTupleBuilder<N, I - 1, std::string_view, Args...>()
           .build_typed_tuple(std::move(exprs));
     default:
-      LOG(FATAL) << "not support";
+      LOG(FATAL) << "not support type: "
+                 << static_cast<int>(exprs[I - 1]->type());
     }
   }
 };
