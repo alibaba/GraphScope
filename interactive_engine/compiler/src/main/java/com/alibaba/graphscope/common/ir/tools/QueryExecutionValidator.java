@@ -53,12 +53,19 @@ public class QueryExecutionValidator {
                         throw new FrontendException(
                                 Code.LOGICAL_PLAN_BUILD_FAILED,
                                 "path expand with no upper bound exceeds the maximum allowed"
-                                    + " iterations "
+                                        + " iterations "
                                         + MAX_ITERATIONS);
                     }
                     return false;
                 }
-                hops += ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue();
+                int lower =
+                        (pxd.getOffset() == null)
+                                ? 0
+                                : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+                hops +=
+                        (lower
+                                + ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                - 1);
             } else if (top instanceof GraphLogicalSingleMatch) {
                 validate(
                         new LogicalPlan(((GraphLogicalSingleMatch) top).getSentence()),
