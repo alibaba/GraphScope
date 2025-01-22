@@ -736,7 +736,10 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
         if (properties.empty()) {
           ed_types.push_back(PropertyType::Empty());
         } else {
-          CHECK_EQ(properties.size(), 1);
+          if (properties.size() != 1) {
+            LOG(ERROR) << "not support edge type";
+            RETURN_UNSUPPORTED_ERROR("not support edge type");
+          }
           ed_types.push_back(properties[0]);
         }
       }
@@ -750,7 +753,10 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_lt(
         if (properties.empty()) {
           ed_types.push_back(PropertyType::Empty());
         } else {
-          CHECK_EQ(properties.size(), 1);
+          if (properties.size() != 1) {
+            LOG(ERROR) << "not support edge type";
+            RETURN_UNSUPPORTED_ERROR("not support edge type");
+          }
           ed_types.push_back(properties[0]);
         }
       }
@@ -904,7 +910,10 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
         if (properties.empty()) {
           ed_types.push_back(PropertyType::Empty());
         } else {
-          CHECK_EQ(properties.size(), 1);
+          if (properties.size() != 1) {
+            LOG(ERROR) << "not support multiple edge types";
+            RETURN_UNSUPPORTED_ERROR("not support multiple edge types");
+          }
           ed_types.push_back(properties[0]);
         }
       }
@@ -918,7 +927,10 @@ bl::result<Context> EdgeExpand::expand_vertex_ep_gt(
         if (properties.empty()) {
           ed_types.push_back(PropertyType::Empty());
         } else {
-          CHECK_EQ(properties.size(), 1);
+          if (properties.size() != 1) {
+            LOG(ERROR) << "not support multiple edge types";
+            RETURN_UNSUPPORTED_ERROR("not support multiple edge types");
+          }
           ed_types.push_back(properties[0]);
         }
       }

@@ -517,9 +517,7 @@ class ASPOpr : public IReadOperator {
   ASPOpr(const physical::PathExpand& opr,
          const physical::PhysicalOpr_MetaData& meta,
          const physical::GetV& get_v_opr, int v_alias) {
-    CHECK(opr.has_start_tag());
     int start_tag = opr.start_tag().value();
-    CHECK(!opr.is_optional());
     aspp_.start_tag = start_tag;
     aspp_.dir = parse_direction(opr.base().edge_expand().direction());
     aspp_.v_alias = v_alias;
@@ -531,7 +529,6 @@ class ASPOpr : public IReadOperator {
     CHECK(aspp_.labels.size() == 1) << "only support one label triplet";
     CHECK(aspp_.labels[0].src_label == aspp_.labels[0].dst_label)
         << "only support same src and dst label";
-    CHECK(get_v_opr.has_params() && get_v_opr.params().has_predicate());
     CHECK(is_pk_oid_exact_check(get_v_opr.params().predicate(), oid_getter_));
   }
 
@@ -679,7 +676,20 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SPOprBuilder::Build(
     }
     ret_meta.set(v_alias);
     ret_meta.set(alias);
-
+    const auto& path = plan.plan(op_idx).opr().path();
+    if (!path.has_start_tag()) {
+      LOG(ERROR) << "Shortest path must have start tag";
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if (path.is_optional()) {
+      LOG(ERROR) << "Currently only support non-optional shortest path";
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    if ((!vertex.has_params()) || (!vertex.params().has_predicate())) {
+      LOG(ERROR) << "Currently only support non-optional shortest path without "
+                    "predicate";
+      return std::make_pair(nullptr, ContextMeta());
+    }
     return std::make_pair(std::make_unique<ASPOpr>(
                               plan.plan(op_idx).opr().path(),
                               plan.plan(op_idx).meta_data(0), vertex, v_alias),

@@ -195,8 +195,10 @@ parse_vertex_mapping(
 std::unique_ptr<IInsertOperator> LoadOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().load();
-  CHECK(opr.kind() == cypher::Load_Kind::Load_Kind_CREATE)
-      << "Only support CREATE";
+  if (opr.kind() != cypher::Load_Kind::Load_Kind_CREATE) {
+    LOG(ERROR) << "Only support CREATE";
+    return nullptr;
+  }
   auto& mappings = opr.mappings();
   int vertex_mapping_size = mappings.vertex_mappings_size();
   int edge_mapping_size = mappings.edge_mappings_size();

@@ -43,7 +43,10 @@ std::unique_ptr<IInsertOperator> DedupInsertOprBuilder::Build(
   for (int k_i = 0; k_i < keys_num; ++k_i) {
     const common::Variable& key = opr.keys(k_i);
     int tag = -1;
-    CHECK(key.has_tag());
+    if (!key.has_tag()) {
+      LOG(ERROR) << "dedup not support key without tag";
+      return nullptr;
+    }
     tag = key.tag().id();
     keys.emplace_back(tag);
     if (key.has_property()) {

@@ -930,8 +930,6 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
     return make_reducer<Tuple>(graph, ctx, std::move(var_), kind, alias);
   } else {
     return make_general_reducer(graph, ctx, std::move(var_), kind, alias);
-    LOG(FATAL) << "unsupport" << static_cast<int>(var_.type());
-    return nullptr;
   }
 }
 std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
