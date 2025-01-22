@@ -495,17 +495,31 @@ class ScanWithGPredOpr : public IReadOperator {
     auto expr =
         parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
-      auto ret = Scan::scan_vertex(
-          graph, scan_params_, [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
-          });
-      return ret;
+      if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
+        return Scan::scan_vertex(
+            graph, scan_params_, [&expr](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            });
+      } else {
+        return Scan::scan_vertex_with_limit(
+            graph, scan_params_, [&expr](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            });
+      }
     } else {
-      auto ret = Scan::scan_vertex(
-          graph, scan_params_, [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
-          });
-      return ret;
+      if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
+        auto ret = Scan::scan_vertex(
+            graph, scan_params_, [&expr](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0).as_bool();
+            });
+        return ret;
+      } else {
+        auto ret = Scan::scan_vertex_with_limit(
+            graph, scan_params_, [&expr](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0).as_bool();
+            });
+        return ret;
+      }
     }
   }
 
@@ -523,8 +537,13 @@ class ScanWithoutPredOpr : public IReadOperator {
                             const std::map<std::string, std::string>& params,
                             gs::runtime::Context&& ctx,
                             gs::runtime::OprTimer& timer) override {
-    return Scan::scan_vertex(graph, scan_params_,
-                             [](label_t, vid_t) { return true; });
+    if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
+      return Scan::scan_vertex(graph, scan_params_,
+                               [](label_t, vid_t) { return true; });
+    } else {
+      return Scan::scan_vertex_with_limit(graph, scan_params_,
+                                          [](label_t, vid_t) { return true; });
+    }
   }
 
  private:
@@ -566,6 +585,17 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ScanOprBuilder::Build(
 
   ScanParams scan_params;
   scan_params.alias = scan_opr.has_alias() ? scan_opr.alias().value() : -1;
+  scan_params.limit = std::numeric_limits<int32_t>::max();
+  if (scan_opr.params().has_limit()) {
+    auto& limit_range = scan_opr.params().limit();
+    if (limit_range.lower() != 0) {
+      LOG(FATAL) << "Scan with lower limit expect 0, but got "
+                 << limit_range.lower();
+    }
+    if (limit_range.upper() > 0) {
+      scan_params.limit = limit_range.upper();
+    }
+  }
   for (auto& table : scan_opr.params().tables()) {
     // bug here, exclude invalid vertex label id
     if (schema.vertex_label_num() <= table.id()) {

@@ -19,7 +19,8 @@ namespace gs {
 namespace runtime {
 
 Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
-                                   label_t label, const Any& oid, int alias) {
+                                   label_t label, const Any& oid,
+                                   int32_t alias) {
   SLVertexColumnBuilder builder(label);
   vid_t vid;
   if (graph.GetVertexIndex(label, oid, vid)) {
@@ -31,7 +32,7 @@ Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
 }
 
 Context Scan::find_vertex_with_gid(const GraphReadInterface& graph,
-                                   label_t label, int64_t gid, int alias) {
+                                   label_t label, int64_t gid, int32_t alias) {
   SLVertexColumnBuilder builder(label);
   if (GlobalId::get_label_id(gid) == label) {
     builder.push_back_opt(GlobalId::get_vid(gid));
@@ -42,42 +43,6 @@ Context Scan::find_vertex_with_gid(const GraphReadInterface& graph,
   Context ctx;
   ctx.set(alias, builder.finish());
   return ctx;
-}
-
-Context Scan::find_vertex_with_id(const GraphReadInterface& graph,
-                                  label_t label, const Any& pk, int alias,
-                                  bool scan_oid) {
-  if (scan_oid) {
-    SLVertexColumnBuilder builder(label);
-    vid_t vid;
-    if (graph.GetVertexIndex(label, pk, vid)) {
-      builder.push_back_opt(vid);
-    }
-    Context ctx;
-    ctx.set(alias, builder.finish());
-    return ctx;
-  } else {
-    SLVertexColumnBuilder builder(label);
-    vid_t vid{};
-    int64_t gid{};
-    if (pk.type == PropertyType::kInt64) {
-      gid = pk.AsInt64();
-    } else if (pk.type == PropertyType::kInt32) {
-      gid = pk.AsInt32();
-    } else {
-      LOG(FATAL) << "Unsupported primary key type";
-    }
-    if (GlobalId::get_label_id(gid) == label) {
-      vid = GlobalId::get_vid(gid);
-    } else {
-      LOG(ERROR) << "Global id " << gid << " does not match label " << label;
-      return Context();
-    }
-    builder.push_back_opt(vid);
-    Context ctx;
-    ctx.set(alias, builder.finish());
-    return ctx;
-  }
 }
 
 template <typename T>

@@ -310,6 +310,40 @@ def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_g
     assert cnt == 8
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON",
+    reason="Scan+Limit fuse only works on proto",
+)
+def test_scan_limit_fuse(interactive_session, neo4j_session, create_modern_graph):
+    print("[Test call procedure in cypher]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
+    result = neo4j_session.run(
+        'MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;'
+    )
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 8
+
+    # Q: Why we could use this query to verify whether Scan+Limit fuse works?
+    # A: If Scan+Limit fuse works, the result of this query should be 2, otherwise it should be 6
+    result = neo4j_session.run("MATCH(n) return n.id limit 2")
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 2
+
+    result = neo4j_session.run("MATCH(n) return n.id limit 0")
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 0
+
+
 def test_custom_pk_name(
     interactive_session, neo4j_session, create_graph_with_custom_pk_name
 ):
