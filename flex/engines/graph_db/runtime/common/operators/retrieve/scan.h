@@ -37,6 +37,38 @@ class Scan {
                              const ScanParams& params,
                              const PRED_T& predicate) {
     Context ctx;
+    if (params.tables.size() == 1) {
+      label_t label = params.tables[0];
+      SLVertexColumnBuilder builder(label);
+      auto vertices = graph.GetVertexSet(label);
+      for (auto vid : vertices) {
+        if (predicate(label, vid)) {
+          builder.push_back_opt(vid);
+        }
+      }
+      ctx.set(params.alias, builder.finish());
+    } else if (params.tables.size() > 1) {
+      MSVertexColumnBuilder builder;
+
+      for (auto label : params.tables) {
+        auto vertices = graph.GetVertexSet(label);
+        builder.start_label(label);
+        for (auto vid : vertices) {
+          if (predicate(label, vid)) {
+            builder.push_back_opt(vid);
+          }
+        }
+      }
+      ctx.set(params.alias, builder.finish());
+    }
+    return ctx;
+  }
+
+  template <typename PRED_T>
+  static Context scan_vertex_with_limit(const GraphReadInterface& graph,
+                                        const ScanParams& params,
+                                        const PRED_T& predicate) {
+    Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
