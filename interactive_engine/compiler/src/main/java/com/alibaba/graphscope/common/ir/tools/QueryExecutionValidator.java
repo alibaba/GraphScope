@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.config.Config;
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
@@ -33,9 +35,27 @@ import org.apache.calcite.rex.RexLiteral;
 import java.util.List;
 
 public class QueryExecutionValidator {
-    public static int MAX_ITERATIONS = 15;
+    public static final int SYSTEM_MAX_ITERATIONS = 15;
 
-    boolean validate(LogicalPlan plan, boolean throwsOnFail) {
+    private static final Config<Integer> CONFIG_MAX_ITERATIONS =
+            Config.intConfig("query.execution.max.iterations", 15);
+
+    private final int maxIterations;
+
+    public QueryExecutionValidator(Configs configs) {
+        int maxIterations = CONFIG_MAX_ITERATIONS.get(configs);
+        if (maxIterations > SYSTEM_MAX_ITERATIONS) {
+            throw new FrontendException(
+                    Code.LOGICAL_PLAN_BUILD_FAILED,
+                    "max iterations "
+                            + maxIterations
+                            + " exceeds the system limit "
+                            + SYSTEM_MAX_ITERATIONS);
+        }
+        this.maxIterations = maxIterations;
+    }
+
+    public boolean validate(LogicalPlan plan, boolean throwsOnFail) {
         if (plan.getRegularQuery() == null || plan.isReturnEmpty()) return true;
         int hops = 0;
         List<RelNode> queue = Lists.newArrayList(plan.getRegularQuery());
@@ -54,7 +74,7 @@ public class QueryExecutionValidator {
                                 Code.LOGICAL_PLAN_BUILD_FAILED,
                                 "path expand with no upper bound exceeds the maximum allowed"
                                         + " iterations "
-                                        + MAX_ITERATIONS);
+                                        + maxIterations);
                     }
                     return false;
                 }
@@ -80,14 +100,14 @@ public class QueryExecutionValidator {
             }
             queue.addAll(top.getInputs());
         }
-        if (hops <= MAX_ITERATIONS) return true;
+        if (hops <= maxIterations) return true;
         if (throwsOnFail) {
             throw new FrontendException(
                     Code.LOGICAL_PLAN_BUILD_FAILED,
                     "query hops "
                             + hops
                             + " exceeds the maximum allowed iterations "
-                            + MAX_ITERATIONS);
+                            + maxIterations);
         }
         return false;
     }

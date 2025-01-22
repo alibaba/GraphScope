@@ -106,7 +106,7 @@ public class PrimitiveCountEstimator {
         int baseHop = Math.max(minHop, 1);
         double baseHopCount = Math.pow(edgeCount, baseHop) / Math.pow(dstVertexCount, baseHop - 1);
         for (int hop = baseHop, iters = 0;
-                hop <= maxHop && iters < QueryExecutionValidator.MAX_ITERATIONS;
+                hop <= maxHop && iters < QueryExecutionValidator.SYSTEM_MAX_ITERATIONS;
                 ++hop, ++iters) {
             sum += baseHopCount;
             baseHopCount *= (edgeCount / dstVertexCount);

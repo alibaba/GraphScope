@@ -71,6 +71,7 @@ public class GraphPlanner {
     private final GraphRelOptimizer optimizer;
     private final RexBuilder rexBuilder;
     private final LogicalPlanFactory logicalPlanFactory;
+    private final QueryExecutionValidator validator;
 
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
@@ -83,6 +84,7 @@ public class GraphPlanner {
         this.optimizer = optimizer;
         this.logicalPlanFactory = logicalPlanFactory;
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
+        this.validator = new QueryExecutionValidator(graphConfig);
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
@@ -106,7 +108,7 @@ public class GraphPlanner {
                 GraphBuilder.create(
                         graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
         LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
-        new QueryExecutionValidator().validate(logicalPlan, true);
+        this.validator.validate(logicalPlan, true);
         return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta, queryLogger);
     }
 

@@ -848,7 +848,7 @@ public class GraphTypeInference {
         }
 
         public GraphPathType inferPathType() {
-            if (this.maxHop > QueryExecutionValidator.MAX_ITERATIONS) {
+            if (this.maxHop > QueryExecutionValidator.SYSTEM_MAX_ITERATIONS) {
                 return this.pxdType;
             }
             recursive(startVType, new CompositePathType(Lists.newArrayList()), 0);
