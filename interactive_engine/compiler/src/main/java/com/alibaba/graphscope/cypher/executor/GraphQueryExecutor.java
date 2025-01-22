@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
+import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.google.common.base.Preconditions;
 
@@ -134,6 +135,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                             graphPlanner.instance(
                                     statement, irMeta, statusCallback.getQueryLogger()));
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
+            logCacheHit(cacheKey, cacheValue);
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
@@ -221,5 +223,21 @@ public class GraphQueryExecutor extends FabricExecutor {
         if (!(plan.getProcedureCall() instanceof RexProcedureCall)) return false;
         RexProcedureCall procedureCall = (RexProcedureCall) plan.getProcedureCall();
         return procedureCall.getMode() == StoredProcedureMeta.Mode.SCHEMA;
+    }
+
+    private void logCacheHit(QueryCache.Key key, QueryCache.Value value) {
+        GraphPlanner.PlannerInstance cacheInstance =
+                (GraphPlanner.PlannerInstance) value.debugInfo.get("instance");
+        if (cacheInstance != null && cacheInstance != key.instance) {
+            QueryLogger queryLogger = key.instance.getQueryLogger();
+            if (queryLogger != null) {
+                queryLogger.info(
+                        "query hit the cache, cache query id [ {} ], cache statement [ {} ]",
+                        cacheInstance.getQueryLogger() == null
+                                ? 0L
+                                : cacheInstance.getQueryLogger().getQueryId(),
+                        cacheInstance.getQuery());
+            }
+        }
     }
 }
