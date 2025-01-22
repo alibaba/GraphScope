@@ -190,11 +190,10 @@ class Scan {
 
   static Context find_vertex_with_oid(const GraphReadInterface& graph,
                                       label_t label, const Any& pk,
-                                      int32_t alias, int32_t limit);
+                                      int32_t alias);
 
   static Context find_vertex_with_gid(const GraphReadInterface& graph,
-                                      label_t label, int64_t pk, int32_t alias,
-                                      int32_t limit);
+                                      label_t label, int64_t pk, int32_t alias);
 };
 
 }  // namespace runtime

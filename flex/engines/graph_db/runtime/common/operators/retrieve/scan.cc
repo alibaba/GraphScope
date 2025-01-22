@@ -19,14 +19,12 @@ namespace gs {
 namespace runtime {
 
 Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
-                                   label_t label, const Any& oid, int32_t alias,
-                                   int32_t limit) {
+                                   label_t label, const Any& oid,
+                                   int32_t alias) {
   SLVertexColumnBuilder builder(label);
   vid_t vid;
-  if (limit >= 1) {
-    if (graph.GetVertexIndex(label, oid, vid)) {
-      builder.push_back_opt(vid);
-    }
+  if (graph.GetVertexIndex(label, oid, vid)) {
+    builder.push_back_opt(vid);
   }
   Context ctx;
   ctx.set(alias, builder.finish());
@@ -34,16 +32,13 @@ Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
 }
 
 Context Scan::find_vertex_with_gid(const GraphReadInterface& graph,
-                                   label_t label, int64_t gid, int32_t alias,
-                                   int32_t limit) {
+                                   label_t label, int64_t gid, int32_t alias) {
   SLVertexColumnBuilder builder(label);
-  if (limit >= 1) {
-    if (GlobalId::get_label_id(gid) == label) {
-      builder.push_back_opt(GlobalId::get_vid(gid));
-    } else {
-      LOG(ERROR) << "Invalid label id: "
-                 << static_cast<int>(GlobalId::get_label_id(gid));
-    }
+  if (GlobalId::get_label_id(gid) == label) {
+    builder.push_back_opt(GlobalId::get_vid(gid));
+  } else {
+    LOG(ERROR) << "Invalid label id: "
+               << static_cast<int>(GlobalId::get_label_id(gid));
   }
   Context ctx;
   ctx.set(alias, builder.finish());
