@@ -58,7 +58,9 @@ static inline void get_edge_data(EdgePropVecBase* prop, size_t idx,
     edge_data.value.day_val =
         dynamic_cast<EdgePropVec<Day>*>(prop)->get_view(idx);
   } else if (prop->type() == PropertyType::kRecordView) {
-    // edge_data.type = RTAnyType::kRecordView;
+    edge_data.type = RTAnyType::kRecordView;
+    edge_data.value.record_view =
+        dynamic_cast<EdgePropVec<RecordView>*>(prop)->get_view(idx);
   } else {
     edge_data.type = RTAnyType::kUnknown;
   }
@@ -84,6 +86,9 @@ static inline void set_edge_data(EdgePropVecBase* col, size_t idx,
     dynamic_cast<EdgePropVec<Date>*>(col)->set(idx, edge_data.value.date_val);
   } else if (edge_data.type == RTAnyType::kDate32) {
     dynamic_cast<EdgePropVec<Day>*>(col)->set(idx, edge_data.value.day_val);
+  } else if (edge_data.type == RTAnyType::kRecordView) {
+    dynamic_cast<EdgePropVec<RecordView>*>(col)->set(
+        idx, edge_data.value.record_view);
   } else {
     // LOG(FATAL) << "not support for " << edge_data.type;
   }
@@ -650,13 +655,11 @@ class BDMLEdgeColumn : public IEdgeColumn {
 class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
   SDSLEdgeColumnBuilder(Direction dir, const LabelTriplet& label,
-                        PropertyType prop_type,
-                        const std::vector<PropertyType>& sub_types = {})
+                        PropertyType prop_type)
       : dir_(dir),
         label_(label),
         prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)),
-        sub_types_(sub_types) {}
+        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
   ~SDSLEdgeColumnBuilder() = default;
 
   void reserve(size_t size) override { edges_.reserve(size); }
@@ -684,7 +687,6 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
   std::vector<std::pair<vid_t, vid_t>> edges_;
   PropertyType prop_type_;
   std::shared_ptr<EdgePropVecBase> prop_col_;
-  std::vector<PropertyType> sub_types_;
 };
 
 template <typename T>
