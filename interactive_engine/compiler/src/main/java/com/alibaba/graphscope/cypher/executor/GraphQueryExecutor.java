@@ -232,7 +232,8 @@ public class GraphQueryExecutor extends FabricExecutor {
             QueryLogger queryLogger = key.instance.getQueryLogger();
             if (queryLogger != null) {
                 queryLogger.info(
-                        "query hit the cache, cache query id [ {} ], cache statement [ {} ]",
+                        "query hit the cache, cached query id [ {} ], cached query statement [ {}"
+                                + " ]",
                         cacheInstance.getQueryLogger() == null
                                 ? 0L
                                 : cacheInstance.getQueryLogger().getQueryId(),
