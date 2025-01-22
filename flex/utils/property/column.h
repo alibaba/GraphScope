@@ -295,6 +295,8 @@ class TypedColumn<RecordView> : public ColumnBase {
 };
 
 using BoolColumn = TypedColumn<bool>;
+using UInt8Column = TypedColumn<uint8_t>;
+using UInt16Column = TypedColumn<uint16_t>;
 using IntColumn = TypedColumn<int32_t>;
 using UIntColumn = TypedColumn<uint32_t>;
 using LongColumn = TypedColumn<int64_t>;

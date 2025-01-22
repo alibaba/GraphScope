@@ -183,8 +183,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         pt = props[0];
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt,
-                                    props);
+      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
 
       label_t dst_label = params.labels[0].dst_label;
       foreach_vertex(input_vertex_list,
@@ -223,8 +222,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         pt = PropertyType::kRecordView;
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt,
-                                    props);
+      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
       label_t src_label = params.labels[0].src_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
@@ -312,7 +310,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         if (params.dir == Direction::kOut) {
           auto& triplet = labels[0];
           SDSLEdgeColumnBuilder builder(Direction::kOut, triplet,
-                                        label_props[0].second, props_vec[0]);
+                                        label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.src_label) {
@@ -332,7 +330,7 @@ Context EdgeExpand::expand_edge_without_predicate(
         } else if (params.dir == Direction::kIn) {
           auto& triplet = labels[0];
           SDSLEdgeColumnBuilder builder(Direction::kIn, triplet,
-                                        label_props[0].second, props_vec[0]);
+                                        label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.dst_label) {
