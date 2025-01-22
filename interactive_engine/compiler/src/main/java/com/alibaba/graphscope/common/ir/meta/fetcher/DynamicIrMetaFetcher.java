@@ -26,7 +26,6 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
-import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec.Type;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import org.slf4j.Logger;
