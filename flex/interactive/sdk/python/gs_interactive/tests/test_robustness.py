@@ -490,4 +490,3 @@ def test_multiple_edge_property(
     for i in range(len(records)):
         assert records[i]["e"]["weight"] == expected_result[i]["weight"]
         assert records[i]["e"]["since"] == expected_result[i]["since"]
-
