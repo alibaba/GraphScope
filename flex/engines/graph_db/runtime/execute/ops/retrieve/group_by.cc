@@ -56,6 +56,8 @@ class GroupByOpr : public IReadOperator {
                  const GraphReadInterface&, const Context&)>>&& aggrs)
       : key_fun_(std::move(key_fun)), aggrs_(std::move(aggrs)) {}
 
+  std::string get_operator_name() const override { return "GroupByOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -90,6 +92,8 @@ class GroupByOprBeta : public IReadOperator {
       : key_project_func_(std::move(key_project_func)),
         key_fun_(std::move(key_fun)),
         aggrs_(std::move(aggrs)) {}
+
+  std::string get_operator_name() const override { return "GroupByOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

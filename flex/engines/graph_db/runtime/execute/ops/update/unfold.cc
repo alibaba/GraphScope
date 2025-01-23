@@ -25,6 +25,8 @@ class UnfoldInsertOpr : public IInsertOperator {
  public:
   UnfoldInsertOpr(int tag, int alias) : tag_(tag), alias_(alias) {}
 
+  std::string get_operator_name() const override { return "UnfoldInsertOpr"; }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,

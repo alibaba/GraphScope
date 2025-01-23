@@ -183,6 +183,8 @@ class FilterOidsWithoutPredOpr : public IReadOperator {
         graph, params_, [](label_t, vid_t) { return true; }, oids);
   }
 
+  std::string get_operator_name() const override { return "FilterOidsOpr"; }
+
  private:
   ScanParams params_;
   std::function<std::vector<Any>(ParamsType)> oids_;
@@ -208,6 +210,8 @@ class FilterMultiTypeOidsWithoutPredOpr : public IReadOperator {
     return Scan::filter_oids(
         graph, params_, [](label_t, vid_t) { return true; }, oids);
   }
+
+  std::string get_operator_name() const override { return "FilterOidsOpr"; }
 
  private:
   ScanParams params_;
@@ -237,6 +241,8 @@ class FilterGidsWithoutPredOpr : public IReadOperator {
         graph, params_, [](label_t, vid_t) { return true; }, gids);
   }
 
+  std::string get_operator_name() const override { return "FilterGidsOpr"; }
+
  private:
   ScanParams params_;
   std::function<std::vector<Any>(ParamsType)> oids_;
@@ -258,6 +264,10 @@ class FilterOidsSPredOpr : public IReadOperator {
     auto pred = pred_(graph, params);
     return Scan::filter_oids_with_special_vertex_predicate(graph, params_,
                                                            *pred, ids);
+  }
+
+  std::string get_operator_name() const override {
+    return "FilterOidsSPredOpr";
   }
 
  private:
@@ -300,6 +310,10 @@ class FilterOidsGPredOpr : public IReadOperator {
     }
   }
 
+  std::string get_operator_name() const override {
+    return "FilterOidsGPredOpr";
+  }
+
  private:
   ScanParams params_;
   std::function<std::vector<Any>(ParamsType)> oids_;
@@ -331,6 +345,10 @@ class FilterOidsMultiTypeSPredOpr : public IReadOperator {
                                                            *pred, all_ids);
   }
 
+  std::string get_operator_name() const override {
+    return "FilterOidsMultiTypeSPredOpr";
+  }
+
  private:
   ScanParams params_;
   std::vector<std::function<std::vector<Any>(ParamsType)>> oids_;
@@ -347,6 +365,10 @@ class FilterOidsMultiTypeGPredOpr : public IReadOperator {
       const std::vector<std::function<std::vector<Any>(ParamsType)>>& oids,
       const common::Expression& pred)
       : params_(params), oids_(oids), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "FilterOidsMultiTypeGPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
@@ -393,6 +415,10 @@ class FilterGidsSPredOpr : public IReadOperator {
                          const std::map<std::string, std::string>&)>& pred)
       : params_(params), oids_(std::move(oids)), pred_(pred) {}
 
+  std::string get_operator_name() const override {
+    return "FilterGidsSPredOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
@@ -421,6 +447,10 @@ class FilterGidsGPredOpr : public IReadOperator {
                      const std::function<std::vector<Any>(ParamsType)>& oids,
                      const common::Expression& pred)
       : params_(params), oids_(std::move(oids)), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "FilterGidsGPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
@@ -464,6 +494,8 @@ class ScanWithSPredOpr : public IReadOperator {
                        const std::map<std::string, std::string>&)>
                        pred)
       : scan_params_(scan_params), pred_(pred) {}
+
+  std::string get_operator_name() const override { return "ScanWithSPredOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -523,6 +555,7 @@ class ScanWithGPredOpr : public IReadOperator {
       }
     }
   }
+  std::string get_operator_name() const override { return "ScanWithGPredOpr"; }
 
  private:
   ScanParams scan_params_;
@@ -545,6 +578,10 @@ class ScanWithoutPredOpr : public IReadOperator {
       return Scan::scan_vertex_with_limit(graph, scan_params_,
                                           [](label_t, vid_t) { return true; });
     }
+  }
+
+  std::string get_operator_name() const override {
+    return "ScanWithoutPredOpr";
   }
 
  private:

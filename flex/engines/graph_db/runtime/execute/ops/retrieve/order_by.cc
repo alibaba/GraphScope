@@ -32,6 +32,8 @@ class OrderByOprBeta : public IReadOperator {
           func)
       : keys_(std::move(keys)), lower_(lower), upper_(upper), func_(func) {}
 
+  std::string get_operator_name() const override { return "OrderByOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

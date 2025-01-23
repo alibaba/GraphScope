@@ -31,6 +31,8 @@ class JoinOpr : public IReadOperator {
         right_pipeline_(std::move(right_pipeline)),
         params_(join_params) {}
 
+  std::string get_operator_name() const override { return "JoinOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

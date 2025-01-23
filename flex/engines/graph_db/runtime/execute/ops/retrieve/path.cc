@@ -268,6 +268,8 @@ class SPOrderByLimitOpr : public IReadOperator {
           pred)
       : spp_(spp), limit_(limit), pred_(std::move(pred)) {}
 
+  std::string get_operator_name() const override { return "SPOrderByLimitOpr"; }
+
   template <typename T>
   bl::result<gs::runtime::Context> _invoke(
       const GraphReadInterface& graph, Context&& ctx,
@@ -345,6 +347,10 @@ class SPOrderByLimitWithOutPredOpr : public IReadOperator {
   SPOrderByLimitWithOutPredOpr(const ShortestPathParams& spp, int limit)
       : spp_(spp), limit_(limit) {}
 
+  std::string get_operator_name() const override {
+    return "SPOrderByLimitWithOutPredOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -364,6 +370,10 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
   SPOrderByLimitWithGPredOpr(const ShortestPathParams& spp, int limit,
                              const common::Expression& pred)
       : spp_(spp), limit_(limit), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "SPOrderByLimitWithGPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -453,6 +463,8 @@ class SPSPredOpr : public IReadOperator {
           pred)
       : spp_(spp), pred_(std::move(pred)) {}
 
+  std::string get_operator_name() const override { return "SPSPredOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -474,6 +486,8 @@ class SPGPredOpr : public IReadOperator {
  public:
   SPGPredOpr(const ShortestPathParams& spp, const common::Expression& pred)
       : spp_(spp), pred_(pred) {}
+
+  std::string get_operator_name() const override { return "SPGPredOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -497,6 +511,8 @@ class SPGPredOpr : public IReadOperator {
 class SPWithoutPredOpr : public IReadOperator {
  public:
   SPWithoutPredOpr(const ShortestPathParams& spp) : spp_(spp) {}
+
+  std::string get_operator_name() const override { return "SPWithoutPredOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -530,6 +546,8 @@ class ASPOpr : public IReadOperator {
     CHECK(is_pk_oid_exact_check(get_v_opr.params().predicate(), oid_getter_));
   }
 
+  std::string get_operator_name() const override { return "ASPOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -562,6 +580,8 @@ class SSSDSPOpr : public IReadOperator {
             const std::function<Any(const std::map<std::string, std::string>&)>&
                 oid_getter)
       : spp_(spp), oid_getter_(oid_getter) {}
+
+  std::string get_operator_name() const override { return "SSSDSPOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -707,6 +727,7 @@ class PathExpandVOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return PathExpand::edge_expand_v(graph, std::move(ctx), pep_);
   }
+  std::string get_operator_name() const override { return "PathExpandVOpr"; }
 
  private:
   PathExpandParams pep_;
@@ -772,6 +793,8 @@ bl::result<ReadOpBuildResultT> PathExpandVOprBuilder::Build(
 class PathExpandOpr : public IReadOperator {
  public:
   PathExpandOpr(PathExpandParams pep) : pep_(pep) {}
+
+  std::string get_operator_name() const override { return "PathExpandOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

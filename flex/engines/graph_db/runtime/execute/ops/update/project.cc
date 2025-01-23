@@ -25,6 +25,8 @@ class ProjectInsertOpr : public IInsertOperator {
           const std::map<std::string, std::string>&)>>& exprs)
       : exprs_(exprs) {}
 
+  std::string get_operator_name() const override { return "ProjectInsertOpr"; }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,

@@ -24,6 +24,8 @@ class UnfoldOpr : public IReadOperator {
   UnfoldOpr(const physical::Unfold& opr)
       : opr_(opr), tag_(opr.tag().value()), alias_(opr.alias().value()) {}
 
+  std::string get_operator_name() const override { return "UnfoldOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

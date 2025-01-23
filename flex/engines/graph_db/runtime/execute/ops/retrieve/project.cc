@@ -1256,6 +1256,8 @@ class ProjectOpr : public IReadOperator {
     return Project::project(std::move(ctx), exprs, is_append_);
   }
 
+  std::string get_operator_name() const override { return "ProjectOpr"; }
+
  private:
   std::vector<std::function<std::unique_ptr<ProjectExprBase>(
       const GraphReadInterface& graph,
@@ -1344,6 +1346,10 @@ class ProjectOrderByOprBeta : public IReadOperator {
         lower_bound_(lower_bound),
         upper_bound_(upper_bound),
         first_pair_(first_pair) {}
+
+  std::string get_operator_name() const override {
+    return "ProjectOrderByOprBeta";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

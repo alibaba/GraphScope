@@ -22,6 +22,8 @@ class SinkInsertOpr : public IInsertOperator {
  public:
   SinkInsertOpr() {}
 
+  std::string get_operator_name() const override { return "SinkInsertOpr"; }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,

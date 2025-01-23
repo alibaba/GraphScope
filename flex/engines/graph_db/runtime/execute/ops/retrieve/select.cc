@@ -44,6 +44,8 @@ class SelectIdNeOpr : public IReadOperator {
  public:
   SelectIdNeOpr(const common::Expression& expr) : expr_(expr) {}
 
+  std::string get_operator_name() const override { return "SelectIdNeOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -89,6 +91,8 @@ class SelectIdNeOpr : public IReadOperator {
 class SelectOprBeta : public IReadOperator {
  public:
   SelectOprBeta(const common::Expression& expr) : expr_(expr) {}
+
+  std::string get_operator_name() const override { return "SelectOprBeta"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

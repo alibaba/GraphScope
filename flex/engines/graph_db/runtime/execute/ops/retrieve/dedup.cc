@@ -23,6 +23,7 @@ namespace ops {
 class DedupOpr : public IReadOperator {
  public:
   DedupOpr(const std::vector<size_t>& tag_ids) : tag_ids_(tag_ids) {}
+  std::string get_operator_name() const override { return "DedupOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -37,6 +38,8 @@ class DedupOpr : public IReadOperator {
 class DedupWithPropertyOpr : public IReadOperator {
  public:
   DedupWithPropertyOpr(const algebra::Dedup& dedup_opr) : opr_(dedup_opr) {}
+
+  std::string get_operator_name() const override { return "DedupWithProperty"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

@@ -30,6 +30,8 @@ class LimitOpr : public IReadOperator {
     }
   }
 
+  std::string get_operator_name() const override { return "LimitOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

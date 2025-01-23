@@ -30,6 +30,10 @@ class GetVFromVerticesWithLabelWithInOpr : public IReadOperator {
                                      const std::set<label_t>& labels)
       : opr_(opr), v_params_(p), labels_set_(labels) {}
 
+  std::string get_operator_name() const override {
+    return "GetVFromVerticesWithLabelWithInOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -71,6 +75,10 @@ class GetVFromVerticesWithPKExactOpr : public IReadOperator {
         exact_pk_label_(exact_pk_label),
         exact_pk_(exact_pk) {}
 
+  std::string get_operator_name() const override {
+    return "GetVFromVerticesWithPKExact";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -96,6 +104,10 @@ class GetVFromVerticesWithPredicateOpr : public IReadOperator {
                                    const GetVParams& p)
       : opr_(opr), v_params_(p) {}
 
+  std::string get_operator_name() const override {
+    return "GetVFromVerticesWithPredicate";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -114,6 +126,10 @@ class GetVFromEdgesWithPredicateOpr : public IReadOperator {
  public:
   GetVFromEdgesWithPredicateOpr(const physical::GetV& opr, const GetVParams& p)
       : opr_(opr), v_params_(p) {}
+
+  std::string get_operator_name() const override {
+    return "GetVFromEdgesWithPredicate";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,

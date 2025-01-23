@@ -26,6 +26,8 @@ class UnionOpr : public IReadOperator {
   UnionOpr(std::vector<ReadPipeline>&& sub_plans)
       : sub_plans_(std::move(sub_plans)) {}
 
+  std::string get_operator_name() const override { return "UnionOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

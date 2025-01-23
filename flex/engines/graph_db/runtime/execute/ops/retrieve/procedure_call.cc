@@ -395,6 +395,8 @@ class ProcedureCallOpr : public IReadOperator {
                    const physical::ProcedureCall& opr)
       : aliases_(aliases), opr_(opr) {}
 
+  std::string get_operator_name() const override { return "ProcedureCallOpr"; }
+
   bl::result<Context> Eval(const GraphReadInterface& txn,
                            const std::map<std::string, std::string>&,
                            Context&& ctx, OprTimer&) override {

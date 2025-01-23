@@ -154,6 +154,10 @@ class EdgeExpandVWithoutPredOpr : public IReadOperator {
                                                        eep_);
   }
 
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithoutPredOpr";
+  }
+
  private:
   EdgeExpandParams eep_;
 };
@@ -163,6 +167,10 @@ class EdgeExpandVWithEPGTOpr : public IReadOperator {
   EdgeExpandVWithEPGTOpr(const EdgeExpandParams& eep, const std::string& param,
                          const common::Expression& pred)
       : eep_(eep), param_(param), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithEPGTOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -191,6 +199,10 @@ class EdgeExpandVWithEPLTOpr : public IReadOperator {
                          const common::Expression& pred)
       : eep_(eep), param_(param), pred_(pred) {}
 
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithEPLTOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -218,6 +230,10 @@ class EdgeExpandVWithEdgePredOpr : public IReadOperator {
                              const common::Expression& pred)
       : eep_(eep), pred_(pred) {}
 
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithEdgePredOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -235,6 +251,10 @@ class EdgeExpandVWithEdgePredOpr : public IReadOperator {
 class EdgeExpandEWithoutPredicateOpr : public IReadOperator {
  public:
   EdgeExpandEWithoutPredicateOpr(const EdgeExpandParams& eep) : eep_(eep) {}
+
+  std::string get_operator_name() const override {
+    return "EdgeExpandEWithoutPredicateOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -257,6 +277,10 @@ class EdgeExpandEWithSPredOpr : public IReadOperator {
           const std::map<std::string, std::string>&)>& sp_edge_pred,
       const common::Expression& pred)
       : eep_(eep), sp_edge_pred_(sp_edge_pred), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "EdgeExpandEWithSPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -289,6 +313,10 @@ class EdgeExpandEWithGPredOpr : public IReadOperator {
                           const common::Expression& pred)
       : eep_(eep), pred_(pred) {}
 
+  std::string get_operator_name() const override {
+    return "EdgeExpandEWithGPredOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -309,6 +337,10 @@ class EdgeExpandVWithExactVertexOpr : public IReadOperator {
                                 const std::string& pk,
                                 const algebra::QueryParams& query_params)
       : eep_(eep), pk_label_(pk_label), pk_(pk), query_params_(query_params) {}
+
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithExactVertexOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -352,6 +384,10 @@ class EdgeExpandVWithVertexEdgePredOpr : public IReadOperator {
                                    const common::Expression& e_pred)
       : eep_(eep), v_pred_(v_pred), e_pred_(e_pred) {}
 
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithVertexEdgePredOpr";
+  }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
@@ -379,6 +415,10 @@ class EdgeExpandVWithSPVertexPredOpr : public IReadOperator {
           const std::map<std::string, std::string>&)>& sp_vertex_pred,
       const common::Expression& pred)
       : eep_(eep), sp_vertex_pred_(sp_vertex_pred), pred_(pred) {}
+
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithSPVertexPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -411,6 +451,9 @@ class EdgeExpandVWithGPVertexPredOpr : public IReadOperator {
   EdgeExpandVWithGPVertexPredOpr(const EdgeExpandParams& eep,
                                  const common::Expression& pred)
       : eep_(eep), pred_(pred) {}
+  std::string get_operator_name() const override {
+    return "EdgeExpandVWithGPVertexPredOpr";
+  }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -558,9 +601,9 @@ bl::result<ReadOpBuildResultT> EdgeExpandGetVOprBuilder::Build(
             physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_EDGE &&
         ee_opr.expand_opt() !=
             physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
-      LOG(ERROR)
-          << "EdgeExpandGetVOprBuilder::Build: expand_opt is not EDGE or VERTEX"
-          << ee_opr.DebugString();
+      LOG(ERROR) << "EdgeExpandGetVOprBuilder::Build: expand_opt is not EDGE "
+                    "or VERTEX"
+                 << ee_opr.DebugString();
       return std::make_pair(nullptr, ContextMeta());
     }
     if (query_params.has_predicate()) {

@@ -31,6 +31,8 @@ class DedupInsertOpr : public IInsertOperator {
     return Dedup::dedup(graph, std::move(ctx), keys);
   }
 
+  std::string get_operator_name() const override { return "DedupInsertOpr"; }
+
  private:
   std::vector<size_t> keys;
 };

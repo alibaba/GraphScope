@@ -27,6 +27,8 @@ class IntersectOpr : public IReadOperator {
                std::vector<ReadPipeline>&& sub_plans)
       : key_(intersect_opr.key()), sub_plans_(std::move(sub_plans)) {}
 
+  std::string get_operator_name() const override { return "IntersectOpr"; }
+
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,

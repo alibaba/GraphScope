@@ -30,6 +30,8 @@ class SinkOpr : public IReadOperator {
     return ctx;
   }
 
+  std::string get_operator_name() const override { return "SinkOpr"; }
+
  private:
   std::vector<int> tag_ids_;
 };

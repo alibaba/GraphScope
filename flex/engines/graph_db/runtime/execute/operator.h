@@ -32,6 +32,8 @@ class IReadOperator {
  public:
   virtual ~IReadOperator() = default;
 
+  virtual std::string get_operator_name() const = 0;
+
   virtual bl::result<Context> Eval(
       const GraphReadInterface& graph,
       const std::map<std::string, std::string>& params, Context&& ctx,
@@ -56,6 +58,8 @@ class IReadOperatorBuilder {
 class IInsertOperator {
  public:
   virtual ~IInsertOperator() = default;
+
+  virtual std::string get_operator_name() const = 0;
 
   virtual bl::result<WriteContext> Eval(
       GraphInsertInterface& graph,
