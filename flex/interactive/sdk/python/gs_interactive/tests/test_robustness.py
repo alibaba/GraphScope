@@ -451,7 +451,7 @@ def test_not_supported_cases(
     with pytest.raises(Exception):
         result = neo4j_session.run('MATCH shortestPath(src: person {id: 1})-[e*1..2]-(dst: person) return length(e);')
         result.fetch(1)
-        
+
 
 def test_multiple_edge_property(
     interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
