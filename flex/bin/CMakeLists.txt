@@ -20,6 +20,10 @@ add_executable(adhoc_runner adhoc_runner.cc)
 target_link_libraries(adhoc_runner flex_utils flex_graph_db)
 install_without_export_flex_target(adhoc_runner)
 
+add_executable(cypher_runner cypher_runner.cc)
+target_link_libraries(cypher_runner flex_utils flex_graph_db)
+install_without_export_flex_target(cypher_runner)
+
 add_executable(flex_analytical_engine flex_analytical_engine.cc)
 target_link_libraries(flex_analytical_engine flex_immutable_graph flex_bsp ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
 install_without_export_flex_target(flex_analytical_engine)
