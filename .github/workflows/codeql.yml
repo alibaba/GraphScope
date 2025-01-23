@@ -22,8 +22,8 @@ on:
       - 'flex/**'
       - 'python/**'
   # Commented out to save time; reopen after install-deps refactored.
-  # pull_request:
-  #   branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   schedule:
     - cron: '38 20 * * 5'
 
@@ -96,8 +96,9 @@ jobs:
       shell: bash
       run: |
         echo 'Install dependencies'
-        pip install gsctl
-        gsctl install-deps dev
+        # pip install gsctl
+        # gsctl install-deps dev
+        python3 gsctl.py install-deps dev
         source ~/.graphscope_env
         echo 'Making GRAPE'
         cd analytical_engine
