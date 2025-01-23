@@ -118,6 +118,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   // is not serialized and deserialized.
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
+  mutable_schema.set_compiler_path(config.compiler_path);
   std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
   for (auto plugin_pair : plugins) {
