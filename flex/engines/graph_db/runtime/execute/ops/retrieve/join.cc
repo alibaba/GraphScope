@@ -58,7 +58,7 @@ class JoinOpr : public IReadOperator {
   JoinParams params_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> JoinOprBuilder::Build(
+bl::result<ReadOpBuildResultT> JoinOprBuilder::Build(
     const Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   ContextMeta ret_meta;

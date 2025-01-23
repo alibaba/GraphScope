@@ -107,7 +107,7 @@ class SelectOprBeta : public IReadOperator {
   common::Expression expr_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SelectOprBuilder::Build(
+bl::result<ReadOpBuildResultT> SelectOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   auto opr = plan.plan(op_idx).opr().select();

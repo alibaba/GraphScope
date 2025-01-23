@@ -460,10 +460,9 @@ static bool check_label_in_set(const Direction& dir,
   return within;
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-EdgeExpandOprBuilder::Build(const gs::Schema& schema,
-                            const ContextMeta& ctx_meta,
-                            const physical::PhysicalPlan& plan, int op_idx) {
+bl::result<ReadOpBuildResultT> EdgeExpandOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   int alias = -1;
   if (plan.plan(op_idx).opr().edge().has_alias()) {
     alias = plan.plan(op_idx).opr().edge().alias().value();
@@ -532,11 +531,9 @@ EdgeExpandOprBuilder::Build(const gs::Schema& schema,
   return std::make_pair(nullptr, ContextMeta());
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-EdgeExpandGetVOprBuilder::Build(const gs::Schema& schema,
-                                const ContextMeta& ctx_meta,
-                                const physical::PhysicalPlan& plan,
-                                int op_idx) {
+bl::result<ReadOpBuildResultT> EdgeExpandGetVOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   if (edge_expand_get_v_fusable(plan.plan(op_idx).opr().edge(),
                                 plan.plan(op_idx + 1).opr().vertex(),
                                 plan.plan(op_idx).meta_data(0))) {

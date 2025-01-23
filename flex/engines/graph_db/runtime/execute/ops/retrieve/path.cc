@@ -386,11 +386,9 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
   common::Expression pred_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-SPOrderByLimitOprBuilder::Build(const gs::Schema& schema,
-                                const ContextMeta& ctx_meta,
-                                const physical::PhysicalPlan& plan,
-                                int op_idx) {
+bl::result<ReadOpBuildResultT> SPOrderByLimitOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().path();
   int path_len_alias = -1;
   int vertex_alias = -1;
@@ -590,7 +588,7 @@ class SSSDSPOpr : public IReadOperator {
   ShortestPathParams spp_;
   std::function<Any(const std::map<std::string, std::string>&)> oid_getter_;
 };
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SPOprBuilder::Build(
+bl::result<ReadOpBuildResultT> SPOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   ContextMeta ret_meta = ctx_meta;
@@ -714,10 +712,9 @@ class PathExpandVOpr : public IReadOperator {
   PathExpandParams pep_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-PathExpandVOprBuilder::Build(const gs::Schema& schema,
-                             const ContextMeta& ctx_meta,
-                             const physical::PhysicalPlan& plan, int op_idx) {
+bl::result<ReadOpBuildResultT> PathExpandVOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().path();
   const auto& next_opr = plan.plan(op_idx + 1).opr().vertex();
   if (opr.result_opt() ==
@@ -787,10 +784,9 @@ class PathExpandOpr : public IReadOperator {
   PathExpandParams pep_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-PathExpandOprBuilder::Build(const gs::Schema& schema,
-                            const ContextMeta& ctx_meta,
-                            const physical::PhysicalPlan& plan, int op_idx) {
+bl::result<ReadOpBuildResultT> PathExpandOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().path();
   int alias = -1;
   if (opr.has_alias()) {

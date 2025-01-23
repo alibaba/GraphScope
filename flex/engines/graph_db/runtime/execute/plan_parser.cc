@@ -187,6 +187,7 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
     }
     auto& builders = read_op_builders_[cur_op_kind];
     int old_i = i;
+    gs::Status status = gs::Status::OK();
     for (auto& pair : builders) {
       auto pattern = pair.first;
       auto& builder = pair.second;
@@ -200,23 +201,55 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
         }
       }
       if (match) {
-        auto [opr, new_ctx_meta] =
-            builder->Build(schema, cur_ctx_meta, plan, i);
-        if (opr) {
-          operators.emplace_back(std::move(opr));
-          cur_ctx_meta = new_ctx_meta;
-          // cur_ctx_meta.desc();
-          i = builder->stepping(i);
-          break;
+        bl::result<ReadOpBuildResultT> res_pair_status = bl::try_handle_some(
+            [&builder, &schema, &cur_ctx_meta, &plan,
+             &i]() -> bl::result<ReadOpBuildResultT> {
+              return builder->Build(schema, cur_ctx_meta, plan, i);
+            },
+            [&status, &i](const gs::Status& err) {
+              status = err;
+              return ReadOpBuildResultT(nullptr, ContextMeta());
+            },
+            [&](const bl::error_info& err) {
+              status = gs::Status(
+                  gs::StatusCode::INTERNAL_ERROR,
+                  "BOOST LEAF Error: " + std::to_string(err.error().value()) +
+                      ", Exception: " + err.exception()->what());
+              return ReadOpBuildResultT(nullptr, ContextMeta());
+            },
+            [&]() {
+              status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
+              return ReadOpBuildResultT(nullptr, ContextMeta());
+            });
+        if (res_pair_status) {
+          auto& opr = res_pair_status.value().first;
+          auto& new_ctx_meta = res_pair_status.value().second;
+          if (opr) {
+            operators.emplace_back(std::move(opr));
+            cur_ctx_meta = new_ctx_meta;
+            i = builder->stepping(i);
+            // Reset status to OK after a successful match.
+            status = gs::Status::OK();
+            break;
+          } else {
+            // If the operator is null, it means the builder has failed, we need
+            // to stage the error.
+            status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                                "Failed to build operator at index " +
+                                    std::to_string(i) +
+                                    ", op_kind: " + get_opr_name(cur_op_kind));
+          }
         }
       }
     }
     if (i == old_i) {
-      LOG(ERROR) << "Failed to parse plan at index " << i << ": "
-                 << get_opr_name(cur_op_kind);
-      RETURN_UNSUPPORTED_ERROR("Failed to parse plan at index " +
-                               std::to_string(i) + ": " +
-                               get_opr_name(cur_op_kind));
+      std::stringstream ss;
+      ss << "Failed to parse plan at index " << i << ": "
+         << get_opr_name(cur_op_kind)
+         << ", last match error: " << status.ToString();
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
     }
   }
   return std::make_pair(ReadPipeline(std::move(operators)), cur_ctx_meta);
@@ -227,7 +260,7 @@ bl::result<ReadPipeline> PlanParser::parse_read_pipeline(
     const physical::PhysicalPlan& plan) {
   auto ret = parse_read_pipeline_with_meta(schema, ctx_meta, plan);
   if (!ret) {
-    RETURN_UNSUPPORTED_ERROR("Failed to parse read pipeline");
+    return ret.error();
   }
   return std::move(ret.value().first);
 }

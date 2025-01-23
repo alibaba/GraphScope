@@ -267,7 +267,7 @@ std::unique_ptr<IReadOperator> make_tc_opr(
   }
   return nullptr;
 }
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> TCOprBuilder::Build(
+bl::result<ReadOpBuildResultT> TCOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   if (tc_fusable(plan.plan(op_idx).opr().edge(),

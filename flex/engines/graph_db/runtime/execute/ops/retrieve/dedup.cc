@@ -60,7 +60,7 @@ class DedupWithPropertyOpr : public IReadOperator {
 
   algebra::Dedup opr_;
 };
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> DedupOprBuilder::Build(
+bl::result<ReadOpBuildResultT> DedupOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   const auto& dedup_opr = plan.plan(op_idx).opr().dedup();

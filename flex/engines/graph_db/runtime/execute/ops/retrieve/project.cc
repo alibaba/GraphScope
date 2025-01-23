@@ -1280,7 +1280,7 @@ auto _make_project_expr(const common::Expression& expr, int alias,
   return make_project_expr(expr, alias);
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
+bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<common::IrDataType> data_types;
@@ -1431,11 +1431,9 @@ static bool project_order_by_fusable_beta(
   return true;
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
-                                const ContextMeta& ctx_meta,
-                                const physical::PhysicalPlan& plan,
-                                int op_idx) {
+bl::result<ReadOpBuildResultT> ProjectOrderByOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<common::IrDataType> data_types;
   int mappings_size = plan.plan(op_idx).opr().project().mappings_size();
   if (plan.plan(op_idx).meta_data_size() == mappings_size) {

@@ -38,10 +38,13 @@ class IReadOperator {
       OprTimer& timer) = 0;
 };
 
+using ReadOpBuildResultT =
+    std::pair<std::unique_ptr<IReadOperator>, ContextMeta>;
+
 class IReadOperatorBuilder {
  public:
   virtual ~IReadOperatorBuilder() = default;
-  virtual std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
+  virtual bl::result<ReadOpBuildResultT> Build(
       const gs::Schema& schema, const ContextMeta& ctx_meta,
       const physical::PhysicalPlan& plan, int op_idx) = 0;
   virtual int stepping(int i) { return i + GetOpKinds().size(); }

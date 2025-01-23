@@ -45,7 +45,7 @@ class UnionOpr : public IReadOperator {
  private:
   std::vector<ReadPipeline> sub_plans_;
 };
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> UnionOprBuilder::Build(
+bl::result<ReadOpBuildResultT> UnionOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<ReadPipeline> sub_plans;

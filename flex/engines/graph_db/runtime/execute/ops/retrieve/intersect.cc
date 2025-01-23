@@ -49,9 +49,9 @@ class IntersectOpr : public IReadOperator {
   std::vector<ReadPipeline> sub_plans_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-IntersectOprBuilder::Build(const Schema& schema, const ContextMeta& ctx_meta,
-                           const physical::PhysicalPlan& plan, int op_idx) {
+bl::result<ReadOpBuildResultT> IntersectOprBuilder::Build(
+    const Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<ReadPipeline> sub_plans;
   for (int i = 0; i < plan.plan(op_idx).opr().intersect().sub_plans_size();
        ++i) {

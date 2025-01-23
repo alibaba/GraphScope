@@ -27,17 +27,14 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     gs::runtime::Context ctx;
     gs::Status status = gs::Status::OK();
     {
-      auto pipeline_res = runtime::PlanParser::get().parse_read_pipeline(
-          gri.schema(), gs::runtime::ContextMeta(), plan);
-      if (!pipeline_res) {
-        status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
-                            "Failed to parse read pipeline");
-      }
       if (status.ok()) {
-        auto pipeline = std::move(pipeline_res.value());
         ctx = bl::try_handle_all(
-            [this, &pipeline, &gri]() {
-              return pipeline.Execute(gri, runtime::Context(), {}, timer_);
+            [this, &gri, &plan]() {
+              return runtime::PlanParser::get()
+                  .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
+                                       plan)
+                  .value()
+                  .Execute(gri, runtime::Context(), {}, timer_);
             },
             [&status](const gs::Status& err) {
               status = err;

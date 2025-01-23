@@ -135,7 +135,7 @@ class GetVFromEdgesWithPredicateOpr : public IReadOperator {
   GetVParams v_params_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> VertexOprBuilder::Build(
+bl::result<ReadOpBuildResultT> VertexOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   const auto& vertex = plan.plan(op_idx).opr().vertex();

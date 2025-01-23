@@ -34,7 +34,7 @@ class SinkOpr : public IReadOperator {
   std::vector<int> tag_ids_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SinkOprBuilder::Build(
+bl::result<ReadOpBuildResultT> SinkOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   auto& opr = plan.plan(op_idx).opr().sink();

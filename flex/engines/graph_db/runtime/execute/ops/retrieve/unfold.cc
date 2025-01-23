@@ -37,7 +37,7 @@ class UnfoldOpr : public IReadOperator {
   int alias_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> UnfoldOprBuilder::Build(
+bl::result<ReadOpBuildResultT> UnfoldOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   ContextMeta ret_meta = ctx_meta;

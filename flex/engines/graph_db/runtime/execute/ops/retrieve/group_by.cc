@@ -932,7 +932,7 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
     return make_general_reducer(graph, ctx, std::move(var_), kind, alias);
   }
 }
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
+bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   int mappings_num = plan.plan(op_idx).opr().group_by().mappings_size();

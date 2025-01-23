@@ -62,7 +62,7 @@ class OrderByOprBeta : public IReadOperator {
       func_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> OrderByOprBuilder::Build(
+bl::result<ReadOpBuildResultT> OrderByOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   const auto opr = plan.plan(op_idx).opr().order_by();

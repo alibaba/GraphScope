@@ -42,7 +42,7 @@ class LimitOpr : public IReadOperator {
   size_t upper_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> LimitOprBuilder::Build(
+bl::result<ReadOpBuildResultT> LimitOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   return std::make_pair(

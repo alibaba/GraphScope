@@ -29,7 +29,7 @@ class EdgeExpandOprBuilder : public IReadOperatorBuilder {
   EdgeExpandOprBuilder() = default;
   ~EdgeExpandOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
+  bl::result<ReadOpBuildResultT> Build(
       const gs::Schema& schema, const ContextMeta& ctx_meta,
       const physical::PhysicalPlan& plan, int op_idx) override;
 
@@ -44,7 +44,7 @@ class EdgeExpandGetVOprBuilder : public IReadOperatorBuilder {
   EdgeExpandGetVOprBuilder() = default;
   ~EdgeExpandGetVOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
+  bl::result<ReadOpBuildResultT> Build(
       const gs::Schema& schema, const ContextMeta& ctx_meta,
       const physical::PhysicalPlan& plan, int op_idx) override;
 
@@ -62,7 +62,7 @@ class TCOprBuilder : public IReadOperatorBuilder {
   TCOprBuilder() = default;
   ~TCOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
+  bl::result<ReadOpBuildResultT> Build(
       const gs::Schema& schema, const ContextMeta& ctx_meta,
       const physical::PhysicalPlan& plan, int op_idx) override;
 
