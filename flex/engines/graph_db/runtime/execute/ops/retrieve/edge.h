@@ -29,9 +29,10 @@ class EdgeExpandOprBuilder : public IReadOperatorBuilder {
   EdgeExpandOprBuilder() = default;
   ~EdgeExpandOprBuilder() = default;
 
-  bl::result<ReadOpBuildResultT> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
@@ -44,9 +45,10 @@ class EdgeExpandGetVOprBuilder : public IReadOperatorBuilder {
   EdgeExpandGetVOprBuilder() = default;
   ~EdgeExpandGetVOprBuilder() = default;
 
-  bl::result<ReadOpBuildResultT> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
@@ -62,9 +64,10 @@ class TCOprBuilder : public IReadOperatorBuilder {
   TCOprBuilder() = default;
   ~TCOprBuilder() = default;
 
-  bl::result<ReadOpBuildResultT> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
