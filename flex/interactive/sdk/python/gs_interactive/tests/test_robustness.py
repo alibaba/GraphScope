@@ -411,6 +411,9 @@ def test_x_csr_params(
     start_service_on_graph(
         interactive_session, create_graph_algo_graph_with_x_csr_params
     )
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_algo_graph_with_x_csr_params
+    )
     result = neo4j_session.run('MATCH (n) where n.id <> "" return count(n);')
     # expect return value 0
     records = result.fetch(1)
@@ -418,6 +421,10 @@ def test_x_csr_params(
     assert len(records) == 1 and records[0]["$f0"] == 3506
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON",
+    reason="var_char is only supported in proto",
+)
 def test_var_char_property(
     interactive_session, neo4j_session, create_graph_with_var_char_property
 ):
@@ -426,6 +433,9 @@ def test_var_char_property(
         interactive_session, create_graph_with_var_char_property
     )
     start_service_on_graph(interactive_session, create_graph_with_var_char_property)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_with_var_char_property
+    )
     result = neo4j_session.run("MATCH (n: person) return n.name AS personName;")
     records = result.fetch(10)
     assert len(records) == 4

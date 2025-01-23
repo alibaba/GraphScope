@@ -26,7 +26,6 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
-import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec.Type;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import org.slf4j.Logger;
@@ -79,9 +78,6 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private synchronized void syncMeta() {
         try {
             IrMeta meta = this.reader.readMeta();
-            logger.debug(
-                    "schema from remote: {}",
-                    (meta == null) ? null : meta.getSchema().getSchemaSpec(Type.IR_CORE_IN_JSON));
             // if the graph id or schema version is changed, we need to update the statistics
             if (this.currentState == null
                     || !this.currentState.getGraphId().equals(meta.getGraphId())
