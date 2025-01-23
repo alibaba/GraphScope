@@ -81,7 +81,7 @@ readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
   readonly HOMEBREW_PREFIX=$(brew --prefix)
 fi
-readonly ARROW_VERSION="16.1.0"
+readonly ARROW_VERSION="15.0.2"
 readonly MPI_PREFIX="/opt/openmpi"  # fixed, related to coordinator/setup.py
 readonly V6D_PREFIX="/opt/vineyard" # fixed, related to coordinator/setup.py
 readonly tempdir="/tmp/gs-local-deps"
