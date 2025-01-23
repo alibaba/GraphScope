@@ -122,10 +122,7 @@ class Graph {
   };
 
   inline void edge(size_t eid, size_t& from, size_t& to) {
-    // from = IGRAPH_FROM(this->get_igraph(), eid);
-    from = get_source_vid_from_eid(eid);
-    // to = IGRAPH_TO(this->get_igraph(), eid);
-    to = get_dst_vid_from_eid(eid);
+    this->_graph->edge(eid, from, to);
   }
 
   inline vector<size_t> edge(size_t e) {

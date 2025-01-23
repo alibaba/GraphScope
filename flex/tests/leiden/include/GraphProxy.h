@@ -3,6 +3,7 @@
 
 #include <igraph/igraph.h>
 #include <vector>
+#include "flex/engines/graph_db/database/graph_db_session.h"
 
 using std::vector;
 
@@ -55,18 +56,10 @@ class IGraphProxy {
   virtual IGraphProxyRNG* create_rng() const = 0;
   virtual int64_t get_eid(size_t src_node, size_t dst_node,
                           bool directed) const = 0;
+  virtual void edge(size_t eid, size_t& from, size_t& to) const = 0;
 };
 
 // corresponding to igraph_rng_t
-
-// Assuming vid is less than uint32_t, and only one vertex_label. We use first
-// 32bits to store source vid, and the rest to store dst vid.
-inline size_t get_source_vid_from_eid(size_t eid) { return eid >> 32; }
-
-inline size_t get_dst_vid_from_eid(size_t eid) {
-  size_t mask = 0xFFFFFFFF;  // 2^32 - 1
-  return eid & mask;
-}
 
 // inline size_t generate_edge_id(size_t src, size_t dst) {
 //   return (src << 32) | dst;
@@ -81,6 +74,18 @@ class IGraphGraphProxyRNG : public IGraphProxyRNG {
 
  private:
   igraph_t* g_;
+};
+
+class GraphDBGraphProxyRNG : public IGraphProxyRNG {
+ public:
+  GraphDBGraphProxyRNG(size_t vertex_num, size_t edge_num)
+      : vertex_num_(vertex_num), edge_num_(edge_num) {}
+  ~GraphDBGraphProxyRNG() {}
+  size_t vertex_num() const override { return vertex_num_; }
+  size_t edge_num() const override { return edge_num_; }
+
+ private:
+  size_t vertex_num_, edge_num_;
 };
 
 class IGraphGraphProxy : public IGraphProxy {
@@ -139,13 +144,9 @@ class IGraphGraphProxy : public IGraphProxy {
     return eid;
   }
 
+  void edge(size_t eid, size_t& from, size_t& to) const override;
+
  private:
-  inline void edge(size_t eid, size_t& from, size_t& to) {
-    // from = IGRAPH_FROM(this->get_igraph(), eid);
-    from = get_source_vid_from_eid(eid);
-    // to = IGRAPH_TO(this->get_igraph(), eid);
-    to = get_dst_vid_from_eid(eid);
-  }
   igraph_t* graph_;
 
   vector<size_t> _degree_in;
@@ -155,8 +156,16 @@ class IGraphGraphProxy : public IGraphProxy {
 
 class GraphDBGraphProxy : public IGraphProxy {
  public:
-  GraphDBGraphProxy(igraph_t* graph);
-  ~GraphDBGraphProxy();
+  // We use size_t as edge_id, which should be uint64_t.
+  // We use the top bit to denote the direction of the edge.
+  static constexpr size_t kEdgeIdMask = 0x8000000000000000;
+  // static constexpr size_t Dir_Out = 0x8000000000000000;
+  // static constexpr size_t Dir_In = 0x0000000000000000;
+  GraphDBGraphProxy(const gs::GraphDBSession& sess)
+      : sess_(sess), initialized_(false), has_self_loops_(false) {
+    initialize();
+  }
+  ~GraphDBGraphProxy() {}
   size_t vertex_num() const override;
   size_t edge_num() const override;
   bool is_directed() const override;
@@ -166,6 +175,24 @@ class GraphDBGraphProxy : public IGraphProxy {
   std::vector<size_t> neighbors(size_t v, igraph_neimode_t mode) const override;
   size_t get_random_neighbour(size_t v, igraph_neimode_t mode,
                               IGraphProxyRNG* rng) const override;
+  size_t degree(size_t v, igraph_neimode_t mode) const override;
+
+  IGraphProxyRNG* create_rng() const override;
+  int64_t get_eid(size_t src_node, size_t dst_node,
+                  bool directed) const override;
+  void edge(size_t eid, size_t& from, size_t& to) const override;
+
+ private:
+  void initialize();
+  size_t generate_eid(size_t src, igraph_neimode_t mode, size_t offset,
+                      size_t dst) const;
+  const gs::GraphDBSession& sess_;
+  bool initialized_;
+  bool has_self_loops_;
+  // edges_cnt[vid] stores the number of edges that from i < vid.
+
+  std::vector<size_t> edges_cnt_all_;
+  std::vector<size_t> edges_cnt_out_, edges_cnt_in_;
 };
 
 #endif  // GRAPH_PROXY_INCLUDED

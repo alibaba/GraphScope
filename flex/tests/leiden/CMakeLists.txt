@@ -20,6 +20,7 @@ target_link_libraries(libleidenalg
   igraph::igraph
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(libleidenalg PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
 
 # Make sure we can find include files
 target_include_directories(

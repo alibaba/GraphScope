@@ -331,7 +331,8 @@ void Graph::set_self_weights() {
     double self_weight = 0.0;
     // There should be only one self loop
     igraph_integer_t eid = this->_graph->get_eid(v, v, this->is_directed());
-    // size_t eid = generate_edge_id(v, v);
+    // LOG(INFO) << "eid from src: " << v << ", to dest: " << v << " is: " <<
+    // eid; size_t eid = generate_edge_id(v, v);
 
     // Get edge id for self loop
     // igraph_get_eid(this->_graph, &eid, v, v, this->is_directed(), false);
@@ -345,6 +346,7 @@ void Graph::set_self_weights() {
          << "Self weight node " << v << ": " << self_weight << endl;
 #endif
   }
+  LOG(INFO) << "Self weights set.";
 }
 
 void Graph::init_admin() {
@@ -420,9 +422,8 @@ void Graph::cache_neighbour_edges(size_t v, igraph_neimode_t mode) {
   cerr << "void Graph::cache_neighbour_edges(" << v << ", " << mode << ");"
        << endl;
 #endif
-  size_t degree = this->degree(v, mode);
-  cerr << "Degree: " << degree << endl;
 #ifdef DEBUG
+  size_t degree = this->degree(v, mode);
   cerr << "Degree: " << degree << endl;
 #endif
 
@@ -490,9 +491,8 @@ void Graph::cache_neighbours(size_t v, igraph_neimode_t mode) {
 #ifdef DEBUG
   cerr << "void Graph::cache_neighbours(" << v << ", " << mode << ");" << endl;
 #endif
-  size_t degree = this->degree(v, mode);
-  cerr << "Degree: " << degree << endl;
 #ifdef DEBUG
+  size_t degree = this->degree(v, mode);
   cerr << "Degree: " << degree << endl;
 #endif
 

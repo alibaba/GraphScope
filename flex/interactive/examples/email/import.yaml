@@ -21,7 +21,7 @@ loading_config:
 vertex_mappings:
   - type_name: vertex  # must align with the schema
     inputs:
-      - vertices.csv
+      - vertex.csv
 edge_mappings:
   - type_triplet:
       edge: edge

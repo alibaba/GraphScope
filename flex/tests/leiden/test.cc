@@ -31,7 +31,7 @@
 using std::cout;
 using std::endl;
 
-void graph_db_to_igraph(igraph_t* g, gs::GraphDBSession& sess) {
+void graph_db_to_igraph(igraph_t* g, const gs::GraphDBSession& sess) {
   // Make sure only one vertex label and one edge label
   CHECK(sess.graph().schema().vertex_label_num() == 1 &&
         sess.graph().schema().edge_label_num() == 1);
@@ -54,6 +54,42 @@ void graph_db_to_igraph(igraph_t* g, gs::GraphDBSession& sess) {
   igraph_vector_int_destroy(&edges);
 }
 
+void check_edge_id_same(const gs::GraphDBSession& sess) {
+  igraph_t g;
+  graph_db_to_igraph(&g, sess);
+  IGraphProxy* igraph_proxy = new IGraphGraphProxy(&g);
+
+  IGraphProxy* graph_db_proxy = new GraphDBGraphProxy(sess);
+
+  CHECK(igraph_proxy->vertex_num() == graph_db_proxy->vertex_num());
+  CHECK(igraph_proxy->edge_num() == graph_db_proxy->edge_num());
+  for (size_t i = 0; i < igraph_proxy->edge_num(); i++) {
+    size_t from_igraph, to_igraph;
+    igraph_proxy->edge(i, from_igraph, to_igraph);
+    size_t from_graph_db, to_graph_db;
+    graph_db_proxy->edge(i, from_graph_db, to_graph_db);
+    CHECK(from_igraph == from_graph_db);
+    CHECK(to_igraph == to_graph_db);
+  }
+  for (size_t v = 0; v < graph_db_proxy->vertex_num(); ++v) {
+    auto incident_graph_db = graph_db_proxy->incident(v, IGRAPH_ALL);
+    auto incident_igraph = igraph_proxy->incident(v, IGRAPH_ALL);
+    CHECK(incident_graph_db.size() == incident_igraph.size());
+    sort(incident_igraph.begin(), incident_igraph.end());
+    sort(incident_graph_db.begin(), incident_graph_db.end());
+    for (size_t i = 0; i < incident_graph_db.size(); i++) {
+      CHECK(incident_graph_db[i] == incident_igraph[i]);
+      size_t from_igraph, to_igraph;
+      igraph_proxy->edge(incident_igraph[i], from_igraph, to_igraph);
+      size_t from_graph_db, to_graph_db;
+      graph_db_proxy->edge(incident_graph_db[i], from_graph_db, to_graph_db);
+      CHECK(from_igraph == from_graph_db);
+      CHECK(to_igraph == to_graph_db);
+    }
+  }
+  // test neighbors, degree
+}
+
 int main(int argc, char** argv) {
   // igraph_t g;
   // igraph_famous(&g, "Zachary");
@@ -65,8 +101,6 @@ int main(int argc, char** argv) {
   std::string schema_path = argv[1];
   std::string db_path = argv[2];
   std::string output_path = argv[3];
-
-  igraph_t g;
 
   auto& db = gs::GraphDB::get();
   auto schema_res = gs::Schema::LoadFromYaml(schema_path);
@@ -80,11 +114,55 @@ int main(int argc, char** argv) {
   }
   auto& sess = db.GetSession(0);
 
-  graph_db_to_igraph(&g, sess);
-  IGraphProxy* proxy = new IGraphGraphProxy(&g);
+  // igraph_t g;
+  // graph_db_to_igraph(&g, sess);
+  // IGraphProxy* proxy = new IGraphGraphProxy(&g);
 
-  LOG(INFO) << "Graph created, vcount: " << igraph_vcount(&g)
-            << ", ecount: " << igraph_ecount(&g);
+  check_edge_id_same(sess);
+
+  return 0;
+
+  IGraphProxy* proxy = new GraphDBGraphProxy(sess);
+
+  LOG(INFO) << "vertex num: " << proxy->vertex_num()
+            << ", edge num: " << proxy->edge_num();
+  LOG(INFO) << "directed: " << proxy->is_directed()
+            << ", self loops: " << proxy->has_self_loops();
+
+  // for (size_t i = 0; i < proxy->vertex_num(); i++) {
+  //   auto neighbours = proxy->neighbors(i, IGRAPH_ALL);
+  //   LOG(INFO) << "Vertex " << i << " has " << neighbours.size()
+  //             << " neighbours";
+  //   for (size_t j = 0; j < neighbours.size(); j++) {
+  //     LOG(INFO) << "Neighbour " << j << ": " << neighbours[j];
+  //   }
+  //   LOG(INFO) << "=====================";
+  // }
+  // std::vector<std::vector<size_t>> incident_edges;
+  // for (size_t i = 0; i < proxy->vertex_num(); i++) {
+  //   auto neighbours = proxy->incident(i, IGRAPH_ALL);
+  //   incident_edges.push_back(neighbours);
+  //   LOG(INFO) << "Vertex " << i << " has " << neighbours.size()
+  //             << " incident edges";
+  //   for (size_t j = 0; j < neighbours.size(); j++) {
+  //     VLOG(INFO) << "Incident edge " << j << ": " << neighbours[j];
+  //   }
+  //   LOG(INFO) << "=====================";
+  // }
+
+  // verify the incident edges
+  // for (size_t i = 0; i < proxy->vertex_num(); i++) {
+  //   auto edges = proxy->incident(i, IGRAPH_ALL);
+  //   size_t from, to;
+  //   for (size_t j = 0; j < edges.size(); j++) {
+  //     proxy->edge(edges[j], from, to);
+  //     LOG(INFO) << "edge: " << edges[j] << ", from: " << from << ", to: " <<
+  //     to;
+  //   }
+  // }
+
+  // LOG(INFO) << "Graph created, vcount: " << igraph_vcount(&g)
+  // << ", ecount: " << igraph_ecount(&g);
 
   double t = -grape::GetCurrentTime();
 
@@ -117,7 +195,7 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  igraph_destroy(&g);
+  // igraph_destroy(&g);
 
   t += grape::GetCurrentTime();
   LOG(INFO) << "Time: " << t << "s";
