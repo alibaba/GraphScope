@@ -81,7 +81,7 @@ bool generate_plan(
     std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache) {
   // dump query to file
   const char* compiler_jar = compiler_jar_path.c_str();
-  if (compiler_jar == "") {
+  if (compiler_jar_path == "") {
     std::cerr << "COMPILER_JAR is not set!" << std::endl;
     compiler_jar =
         "../../interactive_engine/compiler/target/"

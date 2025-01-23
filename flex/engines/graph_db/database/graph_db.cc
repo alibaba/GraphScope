@@ -73,7 +73,7 @@ GraphDB& GraphDB::get() {
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
                            bool enable_auto_compaction) {
-  GraphDBConfig config(schema, data_dir, thread_num);
+  GraphDBConfig config(schema, data_dir, "", thread_num);
   config.warmup = warmup;
   if (memory_only) {
     config.memory_level = 1;
