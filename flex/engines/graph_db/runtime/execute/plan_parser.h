@@ -37,16 +37,17 @@ class PlanParser {
   void register_write_operator_builder(
       std::unique_ptr<IInsertOperatorBuilder>&& builder);
 
-  std::pair<ReadPipeline, ContextMeta> parse_read_pipeline_with_meta(
+  bl::result<std::pair<ReadPipeline, ContextMeta>>
+  parse_read_pipeline_with_meta(const gs::Schema& schema,
+                                const ContextMeta& ctx_meta,
+                                const physical::PhysicalPlan& plan);
+
+  bl::result<ReadPipeline> parse_read_pipeline(
       const gs::Schema& schema, const ContextMeta& ctx_meta,
       const physical::PhysicalPlan& plan);
 
-  ReadPipeline parse_read_pipeline(const gs::Schema& schema,
-                                   const ContextMeta& ctx_meta,
-                                   const physical::PhysicalPlan& plan);
-
-  InsertPipeline parse_write_pipeline(const gs::Schema& schema,
-                                      const physical::PhysicalPlan& plan);
+  bl::result<InsertPipeline> parse_write_pipeline(
+      const gs::Schema& schema, const physical::PhysicalPlan& plan);
 
  private:
   std::vector<std::vector<

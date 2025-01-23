@@ -76,11 +76,12 @@ void generate_compiler_configs(const std::string& graph_yaml,
 
 bool generate_plan(
     const std::string& query, const std::string& statistics,
-    const std::string& compiler_yaml, const std::string& tmp_dir,
+    const std::string& compiler_jar_path, const std::string& compiler_yaml,
+    const std::string& tmp_dir,
     std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache) {
   // dump query to file
-  const char* compiler_jar = getenv("COMPILER_JAR");
-  if (compiler_jar == nullptr) {
+  const char* compiler_jar = compiler_jar_path.c_str();
+  if (compiler_jar_path == "") {
     std::cerr << "COMPILER_JAR is not set!" << std::endl;
     compiler_jar =
         "../../interactive_engine/compiler/target/"

@@ -147,6 +147,10 @@ class Schema {
                                                        label_t dst_label,
                                                        label_t label) const;
 
+  const std::string& get_compiler_path() const;
+
+  void set_compiler_path(const std::string& compiler_path);
+
   std::string get_edge_description(const std::string& src_label,
                                    const std::string& dst_label,
                                    const std::string& label) const;
@@ -304,6 +308,7 @@ class Schema {
   std::string plugin_dir_;
   std::string description_;
   std::string version_;
+  std::string compiler_path_;
   bool has_multi_props_edge_;
 };
 

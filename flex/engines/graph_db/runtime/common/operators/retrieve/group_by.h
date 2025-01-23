@@ -22,6 +22,7 @@
 
 #include "flex/engines/graph_db/runtime/common/columns/value_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "parallel_hashmap/phmap.h"
 namespace std {
 template <>
@@ -172,9 +173,10 @@ struct Reducer : public ReducerBase {
 
 class GroupBy {
  public:
-  static Context group_by(const GraphReadInterface& graph, Context&& ctx,
-                          std::unique_ptr<KeyBase>&& key,
-                          std::vector<std::unique_ptr<ReducerBase>>&& aggrs) {
+  static bl::result<Context> group_by(
+      const GraphReadInterface& graph, Context&& ctx,
+      std::unique_ptr<KeyBase>&& key,
+      std::vector<std::unique_ptr<ReducerBase>>&& aggrs) {
     auto [offsets, groups] = key->group(ctx);
     Context ret;
     const auto& tag_alias = key->tag_alias();

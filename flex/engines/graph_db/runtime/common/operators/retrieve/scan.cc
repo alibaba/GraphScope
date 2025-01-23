@@ -18,9 +18,9 @@
 namespace gs {
 namespace runtime {
 
-Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
-                                   label_t label, const Any& oid,
-                                   int32_t alias) {
+bl::result<Context> Scan::find_vertex_with_oid(const GraphReadInterface& graph,
+                                               label_t label, const Any& oid,
+                                               int32_t alias) {
   SLVertexColumnBuilder builder(label);
   vid_t vid;
   if (graph.GetVertexIndex(label, oid, vid)) {
@@ -31,8 +31,9 @@ Context Scan::find_vertex_with_oid(const GraphReadInterface& graph,
   return ctx;
 }
 
-Context Scan::find_vertex_with_gid(const GraphReadInterface& graph,
-                                   label_t label, int64_t gid, int32_t alias) {
+bl::result<Context> Scan::find_vertex_with_gid(const GraphReadInterface& graph,
+                                               label_t label, int64_t gid,
+                                               int32_t alias) {
   SLVertexColumnBuilder builder(label);
   if (GlobalId::get_label_id(gid) == label) {
     builder.push_back_opt(GlobalId::get_vid(gid));
@@ -46,7 +47,7 @@ Context Scan::find_vertex_with_gid(const GraphReadInterface& graph,
 }
 
 template <typename T>
-static Context _scan_vertex_with_special_vertex_predicate(
+static bl::result<Context> _scan_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyEQ) {
@@ -74,12 +75,13 @@ static Context _scan_vertex_with_special_vertex_predicate(
         graph, params,
         dynamic_cast<const VertexPropertyNEPredicateBeta<T>&>(pred));
   } else {
-    LOG(FATAL) << "not impl... - " << static_cast<int>(pred.type());
-    return Context();
+    LOG(ERROR) << "not impl... - " << static_cast<int>(pred.type());
+    RETURN_UNSUPPORTED_ERROR(
+        "not support vertex special property predicate type");
   }
 }
 
-Context Scan::scan_vertex_with_special_vertex_predicate(
+bl::result<Context> Scan::scan_vertex_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& pred) {
   if (pred.data_type() == RTAnyType::kI64Value) {
@@ -100,16 +102,14 @@ Context Scan::scan_vertex_with_special_vertex_predicate(
     return _scan_vertex_with_special_vertex_predicate<Date>(graph, params,
                                                             pred);
   } else {
-    LOG(FATAL) << "not impl... - " << static_cast<int>(pred.data_type());
-    return Context();
+    LOG(ERROR) << "not impl... - " << static_cast<int>(pred.data_type());
+    RETURN_UNSUPPORTED_ERROR(
+        "not support vertex special property predicate type");
   }
-
-  LOG(FATAL) << "not impl... - " << static_cast<int>(pred.type());
-  return Context();
 }
 
 template <typename T>
-static Context _filter_gids_with_special_vertex_predicate(
+static bl::result<Context> _filter_gids_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& pred, const std::vector<int64_t>& gids) {
   if (pred.type() == SPPredicateType::kPropertyEQ) {
@@ -137,12 +137,13 @@ static Context _filter_gids_with_special_vertex_predicate(
         graph, params,
         dynamic_cast<const VertexPropertyNEPredicateBeta<T>&>(pred), gids);
   } else {
-    LOG(FATAL) << "not impl... - " << static_cast<int>(pred.type());
-    return Context();
+    LOG(ERROR) << "not impl... - " << static_cast<int>(pred.type());
+    RETURN_UNSUPPORTED_ERROR(
+        "not support vertex special property predicate type");
   }
 }
 
-Context Scan::filter_gids_with_special_vertex_predicate(
+bl::result<Context> Scan::filter_gids_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& predicate, const std::vector<int64_t>& oids) {
   if (predicate.data_type() == RTAnyType::kI64Value) {
@@ -164,14 +165,14 @@ Context Scan::filter_gids_with_special_vertex_predicate(
     return _filter_gids_with_special_vertex_predicate<Date>(graph, params,
                                                             predicate, oids);
   } else {
-    LOG(FATAL) << "not support type :"
+    LOG(ERROR) << "not support type: "
                << static_cast<int>(predicate.data_type());
-    return Context();
+    RETURN_UNSUPPORTED_ERROR("not support vertex property type");
   }
 }
 
 template <typename T>
-static Context _filter_oid_with_special_vertex_predicate(
+static bl::result<Context> _filter_oid_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& pred, const std::vector<Any>& oids) {
   if (pred.type() == SPPredicateType::kPropertyEQ) {
@@ -199,12 +200,13 @@ static Context _filter_oid_with_special_vertex_predicate(
         graph, params,
         dynamic_cast<const VertexPropertyNEPredicateBeta<T>&>(pred), oids);
   } else {
-    LOG(FATAL) << "not impl... - " << static_cast<int>(pred.type());
-    return Context();
+    LOG(ERROR) << "not impl... - " << static_cast<int>(pred.type());
+    RETURN_UNSUPPORTED_ERROR(
+        "not support vertex special property predicate type");
   }
 }
 
-Context Scan::filter_oids_with_special_vertex_predicate(
+bl::result<Context> Scan::filter_oids_with_special_vertex_predicate(
     const GraphReadInterface& graph, const ScanParams& params,
     const SPVertexPredicate& predicate, const std::vector<Any>& oids) {
   if (predicate.data_type() == RTAnyType::kI64Value) {
@@ -226,9 +228,9 @@ Context Scan::filter_oids_with_special_vertex_predicate(
     return _filter_oid_with_special_vertex_predicate<Date>(graph, params,
                                                            predicate, oids);
   } else {
-    LOG(FATAL) << "not support type: "
+    LOG(ERROR) << "not support type: "
                << static_cast<int>(predicate.data_type());
-    return Context();
+    RETURN_UNSUPPORTED_ERROR("not support vertex property type");
   }
 }
 }  // namespace runtime

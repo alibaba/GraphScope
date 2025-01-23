@@ -22,6 +22,7 @@
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/edge_expand_impl.h"
 #include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
@@ -43,11 +44,13 @@ class OprTimer;
 class EdgeExpand {
  public:
   template <typename PRED_T>
-  static Context expand_edge(const GraphReadInterface& graph, Context&& ctx,
-                             const EdgeExpandParams& params,
-                             const PRED_T& pred) {
+  static bl::result<Context> expand_edge(const GraphReadInterface& graph,
+                                         Context&& ctx,
+                                         const EdgeExpandParams& params,
+                                         const PRED_T& pred) {
     if (params.is_optional) {
-      LOG(FATAL) << "not support optional edge expand";
+      LOG(ERROR) << "not support optional edge expand";
+      RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
     }
     std::vector<size_t> shuffle_offset;
     std::shared_ptr<IVertexColumn> input_vertex_list_ptr =
@@ -239,26 +242,65 @@ class EdgeExpand {
             });
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
+      } else if (params.dir == Direction::kIn) {
+        auto& input_vertex_list =
+            *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
+        std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
+        for (auto& triplet : params.labels) {
+          auto& props = graph.schema().get_edge_properties(
+              triplet.src_label, triplet.dst_label, triplet.edge_label);
+          PropertyType pt = PropertyType::kEmpty;
+          if (!props.empty()) {
+            pt = props[0];
+          }
+          label_props.emplace_back(triplet, pt);
+        }
+        SDMLEdgeColumnBuilder builder(Direction::kIn, label_props);
+
+        foreach_vertex(
+            input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+              for (auto& label_prop : label_props) {
+                auto& triplet = label_prop.first;
+                if (label != triplet.dst_label)
+                  continue;
+                auto ie_iter = graph.GetInEdgeIterator(
+                    label, v, triplet.src_label, triplet.edge_label);
+                while (ie_iter.IsValid()) {
+                  auto nbr = ie_iter.GetNeighbor();
+                  if (pred(triplet, nbr, v, ie_iter.GetData(), Direction::kIn,
+                           index)) {
+                    assert(ie_iter.GetData().type == label_prop.second);
+                    builder.push_back_opt(triplet, nbr, v, ie_iter.GetData());
+                    shuffle_offset.push_back(index);
+                  }
+                  ie_iter.Next();
+                }
+              }
+            });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
       }
     }
-    LOG(FATAL) << "not support";
+    LOG(ERROR) << "expand edge not support";
+    RETURN_UNSUPPORTED_ERROR("expand edge not support");
   }
 
-  static std::optional<Context> expand_edge_with_special_edge_predicate(
+  static bl::result<Context> expand_edge_with_special_edge_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPEdgePredicate& pred);
 
-  static Context expand_edge_without_predicate(const GraphReadInterface& graph,
-                                               Context&& ctx,
-                                               const EdgeExpandParams& params,
-                                               OprTimer& timer);
+  static bl::result<Context> expand_edge_without_predicate(
+      const GraphReadInterface& graph, Context&& ctx,
+      const EdgeExpandParams& params, OprTimer& timer);
 
   template <typename PRED_T>
-  static Context expand_vertex(const GraphReadInterface& graph, Context&& ctx,
-                               const EdgeExpandParams& params,
-                               const PRED_T& pred) {
+  static bl::result<Context> expand_vertex(const GraphReadInterface& graph,
+                                           Context&& ctx,
+                                           const EdgeExpandParams& params,
+                                           const PRED_T& pred) {
     if (params.is_optional) {
-      LOG(FATAL) << "not support optional edge expand";
+      LOG(ERROR) << "not support optional edge expand with predicate";
+      RETURN_UNSUPPORTED_ERROR("not support optional edge expand");
     }
     std::shared_ptr<IVertexColumn> input_vertex_list =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
@@ -287,15 +329,18 @@ class EdgeExpand {
       ctx.set_with_reshuffle(params.alias, pair.first, pair.second);
       return ctx;
     } else {
-      LOG(FATAL) << "not support vertex column type "
+      LOG(ERROR) << "not support vertex column type "
                  << static_cast<int>(input_vertex_list_type);
+      RETURN_UNSUPPORTED_ERROR(
+          "not support vertex column type " +
+          std::to_string(static_cast<int>(input_vertex_list_type)));
     }
   }
 
-  static std::optional<Context> expand_vertex_ep_lt(
+  static bl::result<Context> expand_vertex_ep_lt(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const std::string& ep_val);
-  static std::optional<Context> expand_vertex_ep_gt(
+  static bl::result<Context> expand_vertex_ep_gt(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const std::string& ep_val);
   template <typename PRED_T>
@@ -315,23 +360,26 @@ class EdgeExpand {
     const PRED_T& pred_;
   };
 
-  static std::optional<Context> expand_vertex_with_special_vertex_predicate(
+  static bl::result<Context> expand_vertex_with_special_vertex_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params, const SPVertexPredicate& pred);
 
-  static Context expand_vertex_without_predicate(
+  static bl::result<Context> expand_vertex_without_predicate(
       const GraphReadInterface& graph, Context&& ctx,
       const EdgeExpandParams& params);
 
   template <typename T1, typename T2, typename T3>
-  static Context tc(
+  static bl::result<Context> tc(
       const GraphReadInterface& graph, Context&& ctx,
       const std::array<std::tuple<label_t, label_t, label_t, Direction>, 3>&
           labels,
       int input_tag, int alias1, int alias2, bool LT, const std::string& val) {
     std::shared_ptr<IVertexColumn> input_vertex_list =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(input_tag));
-    CHECK(input_vertex_list->vertex_column_type() == VertexColumnType::kSingle);
+    if (input_vertex_list->vertex_column_type() != VertexColumnType::kSingle) {
+      RETURN_UNSUPPORTED_ERROR(
+          "Unsupported input for triangle counting, only single vertex column");
+    }
     auto casted_input_vertex_list =
         std::dynamic_pointer_cast<SLVertexColumn>(input_vertex_list);
     label_t input_label = casted_input_vertex_list->label();

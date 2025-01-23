@@ -159,8 +159,9 @@ static Context left_outer_intersect(Context&& ctx, Context&& ctx0,
   }
   return ctx;
 }
-static Context intersect_impl(Context&& ctx, std::vector<Context>&& ctxs,
-                              int key) {
+static bl::result<Context> intersect_impl(Context&& ctx,
+                                          std::vector<Context>&& ctxs,
+                                          int key) {
   if (ctxs[0].get(key)->column_type() == ContextColumnType::kVertex) {
     if (ctxs.size() == 2) {
       auto& vlist0 =
@@ -256,12 +257,14 @@ static Context intersect_impl(Context&& ctx, std::vector<Context>&& ctxs,
       return ctx;
     }
   }
-  LOG(FATAL) << "not support";
-  return Context();
+  LOG(ERROR) << "Currently we only support intersect on vertex columns";
+  RETURN_NOT_IMPLEMENTED_ERROR(
+      "Currently we only support intersect on vertex "
+      "columns");
 }
 
-Context Intersect::intersect(Context&& ctx, std::vector<Context>&& ctxs,
-                             int key) {
+bl::result<Context> Intersect::intersect(Context&& ctx,
+                                         std::vector<Context>&& ctxs, int key) {
   return intersect_impl(std::move(ctx), std::move(ctxs), key);
 }
 

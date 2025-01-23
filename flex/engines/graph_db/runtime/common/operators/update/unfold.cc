@@ -19,7 +19,8 @@ namespace gs {
 
 namespace runtime {
 
-WriteContext Unfold::unfold(WriteContext&& ctx, int key, int alias) {
+bl::result<WriteContext> Unfold::unfold(WriteContext&& ctx, int key,
+                                        int alias) {
   auto col = ctx.get(key);
   auto [new_col, offset] = col.unfold();
   ctx.set_with_reshuffle(alias, std::move(new_col), offset);

@@ -18,6 +18,7 @@
 
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 namespace gs {
@@ -33,9 +34,9 @@ struct ScanParams {
 class Scan {
  public:
   template <typename PRED_T>
-  static Context scan_vertex(const GraphReadInterface& graph,
-                             const ScanParams& params,
-                             const PRED_T& predicate) {
+  static bl::result<Context> scan_vertex(const GraphReadInterface& graph,
+                                         const ScanParams& params,
+                                         const PRED_T& predicate) {
     Context ctx;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
@@ -65,9 +66,9 @@ class Scan {
   }
 
   template <typename PRED_T>
-  static Context scan_vertex_with_limit(const GraphReadInterface& graph,
-                                        const ScanParams& params,
-                                        const PRED_T& predicate) {
+  static bl::result<Context> scan_vertex_with_limit(
+      const GraphReadInterface& graph, const ScanParams& params,
+      const PRED_T& predicate) {
     Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
@@ -108,14 +109,15 @@ class Scan {
     return ctx;
   }
 
-  static Context scan_vertex_with_special_vertex_predicate(
+  static bl::result<Context> scan_vertex_with_special_vertex_predicate(
       const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& pred);
 
   template <typename PRED_T>
-  static Context filter_gids(const GraphReadInterface& graph,
-                             const ScanParams& params, const PRED_T& predicate,
-                             const std::vector<int64_t>& gids) {
+  static bl::result<Context> filter_gids(const GraphReadInterface& graph,
+                                         const ScanParams& params,
+                                         const PRED_T& predicate,
+                                         const std::vector<int64_t>& gids) {
     Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
@@ -155,14 +157,15 @@ class Scan {
     return ctx;
   }
 
-  static Context filter_gids_with_special_vertex_predicate(
+  static bl::result<Context> filter_gids_with_special_vertex_predicate(
       const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& predicate, const std::vector<int64_t>& oids);
 
   template <typename PRED_T>
-  static Context filter_oids(const GraphReadInterface& graph,
-                             const ScanParams& params, const PRED_T& predicate,
-                             const std::vector<Any>& oids) {
+  static bl::result<Context> filter_oids(const GraphReadInterface& graph,
+                                         const ScanParams& params,
+                                         const PRED_T& predicate,
+                                         const std::vector<Any>& oids) {
     Context ctx;
     auto limit = params.limit;
     if (params.tables.size() == 1) {
@@ -216,16 +219,17 @@ class Scan {
     return ctx;
   }
 
-  static Context filter_oids_with_special_vertex_predicate(
+  static bl::result<Context> filter_oids_with_special_vertex_predicate(
       const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& predicate, const std::vector<Any>& oids);
 
-  static Context find_vertex_with_oid(const GraphReadInterface& graph,
-                                      label_t label, const Any& pk,
-                                      int32_t alias);
+  static bl::result<Context> find_vertex_with_oid(
+      const GraphReadInterface& graph, label_t label, const Any& pk,
+      int32_t alias);
 
-  static Context find_vertex_with_gid(const GraphReadInterface& graph,
-                                      label_t label, int64_t pk, int32_t alias);
+  static bl::result<Context> find_vertex_with_gid(
+      const GraphReadInterface& graph, label_t label, int64_t pk,
+      int32_t alias);
 };
 
 }  // namespace runtime

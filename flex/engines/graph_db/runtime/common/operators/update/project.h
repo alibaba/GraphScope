@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_UPDATE_PROJECT_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 namespace runtime {
@@ -90,7 +91,7 @@ struct PairsSndGetter : public WriteProjectExprBase {
 
 class Project {
  public:
-  static WriteContext project(
+  static bl::result<WriteContext> project(
       WriteContext&& ctx,
       const std::vector<std::unique_ptr<WriteProjectExprBase>>& exprs);
 };

@@ -41,7 +41,9 @@ class LoadSingleEdgeOpr : public IInsertOperator {
         dst_pk_type(dst_pk_type),
         edge_prop_type(edge_prop_type) {}
 
-  gs::runtime::WriteContext Eval(
+  std::string get_operator_name() const override { return "LoadSingleEdgeOpr"; }
+
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -71,7 +73,11 @@ class LoadSingleVertexOpr : public IInsertOperator {
         properties(properties),
         edges(edges) {}
 
-  gs::runtime::WriteContext Eval(
+  std::string get_operator_name() const override {
+    return "LoadSingleVertexOpr";
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -97,7 +103,9 @@ class LoadOpr : public IInsertOperator {
           edge_mappings)
       : vertex_mappings_(vertex_mappings), edge_mappings_(edge_mappings) {}
 
-  gs::runtime::WriteContext Eval(
+  std::string get_operator_name() const override { return "LoadOpr"; }
+
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -195,8 +203,10 @@ parse_vertex_mapping(
 std::unique_ptr<IInsertOperator> LoadOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().load();
-  CHECK(opr.kind() == cypher::Load_Kind::Load_Kind_CREATE)
-      << "Only support CREATE";
+  if (opr.kind() != cypher::Load_Kind::Load_Kind_CREATE) {
+    LOG(ERROR) << "Only support CREATE";
+    return nullptr;
+  }
   auto& mappings = opr.mappings();
   int vertex_mapping_size = mappings.vertex_mappings_size();
   int edge_mapping_size = mappings.edge_mappings_size();

@@ -213,8 +213,12 @@ expand_vertex_without_predicate_optional_impl(
     }
   }
   LOG(INFO) << "ed_types.size() " << se << " " << sp;
-  LOG(FATAL) << "not implemented" << label_dirs.size();
-  return std::make_pair(nullptr, std::vector<size_t>());
+  int label_num = graph.schema().vertex_label_num();
+  std::vector<std::vector<std::tuple<label_t, label_t, Direction>>> _label_dirs(
+      label_num);
+  _label_dirs[input_label] = label_dirs;
+  return expand_vertex_optional_impl<DummyPredicate<Any>>(
+      graph, input, _label_dirs, DummyPredicate<Any>());
 }
 
 std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
@@ -394,16 +398,27 @@ expand_vertex_without_predicate_optional_impl(
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
     if (ed_type == PropertyType::Empty()) {
-      if (se) {
-        LOG(FATAL) << "not implemented";
-      } else {
+      if (!se) {
         return expand_vertex_np_me_sp_optional<
             grape::EmptyType, DummyPredicate<grape::EmptyType>>(
             graph, input, label_dirs, DummyPredicate<grape::EmptyType>());
       }
+    } else if (ed_type == PropertyType::Date()) {
+      if (!se) {
+        return expand_vertex_np_me_sp_optional<Date, DummyPredicate<Date>>(
+            graph, input, label_dirs, DummyPredicate<Date>());
+      }
+    } else if (ed_type == PropertyType::Int32()) {
+      if (!se) {
+        return expand_vertex_np_me_sp_optional<int, DummyPredicate<int>>(
+            graph, input, label_dirs, DummyPredicate<int>());
+      }
+    } else {
+      LOG(INFO) << "type - " << ed_type << " - not implemented, fallback";
     }
   }
-  return {nullptr, {}};
+  return expand_vertex_optional_impl<DummyPredicate<Any>>(
+      graph, input, label_dirs, DummyPredicate<Any>());
 }
 
 std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>

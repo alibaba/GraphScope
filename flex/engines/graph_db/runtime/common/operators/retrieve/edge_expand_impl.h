@@ -288,7 +288,6 @@ expand_vertex_np_me_sp_optional(
   }
   if (single_nbr_label) {
     OptionalSLVertexColumnBuilder builder(nbr_labels[0]);
-#if 1
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t v) {
       if (!input.has_value(idx)) {
         builder.push_back_null();
@@ -318,8 +317,7 @@ expand_vertex_np_me_sp_optional(
       }
       ++idx;
     });
-#else
-#endif
+
     col = builder.finish();
   } else {
     OptionalMLVertexColumnBuilder builder;
@@ -831,8 +829,6 @@ expand_vertex_np_me_sp(
     col = builder.finish();
   } else {
     MLVertexColumnBuilder builder;
-    // not optimized for ms vertex column access
-    //    LOG(INFO) << "not optimized for ms vertex column access";
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
       size_t csr_idx = 0;
       for (auto& view : views[l]) {
@@ -914,6 +910,48 @@ expand_vertex_np_me_mp(
         }
         it.Next();
       }
+    }
+  });
+  return std::make_pair(builder.finish(), std::move(offsets));
+}
+
+template <typename PRED_T>
+inline std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
+expand_vertex_optional_impl(
+    const GraphReadInterface& graph, const IVertexColumn& input,
+    const std::vector<std::vector<std::tuple<label_t, label_t, Direction>>>&
+        label_dirs,
+    const PRED_T& pred) {
+  OptionalMLVertexColumnBuilder builder;
+  std::vector<size_t> offsets;
+  foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
+    if (!input.has_value(idx)) {
+      builder.push_back_null();
+      offsets.push_back(idx);
+      return;
+    }
+    bool has_nbr = false;
+    for (auto& t : label_dirs[label]) {
+      label_t nbr_label = std::get<0>(t);
+      label_t edge_label = std::get<1>(t);
+      Direction dir = std::get<2>(t);
+      auto it =
+          (dir == Direction::kOut)
+              ? (graph.GetOutEdgeIterator(label, v, nbr_label, edge_label))
+              : (graph.GetInEdgeIterator(label, v, nbr_label, edge_label));
+      while (it.IsValid()) {
+        auto nbr = it.GetNeighbor();
+        if (pred(label, v, nbr_label, nbr, edge_label, dir, it.GetData())) {
+          builder.push_back_vertex({nbr_label, nbr});
+          offsets.push_back(idx);
+          has_nbr = true;
+        }
+        it.Next();
+      }
+    }
+    if (!has_nbr) {
+      builder.push_back_null();
+      offsets.push_back(idx);
     }
   });
   return std::make_pair(builder.finish(), std::move(offsets));

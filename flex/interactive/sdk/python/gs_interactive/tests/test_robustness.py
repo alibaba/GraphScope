@@ -444,6 +444,25 @@ def test_var_char_property(
         assert len(record["personName"]) == 2
 
 
+def test_not_supported_cases(interactive_session, neo4j_session, create_modern_graph):
+    """
+    There are cases that are not supported by the current implementation.
+    In the future, after the implementation is complete, these cases should be supported and should be removed.
+    """
+    print("[Test not supported cases in cypher]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
+    # expect exception thrown when running cypher query 'MATCH(p)-[e]->(n) return [p,n] as nodes;'
+    with pytest.raises(Exception):
+        result = neo4j_session.run(
+            "MATCH shortestPath(src: person {id: 1})-[e*1..2]-(dst: person) return length(e);"
+        )
+        result.fetch(1)
+
+
 def test_multiple_edge_property(
     interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
 ):

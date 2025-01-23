@@ -31,18 +31,26 @@ class JoinOpr : public IReadOperator {
         right_pipeline_(std::move(right_pipeline)),
         params_(join_params) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "JoinOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     gs::runtime::Context ret_dup(ctx);
 
     auto left_ctx =
         left_pipeline_.Execute(graph, std::move(ctx), params, timer);
+    if (!left_ctx) {
+      return left_ctx;
+    }
     auto right_ctx =
         right_pipeline_.Execute(graph, std::move(ret_dup), params, timer);
-
-    return Join::join(std::move(left_ctx), std::move(right_ctx), params_);
+    if (!right_ctx) {
+      return right_ctx;
+    }
+    return Join::join(std::move(left_ctx.value()), std::move(right_ctx.value()),
+                      params_);
   }
 
  private:
@@ -52,27 +60,31 @@ class JoinOpr : public IReadOperator {
   JoinParams params_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> JoinOprBuilder::Build(
+bl::result<ReadOpBuildResultT> JoinOprBuilder::Build(
     const Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   ContextMeta ret_meta;
   std::vector<int> right_columns;
   auto& opr = plan.plan(op_idx).opr().join();
   JoinParams p;
-  CHECK(opr.left_keys().size() == opr.right_keys().size())
-      << "join keys size mismatch";
+  if (opr.left_keys().size() != opr.right_keys().size()) {
+    LOG(ERROR) << "join keys size mismatch";
+    return std::make_pair(nullptr, ContextMeta());
+  }
   auto left_keys = opr.left_keys();
 
   for (int i = 0; i < left_keys.size(); i++) {
     if (!left_keys.Get(i).has_tag()) {
-      LOG(FATAL) << "left_keys should have tag";
+      LOG(ERROR) << "left_keys should have tag";
+      return std::make_pair(nullptr, ContextMeta());
     }
     p.left_columns.push_back(left_keys.Get(i).tag().id());
   }
   auto right_keys = opr.right_keys();
   for (int i = 0; i < right_keys.size(); i++) {
     if (!right_keys.Get(i).has_tag()) {
-      LOG(FATAL) << "right_keys should have tag";
+      LOG(ERROR) << "right_keys should have tag";
+      return std::make_pair(nullptr, ContextMeta());
     }
     p.right_columns.push_back(right_keys.Get(i).tag().id());
   }
@@ -91,14 +103,23 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> JoinOprBuilder::Build(
     p.join_type = JoinKind::kLeftOuterJoin;
     break;
   default:
-    LOG(FATAL) << "unsupported join kind" << opr.join_kind();
+    LOG(ERROR) << "unsupported join kind" << opr.join_kind();
+    return std::make_pair(nullptr, ContextMeta());
   }
   auto join_kind = plan.plan(op_idx).opr().join().join_kind();
 
-  auto pair1 = PlanParser::get().parse_read_pipeline_with_meta(
+  auto pair1_res = PlanParser::get().parse_read_pipeline_with_meta(
       schema, ctx_meta, plan.plan(op_idx).opr().join().left_plan());
-  auto pair2 = PlanParser::get().parse_read_pipeline_with_meta(
+  if (!pair1_res) {
+    return std::make_pair(nullptr, ContextMeta());
+  }
+  auto pair2_res = PlanParser::get().parse_read_pipeline_with_meta(
       schema, ctx_meta, plan.plan(op_idx).opr().join().right_plan());
+  if (!pair2_res) {
+    return std::make_pair(nullptr, ContextMeta());
+  }
+  auto pair1 = std::move(pair1_res.value());
+  auto pair2 = std::move(pair2_res.value());
   auto& ctx_meta1 = pair1.second;
   auto& ctx_meta2 = pair2.second;
   if (join_kind == physical::Join_JoinKind::Join_JoinKind_SEMI ||
@@ -110,7 +131,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> JoinOprBuilder::Build(
       ret_meta.set(k);
     }
   } else {
-    CHECK(join_kind == physical::Join_JoinKind::Join_JoinKind_LEFT_OUTER);
+    if (join_kind != physical::Join_JoinKind::Join_JoinKind_LEFT_OUTER) {
+      LOG(ERROR) << "unsupported join kind" << join_kind;
+      return std::make_pair(nullptr, ContextMeta());
+    }
     ret_meta = ctx_meta1;
     for (auto k : ctx_meta2.columns()) {
       if (std::find(p.right_columns.begin(), p.right_columns.end(), k) ==

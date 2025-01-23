@@ -82,9 +82,32 @@ gs::runtime::Context eval_plan(
     const std::map<std::string, std::string>& params) {
   gs::runtime::GraphReadInterface gri(txn);
   gs::runtime::OprTimer timer;
-  return gs::runtime::PlanParser::get()
-      .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(), plan)
-      .Execute(gri, gs::runtime::Context(), params, timer);
+
+  gs::runtime::Context ctx;
+  {
+    ctx = bl::try_handle_all(
+        [&plan, &params, &gri, &timer]() {
+          return gs::runtime::PlanParser::get()
+              .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
+                                   plan)
+              .value()
+              .Execute(gri, gs::runtime::Context(), params, timer);
+        },
+        [&ctx](const gs::Status& err) {
+          LOG(FATAL) << "Error in execution: " << err.error_message();
+          return ctx;
+        },
+        [&](const bl::error_info& err) {
+          LOG(FATAL) << "Error: " << err.error().value() << ", "
+                     << err.exception()->what();
+          return ctx;
+        },
+        [&]() {
+          LOG(FATAL) << "Unknown error in execution";
+          return ctx;
+        });
+  }
+  return ctx;
 }
 
 int main(int argc, char** argv) {

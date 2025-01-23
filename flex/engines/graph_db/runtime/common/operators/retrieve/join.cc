@@ -496,23 +496,16 @@ static Context default_left_outer_join(Context&& ctx, Context&& ctx2,
   return ctx;
 }
 
-Context Join::join(Context&& ctx, Context&& ctx2, const JoinParams& params) {
-  CHECK(params.left_columns.size() == params.right_columns.size())
-      << "Join columns size mismatch";
-#ifdef DEBUG_JOIN
-  LOG(INFO) << params.join_type
-            << ": keys size: " << params.right_columns.size()
-            << ", left size = " << ctx.row_num()
-            << ", right size = " << ctx2.row_num();
-  for (size_t k = 0; k < params.left_columns.size(); ++k) {
-    LOG(INFO) << "left key - " << k << ": "
-              << ctx.get(params.left_columns[k])->column_info();
+bl::result<Context> Join::join(Context&& ctx, Context&& ctx2,
+                               const JoinParams& params) {
+  if (params.left_columns.size() != params.right_columns.size()) {
+    LOG(ERROR) << "Join columns size mismatch";
+    RETURN_BAD_REQUEST_ERROR(
+        "Join columns size mismatch left size: " +
+        std::to_string(params.left_columns.size()) +
+        " right size: " + std::to_string(params.right_columns.size()));
   }
-  for (size_t k = 0; k < params.right_columns.size(); ++k) {
-    LOG(INFO) << "right key - " << k << ": "
-              << ctx2.get(params.right_columns[k])->column_info();
-  }
-#endif
+
   if (params.join_type == JoinKind::kSemiJoin ||
       params.join_type == JoinKind::kAntiJoin) {
     return default_semi_join(std::move(ctx), std::move(ctx2), params);

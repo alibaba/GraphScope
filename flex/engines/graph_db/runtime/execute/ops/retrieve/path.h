@@ -29,9 +29,10 @@ class SPOrderByLimitOprBuilder : public IReadOperatorBuilder {
   SPOrderByLimitOprBuilder() = default;
   ~SPOrderByLimitOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   int stepping(int i) override { return i + 5; }
 
@@ -53,9 +54,10 @@ class SPOprBuilder : public IReadOperatorBuilder {
   SPOprBuilder() = default;
   ~SPOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
@@ -72,9 +74,10 @@ class PathExpandVOprBuilder : public IReadOperatorBuilder {
   PathExpandVOprBuilder() = default;
   ~PathExpandVOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
@@ -90,9 +93,10 @@ class PathExpandOprBuilder : public IReadOperatorBuilder {
   PathExpandOprBuilder() = default;
   ~PathExpandOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
     return {physical::PhysicalOpr_Operator::OpKindCase::kPath};
