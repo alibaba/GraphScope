@@ -206,7 +206,7 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
              &i]() -> bl::result<ReadOpBuildResultT> {
               return builder->Build(schema, cur_ctx_meta, plan, i);
             },
-            [&status, &i](const gs::Status& err) {
+            [&status](const gs::Status& err) {
               status = err;
               return ReadOpBuildResultT(nullptr, ContextMeta());
             },
