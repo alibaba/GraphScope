@@ -98,7 +98,7 @@ gs::runtime::Context eval_plan(
           return ctx;
         },
         [&](const bl::error_info& err) {
-          LOG(FATAL) << "boost leaf error: " << err.error().value() << ", "
+          LOG(FATAL) << "Error: " << err.error().value() << ", "
                      << err.exception()->what();
           return ctx;
         },

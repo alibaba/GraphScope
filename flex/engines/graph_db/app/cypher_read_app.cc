@@ -40,10 +40,10 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
             return runtime::Context();
           },
           [&](const bl::error_info& err) {
-            status = gs::Status(
-                gs::StatusCode::INTERNAL_ERROR,
-                "BOOST LEAF Error: " + std::to_string(err.error().value()) +
-                    ", Exception: " + err.exception()->what());
+            status =
+                gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                           "Error: " + std::to_string(err.error().value()) +
+                               ", Exception: " + err.exception()->what());
             return runtime::Context();
           },
           [&]() {

@@ -211,10 +211,10 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
               return ReadOpBuildResultT(nullptr, ContextMeta());
             },
             [&](const bl::error_info& err) {
-              status = gs::Status(
-                  gs::StatusCode::INTERNAL_ERROR,
-                  "BOOST LEAF Error: " + std::to_string(err.error().value()) +
-                      ", Exception: " + err.exception()->what());
+              status =
+                  gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                             "Error: " + std::to_string(err.error().value()) +
+                                 ", Exception: " + err.exception()->what());
               return ReadOpBuildResultT(nullptr, ContextMeta());
             },
             [&]() {
