@@ -178,6 +178,10 @@ std::shared_ptr<ColumnBase> CreateColumn(
       return std::make_shared<TypedColumn<grape::EmptyType>>(strategy);
     } else if (type == PropertyType::kBool) {
       return std::make_shared<BoolColumn>(strategy);
+    } else if (type == PropertyType::kUInt8) {
+      return std::make_shared<UInt8Column>(strategy);
+    } else if (type == PropertyType::kUInt16) {
+      return std::make_shared<UInt16Column>(strategy);
     } else if (type == PropertyType::kInt32) {
       return std::make_shared<IntColumn>(strategy);
     } else if (type == PropertyType::kInt64) {

@@ -272,7 +272,9 @@ bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
     auto op_kind = plan.plan(i).opr().op_kind_case();
     auto op = write_op_builders_.at(op_kind)->Build(schema, plan, i);
     if (!op) {
-      RETURN_UNSUPPORTED_ERROR("Failed to parse write pipeline");
+      RETURN_UNSUPPORTED_ERROR("Failed to parse write pipeline at index " +
+                               std::to_string(i) + ": " +
+                               get_opr_name(op_kind));
     }
     operators.emplace_back(std::move(op));
   }

@@ -286,7 +286,7 @@ struct LabelKey {
 class Table;
 struct Any;
 struct RecordView {
-  RecordView() : offset(0), table(nullptr) {}
+  RecordView() = default;
   RecordView(size_t offset, const Table* table)
       : offset(offset), table(table) {}
   size_t size() const;
@@ -294,6 +294,15 @@ struct RecordView {
 
   template <typename T>
   T get_field(int col_id) const;
+
+  inline bool operator==(const RecordView& other) const {
+    if (size() != other.size()) {
+      return false;
+    }
+    return table == other.table && offset == other.offset;
+  }
+
+  std::string to_string() const;
 
   size_t offset;
   const Table* table;
@@ -1374,6 +1383,12 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
   } else if (pt == gs::PropertyType::VertexGlobalId()) {
     os << "vertex_global_id";
+  } else if (pt == gs::PropertyType::Label()) {
+    os << "label";
+  } else if (pt == gs::PropertyType::RecordView()) {
+    os << "record_view";
+  } else if (pt == gs::PropertyType::Record()) {
+    os << "record";
   } else {
     os << "unknown";
   }

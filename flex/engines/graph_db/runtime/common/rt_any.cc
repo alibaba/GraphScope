@@ -693,6 +693,8 @@ static void sink_any(const Any& any, common::Value* value) {
     value->set_boolean(any.AsBool());
   } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.AsDouble());
+  } else if (any.type == PropertyType::Empty()) {
+    value->mutable_none();
   } else {
     LOG(FATAL) << "Any value: " << any.to_string()
                << ", type = " << any.type.type_enum;
@@ -987,6 +989,8 @@ std::shared_ptr<EdgePropVecBase> EdgePropVecBase::make_edge_prop_vec(
     return std::make_shared<EdgePropVec<bool>>();
   } else if (type == PropertyType::Empty()) {
     return std::make_shared<EdgePropVec<grape::EmptyType>>();
+  } else if (type == PropertyType::RecordView()) {
+    return std::make_shared<EdgePropVec<RecordView>>();
   } else {
     LOG(FATAL) << "not support for " << type;
     return nullptr;

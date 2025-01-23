@@ -65,11 +65,10 @@ class Scan {
     return ctx;
   }
 
-
   template <typename PRED_T>
-  static bl::result<Context> scan_vertex_with_limit(const GraphReadInterface& graph,
-                                        const ScanParams& params,
-                                        const PRED_T& predicate) {
+  static bl::result<Context> scan_vertex_with_limit(
+      const GraphReadInterface& graph, const ScanParams& params,
+      const PRED_T& predicate) {
     Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
@@ -225,10 +224,12 @@ class Scan {
       const SPVertexPredicate& predicate, const std::vector<Any>& oids);
 
   static bl::result<Context> find_vertex_with_oid(
-      const GraphReadInterface& graph, label_t label, const Any& pk, int32_t alias);
+      const GraphReadInterface& graph, label_t label, const Any& pk,
+      int32_t alias);
 
   static bl::result<Context> find_vertex_with_gid(
-      const GraphReadInterface& graph, label_t label, int64_t pk, int32_t alias);
+      const GraphReadInterface& graph, label_t label, int64_t pk,
+      int32_t alias);
 };
 
 }  // namespace runtime

@@ -451,3 +451,42 @@ def test_not_supported_cases(interactive_session, neo4j_session, create_modern_g
             "MATCH shortestPath(src: person {id: 1})-[e*1..2]-(dst: person) return length(e);"
         )
         result.fetch(1)
+
+
+def test_multiple_edge_property(
+    interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
+):
+    print("[Test multiple edge property]")
+    import_data_to_full_modern_graph(
+        interactive_session, create_modern_graph_multiple_edge_property
+    )
+    start_service_on_graph(
+        interactive_session, create_modern_graph_multiple_edge_property
+    )
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
+    )
+    result = neo4j_session.run(
+        "MATCH (n: person)-[e]->(m: software) RETURN e.weight AS weight, e.since AS since ORDER BY weight ASC, since ASC;"
+    )
+    records = result.fetch(10)
+    assert len(records) == 4
+    expected_result = [
+        {"weight": 0.2, "since": 2023},
+        {"weight": 0.4, "since": 2020},
+        {"weight": 0.4, "since": 2022},
+        {"weight": 1.0, "since": 2021},
+    ]
+
+    for i in range(len(records)):
+        assert records[i]["weight"] == expected_result[i]["weight"]
+        assert records[i]["since"] == expected_result[i]["since"]
+
+    result = neo4j_session.run(
+        "MATCH (n: person)-[e]->(m: software) RETURN e ORDER BY e.weight ASC, e.since ASC;"
+    )
+    records = result.fetch(10)
+    assert len(records) == 4
+    for i in range(len(records)):
+        assert records[i]["e"]["weight"] == expected_result[i]["weight"]
+        assert records[i]["e"]["since"] == expected_result[i]["since"]
