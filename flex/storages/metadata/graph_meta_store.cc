@@ -131,8 +131,7 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     shortest_path_among_three.params.push_back(
         {"oid3", PropertyType::kInt64, false});
     shortest_path_among_three.returns.push_back(
-        {"shortest_path_among_three (label name, vertex oid)",
-         PropertyType::kString});
+        {"path", PropertyType::kString});
     builtin_plugins.push_back(shortest_path_among_three);
 
     initialized = true;
