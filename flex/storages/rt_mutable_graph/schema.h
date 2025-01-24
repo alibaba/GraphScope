@@ -42,6 +42,7 @@ class Schema {
   static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
   static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
   static constexpr const char* ADHOC_READ_PLUGIN_ID_STR = "\xFD";
+  static constexpr const char* CYPHER_READ_DEBUG_PLUGIN_ID_STR = "\xF6";
   static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
   static constexpr const char* VARCHAR_KEY = "varchar";
   static constexpr const char* MAX_LENGTH_KEY = "max_length";

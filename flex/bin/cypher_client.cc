@@ -19,6 +19,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include "flex/engines/graph_db/database/graph_db_session.h"
+#include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/third_party/httplib.h"
 
 namespace bpo = boost::program_options;
@@ -62,8 +64,11 @@ int main(int argc, char** argv) {
     if (query == "") {
       continue;
     }
-    query.append(1, '\xF6');
-    query.append(1, 4);
+
+    query.append(1, *gs::Schema::CYPHER_READ_DEBUG_PLUGIN_ID_STR);
+    char input_format =
+        static_cast<char>(gs::GraphDBSession::InputFormat::kCypherString);
+    query.append(1, input_format);
     auto res = cli.Post("/v1/graph/current/query", query, "text/plain");
     std::string ret = res->body;
     std::cout << ret << std::endl;
