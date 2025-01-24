@@ -84,10 +84,10 @@ public class PlanUtils {
             StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
             long elapsedTime = System.currentTimeMillis() - startTime;
             logger.info("compile plan cost: {} ms", elapsedTime);
-            // hack ways to set error code as 'LABEL_NOT_FOUND' when the results are empty
+            // hack ways to set error code as 'TYPE_INFERENCE_FAILED' when the results are empty
             if (physicalPlan.getContent() == null) {
                 return new GraphPlan(
-                        Code.LABEL_NOT_FOUND,
+                        Code.TYPE_INFERENCE_FAILED,
                         "The compiled plan returns empty results",
                         null,
                         null);
