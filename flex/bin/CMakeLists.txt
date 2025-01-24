@@ -12,7 +12,7 @@ if(Hiactor_FOUND)
 endif()
 
 add_executable(rt_admin rt_admin.cc)
-target_link_libraries(rt_admin flex_utils flex_rt_mutable_graph flex_graph_db)
+target_link_libraries(rt_admin flex_utils)
 install_without_export_flex_target(rt_admin)
 
 
