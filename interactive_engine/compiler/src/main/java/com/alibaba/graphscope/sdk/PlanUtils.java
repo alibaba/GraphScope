@@ -84,6 +84,14 @@ public class PlanUtils {
             StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
             long elapsedTime = System.currentTimeMillis() - startTime;
             logger.info("compile plan cost: {} ms", elapsedTime);
+            // hack ways to set error code as 'LABEL_NOT_FOUND' when the results are empty
+            if (physicalPlan.getContent() == null) {
+                return new GraphPlan(
+                        Code.LABEL_NOT_FOUND,
+                        "The compiled plan returns empty results",
+                        null,
+                        null);
+            }
             return new GraphPlan(
                     Code.OK, null, physicalPlan.getContent(), new String(metaStream.toByteArray()));
         } catch (Throwable t) {

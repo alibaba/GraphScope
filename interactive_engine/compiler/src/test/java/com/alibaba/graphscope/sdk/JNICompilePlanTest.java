@@ -66,9 +66,9 @@ public class JNICompilePlanTest {
     public void edge_label_not_found_test() {
         String query =
                 "MATCH (src:`acs@acs.vpc.vswitch`)-[e1]->(n1)<-[e2]-(n2)-[e3]->(n3)\n"
-                    + "WHERE src <> n2 AND n1.__entity_type__ <> n3.__entity_type__ AND NOT"
-                    + " (src)<-[e1:`related_to`]-(n1)\n"
-                    + "RETURN src, e1.__type__, n1, e2.__type__, n2, e3.__type__, n3";
+                        + "WHERE src <> n2 AND n1.__entity_type__ <> n3.__entity_type__ AND NOT"
+                        + " (src)<-[e1:`related_to`]-(n1)\n"
+                        + "RETURN src, e1.__type__, n1, e2.__type__, n2, e3.__type__, n3";
         GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
         Assert.assertEquals("LABEL_NOT_FOUND", plan.errorCode);
     }
