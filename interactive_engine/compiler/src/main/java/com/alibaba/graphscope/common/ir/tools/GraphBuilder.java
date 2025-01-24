@@ -53,6 +53,7 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
@@ -181,11 +182,13 @@ public class GraphBuilder extends RelBuilder {
                         config.getAlias(),
                         getAliasNameWithId(
                                 config.getStartAlias(),
-                                (RelDataType type) ->
-                                        (type instanceof GraphSchemaType)
-                                                        && ((GraphSchemaType) type).getScanOpt()
-                                                                == GraphOpt.Source.EDGE
-                                                || type instanceof GraphPathType));
+                                (RelDataType type) -> {
+                                    if (input instanceof LogicalValues) return true;
+                                    return (type instanceof GraphSchemaType)
+                                                    && ((GraphSchemaType) type).getScanOpt()
+                                                            == GraphOpt.Source.EDGE
+                                            || type instanceof GraphPathType;
+                                }));
         replaceTop(getV);
         return this;
     }
@@ -225,10 +228,12 @@ public class GraphBuilder extends RelBuilder {
                         pxdConfig.getAlias(),
                         getAliasNameWithId(
                                 pxdConfig.getStartAlias(),
-                                (RelDataType type) ->
-                                        (type instanceof GraphSchemaType)
-                                                && ((GraphSchemaType) type).getScanOpt()
-                                                        == GraphOpt.Source.VERTEX));
+                                (RelDataType type) -> {
+                                    if (input instanceof LogicalValues) return true;
+                                    return (type instanceof GraphSchemaType)
+                                            && ((GraphSchemaType) type).getScanOpt()
+                                                    == GraphOpt.Source.VERTEX;
+                                }));
         replaceTop(pathExpand);
         return this;
     }

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.QueryExecutionValidator;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.base.Preconditions;
@@ -59,6 +60,7 @@ public class GraphTypeInference {
      * @return
      */
     public RelNode inferTypes(RelNode top) {
+        if (new LogicalPlan(top).isReturnEmpty()) return top;
         return visitRels(ImmutableList.of(top)).get(0);
     }
 
