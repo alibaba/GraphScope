@@ -16,15 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
@@ -45,6 +42,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Maintain {@link RelDataType} and {@link Statistic} per entity or per relation
@@ -140,7 +139,8 @@ public class GraphOptTable implements RelOptTable {
         }
         RelDataTypeFactory typeFactory = this.schema.getTypeFactory();
         requireNonNull(typeFactory, "typeFactory");
-        IrDataTypeConvertor<DataType> typeConvertor = new IrDataTypeConvertor.Groot(typeFactory);
+        IrDataTypeConvertor<DataType> typeConvertor =
+                new IrDataTypeConvertor.Groot(typeFactory, true);
         return typeConvertor.convert(property.getDataType());
     }
 

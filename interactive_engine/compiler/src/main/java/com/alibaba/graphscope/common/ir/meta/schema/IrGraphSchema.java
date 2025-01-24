@@ -37,7 +37,6 @@ public class IrGraphSchema implements GraphSchema {
     private final GraphSchema graphSchema;
     private final boolean isColumnId;
     private final SchemaSpecManager specManager;
-    private final RelDataTypeFactory typeFactory;
 
     public IrGraphSchema(Configs configs, SchemaInputStream schemaInputStream) throws IOException {
         this.isColumnId = false;
@@ -46,20 +45,19 @@ public class IrGraphSchema implements GraphSchema {
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         schemaInputStream.getInputStream().close();
         SchemaSpec spec = new SchemaSpec(schemaInputStream.getType(), content);
-        this.typeFactory = new GraphTypeFactoryImpl(configs);
-        this.graphSchema = spec.convert(new GraphTypeFactoryImpl(configs));
-        this.specManager = new SchemaSpecManager(this, spec);
+        RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl(configs);
+        this.graphSchema = spec.convert(typeFactory);
+        this.specManager = new SchemaSpecManager(this.graphSchema, false, typeFactory, spec);
     }
 
     public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
         this.isColumnId = isColumnId;
-        this.typeFactory = new GraphTypeFactoryImpl(new Configs(ImmutableMap.of()));
-        this.specManager = new SchemaSpecManager(this);
-    }
-
-    public RelDataTypeFactory getTypeFactory() {
-        return this.typeFactory;
+        this.specManager =
+                new SchemaSpecManager(
+                        this.graphSchema,
+                        this.isColumnId,
+                        new GraphTypeFactoryImpl(new Configs(ImmutableMap.of())));
     }
 
     public boolean isColumnId() {

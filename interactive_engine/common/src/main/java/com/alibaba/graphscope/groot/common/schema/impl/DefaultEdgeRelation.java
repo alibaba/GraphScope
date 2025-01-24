@@ -18,6 +18,7 @@ package com.alibaba.graphscope.groot.common.schema.impl;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 public class DefaultEdgeRelation implements EdgeRelation {
     private final GraphVertex source;
@@ -56,5 +57,20 @@ public class DefaultEdgeRelation implements EdgeRelation {
     @Override
     public long getTableId() {
         return this.tableId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DefaultEdgeRelation that = (DefaultEdgeRelation) o;
+        return tableId == that.tableId
+                && Objects.equal(source, that.source)
+                && Objects.equal(target, that.target);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(source, target, tableId);
     }
 }

@@ -38,16 +38,27 @@ import java.util.stream.Collectors;
 
 public class SchemaSpecManager {
     private static final Logger logger = LoggerFactory.getLogger(SchemaSpecManager.class);
-    private final IrGraphSchema parent;
+    private final GraphSchema rootSchema;
+    private final boolean isColumnId;
+    private final RelDataTypeFactory typeFactory;
     private final List<SchemaSpec> specifications;
 
-    public SchemaSpecManager(IrGraphSchema parent) {
-        this.parent = parent;
+    public SchemaSpecManager(
+            GraphSchema rootSchema, boolean isColumnId, RelDataTypeFactory typeFactory) {
+        this.rootSchema = rootSchema;
+        this.isColumnId = isColumnId;
+        this.typeFactory = typeFactory;
         this.specifications = Lists.newArrayList();
     }
 
-    public SchemaSpecManager(IrGraphSchema parent, SchemaSpec input) {
-        this.parent = parent;
+    public SchemaSpecManager(
+            GraphSchema rootSchema,
+            boolean isColumnId,
+            RelDataTypeFactory typeFactory,
+            SchemaSpec input) {
+        this.rootSchema = rootSchema;
+        this.isColumnId = isColumnId;
+        this.typeFactory = typeFactory;
         this.specifications = Lists.newArrayList(input);
     }
 
@@ -62,9 +73,7 @@ public class SchemaSpecManager {
             case IR_CORE_IN_JSON:
                 newSpec =
                         new SchemaSpec(
-                                type,
-                                IrSchemaParser.getInstance()
-                                        .parse(parent.getGraphSchema(), parent.isColumnId()));
+                                type, IrSchemaParser.getInstance().parse(rootSchema, isColumnId));
                 break;
             case FLEX_IN_JSON:
                 SchemaSpec yamlSpec = getSpec(SchemaSpec.Type.FLEX_IN_YAML);
@@ -82,7 +91,7 @@ public class SchemaSpecManager {
                 break;
             case FLEX_IN_YAML:
             default:
-                newSpec = convertToFlex(parent.getGraphSchema());
+                newSpec = convertToFlex(rootSchema);
                 break;
         }
         this.specifications.add(newSpec);
@@ -142,16 +151,16 @@ public class SchemaSpecManager {
     }
 
     private Map<String, Object> convertProperty(GraphProperty property) {
-        RelDataTypeFactory typeFactory = parent.getTypeFactory();
         RelDataType propertyType;
         if (property instanceof IrGraphProperty) {
             propertyType = ((IrGraphProperty) property).getRelDataType();
         } else {
             propertyType =
-                    (new IrDataTypeConvertor.Groot(typeFactory)).convert(property.getDataType());
+                    (new IrDataTypeConvertor.Groot(typeFactory, false))
+                            .convert(property.getDataType());
         }
         // convert property type to flex format
-        IrDataTypeConvertor.Flex flexConvertor = new IrDataTypeConvertor.Flex(typeFactory, true);
+        IrDataTypeConvertor.Flex flexConvertor = new IrDataTypeConvertor.Flex(typeFactory, false);
         GSDataTypeDesc typeDesc = flexConvertor.convert(propertyType);
         return ImmutableMap.of(
                 "property_id", property.getId(),

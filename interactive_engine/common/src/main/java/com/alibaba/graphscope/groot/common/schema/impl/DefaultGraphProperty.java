@@ -18,6 +18,7 @@ package com.alibaba.graphscope.groot.common.schema.impl;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 public class DefaultGraphProperty implements GraphProperty {
     private final int id;
@@ -70,5 +71,21 @@ public class DefaultGraphProperty implements GraphProperty {
                 .add("name", name)
                 .add("dataType", dataType)
                 .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DefaultGraphProperty that = (DefaultGraphProperty) o;
+        return id == that.id
+                && Objects.equal(name, that.name)
+                && dataType == that.dataType
+                && Objects.equal(defaultValue, that.defaultValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id, name, dataType, defaultValue);
     }
 }
