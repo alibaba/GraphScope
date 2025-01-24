@@ -1633,7 +1633,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age() {
             return ((IrCustomizedTraversal)
-                            g.V().out("1..100", "knows")
+                            g.V().out("1..15", "knows") // system maximum hops is 15
                                     .with(
                                             "UNTIL",
                                             com.alibaba.graphscope.gremlin.integration.suite.utils
