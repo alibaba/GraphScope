@@ -23,11 +23,12 @@ namespace ops {
 class DedupOpr : public IReadOperator {
  public:
   DedupOpr(const std::vector<size_t>& tag_ids) : tag_ids_(tag_ids) {}
+  std::string get_operator_name() const override { return "DedupOpr"; }
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     return Dedup::dedup(graph, std::move(ctx), tag_ids_);
   }
 
@@ -38,10 +39,12 @@ class DedupWithPropertyOpr : public IReadOperator {
  public:
   DedupWithPropertyOpr(const algebra::Dedup& dedup_opr) : opr_(dedup_opr) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "DedupWithProperty"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     int keys_num = opr_.keys_size();
     std::vector<std::function<RTAny(size_t)>> keys;
     for (int k_i = 0; k_i < keys_num; ++k_i) {
@@ -60,7 +63,7 @@ class DedupWithPropertyOpr : public IReadOperator {
 
   algebra::Dedup opr_;
 };
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> DedupOprBuilder::Build(
+bl::result<ReadOpBuildResultT> DedupOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   const auto& dedup_opr = plan.plan(op_idx).opr().dedup();

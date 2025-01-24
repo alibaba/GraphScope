@@ -19,11 +19,17 @@ namespace gs {
 
 namespace runtime {
 
-Context Union::union_op(std::vector<Context>&& ctxs) {
-  CHECK(ctxs.size() == 2);
+bl::result<Context> Union::union_op(std::vector<Context>&& ctxs) {
+  if (ctxs.size() != 2) {
+    LOG(ERROR) << "Union: only support two context";
+    RETURN_UNSUPPORTED_ERROR("Union: only support two context");
+  }
   auto& ctx0 = ctxs[0];
   auto& ctx1 = ctxs[1];
-  CHECK(ctx0.columns.size() == ctx1.columns.size());
+  if (ctx0.columns.size() != ctx1.columns.size()) {
+    LOG(ERROR) << "Union: column size not match";
+    RETURN_BAD_REQUEST_ERROR("Union: column size not match");
+  }
   return ctx0.union_ctx(ctx1);
 }
 

@@ -34,9 +34,11 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
         }
         plan_cache_[query] = plan;
       } else {
+        const auto& compiler_path = db_.schema().get_compiler_path();
+
         for (int i = 0; i < 3; ++i) {
-          if (!generate_plan(query, statistics, compiler_yaml, tmp_dir,
-                             plan_cache_)) {
+          if (!generate_plan(query, statistics, compiler_path, compiler_yaml,
+                             tmp_dir, plan_cache_)) {
             LOG(ERROR) << "Generate plan failed for query: " << query;
           } else {
             query_cache.put(query, plan_cache_[query].SerializeAsString());
@@ -46,9 +48,9 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
       }
     }
     const auto& plan = plan_cache_[query];
-    pipeline_cache_.emplace(
-        query,
-        runtime::PlanParser::get().parse_write_pipeline(db_.schema(), plan));
+    pipeline_cache_.emplace(query, runtime::PlanParser::get()
+                                       .parse_write_pipeline(db_.schema(), plan)
+                                       .value());
   } else {
   }
 

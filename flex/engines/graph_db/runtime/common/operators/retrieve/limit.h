@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_RETRIEVE_LIMIT_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -24,7 +25,7 @@ namespace runtime {
 
 class Limit {
  public:
-  static Context limit(Context&& ctxs, size_t lower, size_t upper);
+  static bl::result<Context> limit(Context&& ctxs, size_t lower, size_t upper);
 };
 
 }  // namespace runtime

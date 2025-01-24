@@ -17,6 +17,7 @@
 
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 #include <queue>
 
@@ -27,9 +28,9 @@ namespace runtime {
 class OrderBy {
  public:
   template <typename Comparer>
-  static Context order_by_with_limit(const GraphReadInterface& graph,
-                                     Context&& ctx, const Comparer& cmp,
-                                     size_t low, size_t high) {
+  static bl::result<Context> order_by_with_limit(
+      const GraphReadInterface& graph, Context&& ctx, const Comparer& cmp,
+      size_t low, size_t high) {
     if (low == 0 && high >= ctx.row_num()) {
       std::vector<size_t> offsets(ctx.row_num());
       std::iota(offsets.begin(), offsets.end(), 0);
@@ -63,7 +64,7 @@ class OrderBy {
   }
 
   template <typename Comparer>
-  static Context staged_order_by_with_limit(
+  static bl::result<Context> staged_order_by_with_limit(
       const GraphReadInterface& graph, Context&& ctx, const Comparer& cmp,
       size_t low, size_t high, const std::vector<size_t>& indices) {
     std::priority_queue<size_t, std::vector<size_t>, Comparer> queue(cmp);
@@ -90,7 +91,7 @@ class OrderBy {
   }
 
   template <typename Comparer>
-  static Context order_by_with_limit_with_indices(
+  static bl::result<Context> order_by_with_limit_with_indices(
       const GraphReadInterface& graph, Context&& ctx,
       std::function<std::optional<std::vector<size_t>>(
           const GraphReadInterface&, const Context& ctx)>

@@ -22,7 +22,6 @@ import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.aliyun.odps.Odps;
-import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.mapred.JobClient;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.odps.mapred.conf.SessionState;
@@ -33,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 
 public class OfflineBuildOdpsDebug {
@@ -41,7 +39,7 @@ public class OfflineBuildOdpsDebug {
 
     private static Odps odps;
 
-    public static void main(String[] args) throws IOException, OdpsException {
+    public static void main(String[] args) throws Exception {
         String configFile = args[0];
         UniConfig properties = UniConfig.fromFile(configFile);
 

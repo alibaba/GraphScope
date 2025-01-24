@@ -23,18 +23,20 @@ class SinkOpr : public IReadOperator {
  public:
   SinkOpr(const std::vector<int>& tag_ids) : tag_ids_(tag_ids) {}
 
-  Context Eval(const GraphReadInterface& graph,
-               const std::map<std::string, std::string>& params, Context&& ctx,
-               OprTimer& timer) override {
+  bl::result<Context> Eval(const GraphReadInterface& graph,
+                           const std::map<std::string, std::string>& params,
+                           Context&& ctx, OprTimer& timer) override {
     ctx.tag_ids = tag_ids_;
     return ctx;
   }
+
+  std::string get_operator_name() const override { return "SinkOpr"; }
 
  private:
   std::vector<int> tag_ids_;
 };
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> SinkOprBuilder::Build(
+bl::result<ReadOpBuildResultT> SinkOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   auto& opr = plan.plan(op_idx).opr().sink();

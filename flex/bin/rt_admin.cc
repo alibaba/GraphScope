@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
   if (op == "SHOW_STORED_PROCEDURES") {
     encoder.put_string(op);
     encoder.put_byte(0);
+    encoder.put_byte(0);
   } else if (op == "QUERY_VERTEX") {
     if (argc < 4) {
       std::cerr << "usage for vertex query: rt_admin query_vertex "
@@ -73,6 +74,7 @@ int main(int argc, char** argv) {
     encoder.put_string(op);
     encoder.put_string(label_name);
     encoder.put_long(vertex_id);
+    encoder.put_byte(0);
     encoder.put_byte(0);
   } else if (op == "QUERY_EDGE") {
     if (argc < 7) {
@@ -103,13 +105,14 @@ int main(int argc, char** argv) {
     encoder.put_long(dst_id);
     encoder.put_string(edge_label);
     encoder.put_byte(0);
+    encoder.put_byte(0);
   } else {
     std::cerr << "unexpected op - " << op << std::endl;
     return -1;
   }
 
   std::string content(buf.data(), buf.size());
-  auto res = cli.Post("/interactive/app", content, "text/plain");
+  auto res = cli.Post("/v1/graph/current/query", content, "text/plain");
 
   std::string ret = res->body;
   if (op == "SHOW_STORED_PROCEDURES") {

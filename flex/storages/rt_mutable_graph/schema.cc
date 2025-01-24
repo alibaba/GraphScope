@@ -29,8 +29,14 @@ bool Schema::IsBuiltinPlugin(const std::string& plugin_name) {
   return false;
 }
 
-Schema::Schema() : has_multi_props_edge_(false){};
+Schema::Schema() : compiler_path_(""), has_multi_props_edge_(false) {}
 Schema::~Schema() = default;
+
+void Schema::set_compiler_path(const std::string& path) {
+  compiler_path_ = path;
+}
+
+const std::string& Schema::get_compiler_path() const { return compiler_path_; }
 
 void Schema::Clear() {
   vlabel_indexer_.Clear();

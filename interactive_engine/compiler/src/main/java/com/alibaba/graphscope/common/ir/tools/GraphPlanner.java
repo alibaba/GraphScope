@@ -192,6 +192,14 @@ public class GraphPlanner {
                 return new ProcedurePhysicalBuilder(graphConfig, irMeta, logicalPlan).build();
             }
         }
+
+        public @Nullable QueryLogger getQueryLogger() {
+            return this.queryLogger;
+        }
+
+        public String getQuery() {
+            return query;
+        }
     }
 
     public static class Summary {

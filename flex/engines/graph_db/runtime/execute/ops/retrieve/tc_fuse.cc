@@ -70,10 +70,12 @@ class TCOpr : public IReadOperator {
     }
   }
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "TCOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     const std::string& param_value = params.at(param_name_);
     return EdgeExpand::tc<T1, T2, T3>(graph, std::move(ctx), labels_,
                                       input_tag_, alias1_, alias2_, is_lt_,
@@ -267,7 +269,7 @@ std::unique_ptr<IReadOperator> make_tc_opr(
   }
   return nullptr;
 }
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> TCOprBuilder::Build(
+bl::result<ReadOpBuildResultT> TCOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   if (tc_fusable(plan.plan(op_idx).opr().edge(),

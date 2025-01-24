@@ -336,6 +336,8 @@ struct EdgeData {
       return grape::EmptyType();
     } else if constexpr (std::is_same_v<T, Date>) {
       return Date(value.i64_val);
+    } else if constexpr (std::is_same_v<T, RecordView>) {
+      return value.record_view;
     } else {
       LOG(FATAL) << "not support for " << typeid(T).name();
     }
@@ -366,6 +368,9 @@ struct EdgeData {
     } else if constexpr (std::is_same_v<T, Date>) {
       type = RTAnyType::kTimestamp;
       value.date_val = val;
+    } else if constexpr (std::is_same_v<T, RecordView>) {
+      type = RTAnyType::kRecordView;
+      value.record_view = val;
     } else {
       LOG(FATAL) << "not support for " << typeid(T).name();
     }
@@ -385,14 +390,14 @@ struct EdgeData {
       return std::to_string(value.f64_val);
     } else if (type == RTAnyType::kBoolValue) {
       return value.b_val ? "true" : "false";
-    } else if (type == RTAnyType::kEmpty) {
-      return "";
     } else if (type == RTAnyType::kDate32) {
       return value.day_val.to_string();
     } else if (type == RTAnyType::kTimestamp) {
       return std::to_string(value.date_val.milli_second);
     } else if (type == RTAnyType::kEmpty) {
       return "";
+    } else if (type == RTAnyType::kRecordView) {
+      return value.record_view.to_string();
     } else {
       LOG(FATAL) << "Unexpected property type: " << static_cast<int>(type);
       return "";
@@ -429,6 +434,10 @@ struct EdgeData {
     case impl::PropertyTypeImpl::kDate:
       type = RTAnyType::kTimestamp;
       value.date_val = any.value.d;
+      break;
+    case impl::PropertyTypeImpl::kRecordView:
+      type = RTAnyType::kRecordView;
+      value.record_view = any.value.record_view;
       break;
     default:
       LOG(FATAL) << "Unexpected property type: "
@@ -471,6 +480,8 @@ struct EdgeData {
       return value.day_val == e.value.day_val;
     } else if (type == RTAnyType::kTimestamp) {
       return value.date_val == e.value.date_val;
+    } else if (type == RTAnyType::kRecordView) {
+      return value.record_view == e.value.record_view;
     } else {
       return false;
     }
@@ -486,6 +497,7 @@ struct EdgeData {
     pod_string_view str_val;
     Date date_val;
     Day day_val;
+    RecordView record_view;
     // todo: make recordview as a pod type
     // RecordView record;
   } value;
