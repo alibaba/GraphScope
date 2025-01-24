@@ -21,6 +21,9 @@ import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.google.common.collect.ImmutableMap;
+
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +37,7 @@ public class IrGraphSchema implements GraphSchema {
     private final GraphSchema graphSchema;
     private final boolean isColumnId;
     private final SchemaSpecManager specManager;
+    private final RelDataTypeFactory typeFactory;
 
     public IrGraphSchema(Configs configs, SchemaInputStream schemaInputStream) throws IOException {
         this.isColumnId = false;
@@ -42,6 +46,7 @@ public class IrGraphSchema implements GraphSchema {
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         schemaInputStream.getInputStream().close();
         SchemaSpec spec = new SchemaSpec(schemaInputStream.getType(), content);
+        this.typeFactory = new GraphTypeFactoryImpl(configs);
         this.graphSchema = spec.convert(new GraphTypeFactoryImpl(configs));
         this.specManager = new SchemaSpecManager(this, spec);
     }
@@ -49,7 +54,12 @@ public class IrGraphSchema implements GraphSchema {
     public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
         this.isColumnId = isColumnId;
+        this.typeFactory = new GraphTypeFactoryImpl(new Configs(ImmutableMap.of()));
         this.specManager = new SchemaSpecManager(this);
+    }
+
+    public RelDataTypeFactory getTypeFactory() {
+        return this.typeFactory;
     }
 
     public boolean isColumnId() {
