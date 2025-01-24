@@ -73,7 +73,7 @@ void Sink::sink_beta(const Context& ctx, const GraphReadInterface& graph,
   }
   ss << "========================================================="
      << std::endl;
-  // auto res = results.SerializeAsString();
+  // std::cout << ss.str();
   auto res = ss.str();
   output.put_bytes(res.data(), res.size());
 }
