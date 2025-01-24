@@ -96,8 +96,6 @@ jobs:
       shell: bash
       run: |
         echo 'Install dependencies'
-        # pip install gsctl
-        # gsctl install-deps dev
         python3 gsctl.py install-deps dev
         source ~/.graphscope_env
         echo 'Making GRAPE'
