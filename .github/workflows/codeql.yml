@@ -22,8 +22,8 @@ on:
       - 'flex/**'
       - 'python/**'
   # Commented out to save time; reopen after install-deps refactored.
-  pull_request:
-    branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
   schedule:
     - cron: '38 20 * * 5'
 
