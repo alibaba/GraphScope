@@ -58,25 +58,23 @@ void Sink::sink_encoder(const Context& ctx, const GraphReadInterface& graph,
 void Sink::sink_beta(const Context& ctx, const GraphReadInterface& graph,
                      Encoder& output) {
   size_t row_num = ctx.row_num();
-  results::CollectiveResults results;
+  std::stringstream ss;
+
   for (size_t i = 0; i < row_num; ++i) {
-    auto result = results.add_results();
-    std::stringstream ss;
     for (size_t j : ctx.tag_ids) {
       auto col = ctx.get(j);
       if (col == nullptr) {
         continue;
       }
-      auto column = result->mutable_record()->add_columns();
       auto val = col->get_elem(i);
       ss << val.to_string() << "|";
-      val.sink(graph, j, column);
     }
-    std::cout << ss.str() << std::endl;
+    ss << std::endl;
   }
-  std::cout << "========================================================="
-            << std::endl;
-  auto res = results.SerializeAsString();
+  ss << "========================================================="
+     << std::endl;
+  // auto res = results.SerializeAsString();
+  auto res = ss.str();
   output.put_bytes(res.data(), res.size());
 }
 

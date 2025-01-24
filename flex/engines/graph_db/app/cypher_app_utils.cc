@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/graph_db/app/cypher_app_utils.h"
+#include <glog/logging.h>
 
 #include <sys/wait.h>  // for waitpid()
 #include <unistd.h>    // for fork() and execvp()
@@ -135,8 +136,8 @@ bool generate_plan(
       int status;
       waitpid(pid, &status, 0);
       if (WIFEXITED(status)) {
-        std::cout << "Child exited with status " << WEXITSTATUS(status)
-                  << std::endl;
+        VLOG(1) << "Child exited with status " << WEXITSTATUS(status)
+                << std::endl;
       }
 
       {
