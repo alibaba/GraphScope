@@ -27,9 +27,10 @@ class VertexOprBuilder : public IReadOperatorBuilder {
   VertexOprBuilder() = default;
   ~VertexOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const gs::Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {
     return {physical::PhysicalOpr_Operator::OpKindCase::kVertex};

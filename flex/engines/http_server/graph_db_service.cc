@@ -94,7 +94,7 @@ void openGraph(const gs::GraphId& graph_id,
                << ", for graph: " << graph_id;
   }
   db.Close();
-  gs::GraphDBConfig config(schema_res.value(), data_dir,
+  gs::GraphDBConfig config(schema_res.value(), data_dir, "",
                            service_config.shard_num);
   config.memory_level = service_config.memory_level;
   if (config.memory_level >= 2) {

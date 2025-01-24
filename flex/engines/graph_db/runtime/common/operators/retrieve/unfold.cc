@@ -19,9 +19,12 @@ namespace gs {
 
 namespace runtime {
 
-Context Unfold::unfold(Context&& ctxs, int key, int alias) {
+bl::result<Context> Unfold::unfold(Context&& ctxs, int key, int alias) {
   auto col = ctxs.get(key);
-  CHECK(col->elem_type() == RTAnyType::kList);
+  if (col->elem_type() != RTAnyType::kList) {
+    LOG(ERROR) << "Unfold column type is not list";
+    RETURN_BAD_REQUEST_ERROR("Unfold column type is not list");
+  }
   auto list_col = std::dynamic_pointer_cast<ListValueColumnBase>(col);
   auto [ptr, offsets] = list_col->unfold();
 

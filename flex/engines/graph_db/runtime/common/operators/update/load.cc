@@ -17,13 +17,11 @@
 namespace gs {
 namespace runtime {
 
-WriteContext Load::load_single_edge(GraphInsertInterface& graph,
-                                    WriteContext&& ctxs, label_t src_label_id,
-                                    label_t dst_label_id, label_t edge_label_id,
-                                    PropertyType& src_pk_type,
-                                    PropertyType& dst_pk_type,
-                                    PropertyType& edge_prop_type, int src_index,
-                                    int dst_index, int prop_index) {
+bl::result<WriteContext> Load::load_single_edge(
+    GraphInsertInterface& graph, WriteContext&& ctxs, label_t src_label_id,
+    label_t dst_label_id, label_t edge_label_id, PropertyType& src_pk_type,
+    PropertyType& dst_pk_type, PropertyType& edge_prop_type, int src_index,
+    int dst_index, int prop_index) {
   // grape::EmptyType
   if (edge_prop_type == PropertyType::kEmpty) {
     auto& src = ctxs.get(src_index);
@@ -45,7 +43,7 @@ WriteContext Load::load_single_edge(GraphInsertInterface& graph,
   return ctxs;
 }
 
-WriteContext Load::load_single_vertex(
+bl::result<WriteContext> Load::load_single_vertex(
     GraphInsertInterface& graph, WriteContext&& ctxs, label_t label,
     PropertyType& pk_type, int id_col, const std::vector<int>& properties,
     const std::vector<std::tuple<label_t, label_t, label_t, PropertyType,
@@ -79,7 +77,7 @@ WriteContext Load::load_single_vertex(
   return ctxs;
 }
 
-WriteContext Load::load(
+bl::result<WriteContext> Load::load(
     GraphInsertInterface& graph, WriteContext&& ctxs,
     const std::vector<std::tuple<label_t, int, PropertyType, std::vector<int>>>&
         vertex_mappings,

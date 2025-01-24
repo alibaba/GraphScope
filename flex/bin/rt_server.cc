@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
       "warmup,w", bpo::value<bool>()->default_value(false),
       "warmup graph data")("memory-level,m",
                            bpo::value<int>()->default_value(1))(
+      "compiler-path,c", bpo::value<std::string>()->default_value(""))(
       "sharding-mode", bpo::value<std::string>()->default_value("cooperative"));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
@@ -69,6 +70,7 @@ int main(int argc, char** argv) {
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
+  std::string compiler_path = vm["compiler-path"].as<std::string>();
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -80,7 +82,7 @@ int main(int argc, char** argv) {
   if (!schema.ok()) {
     LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();
   }
-  gs::GraphDBConfig config(schema.value(), data_path, shard_num);
+  gs::GraphDBConfig config(schema.value(), data_path, compiler_path, shard_num);
   config.memory_level = memory_level;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;

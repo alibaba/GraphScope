@@ -56,10 +56,12 @@ class GroupByOpr : public IReadOperator {
                  const GraphReadInterface&, const Context&)>>&& aggrs)
       : key_fun_(std::move(key_fun)), aggrs_(std::move(aggrs)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "GroupByOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto key = key_fun_(graph, ctx);
     std::vector<std::unique_ptr<ReducerBase>> reducers;
     for (auto& aggr : aggrs_) {
@@ -91,13 +93,20 @@ class GroupByOprBeta : public IReadOperator {
         key_fun_(std::move(key_fun)),
         aggrs_(std::move(aggrs)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "GroupByOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto key_project = key_project_func_(graph, ctx);
     auto tmp = ctx;
-    auto ret = Project::project(std::move(tmp), std::move(key_project));
+
+    auto ret_res = Project::project(std::move(tmp), std::move(key_project));
+    if (!ret_res) {
+      return ret_res;
+    }
+    auto& ret = ret_res.value();
     for (size_t i = 0; i < ret.col_num(); ++i) {
       if (ret.get(i) != nullptr) {
         ctx.set(i, ret.get(i));
@@ -925,11 +934,9 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
     return make_reducer<Tuple>(graph, ctx, std::move(var_), kind, alias);
   } else {
     return make_general_reducer(graph, ctx, std::move(var_), kind, alias);
-    LOG(FATAL) << "unsupport" << static_cast<int>(var_.type());
-    return nullptr;
   }
 }
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
+bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   int mappings_num = plan.plan(op_idx).opr().group_by().mappings_size();
@@ -959,8 +966,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> GroupByOprBuilder::Build(
 
   for (int i = 0; i < mappings_num; ++i) {
     auto& key = opr.mappings(i);
-    CHECK(key.has_key());
-    CHECK(key.has_alias());
+    if (!key.has_key() || !key.has_alias()) {
+      LOG(ERROR) << "key should have key and alias";
+      return std::make_pair(nullptr, meta);
+    }
     int tag = key.key().has_tag() ? key.key().tag().id() : -1;
     int alias = key.has_alias() ? key.alias().value() : -1;
     if (key.key().has_property()) {
