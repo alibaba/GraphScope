@@ -73,7 +73,7 @@ GraphDB& GraphDB::get() {
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
                            bool enable_auto_compaction) {
-  GraphDBConfig config(schema, data_dir, thread_num);
+  GraphDBConfig config(schema, data_dir, "", thread_num);
   config.warmup = warmup;
   if (memory_only) {
     config.memory_level = 1;
@@ -118,6 +118,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   // is not serialized and deserialized.
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
+  mutable_schema.set_compiler_path(config.compiler_path);
   std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
   for (auto plugin_pair : plugins) {

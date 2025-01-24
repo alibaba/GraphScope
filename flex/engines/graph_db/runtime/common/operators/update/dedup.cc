@@ -19,8 +19,9 @@ namespace gs {
 
 namespace runtime {
 
-WriteContext Dedup::dedup(const GraphInsertInterface& graph, WriteContext&& ctx,
-                          const std::vector<size_t>& keys) {
+bl::result<WriteContext> Dedup::dedup(const GraphInsertInterface& graph,
+                                      WriteContext&& ctx,
+                                      const std::vector<size_t>& keys) {
   int row_num = ctx.row_num();
   if (row_num == 0) {
     return ctx;

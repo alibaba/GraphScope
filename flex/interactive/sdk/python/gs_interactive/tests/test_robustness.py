@@ -310,6 +310,40 @@ def test_call_proc_in_cypher(interactive_session, neo4j_session, create_modern_g
     assert cnt == 8
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON",
+    reason="Scan+Limit fuse only works on proto",
+)
+def test_scan_limit_fuse(interactive_session, neo4j_session, create_modern_graph):
+    print("[Test call procedure in cypher]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
+    result = neo4j_session.run(
+        'MATCH(p: person) with p.id as oid CALL k_neighbors("person", oid, 1) return label_name, vertex_oid;'
+    )
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 8
+
+    # Q: Why we could use this query to verify whether Scan+Limit fuse works?
+    # A: If Scan+Limit fuse works, the result of this query should be 2, otherwise it should be 6
+    result = neo4j_session.run("MATCH(n) return n.id limit 2")
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 2
+
+    result = neo4j_session.run("MATCH(n) return n.id limit 0")
+    cnt = 0
+    for record in result:
+        cnt += 1
+    assert cnt == 0
+
+
 def test_custom_pk_name(
     interactive_session, neo4j_session, create_graph_with_custom_pk_name
 ):
@@ -377,6 +411,9 @@ def test_x_csr_params(
     start_service_on_graph(
         interactive_session, create_graph_algo_graph_with_x_csr_params
     )
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_algo_graph_with_x_csr_params
+    )
     result = neo4j_session.run('MATCH (n) where n.id <> "" return count(n);')
     # expect return value 0
     records = result.fetch(1)
@@ -384,6 +421,10 @@ def test_x_csr_params(
     assert len(records) == 1 and records[0]["$f0"] == 3506
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_ON_PROTO", None) != "ON",
+    reason="var_char is only supported in proto",
+)
 def test_var_char_property(
     interactive_session, neo4j_session, create_graph_with_var_char_property
 ):
@@ -392,9 +433,70 @@ def test_var_char_property(
         interactive_session, create_graph_with_var_char_property
     )
     start_service_on_graph(interactive_session, create_graph_with_var_char_property)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_graph_with_var_char_property
+    )
     result = neo4j_session.run("MATCH (n: person) return n.name AS personName;")
     records = result.fetch(10)
     assert len(records) == 4
     for record in records:
         # all string property in this graph is var char with max_length 2
         assert len(record["personName"]) == 2
+
+
+def test_not_supported_cases(interactive_session, neo4j_session, create_modern_graph):
+    """
+    There are cases that are not supported by the current implementation.
+    In the future, after the implementation is complete, these cases should be supported and should be removed.
+    """
+    print("[Test not supported cases in cypher]")
+    import_data_to_full_modern_graph(interactive_session, create_modern_graph)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph
+    )
+    # expect exception thrown when running cypher query 'MATCH(p)-[e]->(n) return [p,n] as nodes;'
+    with pytest.raises(Exception):
+        result = neo4j_session.run(
+            "MATCH shortestPath(src: person {id: 1})-[e*1..2]-(dst: person) return length(e);"
+        )
+        result.fetch(1)
+
+
+def test_multiple_edge_property(
+    interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
+):
+    print("[Test multiple edge property]")
+    import_data_to_full_modern_graph(
+        interactive_session, create_modern_graph_multiple_edge_property
+    )
+    start_service_on_graph(
+        interactive_session, create_modern_graph_multiple_edge_property
+    )
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph_multiple_edge_property
+    )
+    result = neo4j_session.run(
+        "MATCH (n: person)-[e]->(m: software) RETURN e.weight AS weight, e.since AS since ORDER BY weight ASC, since ASC;"
+    )
+    records = result.fetch(10)
+    assert len(records) == 4
+    expected_result = [
+        {"weight": 0.2, "since": 2023},
+        {"weight": 0.4, "since": 2020},
+        {"weight": 0.4, "since": 2022},
+        {"weight": 1.0, "since": 2021},
+    ]
+
+    for i in range(len(records)):
+        assert records[i]["weight"] == expected_result[i]["weight"]
+        assert records[i]["since"] == expected_result[i]["since"]
+
+    result = neo4j_session.run(
+        "MATCH (n: person)-[e]->(m: software) RETURN e ORDER BY e.weight ASC, e.since ASC;"
+    )
+    records = result.fetch(10)
+    assert len(records) == 4
+    for i in range(len(records)):
+        assert records[i]["e"]["weight"] == expected_result[i]["weight"]
+        assert records[i]["e"]["since"] == expected_result[i]["since"]

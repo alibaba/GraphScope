@@ -486,7 +486,9 @@ std::unique_ptr<ProjectExprBase> create_case_when_project(
     const std::shared_ptr<IVertexColumn>& vertex_col, PRED&& pred,
     const common::Value& then_value, const common::Value& else_value,
     int alias) {
-  CHECK(then_value.item_case() == else_value.item_case());
+  if (then_value.item_case() != else_value.item_case()) {
+    return nullptr;
+  }
   switch (then_value.item_case()) {
   case common::Value::kI32: {
     if (vertex_col->vertex_column_type() == VertexColumnType::kSingle) {
@@ -1243,16 +1245,18 @@ class ProjectOpr : public IReadOperator {
              bool is_append)
       : exprs_(exprs), is_append_(is_append) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     std::vector<std::unique_ptr<ProjectExprBase>> exprs;
     for (size_t i = 0; i < exprs_.size(); ++i) {
       exprs.push_back(exprs_[i](graph, params, ctx));
     }
     return Project::project(std::move(ctx), exprs, is_append_);
   }
+
+  std::string get_operator_name() const override { return "ProjectOpr"; }
 
  private:
   std::vector<std::function<std::unique_ptr<ProjectExprBase>(
@@ -1278,7 +1282,7 @@ auto _make_project_expr(const common::Expression& expr, int alias,
   return make_project_expr(expr, alias);
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
+bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<common::IrDataType> data_types;
@@ -1298,7 +1302,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
       const auto& m = plan.plan(op_idx).opr().project().mappings(i);
       int alias = m.has_alias() ? m.alias().value() : -1;
       ret_meta.set(alias);
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
     }
@@ -1309,7 +1316,10 @@ std::pair<std::unique_ptr<IReadOperator>, ContextMeta> ProjectOprBuilder::Build(
       int alias = m.has_alias() ? m.alias().value() : -1;
 
       ret_meta.set(alias);
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, std::nullopt));
     }
@@ -1337,10 +1347,14 @@ class ProjectOrderByOprBeta : public IReadOperator {
         upper_bound_(upper_bound),
         first_pair_(first_pair) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override {
+    return "ProjectOrderByOprBeta";
+  }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto cmp_func = [&](const Context& ctx) -> GeneralComparer {
       GeneralComparer cmp;
       for (const auto& pair : order_by_pairs_) {
@@ -1423,11 +1437,9 @@ static bool project_order_by_fusable_beta(
   return true;
 }
 
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta>
-ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
-                                const ContextMeta& ctx_meta,
-                                const physical::PhysicalPlan& plan,
-                                int op_idx) {
+bl::result<ReadOpBuildResultT> ProjectOrderByOprBuilder::Build(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<common::IrDataType> data_types;
   int mappings_size = plan.plan(op_idx).opr().project().mappings_size();
   if (plan.plan(op_idx).meta_data_size() == mappings_size) {
@@ -1458,7 +1470,10 @@ ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
       if (alias == first_key) {
         first_idx = i;
       }
-      CHECK(m.has_expr());
+      if (!m.has_expr()) {
+        LOG(ERROR) << "expr is not set" << m.DebugString();
+        return std::make_pair(nullptr, ret_meta);
+      }
       auto expr = m.expr();
       exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
       if (order_by_keys.find(alias) != order_by_keys.end()) {
@@ -1472,17 +1487,23 @@ ProjectOrderByOprBuilder::Build(const gs::Schema& schema,
     std::tuple<int, int, bool> first_tuple;
     for (int i = 0; i < pair_size; ++i) {
       const auto& pair = order_by_opr.pairs(i);
-      CHECK(pair.order() == algebra::OrderBy_OrderingPair_Order::
-                                OrderBy_OrderingPair_Order_ASC ||
-            pair.order() == algebra::OrderBy_OrderingPair_Order::
-                                OrderBy_OrderingPair_Order_DESC);
+      if (pair.order() != algebra::OrderBy_OrderingPair_Order::
+                              OrderBy_OrderingPair_Order_ASC &&
+          pair.order() != algebra::OrderBy_OrderingPair_Order::
+                              OrderBy_OrderingPair_Order_DESC) {
+        LOG(ERROR) << "order by order is not set" << pair.DebugString();
+        return std::make_pair(nullptr, ContextMeta());
+      }
       bool asc =
           pair.order() ==
           algebra::OrderBy_OrderingPair_Order::OrderBy_OrderingPair_Order_ASC;
       order_by_pairs.emplace_back(pair.key(), asc);
       if (i == 0) {
         first_tuple = std::make_tuple(first_key, first_idx, asc);
-        CHECK(!pair.key().has_property());
+        if (pair.key().has_property()) {
+          LOG(ERROR) << "key has property" << pair.DebugString();
+          return std::make_pair(nullptr, ContextMeta());
+        }
       }
     }
     int lower = 0;

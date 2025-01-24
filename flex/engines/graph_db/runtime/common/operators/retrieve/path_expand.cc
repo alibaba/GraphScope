@@ -21,9 +21,9 @@ namespace gs {
 
 namespace runtime {
 
-Context PathExpand::edge_expand_v(const GraphReadInterface& graph,
-                                  Context&& ctx,
-                                  const PathExpandParams& params) {
+bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
+                                              Context&& ctx,
+                                              const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
   if (params.labels.size() == 1 &&
       ctx.get(params.start_tag)->column_type() == ContextColumnType::kVertex &&
@@ -164,13 +164,13 @@ Context PathExpand::edge_expand_v(const GraphReadInterface& graph,
       return ctx;
     }
   }
-  LOG(FATAL) << "not support...";
-  return ctx;
+  LOG(ERROR) << "not support path expand options";
+  RETURN_UNSUPPORTED_ERROR("not support path expand options");
 }
 
-Context PathExpand::edge_expand_p(const GraphReadInterface& graph,
-                                  Context&& ctx,
-                                  const PathExpandParams& params) {
+bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
+                                              Context&& ctx,
+                                              const PathExpandParams& params) {
   std::vector<size_t> shuffle_offset;
   auto& input_vertex_list =
       *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
@@ -329,8 +329,8 @@ Context PathExpand::edge_expand_p(const GraphReadInterface& graph,
     ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
     return ctx;
   }
-  LOG(FATAL) << "not support...";
-  return ctx;
+  LOG(ERROR) << "not support path expand options";
+  RETURN_UNSUPPORTED_ERROR("not support path expand options");
 }
 
 static bool single_source_single_dest_shortest_path_impl(
@@ -468,7 +468,7 @@ static bool single_source_single_dest_shortest_path_impl(
   return false;
 }
 
-Context PathExpand::single_source_single_dest_shortest_path(
+bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
     const GraphReadInterface& graph, Context&& ctx,
     const ShortestPathParams& params, std::pair<label_t, vid_t>& dest) {
   std::vector<size_t> shuffle_offset;
@@ -476,13 +476,18 @@ Context PathExpand::single_source_single_dest_shortest_path(
       *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
   auto label_sets = input_vertex_list.get_labels_set();
   auto labels = params.labels;
-  CHECK(labels.size() == 1) << "only support one label triplet";
-  CHECK(label_sets.size() == 1) << "only support one label set";
+  if (labels.size() != 1 || label_sets.size() != 1) {
+    LOG(ERROR) << "only support one label triplet";
+    RETURN_UNSUPPORTED_ERROR("only support one label triplet");
+  }
   auto label_triplet = labels[0];
-  CHECK(label_triplet.src_label == label_triplet.dst_label)
-      << "only support same src and dst label";
-  auto dir = params.dir;
-  CHECK(dir == Direction::kBoth) << "only support both direction";
+  if (label_triplet.src_label != label_triplet.dst_label ||
+      params.dir != Direction::kBoth) {
+    LOG(ERROR) << "only support same src and dst label and both direction";
+    RETURN_UNSUPPORTED_ERROR(
+        "only support same src and dst label and both "
+        "direction");
+  }
   SLVertexColumnBuilder builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
   std::vector<std::shared_ptr<PathImpl>> path_impls;
@@ -707,23 +712,32 @@ static void all_shortest_path_with_given_source_and_dest_impl(
   dfs(graph, src, dst, visited, dist_from_src, params, paths, cur_path);
 }
 
-Context PathExpand::all_shortest_paths_with_given_source_and_dest(
+bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
     const GraphReadInterface& graph, Context&& ctx,
     const ShortestPathParams& params, const std::pair<label_t, vid_t>& dest) {
   auto& input_vertex_list =
       *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.start_tag));
   auto label_sets = input_vertex_list.get_labels_set();
   auto labels = params.labels;
-  CHECK(labels.size() == 1) << "only support one label triplet";
-  CHECK(label_sets.size() == 1) << "only support one label set";
+  if (labels.size() != 1 || label_sets.size() != 1) {
+    LOG(ERROR) << "only support one label triplet";
+    RETURN_UNSUPPORTED_ERROR("only support one label triplet");
+  }
   auto label_triplet = labels[0];
-  CHECK(label_triplet.src_label == label_triplet.dst_label)
-      << "only support same src and dst label";
+  if (label_triplet.src_label != label_triplet.dst_label) {
+    LOG(ERROR) << "only support same src and dst label";
+    RETURN_UNSUPPORTED_ERROR("only support same src and dst label");
+  }
   auto dir = params.dir;
-  CHECK(dir == Direction::kBoth) << "only support both direction";
+  if (dir != Direction::kBoth) {
+    LOG(ERROR) << "only support both direction";
+    RETURN_UNSUPPORTED_ERROR("only support both direction");
+  }
 
-  CHECK(dest.first == label_triplet.dst_label)
-      << "only support same src and dst label";
+  if (dest.first != label_triplet.dst_label) {
+    LOG(ERROR) << "only support same src and dst label";
+    RETURN_UNSUPPORTED_ERROR("only support same src and dst label");
+  }
   SLVertexColumnBuilder builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
   std::vector<std::shared_ptr<PathImpl>> path_impls;
@@ -747,10 +761,9 @@ Context PathExpand::all_shortest_paths_with_given_source_and_dest(
 }
 
 template <typename T>
-static Context _single_shortest_path(const GraphReadInterface& graph,
-                                     Context&& ctx,
-                                     const ShortestPathParams& params,
-                                     const SPVertexPredicate& pred) {
+static bl::result<Context> _single_shortest_path(
+    const GraphReadInterface& graph, Context&& ctx,
+    const ShortestPathParams& params, const SPVertexPredicate& pred) {
   if (pred.type() == SPPredicateType::kPropertyLT) {
     return PathExpand::single_source_shortest_path<
         VertexPropertyLTPredicateBeta<T>>(
@@ -787,12 +800,14 @@ static Context _single_shortest_path(const GraphReadInterface& graph,
         graph, std::move(ctx), params,
         dynamic_cast<const VertexPropertyNEPredicateBeta<T>&>(pred));
   } else {
-    LOG(FATAL) << "not support edge property type "
+    LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.type());
+    RETURN_UNSUPPORTED_ERROR("not support edge property type");
   }
 }
 
-Context PathExpand::single_source_shortest_path_with_special_vertex_predicate(
+bl::result<Context>
+PathExpand::single_source_shortest_path_with_special_vertex_predicate(
     const GraphReadInterface& graph, Context&& ctx,
     const ShortestPathParams& params, const SPVertexPredicate& pred) {
   if (pred.data_type() == RTAnyType::kI64Value) {
@@ -812,8 +827,9 @@ Context PathExpand::single_source_shortest_path_with_special_vertex_predicate(
     return _single_shortest_path<grape::EmptyType>(graph, std::move(ctx),
                                                    params, pred);
   } else {
-    LOG(FATAL) << "not support edge property type "
+    LOG(ERROR) << "not support edge property type "
                << static_cast<int>(pred.type());
+    RETURN_UNSUPPORTED_ERROR("not support edge property type");
   }
   return ctx;
 }

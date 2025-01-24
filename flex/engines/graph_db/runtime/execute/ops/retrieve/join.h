@@ -29,9 +29,10 @@ class JoinOprBuilder : public IReadOperatorBuilder {
   JoinOprBuilder() = default;
   ~JoinOprBuilder() = default;
 
-  std::pair<std::unique_ptr<IReadOperator>, ContextMeta> Build(
-      const Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan, int op_idx) override;
+  bl::result<ReadOpBuildResultT> Build(const Schema& schema,
+                                       const ContextMeta& ctx_meta,
+                                       const physical::PhysicalPlan& plan,
+                                       int op_idx) override;
 
   std::vector<physical::PhysicalOpr_Operator::OpKindCase> GetOpKinds()
       const override {

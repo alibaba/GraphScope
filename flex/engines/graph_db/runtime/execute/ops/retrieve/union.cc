@@ -26,14 +26,20 @@ class UnionOpr : public IReadOperator {
   UnionOpr(std::vector<ReadPipeline>&& sub_plans)
       : sub_plans_(std::move(sub_plans)) {}
 
-  gs::runtime::Context Eval(const gs::runtime::GraphReadInterface& graph,
-                            const std::map<std::string, std::string>& params,
-                            gs::runtime::Context&& ctx,
-                            gs::runtime::OprTimer& timer) override {
+  std::string get_operator_name() const override { return "UnionOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      const gs::runtime::GraphReadInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     std::vector<gs::runtime::Context> ctxs;
     for (auto& plan : sub_plans_) {
       gs::runtime::Context n_ctx = ctx;
-      ctxs.push_back(plan.Execute(graph, std::move(n_ctx), params, timer));
+      auto ret = plan.Execute(graph, std::move(n_ctx), params, timer);
+      if (!ret) {
+        return ret;
+      }
+      ctxs.emplace_back(std::move(ret.value()));
     }
     return Union::union_op(std::move(ctxs));
   }
@@ -41,15 +47,19 @@ class UnionOpr : public IReadOperator {
  private:
   std::vector<ReadPipeline> sub_plans_;
 };
-std::pair<std::unique_ptr<IReadOperator>, ContextMeta> UnionOprBuilder::Build(
+bl::result<ReadOpBuildResultT> UnionOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan, int op_idx) {
   std::vector<ReadPipeline> sub_plans;
   std::vector<ContextMeta> sub_metas;
   for (int i = 0; i < plan.plan(op_idx).opr().union_().sub_plans_size(); ++i) {
     auto& sub_plan = plan.plan(op_idx).opr().union_().sub_plans(i);
-    auto pair = PlanParser::get().parse_read_pipeline_with_meta(
+    auto pair_res = PlanParser::get().parse_read_pipeline_with_meta(
         schema, ctx_meta, sub_plan);
+    if (!pair_res) {
+      return std::make_pair(nullptr, ContextMeta());
+    }
+    auto pair = std::move(pair_res.value());
     sub_plans.emplace_back(std::move(pair.first));
     sub_metas.push_back(pair.second);
   }

@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_RETRIEVE_SELECT_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -25,7 +26,7 @@ namespace runtime {
 class Select {
  public:
   template <typename PRED_T>
-  static Context select(Context&& ctx, const PRED_T& pred) {
+  static bl::result<Context> select(Context&& ctx, const PRED_T& pred) {
     size_t row_num = ctx.row_num();
     std::vector<size_t> offsets;
     for (size_t k = 0; k < row_num; ++k) {

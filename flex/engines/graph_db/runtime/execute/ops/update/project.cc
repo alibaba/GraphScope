@@ -25,7 +25,9 @@ class ProjectInsertOpr : public IInsertOperator {
           const std::map<std::string, std::string>&)>>& exprs)
       : exprs_(exprs) {}
 
-  gs::runtime::WriteContext Eval(
+  std::string get_operator_name() const override { return "ProjectInsertOpr"; }
+
+  bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
@@ -51,9 +53,14 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
       exprs;
   for (int i = 0; i < mappings_size; ++i) {
     const physical::Project_ExprAlias& m = opr.mappings(i);
-    CHECK(m.has_alias());
-    CHECK(m.has_expr());
-    CHECK(m.expr().operators_size() == 1);
+    if (!m.has_alias()) {
+      LOG(ERROR) << "project mapping should have alias";
+      return nullptr;
+    }
+    if ((!m.has_expr()) || m.expr().operators_size() != 1) {
+      LOG(ERROR) << "project mapping should have one expr";
+      return nullptr;
+    }
     if (m.expr().operators(0).item_case() == common::ExprOpr::kParam) {
       auto param = m.expr().operators(0).param();
       auto name = param.name();
@@ -65,8 +72,14 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
           });
     } else if (m.expr().operators(0).item_case() == common::ExprOpr::kVar) {
       auto var = m.expr().operators(0).var();
-      CHECK(var.has_tag());
-      CHECK(!var.has_property());
+      if (!var.has_tag()) {
+        LOG(ERROR) << "project mapping should have tag";
+        return nullptr;
+      }
+      if (var.has_property()) {
+        LOG(ERROR) << "project mapping should not have property";
+        return nullptr;
+      }
       int tag = var.tag().id();
       int alias = m.alias().value();
       exprs.emplace_back(
@@ -77,30 +90,60 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
       auto udf_func = m.expr().operators(0).udf_func();
 
       if (udf_func.name() == "gs.function.first") {
-        CHECK(udf_func.parameters_size() == 1 &&
-              udf_func.parameters(0).operators_size() == 1);
+        if (udf_func.parameters_size() != 1 ||
+            udf_func.parameters(0).operators_size() != 1) {
+          LOG(ERROR) << "not support for " << m.expr().DebugString();
+          return nullptr;
+        }
         auto param = udf_func.parameters(0).operators(0);
 
-        CHECK(param.item_case() == common::ExprOpr::kVar);
+        if (param.item_case() != common::ExprOpr::kVar) {
+          LOG(ERROR) << "not support for " << m.expr().DebugString();
+          return nullptr;
+        }
         auto var = param.var();
-        CHECK(var.has_tag());
-        CHECK(!var.has_property());
+        if (!var.has_tag()) {
+          LOG(ERROR) << "project mapping should have tag";
+          return nullptr;
+        }
+        if (var.has_property()) {
+          LOG(ERROR) << "project mapping should not have property";
+          return nullptr;
+        }
         int tag = var.tag().id();
         int alias = m.alias().value();
 
         if (i + 1 < mappings_size) {
           const physical::Project_ExprAlias& next = opr.mappings(i + 1);
-          CHECK(next.has_alias());
-          CHECK(next.has_expr());
-          CHECK(next.expr().operators_size() == 1);
+          if (!next.has_alias()) {
+            LOG(ERROR) << "project mapping should have alias";
+            return nullptr;
+          }
+          if (!next.has_expr()) {
+            LOG(ERROR) << "project mapping should have expr";
+            return nullptr;
+          }
+          if (next.expr().operators_size() != 1) {
+            LOG(ERROR) << "project mapping should have one expr";
+            return nullptr;
+          }
           if (next.expr().operators(0).has_udf_func()) {
             auto next_udf_func = next.expr().operators(0).udf_func();
             if (next_udf_func.name() == "gs.function.second") {
               auto param = udf_func.parameters(0).operators(0);
-              CHECK(param.item_case() == common::ExprOpr::kVar);
+              if (param.item_case() != common::ExprOpr::kVar) {
+                LOG(ERROR) << "not support for " << m.expr().DebugString();
+                return nullptr;
+              }
               auto var = param.var();
-              CHECK(var.has_tag());
-              CHECK(!var.has_property());
+              if (!var.has_tag()) {
+                LOG(ERROR) << "project mapping should have tag";
+                return nullptr;
+              }
+              if (var.has_property()) {
+                LOG(ERROR) << "project mapping should not have property";
+                return nullptr;
+              }
               int next_tag = var.tag().id();
               int next_alias = next.alias().value();
               if (next_tag == tag) {
@@ -122,14 +165,26 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
             });
 
       } else if (udf_func.name() == "gs.function.second") {
-        CHECK(udf_func.parameters_size() == 1 &&
-              udf_func.parameters(0).operators_size() == 1);
+        if (udf_func.parameters_size() != 1 ||
+            udf_func.parameters(0).operators_size() != 1) {
+          LOG(ERROR) << "not support for " << m.expr().DebugString();
+          return nullptr;
+        }
         auto param = udf_func.parameters(0).operators(0);
 
-        CHECK(param.item_case() == common::ExprOpr::kVar);
+        if (param.item_case() != common::ExprOpr::kVar) {
+          LOG(ERROR) << "not support for " << m.expr().DebugString();
+          return nullptr;
+        }
         auto var = param.var();
-        CHECK(var.has_tag());
-        CHECK(!var.has_property());
+        if (!var.has_tag()) {
+          LOG(ERROR) << "project mapping should have tag";
+          return nullptr;
+        }
+        if (var.has_property()) {
+          LOG(ERROR) << "project mapping should not have property";
+          return nullptr;
+        }
         int tag = var.tag().id();
         int alias = m.alias().value();
         exprs.emplace_back(
@@ -137,10 +192,12 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
               return std::make_unique<PairsSndGetter>(tag, alias);
             });
       } else {
-        LOG(FATAL) << "not support for " << m.expr().DebugString();
+        LOG(ERROR) << "not support for " << m.expr().DebugString();
+        return nullptr;
       }
     } else {
-      LOG(FATAL) << "not support for " << m.expr().DebugString();
+      LOG(ERROR) << "not support for " << m.expr().DebugString();
+      return nullptr;
     }
   }
 

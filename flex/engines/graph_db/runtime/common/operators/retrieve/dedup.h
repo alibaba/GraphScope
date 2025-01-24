@@ -21,6 +21,7 @@
 
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -28,10 +29,12 @@ namespace runtime {
 
 class Dedup {
  public:
-  static Context dedup(const GraphReadInterface& graph, Context&& ctx,
-                       const std::vector<size_t>& cols);
-  static Context dedup(const GraphReadInterface& graph, Context&& ctx,
-                       const std::vector<std::function<RTAny(size_t)>>& vars);
+  static bl::result<Context> dedup(const GraphReadInterface& graph,
+                                   Context&& ctx,
+                                   const std::vector<size_t>& cols);
+  static bl::result<Context> dedup(
+      const GraphReadInterface& graph, Context&& ctx,
+      const std::vector<std::function<RTAny(size_t)>>& vars);
 };
 
 }  // namespace runtime

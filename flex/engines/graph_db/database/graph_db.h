@@ -43,9 +43,10 @@ struct SessionLocalContext;
 
 struct GraphDBConfig {
   GraphDBConfig(const Schema& schema_, const std::string& data_dir_,
-                int thread_num_ = 1)
+                const std::string& compiler_path_ = "", int thread_num_ = 1)
       : schema(schema_),
         data_dir(data_dir_),
+        compiler_path(compiler_path_),
         thread_num(thread_num_),
         warmup(false),
         enable_monitoring(false),
@@ -54,6 +55,7 @@ struct GraphDBConfig {
 
   Schema schema;
   std::string data_dir;
+  std::string compiler_path;
   int thread_num;
   bool warmup;
   bool enable_monitoring;

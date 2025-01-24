@@ -140,10 +140,12 @@ public interface IrDataTypeConvertor<T> {
                     if (dataFrom.getPrecision() == 1) {
                         return DataType.CHAR;
                     }
+                    break;
                 case VARCHAR:
                     if (dataFrom.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED) {
                         return DataType.STRING;
                     }
+                    break;
                 case SMALLINT:
                     return DataType.SHORT;
                 case INTEGER:
@@ -163,7 +165,7 @@ public interface IrDataTypeConvertor<T> {
                 case MULTISET:
                 case ARRAY:
                     RelDataType componentType = dataFrom.getComponentType();
-                    // check the array or set is a unlimited size list of primitive type
+                    // check the array or set is an unlimited size list of primitive type
                     if (componentType != null
                             && dataFrom.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED) {
                         switch (componentType.getSqlTypeName()) {
@@ -182,17 +184,18 @@ public interface IrDataTypeConvertor<T> {
                                 }
                         }
                     }
+                    break;
                 case UNKNOWN:
                     return DataType.UNKNOWN;
                 default:
-                    if (throwsOnFail) {
-                        throw new UnsupportedOperationException(
-                                "convert RelDataType ["
-                                        + dataFrom
-                                        + "] to GrootDataType is unsupported yet");
-                    }
-                    return DataType.UNKNOWN;
             }
+            if (throwsOnFail) {
+                throw new UnsupportedOperationException(
+                        "convert RelDataType ["
+                                + dataFrom
+                                + "] to GrootDataType is unsupported yet");
+            }
+            return DataType.UNKNOWN;
         }
     }
 

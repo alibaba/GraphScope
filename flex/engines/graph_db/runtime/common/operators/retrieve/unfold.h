@@ -17,6 +17,7 @@
 #define RUNTIME_COMMON_OPERATORS_RETRIEVE_UNFOLD_H_
 
 #include "flex/engines/graph_db/runtime/common/context.h"
+#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 
 namespace gs {
 
@@ -24,7 +25,7 @@ namespace runtime {
 
 class Unfold {
  public:
-  static Context unfold(Context&& ctxs, int key, int alias);
+  static bl::result<Context> unfold(Context&& ctxs, int key, int alias);
 };
 
 }  // namespace runtime

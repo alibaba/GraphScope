@@ -16,7 +16,7 @@
 
 namespace gs {
 namespace runtime {
-WriteContext Project::project(
+bl::result<WriteContext> Project::project(
     WriteContext&& ctx,
     const std::vector<std::unique_ptr<WriteProjectExprBase>>& exprs) {
   WriteContext ret;
