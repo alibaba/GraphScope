@@ -131,7 +131,12 @@ def insight(app, graphscope_repo):
     required=False,
     help="GraphScope code repo location.",
 )
-def interactive(app, graphscope_repo):
+@click.option(
+    "--version",
+    required=False,
+    help="The version of the built image",
+)
+def interactive(app, graphscope_repo, version):
     """Build Interactive for high throughput scenarios"""
     if graphscope_repo is None:
         graphscope_repo = default_graphscope_repo_path
@@ -145,6 +150,8 @@ def interactive(app, graphscope_repo):
         )
         return
     cmd = ["make", "flex-interactive", "ENABLE_COORDINATOR=true"]
+    if version is not None:
+        cmd.extend(["VERSION=" + version])
     sys.exit(run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir)))
 
 
