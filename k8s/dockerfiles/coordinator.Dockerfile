@@ -25,8 +25,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         cd python && \
         python3 -m pip install --user -r requirements.txt && \
         python3 setup.py bdist_wheel && \
-        python3 -m pip install wheelhouse/*.whl && \
-        cp wheelhouse/*.whl /home/graphscope/install/ && \
+        cp dist/*.whl /home/graphscope/install/ && \
         cd ../coordinator && \
         python3 setup.py bdist_wheel && \
         cp dist/*.whl /home/graphscope/install/; \
