@@ -139,8 +139,10 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
-          if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
-                                        tag)) {
+          // FIXME(zhanglei,lexiao): We could not assume that the primary key
+          // property is id. The best solution maybe merge the primary key
+          // getter and property getter.
+          if (pt.key().name() == "id") {
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdVertexAccessor<std::string_view>>(
