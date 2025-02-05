@@ -12,6 +12,13 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'python/graphscope/gsctl/commands/dev.py'
+      - '.github/workflows/release.yml'
+
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
