@@ -583,7 +583,8 @@ bool is_exchange_index(const common::Expression& expr, int alias, int& tag) {
   return false;
 }
 
-bool is_check_property_in_range(const common::Expression& expr, int& tag,
+bool is_check_property_in_range(const gs::Schema& schema,
+                                const common::Expression& expr, int& tag,
                                 std::string& name, std::string& lower,
                                 std::string& upper, common::Value& then_value,
                                 common::Value& else_value) {
@@ -613,7 +614,7 @@ bool is_check_property_in_range(const common::Expression& expr, int& tag,
         return false;
       }
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (schema.could_be_primary_key(name) || name == "label") {
         return false;
       }
     }
@@ -690,7 +691,8 @@ bool is_check_property_in_range(const common::Expression& expr, int& tag,
   return false;
 }
 
-bool is_check_property_cmp(const common::Expression& expr, int& tag,
+bool is_check_property_cmp(const gs::Schema& schema,
+                           const common::Expression& expr, int& tag,
                            std::string& name, std::string& target,
                            common::Value& then_value, common::Value& else_value,
                            SPPredicateType& ptype) {
@@ -720,7 +722,7 @@ bool is_check_property_cmp(const common::Expression& expr, int& tag,
         return false;
       }
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (schema.could_be_primary_key(name) || name == "label") {
         return false;
       }
     }
@@ -782,7 +784,8 @@ bool is_check_property_cmp(const common::Expression& expr, int& tag,
   return false;
 }
 
-bool is_property_extract(const common::Expression& expr, int& tag,
+bool is_property_extract(const gs::Schema& schema,
+                         const common::Expression& expr, int& tag,
                          std::string& name, RTAnyType& type) {
   if (expr.operators_size() == 1 &&
       expr.operators(0).item_case() == common::ExprOpr::kVar) {
@@ -797,7 +800,7 @@ bool is_property_extract(const common::Expression& expr, int& tag,
     }
     if (var.has_property() && var.property().has_key()) {
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (schema.could_be_primary_key(name) || name == "label") {
         return false;
       }
       if (var.has_node_type()) {
@@ -947,7 +950,8 @@ make_project_expr(const common::Expression& expr, int alias) {
 static std::optional<std::function<std::unique_ptr<ProjectExprBase>(
     const GraphReadInterface& graph,
     const std::map<std::string, std::string>& params, const Context& ctx)>>
-parse_special_expr(const common::Expression& expr, int alias) {
+parse_special_expr(const gs::Schema& schema, const common::Expression& expr,
+                   int alias) {
   int tag = -1;
   if (is_exchange_index(expr, alias, tag)) {
     return [=](const GraphReadInterface& graph,
@@ -960,7 +964,7 @@ parse_special_expr(const common::Expression& expr, int alias) {
     int tag;
     std::string name;
     RTAnyType type;
-    if (is_property_extract(expr, tag, name, type)) {
+    if (is_property_extract(schema, expr, tag, name, type)) {
       return [=](const GraphReadInterface& graph,
                  const std::map<std::string, std::string>& params,
                  const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
@@ -1000,8 +1004,8 @@ parse_special_expr(const common::Expression& expr, int alias) {
   }
   std::string name, lower, upper, target;
   common::Value then_value, else_value;
-  if (is_check_property_in_range(expr, tag, name, lower, upper, then_value,
-                                 else_value)) {
+  if (is_check_property_in_range(schema, expr, tag, name, lower, upper,
+                                 then_value, else_value)) {
     return [=](const GraphReadInterface& graph,
                const std::map<std::string, std::string>& params,
                const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
@@ -1069,8 +1073,8 @@ parse_special_expr(const common::Expression& expr, int alias) {
     };
   }
   SPPredicateType ptype;
-  if (is_check_property_cmp(expr, tag, name, target, then_value, else_value,
-                            ptype)) {
+  if (is_check_property_cmp(schema, expr, tag, name, target, then_value,
+                            else_value, ptype)) {
     return [=](const GraphReadInterface& graph,
                const std::map<std::string, std::string>& params,
                const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
@@ -1266,9 +1270,10 @@ class ProjectOpr : public IReadOperator {
   bool is_append_;
 };
 
-auto _make_project_expr(const common::Expression& expr, int alias,
+auto _make_project_expr(const gs::Schema& schema,
+                        const common::Expression& expr, int alias,
                         const std::optional<common::IrDataType>& data_type) {
-  auto func = parse_special_expr(expr, alias);
+  auto func = parse_special_expr(schema, expr, alias);
   if (func.has_value()) {
     return func.value();
   }
@@ -1307,7 +1312,8 @@ bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
+      exprs.emplace_back(
+          _make_project_expr(schema, expr, alias, data_types[i]));
     }
   } else {
     for (int i = 0; i < mappings_size; ++i) {
@@ -1321,7 +1327,7 @@ bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(_make_project_expr(expr, alias, std::nullopt));
+      exprs.emplace_back(_make_project_expr(schema, expr, alias, std::nullopt));
     }
   }
 
@@ -1475,7 +1481,8 @@ bl::result<ReadOpBuildResultT> ProjectOrderByOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
+      exprs.emplace_back(
+          _make_project_expr(schema, expr, alias, data_types[i]));
       if (order_by_keys.find(alias) != order_by_keys.end()) {
         index_set.insert(i);
       }

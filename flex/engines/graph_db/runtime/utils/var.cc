@@ -23,6 +23,20 @@ namespace gs {
 
 namespace runtime {
 
+bool check_whether_pk_property(const std::string& property_name,
+                               const Context& ctx, const gs::Schema& schema,
+                               int tag) {
+  auto vertex_column = std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag));
+  const auto& labels_set = vertex_column->get_labels_set();
+  for (auto label : labels_set) {
+    // Return true if any label's pk name is equal to property_name
+    if (schema.get_vertex_primary_key_name(label) == property_name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 Var::Var(const GraphReadInterface& graph, const Context& ctx,
          const common::Variable& pb, VarType var_type)
     : getter_(nullptr) {
@@ -55,7 +69,9 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
+          if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
+                                        tag)) {
+            LOG(INFO) << "check_whether_pk_property";
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdPathAccessor<std::string_view>>(
@@ -124,7 +140,9 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
-          if (pt.key().name() == "id") {
+          if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
+                                        tag)) {
+            LOG(INFO) << "check_whether_pk_property";
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdVertexAccessor<std::string_view>>(

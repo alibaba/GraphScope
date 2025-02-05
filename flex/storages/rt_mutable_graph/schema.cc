@@ -198,6 +198,17 @@ Schema::get_vprop_name_to_type_and_index(label_t label) const {
   return vprop_name_to_type_and_index_[label];
 }
 
+bool Schema::could_be_primary_key(const std::string& prop) const {
+  for (const auto& v : v_primary_keys_) {
+    for (const auto& p : v) {
+      if (std::get<1>(p) == prop) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool Schema::exist(const std::string& src_label, const std::string& dst_label,
                    const std::string& edge_label) const {
   label_t src = get_vertex_label_id(src_label);
@@ -393,6 +404,16 @@ Schema::get_vertex_primary_key(label_t index) const {
                      "Fail to get vertex primary key: " +
                          std::to_string(index) + ", out of range");
   return v_primary_keys_[index];
+}
+
+const std::string& Schema::get_vertex_primary_key_name(label_t index) const {
+  THROW_EXCEPTION_IF(index >= v_primary_keys_.size(),
+                     "Fail to get vertex primary key name: " +
+                         std::to_string(index) + ", out of range");
+  THROW_EXCEPTION_IF(v_primary_keys_[index].size() != 1,
+                     "Expect only one primary key, but got " +
+                         std::to_string(v_primary_keys_[index].size()));
+  return std::get<1>(v_primary_keys_[index][0]);
 }
 
 // Note that plugin_dir_ and plugin_name_to_path_and_id_ are not serialized.

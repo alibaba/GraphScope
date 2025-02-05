@@ -122,7 +122,16 @@ bl::result<ReadOpBuildResultT> SelectOprBuilder::Build(
       auto name = var.property().key().name();
       auto type = parse_from_ir_data_type(
           opr.predicate().operators(2).param().data_type());
-      if (name == "id" && type == RTAnyType::kI64Value) {
+      // Here we don't know the exact labels info of var.tag.id(), but we could
+      // create SelectIdNeOpr once any primary key in schema matches this
+      // property, since it is a common property, we still could deprecate to
+      // SelectOprBeta.
+      std::unordered_set<std::string> pks;
+      for (auto label = 0; label < schema.vertex_label_num(); ++label) {
+        auto pk = schema.get_vertex_primary_key_name(label);
+        pks.insert(pk);
+      }
+      if (pks.find(name) != pks.end() && type == RTAnyType::kI64Value) {
         return std::make_pair(std::make_unique<SelectIdNeOpr>(opr.predicate()),
                               ctx_meta);
       }

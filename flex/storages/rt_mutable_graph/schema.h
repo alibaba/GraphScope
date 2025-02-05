@@ -277,6 +277,9 @@ class Schema {
   const std::unordered_map<std::string, std::pair<PropertyType, uint8_t>>&
   get_vprop_name_to_type_and_index(label_t label) const;
 
+  // Test whether the property could be a primary key
+  bool could_be_primary_key(const std::string& prop) const;
+
  private:
   label_t vertex_label_to_index(const std::string& label);
 
