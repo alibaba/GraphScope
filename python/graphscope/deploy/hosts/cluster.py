@@ -91,7 +91,7 @@ class HostsClusterLauncher(Launcher):
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
-        # In notebook environment, we need to accept the signal from kernel restarted/stoped.
+        # In notebook environment, we need to accept the signal from kernel restarted/stopped.
         process = subprocess.Popen(
             cmd,
             start_new_session=False if in_notebook() else True,

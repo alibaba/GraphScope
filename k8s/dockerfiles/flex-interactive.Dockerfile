@@ -33,7 +33,7 @@ RUN cd /tmp && git clone https://github.com/igraph/igraph.git && cd igraph && \
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} && make -j ${PARALLEL} && make install && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && make -j ${PARALLEL} && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \

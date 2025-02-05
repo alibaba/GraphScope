@@ -69,11 +69,14 @@ inline bool parse_multipart_boundary(const seastar::sstring& content_type,
 
 class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
  public:
-  admin_file_upload_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+  admin_file_upload_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
+                                 int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -210,11 +213,14 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
  */
 class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
  public:
-  admin_http_graph_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+  admin_http_graph_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
+                                int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -329,11 +335,14 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
 class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
  public:
   admin_http_procedure_handler_impl(uint32_t group_id,
-                                    uint32_t shard_concurrency)
+                                    uint32_t shard_concurrency,
+                                    int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -445,11 +454,14 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
 // Handling request for node and service management
 class admin_http_service_handler_impl : public seastar::httpd::handler_base {
  public:
-  admin_http_service_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+  admin_http_service_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
+                                  int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -514,11 +526,14 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
 
 class admin_http_node_handler_impl : public seastar::httpd::handler_base {
  public:
-  admin_http_node_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+  admin_http_node_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
+                               int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -558,11 +573,14 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
 
 class admin_http_job_handler_impl : public seastar::httpd::handler_base {
  public:
-  admin_http_job_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+  admin_http_job_handler_impl(uint32_t group_id, uint32_t shard_concurrency,
+                              int32_t exclusive_shard_id)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     admin_actor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder
+        .set_shard(exclusive_shard_id >= 0 ? exclusive_shard_id
+                                           : hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
     for (unsigned i = 0; i < shard_concurrency_; ++i) {
@@ -623,8 +641,9 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
   std::vector<admin_actor_ref> admin_actor_refs_;
 };
 
-admin_http_handler::admin_http_handler(uint16_t http_port)
-    : http_port_(http_port) {}
+admin_http_handler::admin_http_handler(uint16_t http_port,
+                                       int32_t exclusive_shard_id)
+    : http_port_(http_port), exclusive_shard_id_(exclusive_shard_id) {}
 
 void admin_http_handler::start() {
   auto fut = seastar::alien::submit_to(
@@ -649,12 +668,13 @@ void admin_http_handler::stop() {
 }
 
 seastar::future<> admin_http_handler::set_routes() {
-  return server_.set_routes([](seastar::httpd::routes& r) {
+  return server_.set_routes([&](seastar::httpd::routes& r) {
     ////Procedure management ///
     {
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure");
@@ -664,7 +684,8 @@ seastar::future<> admin_http_handler::set_routes() {
     {
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure");
@@ -675,7 +696,8 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -688,7 +710,8 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -700,7 +723,8 @@ seastar::future<> admin_http_handler::set_routes() {
       // Each procedure's handling
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_procedure_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/procedure")
@@ -713,24 +737,28 @@ seastar::future<> admin_http_handler::set_routes() {
     // List all graphs.
     r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/v1/graph"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_concurrency));
+                                            shard_admin_concurrency,
+                                            exclusive_shard_id_));
     // Create a new Graph
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/graph"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_concurrency));
+                                            shard_admin_concurrency,
+                                            exclusive_shard_id_));
 
     // Delete a graph
     r.add(SEASTAR_DELETE,
           seastar::httpd::url("/v1/graph").remainder("graph_id"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
-                                            shard_admin_concurrency));
+                                            shard_admin_concurrency,
+                                            exclusive_shard_id_));
     {
       // uploading file to server
       r.add(seastar::httpd::operation_type::POST,
             seastar::httpd::url("/v1/file/upload"),
             new admin_file_upload_handler_impl(interactive_admin_group_id,
-                                               shard_admin_concurrency));
+                                               shard_admin_concurrency,
+                                               exclusive_shard_id_));
     }
 
     // Get graph metadata
@@ -739,7 +767,8 @@ seastar::future<> admin_http_handler::set_routes() {
       // /v1/graph/{graph_id}/schema
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph").add_param("graph_id", false);
       // Get graph schema
       r.add(match_rule, seastar::httpd::operation_type::GET);
@@ -748,7 +777,8 @@ seastar::future<> admin_http_handler::set_routes() {
     {  // load data to graph
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/dataloading");
@@ -757,7 +787,8 @@ seastar::future<> admin_http_handler::set_routes() {
     {  // Get Graph Schema
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/schema");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
@@ -765,7 +796,8 @@ seastar::future<> admin_http_handler::set_routes() {
       // Get running graph statistics
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/statistics");
@@ -777,18 +809,21 @@ seastar::future<> admin_http_handler::set_routes() {
       r.add(seastar::httpd::operation_type::GET,
             seastar::httpd::url("/v1/node/status"),
             new admin_http_node_handler_impl(interactive_admin_group_id,
-                                             shard_admin_concurrency));
+                                             shard_admin_concurrency,
+                                             exclusive_shard_id_));
 
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_service_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
       match_rule->add_str("/v1/service").add_param("action");
       r.add(match_rule, seastar::httpd::operation_type::POST);
 
       r.add(seastar::httpd::operation_type::GET,
             seastar::httpd::url("/v1/service/status"),
             new admin_http_service_handler_impl(interactive_admin_group_id,
-                                                shard_admin_concurrency));
+                                                shard_admin_concurrency,
+                                                exclusive_shard_id_));
     }
 
     {
@@ -860,17 +895,20 @@ seastar::future<> admin_http_handler::set_routes() {
       // job request handling.
       r.add(seastar::httpd::operation_type::GET, seastar::httpd::url("/v1/job"),
             new admin_http_job_handler_impl(interactive_admin_group_id,
-                                            shard_admin_concurrency));
+                                            shard_admin_concurrency,
+                                            exclusive_shard_id_));
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_job_handler_impl(
-              interactive_admin_group_id, shard_admin_concurrency));
+              interactive_admin_group_id, shard_admin_concurrency,
+              exclusive_shard_id_));
 
       match_rule->add_str("/v1/job").add_param("job_id");
       r.add(match_rule, seastar::httpd::operation_type::GET);
 
       r.add(SEASTAR_DELETE, seastar::httpd::url("/v1/job").remainder("job_id"),
             new admin_http_job_handler_impl(interactive_admin_group_id,
-                                            shard_admin_concurrency));
+                                            shard_admin_concurrency,
+                                            exclusive_shard_id_));
     }
 
     return seastar::make_ready_future<>();

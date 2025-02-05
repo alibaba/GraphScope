@@ -39,6 +39,7 @@ using JobId = std::string;
 struct Parameter {
   std::string name;
   PropertyType type;
+  bool allow_cast{false};
 
   std::string ToJson() const;
 };
@@ -52,6 +53,8 @@ enum class JobStatus {
 };
 
 JobStatus parseFromString(const std::string& status_string);
+Result<std::string> preprocess_and_check_schema_json_string(
+    const std::string& json_str);
 
 ////////////////// MetaData ///////////////////////
 struct PluginMeta;

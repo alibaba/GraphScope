@@ -21,10 +21,13 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -36,7 +39,14 @@ public class QueryCache {
         this.cache =
                 CacheBuilder.newBuilder()
                         .maximumSize(cacheSize)
-                        .build(CacheLoader.from(key -> new Value(key.instance.plan(), null)));
+                        .build(
+                                CacheLoader.from(
+                                        key ->
+                                                new Value(
+                                                        key.instance.plan(),
+                                                        null,
+                                                        ImmutableMap.of(
+                                                                "instance", key.instance))));
     }
 
     public class Key {
@@ -69,10 +79,16 @@ public class QueryCache {
     public static class Value {
         public final GraphPlanner.Summary summary;
         public @Nullable Result result;
+        public final Map<String, Object> debugInfo;
 
         public Value(GraphPlanner.Summary summary, Result result) {
+            this(summary, result, Maps.newHashMap());
+        }
+
+        public Value(GraphPlanner.Summary summary, Result result, Map<String, Object> debugInfo) {
             this.summary = Objects.requireNonNull(summary);
             this.result = result;
+            this.debugInfo = debugInfo;
         }
     }
 

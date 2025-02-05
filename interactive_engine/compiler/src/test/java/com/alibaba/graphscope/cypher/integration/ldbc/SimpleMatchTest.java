@@ -25,10 +25,22 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.internal.types.InternalTypeSystem;
+import org.neo4j.driver.types.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class SimpleMatchTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleMatchTest.class);
 
     private static Session session;
 
@@ -160,6 +172,45 @@ public class SimpleMatchTest {
         QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_17_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_simple_match_18_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_18_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_simple_match_19_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_19_test();
+        Result result = session.run(testQuery.getQuery());
+        List<Record> records = result.list();
+        List<String> properties = new ArrayList<>();
+        records.forEach(
+                record -> {
+                    properties.add(fetchAllProperties(record));
+                });
+        logger.info(properties.toString());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), properties.toString());
+    }
+
+    private static String fetchAllProperties(Record record) {
+        List<String> properties = new ArrayList<>();
+        record.keys()
+                .forEach(
+                        key -> {
+                            Value v = record.get(key);
+                            if (v.hasType(InternalTypeSystem.TYPE_SYSTEM.NODE())) {
+                                Node node = v.asNode();
+                                Map<String, Object> nodeProperties = node.asMap();
+                                properties.add(key + ": " + nodeProperties.toString());
+                            } else {
+                                properties.add(key + ": " + record.get(key).toString());
+                            }
+                        });
+        return properties.toString();
     }
 
     @AfterClass

@@ -54,7 +54,7 @@ get_os_version() {
     OS_VERSION=$(uname -r)
   fi
   if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* && "${PLATFORM}" != *"Darwin"* && "${PLATFORM}" != *"Aliyun"* ]];then
-    err "Only suppport on Ubuntu/CentOS/macOS/AliyunOS platform."
+    err "Only support on Ubuntu/CentOS/macOS/AliyunOS platform."
     exit 1
   fi
   if [[ "${PLATFORM}" == *"Ubuntu"* && "${OS_VERSION:0:2}" -lt "20" ]]; then
@@ -293,7 +293,7 @@ install_boost() {
   pushd "${tempdir}" || exit
   directory="boost_1_75_0"
   file="${directory}.tar.gz"
-  url="https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source"
+  url="https://archives.boost.io/release/1.75.0/source"
   url=$(set_to_cn_url ${url})
   download_and_untar "${url}" "${file}" "${directory}"
   pushd ${directory} || exit
@@ -485,6 +485,19 @@ install_zlib() {
   popd || exit
   popd || exit
   rm -rf "${tempdir:?}/${directory:?}" "${tempdir:?}/${file:?}"
+}
+
+install_mimalloc() {
+  pushd "${tempdir}" || exit
+  git clone https://github.com/microsoft/mimalloc -b v1.8.6
+  cd mimalloc
+  mkdir -p build && cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${install_prefix}"
+  make -j$(nproc)
+  make install
+  popd || exit
+  rm -rf "${tempdir:?}/mimalloc"
 }
 
 # opentelemetry
@@ -867,12 +880,14 @@ install_interactive_dependencies() {
     install_boost
     # hiactor is only supported on ubuntu
     install_hiactor
+    install_mimalloc
     ${SUDO} sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
     ${SUDO} sysctl -p /etc/sysctl.conf
   else
     ${SUDO} yum install -y ${INTERACTIVE_CENTOS[*]}
     install_arrow
     install_boost
+    install_mimalloc
   fi
   # libgrape-lite
   install_libgrape_lite "v0.3.2"
@@ -882,13 +897,21 @@ install_interactive_dependencies() {
   if ! command -v rustup &>/dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
-    rustup install 1.76.0
-    rustup default 1.76.0
+    rustup install 1.81.0
+    rustup default 1.81.0
     rustc --version
   fi
   # opentelemetry
   if [[ "${OS_PLATFORM}" != *"Darwin"* ]]; then
-    install_opentelemetry
+    # opentelemetry expect libprotoc >= 3.13.0, see https://github.com/open-telemetry/opentelemetry-cpp/discussions/2223
+    proto_version=$(protoc --version | awk '{print $2}')
+    major_version=$(echo ${proto_version} | cut -d'.' -f1)
+    minor_version=$(echo ${proto_version} | cut -d'.' -f2)
+    if [[ ${major_version} -lt 3 ]] || [[ ${major_version} -eq 3 && ${minor_version} -lt 13 ]]; then
+      warning "OpenTelemetry requires protoc >= 3.13, current version is ${proto_version}, please upgrade it."
+    else
+      install_opentelemetry
+    fi
   fi
 }
 

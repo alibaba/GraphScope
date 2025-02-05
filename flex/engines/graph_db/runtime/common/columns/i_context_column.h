@@ -47,7 +47,7 @@ class SigColumn : public ISigColumn {
  public:
   SigColumn(const std::vector<T>& data) : data_(data.data()) {}
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override {
+  inline size_t get_sig(size_t idx) const override {
     return static_cast<size_t>(data_[idx]);
   }
 
@@ -60,7 +60,7 @@ class SigColumn<Date> : public ISigColumn {
  public:
   SigColumn(const std::vector<Date>& data) : data_(data.data()) {}
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override {
+  inline size_t get_sig(size_t idx) const override {
     return static_cast<size_t>(data_[idx].milli_second);
   }
 
@@ -69,21 +69,46 @@ class SigColumn<Date> : public ISigColumn {
 };
 
 template <>
-class SigColumn<std::pair<label_t, vid_t>> : public ISigColumn {
+class SigColumn<Day> : public ISigColumn {
  public:
-  SigColumn(const std::vector<std::pair<label_t, vid_t>>& data)
-      : data_(data.data()) {}
+  SigColumn(const std::vector<Day>& data) : data_(data.data()) {}
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override {
+  inline size_t get_sig(size_t idx) const override {
+    return static_cast<size_t>(data_[idx].to_u32());
+  }
+
+ private:
+  const Day* data_;
+};
+template <>
+class SigColumn<VertexRecord> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<VertexRecord>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
     const auto& v = data_[idx];
-    size_t ret = v.first;
+    size_t ret = v.label_;
     ret <<= 32;
-    ret += v.second;
+    ret += v.vid_;
     return ret;
   }
 
  private:
-  const std::pair<label_t, vid_t>* data_;
+  const VertexRecord* data_;
+};
+
+template <>
+class SigColumn<Relation> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<Relation>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return 0;
+  }
+
+ private:
+  const Relation* data_;
 };
 
 template <>
@@ -104,7 +129,7 @@ class SigColumn<std::string_view> : public ISigColumn {
     }
   }
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
+  inline size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
 
  private:
   std::vector<size_t> sig_list_;
@@ -128,7 +153,7 @@ class SigColumn<std::set<std::string>> : public ISigColumn {
     }
   }
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
+  inline size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
 
  private:
   std::vector<size_t> sig_list_;
@@ -152,7 +177,7 @@ class SigColumn<std::vector<vid_t>> : public ISigColumn {
     }
   }
   ~SigColumn() = default;
-  size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
+  inline size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
 
  private:
   std::vector<size_t> sig_list_;
@@ -171,8 +196,6 @@ class IContextColumn {
     return 0;
   }
 
-  virtual std::shared_ptr<IContextColumn> dup() const = 0;
-
   virtual std::string column_info() const = 0;
   virtual ContextColumnType column_type() const = 0;
 
@@ -187,6 +210,12 @@ class IContextColumn {
   }
 
   virtual std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const {
+    LOG(FATAL) << "not implemented for " << this->column_info();
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offsets) const {
     LOG(FATAL) << "not implemented for " << this->column_info();
     return nullptr;
@@ -214,6 +243,20 @@ class IContextColumn {
 
   virtual void generate_dedup_offset(std::vector<size_t>& offsets) const {
     LOG(FATAL) << "not implemented for " << this->column_info();
+  }
+
+  virtual std::pair<std::shared_ptr<IContextColumn>,
+                    std::vector<std::vector<size_t>>>
+  generate_aggregate_offset() const {
+    LOG(INFO) << "not implemented for " << this->column_info();
+    std::shared_ptr<IContextColumn> col(nullptr);
+    return std::make_pair(col, std::vector<std::vector<size_t>>());
+  }
+
+  virtual bool order_by_limit(bool asc, size_t limit,
+                              std::vector<size_t>& offsets) const {
+    LOG(INFO) << "order by limit not implemented for " << this->column_info();
+    return false;
   }
 };
 

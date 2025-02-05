@@ -208,6 +208,10 @@ struct __attribute__((packed)) Date {
     return milli_second < rhs.milli_second;
   }
 
+  bool operator==(const Date& rhs) const {
+    return milli_second == rhs.milli_second;
+  }
+
   int64_t milli_second;
 };
 
@@ -253,8 +257,7 @@ struct Day {
     this->value.internal.day = date.day();
     this->value.internal.hour = td.hours();
 
-    int64_t ts_back = to_timestamp();
-    CHECK_EQ(ts, ts_back);
+    assert(ts == to_timestamp());
   }
 
   bool operator<(const Day& rhs) const { return this->to_u32() < rhs.to_u32(); }
@@ -283,7 +286,7 @@ struct LabelKey {
 class Table;
 struct Any;
 struct RecordView {
-  RecordView() : offset(0), table(nullptr) {}
+  RecordView() = default;
   RecordView(size_t offset, const Table* table)
       : offset(offset), table(table) {}
   size_t size() const;
@@ -291,6 +294,15 @@ struct RecordView {
 
   template <typename T>
   T get_field(int col_id) const;
+
+  inline bool operator==(const RecordView& other) const {
+    if (size() != other.size()) {
+      return false;
+    }
+    return table == other.table && offset == other.offset;
+  }
+
+  std::string to_string() const;
 
   size_t offset;
   const Table* table;
@@ -804,7 +816,7 @@ struct ConvertAny {
 template <>
 struct ConvertAny<bool> {
   static void to(const Any& value, bool& out) {
-    CHECK(value.type == PropertyType::kBool);
+    assert(value.type == PropertyType::kBool);
     out = value.value.b;
   }
 };
@@ -812,7 +824,7 @@ struct ConvertAny<bool> {
 template <>
 struct ConvertAny<int32_t> {
   static void to(const Any& value, int32_t& out) {
-    CHECK(value.type == PropertyType::kInt32);
+    assert(value.type == PropertyType::kInt32);
     out = value.value.i;
   }
 };
@@ -820,7 +832,7 @@ struct ConvertAny<int32_t> {
 template <>
 struct ConvertAny<uint32_t> {
   static void to(const Any& value, uint32_t& out) {
-    CHECK(value.type == PropertyType::kUInt32);
+    assert(value.type == PropertyType::kUInt32);
     out = value.value.ui;
   }
 };
@@ -828,7 +840,7 @@ struct ConvertAny<uint32_t> {
 template <>
 struct ConvertAny<int64_t> {
   static void to(const Any& value, int64_t& out) {
-    CHECK(value.type == PropertyType::kInt64);
+    assert(value.type == PropertyType::kInt64);
     out = value.value.l;
   }
 };
@@ -836,7 +848,7 @@ struct ConvertAny<int64_t> {
 template <>
 struct ConvertAny<uint64_t> {
   static void to(const Any& value, uint64_t& out) {
-    CHECK(value.type == PropertyType::kUInt64);
+    assert(value.type == PropertyType::kUInt64);
     out = value.value.ul;
   }
 };
@@ -844,7 +856,7 @@ struct ConvertAny<uint64_t> {
 template <>
 struct ConvertAny<GlobalId> {
   static void to(const Any& value, GlobalId& out) {
-    CHECK(value.type == PropertyType::kVertexGlobalId);
+    assert(value.type == PropertyType::kVertexGlobalId);
     out = value.value.vertex_gid;
   }
 };
@@ -852,7 +864,7 @@ struct ConvertAny<GlobalId> {
 template <>
 struct ConvertAny<LabelKey> {
   static void to(const Any& value, LabelKey& out) {
-    CHECK(value.type == PropertyType::kLabel);
+    assert(value.type == PropertyType::kLabel);
     out = value.value.label_key;
   }
 };
@@ -860,7 +872,7 @@ struct ConvertAny<LabelKey> {
 template <>
 struct ConvertAny<Date> {
   static void to(const Any& value, Date& out) {
-    CHECK(value.type == PropertyType::kDate);
+    assert(value.type == PropertyType::kDate);
     out = value.value.d;
   }
 };
@@ -868,7 +880,7 @@ struct ConvertAny<Date> {
 template <>
 struct ConvertAny<Day> {
   static void to(const Any& value, Day& out) {
-    CHECK(value.type == PropertyType::kDay);
+    assert(value.type == PropertyType::kDay);
     out = value.value.day;
   }
 };
@@ -876,14 +888,14 @@ struct ConvertAny<Day> {
 template <>
 struct ConvertAny<grape::EmptyType> {
   static void to(const Any& value, grape::EmptyType& out) {
-    CHECK(value.type == PropertyType::kEmpty);
+    assert(value.type == PropertyType::kEmpty);
   }
 };
 
 template <>
 struct ConvertAny<std::string> {
   static void to(const Any& value, std::string& out) {
-    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kString);
+    assert(value.type.type_enum == impl::PropertyTypeImpl::kString);
     out = *value.value.s_ptr.ptr;
   }
 };
@@ -891,7 +903,7 @@ struct ConvertAny<std::string> {
 template <>
 struct ConvertAny<std::string_view> {
   static void to(const Any& value, std::string_view& out) {
-    CHECK(value.type == PropertyType::kStringView);
+    assert(value.type == PropertyType::kStringView);
     out = value.value.s;
   }
 };
@@ -899,7 +911,7 @@ struct ConvertAny<std::string_view> {
 template <>
 struct ConvertAny<float> {
   static void to(const Any& value, float& out) {
-    CHECK(value.type == PropertyType::kFloat);
+    assert(value.type == PropertyType::kFloat);
     out = value.value.f;
   }
 };
@@ -907,7 +919,7 @@ struct ConvertAny<float> {
 template <>
 struct ConvertAny<double> {
   static void to(const Any& value, double& out) {
-    CHECK(value.type == PropertyType::kDouble);
+    assert(value.type == PropertyType::kDouble);
     out = value.value.db;
   }
 };
@@ -915,7 +927,7 @@ struct ConvertAny<double> {
 template <>
 struct ConvertAny<RecordView> {
   static void to(const Any& value, RecordView& out) {
-    CHECK(value.type == PropertyType::kRecordView);
+    assert(value.type == PropertyType::kRecordView);
     out.offset = value.value.record_view.offset;
     out.table = value.value.record_view.table;
   }
@@ -924,7 +936,7 @@ struct ConvertAny<RecordView> {
 template <>
 struct ConvertAny<Record> {
   static void to(const Any& value, Record& out) {
-    CHECK(value.type == PropertyType::kRecord);
+    assert(value.type == PropertyType::kRecord);
     out = value.value.record;
   }
 };
@@ -943,7 +955,7 @@ struct AnyConverter<bool> {
     return ret;
   }
   static const bool& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kBool);
+    assert(value.type == PropertyType::kBool);
     return value.value.b;
   }
 
@@ -959,7 +971,7 @@ struct AnyConverter<uint8_t> {
     return ret;
   }
   static const uint8_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kUInt8);
+    assert(value.type == PropertyType::kUInt8);
     return value.value.u8;
   }
 };
@@ -973,7 +985,7 @@ struct AnyConverter<uint16_t> {
     return ret;
   }
   static const uint16_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kUInt8);
+    assert(value.type == PropertyType::kUInt8);
     return value.value.u16;
   }
 };
@@ -989,7 +1001,7 @@ struct AnyConverter<int32_t> {
   }
 
   static const int32_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kInt32);
+    assert(value.type == PropertyType::kInt32);
     return value.value.i;
   }
 
@@ -1009,7 +1021,7 @@ struct AnyConverter<uint32_t> {
   }
 
   static const uint32_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kUInt32);
+    assert(value.type == PropertyType::kUInt32);
     return value.value.ui;
   }
 
@@ -1028,7 +1040,7 @@ struct AnyConverter<int64_t> {
   }
 
   static const int64_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kInt64);
+    assert(value.type == PropertyType::kInt64);
     return value.value.l;
   }
 
@@ -1048,7 +1060,7 @@ struct AnyConverter<uint64_t> {
   }
 
   static const uint64_t& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kUInt64);
+    assert(value.type == PropertyType::kUInt64);
     return value.value.ul;
   }
 
@@ -1068,7 +1080,7 @@ struct AnyConverter<GlobalId> {
   }
 
   static const GlobalId& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kVertexGlobalId);
+    assert(value.type == PropertyType::kVertexGlobalId);
     return value.value.vertex_gid;
   }
 
@@ -1094,7 +1106,7 @@ struct AnyConverter<Date> {
   }
 
   static const Date& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kDate);
+    assert(value.type == PropertyType::kDate);
     return value.value.d;
   }
 
@@ -1119,7 +1131,7 @@ struct AnyConverter<Day> {
   }
 
   static const Day& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kDay);
+    assert(value.type == PropertyType::kDay);
     return value.value.day;
   }
 
@@ -1137,8 +1149,8 @@ struct AnyConverter<std::string_view> {
   }
 
   static const std::string_view& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kStringView &&
-          value.type.type_enum != impl::PropertyTypeImpl::kString);
+    assert(value.type == PropertyType::kStringView &&
+           value.type.type_enum != impl::PropertyTypeImpl::kString);
     return value.value.s;
   }
 
@@ -1158,7 +1170,7 @@ struct AnyConverter<std::string> {
   }
 
   static std::string& from_any(const Any& value) {
-    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kString);
+    assert(value.type.type_enum == impl::PropertyTypeImpl::kString);
     return *value.value.s_ptr.ptr;
   }
 
@@ -1177,7 +1189,7 @@ struct AnyConverter<grape::EmptyType> {
   }
 
   static grape::EmptyType from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kEmpty);
+    assert(value.type == PropertyType::kEmpty);
     return grape::EmptyType();
   }
 
@@ -1197,7 +1209,7 @@ struct AnyConverter<double> {
   }
 
   static const double& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kDouble);
+    assert(value.type == PropertyType::kDouble);
     return value.value.db;
   }
 
@@ -1218,7 +1230,7 @@ struct AnyConverter<float> {
   }
 
   static const float& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kFloat);
+    assert(value.type == PropertyType::kFloat);
     return value.value.f;
   }
 
@@ -1236,7 +1248,7 @@ struct AnyConverter<LabelKey> {
   }
 
   static const LabelKey& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kLabel);
+    assert(value.type == PropertyType::kLabel);
     return value.value.label_key;
   }
 
@@ -1257,7 +1269,7 @@ struct AnyConverter<RecordView> {
   }
 
   static const RecordView& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kRecordView);
+    assert(value.type == PropertyType::kRecordView);
     return value.value.record_view;
   }
 
@@ -1277,7 +1289,7 @@ struct AnyConverter<Record> {
   }
 
   static const Record& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kRecord);
+    assert(value.type == PropertyType::kRecord);
     return value.value.record;
   }
 
@@ -1371,6 +1383,12 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
   } else if (pt == gs::PropertyType::VertexGlobalId()) {
     os << "vertex_global_id";
+  } else if (pt == gs::PropertyType::Label()) {
+    os << "label";
+  } else if (pt == gs::PropertyType::RecordView()) {
+    os << "record_view";
+  } else if (pt == gs::PropertyType::Record()) {
+    os << "record";
   } else {
     os << "unknown";
   }

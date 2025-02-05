@@ -279,7 +279,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_Variable(CypherGSParser.OC_VariableContext ctx) {
-        String aliasName = ctx.getText();
+        String aliasName = Utils.getAliasName(ctx);
         return new ExprVisitorResult(builder.variable(aliasName));
     }
 

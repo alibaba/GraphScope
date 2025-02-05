@@ -335,7 +335,14 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
     query_param&& query_param) {
   LOG(INFO) << "Creating Graph: " << query_param.content;
 
-  auto request = gs::CreateGraphMetaRequest::FromJson(query_param.content);
+  gs::Result<std::string> preprocess_schema_str =
+      gs::preprocess_and_check_schema_json_string(query_param.content);
+  if (!preprocess_schema_str.ok()) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(preprocess_schema_str.status()));
+  }
+  auto request =
+      gs::CreateGraphMetaRequest::FromJson(preprocess_schema_str.value());
   if (!request.ok()) {
     LOG(ERROR) << "Fail to parse graph meta: "
                << request.status().error_message();
@@ -923,9 +930,29 @@ seastar::future<admin_query_result> admin_actor::start_service(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(plugins_res.status()));
   }
+  // Note that the plugin meta contains both builtin and user-defined plugins,
+  // we need to remove the builtin plugins from the plugin meta.
+  auto& graph_meta = get_graph_res.value();
+  auto& additional_plugins = plugins_res.value();
+  const auto& all_builtin_plugins = gs::get_builtin_plugin_metas();
+  for (const auto& builtin_plugin : all_builtin_plugins) {
+    auto it =
+        std::remove_if(additional_plugins.begin(), additional_plugins.end(),
+                       [&builtin_plugin](const gs::PluginMeta& plugin_meta) {
+                         return plugin_meta.id == builtin_plugin.id;
+                       });
+    additional_plugins.erase(it, additional_plugins.end());
+    auto it2 = std::remove_if(
+        graph_meta.plugin_metas.begin(), graph_meta.plugin_metas.end(),
+        [&builtin_plugin](const gs::PluginMeta& plugin_meta) {
+          return plugin_meta.id == builtin_plugin.id;
+        });
+    graph_meta.plugin_metas.erase(it2, graph_meta.plugin_metas.end());
+  }
+
   // With all enabled plugins and graph schema, dump to a new schema file.
-  auto dump_res = WorkDirManipulator::DumpGraphSchema(get_graph_res.value(),
-                                                      plugins_res.value());
+  auto dump_res =
+      WorkDirManipulator::DumpGraphSchema(graph_meta, additional_plugins);
   if (!dump_res.ok()) {
     LOG(ERROR) << "Fail to dump graph schema: "
                << dump_res.status().error_message();

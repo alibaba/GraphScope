@@ -34,12 +34,13 @@ int main(int argc, char** argv) {
                                       bpo::value<uint32_t>()->default_value(1),
                                       "shard number of actor system")(
       "http-port,p", bpo::value<uint16_t>()->default_value(10000),
-      "http port of query handler")("graph-config,g", bpo::value<std::string>(),
-                                    "graph schema config file")(
-      "data-path,d", bpo::value<std::string>(), "data directory path")(
+      "http port of query handler")("data-path,d", bpo::value<std::string>(),
+                                    "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
       "warmup graph data")("memory-level,m",
-                           bpo::value<int>()->default_value(1));
+                           bpo::value<int>()->default_value(1))(
+      "compiler-path,c", bpo::value<std::string>()->default_value(""))(
+      "sharding-mode", bpo::value<std::string>()->default_value("cooperative"));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -62,31 +63,26 @@ int main(int argc, char** argv) {
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
 
-  std::string graph_schema_path = "";
   std::string data_path = "";
 
-  if (!vm.count("graph-config")) {
-    LOG(ERROR) << "graph-config is required";
-    return -1;
-  }
-  graph_schema_path = vm["graph-config"].as<std::string>();
   if (!vm.count("data-path")) {
     LOG(ERROR) << "data-path is required";
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
+  std::string compiler_path = vm["compiler-path"].as<std::string>();
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
 
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
-
+  std::string graph_schema_path = data_path + "/graph.yaml";
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   if (!schema.ok()) {
     LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();
   }
-  gs::GraphDBConfig config(schema.value(), data_path, shard_num);
+  gs::GraphDBConfig config(schema.value(), data_path, compiler_path, shard_num);
   config.memory_level = memory_level;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
@@ -106,6 +102,7 @@ int main(int argc, char** argv) {
   service_config.query_port = http_port;
   service_config.start_admin_service = false;
   service_config.start_compiler = false;
+  service_config.set_sharding_mode(vm["sharding-mode"].as<std::string>());
   server::GraphDBService::get().init(service_config);
   server::GraphDBService::get().run_and_wait_for_exit();
 

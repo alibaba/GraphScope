@@ -66,8 +66,8 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     count_vertices.type = "cypher";
     count_vertices.creation_time = GetCurrentTimeStamp();
     count_vertices.update_time = GetCurrentTimeStamp();
-    count_vertices.params.push_back({"labelName", PropertyType::kString});
-    count_vertices.returns.push_back({"count", PropertyType::kInt32});
+    count_vertices.params.push_back({"labelName", PropertyType::kString, true});
+    count_vertices.returns.push_back({"count", PropertyType::kInt32, false});
     builtin_plugins.push_back(count_vertices);
 
     // pagerank
@@ -80,11 +80,11 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     pagerank.type = "cypher";
     pagerank.creation_time = GetCurrentTimeStamp();
     pagerank.update_time = GetCurrentTimeStamp();
-    pagerank.params.push_back({"vertex_label", PropertyType::kString});
-    pagerank.params.push_back({"edge_label", PropertyType::kString});
-    pagerank.params.push_back({"damping_factor", PropertyType::kDouble});
-    pagerank.params.push_back({"max_iterations", PropertyType::kInt32});
-    pagerank.params.push_back({"epsilon", PropertyType::kDouble});
+    pagerank.params.push_back({"vertex_label", PropertyType::kString, true});
+    pagerank.params.push_back({"edge_label", PropertyType::kString, true});
+    pagerank.params.push_back({"damping_factor", PropertyType::kDouble, false});
+    pagerank.params.push_back({"max_iterations", PropertyType::kInt32, false});
+    pagerank.params.push_back({"epsilon", PropertyType::kDouble, false});
     pagerank.returns.push_back({"label_name", PropertyType::kString});
     pagerank.returns.push_back({"vertex_oid", PropertyType::kInt64});
     pagerank.returns.push_back({"pagerank", PropertyType::kDouble});
@@ -100,9 +100,9 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     k_neighbors.type = "cypher";
     k_neighbors.creation_time = GetCurrentTimeStamp();
     k_neighbors.update_time = GetCurrentTimeStamp();
-    k_neighbors.params.push_back({"label_name", PropertyType::kString});
-    k_neighbors.params.push_back({"oid", PropertyType::kInt64});
-    k_neighbors.params.push_back({"k", PropertyType::kInt32});
+    k_neighbors.params.push_back({"label_name", PropertyType::kString, true});
+    k_neighbors.params.push_back({"oid", PropertyType::kInt64, false});
+    k_neighbors.params.push_back({"k", PropertyType::kInt32, false});
     k_neighbors.returns.push_back({"label_name", PropertyType::kString});
     k_neighbors.returns.push_back({"vertex_oid", PropertyType::kInt64});
     builtin_plugins.push_back(k_neighbors);
@@ -119,17 +119,19 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     shortest_path_among_three.creation_time = GetCurrentTimeStamp();
     shortest_path_among_three.update_time = GetCurrentTimeStamp();
     shortest_path_among_three.params.push_back(
-        {"label_name1", PropertyType::kString});
-    shortest_path_among_three.params.push_back({"oid1", PropertyType::kInt64});
+        {"label_name1", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"label_name2", PropertyType::kString});
-    shortest_path_among_three.params.push_back({"oid2", PropertyType::kInt64});
+        {"oid1", PropertyType::kInt64, false});
     shortest_path_among_three.params.push_back(
-        {"label_name3", PropertyType::kString});
-    shortest_path_among_three.params.push_back({"oid3", PropertyType::kInt64});
+        {"label_name2", PropertyType::kString, true});
+    shortest_path_among_three.params.push_back(
+        {"oid2", PropertyType::kInt64, false});
+    shortest_path_among_three.params.push_back(
+        {"label_name3", PropertyType::kString, true});
+    shortest_path_among_three.params.push_back(
+        {"oid3", PropertyType::kInt64, false});
     shortest_path_among_three.returns.push_back(
-        {"shortest_path_among_three (label name, vertex oid)",
-         PropertyType::kString});
+        {"path", PropertyType::kString});
     builtin_plugins.push_back(shortest_path_among_three);
 
     initialized = true;
@@ -153,6 +155,7 @@ std::string Parameter::ToJson() const {
   json.AddMember("name", name, json.GetAllocator());
   json.AddMember("type", to_json(type, &json.GetAllocator()),
                  json.GetAllocator());
+  json.AddMember("allow_cast", allow_cast, json.GetAllocator());
   return rapidjson_stringify(json);
 }
 
@@ -329,6 +332,7 @@ void PluginMeta::ToJson(rapidjson::Value& json,
     rapidjson::Document tempDoc(rapidjson::kObjectType, &allocator);
     tempDoc.AddMember("name", param.name, allocator);
     tempDoc.AddMember("type", to_json(param.type, &allocator), allocator);
+    tempDoc.AddMember("allow_cast", param.allow_cast, allocator);
     params_json.PushBack(tempDoc, allocator);
   }
   json.AddMember("params", params_json, allocator);
@@ -337,6 +341,7 @@ void PluginMeta::ToJson(rapidjson::Value& json,
     rapidjson::Document tempDoc(rapidjson::kObjectType, &allocator);
     tempDoc.AddMember("name", ret.name, allocator);
     tempDoc.AddMember("type", to_json(ret.type, &allocator), allocator);
+    tempDoc.AddMember("allow_cast", ret.allow_cast, allocator);
     returns_json.PushBack(tempDoc, allocator);
   }
   json.AddMember("returns", returns_json, allocator);
@@ -370,6 +375,11 @@ void PluginMeta::setParamsFromJsonString(const rapidjson::Value& document) {
       Parameter p;
       p.name = param["name"].GetString();
       p.type = from_json(param["type"]);
+      if (param.HasMember("allow_cast")) {
+        p.allow_cast = param["allow_cast"].GetBool();
+      } else {
+        p.allow_cast = false;
+      }
       params.push_back(p);
     }
   } else {
@@ -384,6 +394,11 @@ void PluginMeta::setReturnsFromJsonString(const rapidjson::Value& value) {
       Parameter p;
       p.name = ret["name"].GetString();
       p.type = from_json(ret["type"]);
+      if (ret.HasMember("allow_cast")) {
+        p.allow_cast = ret["allow_cast"].GetBool();
+      } else {
+        p.allow_cast = false;
+      }
       returns.push_back(p);
     }
   } else {
@@ -608,14 +623,10 @@ Result<CreateGraphMetaRequest> CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
 
-  Result<std::string> real_json_str =
-      preprocess_and_check_schema_json_string(json_str);
-
   CreateGraphMetaRequest request;
   rapidjson::Document json(rapidjson::kObjectType);
-  if (json.Parse(real_json_str.value().c_str()).HasParseError()) {
-    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: "
-               << real_json_str.value();
+  if (json.Parse(json_str.c_str()).HasParseError()) {
+    LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << json_str;
     return request;
   }
   if (json.HasMember("version")) {
@@ -814,6 +825,9 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
       Parameter p;
       p.name = param["name"].GetString();
       from_json(param["type"], p.type);
+      if (param.HasMember("allow_cast")) {
+        p.allow_cast = param["allow_cast"].GetBool();
+      }
       request.params.push_back(p);
     }
   }
@@ -822,6 +836,9 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
       Parameter p;
       p.name = ret["name"].GetString();
       from_json(ret["type"], p.type);
+      if (ret.HasMember("allow_cast")) {
+        p.allow_cast = ret["allow_cast"].GetBool();
+      }
       request.returns.push_back(p);
     }
   }
@@ -878,6 +895,9 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
       Parameter p;
       p.name = param["name"].GetString();
       p.type = from_json(param["type"]);
+      if (param.HasMember("allow_cast")) {
+        p.allow_cast = param["allow_cast"].GetBool();
+      }
       request.params->emplace_back(std::move(p));
     }
   }
@@ -887,6 +907,9 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
       Parameter p;
       p.name = ret["name"].GetString();
       p.type = from_json(ret["type"]);
+      if (ret.HasMember("allow_cast")) {
+        p.allow_cast = ret["allow_cast"].GetBool();
+      }
       request.returns->emplace_back(std::move(p));
     }
   }

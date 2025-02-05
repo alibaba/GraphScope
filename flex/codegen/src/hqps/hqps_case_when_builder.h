@@ -118,9 +118,8 @@ class CaseWhenBuilder : public ExprBuilder {
 
     std::string str = formater.str();
 
-    return std::make_tuple(
-        class_name_, construct_params_, tag_selectors_, str,
-        std::vector{common::DataType::DataType_INT_MIN_SENTINEL_DO_NOT_USE_});
+    return std::make_tuple(class_name_, construct_params_, tag_selectors_, str,
+                           std::vector{common::DataType()});
   }
 
  protected:

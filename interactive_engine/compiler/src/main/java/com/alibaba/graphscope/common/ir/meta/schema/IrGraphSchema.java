@@ -16,9 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.google.common.collect.ImmutableMap;
+
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,21 +38,26 @@ public class IrGraphSchema implements GraphSchema {
     private final boolean isColumnId;
     private final SchemaSpecManager specManager;
 
-    public IrGraphSchema(SchemaInputStream schemaInputStream) throws IOException {
+    public IrGraphSchema(Configs configs, SchemaInputStream schemaInputStream) throws IOException {
         this.isColumnId = false;
         String content =
                 new String(
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         schemaInputStream.getInputStream().close();
         SchemaSpec spec = new SchemaSpec(schemaInputStream.getType(), content);
-        this.graphSchema = spec.convert();
-        this.specManager = new SchemaSpecManager(this, spec);
+        RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl(configs);
+        this.graphSchema = spec.convert(typeFactory);
+        this.specManager = new SchemaSpecManager(this.graphSchema, false, typeFactory, spec);
     }
 
     public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
         this.isColumnId = isColumnId;
-        this.specManager = new SchemaSpecManager(this);
+        this.specManager =
+                new SchemaSpecManager(
+                        this.graphSchema,
+                        this.isColumnId,
+                        new GraphTypeFactoryImpl(new Configs(ImmutableMap.of())));
     }
 
     public boolean isColumnId() {

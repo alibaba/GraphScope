@@ -69,7 +69,7 @@ class StoppableHandler : public seastar::httpd::handler_base {
           } catch (const std::exception& e) {
             // In case the scope is already cancelled, we should ignore the
             // exception.
-            LOG(INFO) << "Failed to cancel IC scope: " << e.what();
+            VLOG(1) << "Failed to cancel IC scope: " << e.what();
           }
           func();
           return seastar::make_ready_future<>();
@@ -112,7 +112,8 @@ class graph_db_http_handler {
       seastar::httpd::operation_type::PUT, seastar::httpd::operation_type::GET,
       seastar::httpd::operation_type::POST,
       seastar::httpd::operation_type::DELETE};
-  graph_db_http_handler(uint16_t http_port, int32_t shard_num,
+  graph_db_http_handler(uint16_t http_port, int32_t all_shard_num,
+                        int32_t query_shard_num,
                         bool enable_adhoc_handlers = false);
 
   ~graph_db_http_handler();
@@ -136,6 +137,8 @@ class graph_db_http_handler {
 
  private:
   const uint16_t http_port_;
+  const int32_t all_shard_num_;    // The total number of shards
+  const int32_t query_shard_num_;  // The number of shards that receive queries
   seastar::httpd::http_server_control server_;
 
   std::atomic<bool> enable_adhoc_handlers_{false}, running_{false},

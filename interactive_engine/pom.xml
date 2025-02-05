@@ -50,6 +50,48 @@
       </modules>
     </profile>
     <profile>
+      <id>graph-planner-jni</id>
+      <properties>
+        <skip.native>false</skip.native>
+        <skip.ir.core>true</skip.ir.core>
+      </properties>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>common</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>compiler</module>
+        <module>assembly</module>
+      </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>make</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <target>
+                    <ant antfile="compiler/build_native.xml">
+                      <target name="graph_planner"></target>
+                    </ant>
+                  </target>
+                  <skip>${skip.native}</skip>
+                </configuration>
+              </execution>
+            </executions>
+            <inherited>false</inherited>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>graphscope</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -253,7 +295,7 @@
 
     <neo4j.version>4.4.0</neo4j.version>
     <neo4j.driver.version>4.4.0</neo4j.driver.version>
-    <interactive.sdk.version>0.4.2</interactive.sdk.version>
+    <interactive.sdk.version>0.4.3</interactive.sdk.version>
     <interactive.sdk.classifier>no-gaia-ir</interactive.sdk.classifier>
   </properties>
 
@@ -698,6 +740,11 @@
         <version>${interactive.sdk.version}</version>
         <classifier>${interactive.sdk.classifier}</classifier>
       </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>2.5.12</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -884,6 +931,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
       </plugin>
     </plugins>
   </build>

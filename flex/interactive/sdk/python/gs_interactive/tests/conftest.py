@@ -17,6 +17,7 @@
 #
 
 # get the directory of the current file
+import copy
 import os
 import time
 
@@ -27,6 +28,7 @@ from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import CreateGraphRequest
 from gs_interactive.models import CreateProcedureRequest
+from gs_interactive.models import GetGraphSchemaResponse
 from gs_interactive.models import SchemaMapping
 from gs_interactive.models import StartServiceRequest
 from gs_interactive.models import UpdateProcedureRequest
@@ -35,11 +37,14 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 MODERN_GRAPH_DATA_DIR = os.path.abspath(
     os.path.join(cur_dir, "../../../../examples/modern_graph")
 )
+GRAPH_ALGO_DATA_DIR = os.path.abspath(
+    os.path.join(cur_dir, "../../../../examples/graph_algo")
+)
 print("MODERN_GRAPH_DATA_DIR: ", MODERN_GRAPH_DATA_DIR)
-
+print("GRAPH_ALGO_DATA_DIR: ", GRAPH_ALGO_DATA_DIR)
 
 modern_graph_full = {
-    "name": "modern_graph",
+    "name": "full_graph",
     "description": "This is a test graph",
     "schema": {
         "vertex_types": [
@@ -119,8 +124,93 @@ modern_graph_full = {
     },
 }
 
+modern_graph_multiple_edge_properties = {
+    "name": "full_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "software",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "lang",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            },
+            {
+                "type_name": "created",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "software",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    },
+                    {
+                        "property_name": "since",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": [],
+            },
+        ],
+    },
+}
+
 modern_graph_vertex_only = {
-    "name": "modern_graph",
+    "name": "vertex_only",
     "description": "This is a test graph, only contains vertex",
     "schema": {
         "vertex_types": [
@@ -148,7 +238,7 @@ modern_graph_vertex_only = {
 }
 
 modern_graph_partial = {
-    "name": "modern_graph",
+    "name": "partial_graph",
     "description": "This is a test graph",
     "schema": {
         "vertex_types": [
@@ -284,6 +374,582 @@ modern_graph_vertex_only_import_config = {
     ],
 }
 
+graph_algo_graph = {
+    "name": "graph_algo",
+    "version": "v0.1",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "Paper",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "conference",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "CCFRank",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "CCFField",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "year",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                    {
+                        "property_name": "paper",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Challenge",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "challenge",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Topic",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "topic",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Task",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "task",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Solution",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "solution",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "CCFField",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "field",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+        ],
+        "edge_types": [
+            {
+                "type_name": "WorkOn",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Paper",
+                        "destination_vertex": "Task",
+                        "relation": "MANY_TO_ONE",
+                    }
+                ],
+            },
+            {
+                "type_name": "Resolve",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Paper",
+                        "destination_vertex": "Challenge",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+            },
+            {
+                "type_name": "Target",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Task",
+                        "destination_vertex": "Challenge",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "number",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    }
+                ],
+            },
+            {
+                "type_name": "Belong",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Task",
+                        "destination_vertex": "Topic",
+                        "relation": "MANY_TO_ONE",
+                    }
+                ],
+            },
+            {
+                "type_name": "Use",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Paper",
+                        "destination_vertex": "Solution",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+            },
+            {
+                "type_name": "ApplyOn",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Solution",
+                        "destination_vertex": "Challenge",
+                        "relation": "MANY_TO_ONE",
+                    }
+                ],
+            },
+            {
+                "type_name": "HasField",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Paper",
+                        "destination_vertex": "CCFField",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+            },
+            {
+                "type_name": "Citation",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "Paper",
+                        "destination_vertex": "Paper",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+            },
+        ],
+    },
+}
+
+graph_algo_graph_import_config = {
+    "graph": "graph_algo",
+    "loading_config": {
+        "data_source": {"scheme": "file", "location": "@" + GRAPH_ALGO_DATA_DIR},
+        "import_option": "init",
+        "format": {
+            "type": "csv",
+            "metadata": {
+                "delimiter": "|",
+            },
+        },
+    },
+    "vertex_mappings": [
+        {"type_name": "Paper", "inputs": ["Paper.csv"]},
+        {"type_name": "Challenge", "inputs": ["Challenge.csv"]},
+        {"type_name": "Topic", "inputs": ["Topic.csv"]},
+        {"type_name": "Task", "inputs": ["Task.csv"]},
+        {"type_name": "Solution", "inputs": ["Solution.csv"]},
+        {"type_name": "CCFField", "inputs": ["CCFField.csv"]},
+    ],
+    "edge_mappings": [
+        {
+            "type_triplet": {
+                "edge": "WorkOn",
+                "source_vertex": "Paper",
+                "destination_vertex": "Task",
+            },
+            "inputs": ["Paper_WorkOn_Task.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "Resolve",
+                "source_vertex": "Paper",
+                "destination_vertex": "Challenge",
+            },
+            "inputs": ["Paper_Resolve_Challenge.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "Target",
+                "source_vertex": "Task",
+                "destination_vertex": "Challenge",
+            },
+            "source_vertex_mappings": [{"column": {"index": 0, "name": "id"}}],
+            "destination_vertex_mappings": [{"column": {"index": 1, "name": "id"}}],
+            "inputs": ["Task_Target_Challenge.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "Belong",
+                "source_vertex": "Task",
+                "destination_vertex": "Topic",
+            },
+            "inputs": ["Task_Belong_Topic.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "Use",
+                "source_vertex": "Paper",
+                "destination_vertex": "Solution",
+            },
+            "inputs": ["Paper_Use_Solution.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "ApplyOn",
+                "source_vertex": "Solution",
+                "destination_vertex": "Challenge",
+            },
+            "inputs": ["Solution_ApplyOn_Challenge.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "HasField",
+                "source_vertex": "Paper",
+                "destination_vertex": "CCFField",
+            },
+            "inputs": ["Paper_HasField_CCFField.csv"],
+        },
+        {
+            "type_triplet": {
+                "edge": "Citation",
+                "source_vertex": "Paper",
+                "destination_vertex": "Paper",
+            },
+            "inputs": ["Paper_Citation_Paper.csv"],
+        },
+    ],
+}
+
+
+new_graph_algo = {
+    "name": "graph_algo",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "Challenge",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "description",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Task",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "description",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Solution",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "description",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+            {
+                "type_name": "Paper",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "published",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "year",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                    {
+                        "property_name": "month",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                    {
+                        "property_name": "title",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "authors",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "summary",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "journal_ref",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "doi",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "primary_category",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "categories",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "problem_def",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                    {
+                        "property_name": "keywords",
+                        "property_type": {"string": {"long_text": None}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            },
+        ],
+        "edge_types": [
+            {
+                "type_name": "SolvedBy",
+                "properties": [],
+                "vertex_type_pair_relations": [
+                    {
+                        "destination_vertex": "Solution",
+                        "relation": "MANY_TO_MANY",
+                        "source_vertex": "Challenge",
+                    }
+                ],
+            },
+            {
+                "type_name": "Cite",
+                "properties": [],
+                "vertex_type_pair_relations": [
+                    {
+                        "destination_vertex": "Paper",
+                        "relation": "MANY_TO_MANY",
+                        "source_vertex": "Paper",
+                    }
+                ],
+            },
+            {
+                "type_name": "Has",
+                "properties": [],
+                "vertex_type_pair_relations": [
+                    {
+                        "destination_vertex": "Challenge",
+                        "relation": "MANY_TO_MANY",
+                        "source_vertex": "Paper",
+                    }
+                ],
+            },
+            {
+                "type_name": "WorkOn",
+                "properties": [],
+                "vertex_type_pair_relations": [
+                    {
+                        "destination_vertex": "Task",
+                        "relation": "MANY_TO_MANY",
+                        "source_vertex": "Paper",
+                    }
+                ],
+            },
+            {
+                "type_name": "Use",
+                "properties": [],
+                "vertex_type_pair_relations": [
+                    {
+                        "destination_vertex": "Solution",
+                        "relation": "MANY_TO_MANY",
+                        "source_vertex": "Paper",
+                    }
+                ],
+            },
+        ],
+    },
+}
+
+"""
+Replace the source location with the real location
+"""
+new_graph_algo_import_config = {
+    "graph": "graph_algo",
+    "loading_config": {
+        "data_source": {"scheme": "file"},
+        "import_option": "init",
+        "format": {
+            "type": "csv",
+            "metadata": {
+                "delimiter": "|",
+                "header_row": True,
+                "quoting": True,
+                "quote_char": '"',
+                "double_quote": True,
+                "batch_reader": True,
+            },
+        },
+    },
+    "vertex_mappings": [
+        {
+            "type_name": "Challenge",
+            "inputs": ["Challenge.csv"],
+        },
+        {"type_name": "Task", "inputs": ["Task.csv"]},
+        {
+            "type_name": "Solution",
+            "inputs": ["Solution.csv"],
+        },
+        {"type_name": "Paper", "inputs": ["Paper.csv"]},
+    ],
+    "edge_mappings": [
+        {
+            "type_triplet": {
+                "edge": "SolvedBy",
+                "source_vertex": "Challenge",
+                "destination_vertex": "Solution",
+            },
+            "inputs": ["Challenge_Solvedby_Solution.csv"],
+            "column_mappings": [],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "source"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "target"}, "property": "id"}
+            ],
+        },
+        {
+            "type_triplet": {
+                "edge": "Cite",
+                "source_vertex": "Paper",
+                "destination_vertex": "Paper",
+            },
+            "inputs": ["Paper_Cite_Paper.csv"],
+            "column_mappings": [],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "source"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "target"}, "property": "id"}
+            ],
+        },
+        {
+            "type_triplet": {
+                "edge": "Has",
+                "source_vertex": "Paper",
+                "destination_vertex": "Challenge",
+            },
+            "inputs": ["Paper_Has_Challenge.csv"],
+            "column_mappings": [],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "source"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "target"}, "property": "id"}
+            ],
+        },
+        {
+            "type_triplet": {
+                "edge": "WorkOn",
+                "source_vertex": "Paper",
+                "destination_vertex": "Task",
+            },
+            "inputs": ["Paper_WorkOn_Task.csv"],
+            "column_mappings": [],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "source"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "target"}, "property": "id"}
+            ],
+        },
+        {
+            "type_triplet": {
+                "edge": "Use",
+                "source_vertex": "Paper",
+                "destination_vertex": "Solution",
+            },
+            "inputs": ["Paper_Use_Solution.csv"],
+            "column_mappings": [],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "source"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "target"}, "property": "id"}
+            ],
+        },
+    ],
+}
+
 
 @pytest.fixture(scope="module")
 def interactive_driver():
@@ -315,6 +981,28 @@ def create_modern_graph(interactive_session):
 
 
 @pytest.fixture(scope="function")
+def create_modern_graph_multiple_edge_property(interactive_session):
+    create_graph_request = CreateGraphRequest.from_dict(
+        modern_graph_multiple_edge_properties
+    )
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
+def create_graph_algo_graph(interactive_session):
+    create_graph_request = CreateGraphRequest.from_dict(graph_algo_graph)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
 def create_vertex_only_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_vertex_only)
     resp = interactive_session.create_graph(create_graph_request)
@@ -336,11 +1024,46 @@ def create_partial_modern_graph(interactive_session):
 
 @pytest.fixture(scope="function")
 def create_graph_with_custom_pk_name(interactive_session):
-    modern_graph_custom_pk_name = modern_graph_full.copy()
+    modern_graph_custom_pk_name = copy.deepcopy(modern_graph_full)
     for vertex_type in modern_graph_custom_pk_name["schema"]["vertex_types"]:
         vertex_type["properties"][0]["property_name"] = "custom_id"
         vertex_type["primary_keys"] = ["custom_id"]
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_custom_pk_name)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
+def create_graph_with_var_char_property(interactive_session):
+    modern_graph_custom_pk_name = copy.deepcopy(modern_graph_full)
+    for vertex_type in modern_graph_custom_pk_name["schema"]["vertex_types"]:
+        # replace each string property with var_char
+        for prop in vertex_type["properties"]:
+            if prop["property_type"]:
+                if "string" in prop["property_type"]:
+                    prop["property_type"]["string"] = {"var_char": {"max_length": 2}}
+    create_graph_request = CreateGraphRequest.from_dict(modern_graph_custom_pk_name)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
+def create_graph_algo_graph_with_x_csr_params(interactive_session):
+    """
+    Create a relative complex graph with small max_vertex_num and import
+    relatively large data to test the bulk loading procedure could handle
+    the case.
+    """
+    new_graph_algo_schema = new_graph_algo.copy()
+    for vertex_type in new_graph_algo_schema["schema"]["vertex_types"]:
+        vertex_type["x_csr_params"] = {"max_vertex_num": 1}
+    create_graph_request = CreateGraphRequest.from_dict(new_graph_algo_schema)
     resp = interactive_session.create_graph(create_graph_request)
     assert resp.is_ok()
     graph_id = resp.get_value().graph_id
@@ -389,6 +1112,32 @@ def import_data_to_partial_modern_graph(sess: Session, graph_id: str):
 
 def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(modern_graph_full_import_config)
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+
+
+def import_data_to_full_graph_algo_graph(sess: Session, graph_id: str):
+    schema_mapping = SchemaMapping.from_dict(graph_algo_graph_import_config)
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+
+
+def import_data_to_new_graph_algo_graph(sess: Session, graph_id: str):
+    # check whether GS_TEST_DIR is set
+    if "GS_TEST_DIR" not in os.environ:
+        raise Exception("GS_TEST_DIR is not set")
+
+    GS_TEST_DIR = os.environ["GS_TEST_DIR"]
+    NEW_GRAPH_ALGO_SOURCE_DIR = os.path.join(GS_TEST_DIR, "flex/new_graph_algo")
+    import_config = copy.deepcopy(new_graph_algo_import_config)
+    import_config["loading_config"]["data_source"][
+        "location"
+    ] = NEW_GRAPH_ALGO_SOURCE_DIR
+    schema_mapping = SchemaMapping.from_dict(import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
     assert resp.is_ok()
     job_id = resp.get_value().job_id
@@ -479,3 +1228,43 @@ def start_service_on_graph(interactive_session, graph_id: str):
     assert resp.is_ok()
     # wait three second to let compiler get the new graph
     time.sleep(3)
+
+
+def ensure_compiler_schema_ready(
+    interactive_session, neo4j_session: Neo4jSession, graph_id: str
+):
+    rel_graph_meta = interactive_session.get_graph_schema(graph_id).get_value()
+    max_times = 10
+    while True:
+        if max_times == 0:
+            raise Exception("compiler schema is not ready")
+        res = neo4j_session.run("CALL gs.procedure.meta.schema();")
+        val = res.single().value()
+        compiler_graph_schema = GetGraphSchemaResponse.from_json(val)
+        # print("compiler_graph_schema: ", compiler_graph_schema)
+        # print("rel_graph_meta: ", rel_graph_meta)
+        if compiler_graph_schema == rel_graph_meta:
+            break
+        print("compiler schema is not ready, wait for 1 second")
+        time.sleep(1)
+        max_times -= 1
+    print("compiler schema is ready")
+
+
+def send_get_request(url, timeout):
+    try:
+        import requests
+
+        response = requests.get(url, timeout=timeout)  # noqa
+    except requests.exceptions.Timeout:
+        raise Exception("Got timeout exception when sending get request to ", url)
+    except Exception as e:
+        raise Exception(
+            "Got exception when sending get request to ", url, " exception: ", e
+        )
+
+
+def send_get_request_periodically(url, timeout, interval, times):
+    for i in range(times):
+        send_get_request(url, timeout)
+        time.sleep(interval)

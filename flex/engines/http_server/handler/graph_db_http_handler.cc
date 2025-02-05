@@ -134,6 +134,17 @@ bool is_running_graph(const seastar::sstring& graph_id) {
   return running_graph_res.value() == graph_id_str;
 }
 
+// We could create a scope_builder to create actors on any shard from the
+// current shard.
+hiactor::scope_builder create_builder(uint32_t exec_shard_id,
+                                      uint32_t group_id) {
+  hiactor::scope_builder builder;
+  builder.set_shard(exec_shard_id)
+      .enter_sub_scope(hiactor::scope<executor_group>(0))
+      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
+  return builder;
+}
+
 ////////////////////////////stored_proc_handler////////////////////////////
 class stored_proc_handler : public StoppableHandler {
  public:
@@ -142,8 +153,9 @@ class stored_proc_handler : public StoppableHandler {
     return executor_refs;
   }
 
-  stored_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
-                      uint32_t group_inc_step, uint32_t shard_concurrency)
+  stored_proc_handler(uint32_t cooperative_shard_num, uint32_t init_group_id,
+                      uint32_t max_group_id, uint32_t group_inc_step,
+                      uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
         dispatcher_(shard_concurrency) {
@@ -151,15 +163,30 @@ class stored_proc_handler : public StoppableHandler {
     CHECK(executors.size() >= StoppableHandler::shard_id());
     executors[StoppableHandler::shard_id()].reserve(shard_concurrency);
     hiactor::scope_builder builder;
-    LOG(INFO) << "Creating stored proc handler on shard id: "
-              << StoppableHandler::shard_id();
-    builder.set_shard(StoppableHandler::shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(
-            StoppableHandler::cur_group_id_));
-    for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
-      executors[StoppableHandler::shard_id()].emplace_back(
-          builder.build_ref<executor_ref>(i));
+    VLOG(10) << "Creating stored proc handler on shard id: "
+             << StoppableHandler::shard_id();
+    if (StoppableHandler::shard_id() >= cooperative_shard_num) {
+      // If current shard is not cooperative, we construct executors that runs
+      // on other shards. We use a round robin manner to dispatch the query to
+      // different executors.
+      // Note that the forwarding maybe unbalanced.
+      size_t forwarding_shard = 0;
+      for (unsigned i = 0; i < shard_concurrency; ++i) {
+        auto builder =
+            create_builder((forwarding_shard++) % cooperative_shard_num,
+                           StoppableHandler::cur_group_id_);
+        executors[StoppableHandler::shard_id()].emplace_back(
+            builder.build_ref<executor_ref>(i));
+      }
+    } else {
+      // If current shard is cooperative, we construct executors run on this
+      // shard.
+      auto builder = create_builder(StoppableHandler::shard_id(),
+                                    StoppableHandler::cur_group_id_);
+      for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
+        executors[StoppableHandler::shard_id()].emplace_back(
+            builder.build_ref<executor_ref>(i));
+      }
     }
 #ifdef HAVE_OPENTELEMETRY_CPP
     total_counter_ = otel::create_int_counter("hqps_procedure_query_total");
@@ -176,7 +203,7 @@ class stored_proc_handler : public StoppableHandler {
 
   bool start() override {
     if (get_executors()[StoppableHandler::shard_id()].size() > 0) {
-      LOG(ERROR) << "The actors have been already created!";
+      VLOG(10) << "The actors have been already created!";
       return false;
     }
     return StoppableHandler::start_scope(
@@ -296,9 +323,8 @@ class stored_proc_handler : public StoppableHandler {
     if (req->content.size() > 0) {
       // read last byte and get the format info from the byte.
       last_byte = req->content.back();
-      if (last_byte >
-          static_cast<uint8_t>(
-              gs::GraphDBSession::InputFormat::kCypherProtoProcedure)) {
+      if (last_byte > static_cast<uint8_t>(
+                          gs::GraphDBSession::InputFormat::kCypherString)) {
         LOG(ERROR) << "Unsupported request format: " << (int) last_byte;
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
@@ -339,7 +365,10 @@ class stored_proc_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
     ](auto&& output) {
           if (last_byte == static_cast<uint8_t>(
-                               gs::GraphDBSession::InputFormat::kCppEncoder)) {
+                               gs::GraphDBSession::InputFormat::kCppEncoder) ||
+              last_byte ==
+                  static_cast<uint8_t>(
+                      gs::GraphDBSession::InputFormat::kCypherString)) {
             return seastar::make_ready_future<query_param>(
                 std::move(output.content));
           } else {
@@ -434,21 +463,35 @@ class adhoc_runtime_query_handler : public StoppableHandler {
     return executor_refs;
   }
 
-  adhoc_runtime_query_handler(uint32_t init_group_id, uint32_t max_group_id,
+  adhoc_runtime_query_handler(uint32_t cooperative_shard_num,
+                              uint32_t init_group_id, uint32_t max_group_id,
                               uint32_t group_inc_step,
                               uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
-        executor_idx_(0) {
+        dispatcher_(shard_concurrency) {
     auto& executor_refs = get_executors();
     CHECK(executor_refs.size() >= StoppableHandler::shard_id());
     executor_refs[StoppableHandler::shard_id()].reserve(shard_concurrency_);
-    {
-      hiactor::scope_builder builder;
-      builder.set_shard(StoppableHandler::shard_id())
-          .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
-      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+    if (StoppableHandler::shard_id() >= cooperative_shard_num) {
+      // If current shard is not cooperative, we construct executors that runs
+      // on other shards. We use a round robin manner to dispatch the query to
+      // different executors.
+      // Note that the forwarding maybe unbalanced.
+      size_t forwarding_shard = 0;
+      for (unsigned i = 0; i < shard_concurrency; ++i) {
+        auto builder =
+            create_builder((forwarding_shard++) % cooperative_shard_num,
+                           StoppableHandler::cur_group_id_);
+        executor_refs[StoppableHandler::shard_id()].emplace_back(
+            builder.build_ref<executor_ref>(i));
+      }
+    } else {
+      // If current shard is cooperative, we construct executors run on this
+      // shard.
+      auto builder = create_builder(StoppableHandler::shard_id(),
+                                    StoppableHandler::cur_group_id_);
+      for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
         executor_refs[StoppableHandler::shard_id()].emplace_back(
             builder.build_ref<executor_ref>(i));
       }
@@ -488,8 +531,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_executor = executor_idx_;
-    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    auto dst_executor = dispatcher_.get_executor_idx();
 
     if (path != "/v1/graph/current/adhoc_query" &&
         req->param.exists("graph_id")) {
@@ -588,7 +630,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
   }
 
  private:
-  uint32_t executor_idx_;
+  query_dispatcher dispatcher_;
 
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
@@ -610,31 +652,37 @@ class adhoc_query_handler : public StoppableHandler {
     return codegen_actor_refs;
   }
 
-  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
-                      uint32_t group_inc_step, uint32_t shard_concurrency)
+  adhoc_query_handler(uint32_t cooperative_shard_num, uint32_t init_group_id,
+                      uint32_t max_group_id, uint32_t group_inc_step,
+                      uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
-        executor_idx_(0) {
+        dispatcher_(shard_concurrency) {
     auto& executor_refs = get_executors();
     CHECK(executor_refs.size() >= StoppableHandler::shard_id());
     executor_refs[StoppableHandler::shard_id()].reserve(shard_concurrency_);
-    {
-      hiactor::scope_builder builder;
-      builder.set_shard(StoppableHandler::shard_id())
-          .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
-      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+    auto& codegen_actor_refs = get_codegen_actors();
+    CHECK(codegen_actor_refs.size() >= StoppableHandler::shard_id());
+    if (StoppableHandler::shard_id() >= cooperative_shard_num) {
+      size_t forwarding_shard = 0;
+      for (unsigned i = 0; i < shard_concurrency; ++i) {
+        auto builder =
+            create_builder((forwarding_shard++) % cooperative_shard_num,
+                           StoppableHandler::cur_group_id_);
         executor_refs[StoppableHandler::shard_id()].emplace_back(
             builder.build_ref<executor_ref>(i));
       }
-    }
-    auto& codegen_actor_refs = get_codegen_actors();
-    CHECK(codegen_actor_refs.size() >= StoppableHandler::shard_id());
-    {
-      hiactor::scope_builder builder;
-      builder.set_shard(StoppableHandler::shard_id())
-          .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
+      codegen_actor_refs[StoppableHandler::shard_id()].emplace_back(
+          create_builder((forwarding_shard++) % cooperative_shard_num,
+                         StoppableHandler::cur_group_id_)
+              .build_ref<codegen_actor_ref>(0));
+    } else {
+      auto builder = create_builder(StoppableHandler::shard_id(),
+                                    StoppableHandler::cur_group_id_);
+      for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
+        executor_refs[StoppableHandler::shard_id()].emplace_back(
+            builder.build_ref<executor_ref>(i));
+      }
       codegen_actor_refs[StoppableHandler::shard_id()].emplace_back(
           builder.build_ref<codegen_actor_ref>(0));
     }
@@ -677,8 +725,7 @@ class adhoc_query_handler : public StoppableHandler {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_executor = executor_idx_;
-    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    auto dst_executor = dispatcher_.get_executor_idx();
     if (path != "/v1/graph/current/adhoc_query" &&
         req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
@@ -825,7 +872,7 @@ class adhoc_query_handler : public StoppableHandler {
   }
 
  private:
-  uint32_t executor_idx_;
+  query_dispatcher dispatcher_;
 
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
@@ -838,24 +885,27 @@ class adhoc_query_handler : public StoppableHandler {
 ///////////////////////////graph_db_http_handler/////////////////////////////
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
-                                             int32_t shard_num,
+                                             int32_t all_shard_num,
+                                             int32_t query_shard_num,
                                              bool enable_adhoc_handlers)
     : http_port_(http_port),
+      all_shard_num_(all_shard_num),
+      query_shard_num_(query_shard_num),
       enable_adhoc_handlers_(enable_adhoc_handlers),
       running_(false),
       actors_running_(true) {
-  current_graph_query_handlers_.resize(shard_num);
-  all_graph_query_handlers_.resize(shard_num);
-  adhoc_query_handlers_.resize(shard_num);
-  vertex_handlers_.resize(shard_num);
-  edge_handlers_.resize(shard_num);
+  current_graph_query_handlers_.resize(all_shard_num_);
+  all_graph_query_handlers_.resize(all_shard_num_);
+  adhoc_query_handlers_.resize(all_shard_num_);
+  vertex_handlers_.resize(all_shard_num_);
+  edge_handlers_.resize(all_shard_num_);
   if (enable_adhoc_handlers_) {
-    adhoc_query_handler::get_executors().resize(shard_num);
-    adhoc_query_handler::get_codegen_actors().resize(shard_num);
+    adhoc_query_handler::get_executors().resize(all_shard_num_);
+    adhoc_query_handler::get_codegen_actors().resize(all_shard_num_);
   } else {
-    adhoc_runtime_query_handler::get_executors().resize(shard_num);
+    adhoc_runtime_query_handler::get_executors().resize(all_shard_num_);
   }
-  stored_proc_handler::get_executors().resize(shard_num);
+  stored_proc_handler::get_executors().resize(all_shard_num_);
 }
 
 graph_db_http_handler::~graph_db_http_handler() {
@@ -961,14 +1011,16 @@ seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     // matches /v1/graph/current/query
     current_graph_query_handlers_[hiactor::local_shard_id()] =
-        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+        new stored_proc_handler(query_shard_num_, ic_query_group_id,
+                                max_group_id, group_inc_step,
                                 shard_query_concurrency);
     r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",
           current_graph_query_handlers_[hiactor::local_shard_id()]);
 
     // matches /v1/graph/{graph_id}/query
     all_graph_query_handlers_[hiactor::local_shard_id()] =
-        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+        new stored_proc_handler(query_shard_num_, ic_query_group_id,
+                                max_group_id, group_inc_step,
                                 shard_query_concurrency);
     auto rule_proc = new seastar::httpd::match_rule(
         all_graph_query_handlers_[hiactor::local_shard_id()]);
@@ -977,9 +1029,9 @@ seastar::future<> graph_db_http_handler::set_routes() {
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
     if (enable_adhoc_handlers_.load()) {
-      auto adhoc_query_handler_ =
-          new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
-                                  group_inc_step, shard_adhoc_concurrency);
+      auto adhoc_query_handler_ = new adhoc_query_handler(
+          query_shard_num_, ic_adhoc_group_id, max_group_id, group_inc_step,
+          shard_adhoc_concurrency);
       adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
       // Add routes
       auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
@@ -989,7 +1041,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
       r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     } else {
       auto adhoc_runtime_query_handler_ = new adhoc_runtime_query_handler(
-          ic_adhoc_group_id, max_group_id, group_inc_step,
+          query_shard_num_, ic_adhoc_group_id, max_group_id, group_inc_step,
           shard_adhoc_concurrency);
       adhoc_query_handlers_[hiactor::local_shard_id()] =
           adhoc_runtime_query_handler_;
@@ -1002,12 +1054,12 @@ seastar::future<> graph_db_http_handler::set_routes() {
       r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     }
     for (size_t i = 0; i < NUM_OPERATION; ++i) {
-      vertex_handlers_[hiactor::local_shard_id()][i] =
-          new stored_proc_handler(ic_query_group_id, max_group_id,
-                                  group_inc_step, shard_query_concurrency);
-      edge_handlers_[hiactor::local_shard_id()][i] =
-          new stored_proc_handler(ic_query_group_id, max_group_id,
-                                  group_inc_step, shard_query_concurrency);
+      vertex_handlers_[hiactor::local_shard_id()][i] = new stored_proc_handler(
+          query_shard_num_, ic_query_group_id, max_group_id, group_inc_step,
+          shard_query_concurrency);
+      edge_handlers_[hiactor::local_shard_id()][i] = new stored_proc_handler(
+          query_shard_num_, ic_query_group_id, max_group_id, group_inc_step,
+          shard_query_concurrency);
     }
 
     for (size_t i = 0; i < NUM_OPERATION; ++i) {

@@ -20,8 +20,8 @@ import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
-import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeDesc;
+import com.alibaba.graphscope.common.ir.meta.schema.IrDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
 import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec;
 import com.alibaba.graphscope.common.ir.rex.RexProcedureCall;
@@ -128,10 +128,17 @@ public class StoredProcedureMeta {
     public static class Parameter {
         private final String name;
         private final RelDataType dataType;
+        // allow cast among types in the same family, i.e. int32 to int64, char to varchar
+        private final boolean allowCast;
 
         public Parameter(String name, RelDataType dataType) {
+            this(name, dataType, false);
+        }
+
+        public Parameter(String name, RelDataType dataType, boolean allowCast) {
             this.name = name;
             this.dataType = dataType;
+            this.allowCast = allowCast;
         }
 
         public String getName() {
@@ -140,6 +147,10 @@ public class StoredProcedureMeta {
 
         public RelDataType getDataType() {
             return dataType;
+        }
+
+        public boolean allowCast() {
+            return allowCast;
         }
 
         @Override
@@ -163,16 +174,18 @@ public class StoredProcedureMeta {
     }
 
     public static class Serializer {
-        public static void perform(StoredProcedureMeta meta, OutputStream outputStream)
+        public static void perform(
+                StoredProcedureMeta meta, OutputStream outputStream, boolean throwsOnFail)
                 throws IOException {
             Yaml yaml = new Yaml();
-            String mapStr = yaml.dump(createProduceMetaMap(meta));
+            String mapStr = yaml.dump(createProduceMetaMap(meta, throwsOnFail));
             outputStream.write(mapStr.getBytes(StandardCharsets.UTF_8));
         }
 
-        private static Map<String, Object> createProduceMetaMap(StoredProcedureMeta meta) {
-            GSDataTypeConvertor<RelDataType> typeConvertor =
-                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
+        private static Map<String, Object> createProduceMetaMap(
+                StoredProcedureMeta meta, boolean throwsOnFail) {
+            IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
+                    new IrDataTypeConvertor.Flex(typeFactory, throwsOnFail);
             return ImmutableMap.of(
                     Config.NAME.getKey(),
                     meta.name,
@@ -216,8 +229,8 @@ public class StoredProcedureMeta {
 
     public static class Deserializer {
         public static StoredProcedureMeta perform(InputStream inputStream) throws IOException {
-            GSDataTypeConvertor<RelDataType> typeConvertor =
-                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
+            IrDataTypeConvertor<GSDataTypeDesc> typeConvertor =
+                    new IrDataTypeConvertor.Flex(typeFactory, true);
             Yaml yaml = new Yaml();
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(
@@ -240,7 +253,7 @@ public class StoredProcedureMeta {
         }
 
         private static RelDataType createReturnType(
-                List config, GSDataTypeConvertor<RelDataType> typeConvertor) {
+                List config, IrDataTypeConvertor<GSDataTypeDesc> typeConvertor) {
             List<RelDataTypeField> fields = Lists.newArrayList();
             if (config == null) {
                 return new RelRecordType(fields);
@@ -262,7 +275,7 @@ public class StoredProcedureMeta {
         }
 
         private static List<StoredProcedureMeta.Parameter> createParameters(
-                List config, GSDataTypeConvertor<RelDataType> typeConvertor) {
+                List config, IrDataTypeConvertor<GSDataTypeDesc> typeConvertor) {
             List<StoredProcedureMeta.Parameter> parameters = Lists.newArrayList();
             if (config == null) {
                 return parameters;
@@ -270,12 +283,16 @@ public class StoredProcedureMeta {
             Iterator iterator = config.iterator();
             while (iterator.hasNext()) {
                 Map<String, Object> field = (Map<String, Object>) iterator.next();
+                Object castValue = field.get("allow_cast");
+                boolean allowCast =
+                        castValue == null ? false : Boolean.valueOf(String.valueOf(castValue));
                 parameters.add(
                         new StoredProcedureMeta.Parameter(
                                 (String) field.get("name"),
                                 typeConvertor.convert(
                                         new GSDataTypeDesc(
-                                                (Map<String, Object>) field.get("type")))));
+                                                (Map<String, Object>) field.get("type"))),
+                                allowCast));
             }
             return parameters;
         }

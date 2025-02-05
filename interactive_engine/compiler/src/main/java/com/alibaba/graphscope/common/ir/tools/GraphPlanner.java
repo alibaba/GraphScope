@@ -71,6 +71,7 @@ public class GraphPlanner {
     private final GraphRelOptimizer optimizer;
     private final RexBuilder rexBuilder;
     private final LogicalPlanFactory logicalPlanFactory;
+    private final QueryExecutionValidator validator;
 
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
@@ -83,6 +84,7 @@ public class GraphPlanner {
         this.optimizer = optimizer;
         this.logicalPlanFactory = logicalPlanFactory;
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
+        this.validator = new QueryExecutionValidator(graphConfig);
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
@@ -105,8 +107,8 @@ public class GraphPlanner {
         GraphBuilder graphBuilder =
                 GraphBuilder.create(
                         graphConfig, optCluster, new GraphOptSchema(optCluster, schema));
-
         LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+        this.validator.validate(logicalPlan, true);
         return new PlannerInstance(query, logicalPlan, graphBuilder, irMeta, queryLogger);
     }
 
@@ -190,6 +192,14 @@ public class GraphPlanner {
                 return new ProcedurePhysicalBuilder(graphConfig, irMeta, logicalPlan).build();
             }
         }
+
+        public @Nullable QueryLogger getQueryLogger() {
+            return this.queryLogger;
+        }
+
+        public String getQuery() {
+            return query;
+        }
     }
 
     public static class Summary {
@@ -227,16 +237,34 @@ public class GraphPlanner {
         return new Configs(keyValueMap);
     }
 
-    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
-            throws IOException {
-        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
-        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
-        } else if (schemaUri.getScheme().equals("http")) {
-            return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
-        }
-        throw new IllegalArgumentException(
-                "unknown graph meta reader mode: " + schemaUri.getScheme());
+    public interface IrMetaFetcherFactory {
+        IrMetaFetcher create(Configs configs, IrMetaTracker tracker) throws IOException;
+
+        IrMetaFetcherFactory DEFAULT =
+                (configs, tracker) -> {
+                    URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+                    if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+                        return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+                    } else if (schemaUri.getScheme().equals("http")) {
+                        return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
+                    }
+                    throw new IllegalArgumentException(
+                            "unknown graph meta reader mode: " + schemaUri.getScheme());
+                };
+    }
+
+    public static Summary generatePlan(
+            String configPath, String queryString, IrMetaFetcherFactory metaFetcherFactory)
+            throws Exception {
+        Configs configs = Configs.Factory.create(configPath);
+        GraphRelOptimizer optimizer =
+                new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
+        IrMetaFetcher metaFetcher = metaFetcherFactory.create(configs, optimizer.getGlogueHolder());
+        GraphPlanner planner =
+                new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
+        PlannerInstance instance = planner.instance(queryString, metaFetcher.fetch().get());
+        Summary summary = instance.plan();
+        return summary;
     }
 
     public static void main(String[] args) throws Exception {
@@ -250,18 +278,14 @@ public class GraphPlanner {
                             + " '<path_to_physical_output_file>' '<path_to_procedure_file>'"
                             + " 'optional <extra_key_value_config_file>'");
         }
-        Configs configs = Configs.Factory.create(args[0]);
-        GraphRelOptimizer optimizer =
-                new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
-        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
+
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
-        GraphPlanner planner =
-                new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
-        PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
-        Summary summary = instance.plan();
+
+        Summary summary = generatePlan(args[0], query, IrMetaFetcherFactory.DEFAULT);
         // write physical plan to file
         PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
         FileUtils.writeByteArrayToFile(new File(args[2]), physicalPlan.getContent());
+
         // write stored procedure meta to file
         LogicalPlan logicalPlan = summary.getLogicalPlan();
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);
@@ -271,6 +295,6 @@ public class GraphPlanner {
                         query,
                         logicalPlan.getOutputType(),
                         logicalPlan.getDynamicParams());
-        StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]));
+        StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]), true);
     }
 }

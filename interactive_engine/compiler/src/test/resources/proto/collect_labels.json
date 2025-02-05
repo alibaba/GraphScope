@@ -1,0 +1,149 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 1
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+              "label": 1
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
+            }, {
+              "propId": {
+                "name": "firstName"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "lastName"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "gender"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "birthday"
+              },
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
+            }, {
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "locationIP"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "browserUsed"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "groupBy": {
+        "functions": [{
+          "vars": [{
+            "tag": {
+              "id": 0
+            },
+            "property": {
+              "label": {
+              }
+            },
+            "nodeType": {
+              "dataType": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
+            }
+          }],
+          "aggregate": "TO_LIST",
+          "alias": 1
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": {
+          "array": {
+            "componentType": {
+              "primitiveType": "DT_SIGNED_INT32"
+            },
+            "maxLength": 2147483647
+          }
+        }
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "tags": [{
+          "tag": 1
+        }],
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

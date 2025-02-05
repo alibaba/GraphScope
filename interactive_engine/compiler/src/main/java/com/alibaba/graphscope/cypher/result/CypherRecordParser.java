@@ -146,6 +146,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                                 .mapToDouble(k -> k.getObject().getF64())
                                 .toArray());
             case CHAR:
+            case VARCHAR:
                 return Values.stringArray(
                         collection.getCollectionList().stream()
                                 .map(k -> k.getObject().getStr())

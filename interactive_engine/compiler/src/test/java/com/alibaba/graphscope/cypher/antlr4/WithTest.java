@@ -234,7 +234,7 @@ public class WithTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
-        Assert.assertEquals("RecordType(CHAR(1) name)", project.getRowType().toString());
+        Assert.assertEquals("RecordType(VARCHAR name)", project.getRowType().toString());
     }
 
     @Test

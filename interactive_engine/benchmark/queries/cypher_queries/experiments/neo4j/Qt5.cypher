@@ -1,1 +1,0 @@
-Match (p:Post)-[]->(p1), (p1)-[]->(:Place) Return count(p1);

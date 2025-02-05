@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.tree.Expression;
@@ -37,7 +38,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.schema.Statistic;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -135,33 +135,14 @@ public class GraphOptTable implements RelOptTable {
     }
 
     private RelDataType deriveType(GraphProperty property) {
+        if (property instanceof IrGraphProperty) {
+            return ((IrGraphProperty) property).getRelDataType();
+        }
         RelDataTypeFactory typeFactory = this.schema.getTypeFactory();
         requireNonNull(typeFactory, "typeFactory");
-        switch (property.getDataType()) {
-            case BOOL:
-                return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
-            case CHAR:
-            case STRING:
-                return typeFactory.createSqlType(SqlTypeName.CHAR);
-            case SHORT:
-            case INT:
-                return typeFactory.createSqlType(SqlTypeName.INTEGER);
-            case LONG:
-                return typeFactory.createSqlType(SqlTypeName.BIGINT);
-            case FLOAT:
-                return typeFactory.createSqlType(SqlTypeName.FLOAT);
-            case DOUBLE:
-                return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-            case DATE:
-                return typeFactory.createSqlType(SqlTypeName.DATE);
-            case TIME32:
-                return typeFactory.createSqlType(SqlTypeName.TIME);
-            case TIMESTAMP:
-                return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
-            default:
-                throw new UnsupportedOperationException(
-                        "type " + property.getDataType().name() + " not supported");
-        }
+        IrDataTypeConvertor<DataType> typeConvertor =
+                new IrDataTypeConvertor.Groot(typeFactory, true);
+        return typeConvertor.convert(property.getDataType());
     }
 
     @Override

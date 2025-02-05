@@ -282,6 +282,12 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.81.0
+        override: true
+
     - name: Build Artifact
       run: |
         . ${HOME}/.graphscope_env
@@ -639,6 +645,12 @@ jobs:
             ~/.cargo/git/db/
             ~/.cache/sccache
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.81.0
+          override: true
 
       - name: Build GIE Experimental Artifacts
         run: |

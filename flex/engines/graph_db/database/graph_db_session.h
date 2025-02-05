@@ -40,6 +40,7 @@ class GraphDBSession {
     kCypherJson = 1,            // Json format for cypher query
     kCypherProtoAdhoc = 2,      // Protobuf format for adhoc query
     kCypherProtoProcedure = 3,  // Protobuf format for procedure query
+    kCypherString = 4,
   };
 
   static constexpr int32_t MAX_RETRY = 3;
@@ -160,7 +161,7 @@ class GraphDBSession {
       // second last byte,which is fixed to 255, and other bytes are a string
       // representing the path to generated dynamic lib.
       return std::make_pair((uint8_t) input[len - 2],
-                            std::string_view(str_data, len - 2));
+                            std::string_view(str_data, len - 1));
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
@@ -175,6 +176,9 @@ class GraphDBSession {
       // Same as cypherJson, we don't discard the last byte.
       std::string_view str_view(input.data(), len);
       return parse_query_type_from_cypher_internal(str_view);
+    } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherString)) {
+      return std::make_pair((uint8_t) input[len - 2],
+                            std::string_view(str_data, len - 1));
     } else {
       return Result<std::pair<uint8_t, std::string_view>>(
           gs::Status(StatusCode::INVALID_ARGUMENT,

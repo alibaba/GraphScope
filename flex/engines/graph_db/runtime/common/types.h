@@ -27,7 +27,6 @@ namespace runtime {
 
 uint64_t encode_unique_vertex_id(label_t label_id, vid_t vid);
 std::pair<label_t, vid_t> decode_unique_vertex_id(uint64_t unique_id);
-
 uint32_t generate_edge_label_id(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id);
 int64_t encode_unique_edge_id(uint32_t label_id, vid_t src, vid_t dst);
@@ -56,6 +55,7 @@ enum class JoinKind {
 };
 
 struct LabelTriplet {
+  LabelTriplet() = default;
   LabelTriplet(label_t src, label_t dst, label_t edge)
       : src_label(src), dst_label(dst), edge_label(edge) {}
 
@@ -91,35 +91,21 @@ struct LabelTriplet {
 
 namespace std {
 
-// operator << for Direction
-inline std::ostream& operator<<(std::ostream& os,
-                                const gs::runtime::Direction& dir) {
-  switch (dir) {
-  case gs::runtime::Direction::kOut:
-    os << "OUT";
-    break;
-  case gs::runtime::Direction::kIn:
-    os << "IN";
-    break;
-  case gs::runtime::Direction::kBoth:
-    os << "BOTH";
-    break;
+inline ostream& operator<<(ostream& os, gs::runtime::JoinKind k) {
+  if (k == gs::runtime::JoinKind::kSemiJoin) {
+    os << "semi_join";
+  } else if (k == gs::runtime::JoinKind::kInnerJoin) {
+    os << "inner_join";
+  } else if (k == gs::runtime::JoinKind::kAntiJoin) {
+    os << "anti_join";
+  } else if (k == gs::runtime::JoinKind::kLeftOuterJoin) {
+    os << "left_outer_join";
+  } else {
+    os << "unknwon join";
   }
   return os;
 }
 
-// std::to_string
-inline std::string to_string(const gs::runtime::Direction& dir) {
-  switch (dir) {
-  case gs::runtime::Direction::kOut:
-    return "OUT";
-  case gs::runtime::Direction::kIn:
-    return "IN";
-  case gs::runtime::Direction::kBoth:
-    return "BOTH";
-  }
-  return "UNKNOWN";
-}
 }  // namespace std
 
 #endif  // RUNTIME_COMMON_TYPES_H_
