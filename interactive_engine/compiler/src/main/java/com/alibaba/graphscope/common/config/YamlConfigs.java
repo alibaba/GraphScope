@@ -207,6 +207,9 @@ public class YamlConfigs extends Configs {
                 .put(
                         "query.execution.timeout.ms",
                         (Configs configs) -> configs.get("compiler.query_timeout"))
+                .put(
+                        "query.execution.max.iterations",
+                        (Configs configs) -> configs.get("compiler.query_max_iterations"))
                 .put("engine.type", (Configs configs) -> configs.get("compute_engine.type"))
                 .put(
                         "calcite.default.charset",

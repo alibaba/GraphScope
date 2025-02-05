@@ -22,6 +22,8 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.common.ir.tools.QueryExecutionValidator;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +61,7 @@ public class GraphTypeInference {
      * @return
      */
     public RelNode inferTypes(RelNode top) {
+        if (new LogicalPlan(top).isReturnEmpty()) return top;
         return visitRels(ImmutableList.of(top)).get(0);
     }
 
@@ -880,6 +883,9 @@ public class GraphTypeInference {
         }
 
         public GraphPathType inferPathType() {
+            if (this.maxHop > QueryExecutionValidator.SYSTEM_MAX_ITERATIONS) {
+                return this.pxdType;
+            }
             recursive(startVType, new CompositePathType(Lists.newArrayList()), 0);
             List<GraphLabelType.Entry> expandTypes = Lists.newArrayList();
             List<GraphLabelType.Entry> getVTypes = Lists.newArrayList();

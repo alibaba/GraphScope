@@ -51,9 +51,11 @@ public interface IrDataTypeConvertor<T> {
 
     class Groot implements IrDataTypeConvertor<DataType> {
         private final RelDataTypeFactory typeFactory;
+        private final boolean throwsOnFail;
 
-        public Groot(RelDataTypeFactory typeFactory) {
+        public Groot(RelDataTypeFactory typeFactory, boolean throwsOnFail) {
             this.typeFactory = typeFactory;
+            this.throwsOnFail = throwsOnFail;
         }
 
         @Override
@@ -118,10 +120,13 @@ public interface IrDataTypeConvertor<T> {
                 case BYTES:
                 case BYTES_LIST:
                 default:
-                    throw new UnsupportedOperationException(
-                            "convert GrootDataType ["
-                                    + from.name()
-                                    + "] to RelDataType is unsupported yet");
+                    if (throwsOnFail) {
+                        throw new UnsupportedOperationException(
+                                "convert GrootDataType ["
+                                        + from.name()
+                                        + "] to RelDataType is unsupported yet");
+                    }
+                    return typeFactory.createSqlType(SqlTypeName.ANY);
             }
         }
 
@@ -181,7 +186,14 @@ public interface IrDataTypeConvertor<T> {
                     }
                     break;
                 case UNKNOWN:
+                    return DataType.UNKNOWN;
                 default:
+            }
+            if (throwsOnFail) {
+                throw new UnsupportedOperationException(
+                        "convert RelDataType ["
+                                + dataFrom
+                                + "] to GrootDataType is unsupported yet");
             }
             return DataType.UNKNOWN;
         }

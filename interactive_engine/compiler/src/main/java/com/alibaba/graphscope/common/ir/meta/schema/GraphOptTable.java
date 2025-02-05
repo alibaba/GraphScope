@@ -140,7 +140,8 @@ public class GraphOptTable implements RelOptTable {
         }
         RelDataTypeFactory typeFactory = this.schema.getTypeFactory();
         requireNonNull(typeFactory, "typeFactory");
-        IrDataTypeConvertor<DataType> typeConvertor = new IrDataTypeConvertor.Groot(typeFactory);
+        IrDataTypeConvertor<DataType> typeConvertor =
+                new IrDataTypeConvertor.Groot(typeFactory, true);
         return typeConvertor.convert(property.getDataType());
     }
 
