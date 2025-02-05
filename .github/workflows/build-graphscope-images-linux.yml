@@ -243,7 +243,7 @@ jobs:
 
   build-image-aarch64:
     # runs-on: [self-hosted, Linux, ARM64]
-    runs-on: [Linux, ARM64]
+    runs-on: [ubuntu-22.04-arm, ARM64]
     # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.pull_request == 'pull_request') || (github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@v4

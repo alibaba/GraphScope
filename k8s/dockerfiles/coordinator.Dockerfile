@@ -10,6 +10,11 @@ ARG CI=false
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+# Those commands has been removed from the Dockerfile, since we require no manylinux2014 wheel in this image.
+# ---
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib && \
+# auditwheel repair dist/*.whl && \
+# ---
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
