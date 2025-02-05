@@ -62,7 +62,7 @@ jobs:
         df -h
         make learning CI=false VERSION=${SHORT_SHA}
         df -h
-        make graphlearn-torch CI=false VERSION=${SHORT_SHA}
+        # make graphlearn-torch CI=false VERSION=${SHORT_SHA}
         df -h
         make flex-interactive CI=false VERSION=${SHORT_SHA} ENABLE_COORDINATOR=true
         df -h
@@ -89,7 +89,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -99,7 +99,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         # dataset image
         # Note! dataset image are built manually just use the latest one.
@@ -135,7 +135,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -144,7 +144,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         # dataset image
         # Note! dataset image are built manually just use the latest one.
@@ -165,7 +165,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -174,7 +174,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         # flex-interactive image
         sudo docker tag graphscope/interactive:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive:${tag}
