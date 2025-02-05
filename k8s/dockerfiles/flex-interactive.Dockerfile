@@ -25,6 +25,12 @@ RUN if [ "${ENABLE_OPENTELMETRY}" = "true" ]; then \
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+
+# Install igraph
+RUN cd /tmp && git clone https://github.com/igraph/igraph.git && cd igraph && \
+    sudo apt-get update && sudo apt-get install bison flex && \
+    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope && make -j && make install
+
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && make -j ${PARALLEL} && make install && \

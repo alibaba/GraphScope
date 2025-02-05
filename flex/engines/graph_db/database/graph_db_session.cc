@@ -313,4 +313,50 @@ const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
   return app_metrics_[idx];
 }
 
+size_t GraphDBSession::vertex_num() const {
+  auto& graph = db_.graph();
+  auto vertex_label_num = graph.schema().vertex_label_num();
+  size_t total_vertex_count = 0;
+  for (auto i = 0; i < vertex_label_num; ++i) {
+    total_vertex_count += graph.vertex_num(i);
+  }
+  return total_vertex_count;
+}
+
+size_t GraphDBSession::edge_num() const {
+  auto& graph = db_.graph();
+  auto& schema = graph.schema();
+  auto vertex_label_num = schema.vertex_label_num();
+  auto edge_label_num = graph.schema().edge_label_num();
+  size_t total_edge_count = 0;
+  for (auto edge_label_id = 0; edge_label_id < edge_label_num;
+       ++edge_label_id) {
+    auto edge_label_name = schema.get_edge_label_name(edge_label_id);
+    std::vector<std::tuple<std::string, std::string, int32_t>>
+        vertex_type_pair_statistics;
+    for (auto src_label_id = 0; src_label_id < vertex_label_num;
+         ++src_label_id) {
+      auto src_label_name = schema.get_vertex_label_name(src_label_id);
+      for (auto dst_label_id = 0; dst_label_id < vertex_label_num;
+           ++dst_label_id) {
+        auto dst_label_name = schema.get_vertex_label_name(dst_label_id);
+        if (schema.exist(src_label_id, dst_label_id, edge_label_id)) {
+          auto oe_csr =
+              graph.get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+          auto ie_csr =
+              graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
+          size_t cur_edge_cnt = 0;
+          if (oe_csr) {
+            cur_edge_cnt += oe_csr->edge_num();
+          } else if (ie_csr) {
+            cur_edge_cnt += ie_csr->edge_num();
+          }
+          total_edge_count += cur_edge_cnt;
+        }
+      }
+    }
+  }
+  return total_edge_count;
+}
+
 }  // namespace gs

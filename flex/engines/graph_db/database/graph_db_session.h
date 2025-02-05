@@ -108,6 +108,10 @@ class GraphDBSession {
 
   AppBase* GetApp(const std::string& name);
 
+  size_t vertex_num() const;
+
+  size_t edge_num() const;
+
  private:
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_json(const std::string_view& input);

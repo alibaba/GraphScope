@@ -162,3 +162,6 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 
 **/*.ci-friendly-pom.xml
 **/dependency-reduced-pom.xml
+
+
+output/
