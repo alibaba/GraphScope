@@ -9,6 +9,11 @@ ARG CI=false
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+# Those commands has been removed from the Dockerfile, since we require no manylinux2014 wheel in this image.
+# ---
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib && \
+# auditwheel repair dist/*.whl && \
+# ---
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
@@ -19,10 +24,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         cd python; \
         python3 -m pip install --user -r requirements.txt; \
         python3 setup.py bdist_wheel; \
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib; \
-        auditwheel repair dist/*.whl; \
-        python3 -m pip install wheelhouse/*.whl; \
-        cp wheelhouse/*.whl /home/graphscope/install/; \
+        cp dist/*.whl /home/graphscope/install/; \
         cd ../coordinator; \
         python3 setup.py bdist_wheel; \
         cp dist/*.whl /home/graphscope/install/; \
