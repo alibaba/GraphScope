@@ -84,14 +84,15 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
           const std::string& compiler_yaml = db_.work_dir() + "/graph.yaml";
           const std::string& tmp_dir = db_.work_dir() + "/runtime/tmp/";
           const auto& compiler_path = db_.schema().get_compiler_path();
-          for (int i = 0; i < 3; ++i) {
-            if (!generate_plan(query, statistics, compiler_path, compiler_yaml,
-                               tmp_dir, plan_cache_)) {
-              LOG(ERROR) << "Generate plan failed for query: " << query;
-            } else {
-              query_cache.put(query, plan_cache_[query].SerializeAsString());
-              break;
-            }
+          if (!generate_plan(query, statistics, compiler_path, compiler_yaml,
+                             tmp_dir, plan_cache_)) {
+            LOG(ERROR) << "Generate plan failed for query: " << query;
+            std::string error =
+                "    Compiler failed to generate physical plan: " + query;
+            output.put_bytes(error.data(), error.size());
+            return false;
+          } else {
+            query_cache.put(query, plan_cache_[query].SerializeAsString());
           }
         }
       }
@@ -107,8 +108,11 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     gs::runtime::GraphReadInterface gri(txn);
     auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(),
                                                  params, timer_);
-
-    runtime::Sink::sink_encoder(ctx.value(), gri, output);
+    if (type == Schema::CYPHER_READ_PLUGIN_ID) {
+      runtime::Sink::sink_encoder(ctx.value(), gri, output);
+    } else {
+      runtime::Sink::sink_beta(ctx.value(), gri, output);
+    }
   }
   return true;
 }
