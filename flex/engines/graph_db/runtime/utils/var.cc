@@ -71,7 +71,6 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         } else if (pt.has_key()) {
           if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
                                         tag)) {
-            LOG(INFO) << "check_whether_pk_property";
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdPathAccessor<std::string_view>>(
@@ -142,7 +141,6 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         } else if (pt.has_key()) {
           if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
                                         tag)) {
-            LOG(INFO) << "check_whether_pk_property";
             if (type_ == RTAnyType::kStringValue) {
               getter_ =
                   std::make_shared<VertexIdVertexAccessor<std::string_view>>(
