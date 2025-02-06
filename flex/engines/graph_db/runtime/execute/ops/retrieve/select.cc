@@ -52,11 +52,13 @@ class SelectIdNeOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto tag = expr_.operators(0).var().tag().id();
     auto col = ctx.get(tag);
+    const auto& name = expr_.operators(0).var().property().key().name();
     if ((!col->is_optional()) &&
         col->column_type() == ContextColumnType::kVertex) {
       auto vertex_col = std::dynamic_pointer_cast<IVertexColumn>(col);
       auto labels = vertex_col->get_labels_set();
-      if (labels.size() == 1) {
+      if (labels.size() == 1 &&
+          name == graph.schema().get_vertex_primary_key_name(*labels.begin())) {
         auto label = *labels.begin();
         int64_t oid = std::stoll(params.at(expr_.operators(2).param().name()));
         vid_t vid;
@@ -88,11 +90,11 @@ class SelectIdNeOpr : public IReadOperator {
   common::Expression expr_;
 };
 
-class SelectOprBeta : public IReadOperator {
+class SelectOpr : public IReadOperator {
  public:
-  SelectOprBeta(const common::Expression& expr) : expr_(expr) {}
+  SelectOpr(const common::Expression& expr) : expr_(expr) {}
 
-  std::string get_operator_name() const override { return "SelectOprBeta"; }
+  std::string get_operator_name() const override { return "SelectOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
@@ -122,23 +124,13 @@ bl::result<ReadOpBuildResultT> SelectOprBuilder::Build(
       auto name = var.property().key().name();
       auto type = parse_from_ir_data_type(
           opr.predicate().operators(2).param().data_type());
-      // Here we don't know the exact labels info of var.tag.id(), but we could
-      // create SelectIdNeOpr once any primary key in schema matches this
-      // property, since it is a common property, we still could deprecate to
-      // SelectOprBeta.
-      std::unordered_set<std::string> pks;
-      for (auto label = 0; label < schema.vertex_label_num(); ++label) {
-        auto pk = schema.get_vertex_primary_key_name(label);
-        pks.insert(pk);
-      }
-      if (pks.find(name) != pks.end() && type == RTAnyType::kI64Value) {
+      if (name == "id" && type == RTAnyType::kI64Value) {
         return std::make_pair(std::make_unique<SelectIdNeOpr>(opr.predicate()),
                               ctx_meta);
       }
     }
   }
-  return std::make_pair(std::make_unique<SelectOprBeta>(opr.predicate()),
-                        ctx_meta);
+  return std::make_pair(std::make_unique<SelectOpr>(opr.predicate()), ctx_meta);
 }
 
 }  // namespace ops

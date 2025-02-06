@@ -23,20 +23,6 @@ namespace gs {
 
 namespace runtime {
 
-bool check_whether_pk_property(const std::string& property_name,
-                               const Context& ctx, const gs::Schema& schema,
-                               int tag) {
-  auto vertex_column = std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag));
-  const auto& labels_set = vertex_column->get_labels_set();
-  for (auto label : labels_set) {
-    // Return true if any label's pk name is equal to property_name
-    if (schema.get_vertex_primary_key_name(label) == property_name) {
-      return true;
-    }
-  }
-  return false;
-}
-
 Var::Var(const GraphReadInterface& graph, const Context& ctx,
          const common::Variable& pb, VarType var_type)
     : getter_(nullptr) {
@@ -131,7 +117,7 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
           LOG(FATAL) << "not support for " << pt.DebugString();
         }
       } else {
-        getter_ = std::make_shared<VertexIdVertexAccessor>(graph);
+        getter_ = std::make_shared<VertexIdVertexAccessor>();
       }
     } else if (var_type == VarType::kEdgeVar) {
       if (pb.has_property()) {

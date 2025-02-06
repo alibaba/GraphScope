@@ -198,17 +198,6 @@ Schema::get_vprop_name_to_type_and_index(label_t label) const {
   return vprop_name_to_type_and_index_[label];
 }
 
-bool Schema::could_be_primary_key(const std::string& prop) const {
-  for (const auto& v : v_primary_keys_) {
-    for (const auto& p : v) {
-      if (std::get<1>(p) == prop) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 bool Schema::exist(const std::string& src_label, const std::string& dst_label,
                    const std::string& edge_label) const {
   label_t src = get_vertex_label_id(src_label);

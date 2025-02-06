@@ -57,7 +57,6 @@ class IAccessor {
   virtual std::string name() const { return "unknown"; }
 
   virtual std::shared_ptr<IContextColumnBuilder> builder() const {
-    // LOG(FATAL) << "not implemented for " << this->name();
     return nullptr;
   }
 };
@@ -248,7 +247,7 @@ class ContextValueAccessor : public IAccessor {
 class VertexIdVertexAccessor : public IAccessor {
  public:
   using elem_t = VertexRecord;
-  VertexIdVertexAccessor(const GraphReadInterface& graph) : graph_(graph) {}
+  VertexIdVertexAccessor() {}
 
   elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
     return VertexRecord{label, v};
@@ -269,9 +268,6 @@ class VertexIdVertexAccessor : public IAccessor {
     }
     return RTAny::from_vertex(typed_eval_vertex(label, v, idx));
   }
-
- private:
-  const GraphReadInterface& graph_;
 };
 
 class VertexGIdVertexAccessor : public IAccessor {

@@ -576,15 +576,12 @@ bool is_exchange_index(const common::Expression& expr, int alias, int& tag) {
     if (var.has_tag()) {
       tag = var.tag().id();
     }
-    // if (tag == alias) {
     return true;
-    //}
   }
   return false;
 }
 
-bool is_check_property_in_range(const gs::Schema& schema,
-                                const common::Expression& expr, int& tag,
+bool is_check_property_in_range(const common::Expression& expr, int& tag,
                                 std::string& name, std::string& lower,
                                 std::string& upper, common::Value& then_value,
                                 common::Value& else_value) {
@@ -614,7 +611,7 @@ bool is_check_property_in_range(const gs::Schema& schema,
         return false;
       }
       name = var.property().key().name();
-      if (schema.could_be_primary_key(name) || name == "label") {
+      if (name == "label") {
         return false;
       }
     }
@@ -691,8 +688,7 @@ bool is_check_property_in_range(const gs::Schema& schema,
   return false;
 }
 
-bool is_check_property_cmp(const gs::Schema& schema,
-                           const common::Expression& expr, int& tag,
+bool is_check_property_cmp(const common::Expression& expr, int& tag,
                            std::string& name, std::string& target,
                            common::Value& then_value, common::Value& else_value,
                            SPPredicateType& ptype) {
@@ -722,7 +718,7 @@ bool is_check_property_cmp(const gs::Schema& schema,
         return false;
       }
       name = var.property().key().name();
-      if (schema.could_be_primary_key(name) || name == "label") {
+      if (name == "label") {
         return false;
       }
     }
@@ -784,8 +780,7 @@ bool is_check_property_cmp(const gs::Schema& schema,
   return false;
 }
 
-bool is_property_extract(const gs::Schema& schema,
-                         const common::Expression& expr, int& tag,
+bool is_property_extract(const common::Expression& expr, int& tag,
                          std::string& name, RTAnyType& type) {
   if (expr.operators_size() == 1 &&
       expr.operators(0).item_case() == common::ExprOpr::kVar) {
@@ -800,7 +795,7 @@ bool is_property_extract(const gs::Schema& schema,
     }
     if (var.has_property() && var.property().has_key()) {
       name = var.property().key().name();
-      if (schema.could_be_primary_key(name) || name == "label") {
+      if (name == "label") {
         return false;
       }
       if (var.has_node_type()) {
@@ -964,7 +959,7 @@ parse_special_expr(const gs::Schema& schema, const common::Expression& expr,
     int tag;
     std::string name;
     RTAnyType type;
-    if (is_property_extract(schema, expr, tag, name, type)) {
+    if (is_property_extract(expr, tag, name, type)) {
       return [=](const GraphReadInterface& graph,
                  const std::map<std::string, std::string>& params,
                  const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
@@ -1004,8 +999,8 @@ parse_special_expr(const gs::Schema& schema, const common::Expression& expr,
   }
   std::string name, lower, upper, target;
   common::Value then_value, else_value;
-  if (is_check_property_in_range(schema, expr, tag, name, lower, upper,
-                                 then_value, else_value)) {
+  if (is_check_property_in_range(expr, tag, name, lower, upper, then_value,
+                                 else_value)) {
     return [=](const GraphReadInterface& graph,
                const std::map<std::string, std::string>& params,
                const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
@@ -1073,8 +1068,8 @@ parse_special_expr(const gs::Schema& schema, const common::Expression& expr,
     };
   }
   SPPredicateType ptype;
-  if (is_check_property_cmp(schema, expr, tag, name, target, then_value,
-                            else_value, ptype)) {
+  if (is_check_property_cmp(expr, tag, name, target, then_value, else_value,
+                            ptype)) {
     return [=](const GraphReadInterface& graph,
                const std::map<std::string, std::string>& params,
                const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
