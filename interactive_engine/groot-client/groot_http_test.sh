@@ -38,4 +38,11 @@ cd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
 cmd="python3 -m pytest -s tests/test_driver.py"
 echo "Run python sdk test: ${cmd}"
 eval ${cmd} || (err "test_driver failed" &&  exit 1)
-info "Finish python sdk test"
+echo "Finish python sdk test"
+
+# stop groot and groot http server
+ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep | awk '{print $2}' | xargs kill -9
+ps -ef | grep "com.alibaba.graphscope.groot.OpenApiGeneratorApplication" | grep -v grep | awk '{print $2}' | xargs kill -9
+# clean data
+rm -r ${METADATA_DIR}
+rm -r ${DATA_DIR}
