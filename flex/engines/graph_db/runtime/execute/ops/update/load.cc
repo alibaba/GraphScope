@@ -187,7 +187,7 @@ parse_vertex_mapping(
   const auto& props = vertex_mapping.column_mappings();
   size_t prop_size = vertex_mapping.column_mappings_size();
   std::vector<int> properties(vertex_prop_types.size());
-  auto pk_name = schema.get_vertex_primary_key_name(vertex_label_id);
+  const auto& pk_name = schema.get_vertex_primary_key_name(vertex_label_id);
   CHECK(prop_size == vertex_prop_types.size() + 1)
       << "Only support one primary key";
   int id_col = -1;

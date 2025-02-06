@@ -945,8 +945,7 @@ make_project_expr(const common::Expression& expr, int alias) {
 static std::optional<std::function<std::unique_ptr<ProjectExprBase>(
     const GraphReadInterface& graph,
     const std::map<std::string, std::string>& params, const Context& ctx)>>
-parse_special_expr(const gs::Schema& schema, const common::Expression& expr,
-                   int alias) {
+parse_special_expr(const common::Expression& expr, int alias) {
   int tag = -1;
   if (is_exchange_index(expr, alias, tag)) {
     return [=](const GraphReadInterface& graph,
@@ -1265,10 +1264,9 @@ class ProjectOpr : public IReadOperator {
   bool is_append_;
 };
 
-auto _make_project_expr(const gs::Schema& schema,
-                        const common::Expression& expr, int alias,
+auto _make_project_expr(const common::Expression& expr, int alias,
                         const std::optional<common::IrDataType>& data_type) {
-  auto func = parse_special_expr(schema, expr, alias);
+  auto func = parse_special_expr(expr, alias);
   if (func.has_value()) {
     return func.value();
   }
@@ -1307,8 +1305,7 @@ bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(
-          _make_project_expr(schema, expr, alias, data_types[i]));
+      exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
     }
   } else {
     for (int i = 0; i < mappings_size; ++i) {
@@ -1322,7 +1319,7 @@ bl::result<ReadOpBuildResultT> ProjectOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(_make_project_expr(schema, expr, alias, std::nullopt));
+      exprs.emplace_back(_make_project_expr(expr, alias, std::nullopt));
     }
   }
 
@@ -1476,8 +1473,7 @@ bl::result<ReadOpBuildResultT> ProjectOrderByOprBuilder::Build(
         return std::make_pair(nullptr, ret_meta);
       }
       auto expr = m.expr();
-      exprs.emplace_back(
-          _make_project_expr(schema, expr, alias, data_types[i]));
+      exprs.emplace_back(_make_project_expr(expr, alias, data_types[i]));
       if (order_by_keys.find(alias) != order_by_keys.end()) {
         index_set.insert(i);
       }
