@@ -674,7 +674,7 @@ bl::result<ReadOpBuildResultT> EdgeExpandGetVOprBuilder::Build(
     // Exact vertex predicate
     label_t exact_pk_label;
     std::string pk_name;
-    if (is_pk_exact_check(v_opr.params().predicate(), exact_pk_label,
+    if (is_pk_exact_check(schema, v_opr.params().predicate(), exact_pk_label,
                           pk_name)) {
       return std::make_pair(std::make_unique<EdgeExpandVWithExactVertexOpr>(
                                 eep, exact_pk_label, pk_name, v_opr.params()),
