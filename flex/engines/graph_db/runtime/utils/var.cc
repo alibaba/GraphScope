@@ -122,34 +122,16 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdVertexAccessor>();
         } else if (pt.has_key()) {
-          // FIXME(zhanglei,lexiao): We could not assume that the primary key
-          // property is id. The best solution maybe merge the primary key
-          // getter and property getter.
-          if (pt.key().name() == "id") {
-            if (type_ == RTAnyType::kStringValue) {
-              getter_ =
-                  std::make_shared<VertexIdVertexAccessor<std::string_view>>(
-                      graph);
-            } else if (type_ == RTAnyType::kI32Value) {
-              getter_ =
-                  std::make_shared<VertexIdVertexAccessor<int32_t>>(graph);
-            } else if (type_ == RTAnyType::kI64Value) {
-              getter_ =
-                  std::make_shared<VertexIdVertexAccessor<int64_t>>(graph);
-            } else {
-              LOG(FATAL) << "not support for " << static_cast<int>(type_);
-            }
-          } else {
-            getter_ = create_vertex_property_vertex_accessor(graph, type_,
-                                                             pt.key().name());
-          }
+          getter_ = create_vertex_property_vertex_accessor(graph, type_,
+                                                           pt.key().name());
+
         } else if (pt.has_label()) {
           getter_ = std::make_shared<VertexLabelVertexAccessor>();
         } else {
           LOG(FATAL) << "not support for " << pt.DebugString();
         }
       } else {
-        getter_ = std::make_shared<VertexIdVertexAccessor<int64_t>>(graph);
+        getter_ = std::make_shared<VertexIdVertexAccessor>(graph);
       }
     } else if (var_type == VarType::kEdgeVar) {
       if (pb.has_property()) {

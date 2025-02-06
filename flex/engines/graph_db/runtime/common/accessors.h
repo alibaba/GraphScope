@@ -245,14 +245,13 @@ class ContextValueAccessor : public IAccessor {
   const IValueColumn<elem_t>& col_;
 };
 
-template <typename KEY_T>
 class VertexIdVertexAccessor : public IAccessor {
  public:
-  using elem_t = KEY_T;
+  using elem_t = VertexRecord;
   VertexIdVertexAccessor(const GraphReadInterface& graph) : graph_(graph) {}
 
   elem_t typed_eval_vertex(label_t label, vid_t v, size_t idx) const {
-    return AnyConverter<KEY_T>::from_any(graph_.GetVertexId(label, v));
+    return VertexRecord{label, v};
   }
 
   RTAny eval_path(size_t idx) const override {
@@ -261,14 +260,14 @@ class VertexIdVertexAccessor : public IAccessor {
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    return RTAny(Any(typed_eval_vertex(label, v, idx)));
+    return RTAny::from_vertex(typed_eval_vertex(label, v, idx));
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override {
     if (v == std::numeric_limits<vid_t>::max()) {
       return RTAny(RTAnyType::kNull);
     }
-    return RTAny(typed_eval_vertex(label, v, idx));
+    return RTAny::from_vertex(typed_eval_vertex(label, v, idx));
   }
 
  private:
@@ -339,7 +338,6 @@ class VertexPropertyVertexAccessor : public IAccessor {
         return true;
       }
     }
-
     return false;
   }
 
