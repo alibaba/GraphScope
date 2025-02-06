@@ -44,7 +44,6 @@ public class GSDataTypeDeserializer extends JsonDeserializer<GSDataType> {
             stringType.setString(mapper.treeToValue(node.get("string"), StringTypeString.class));
             return stringType;
         } else if (node.has("temporal")) {
-            // ObjectMapper objectMapper = new ObjectMapper();
             TemporalType temporalType = new TemporalType();
             temporalType.setTemporal(
                     mapper.treeToValue(node.get("temporal"), TemporalTypeTemporal.class));

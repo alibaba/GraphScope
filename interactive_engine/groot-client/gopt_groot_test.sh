@@ -2,7 +2,6 @@
 set -x
 BASE_DIR=$(cd "$(dirname "$0")"; pwd)
 declare -r COMPILER_DIR=${BASE_DIR}/../compiler
-declare -r FLEX_HOME=${BASE_DIR}/../../flex
 declare -r DATA_IMPORT_SCRIPT_DIR=${BASE_DIR}/../groot-server/src/main/resources
 declare -r CONFIG_FILE="/tmp/groot.config"
 declare -r METADATA_DIR="/tmp/groot/meta"

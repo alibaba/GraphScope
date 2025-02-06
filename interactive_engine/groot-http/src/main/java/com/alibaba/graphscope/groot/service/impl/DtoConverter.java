@@ -181,8 +181,6 @@ public class DtoConverter {
                 TemporalTypeTemporal date = new DateType("YYYY-MM-DD".toString());
                 return new TemporalType(date);
             case TIMESTAMP_MS:
-                // TODO: confirm the format of timestamp? should be int64 milliseconds since
-                // 1970-01-01 00:00:00.000000?
                 TemporalTypeTemporal timestamp =
                         new TimeStampType("YYYY-MM-DD HH:MM:SS".toString());
                 return new TemporalType(timestamp);

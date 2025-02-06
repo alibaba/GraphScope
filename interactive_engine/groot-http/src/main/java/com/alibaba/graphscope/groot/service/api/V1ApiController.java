@@ -343,8 +343,6 @@ public class V1ApiController implements V1Api {
     @GetMapping(value = "/service/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ServiceStatus> getServiceStatus() {
         try {
-            // The default port for hqps is 8080 and for gremlin is 12312
-            // todo: get the actual port from configuration
             ServiceStatus serviceStatus = new ServiceStatus();
             serviceStatus.setStatus("OK");
             int hqpsPort = env.getProperty("frontend.service.httpPort", Integer.class, 8080);

@@ -12,20 +12,9 @@ ps -ef | grep "com.alibaba.graphscope.groot.servers.GrootGraph" | grep -v grep |
 cd ${BASE_DIR}/../assembly/target && tar xvzf groot.tar.gz && cd groot
 GROOT_DIR=$(pwd)
 sed -e "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@g" \
-    -e "s@collect.statistics=false@collect.statistics=true@g" \
     -e "s@gremlin.server.port=12312@gremlin.server.port=8182@g" \
     -e "s@file.meta.store.path=./meta@file.meta.store.path=${METADATA_DIR}@g" \
     -e "s@store.data.path=./data@store.data.path=${DATA_DIR}@g" \
-    -e "\$a\
-        graph.planner.is.on=true" \
-    -e "\$a\
-        graph.physical.opt=proto" \
-    -e "\$a\
-        graph.planner.opt=CBO" \
-    -e "\$a\
-        graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,JoinDecompositionRule,ExpandGetVFusionRule" \
-    -e "\$a\
-        gremlin.script.language.name=antlr_gremlin_calcite" \
     ${GROOT_DIR}/conf/config.template > ${CONFIG_FILE}
 
 # test python sdk for groot (the openapi client)

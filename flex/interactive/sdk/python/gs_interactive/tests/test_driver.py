@@ -165,9 +165,7 @@ class TestDriver(unittest.TestCase):
 
     def test_insight_example(self):
         self._graph_id = self.createGraphFromDict()
-        # print("modify graph schema")
-        # self.modifyGraphSchema()
-        print("vertex edge query")
+        self.modifyGraphSchema()
         # sleep for a while to wait for the graph to be ready
         time.sleep(10)
         self.callVertexEdgeQuery()
