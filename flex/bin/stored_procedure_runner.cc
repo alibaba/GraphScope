@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
   if (!schema.ok()) {
     LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();
   }
-  gs::GraphDBConfig config(schema.value(), data_path, 1);
+  gs::GraphDBConfig config(schema.value(), data_path);
   config.memory_level = memory_level;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;

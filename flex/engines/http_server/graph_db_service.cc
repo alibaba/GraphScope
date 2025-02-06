@@ -47,7 +47,8 @@ ServiceConfig::ServiceConfig()
       enable_bolt(false),
       metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
-      verbose_level(DEFAULT_VERBOSE_LEVEL) {}
+      verbose_level(DEFAULT_VERBOSE_LEVEL),
+      sharding_mode(DEFAULT_SHARDING_MODE) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
@@ -93,7 +94,7 @@ void openGraph(const gs::GraphId& graph_id,
                << ", for graph: " << graph_id;
   }
   db.Close();
-  gs::GraphDBConfig config(schema_res.value(), data_dir,
+  gs::GraphDBConfig config(schema_res.value(), data_dir, "",
                            service_config.shard_num);
   config.memory_level = service_config.memory_level;
   if (config.memory_level >= 2) {
@@ -113,10 +114,14 @@ void GraphDBService::init(const ServiceConfig& config) {
   actor_sys_ = std::make_unique<actor_system>(
       config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
       config.external_thread_num, [this]() { set_exit_state(); });
+  // NOTE that in sharding mode EXCLUSIVE, the last shard is reserved for admin
+  //  requests.
   query_hdl_ = std::make_unique<graph_db_http_handler>(
-      config.query_port, config.shard_num, config.enable_adhoc_handler);
+      config.query_port, config.shard_num, config.get_cooperative_shard_num(),
+      config.enable_adhoc_handler);
   if (config.start_admin_service) {
-    admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
+    admin_hdl_ = std::make_unique<admin_http_handler>(
+        config.admin_port, config.get_exclusive_shard_id());
   }
 
   initialized_.store(true);

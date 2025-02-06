@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
+import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.google.common.base.Preconditions;
 
@@ -134,6 +135,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                             graphPlanner.instance(
                                     statement, irMeta, statusCallback.getQueryLogger()));
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
+            logCacheHit(cacheKey, cacheValue);
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
@@ -145,15 +147,27 @@ public class GraphQueryExecutor extends FabricExecutor {
             statusCallback
                     .getQueryLogger()
                     .info("logical IR plan \n\n {} \n\n", planSummary.getLogicalPlan().explain());
-            statusCallback
-                    .getQueryLogger()
-                    .debug("physical IR plan {}", planSummary.getPhysicalPlan().explain());
-            if (planSummary.getLogicalPlan().isReturnEmpty()) {
-                return StatementResults.initial();
+            boolean returnEmpty = planSummary.getLogicalPlan().isReturnEmpty();
+            if (!returnEmpty) {
+                statusCallback
+                        .getQueryLogger()
+                        .debug("physical IR plan {}", planSummary.getPhysicalPlan().explain());
             }
             QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
             GraphPlanExecutor executor;
-            if (cacheValue.result != null && cacheValue.result.isCompleted) {
+            if (returnEmpty) {
+                executor =
+                        new GraphPlanExecutor() {
+                            @Override
+                            public void execute(
+                                    GraphPlanner.Summary summary,
+                                    IrMeta irMeta,
+                                    ExecutionResponseListener listener)
+                                    throws Exception {
+                                listener.onCompleted();
+                            }
+                        };
+            } else if (cacheValue.result != null && cacheValue.result.isCompleted) {
                 executor =
                         new GraphPlanExecutor() {
                             @Override
@@ -221,5 +235,22 @@ public class GraphQueryExecutor extends FabricExecutor {
         if (!(plan.getProcedureCall() instanceof RexProcedureCall)) return false;
         RexProcedureCall procedureCall = (RexProcedureCall) plan.getProcedureCall();
         return procedureCall.getMode() == StoredProcedureMeta.Mode.SCHEMA;
+    }
+
+    private void logCacheHit(QueryCache.Key key, QueryCache.Value value) {
+        GraphPlanner.PlannerInstance cacheInstance =
+                (GraphPlanner.PlannerInstance) value.debugInfo.get("instance");
+        if (cacheInstance != null && cacheInstance != key.instance) {
+            QueryLogger queryLogger = key.instance.getQueryLogger();
+            if (queryLogger != null) {
+                queryLogger.info(
+                        "query hit the cache, cached query id [ {} ], cached query statement [ {}"
+                                + " ]",
+                        cacheInstance.getQueryLogger() == null
+                                ? 0L
+                                : cacheInstance.getQueryLogger().getQueryId(),
+                        cacheInstance.getQuery());
+            }
+        }
     }
 }

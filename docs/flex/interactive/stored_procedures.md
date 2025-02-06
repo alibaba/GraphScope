@@ -107,3 +107,83 @@ CALL test_procedure("marko") YIELD *;
 
 
 In addition to defining a stored procedure with a Cypher query, we also support for customizing query execution through C++ stored procedures. See [C++ Stored Procedure](./development/stored_procedure/cpp_procedure.md).
+
+
+## Builtin Procedures
+
+To enhance the user experience in Interactive, we have integrated built-in stored procedures. These procedures facilitate both commonly executed queries and those that, while complex and challenging to devise, are essential and frequently utilized. To access these features, simply input the correct procedure name and the necessary parameters.
+
+### count_vertices
+
+This procedure returns the count of vertices for a specified label.
+
+```cypher
+CALL count_vertices(vertex_label_name)
+```
+
+###### Parameters
+
+- `vertex_label_name`: The name of the vertex label to be counted.
+
+###### Returns
+
+- `count`: The total number of vertices.
+
+### k_hop_neighbors
+
+This finds all vertices that can be reached from a starting vertex within `k` hops.
+
+```cypher
+CALL k_neighbors(src_vertex_label_name, src_vertex_pk, k)
+```
+
+###### Parameters
+
+- `src_vertex_label_name`: The label of the starting vertex.
+- `src_vertex_pk`: The primary key identifying the starting vertex.
+- `k`: The number of hops, which must be greater than or equal to 0.
+
+###### Returns
+
+- `label_name`: The label of each reachable vertex.
+- `vertex_pk`: The primary key of each reachable vertex.
+
+### shortest_path_among_three
+
+This finds the shortest path connecting three specified vertices.
+
+```cypher
+CALL shortest_path_among_three(label_1, pk_1, label_2, pk_2, label_3, pk_3)
+```
+
+###### Parameters
+
+- `label_1`: The label of the first vertex.
+- `pk_1`: The primary key of the first vertex.
+- `label_2`: The label of the second vertex.
+- `pk_2`: The primary key of the second vertex.
+- `label_3`: The label of the third vertex.
+- `pk_3`: The primary key of the third vertex.
+
+###### Returns
+
+- `path`: The shortest path, represented as a string.
+
+
+### pagerank
+
+Calculate the PageRank values for a subgraph of the current graph.
+
+```note
+Currently, we only support calculating PageRank on a subgraph with a single type of vertex and a single type of relationship.
+```
+
+```cypher
+CALL page_rank(vertex_label, edge_label, damping_factor, max_iterations, epsilon)
+```
+
+- `vertex_label`: The label of the vertices to be queried.
+- `edge_label`: The label of the relationships between vertices.
+- `damping_factor`: A parameter for the PageRank algorithm.
+- `max_iterations`: The maximum number of iterations.
+- `epsilon`: A convergence parameter for the PageRank algorithm.

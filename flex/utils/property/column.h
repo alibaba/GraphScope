@@ -26,6 +26,8 @@
 
 namespace gs {
 
+std::string_view truncate_utf8(std::string_view str, size_t length);
+
 class ColumnBase {
  public:
   virtual ~ColumnBase() {}
@@ -197,7 +199,7 @@ class TypedColumn : public ColumnBase {
     set_value(index, AnyConverter<T>::from_any(value));
   }
 
-  T get_view(size_t index) const {
+  inline T get_view(size_t index) const {
     return index < basic_size_ ? basic_buffer_.get(index)
                                : extra_buffer_.get(index - basic_size_);
   }
@@ -293,6 +295,8 @@ class TypedColumn<RecordView> : public ColumnBase {
 };
 
 using BoolColumn = TypedColumn<bool>;
+using UInt8Column = TypedColumn<uint8_t>;
+using UInt16Column = TypedColumn<uint16_t>;
 using IntColumn = TypedColumn<int32_t>;
 using UIntColumn = TypedColumn<uint32_t>;
 using LongColumn = TypedColumn<int64_t>;
@@ -325,7 +329,11 @@ class TypedColumn<grape::EmptyType> : public ColumnBase {
 
   void set_any(size_t index, const Any& value) override {}
 
+  void set_value(size_t index, const grape::EmptyType& value) {}
+
   Any get(size_t index) const override { return Any(); }
+
+  grape::EmptyType get_view(size_t index) const { return grape::EmptyType(); }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {}
 
@@ -499,12 +507,18 @@ class TypedColumn<std::string_view> : public ColumnBase {
   PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
+    auto copied_val = val;
+    if (copied_val.size() >= width_) {
+      VLOG(1) << "String length" << copied_val.size()
+              << " exceeds the maximum length: " << width_ << ", cut off.";
+      copied_val = truncate_utf8(copied_val, width_);
+    }
     if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
-      size_t offset = pos_.fetch_add(val.size());
-      extra_buffer_.set(idx - basic_size_, offset, val);
+      size_t offset = pos_.fetch_add(copied_val.size());
+      extra_buffer_.set(idx - basic_size_, offset, copied_val);
     } else if (idx < basic_size_) {
-      size_t offset = basic_pos_.fetch_add(val.size());
-      basic_buffer_.set(idx, offset, val);
+      size_t offset = basic_pos_.fetch_add(copied_val.size());
+      basic_buffer_.set(idx, offset, copied_val);
     } else {
       LOG(FATAL) << "Index out of range";
     }
@@ -533,7 +547,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
-  std::string_view get_view(size_t idx) const {
+  inline std::string_view get_view(size_t idx) const {
     return idx < basic_size_ ? basic_buffer_.get(idx)
                              : extra_buffer_.get(idx - basic_size_);
   }

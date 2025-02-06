@@ -51,9 +51,11 @@ public interface IrDataTypeConvertor<T> {
 
     class Groot implements IrDataTypeConvertor<DataType> {
         private final RelDataTypeFactory typeFactory;
+        private final boolean throwsOnFail;
 
-        public Groot(RelDataTypeFactory typeFactory) {
+        public Groot(RelDataTypeFactory typeFactory, boolean throwsOnFail) {
             this.typeFactory = typeFactory;
+            this.throwsOnFail = throwsOnFail;
         }
 
         @Override
@@ -118,10 +120,13 @@ public interface IrDataTypeConvertor<T> {
                 case BYTES:
                 case BYTES_LIST:
                 default:
-                    throw new UnsupportedOperationException(
-                            "convert GrootDataType ["
-                                    + from.name()
-                                    + "] to RelDataType is unsupported yet");
+                    if (throwsOnFail) {
+                        throw new UnsupportedOperationException(
+                                "convert GrootDataType ["
+                                        + from.name()
+                                        + "] to RelDataType is unsupported yet");
+                    }
+                    return typeFactory.createSqlType(SqlTypeName.ANY);
             }
         }
 
@@ -135,10 +140,12 @@ public interface IrDataTypeConvertor<T> {
                     if (dataFrom.getPrecision() == 1) {
                         return DataType.CHAR;
                     }
+                    break;
                 case VARCHAR:
                     if (dataFrom.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED) {
                         return DataType.STRING;
                     }
+                    break;
                 case SMALLINT:
                     return DataType.SHORT;
                 case INTEGER:
@@ -158,7 +165,7 @@ public interface IrDataTypeConvertor<T> {
                 case MULTISET:
                 case ARRAY:
                     RelDataType componentType = dataFrom.getComponentType();
-                    // check the array or set is a unlimited size list of primitive type
+                    // check the array or set is an unlimited size list of primitive type
                     if (componentType != null
                             && dataFrom.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED) {
                         switch (componentType.getSqlTypeName()) {
@@ -177,18 +184,28 @@ public interface IrDataTypeConvertor<T> {
                                 }
                         }
                     }
+                    break;
                 case UNKNOWN:
-                default:
                     return DataType.UNKNOWN;
+                default:
             }
+            if (throwsOnFail) {
+                throw new UnsupportedOperationException(
+                        "convert RelDataType ["
+                                + dataFrom
+                                + "] to GrootDataType is unsupported yet");
+            }
+            return DataType.UNKNOWN;
         }
     }
 
     class Flex implements IrDataTypeConvertor<GSDataTypeDesc> {
         private final RelDataTypeFactory typeFactory;
+        private final boolean throwsOnFail;
 
-        public Flex(RelDataTypeFactory typeFactory) {
+        public Flex(RelDataTypeFactory typeFactory, boolean throwsOnFail) {
             this.typeFactory = typeFactory;
+            this.throwsOnFail = throwsOnFail;
         }
 
         @Override
@@ -312,8 +329,11 @@ public interface IrDataTypeConvertor<T> {
                 // decimal type with precision and scale
                 return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
             }
-            throw new UnsupportedOperationException(
-                    "convert GSDataTypeDesc [" + from + "] to RelDataType is unsupported yet");
+            if (throwsOnFail) {
+                throw new UnsupportedOperationException(
+                        "convert GSDataTypeDesc [" + from + "] to RelDataType is unsupported yet");
+            }
+            return typeFactory.createSqlType(SqlTypeName.ANY);
         }
 
         @Override
@@ -326,6 +346,9 @@ public interface IrDataTypeConvertor<T> {
             SqlTypeName typeName = from.getSqlTypeName();
             Map<String, Object> yamlDesc;
             switch (typeName) {
+                case ANY:
+                    yamlDesc = ImmutableMap.of("primitive_type", "DT_ANY");
+                    break;
                 case NULL:
                     yamlDesc = ImmutableMap.of("primitive_type", "DT_NULL");
                     break;
@@ -420,10 +443,13 @@ public interface IrDataTypeConvertor<T> {
                                             "scale", from.getScale()));
                     break;
                 default:
-                    throw new UnsupportedOperationException(
-                            "convert RelDataType ["
-                                    + from
-                                    + "] to GSDataTypeDesc is unsupported yet");
+                    if (throwsOnFail) {
+                        throw new UnsupportedOperationException(
+                                "convert RelDataType ["
+                                        + from
+                                        + "] to GSDataTypeDesc is unsupported yet");
+                    }
+                    yamlDesc = ImmutableMap.of("primitive_type", "DT_ANY");
             }
             return new GSDataTypeDesc(yamlDesc);
         }

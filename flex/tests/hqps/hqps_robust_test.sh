@@ -106,7 +106,7 @@ run_robust_test(){
 run_additional_robust_test(){
     pushd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
     export RUN_ON_PROTO=ON
-    cmd="python3 -m pytest -s tests/test_robustness.py -k test_call_proc_in_cypher"
+    cmd='python3 -m pytest -s tests/test_robustness.py -k "test_call_proc_in_cypher or test_var_char_property"'
     echo "Run additional robust test with command: ${cmd}"
     eval ${cmd} || (err "Run additional robust test failed"; exit 1)
     info "Run additional robust test success"

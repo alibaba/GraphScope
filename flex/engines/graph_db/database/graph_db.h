@@ -20,6 +20,7 @@
 
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -42,9 +43,10 @@ struct SessionLocalContext;
 
 struct GraphDBConfig {
   GraphDBConfig(const Schema& schema_, const std::string& data_dir_,
-                int thread_num_ = 1)
+                const std::string& compiler_path_ = "", int thread_num_ = 1)
       : schema(schema_),
         data_dir(data_dir_),
+        compiler_path(compiler_path_),
         thread_num(thread_num_),
         warmup(false),
         enable_monitoring(false),
@@ -53,6 +55,7 @@ struct GraphDBConfig {
 
   Schema schema;
   std::string data_dir;
+  std::string compiler_path;
   int thread_num;
   bool warmup;
   bool enable_monitoring;
@@ -65,6 +68,25 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
+};
+
+struct QueryCache {
+  bool get(const std::string& key, std::string_view& value) {
+    std::shared_lock<std::shared_mutex> lock(mutex);
+    auto it = cache.find(key);
+    if (it != cache.end()) {
+      value = it->second;
+      return true;
+    }
+    return false;
+  }
+
+  void put(const std::string& key, const std::string_view& value) {
+    std::unique_lock<std::shared_mutex> lock(mutex);
+    cache[key] = value;
+  }
+  std::shared_mutex mutex;
+  std::unordered_map<std::string, std::string> cache;
 };
 
 class GraphDB {
@@ -129,15 +151,20 @@ class GraphDB {
    */
   UpdateTransaction GetUpdateTransaction(int thread_id = 0);
 
-  const MutablePropertyFragment& graph() const;
-  MutablePropertyFragment& graph();
+  inline const MutablePropertyFragment& graph() const { return graph_; }
+  inline MutablePropertyFragment& graph() { return graph_; }
 
-  const Schema& schema() const;
+  inline const Schema& schema() const { return graph_.schema(); }
 
-  std::shared_ptr<ColumnBase> get_vertex_property_column(
-      uint8_t label, const std::string& col_name) const;
+  inline std::shared_ptr<ColumnBase> get_vertex_property_column(
+      uint8_t label, const std::string& col_name) const {
+    return graph_.get_vertex_table(label).get_column(col_name);
+  }
 
-  std::shared_ptr<RefColumnBase> get_vertex_id_column(uint8_t label) const;
+  inline std::shared_ptr<RefColumnBase> get_vertex_id_column(
+      uint8_t label) const {
+    return graph_.get_vertex_id_column(label);
+  }
 
   AppWrapper CreateApp(uint8_t app_type, int thread_id);
 
@@ -150,6 +177,12 @@ class GraphDB {
 
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
+
+  QueryCache& getQueryCache() const;
+
+  std::string work_dir() const { return work_dir_; }
+
+  void OutputCypherProfiles(const std::string& prefix);
 
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
@@ -180,6 +213,8 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
+
+  mutable QueryCache query_cache_;
 
   std::thread monitor_thread_;
   bool monitor_thread_running_;

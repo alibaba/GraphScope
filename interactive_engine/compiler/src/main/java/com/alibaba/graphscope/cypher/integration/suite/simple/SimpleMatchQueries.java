@@ -230,4 +230,21 @@ public class SimpleMatchQueries {
         List<String> expected = Arrays.asList("Record<{$f0: 39783}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_19_test() {
+        String query = "MATCH(a: PLACE) return a ORDER BY a.id limit 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "[a: {name=India, id=0, type=country,"
+                                + " url=http://dbpedia.org/resource/India}]",
+                        "[a: {name=China, id=1, type=country,"
+                                + " url=http://dbpedia.org/resource/China}]",
+                        "[a: {name=Angola, id=2, type=country,"
+                                + " url=http://dbpedia.org/resource/Angola}]",
+                        "[a: {name=Austria, id=3, type=country,"
+                                + " url=http://dbpedia.org/resource/Austria}]",
+                        "[a: {name=Azerbaijan, id=4, type=country,"
+                                + " url=http://dbpedia.org/resource/Azerbaijan}]");
+        return new QueryContext(query, expected);
+    }
 }

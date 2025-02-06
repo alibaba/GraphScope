@@ -194,7 +194,7 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
     // We will reserve the at least 4096 slots for each vertex label
     size_t vertex_capacity =
         std::max(lf_indexers_[i].capacity(), (size_t) 4096);
-    if (vertex_capacity >= lf_indexers_[i].size()) {
+    if (vertex_capacity >= lf_indexers_[i].capacity()) {
       lf_indexers_[i].reserve(vertex_capacity);
     }
     vertex_data_[i].resize(vertex_capacity);
@@ -389,15 +389,6 @@ const Schema& MutablePropertyFragment::schema() const { return schema_; }
 
 Schema& MutablePropertyFragment::mutable_schema() { return schema_; }
 
-Table& MutablePropertyFragment::get_vertex_table(label_t vertex_label) {
-  return vertex_data_[vertex_label];
-}
-
-const Table& MutablePropertyFragment::get_vertex_table(
-    label_t vertex_label) const {
-  return vertex_data_[vertex_label];
-}
-
 vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
   return static_cast<vid_t>(lf_indexers_[vertex_label].size());
 }
@@ -464,69 +455,98 @@ MutablePropertyFragment::get_incoming_edges_mut(label_t label, vid_t u,
   return get_ie_csr(label, neighbor_label, edge_label)->edge_iter_mut(u);
 }
 
-CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
-                                             label_t neighbor_label,
-                                             label_t edge_label) {
-  size_t index = label * vertex_label_num_ * edge_label_num_ +
-                 neighbor_label * edge_label_num_ + edge_label;
-  return oe_[index];
-}
+void MutablePropertyFragment::generateStatistics(
+    const std::string& work_dir) const {
+  std::string filename = work_dir + "/statistics.json";
+  size_t vertex_count = 0;
 
-const CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
-                                                   label_t neighbor_label,
-                                                   label_t edge_label) const {
-  size_t index = label * vertex_label_num_ * edge_label_num_ +
-                 neighbor_label * edge_label_num_ + edge_label;
-  return oe_[index];
-}
+  std::string ss = "\"vertex_type_statistics\": [\n";
+  size_t vertex_label_num = schema_.vertex_label_num();
+  for (size_t idx = 0; idx < vertex_label_num; ++idx) {
+    ss += "{\n\"type_id\": " + std::to_string(idx) + ", \n";
+    ss += "\"type_name\": \"" + schema_.get_vertex_label_name(idx) + "\", \n";
+    size_t count = lf_indexers_[idx].size();
+    ss += "\"count\": " + std::to_string(count) + "\n}";
+    vertex_count += count;
+    if (idx != vertex_label_num - 1) {
+      ss += ", \n";
+    } else {
+      ss += "\n";
+    }
+  }
+  ss += "]\n";
+  size_t edge_count = 0;
 
-CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
-                                             label_t neighbor_label,
-                                             label_t edge_label) {
-  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                 label * edge_label_num_ + edge_label;
-  return ie_[index];
-}
+  size_t edge_label_num = schema_.edge_label_num();
+  std::vector<std::thread> count_threads;
+  std::vector<size_t> edge_count_list(dual_csr_list_.size(), 0);
+  for (size_t src_label = 0; src_label < vertex_label_num; ++src_label) {
+    const auto& src_label_name = schema_.get_vertex_label_name(src_label);
+    for (size_t dst_label = 0; dst_label < vertex_label_num; ++dst_label) {
+      const auto& dst_label_name = schema_.get_vertex_label_name(dst_label);
+      for (size_t edge_label = 0; edge_label < edge_label_num; ++edge_label) {
+        const auto& edge_label_name = schema_.get_edge_label_name(edge_label);
+        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
+          size_t index = src_label * vertex_label_num * edge_label_num +
+                         dst_label * edge_label_num + edge_label;
+          if (dual_csr_list_[index] != NULL) {
+            count_threads.emplace_back([&edge_count_list, index, this] {
+              edge_count_list[index] = dual_csr_list_[index]->EdgeNum();
+            });
+          }
+        }
+      }
+    }
+  }
+  for (auto& t : count_threads) {
+    t.join();
+  }
+  ss += ",\n";
+  ss += "\"edge_type_statistics\": [";
 
-const CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
-                                                   label_t neighbor_label,
-                                                   label_t edge_label) const {
-  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                 label * edge_label_num_ + edge_label;
-  return ie_[index];
-}
+  for (size_t edge_label = 0; edge_label < edge_label_num; ++edge_label) {
+    const auto& edge_label_name = schema_.get_edge_label_name(edge_label);
 
-std::shared_ptr<ColumnBase> MutablePropertyFragment::get_vertex_property_column(
-    uint8_t label, const std::string& prop) const {
-  return vertex_data_[label].get_column(prop);
-}
+    ss += "{\n\"type_id\": " + std::to_string(edge_label) + ", \n";
+    ss += "\"type_name\": \"" + edge_label_name + "\", \n";
+    ss += "\"vertex_type_pair_statistics\": [\n";
+    bool first = true;
+    std::string props_content{};
+    for (size_t src_label = 0; src_label < vertex_label_num; ++src_label) {
+      const auto& src_label_name = schema_.get_vertex_label_name(src_label);
+      for (size_t dst_label = 0; dst_label < vertex_label_num; ++dst_label) {
+        const auto& dst_label_name = schema_.get_vertex_label_name(dst_label);
+        size_t index = src_label * vertex_label_num * edge_label_num +
+                       dst_label * edge_label_num + edge_label;
+        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
+          if (!first) {
+            ss += ",\n";
+          }
+          first = false;
+          ss += "{\n\"source_vertex\" : \"" + src_label_name + "\", \n";
+          ss += "\"destination_vertex\" : \"" + dst_label_name + "\", \n";
+          ss += "\"count\" : " + std::to_string(edge_count_list[index]) + "\n";
+          edge_count += edge_count_list[index];
+          ss += "}";
+        }
+      }
+    }
 
-std::shared_ptr<RefColumnBase> MutablePropertyFragment::get_vertex_id_column(
-    uint8_t label) const {
-  if (lf_indexers_[label].get_type() == PropertyType::kInt64) {
-    return std::make_shared<TypedRefColumn<int64_t>>(
-        dynamic_cast<const TypedColumn<int64_t>&>(
-            lf_indexers_[label].get_keys()));
-  } else if (lf_indexers_[label].get_type() == PropertyType::kInt32) {
-    return std::make_shared<TypedRefColumn<int32_t>>(
-        dynamic_cast<const TypedColumn<int32_t>&>(
-            lf_indexers_[label].get_keys()));
-  } else if (lf_indexers_[label].get_type() == PropertyType::kUInt64) {
-    return std::make_shared<TypedRefColumn<uint64_t>>(
-        dynamic_cast<const TypedColumn<uint64_t>&>(
-            lf_indexers_[label].get_keys()));
-  } else if (lf_indexers_[label].get_type() == PropertyType::kUInt32) {
-    return std::make_shared<TypedRefColumn<uint32_t>>(
-        dynamic_cast<const TypedColumn<uint32_t>&>(
-            lf_indexers_[label].get_keys()));
-  } else if (lf_indexers_[label].get_type() == PropertyType::kStringView) {
-    return std::make_shared<TypedRefColumn<std::string_view>>(
-        dynamic_cast<const TypedColumn<std::string_view>&>(
-            lf_indexers_[label].get_keys()));
-  } else {
-    LOG(ERROR) << "Unsupported vertex id type: "
-               << lf_indexers_[label].get_type();
-    return nullptr;
+    ss += "\n]\n}";
+    if (edge_label != edge_label_num - 1) {
+      ss += ", \n";
+    } else {
+      ss += "\n";
+    }
+  }
+  ss += "]\n";
+  {
+    std::ofstream out(filename);
+    out << "{\n\"total_vertex_count\": " << vertex_count << ",\n";
+    out << "\"total_edge_count\": " << edge_count << ",\n";
+    out << ss;
+    out << "}\n";
+    out.close();
   }
 }
 

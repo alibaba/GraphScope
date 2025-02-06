@@ -50,6 +50,48 @@
       </modules>
     </profile>
     <profile>
+      <id>graph-planner-jni</id>
+      <properties>
+        <skip.native>false</skip.native>
+        <skip.ir.core>true</skip.ir.core>
+      </properties>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>common</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>compiler</module>
+        <module>assembly</module>
+      </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>make</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <target>
+                    <ant antfile="compiler/build_native.xml">
+                      <target name="graph_planner"></target>
+                    </ant>
+                  </target>
+                  <skip>${skip.native}</skip>
+                </configuration>
+              </execution>
+            </executions>
+            <inherited>false</inherited>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>graphscope</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -907,6 +949,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
       </plugin>
       <plugin>
           <groupId>org.springframework.boot</groupId>

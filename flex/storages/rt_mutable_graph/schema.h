@@ -31,13 +31,18 @@ class Schema {
   // How many built-in plugins are there.
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
-  static constexpr uint8_t MAX_PLUGIN_ID = 248;
+  static constexpr uint8_t MAX_PLUGIN_ID = 245;
   static constexpr uint8_t ADHOC_READ_PLUGIN_ID = 253;
   static constexpr uint8_t HQPS_ADHOC_READ_PLUGIN_ID = 254;
   static constexpr uint8_t HQPS_ADHOC_WRITE_PLUGIN_ID = 255;
+
+  static constexpr uint8_t CYPHER_READ_PLUGIN_ID = 248;
+  static constexpr uint8_t CYPHER_WRITE_PLUGIN_ID = 247;
+  static constexpr uint8_t CYPHER_READ_DEBUG_PLUGIN_ID = 246;
   static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
   static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
   static constexpr const char* ADHOC_READ_PLUGIN_ID_STR = "\xFD";
+  static constexpr const char* CYPHER_READ_DEBUG_PLUGIN_ID_STR = "\xF6";
   static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
   static constexpr const char* VARCHAR_KEY = "varchar";
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
@@ -144,6 +149,10 @@ class Schema {
                                                        label_t dst_label,
                                                        label_t label) const;
 
+  const std::string& get_compiler_path() const;
+
+  void set_compiler_path(const std::string& compiler_path);
+
   std::string get_edge_description(const std::string& src_label,
                                    const std::string& dst_label,
                                    const std::string& label) const;
@@ -192,6 +201,20 @@ class Schema {
   EdgeStrategy get_incoming_edge_strategy(const std::string& src_label,
                                           const std::string& dst_label,
                                           const std::string& label) const;
+
+  inline EdgeStrategy get_outgoing_edge_strategy(label_t src_label,
+                                                 label_t dst_label,
+                                                 label_t label) const {
+    uint32_t index = generate_edge_label(src_label, dst_label, label);
+    return oe_strategy_.at(index);
+  }
+
+  inline EdgeStrategy get_incoming_edge_strategy(label_t src_label,
+                                                 label_t dst_label,
+                                                 label_t label) const {
+    uint32_t index = generate_edge_label(src_label, dst_label, label);
+    return ie_strategy_.at(index);
+  }
 
   bool outgoing_edge_mutable(const std::string& src_label,
                              const std::string& dst_label,
@@ -251,6 +274,9 @@ class Schema {
 
   bool has_multi_props_edge() const;
 
+  const std::unordered_map<std::string, std::pair<PropertyType, uint8_t>>&
+  get_vprop_name_to_type_and_index(label_t label) const;
+
  private:
   label_t vertex_label_to_index(const std::string& label);
 
@@ -275,6 +301,8 @@ class Schema {
   std::map<uint32_t, bool> oe_mutability_;
   std::map<uint32_t, bool> ie_mutability_;
   std::map<uint32_t, bool> sort_on_compactions_;
+  std::vector<std::unordered_map<std::string, std::pair<PropertyType, uint8_t>>>
+      vprop_name_to_type_and_index_;
   std::vector<size_t> max_vnum_;
   std::unordered_map<std::string, std::pair<std::string, uint8_t>>
       plugin_name_to_path_and_id_;  // key is plugin_name, value is plugin_path
@@ -282,6 +310,7 @@ class Schema {
   std::string plugin_dir_;
   std::string description_;
   std::string version_;
+  std::string compiler_path_;
   bool has_multi_props_edge_;
 };
 
