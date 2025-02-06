@@ -430,10 +430,14 @@ def test_x_csr_params(
     records = result.fetch(1)
     print(records[0])
     assert len(records) == 1 and records[0]["$f0"] == 3506
-    
-    result = neo4j_session.run('MATCH(n)-[*1..4]-() RETURN count(n),n;')
-    records = result.fetch(100)
-    assert len(records) == 1
+
+    result = neo4j_session.run("MATCH(n)-[*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
+
+    result = neo4j_session.run("MATCH(n)-[e*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
 
 
 @pytest.mark.skipif(
