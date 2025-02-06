@@ -94,42 +94,6 @@ class VertexPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
-template <typename KEY_T>
-class VertexIdPathAccessor : public IAccessor {
- public:
-  using elem_t = KEY_T;
-  VertexIdPathAccessor(const GraphReadInterface& graph, const Context& ctx,
-                       int tag)
-      : graph_(graph),
-        vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {}
-
-  bool is_optional() const override { return vertex_col_.is_optional(); }
-
-  elem_t typed_eval_path(size_t idx) const {
-    const auto& v = vertex_col_.get_vertex(idx);
-    return AnyConverter<KEY_T>::from_any(graph_.GetVertexId(v.label_, v.vid_));
-  }
-
-  RTAny eval_path(size_t idx) const override {
-    return RTAny(typed_eval_path(idx));
-  }
-
-  RTAny eval_path(size_t idx, int) const override {
-    if (!vertex_col_.has_value(idx)) {
-      return RTAny(RTAnyType::kNull);
-    }
-    return RTAny(typed_eval_path(idx));
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return vertex_col_.builder();
-  }
-
- private:
-  const GraphReadInterface& graph_;
-  const IVertexColumn& vertex_col_;
-};
-
 class VertexGIdPathAccessor : public IAccessor {
  public:
   using elem_t = int64_t;
@@ -162,26 +126,23 @@ class VertexPropertyPathAccessor : public IAccessor {
   VertexPropertyPathAccessor(const GraphReadInterface& graph,
                              const Context& ctx, int tag,
                              const std::string& prop_name)
-      : vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {
+      : is_optional_(false),
+        vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {
     int label_num = graph.schema().vertex_label_num();
-    for (int i = 0; i < label_num; ++i) {
-      property_columns_.emplace_back(
-          graph.GetVertexColumn<elem_t>(static_cast<label_t>(i), prop_name));
+    property_columns_.resize(label_num);
+    const auto& labels = vertex_col_.get_labels_set();
+    if (vertex_col_.is_optional()) {
+      is_optional_ = true;
+    }
+    for (auto label : labels) {
+      property_columns_[label] = graph.GetVertexColumn<T>(label, prop_name);
+      if (property_columns_[label].is_null()) {
+        is_optional_ = true;
+      }
     }
   }
 
-  bool is_optional() const override {
-    if (vertex_col_.is_optional()) {
-      return true;
-    }
-    auto label_set = vertex_col_.get_labels_set();
-    for (auto label : label_set) {
-      if (property_columns_[label].is_null()) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool is_optional() const override { return is_optional_; }
 
   elem_t typed_eval_path(size_t idx) const {
     const auto& v = vertex_col_.get_vertex(idx);
@@ -212,6 +173,7 @@ class VertexPropertyPathAccessor : public IAccessor {
   }
 
  private:
+  bool is_optional_;
   const IVertexColumn& vertex_col_;
   std::vector<GraphReadInterface::vertex_column_t<elem_t>> property_columns_;
 };

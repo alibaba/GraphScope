@@ -69,25 +69,8 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
         if (pt.has_id()) {
           getter_ = std::make_shared<VertexGIdPathAccessor>(ctx, tag);
         } else if (pt.has_key()) {
-          if (check_whether_pk_property(pt.key().name(), ctx, graph.schema(),
-                                        tag)) {
-            if (type_ == RTAnyType::kStringValue) {
-              getter_ =
-                  std::make_shared<VertexIdPathAccessor<std::string_view>>(
-                      graph, ctx, tag);
-            } else if (type_ == RTAnyType::kI32Value) {
-              getter_ = std::make_shared<VertexIdPathAccessor<int32_t>>(
-                  graph, ctx, tag);
-            } else if (type_ == RTAnyType::kI64Value) {
-              getter_ = std::make_shared<VertexIdPathAccessor<int64_t>>(
-                  graph, ctx, tag);
-            } else {
-              LOG(FATAL) << "not support for " << static_cast<int>(type_);
-            }
-          } else {
-            getter_ = create_vertex_property_path_accessor(
-                graph, ctx, tag, type_, pt.key().name());
-          }
+          getter_ = create_vertex_property_path_accessor(graph, ctx, tag, type_,
+                                                         pt.key().name());
         } else if (pt.has_label()) {
           getter_ = create_vertex_label_path_accessor(ctx, tag);
         } else {
