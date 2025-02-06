@@ -1,5 +1,5 @@
 log_level: INFO
-default_graph: ldbc
+default_graph: modern_graph
 compute_engine:
   type: hiactor
   workers:
@@ -20,9 +20,14 @@ compiler:
       - NotMatchToAntiJoinRule
       - ExtendIntersectRule
       - ExpandGetVFusionRule
+      - FlatJoinToExpandRule
+      - FlatJoinToCommonRule
+      - FieldTrimRule
       - ScanExpandFusionRule
       - TopKPushDownRule
       - ScanEarlyStopRule # This rule must be placed after TopKPushDownRule and ScanExpandFusionRule
+    trim_class_names: GraphLogicalExpand
+    join_min_pattern_size: 15
   meta:
     reader:
       schema:

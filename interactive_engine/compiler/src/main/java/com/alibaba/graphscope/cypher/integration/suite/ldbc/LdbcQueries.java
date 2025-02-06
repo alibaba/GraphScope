@@ -25,6 +25,52 @@ import java.util.List;
 
 public class LdbcQueries {
 
+    public static QueryContext get_ldbc_1_test() {
+       String query = "MATCH shortestPath(p: PERSON {id : 10995116277882}) -[k:KNOWS*1..4]-(f:PERSON {firstName : \"John\"})\n" +
+               "where f <> p\n" +
+               "WITH f, length(k) as distance\n" +
+               "ORDER  BY distance ASC, f.lastName ASC, f.id ASC\n" +
+               "LIMIT 20\n" +
+               "\n" +
+               "OPTIONAL MATCH (f: PERSON)-[workAt:WORKAT]->(company:ORGANISATION)-[:ISLOCATEDIN]->(country:PLACE)\n" +
+               "WITH \n" +
+               "    f, distance,\n" +
+               "    CASE\n" +
+               "        WHEN company is null Then null\n" +
+               "        ELSE [company.name, workAt.workFrom, country.name]\n" +
+               "    END as companies\n" +
+               "WITH f, collect(companies) as company_info, distance\n" +
+               "\n" +
+               "OPTIONAL MATCH (f: PERSON)-[studyAt:STUDYAT]->(university)-[:ISLOCATEDIN]->(universityCity:PLACE)\n" +
+               "WITH\n" +
+               "  f, company_info, distance,\n" +
+               "	CASE \n" +
+               "		WHEN university is null Then null\n" +
+               "		ELSE [university.name, studyAt.classYear, universityCity.name]\n" +
+               "	END as universities\n" +
+               "WITH f, collect(universities) as university_info , company_info, distance\n" +
+               "\n" +
+               "MATCH (f:PERSON)-[:ISLOCATEDIN]->(locationCity:PLACE)\n" +
+               "\n" +
+               "return f.id AS friendId,\n" +
+               "        distance AS distanceFromPerson,\n" +
+               "        f.lastName AS friendLastName,\n" +
+               "        f.birthday AS friendBirthday,\n" +
+               "        f.creationDate AS friendCreationDate,\n" +
+               "        f.gender AS friendGender,\n" +
+               "        f.browserUsed AS friendBrowserUsed,\n" +
+               "        f.locationIP AS friendLocationIp,\n" +
+               "        locationCity.name AS friendCityName,\n" +
+               "        f.email AS friendEmail,\n" +
+               "        f.language AS friendLanguage,\n" +
+               "        university_info AS friendUniversities,\n" +
+               "        company_info AS friendCompanies;";
+
+        List<String> expected = Lists.newArrayList();
+        return new QueryContext(query, expected);
+    }
+
+
     public static QueryContext get_ldbc_2_test() {
         String query =
                 "MATCH (p:PERSON{id:"
@@ -174,6 +220,41 @@ public class LdbcQueries {
                         "Record<{tagName: \"Norodom_Sihanouk\", postCount: 3}>",
                         "Record<{tagName: \"George_Clooney\", postCount: 1}>",
                         "Record<{tagName: \"Louis_Philippe_I\", postCount: 1}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_5_test() {
+        String query = "MATCH (person:PERSON { id: 26388279066795 })-[:KNOWS*1..3]-(friend) " +
+               "WITH DISTINCT friend " +
+               "WHERE friend.id <> 26388279066795 " +
+               "CALL { " +
+               "  WITH friend " +
+               "  MATCH (friend)<-[membership:HASMEMBER]-(forum) " +
+               "  WHERE membership.joinDate > 1341446400000 " +
+               "  WITH distinct forum " +
+               "  ORDER BY forum.id ASC " +
+               "  LIMIT 20 " +
+               "  RETURN forum, 0L AS postCount " +
+               "} " +
+               "UNION " +
+               "CALL { " +
+               "  WITH friend " +
+               "  MATCH (friend)<-[membership:HASMEMBER]-(forum) " +
+               "  WHERE membership.joinDate > 1341446400000 " +
+               "  WITH friend, collect(distinct forum) AS forums " +
+               "  MATCH (friend)<-[:HASCREATOR]-(post)<-[:CONTAINEROF]-(forum) " +
+               "  WHERE forum IN forums " +
+               "  WITH forum, count(post) AS postCount " +
+               "  RETURN forum, postCount " +
+               "  ORDER BY postCount DESC, forum.id ASC " +
+               "  LIMIT 20 " +
+               "} " +
+               "WITH forum, max(postCount) AS postCount " +
+               "ORDER BY postCount DESC, forum.id ASC " +
+               "LIMIT 20 " +
+               "RETURN forum.title as name, postCount;";
+
+        List<String> expected = Lists.newArrayList();
         return new QueryContext(query, expected);
     }
 
@@ -510,6 +591,30 @@ public class LdbcQueries {
         return new QueryContext(query, expected);
     }
 
+    public static QueryContext get_ldbc_9_test() {
+        String query = "MATCH (p:PERSON {id: 32985348834013})-[:KNOWS*1..3]-(friend:PERSON)\n" +
+               "WITH distinct friend\n" +
+               "WHERE friend.id <> 32985348834013\n" +
+               "MATCH (message:POST|COMMENT)-[e:HASCREATOR]->(friend)\n" +
+               "WHERE e.creationDate < 1346112000000\n" +
+               "WITH friend, message\n" +
+               "\n" +
+               "RETURN\n" +
+               "    friend.id AS personId,\n" +
+               "    friend.firstName AS personFirstName,\n" +
+               "    friend.lastName AS personLastName,\n" +
+               "    message.id AS commentOrPostId,\n" +
+               "    message.content AS messageContent,\n" +
+               "    message.imageFile AS messageImageFile,\n" +
+               "    message.creationDate AS commentOrPostCreationDate\n" +
+               "ORDER BY\n" +
+               "    commentOrPostCreationDate DESC,\n" +
+               "    commentOrPostId ASC\n" +
+               "LIMIT 20";
+        List<String> expected = Lists.newArrayList();
+        return new QueryContext(query, expected);
+    }
+
     public static QueryContext get_ldbc_10_test() {
         String query =
                 "MATCH (person:PERSON {id: 30786325579101})-[:KNOWS*2..3]-(friend:"
@@ -573,7 +678,32 @@ public class LdbcQueries {
         return new QueryContext(query, expected);
     }
 
-    public static QueryContext get_ldbc_12() {
+    public static QueryContext get_ldbc_11_test() {
+        String query = "MATCH (p:PERSON {id: 24189255811707})-[:KNOWS*1..3]-(friend:PERSON) "
+             + "WITH distinct friend "
+             + "WHERE "
+             + "     friend.id <> 24189255811707 "
+             + "MATCH (friend:PERSON)-[wa:WORKAT]->(com:ORGANISATION)-[:ISLOCATEDIN]->(:PLACE {name: \"Switzerland\"}) "
+             + "WHERE wa.workFrom < 2006 "
+             + "WITH "
+             + "    friend as friend, "
+             + "    com AS com, "
+             + "    wa.workFrom as organizationWorkFromYear "
+             + "ORDER BY "
+             + "    organizationWorkFromYear ASC, "
+             + "    friend.id ASC, com.name DESC "
+             + "LIMIT 10 "
+             + "return "
+             + "    friend.id AS personId, "
+             + "    friend.firstName AS personFirstName, "
+             + "    friend.lastName AS personLastName, "
+             + "    com.name as organizationName, "
+             + "    organizationWorkFromYear as organizationWorkFromYear;";
+        List<String> expected = Lists.newArrayList();
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_12_test() {
         String query =
                 "MATCH (person:PERSON {id:"
                     + " 19791209300143})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(comment:COMMENT)-[:REPLYOF]->(:POST)-[:HASTAG]->(tag:TAG)-[:HASTYPE]->(:TAGCLASS)-[:ISSUBCLASSOF*0..5]->(baseTagClass:TAGCLASS"
@@ -593,6 +723,41 @@ public class LdbcQueries {
                         "Record<{personId: 8796093023000, personFirstName: \"Peng\","
                                 + " personLastName: \"Zhang\", tagNames: [\"Michael_Jordan\"],"
                                 + " replyCount: 4}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_13_test() {
+        String query = "MATCH  (person1: PERSON {id: 32985348833679})\n" +
+                            "WITH person1\n" +
+                            "OPTIONAL MATCH \n" +
+                            "    shortestPath((person1: PERSON{id: 32985348833679})-[k:KNOWS*0..32]-(person2: PERSON {id: 26388279067108}))\n" +
+                            "WITH\n" +
+                            "    CASE \n" +
+                            "        WHEN k is null THEN -1\n" +
+                            "        ELSE length(k)\n" +
+                            "    END as len\n" +
+                            "RETURN len";
+
+        List<String> expected = Lists.newArrayList();
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_14_test() {
+        String query = "MATCH all ShortestPath((person1:PERSON { id: 32985348833679 })-[path:KNOWS*0..10]-(person2:PERSON { id: 2199023256862 }))\n" +
+                            "WITH path, gs.function.relationships(path) as rels_in_path\n" +
+                            "UNWIND rels_in_path as rel\n" +
+                            "WITH path,  gs.function.startNode(rel) as rel0, gs.function.endNode(rel) as rel1\n" +
+                            "OPTIONAL MATCH (rel0:PERSON)<-[:HASCREATOR]-(n)-[:REPLYOF]-(m)-[:HASCREATOR]->(rel1:PERSON)\n" +
+                            "WITH path, \n" +
+                            "    CASE WHEN labels(m) = labels(n) OR n is null THEN 0 ELSE 1 END as ra,\n" +
+                            "    CASE WHEN labels(m) <> labels(n) OR n is null THEN 0 ELSE 1 END as rb\n" +
+                            "WITH path, gs.function.nodes(path) as nodes_in_path,  SUM(ra) AS weight1Count, SUM(rb) as weight2Count\n" +
+                            "UNWIND nodes_in_path as node\n" +
+                            "WITH path, COLLECT(node.id) as personIdsInPath, weight1Count, weight2Count\n" +
+                            "RETURN personIdsInPath, (weight1Count + gs.function.toFloat(weight2Count) / 2) AS pathWeight\n" +
+                            "ORDER BY pathWeight DESC;";
+
+        List<String> expected = Lists.newArrayList();
         return new QueryContext(query, expected);
     }
 

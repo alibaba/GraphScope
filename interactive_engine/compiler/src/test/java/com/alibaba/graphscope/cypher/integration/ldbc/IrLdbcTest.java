@@ -41,6 +41,14 @@ public class IrLdbcTest {
     }
 
     @Test
+    public void run_ldbc_1_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_1_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
     public void run_ldbc_2_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_2_test();
         Result result = session.run(testQuery.getQuery());
@@ -67,6 +75,14 @@ public class IrLdbcTest {
     public void run_ldbc_4_test_exp() {
         assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_4_test_exp();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_ldbc_5_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_5_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
@@ -105,6 +121,14 @@ public class IrLdbcTest {
     }
 
     @Test
+    public void run_ldbc_9_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_9_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
     public void run_ldbc_10_test() {
         // skip this test in pegasus (actually exp-store and groot-store) since the date format is
         // different
@@ -115,8 +139,32 @@ public class IrLdbcTest {
     }
 
     @Test
+    public void run_ldbc_11_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_11_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
     public void run_ldbc_12_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_12();
+        QueryContext testQuery = LdbcQueries.get_ldbc_12_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_ldbc_13_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_13_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_ldbc_14_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")) && "CBO".equals(System.getenv("COMPILER_PLANNER_OPT")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_14_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
