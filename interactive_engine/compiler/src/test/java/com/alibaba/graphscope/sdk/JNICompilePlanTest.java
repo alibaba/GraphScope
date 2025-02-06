@@ -74,6 +74,17 @@ public class JNICompilePlanTest {
     }
 
     @Test
+    public void path_expand_invalid_hop_2_test() throws Exception {
+        try {
+            // the max hop will be set as unlimited if it is less than min hop
+            String query = "MATCH (n)-[*1..11]-() RETURN count(n), n";
+            PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("exceeds the maximum allowed iterations"));
+        }
+    }
+
+    @Test
     public void vertex_label_not_found_test() {
         String query =
                 "MATCH (src)-[e:calls*2..3]->(dest)\n"
