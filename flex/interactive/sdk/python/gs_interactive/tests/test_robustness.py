@@ -410,7 +410,7 @@ def test_complex_query(interactive_session, neo4j_session, create_graph_algo_gra
 
     ping_thread.join()
     ping_thread_2.join()
-    
+
     result = neo4j_session.run("MATCH(n)-[*1..4]-() RETURN count(n),n;")
     records = result.fetch(200)
     assert len(records) == 184
