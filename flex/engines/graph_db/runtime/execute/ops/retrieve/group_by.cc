@@ -640,21 +640,22 @@ struct AvgReducer<
 
 template <typename T>
 struct SetCollector {
+  SetCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(std::set<T>&& val) {
-    auto set = builder.allocate_set();
-    auto set_impl = dynamic_cast<SetImpl<T>*>(set.impl_);
-    for (auto& v : val) {
-      set_impl->insert(v);
-    }
-    builder.push_back_opt(set);
+    auto set = SetImpl<T>::make_set_impl(std::move(val));
+    Set st(set.get());
+    ctx_.value_collection->emplace_back(std::move(set));
+    builder.push_back_opt(st);
   }
   auto get() { return builder.finish(); }
+  const Context& ctx_;
   SetValueColumnBuilder<T> builder;
 };
 
 template <>
 struct SetCollector<std::string_view> {
+  SetCollector(const Context& ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(std::set<std::string_view>&& val) {
     std::set<std::string> set;
@@ -772,7 +773,7 @@ std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
   }
   case AggrKind::kToSet: {
     ToSetReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    SetCollector<typename EXPR::V> collector;
+    SetCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }

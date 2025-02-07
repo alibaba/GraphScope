@@ -964,6 +964,12 @@ class SetImpl : public SetImplBase {
  public:
   SetImpl() = default;
   ~SetImpl() {}
+  static std::unique_ptr<SetImplBase> make_set_impl(std::set<T>&& vals) {
+    auto new_set = new SetImpl<T>();
+    new_set->set_ = std::move(vals);
+    return std::unique_ptr<SetImplBase>(static_cast<SetImplBase*>(new_set));
+  }
+
   bool exists(const RTAny& val) const override {
     return set_.find(TypedConverter<T>::to_typed(val)) != set_.end();
   }
@@ -990,6 +996,16 @@ class SetImpl<VertexRecord> : public SetImplBase {
  public:
   SetImpl() = default;
   ~SetImpl() {}
+
+  static std::unique_ptr<SetImplBase> make_set_impl(
+      std::set<VertexRecord>&& vals) {
+    auto new_set = new SetImpl<VertexRecord>();
+    for (auto& v : vals) {
+      new_set->set_.insert((1ll * v.vid_) << 8 | v.label_);
+    }
+    return std::unique_ptr<SetImplBase>(static_cast<SetImplBase*>(new_set));
+  }
+
   bool exists(const RTAny& val) const override {
     auto v = TypedConverter<VertexRecord>::to_typed(val);
     return set_.find((1ll * v.vid_) << 8 | v.label_) != set_.end();
