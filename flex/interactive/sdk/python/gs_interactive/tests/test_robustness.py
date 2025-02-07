@@ -410,6 +410,14 @@ def test_complex_query(interactive_session, neo4j_session, create_graph_algo_gra
 
     ping_thread.join()
     ping_thread_2.join()
+    
+    result = neo4j_session.run("MATCH(n)-[*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
+
+    result = neo4j_session.run("MATCH(n)-[e*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
 
 
 def test_x_csr_params(
@@ -430,14 +438,6 @@ def test_x_csr_params(
     records = result.fetch(1)
     print(records[0])
     assert len(records) == 1 and records[0]["$f0"] == 3506
-
-    result = neo4j_session.run("MATCH(n)-[*1..4]-() RETURN count(n),n;")
-    records = result.fetch(200)
-    assert len(records) == 184
-
-    result = neo4j_session.run("MATCH(n)-[e*1..4]-() RETURN count(n),n;")
-    records = result.fetch(200)
-    assert len(records) == 184
 
 
 @pytest.mark.skipif(
