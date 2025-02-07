@@ -110,6 +110,7 @@ class Project {
     if (is_append) {
       ret = ctx;
     }
+    ret.value_collection = ctx.value_collection;
     for (size_t i = 0; i < exprs.size(); ++i) {
       ret = exprs[i]->evaluate(ctx, std::move(ret));
     }
@@ -131,6 +132,7 @@ class Project {
     upper = std::min(upper, ctx.row_num());
 
     Context ret;
+    ret.value_collection = ctx.value_collection;
 
     Context tmp(ctx);
     std::vector<int> alias;

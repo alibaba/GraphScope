@@ -21,7 +21,10 @@ namespace gs {
 
 namespace runtime {
 
-Context::Context() : head(nullptr), offset_ptr(nullptr) {}
+Context::Context()
+    : head(nullptr),
+      offset_ptr(nullptr),
+      value_collection(std::make_shared<ValueCollection>()) {}
 
 void Context::clear() {
   columns.clear();

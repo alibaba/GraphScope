@@ -54,25 +54,32 @@ class ValueColumn : public IValueColumn<T> {
   inline size_t size() const override { return data_.size(); }
 
   std::string column_info() const override {
-    return "ValueColumn<" + TypedConverter<T>::name() + ">[" + std::to_string(size()) + "]";
+    return "ValueColumn<" + TypedConverter<T>::name() + ">[" +
+           std::to_string(size()) + "]";
   }
-  inline ContextColumnType column_type() const override { return ContextColumnType::kValue; }
+  inline ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return std::make_shared<ValueColumnBuilder<T>>();
   }
 
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder() const override {
+  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
+      const override {
     return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
         std::make_shared<OptionalValueColumnBuilder<T>>());
   }
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
 
   std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offsets) const override;
 
-  inline RTAnyType elem_type() const override { return TypedConverter<T>::type(); }
+  inline RTAnyType elem_type() const override {
+    return TypedConverter<T>::type();
+  }
   inline RTAny get_elem(size_t idx) const override {
     return TypedConverter<T>::from_typed(data_[idx]);
   }
@@ -94,9 +101,11 @@ class ValueColumn : public IValueColumn<T> {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
   }
 
-  std::shared_ptr<IContextColumn> union_col(std::shared_ptr<IContextColumn> other) const override;
+  std::shared_ptr<IContextColumn> union_col(
+      std::shared_ptr<IContextColumn> other) const override;
 
-  bool order_by_limit(bool asc, size_t limit, std::vector<size_t>& offsets) const override;
+  bool order_by_limit(bool asc, size_t limit,
+                      std::vector<size_t>& offsets) const override;
 
  private:
   template <typename _T>
@@ -116,23 +125,32 @@ class ValueColumn<std::string_view> : public IValueColumn<std::string_view> {
     return "ValueColumn<" + TypedConverter<std::string_view>::name() + ">[" +
            std::to_string(size()) + "]";
   }
-  inline ContextColumnType column_type() const override { return ContextColumnType::kValue; }
+  inline ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return std::dynamic_pointer_cast<IContextColumnBuilder>(
         std::make_shared<ValueColumnBuilder<std::string_view>>());
   }
 
-  inline RTAnyType elem_type() const override { return RTAnyType::kStringValue; }
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  inline RTAnyType elem_type() const override {
+    return RTAnyType::kStringValue;
+  }
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
 
-  inline RTAny get_elem(size_t idx) const override { return RTAny::from_string(data_[idx]); }
+  inline RTAny get_elem(size_t idx) const override {
+    return RTAny::from_string(data_[idx]);
+  }
 
   inline std::string_view get_value(size_t idx) const override {
     return std::string_view(data_[idx]);
   }
 
-  ISigColumn* generate_signature() const override { return new SigColumn<std::string_view>(data_); }
+  ISigColumn* generate_signature() const override {
+    return new SigColumn<std::string_view>(data_);
+  }
 
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
@@ -171,7 +189,8 @@ class ListValueColumnBuilder;
 
 class ListValueColumnBase : public IValueColumn<List> {
  public:
-  virtual std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>> unfold() const = 0;
+  virtual std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
+  unfold() const = 0;
 };
 template <typename T>
 class ListValueColumn : public ListValueColumnBase {
@@ -184,21 +203,24 @@ class ListValueColumn : public ListValueColumnBase {
   std::string column_info() const override {
     return "ListValueColumn[" + std::to_string(size()) + "]";
   }
-  ContextColumnType column_type() const override { return ContextColumnType::kValue; }
+  ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     auto builder = std::make_shared<ListValueColumnBuilder<T>>();
-    builder->set_list_impls(list_impls_);
-    builder->set_list_data(list_data_);
     return builder;
   }
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kList;
     return type;
   }
-  RTAny get_elem(size_t idx) const override { return RTAny::from_list(data_[idx]); }
+  RTAny get_elem(size_t idx) const override {
+    return RTAny::from_list(data_[idx]);
+  }
 
   List get_value(size_t idx) const override { return data_[idx]; }
 
@@ -211,7 +233,8 @@ class ListValueColumn : public ListValueColumnBase {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
   }
 
-  std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>> unfold() const override {
+  std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>> unfold()
+      const override {
     if constexpr (std::is_same_v<T, std::string>) {
       LOG(FATAL) << "not implemented for " << this->column_info();
       return {nullptr, {}};
@@ -248,19 +271,16 @@ class ListValueColumn : public ListValueColumnBase {
   template <typename _T>
   friend class ListValueColumnBuilder;
   std::vector<List> data_;
-  std::vector<std::shared_ptr<ListImplBase>> list_impls_;
-  std::vector<std::shared_ptr<T>> list_data_;
 };
 
 class ListValueColumnBuilderBase : public IContextColumnBuilder {
  public:
-  virtual void set_list_impls(const std::vector<std::shared_ptr<ListImplBase>>& list_impls) = 0;
-  virtual bool impls_has_been_set() const = 0;
+  virtual ~ListValueColumnBuilderBase() = default;
 };
 template <typename T>
 class ListValueColumnBuilder : public ListValueColumnBuilderBase {
  public:
-  ListValueColumnBuilder() : impls_has_been_set_(false) {}
+  ListValueColumnBuilder() {}
   ~ListValueColumnBuilder() = default;
 
   void reserve(size_t size) override { data_.reserve(size); }
@@ -271,32 +291,14 @@ class ListValueColumnBuilder : public ListValueColumnBuilderBase {
 
   void push_back_opt(const List& val) { data_.emplace_back(val); }
 
-  bool impls_has_been_set() const override { return impls_has_been_set_; }
-
-  void set_list_impls(const std::vector<std::shared_ptr<ListImplBase>>& list_impls) override {
-    impls_has_been_set_ = true;
-    list_impls_ = list_impls;
-  }
-
-  void set_list_data(const std::vector<std::shared_ptr<T>>& list_data) { list_data_ = list_data; }
-
   std::shared_ptr<IContextColumn> finish() override {
-    if (!impls_has_been_set_) {
-      LOG(FATAL) << "ListValueColumnBuilder: list impls have not been set";
-    }
     auto ret = std::make_shared<ListValueColumn<T>>();
     ret->data_.swap(data_);
-    ret->list_impls_.swap(list_impls_);
-    ret->list_data_.swap(list_data_);
-
     return ret;
   }
 
  private:
-  bool impls_has_been_set_ = false;
   std::vector<List> data_;
-  std::vector<std::shared_ptr<ListImplBase>> list_impls_;
-  std::vector<std::shared_ptr<T>> list_data_;
 };
 
 template <typename T>
@@ -312,7 +314,9 @@ class SetValueColumn : public IValueColumn<Set> {
   std::string column_info() const override {
     return "SetValueColumn[" + std::to_string(size()) + "]";
   }
-  ContextColumnType column_type() const override { return ContextColumnType::kValue; }
+  ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     auto ptr = std::make_shared<SetValueColumnBuilder<T>>();
@@ -320,13 +324,16 @@ class SetValueColumn : public IValueColumn<Set> {
     return ptr;
   }
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
 
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kSet;
     return type;
   }
-  RTAny get_elem(size_t idx) const override { return RTAny::from_set(data_[idx]); }
+  RTAny get_elem(size_t idx) const override {
+    return RTAny::from_set(data_[idx]);
+  }
 
   Set get_value(size_t idx) const override { return data_[idx]; }
 
@@ -348,9 +355,11 @@ class SetValueColumn : public IValueColumn<Set> {
 template <typename T>
 class SetValueColumnBuilder : public IContextColumnBuilder {
  public:
-  SetValueColumnBuilder() : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {}
+  SetValueColumnBuilder()
+      : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {}
 
-  SetValueColumnBuilder(size_t size) : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {
+  SetValueColumnBuilder(size_t size)
+      : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {
     (*impl_).reserve(size);
   }
   ~SetValueColumnBuilder() = default;
@@ -376,7 +385,9 @@ class SetValueColumnBuilder : public IContextColumnBuilder {
     return ret;
   }
 
-  void set_impl(const std::shared_ptr<std::vector<SetImpl<T>>>& impl) { impl_ = impl; }
+  void set_impl(const std::shared_ptr<std::vector<SetImpl<T>>>& impl) {
+    impl_ = impl;
+  }
 
  private:
   friend class SetValueColumn<T>;
@@ -404,8 +415,6 @@ std::shared_ptr<IContextColumn> ListValueColumn<T>::shuffle(
   for (auto offset : offsets) {
     builder.push_back_opt(data_[offset]);
   }
-  builder.set_list_data(list_data_);
-  builder.set_list_impls(list_impls_);
   return builder.finish();
 }
 
@@ -422,11 +431,14 @@ class MapValueColumn : public IValueColumn<Map> {
     return "MapValueColumn[" + std::to_string(size()) + "]";
   }
 
-  ContextColumnType column_type() const override { return ContextColumnType::kValue; }
+  ContextColumnType column_type() const override {
+    return ContextColumnType::kValue;
+  }
 
   std::shared_ptr<IContextColumnBuilder> builder() const override;
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
 
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kMap;
@@ -478,7 +490,9 @@ class MapValueColumnBuilder : public IContextColumnBuilder {
     values_.push_back(std::move(values));
   }
 
-  void push_back_opt(const std::vector<RTAny>& values) { values_.push_back(values); }
+  void push_back_opt(const std::vector<RTAny>& values) {
+    values_.push_back(values);
+  }
 
   void set_keys(const std::vector<std::string>& keys) { keys_ = keys; }
 
@@ -504,13 +518,15 @@ class OptionalValueColumn : public IValueColumn<T> {
   inline size_t size() const override { return data_.size(); }
 
   std::string column_info() const override {
-    return "OptionalValueColumn<" + TypedConverter<T>::name() + ">[" + std::to_string(size()) + "]";
+    return "OptionalValueColumn<" + TypedConverter<T>::name() + ">[" +
+           std::to_string(size()) + "]";
   }
   inline ContextColumnType column_type() const override {
     return ContextColumnType::kOptionalValue;
   }
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override {
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override {
     OptionalValueColumnBuilder<T> builder;
     builder.reserve(offsets.size());
     for (auto offset : offsets) {
@@ -558,7 +574,8 @@ class OptionalValueColumn : public IValueColumn<T> {
 };
 
 template <>
-class OptionalValueColumn<std::string_view> : public IValueColumn<std::string_view> {
+class OptionalValueColumn<std::string_view>
+    : public IValueColumn<std::string_view> {
  public:
   OptionalValueColumn() = default;
   ~OptionalValueColumn() = default;
@@ -566,8 +583,8 @@ class OptionalValueColumn<std::string_view> : public IValueColumn<std::string_vi
   inline size_t size() const override { return data_.size(); }
 
   std::string column_info() const override {
-    return "OptionalValueColumn<" + TypedConverter<std::string_view>::name() + ">[" +
-           std::to_string(size()) + "]";
+    return "OptionalValueColumn<" + TypedConverter<std::string_view>::name() +
+           ">[" + std::to_string(size()) + "]";
   }
   inline ContextColumnType column_type() const override {
     return ContextColumnType::kOptionalValue;
@@ -578,12 +595,15 @@ class OptionalValueColumn<std::string_view> : public IValueColumn<std::string_vi
         std::make_shared<OptionalValueColumnBuilder<std::string_view>>());
   }
 
-  std::shared_ptr<IContextColumn> shuffle(const std::vector<size_t>& offsets) const override;
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
   RTAnyType elem_type() const override {
     auto type = RTAnyType::kStringValue;
     return type;
   }
-  inline RTAny get_elem(size_t idx) const override { return RTAny::from_string(data_[idx]); }
+  inline RTAny get_elem(size_t idx) const override {
+    return RTAny::from_string(data_[idx]);
+  }
 
   inline std::string_view get_value(size_t idx) const override {
     return std::string_view(data_[idx]);
@@ -646,7 +666,8 @@ class OptionalValueColumnBuilder : public IOptionalContextColumnBuilder {
 };
 
 template <>
-class OptionalValueColumnBuilder<std::string_view> : public IOptionalContextColumnBuilder {
+class OptionalValueColumnBuilder<std::string_view>
+    : public IOptionalContextColumnBuilder {
  public:
   OptionalValueColumnBuilder() = default;
   ~OptionalValueColumnBuilder() = default;
@@ -701,7 +722,9 @@ class ValueColumnBuilder<std::string_view> : public IContextColumnBuilder {
 
   inline void push_back_opt(const std::string& val) { data_.push_back(val); }
 
-  inline void push_back_opt(const std::string_view& val) { data_.emplace_back(val); }
+  inline void push_back_opt(const std::string_view& val) {
+    data_.emplace_back(val);
+  }
 
   std::shared_ptr<IContextColumn> finish() override {
     auto ret = std::make_shared<ValueColumn<std::string_view>>();
@@ -714,7 +737,8 @@ class ValueColumnBuilder<std::string_view> : public IContextColumnBuilder {
 };
 
 template <typename T>
-std::shared_ptr<IContextColumn> ValueColumn<T>::shuffle(const std::vector<size_t>& offsets) const {
+std::shared_ptr<IContextColumn> ValueColumn<T>::shuffle(
+    const std::vector<size_t>& offsets) const {
   ValueColumnBuilder<T> builder;
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
@@ -753,7 +777,8 @@ std::shared_ptr<IContextColumn> ValueColumn<T>::union_col(
 }
 
 template <typename T>
-bool ValueColumn<T>::order_by_limit(bool asc, size_t limit, std::vector<size_t>& offsets) const {
+bool ValueColumn<T>::order_by_limit(bool asc, size_t limit,
+                                    std::vector<size_t>& offsets) const {
   size_t size = data_.size();
   if (size == 0) {
     return false;

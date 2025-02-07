@@ -48,9 +48,6 @@ class ExprBase {
   virtual bool is_optional() const { return false; }
 
   virtual ~ExprBase() = default;
-  virtual std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
-    LOG(FATAL) << "not implemented";
-  }
 };
 
 class ConstTrueExpr : public ExprBase {
@@ -518,8 +515,9 @@ class TupleExpr : public ExprBase {
 template <typename... Args>
 class TypedTupleExpr : public ExprBase {
  public:
-  TypedTupleExpr(std::array<std::unique_ptr<ExprBase>, sizeof...(Args)>&& exprs)
-      : exprs_(std::move(exprs)) {
+  TypedTupleExpr(const Context& ctx,
+                 std::array<std::unique_ptr<ExprBase>, sizeof...(Args)>&& exprs)
+      : ctx_(ctx), exprs_(std::move(exprs)) {
     assert(exprs.size() == sizeof...(Args));
   }
 
@@ -531,8 +529,11 @@ class TypedTupleExpr : public ExprBase {
   }
 
   RTAny eval_path(size_t idx) const override {
-    return RTAny::from_tuple(
-        eval_path_impl(std::index_sequence_for<Args...>(), idx));
+    auto tup = eval_path_impl(std::index_sequence_for<Args...>(), idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   template <std::size_t... Is>
@@ -544,8 +545,12 @@ class TypedTupleExpr : public ExprBase {
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    return RTAny::from_tuple(
-        eval_vertex_impl(std::index_sequence_for<Args...>(), label, v, idx));
+    auto tup =
+        eval_vertex_impl(std::index_sequence_for<Args...>(), label, v, idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   template <std::size_t... Is>
@@ -559,13 +564,18 @@ class TypedTupleExpr : public ExprBase {
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
-    return RTAny::from_tuple(eval_edge_impl(std::index_sequence_for<Args...>(),
-                                            label, src, dst, data, idx));
+    auto tup = eval_edge_impl(std::index_sequence_for<Args...>(), label, src,
+                              dst, data, idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   RTAnyType type() const override { return RTAnyType::kTuple; }
 
  private:
+  const Context& ctx_;
   std::array<std::unique_ptr<ExprBase>, sizeof...(Args)> exprs_;
 };
 
@@ -640,14 +650,16 @@ class ListExprBase : public ExprBase {
 };
 class RelationshipsExpr : public ListExprBase {
  public:
-  RelationshipsExpr(std::unique_ptr<ExprBase>&& args) : args(std::move(args)) {}
+  RelationshipsExpr(const Context& ctx, std::unique_ptr<ExprBase>&& args)
+      : ctx_(ctx), args(std::move(args)) {}
   RTAny eval_path(size_t idx) const override {
     assert(args->type() == RTAnyType::kPath);
     auto path = args->eval_path(idx).as_path();
     auto rels = path.relationships();
     auto ptr = ListImpl<Relation>::make_list_impl(std::move(rels));
-    impls.push_back(ptr);
-    return RTAny::from_list(List::make_list(ptr));
+    List rel_list(ptr.get());
+    ctx_.value_collection->emplace_back(std::move(ptr));
+    return RTAny::from_list(rel_list);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -674,25 +686,24 @@ class RelationshipsExpr : public ListExprBase {
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     return std::make_shared<ListValueColumnBuilder<Relation>>();
   }
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const override {
-    return impls;
-  }
 
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> args;
-  mutable std::vector<std::shared_ptr<ListImplBase>> impls;
 };
 
 class NodesExpr : public ListExprBase {
  public:
-  NodesExpr(std::unique_ptr<ExprBase>&& args) : args(std::move(args)) {}
+  NodesExpr(const Context& ctx, std::unique_ptr<ExprBase>&& args)
+      : ctx_(ctx), args(std::move(args)) {}
   RTAny eval_path(size_t idx) const override {
     assert(args->type() == RTAnyType::kPath);
     auto path = args->eval_path(idx).as_path();
     auto nodes = path.nodes();
     auto ptr = ListImpl<VertexRecord>::make_list_impl(std::move(nodes));
-    impls.push_back(ptr);
-    return RTAny::from_list(List::make_list(ptr));
+    List node_list(ptr.get());
+    ctx_.value_collection->emplace_back(std::move(ptr));
+    return RTAny::from_list(node_list);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -720,13 +731,9 @@ class NodesExpr : public ListExprBase {
     return std::make_shared<ListValueColumnBuilder<VertexRecord>>();
   }
 
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const override {
-    return impls;
-  }
-
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> args;
-  mutable std::vector<std::shared_ptr<ListImplBase>> impls;
 };
 
 class StartNodeExpr : public ExprBase {

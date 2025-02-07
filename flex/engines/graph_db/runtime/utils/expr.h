@@ -49,10 +49,6 @@ class Expr {
 
   bool is_optional() const { return expr_->is_optional(); }
 
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
-    return expr_->get_list_impls();
-  }
-
  private:
   std::unique_ptr<ExprBase> expr_;
 };

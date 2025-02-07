@@ -326,13 +326,7 @@ struct ListCollector {
   void collect(const EXPR& expr, size_t idx) {
     builder_->push_back_elem(expr.expr.eval_path(idx));
   }
-  auto get(const EXPR& expr) {
-    auto& list_builder = dynamic_cast<ListValueColumnBuilderBase&>(*builder_);
-    if (!list_builder.impls_has_been_set()) {
-      list_builder.set_list_impls(expr.expr.get_list_impls());
-    }
-    return builder_->finish();
-  }
+  auto get(const EXPR& expr) { return builder_->finish(); }
   std::shared_ptr<IContextColumnBuilder> builder_;
 };
 
