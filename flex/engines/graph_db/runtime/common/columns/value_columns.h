@@ -320,7 +320,6 @@ class SetValueColumn : public IValueColumn<Set> {
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     auto ptr = std::make_shared<SetValueColumnBuilder<T>>();
-    ptr->set_impl(impl_);
     return ptr;
   }
 
@@ -349,25 +348,15 @@ class SetValueColumn : public IValueColumn<Set> {
  private:
   friend class SetValueColumnBuilder<T>;
   std::vector<Set> data_;
-  std::shared_ptr<std::vector<SetImpl<T>>> impl_;
 };
 
 template <typename T>
 class SetValueColumnBuilder : public IContextColumnBuilder {
  public:
-  SetValueColumnBuilder()
-      : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {}
+  SetValueColumnBuilder() = default;
 
-  SetValueColumnBuilder(size_t size)
-      : impl_(std::make_shared<std::vector<SetImpl<T>>>()) {
-    (*impl_).reserve(size);
-  }
+  SetValueColumnBuilder(size_t size) : data_(size) {}
   ~SetValueColumnBuilder() = default;
-
-  Set allocate_set() {
-    impl_->emplace_back();
-    return Set(&impl_->back());
-  }
 
   void reserve(size_t size) override { data_.reserve(size); }
 
@@ -381,25 +370,18 @@ class SetValueColumnBuilder : public IContextColumnBuilder {
   std::shared_ptr<IContextColumn> finish() override {
     auto ret = std::make_shared<SetValueColumn<T>>();
     ret->data_.swap(data_);
-    ret->impl_ = impl_;
     return ret;
-  }
-
-  void set_impl(const std::shared_ptr<std::vector<SetImpl<T>>>& impl) {
-    impl_ = impl;
   }
 
  private:
   friend class SetValueColumn<T>;
   std::vector<Set> data_;
-  std::shared_ptr<std::vector<SetImpl<T>>> impl_;
 };
 
 template <typename T>
 std::shared_ptr<IContextColumn> SetValueColumn<T>::shuffle(
     const std::vector<size_t>& offsets) const {
   SetValueColumnBuilder<T> builder;
-  builder.set_impl(impl_);
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
     builder.push_back_opt(data_[offset]);
