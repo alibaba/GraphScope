@@ -72,11 +72,12 @@ class GenerateFlexSDK(Command):
         if os.path.exists(tempdir):
             shutil.rmtree(tempdir)
         targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
-        if os.path.exists(targetdir):
-            shutil.rmtree(targetdir)
         # generate
         specification = os.path.join(
             pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
+        )
+        openapi_generator_ignore_list = os.path.join(
+            pkg_root, ".openapi-generator-ignore"
         )
         cmd = [
             "openapi-generator",
@@ -89,6 +90,10 @@ class GenerateFlexSDK(Command):
             str(tempdir),
             "--package-name",
             "graphscope.flex.rest",
+            "--openapi-generator-ignore-list",
+            str(openapi_generator_ignore_list),
+            "-o",
+            targetdir,
         ]
         print(" ".join(cmd))
         env = os.environ.copy()

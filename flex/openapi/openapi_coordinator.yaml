@@ -299,6 +299,7 @@ components:
       properties:
         timestamp:
           type: string
+          nullable: true
 
     DateType:
       required:
@@ -306,6 +307,7 @@ components:
       properties:
         date32:
           type: string
+          nullable: true
 
     TemporalType:
       required:
