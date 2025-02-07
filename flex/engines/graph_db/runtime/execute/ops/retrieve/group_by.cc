@@ -685,23 +685,23 @@ struct VertexCollector {
 
 template <typename T>
 struct ListCollector {
+  ListCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(std::vector<T>&& val) {
     auto impl = ListImpl<T>::make_list_impl(std::move(val));
-    auto list = List::make_list(impl);
-    impls.emplace_back(impl);
+    List list(impl.get());
+    ctx_.value_collection->emplace_back(std::move(impl));
     builder.push_back_opt(list);
   }
-  auto get() {
-    builder.set_list_impls(impls);
-    return builder.finish();
-  }
-  std::vector<std::shared_ptr<ListImplBase>> impls;
+
+  auto get() { return builder.finish(); }
   ListValueColumnBuilder<T> builder;
+  Context ctx_;
 };
 
 template <>
 struct ListCollector<std::string_view> {
+  ListCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(std::vector<std::string_view>&& val) {
     std::vector<std::string> vec;
@@ -710,21 +710,18 @@ struct ListCollector<std::string_view> {
       vec.push_back(std::string(s));
     }
     auto impl = ListImpl<std::string_view>::make_list_impl(std::move(vec));
-    auto list = List::make_list(impl);
-    impls.emplace_back(impl);
+    List list(impl.get());
+    ctx_.value_collection->emplace_back(std::move(impl));
     builder.push_back_opt(list);
   }
-  auto get() {
-    builder.set_list_impls(impls);
-    return builder.finish();
-  }
-  std::vector<std::shared_ptr<ListImplBase>> impls;
+  auto get() { return builder.finish(); }
+  const Context& ctx_;
   ListValueColumnBuilder<std::string> builder;
 };
 
 template <typename EXPR, bool IS_OPTIONAL>
-std::unique_ptr<ReducerBase> _make_reducer(EXPR&& expr, AggrKind kind,
-                                           int alias) {
+std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
+                                           AggrKind kind, int alias) {
   switch (kind) {
   case AggrKind::kSum: {
     if constexpr (std::is_arithmetic<typename EXPR::V>::value) {
@@ -781,7 +778,7 @@ std::unique_ptr<ReducerBase> _make_reducer(EXPR&& expr, AggrKind kind,
   }
   case AggrKind::kToList: {
     ToListReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ListCollector<typename EXPR::V> collector;
+    ListCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
@@ -808,12 +805,12 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
                                           AggrKind kind, int alias) {
   if (var.is_optional()) {
     OptionalTypedVarWrapper<T> wrapper(std::move(var));
-    return _make_reducer<decltype(wrapper), true>(std::move(wrapper), kind,
+    return _make_reducer<decltype(wrapper), true>(ctx, std::move(wrapper), kind,
                                                   alias);
   } else {
     TypedVarWrapper<T> wrapper(std::move(var));
-    return _make_reducer<decltype(wrapper), false>(std::move(wrapper), kind,
-                                                   alias);
+    return _make_reducer<decltype(wrapper), false>(ctx, std::move(wrapper),
+                                                   kind, alias);
   }
 }
 std::unique_ptr<ReducerBase> make_general_reducer(
@@ -891,45 +888,45 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
         if (vertex_col->vertex_column_type() == VertexColumnType::kSingle) {
           SLVertexWrapperBeta wrapper(
               *dynamic_cast<const SLVertexColumn*>(vertex_col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (vertex_col->vertex_column_type() ==
                    VertexColumnType::kMultiple) {
           auto typed_vertex_col =
               std::dynamic_pointer_cast<MLVertexColumn>(vertex_col);
           MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
               *typed_vertex_col);
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else {
           auto typed_vertex_col =
               std::dynamic_pointer_cast<MSVertexColumn>(vertex_col);
           MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
               *typed_vertex_col);
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         }
       } else if (col->column_type() == ContextColumnType::kValue) {
         if (col->elem_type() == RTAnyType::kI64Value) {
           ValueWrapper<int64_t> wrapper(
               *dynamic_cast<const ValueColumn<int64_t>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kI32Value) {
           ValueWrapper<int32_t> wrapper(
               *dynamic_cast<const ValueColumn<int32_t>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kStringValue) {
           ValueWrapper<std::string_view> wrapper(
               *dynamic_cast<const ValueColumn<std::string_view>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kTimestamp) {
           ValueWrapper<Date> wrapper(
               *dynamic_cast<const ValueColumn<Date>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         }
       }
     }

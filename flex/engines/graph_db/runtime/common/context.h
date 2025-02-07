@@ -68,6 +68,8 @@ class Context {
   const ValueColumn<size_t>& get_offsets() const;
   std::shared_ptr<ValueColumn<size_t>> offset_ptr;
   std::vector<int> tag_ids;
+
+  mutable std::shared_ptr<ValueCollection> value_collection;
 };
 
 class ContextMeta {

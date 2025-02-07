@@ -26,6 +26,14 @@
 namespace gs {
 
 namespace runtime {
+
+class CpxValueBase {
+ public:
+  virtual ~CpxValueBase() = default;
+};
+
+using ValueCollection = std::vector<std::unique_ptr<CpxValueBase>>;
+
 class VertexRecord {
  public:
   bool operator<(const VertexRecord& v) const {
@@ -70,7 +78,7 @@ struct Relation {
   VertexRecord end_node() const { return {label, dst}; }
 };
 
-class PathImpl {
+class PathImpl : public CpxValueBase {
  public:
   static std::shared_ptr<PathImpl> make_path_impl(label_t label, vid_t v) {
     auto new_path = std::make_shared<PathImpl>();
@@ -112,7 +120,7 @@ class PathImpl {
 };
 class Path {
  public:
-  Path() : impl_(nullptr) {}
+  Path() = default;
   static Path make_path(const std::shared_ptr<PathImpl>& impl) {
     Path new_path;
     new_path.impl_ = impl.get();
@@ -146,7 +154,7 @@ class Path {
 };
 class RTAny;
 
-class ListImplBase {
+class ListImplBase : public CpxValueBase {
  public:
   virtual ~ListImplBase() = default;
   virtual bool operator<(const ListImplBase& p) const = 0;
@@ -160,11 +168,8 @@ class ListImpl;
 
 class List {
  public:
-  static List make_list(const std::shared_ptr<ListImplBase>& impl) {
-    List new_list;
-    new_list.impl_ = impl.get();
-    return new_list;
-  }
+  List() = default;
+  List(ListImplBase* impl) : impl_(impl) {}
 
   bool operator<(const List& p) const { return *impl_ < *(p.impl_); }
   bool operator==(const List& p) const { return *(impl_) == *(p.impl_); }
@@ -172,7 +177,7 @@ class List {
   RTAny get(size_t idx) const;
   ListImplBase* impl_;
 };
-class SetImplBase {
+class SetImplBase : public CpxValueBase {
  public:
   virtual ~SetImplBase() = default;
   virtual bool operator<(const SetImplBase& p) const = 0;
@@ -196,7 +201,7 @@ class Set {
   SetImplBase* impl_;
 };
 
-class TupleImplBase {
+class TupleImplBase : public CpxValueBase {
  public:
   virtual ~TupleImplBase() = default;
   virtual bool operator<(const TupleImplBase& p) const = 0;
@@ -228,12 +233,12 @@ class TupleImpl : public TupleImplBase {
 class Tuple {
  public:
   template <typename... Args>
-  static Tuple make_tuple(std::tuple<Args...>&& args) {
-    Tuple new_tuple;
-
-    new_tuple.impl_ = new TupleImpl<Args...>(std::move(args));
-    return new_tuple;
+  static std::unique_ptr<TupleImplBase> make_tuple_impl(
+      std::tuple<Args...>&& args) {
+    return std::make_unique<TupleImpl<Args...>>(std::move(args));
   }
+  Tuple() = default;
+  Tuple(TupleImplBase* impl) : impl_(impl) {}
   bool operator<(const Tuple& p) const { return *impl_ < *(p.impl_); }
   bool operator==(const Tuple& p) const { return *impl_ == *(p.impl_); }
   size_t size() const { return impl_->size(); }
@@ -241,7 +246,7 @@ class Tuple {
   TupleImplBase* impl_;
 };
 
-class MapImpl {
+class MapImpl : public CpxValueBase {
  public:
   static MapImpl make_map_impl(const std::vector<std::string>* keys,
                                const std::vector<RTAny>* values) {
@@ -639,14 +644,6 @@ class RTAny {
   static RTAny from_date32(Day v);
   static RTAny from_timestamp(Date v);
 
-  template <typename... Args>
-  static RTAny from_tuple(std::tuple<Args...>&& tuple) {
-    RTAny ret;
-    ret.type_ = RTAnyType::kTuple;
-    ret.value_.t = Tuple::make_tuple(std::move(tuple));
-    return ret;
-  }
-
   static RTAny from_tuple(const Tuple& tuple);
   static RTAny from_list(const List& list);
   static RTAny from_double(double v);
@@ -904,26 +901,11 @@ template <typename T>
 class ListImpl : ListImplBase {
  public:
   ListImpl() = default;
-  static std::shared_ptr<ListImplBase> make_list_impl(std::vector<T>&& vals) {
+  static std::unique_ptr<ListImplBase> make_list_impl(std::vector<T>&& vals) {
     auto new_list = new ListImpl<T>();
     new_list->list_ = std::move(vals);
     new_list->is_valid_.resize(new_list->list_.size(), true);
-    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
-  }
-
-  static std::shared_ptr<ListImplBase> make_list_impl(
-      const std::vector<RTAny>& vals) {
-    auto new_list = new ListImpl<T>();
-    for (auto& val : vals) {
-      if (val.is_null()) {
-        new_list->is_valid_.push_back(false);
-        new_list->list_.push_back(T());
-      } else {
-        new_list->list_.push_back(TypedConverter<T>::to_typed(val));
-        new_list->is_valid_.push_back(true);
-      }
-    }
-    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
+    return std::unique_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
   bool operator<(const ListImplBase& p) const {
@@ -949,28 +931,12 @@ template <>
 class ListImpl<std::string_view> : public ListImplBase {
  public:
   ListImpl() = default;
-  static std::shared_ptr<ListImplBase> make_list_impl(
+  static std::unique_ptr<ListImplBase> make_list_impl(
       std::vector<std::string>&& vals) {
     auto new_list = new ListImpl<std::string_view>();
     new_list->list_ = std::move(vals);
     new_list->is_valid_.resize(new_list->list_.size(), true);
-    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
-  }
-
-  static std::shared_ptr<ListImplBase> make_list_impl(
-      const std::vector<RTAny>& vals) {
-    auto new_list = new ListImpl<std::string_view>();
-    for (auto& val : vals) {
-      if (val.is_null()) {
-        new_list->is_valid_.push_back(false);
-        new_list->list_.push_back("");
-      } else {
-        new_list->list_.push_back(
-            std::string(TypedConverter<std::string_view>::to_typed(val)));
-        new_list->is_valid_.push_back(true);
-      }
-    }
-    return std::shared_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
+    return std::unique_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
   bool operator<(const ListImplBase& p) const {

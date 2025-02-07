@@ -403,20 +403,20 @@ static RTAny parse_const_value(const common::Value& val) {
 template <size_t N, size_t I, typename... Args>
 struct TypedTupleBuilder {
   std::unique_ptr<ExprBase> build_typed_tuple(
-      std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
+      const Context& ctx, std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
     switch (exprs[I - 1]->type()) {
     case RTAnyType::kI32Value:
       return TypedTupleBuilder<N, I - 1, int, Args...>().build_typed_tuple(
-          std::move(exprs));
+          ctx, std::move(exprs));
     case RTAnyType::kI64Value:
       return TypedTupleBuilder<N, I - 1, int64_t, Args...>().build_typed_tuple(
-          std::move(exprs));
+          ctx, std::move(exprs));
     case RTAnyType::kF64Value:
       return TypedTupleBuilder<N, I - 1, double, Args...>().build_typed_tuple(
-          std::move(exprs));
+          ctx, std::move(exprs));
     case RTAnyType::kStringValue:
       return TypedTupleBuilder<N, I - 1, std::string_view, Args...>()
-          .build_typed_tuple(std::move(exprs));
+          .build_typed_tuple(ctx, std::move(exprs));
     default:
       LOG(FATAL) << "not support type: "
                  << static_cast<int>(exprs[I - 1]->type());
@@ -427,8 +427,8 @@ struct TypedTupleBuilder {
 template <size_t N, typename... Args>
 struct TypedTupleBuilder<N, 0, Args...> {
   std::unique_ptr<ExprBase> build_typed_tuple(
-      std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
-    return std::make_unique<TypedTupleExpr<Args...>>(std::move(exprs));
+      const Context& ctx, std::array<std::unique_ptr<ExprBase>, N>&& exprs) {
+    return std::make_unique<TypedTupleExpr<Args...>>(ctx, std::move(exprs));
   }
 };
 
@@ -650,14 +650,16 @@ static std::unique_ptr<ExprBase> build_expr(
           exprs[i] =
               std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type);
         }
-        return TypedTupleBuilder<3, 3>().build_typed_tuple(std::move(exprs));
+        return TypedTupleBuilder<3, 3>().build_typed_tuple(ctx,
+                                                           std::move(exprs));
       } else if (op.keys_size() == 2) {
         std::array<std::unique_ptr<ExprBase>, 2> exprs;
         for (int i = 0; i < op.keys_size(); ++i) {
           exprs[i] =
               std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type);
         }
-        return TypedTupleBuilder<2, 2>().build_typed_tuple(std::move(exprs));
+        return TypedTupleBuilder<2, 2>().build_typed_tuple(ctx,
+                                                           std::move(exprs));
       }
       /**
       std::vector<std::unique_ptr<ExprBase>> exprs;
@@ -698,9 +700,9 @@ static std::unique_ptr<ExprBase> build_expr(
       auto expr =
           parse_expression_impl(graph, ctx, params, op.parameters(0), var_type);
       if (name == "gs.function.relationships") {
-        return std::make_unique<RelationshipsExpr>(std::move(expr));
+        return std::make_unique<RelationshipsExpr>(ctx, std::move(expr));
       } else if (name == "gs.function.nodes") {
-        return std::make_unique<NodesExpr>(std::move(expr));
+        return std::make_unique<NodesExpr>(ctx, std::move(expr));
       } else if (name == "gs.function.startNode") {
         return std::make_unique<StartNodeExpr>(std::move(expr));
       } else if (name == "gs.function.endNode") {

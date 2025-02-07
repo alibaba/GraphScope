@@ -178,6 +178,7 @@ class GroupBy {
       std::vector<std::unique_ptr<ReducerBase>>&& aggrs) {
     auto [offsets, groups] = key->group(ctx);
     Context ret;
+    ret.value_collection = ctx.value_collection;
     const auto& tag_alias = key->tag_alias();
     for (size_t i = 0; i < tag_alias.size(); ++i) {
       ret.set(tag_alias[i].second, ctx.get(tag_alias[i].first));
