@@ -17,6 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.*;
+import java.util.List;
 
 /**
  * Create/Update/Read/Delete vertex
@@ -24,9 +25,9 @@ import com.alibaba.graphscope.interactive.models.*;
 public interface VertexInterface {
     Result<String> addVertex(String graphId, VertexEdgeRequest request);
 
-    Result<String> updateVertex(String graphId, VertexRequest request);
+    Result<String> updateVertex(String graphId, List<VertexRequest> request);
 
     Result<VertexData> getVertex(String graphId, String label, Object primaryKey);
 
-    Result<String> deleteVertex(String graphId, String label, Object primaryKey);
+    Result<String> deleteVertex(String graphId, List<DeleteVertexRequest> requests);
 }

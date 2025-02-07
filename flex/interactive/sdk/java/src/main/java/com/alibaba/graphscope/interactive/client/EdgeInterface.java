@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
+import com.alibaba.graphscope.interactive.models.DeleteEdgeRequest;
 import com.alibaba.graphscope.interactive.models.EdgeData;
 import com.alibaba.graphscope.interactive.models.EdgeRequest;
 
@@ -37,10 +38,7 @@ public interface EdgeInterface {
 
     Result<String> deleteEdge(
             String graphName,
-            String srcLabel,
-            Object srcPrimaryKeyValue,
-            String dstLabel,
-            Object dstPrimaryKeyValue);
+            List<DeleteEdgeRequest> requests);
 
-    Result<String> updateEdge(String graphName, EdgeRequest edgeRequest);
+    Result<String> updateEdge(String graphName, List<EdgeRequest> edgeRequest);
 }
