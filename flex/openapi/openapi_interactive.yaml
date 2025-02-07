@@ -867,10 +867,12 @@ paths:
                 - src_label: "person"
                   dst_label: "software"
                   edge_label: "created"
-                  src_pk_name: "id"
-                  src_pk_value: 1
-                  dst_pk_name: "id"
-                  dst_pk_value: 3
+                  src_primary_key_values: 
+                    - name: "id"
+                      value: 1
+                  dst_primary_key_values: 
+                    - name: "id"
+                      value: 3
                   properties:
                     - name: "weight"
                       value: 0.2
@@ -1194,10 +1196,12 @@ paths:
               - src_label: "person"
                 dst_label: "software"
                 edge_label: "created"
-                src_pk_name: "id"
-                src_pk_value: 1
-                dst_pk_name: "id"
-                dst_pk_value: 3
+                src_primary_key_values: 
+                  - name: "id"
+                    value: 1
+                dst_primary_key_values: 
+                  - name: "id"
+                    value: 3
                 properties:
                   - name: "weight"
                     value: 0.2
@@ -1223,16 +1227,18 @@ paths:
               items:
                 $ref: '#/components/schemas/EdgeRequest'
             example:
-              src_label: "person"
-              dst_label: "software"
-              edge_label: "created"
-              src_pk_name: "id"
-              src_pk_value: 1
-              dst_pk_name: "id"
-              dst_pk_value: 3
-              properties:
-                - name: "weight"
-                  value: 0.3
+              - src_label: "person"
+                dst_label: "software"
+                edge_label: "created"
+                src_primary_key_values: 
+                  - name: "id"
+                    value: 1
+                dst_primary_key_values: 
+                  - name: "id"
+                    value: 3
+                properties:
+                  - name: "weight"
+                    value: 0.2
       responses:
         '200':
           description: Successfully update edge

@@ -25,8 +25,8 @@ from typing import Union
 
 from pydantic import Field
 from pydantic import StrictBytes
-from pydantic import StrictStr
 from pydantic import StrictInt
+from pydantic import StrictStr
 from typing_extensions import Annotated
 
 from gs_interactive.api import AdminServiceGraphManagementApi
@@ -45,10 +45,14 @@ from gs_interactive.client.status import StatusCode
 from gs_interactive.client.utils import InputFormat
 from gs_interactive.client.utils import append_format_byte
 from gs_interactive.configuration import Configuration
+from gs_interactive.models import CreateEdgeType
 from gs_interactive.models import CreateGraphRequest
 from gs_interactive.models import CreateGraphResponse
 from gs_interactive.models import CreateProcedureRequest
 from gs_interactive.models import CreateProcedureResponse
+from gs_interactive.models import CreateVertexType
+from gs_interactive.models import DeleteEdgeRequest
+from gs_interactive.models import DeleteVertexRequest
 from gs_interactive.models import EdgeRequest
 from gs_interactive.models import GetGraphResponse
 from gs_interactive.models import GetGraphSchemaResponse
@@ -59,6 +63,7 @@ from gs_interactive.models import JobStatus
 from gs_interactive.models import QueryRequest
 from gs_interactive.models import SchemaMapping
 from gs_interactive.models import ServiceStatus
+from gs_interactive.models import SnapshotStatus
 from gs_interactive.models import StartServiceRequest
 from gs_interactive.models import StopServiceRequest
 from gs_interactive.models import UpdateProcedureRequest
@@ -66,11 +71,6 @@ from gs_interactive.models import UploadFileResponse
 from gs_interactive.models import VertexData
 from gs_interactive.models import VertexEdgeRequest
 from gs_interactive.models import VertexRequest
-from gs_interactive.models import DeleteVertexRequest
-from gs_interactive.models import DeleteEdgeRequest
-from gs_interactive.models import CreateVertexType
-from gs_interactive.models import CreateEdgeType
-from gs_interactive.models import SnapshotStatus
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -84,7 +84,12 @@ class EdgeInterface(metaclass=ABCMeta):
     def delete_edge(
         self,
         graph_id: StrictStr,
-        delete_edge_request: Annotated[List[DeleteEdgeRequest], Field(description="The label and primary key values of the src and dst vertices, and the edge label.")],
+        delete_edge_request: Annotated[
+            List[DeleteEdgeRequest],
+            Field(
+                description="The label and primary key values of the src and dst vertices, and the edge label."
+            ),
+        ],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -110,7 +115,9 @@ class EdgeInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_edge(
-        self, graph_id: StrictStr, edge_request: List[EdgeRequest],
+        self,
+        graph_id: StrictStr,
+        edge_request: List[EdgeRequest],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -128,7 +135,12 @@ class VertexInterface(metaclass=ABCMeta):
     def delete_vertex(
         self,
         graph_id: StrictStr,
-        delete_vertex_request: Annotated[List[DeleteVertexRequest], Field(description="The label and primary key values of the vertex to be deleted.")],
+        delete_vertex_request: Annotated[
+            List[DeleteVertexRequest],
+            Field(
+                description="The label and primary key values of the vertex to be deleted."
+            ),
+        ],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -145,7 +157,9 @@ class VertexInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_vertex(
-        self, graph_id: StrictStr, vertex_request: List[VertexRequest],
+        self,
+        graph_id: StrictStr,
+        vertex_request: List[VertexRequest],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -242,8 +256,11 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_snapshot_status(self, graph_id: StrictStr, snapshot_id: StrictInt) -> SnapshotStatus:
+    def get_snapshot_status(
+        self, graph_id: StrictStr, snapshot_id: StrictInt
+    ) -> SnapshotStatus:
         raise NotImplementedError
+
 
 class ProcedureInterface(metaclass=ABCMeta):
     @abstractmethod
@@ -424,7 +441,12 @@ class DefaultSession(Session):
     def delete_vertex(
         self,
         graph_id: StrictStr,
-        delete_vertex_request: Annotated[List[DeleteVertexRequest], Field(description="The label and primary key values of the vertex to be deleted.")],
+        delete_vertex_request: Annotated[
+            List[DeleteVertexRequest],
+            Field(
+                description="The label and primary key values of the vertex to be deleted."
+            ),
+        ],
     ) -> Result[str]:
         """
         Delete a vertex from the specified graph with primary key value.
@@ -461,7 +483,9 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def update_vertex(
-        self, graph_id: StrictStr, vertex_request: List[VertexRequest],
+        self,
+        graph_id: StrictStr,
+        vertex_request: List[VertexRequest],
     ) -> Result[str]:
         """
         Update a vertex in the specified graph.
@@ -495,7 +519,12 @@ class DefaultSession(Session):
     def delete_edge(
         self,
         graph_id: StrictStr,
-        delete_edge_request: Annotated[List[DeleteEdgeRequest], Field(description="The label and primary key values of the src and dst vertices, and the edge label.")],
+        delete_edge_request: Annotated[
+            List[DeleteEdgeRequest],
+            Field(
+                description="The label and primary key values of the src and dst vertices, and the edge label."
+            ),
+        ],
     ) -> Result[str]:
         """
         Delete an edge from the specified graph with primary key value.
@@ -782,7 +811,9 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def get_snapshot_status(self, graph_id: StrictStr, snapshot_id: StrictInt) -> SnapshotStatus:
+    def get_snapshot_status(
+        self, graph_id: StrictStr, snapshot_id: StrictInt
+    ) -> SnapshotStatus:
         """
         Get the status of a snapshot with the specified snapshot id.
         """

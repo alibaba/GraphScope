@@ -213,6 +213,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         sed -i 's/interactive_workspace/temp_workspace/g' ./interactive_config_test.yaml
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml java
+        export ENGINE_TYPE=interactive
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml python
         sed -i 's/temp_workspace/interactive_workspace/g' ./interactive_config_test.yaml
   

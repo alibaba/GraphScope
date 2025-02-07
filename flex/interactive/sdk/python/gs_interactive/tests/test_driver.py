@@ -33,6 +33,8 @@ from gs_interactive.models import CreateGraphSchemaRequest
 from gs_interactive.models import CreateProcedureRequest
 from gs_interactive.models import CreatePropertyMeta
 from gs_interactive.models import CreateVertexType
+from gs_interactive.models import DeleteEdgeRequest
+from gs_interactive.models import DeleteVertexRequest
 from gs_interactive.models import EdgeMapping
 from gs_interactive.models import EdgeMappingTypeTriplet
 from gs_interactive.models import EdgeRequest
@@ -53,8 +55,6 @@ from gs_interactive.models import TypedValue
 from gs_interactive.models import VertexEdgeRequest
 from gs_interactive.models import VertexMapping
 from gs_interactive.models import VertexRequest
-from gs_interactive.models import DeleteVertexRequest
-from gs_interactive.models import DeleteEdgeRequest
 
 test_graph_def = {
     "name": "modern_graph",
@@ -139,7 +139,10 @@ class TestDriver(unittest.TestCase):
             rep2 = self._sess.delete_graph(self._graph_id)
             print("delete graph: ", rep2)
 
-    @unittest.skipIf(os.getenv("ENGINE_TYPE") == "insight", "Skipping test_example because ENGINE_TYPE is 'insight'")
+    @unittest.skipIf(
+        os.getenv("ENGINE_TYPE") == "insight",
+        "Skipping test_example because ENGINE_TYPE is 'insight'",
+    )
     def test_example(self):
         self.createGraphFromDict()
         self._graph_id = self.createGraph()
@@ -163,6 +166,10 @@ class TestDriver(unittest.TestCase):
         self.queryWithServiceStop()
         self.createDriver()
 
+    @unittest.skipIf(
+        os.getenv("ENGINE_TYPE") == "interactive",
+        "Skipping test_example because ENGINE_TYPE is 'interactive'",
+    )
     def test_insight_example(self):
         self._graph_id = self.createGraphFromDict()
         self.modifyGraphSchema()
@@ -383,7 +390,9 @@ class TestDriver(unittest.TestCase):
             properties=[
                 CreatePropertyMeta(
                     property_name="id",
-                    property_type=GSDataType.from_dict({"primitive_type": "DT_SIGNED_INT64"}),
+                    property_type=GSDataType.from_dict(
+                        {"primitive_type": "DT_SIGNED_INT64"}
+                    ),
                 ),
                 CreatePropertyMeta(
                     property_name="name",
@@ -396,12 +405,16 @@ class TestDriver(unittest.TestCase):
         assert api_response.is_ok()
         new_schema = self.getGraphSchema().to_dict()
         vertex_types = new_schema.get("vertex_types", [])
-        new_person = next((vt for vt in vertex_types if vt["type_name"] == "new_person"), None)
+        new_person = next(
+            (vt for vt in vertex_types if vt["type_name"] == "new_person"), None
+        )
         assert new_person is not None, "new_person not found"
         properties = new_person.get("properties", [])
         property_names = [prop["property_name"] for prop in properties]
         expected_properties = ["id", "name"]
-        assert all(prop in property_names for prop in expected_properties), f"Expected properties {expected_properties} not found in {property_names}"
+        assert all(
+            prop in property_names for prop in expected_properties
+        ), f"Expected properties {expected_properties} not found in {property_names}"
 
         # update vertex type
         update_vertex_type = CreateVertexType(
@@ -409,7 +422,9 @@ class TestDriver(unittest.TestCase):
             properties=[
                 CreatePropertyMeta(
                     property_name="age",
-                    property_type=GSDataType.from_dict({"primitive_type": "DT_SIGNED_INT32"}),
+                    property_type=GSDataType.from_dict(
+                        {"primitive_type": "DT_SIGNED_INT32"}
+                    ),
                 ),
             ],
             primary_keys=["id"],
@@ -418,10 +433,16 @@ class TestDriver(unittest.TestCase):
         assert api_response.is_ok()
         new_schema = self.getGraphSchema().to_dict()
         vertex_types = new_schema.get("vertex_types", [])
-        new_person = next((vt for vt in vertex_types if vt["type_name"] == "new_person"), None)
-        property_names = [prop["property_name"] for prop in new_person.get("properties")]
+        new_person = next(
+            (vt for vt in vertex_types if vt["type_name"] == "new_person"), None
+        )
+        property_names = [
+            prop["property_name"] for prop in new_person.get("properties")
+        ]
         expected_properties = ["id", "name", "age"]
-        assert all(prop in property_names for prop in expected_properties), f"Expected properties {expected_properties} not found in {property_names}"
+        assert all(
+            prop in property_names for prop in expected_properties
+        ), f"Expected properties {expected_properties} not found in {property_names}"
 
         # delete vertex type
         api_response = self._sess.delete_vertex_type(self._graph_id, "new_person")
@@ -452,12 +473,16 @@ class TestDriver(unittest.TestCase):
 
         new_schema = self.getGraphSchema().to_dict()
         edge_types = new_schema.get("edge_types", [])
-        new_knows = next((et for et in edge_types if et["type_name"] == "new_knows"), None)
+        new_knows = next(
+            (et for et in edge_types if et["type_name"] == "new_knows"), None
+        )
         assert new_knows is not None, "new_knows not found"
         properties = new_knows.get("properties", [])
         property_names = [prop["property_name"] for prop in properties]
         expected_properties = ["weight"]
-        assert all(prop in property_names for prop in expected_properties), f"Expected properties {expected_properties} not found in {property_names}"
+        assert all(
+            prop in property_names for prop in expected_properties
+        ), f"Expected properties {expected_properties} not found in {property_names}"
 
         # update edge type
         update_edge_type = CreateEdgeType(
@@ -481,13 +506,19 @@ class TestDriver(unittest.TestCase):
         assert api_response.is_ok()
         new_schema = self.getGraphSchema().to_dict()
         edge_types = new_schema.get("edge_types", [])
-        new_knows = next((et for et in edge_types if et["type_name"] == "new_knows"), None)
+        new_knows = next(
+            (et for et in edge_types if et["type_name"] == "new_knows"), None
+        )
         property_names = [prop["property_name"] for prop in new_knows.get("properties")]
         expected_properties = ["weight", "new_weight"]
-        assert all(prop in property_names for prop in expected_properties), f"Expected properties {expected_properties} not found in {property_names}"
+        assert all(
+            prop in property_names for prop in expected_properties
+        ), f"Expected properties {expected_properties} not found in {property_names}"
 
         # delete edge type
-        api_response = self._sess.delete_edge_type(self._graph_id, "new_knows", "person", "person")
+        api_response = self._sess.delete_edge_type(
+            self._graph_id, "new_knows", "person", "person"
+        )
         assert api_response.is_ok()
         new_schema = self.getGraphSchema().to_dict()
         edge_types = new_schema.get("edge_types", [])
@@ -708,7 +739,7 @@ class TestDriver(unittest.TestCase):
         vertex_request = [
             VertexRequest(
                 label="person",
-                primary_key_values= [
+                primary_key_values=[
                     ModelProperty(name="id", value=8),
                 ],
                 properties=[
@@ -718,7 +749,7 @@ class TestDriver(unittest.TestCase):
             ),
             VertexRequest(
                 label="person",
-                primary_key_values= [
+                primary_key_values=[
                     ModelProperty(name="id", value=9),
                 ],
                 properties=[
@@ -728,7 +759,7 @@ class TestDriver(unittest.TestCase):
             ),
             VertexRequest(
                 label="person",
-                primary_key_values= [
+                primary_key_values=[
                     ModelProperty(name="id", value=10),
                 ],
                 properties=[
@@ -742,10 +773,10 @@ class TestDriver(unittest.TestCase):
                 src_label="person",
                 dst_label="person",
                 edge_label="knows",
-                src_primary_key_values = [
+                src_primary_key_values=[
                     ModelProperty(name="id", value=8),
                 ],
-                dst_primary_key_values = [
+                dst_primary_key_values=[
                     ModelProperty(name="id", value=9),
                 ],
                 properties=[ModelProperty(name="weight", value=7)],
@@ -759,9 +790,13 @@ class TestDriver(unittest.TestCase):
         # get vertex
         # skip get vertex test for insight, as it is not supported
         if os.getenv("ENGINE_TYPE") == "insight":
-            name = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).values(\'name\');").next()
+            name = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).values('name');"
+            ).next()
             assert name == ["mike"]
-            age = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).values(\'age\');").next()
+            age = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).values('age');"
+            ).next()
             assert age == [12]
         else:
             resp = self._sess.get_vertex(self._graph_id, "person", 8)
@@ -773,21 +808,25 @@ class TestDriver(unittest.TestCase):
                     assert v == 12
 
         # update vertex
-        vertex_request = [VertexRequest(
-            label="person",
-            primary_key_values = [
-                ModelProperty(name="id", value=8),
-            ],
-            properties=[
-                ModelProperty(name="name", value="Cindy"),
-                ModelProperty(name="age", value=24),
-            ],
-        )]
+        vertex_request = [
+            VertexRequest(
+                label="person",
+                primary_key_values=[
+                    ModelProperty(name="id", value=8),
+                ],
+                properties=[
+                    ModelProperty(name="name", value="Cindy"),
+                    ModelProperty(name="age", value=24),
+                ],
+            )
+        ]
         resp = self._sess.update_vertex(self._graph_id, vertex_request)
         assert resp.is_ok()
 
         if os.getenv("ENGINE_TYPE") == "insight":
-            age = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).values(\'age\');").next()
+            age = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).values('age');"
+            ).next()
             assert age == [24]
         else:
             resp = self._sess.get_vertex(self._graph_id, "person", 8)
@@ -802,10 +841,10 @@ class TestDriver(unittest.TestCase):
                 src_label="person",
                 dst_label="person",
                 edge_label="knows",
-                src_primary_key_values = [
+                src_primary_key_values=[
                     ModelProperty(name="id", value=8),
                 ],
-                dst_primary_key_values = [
+                dst_primary_key_values=[
                     ModelProperty(name="id", value=10),
                 ],
                 properties=[ModelProperty(name="weight", value=9.123)],
@@ -817,16 +856,22 @@ class TestDriver(unittest.TestCase):
         # get edge
         # skip get edge test for insight, as it is not supported
         if os.getenv("ENGINE_TYPE") == "insight":
-            weight = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).outE('knows').values(\'weight\');").next()
+            weight = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).outE('knows').values('weight');"
+            ).next()
             assert sorted(weight) == sorted([9.123, 7.0])
-            
+
         else:
-            resp = self._sess.get_edge(self._graph_id, "knows", "person", 8, "person", 10)
+            resp = self._sess.get_edge(
+                self._graph_id, "knows", "person", 8, "person", 10
+            )
             assert resp.is_ok()
             for k, v in resp.get_value().properties:
                 if k == "weight":
                     assert v == 9.123
-            resp = self._sess.get_edge(self._graph_id, "knows", "person", 8, "person", 9)
+            resp = self._sess.get_edge(
+                self._graph_id, "knows", "person", 8, "person", 9
+            )
             assert resp.is_ok()
             for k, v in resp.get_value().properties:
                 if k == "weight":
@@ -835,27 +880,33 @@ class TestDriver(unittest.TestCase):
         # update edge
         resp = self._sess.update_edge(
             self._graph_id,
-            [EdgeRequest(
-                src_label="person",
-                dst_label="person",
-                edge_label="knows",
-                src_primary_key_values = [
-                    ModelProperty(name="id", value=8),
-                ],
-                dst_primary_key_values = [
-                    ModelProperty(name="id", value=9),
-                ],
-                properties=[ModelProperty(name="weight", value=3)],
-            )],
+            [
+                EdgeRequest(
+                    src_label="person",
+                    dst_label="person",
+                    edge_label="knows",
+                    src_primary_key_values=[
+                        ModelProperty(name="id", value=8),
+                    ],
+                    dst_primary_key_values=[
+                        ModelProperty(name="id", value=9),
+                    ],
+                    properties=[ModelProperty(name="weight", value=3)],
+                )
+            ],
         )
         assert resp.is_ok()
 
         if os.getenv("ENGINE_TYPE") == "insight":
-            weight = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).outE('knows').values(\'weight\');").next()
+            weight = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).outE('knows').values('weight');"
+            ).next()
             # todo: this might be a bug in groot, the weight is not updated, but instead a new edge is created
             assert sorted(weight) == sorted([9.123, 7.0, 3.0])
         else:
-            resp = self._sess.get_edge(self._graph_id, "knows", "person", 8, "person", 9)
+            resp = self._sess.get_edge(
+                self._graph_id, "knows", "person", 8, "person", 9
+            )
             assert resp.is_ok()
             for k, v in resp.get_value().properties:
                 if k == "weight":
@@ -869,22 +920,25 @@ class TestDriver(unittest.TestCase):
                     src_label="person",
                     dst_label="person",
                     edge_label="knows",
-                    src_primary_key_values = [
+                    src_primary_key_values=[
                         ModelProperty(name="id", value=8),
                     ],
-                    dst_primary_key_values = [
+                    dst_primary_key_values=[
                         ModelProperty(name="id", value=10),
                     ],
                 )
             ]
             resp = self._sess.delete_edge(self._graph_id, delete_edge)
             assert resp.is_ok()
-            weight = self._gremlin_client.submit("g.V().hasLabel('person').has('id', 8).outE('knows').values(\'weight\');").next()
+            weight = self._gremlin_client.submit(
+                "g.V().hasLabel('person').has('id', 8).outE('knows').values('weight');"
+            ).next()
             assert sorted(weight) == sorted([7.0, 3.0])
             # delete vertex
             delete_vertex_request = [
                 DeleteVertexRequest(
-                    label="person", primary_key_values=[ModelProperty(name="id", value=10)]
+                    label="person",
+                    primary_key_values=[ModelProperty(name="id", value=10)],
                 )
             ]
             resp = self._sess.delete_vertex(self._graph_id, delete_vertex_request)
