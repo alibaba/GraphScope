@@ -20,6 +20,9 @@ compiler:
       - FilterMatchRule
       - ExtendIntersectRule
       - ExpandGetVFusionRule
+    cbo:
+      glogue:
+        size: 2
   meta:
     reader:
       schema:

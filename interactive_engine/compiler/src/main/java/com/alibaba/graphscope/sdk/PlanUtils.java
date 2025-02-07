@@ -22,7 +22,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
@@ -62,15 +62,13 @@ public class PlanUtils {
             String configPath, String query, String schemaYaml, String statsJson) {
         try {
             long startTime = System.currentTimeMillis();
-            GraphPlanerInstance instance =
-                    GraphPlanerInstance.getInstance(
-                            configPath,
-                            (Configs configs, IrMetaTracker tracker) ->
-                                    new StaticIrMetaFetcher(
-                                            new StringMetaReader(schemaYaml, statsJson, configs),
-                                            tracker));
+            Configs configs = Configs.Factory.create(configPath);
+            GraphPlanner graphPlanner = GraphPlanerInstance.getInstance(configs);
+            IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson, configs);
+            IrMetaFetcher metaFetcher =
+                    new StaticIrMetaFetcher(reader, graphPlanner.getOptimizer().getGlogueHolder());
             GraphPlanner.PlannerInstance plannerInstance =
-                    instance.getPlanner().instance(query, instance.getMeta());
+                    graphPlanner.instance(query, metaFetcher.fetch().get());
             GraphPlanner.Summary summary = plannerInstance.plan();
             LogicalPlan logicalPlan = summary.getLogicalPlan();
             PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
