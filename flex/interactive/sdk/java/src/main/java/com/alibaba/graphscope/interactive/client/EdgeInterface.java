@@ -36,9 +36,7 @@ public interface EdgeInterface {
 
     Result<String> addEdge(String graphName, List<EdgeRequest> edgeRequest);
 
-    Result<String> deleteEdge(
-            String graphName,
-            List<DeleteEdgeRequest> requests);
+    Result<String> deleteEdge(String graphName, List<DeleteEdgeRequest> requests);
 
     Result<String> updateEdge(String graphName, List<EdgeRequest> edgeRequest);
 }

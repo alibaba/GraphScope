@@ -22,7 +22,6 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.utils.Encoder;
 import com.alibaba.graphscope.interactive.models.*;
 
-import java.util.Arrays;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.junit.Assert;
@@ -35,6 +34,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -448,7 +448,8 @@ public class DriverTest {
                         .primaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
                         .addPropertiesItem(new Property().name("name").value("Cindy"))
                         .addPropertiesItem(new Property().name("age").value(24));
-        Result<String> updateVertexResponse = session.updateVertex(graphId, Arrays.asList(updateVertexRequest));
+        Result<String> updateVertexResponse =
+                session.updateVertex(graphId, Arrays.asList(updateVertexRequest));
         assertOk(updateVertexResponse);
         getVertexResponse = session.getVertex(graphId, "person", 8);
         assertOk(getVertexResponse);
@@ -506,7 +507,8 @@ public class DriverTest {
                         .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
                         .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(4)))
                         .addPropertiesItem(new Property().name("weight").value(3.0));
-        Result<String> updateEdgeResponse = session.updateEdge(graphId, Arrays.asList(updateEdgeRequest));
+        Result<String> updateEdgeResponse =
+                session.updateEdge(graphId, Arrays.asList(updateEdgeRequest));
         assertOk(updateEdgeResponse);
         getEdgeResponse = session.getEdge(graphId, "knows", "person", 2, "person", 4);
         assertOk(getEdgeResponse);

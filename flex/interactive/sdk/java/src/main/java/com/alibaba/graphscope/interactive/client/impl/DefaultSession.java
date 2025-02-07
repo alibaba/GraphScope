@@ -427,13 +427,9 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> deleteEdge(
-            String graphName,
-            List<DeleteEdgeRequest> requests) {
+    public Result<String> deleteEdge(String graphName, List<DeleteEdgeRequest> requests) {
         try {
-            ApiResponse<String> response =
-                    edgeApi.deleteEdgeWithHttpInfo(
-                            graphName, requests);
+            ApiResponse<String> response = edgeApi.deleteEdgeWithHttpInfo(graphName, requests);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
