@@ -150,10 +150,14 @@ public class SchemaManagementService {
                 createEdgeType.getVertexTypePairRelations()) {
             eLabelBuilder.addRelation(pair.getSourceVertex(), pair.getDestinationVertex());
         }
+        List<String> primaryKeys = createEdgeType.getPrimaryKeys();
         for (CreatePropertyMeta prop : createEdgeType.getProperties()) {
             DataTypePb dataType = DtoConverter.convertToDataTypePb(prop.getPropertyType());
             Property.Builder property =
                     Property.newBuilder().setName(prop.getPropertyName()).setDataType(dataType);
+            if (primaryKeys != null && primaryKeys.contains(prop.getPropertyName())) {
+                property.setPrimaryKey();
+            }
             eLabelBuilder.addProperty(property);
         }
         return eLabelBuilder.build();

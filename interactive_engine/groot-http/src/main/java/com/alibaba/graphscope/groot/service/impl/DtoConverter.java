@@ -82,7 +82,8 @@ public class DtoConverter {
                 convertToPropertyMap(deleteEdgeRequest.getSrcPrimaryKeyValues());
         Map<String, String> dstPkMap =
                 convertToPropertyMap(deleteEdgeRequest.getDstPrimaryKeyValues());
-        return new Edge(label, srcLabel, dstLabel, srcPkMap, dstPkMap);
+        Map<String, String> propertyMap = convertToPropertyMap(deleteEdgeRequest.getProperties());
+        return new Edge(label, srcLabel, dstLabel, srcPkMap, dstPkMap, propertyMap);
     }
 
     public static DataTypePb convertToDataTypePb(GSDataType dataType) {

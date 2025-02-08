@@ -1775,6 +1775,11 @@ components:
           description: Primary key values for the destination vertex.
           items:
             $ref: '#/components/schemas/Property'
+        properties:
+          type: array
+          description: The properties of the edge. If the edge type has primary key, it should be included in the properties.
+          items:
+            $ref: '#/components/schemas/Property'
     QueryRequest:
       x-body-name: query_request
       type: object
@@ -2059,6 +2064,11 @@ components:
       properties:
         type_name:
           type: string
+        primary_keys:
+          type: array
+          description: The primary keys of the edge type, which is optional.
+          items:
+            type: string
         vertex_type_pair_relations:
           type: array
           items:
