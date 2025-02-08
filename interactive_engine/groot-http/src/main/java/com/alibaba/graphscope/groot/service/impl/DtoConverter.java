@@ -144,6 +144,11 @@ public class DtoConverter {
         edgeType.setTypeName(edgeLabel.getLabel());
         edgeType.setTypeId(edgeLabel.getId());
         edgeType.setProperties(convertToDtoProperties(edgeLabel.getProperties()));
+        edgeType.setPrimaryKeys(
+                edgeLabel.getProperties().stream()
+                        .filter(p -> p.isPrimaryKey())
+                        .map(p -> p.getName())
+                        .collect(Collectors.toList()));
         for (EdgeRelation edgeRelation : edgeLabel.getRelations()) {
             BaseEdgeTypeVertexTypePairRelationsInner pair =
                     new BaseEdgeTypeVertexTypePairRelationsInner();
