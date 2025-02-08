@@ -28,7 +28,11 @@ namespace runtime {
 
 class Context {
  public:
+  // this function only called once at the beginning of the query, to create a
+  // new context and can't be called again during the execution
   static Context InitContext() { return Context(); }
+
+  // During the execution, when a new context is needed, call this function
   Context newContext() const;
 
   ~Context() = default;
