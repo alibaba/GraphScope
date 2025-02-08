@@ -36,20 +36,20 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
                 .value()
                 .Execute(gri, std::move(ctx), {}, timer_);
           },
-          [&status](const gs::Status& err) {
+          [&status, &ctx](const gs::Status& err) {
             status = err;
-            return runtime::Context::InitContext();
+            return ctx;
           },
           [&](const bl::error_info& err) {
             status =
                 gs::Status(gs::StatusCode::INTERNAL_ERROR,
                            "Error: " + std::to_string(err.error().value()) +
                                ", Exception: " + err.exception()->what());
-            return runtime::Context::InitContext();
+            return ctx;
           },
           [&]() {
             status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-            return runtime::Context::InitContext();
+            return ctx;
           });
     }
 
