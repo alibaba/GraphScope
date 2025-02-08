@@ -41,6 +41,12 @@ jobs:
         python3 -m pip install --upgrade pip && python3 -m pip install click
         python3 ./gsctl.py flexbuild interactive --app docker
 
+    - name: Prepare dataset
+      env:
+        GS_TEST_DIR: /tmp/gstest
+      run: |
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
     - name: Build gsctl Wheel Package
       run: |
         cd ${GITHUB_WORKSPACE}/python
@@ -48,6 +54,8 @@ jobs:
         python3 setup_flex.py generate_flex_sdk
         python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
+
+        python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
@@ -59,10 +67,9 @@ jobs:
         COORDINATOR_PORT: 8080
         COORDINATOR_ENDPOINT: "http://127.0.0.1:8080"
       run: |
-        # install gsctl
-        python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
-        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
+              --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
@@ -75,6 +82,39 @@ jobs:
         # test coordinator
         res=`curl http://127.0.0.1:${COORDINATOR_PORT}/api/v1/service`
         echo $res | grep ${CYPHER_PORT} || exit 1
+
+        # destroy instance
+        gsctl instance destroy --type interactive -y
+
+    - name: Test customizing coordinator config
+      env:
+        CYPHER_PORT: 7688
+        COORDINATOR_PORT: 8080
+        COORDINATOR_ENDPOINT: "http://127.0.0.1:8080"
+        GS_TEST_DIR: /tmp/gstest
+      run: |
+        # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
+        cat > /tmp/coordinator.yaml << EOF
+        coordinator:
+          http_port: 8080
+          max_content_length: 1048576 # 1MB
+
+        launcher_type: hosts
+
+        session:
+          instance_id: demo
+        EOF
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
+              --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+              --coordinator-config /tmp/coordinator.yaml
+        sleep 20
+        # test
+        python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
+        python3 -m pytest -d --tx popen//python=python3 \
+                          -s -v \
+                          --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
+                          --exitfirst \
+                          $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_fill_uploading.py
 
         # destroy instance
         gsctl instance destroy --type interactive -y

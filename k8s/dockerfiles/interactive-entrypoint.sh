@@ -96,6 +96,10 @@ function launch_service() {
 }
 
 function launch_coordinator() {
+  if [ $# -lt 1 ]; then
+    echo "Usage: launch_coordinator <port_mapping> [<coordinator_config_file>]"
+    exit 1
+  fi
   local host_ports=()
   local container_ports=()
   if [ -n "$1" ]; then
@@ -108,8 +112,17 @@ function launch_coordinator() {
   fi
   if $ENABLE_COORDINATOR;
   then
-    coordinator_config_file="/tmp/coordinator-config.yaml"
-    cat > $coordinator_config_file << EOF
+    dst_coordinator_config_file="/tmp/coordinator_config_$(date +%s).yaml"
+    if [ -n "$2" ]; then
+      original_coordinator_config_file=$2
+      if [ ! -f $original_coordinator_config_file ]; then
+        echo "The provided coordinator config file does not exist: $original_coordinator_config_file"
+        exit 1
+      fi
+      echo "Using the provided coordinator config file: $original_coordinator_config_file"
+      cp $original_coordinator_config_file $dst_coordinator_config_file
+    else
+      cat > $dst_coordinator_config_file << EOF
 coordinator:
   http_port: 8080
 
@@ -118,12 +131,13 @@ launcher_type: hosts
 session:
   instance_id: demo
 EOF
+    fi
 
     if [ ${#host_ports[@]} -gt 0 ]; then
-      echo "interactive:" >> $coordinator_config_file
-      echo "  port_mapping:" >> $coordinator_config_file
+      echo "interactive:" >> $dst_coordinator_config_file
+      echo "  port_mapping:" >> $dst_coordinator_config_file
       for i in "${!host_ports[@]}"; do
-        echo "    ${container_ports[$i]}: ${host_ports[$i]}" >> $coordinator_config_file
+        echo "    ${container_ports[$i]}: ${host_ports[$i]}" >> $dst_coordinator_config_file
       done
     fi
     # i.e
@@ -131,7 +145,7 @@ EOF
     #   port_mapping:
     #     8080: 8081
     #     7777: 7778
-    python3 -m gscoordinator --config-file $coordinator_config_file
+    python3 -m gscoordinator --config-file $dst_coordinator_config_file
   fi
 }
 
@@ -164,6 +178,15 @@ while [[ $# -gt 0 ]]; do
       PORT_MAPPING=$1
       shift
       ;;
+    --coordinator-config)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option --coordinator-config requires an argument." >&2
+        exit 1
+      fi
+      COORDINATOR_CONFIG_FILE=$1
+      shift
+      ;;
     -h | --help)
       usage
       exit 0
@@ -179,4 +202,5 @@ done
 
 prepare_workspace $WORKSPACE
 launch_service $WORKSPACE
-launch_coordinator $PORT_MAPPING
+# Note that the COORDINATOR_CONFIG_FILE should be inside the container
+launch_coordinator $PORT_MAPPING $COORDINATOR_CONFIG_FILE
