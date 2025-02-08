@@ -82,14 +82,6 @@ public class PlanUtils {
             StoredProcedureMeta.Serializer.perform(procedureMeta, metaStream, false);
             long elapsedTime = System.currentTimeMillis() - startTime;
             logger.info("compile plan cost: {} ms", elapsedTime);
-            // hack ways to set error code as 'TYPE_INFERENCE_FAILED' when the results are empty
-            if (physicalPlan.getContent() == null) {
-                return new GraphPlan(
-                        Code.TYPE_INFERENCE_FAILED,
-                        "The compiled plan returns empty results",
-                        null,
-                        null);
-            }
             return new GraphPlan(
                     Code.OK, null, physicalPlan.getContent(), new String(metaStream.toByteArray()));
         } catch (Throwable t) {

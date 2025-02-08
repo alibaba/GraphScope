@@ -117,6 +117,6 @@ public class JNICompilePlanTest {
         // The compiler should infer empty results from LIMIT 0.
         String query = "Match (src:`xzz@t1a`)-[]-(dst:`xzz@t1b`) return src, dst Limit 0";
         GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
-        Assert.assertEquals("TYPE_INFERENCE_FAILED", plan.errorCode);
+        Assert.assertEquals("EMPTY_RESULT", plan.errorCode);
     }
 }

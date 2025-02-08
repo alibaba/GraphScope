@@ -30,7 +30,7 @@ public class GraphPlan implements Serializable {
 
     public GraphPlan(
             Code errorCode, String fullMessage, byte[] physicalBytes, String resultSchemaYaml) {
-        this.errorCode = errorCode.name();
+        this.errorCode = analyzeError(errorCode, physicalBytes).name();
         this.fullMessage = fullMessage;
         this.physicalBytes = physicalBytes;
         this.resultSchemaYaml = resultSchemaYaml;
@@ -50,5 +50,18 @@ public class GraphPlan implements Serializable {
 
     public String getResultSchemaYaml() {
         return resultSchemaYaml;
+    }
+
+    private Enum<?> analyzeError(Code errorCode, byte[] physicalBytes) {
+        switch (errorCode) {
+            case OK:
+                if (physicalBytes == null) return ExtendCode.EMPTY_RESULT;
+            default:
+                return errorCode;
+        }
+    }
+
+    enum ExtendCode {
+        EMPTY_RESULT
     }
 }

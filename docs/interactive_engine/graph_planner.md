@@ -42,6 +42,7 @@ Plan GraphPlannerWrapper::CompilePlan(const std::string &compiler_config_path,
                                       const std::string &cypher_query_string,
                                       const std::string &graph_schema_yaml,
                                       const std::string &graph_statistic_json)
+
 ```
 
 ### Getting Started
@@ -74,31 +75,50 @@ To demonstrate the usage of the JNI interface, an example binary `test_graph_pla
 bin/test_graph_planner libs native ./conf/graph.yaml ./conf/modern_statistics.json "MATCH (n) RETURN n, COUNT(n);" ./conf/gs_interactive_hiactor.yaml
 ```
 
-The output consists of the physical plan (in byte format) and the result schema (in YAML format). The physical plan adheres to the specifications defined in the [protobuf]().
+The output consists of three key fields:
 
-Below is an example of a result schema:
+1. Error code for plan compilation. The following table outlines the error codes, along with their corresponding descriptions:
+    | Error Code                 | Description                                                                                      |
+    | -------------------------- | ------------------------------------------------------------------------------------------------ |
+    | OK                         | Query compilation succeeded.                                                                     |
+    | GREMLIN_INVALID_SYNTAX     | The provided Gremlin query contains syntax errors.                                               |
+    | CYPHER_INVALID_SYNTAX      | The provided Cypher query contains syntax errors.                                                |
+    | TAG_NOT_FOUND              | The specified tag is not found in the current query context.                                     |
+    | LABEL_NOT_FOUND            | The specified label is not found under the schema constraints.                                   |
+    | PROPERTY_NOT_FOUND         | The specified property is not found under the schema constraints.                                |
+    | TYPE_INFERENCE_FAILED      | The query contains invalid graph patterns that violate schema constraints.                       |
+    | LOGICAL_PLAN_BUILD_FAILED  | An error occurred during logical plan optimization. The error message provides specific details. |
+    | PHYSICAL_PLAN_BUILD_FAILED | An error occurred during physical plan construction.                                             |
+    | GREMLIN_INVALID_RESULT     | An error occurred while parsing the Gremlin query results.                                       |
+    | CYPHER_INVALID_RESULT      | An error occurred while parsing the Cypher query results.                                        |
+    | ENGINE_UNAVAILABLE         | The lower execution engine is unavailable.                                                       |
+    | QUERY_EXECUTION_TIMEOUT    | The query execution time exceeded the predefined limit.                                          |
+    | META_SCHEMA_NOT_READY      | The schema metadata is not ready for querying.                                                   |
+    | META_STATISTICS_NOT_READY  | The statistical metadata is not ready for querying.                                              |
+    | EMPTY_RESULT               | The compilation determines that the query will produce an empty result.                          |
+2. Physical plan in byte format, adheres to the specifications defined in the [protobuf](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto).
+3. Result schema in YAML format. Below is an example of a result schema:
+    ```yaml
+    schema:
+    name: default
+    description: default desc
+    mode: READ
+    extension: .so
+    library: libdefault.so
+    params: []
+    returns:
+    - name: n
+        type: {primitive_type: DT_UNKNOWN}
+    - name: $f1
+        type: {primitive_type: DT_SIGNED_INT64}
+    type: UNKNOWN
+    query: MATCH (n) RETURN n, COUNT(n);
+    ```
 
-```yaml
-schema:
-  name: default
-  description: default desc
-  mode: READ
-  extension: .so
-  library: libdefault.so
-  params: []
-returns:
-  - name: n
-    type: {primitive_type: DT_UNKNOWN}
-  - name: $f1
-    type: {primitive_type: DT_SIGNED_INT64}
-type: UNKNOWN
-query: MATCH (n) RETURN n, COUNT(n);
-```
-
-The `returns` field defines the structure of the data returned by backend engines. Each nested entry in the returns field includes three components: 
-- the column name, which specifies the name of the result column; 
-- the entry’s ordinal position, which determines the column ID; 
-- the type, which enforces the data type constraint for the column.
+    The `returns` field defines the structure of the data returned by backend engines. Each nested entry in the returns field includes three components: 
+    - the column name, which specifies the name of the result column;
+    - the entry’s ordinal position, which determines the column ID;
+    - the type, which enforces the data type constraint for the column.
 
 ## Restful API
 
