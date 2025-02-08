@@ -263,6 +263,9 @@ class CoordinatorConfig:
     # It would try to find existing resources and connect to it.
     operator_mode: bool = False
 
+    # For http server, limit the max content length of request. Mainly for file upload.
+    max_content_length: int = 1024 * 1024 * 1024  # 1GB
+
 
 @dataclass
 class HostsLauncherConfig:
