@@ -248,12 +248,8 @@ class ListValueColumn : public ListValueColumnBase {
   std::vector<List> data_;
 };
 
-class ListValueColumnBuilderBase : public IContextColumnBuilder {
- public:
-  virtual ~ListValueColumnBuilderBase() = default;
-};
 template <typename T>
-class ListValueColumnBuilder : public ListValueColumnBuilderBase {
+class ListValueColumnBuilder : public IContextColumnBuilder {
  public:
   ListValueColumnBuilder() {}
   ~ListValueColumnBuilder() = default;
