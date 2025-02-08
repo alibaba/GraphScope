@@ -576,9 +576,7 @@ bool is_exchange_index(const common::Expression& expr, int alias, int& tag) {
     if (var.has_tag()) {
       tag = var.tag().id();
     }
-    // if (tag == alias) {
     return true;
-    //}
   }
   return false;
 }
@@ -613,7 +611,7 @@ bool is_check_property_in_range(const common::Expression& expr, int& tag,
         return false;
       }
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (name == "label") {
         return false;
       }
     }
@@ -720,7 +718,7 @@ bool is_check_property_cmp(const common::Expression& expr, int& tag,
         return false;
       }
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (name == "label") {
         return false;
       }
     }
@@ -797,7 +795,7 @@ bool is_property_extract(const common::Expression& expr, int& tag,
     }
     if (var.has_property() && var.property().has_key()) {
       name = var.property().key().name();
-      if (name == "id" || name == "label") {
+      if (name == "label") {
         return false;
       }
       if (var.has_node_type()) {

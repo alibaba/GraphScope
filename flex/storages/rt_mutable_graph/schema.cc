@@ -395,6 +395,16 @@ Schema::get_vertex_primary_key(label_t index) const {
   return v_primary_keys_[index];
 }
 
+const std::string& Schema::get_vertex_primary_key_name(label_t index) const {
+  THROW_EXCEPTION_IF(index >= v_primary_keys_.size(),
+                     "Fail to get vertex primary key name: " +
+                         std::to_string(index) + ", out of range");
+  THROW_EXCEPTION_IF(v_primary_keys_[index].size() != 1,
+                     "Expect only one primary key, but got " +
+                         std::to_string(v_primary_keys_[index].size()));
+  return std::get<1>(v_primary_keys_[index][0]);
+}
+
 // Note that plugin_dir_ and plugin_name_to_path_and_id_ are not serialized.
 void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   vlabel_indexer_.Serialize(writer);
