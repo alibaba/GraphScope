@@ -265,7 +265,10 @@ static bl::result<Context> intersect_impl(Context&& ctx,
 
 bl::result<Context> Intersect::intersect(Context&& ctx,
                                          std::vector<Context>&& ctxs, int key) {
-  ctx.value_collection = ctxs[0].value_collection;
+  if (ctxs.empty()) {
+    return ctx;
+  }
+  ctx = ctxs[0].newContext();
   return intersect_impl(std::move(ctx), std::move(ctxs), key);
 }
 
