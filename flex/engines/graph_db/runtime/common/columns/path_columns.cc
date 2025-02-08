@@ -25,7 +25,6 @@ std::shared_ptr<IContextColumn> GeneralPathColumn::shuffle(
   for (auto& offset : offsets) {
     builder.push_back_opt(data_[offset]);
   }
-  builder.set_path_impls(path_impls_);
   return builder.finish();
 }
 
@@ -40,13 +39,11 @@ std::shared_ptr<IContextColumn> GeneralPathColumn::optional_shuffle(
       builder.push_back_opt(data_[offset], true);
     }
   }
-  builder.set_path_impls(path_impls_);
   return builder.finish();
 }
 
 std::shared_ptr<IContextColumnBuilder> GeneralPathColumn::builder() const {
   auto builder = std::make_shared<GeneralPathColumnBuilder>();
-  builder->set_path_impls(path_impls_);
   return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
 }
 
@@ -57,14 +54,12 @@ std::shared_ptr<IContextColumn> OptionalGeneralPathColumn::shuffle(
   for (auto& offset : offsets) {
     builder.push_back_opt(data_[offset], valids_[offset]);
   }
-  builder.set_path_impls(path_impls_);
   return builder.finish();
 }
 
 std::shared_ptr<IContextColumnBuilder> OptionalGeneralPathColumn::builder()
     const {
   auto builder = std::make_shared<OptionalGeneralPathColumnBuilder>();
-  builder->set_path_impls(path_impls_);
   return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
 }
 

@@ -26,6 +26,12 @@ Context::Context()
       offset_ptr(nullptr),
       value_collection(std::make_shared<ValueCollection>()) {}
 
+Context Context::newContext() const {
+  Context ctx;
+  ctx.value_collection = value_collection;
+  return ctx;
+}
+
 void Context::clear() {
   columns.clear();
   head.reset();
@@ -218,7 +224,7 @@ void Context::gen_offset() {
 }
 
 Context Context::union_ctx(const Context& other) const {
-  Context ctx;
+  Context ctx = this->newContext();
   CHECK(columns.size() == other.columns.size());
   for (size_t i = 0; i < col_num(); ++i) {
     if (columns[i] != nullptr) {

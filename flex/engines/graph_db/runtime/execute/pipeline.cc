@@ -27,19 +27,19 @@ bl::result<Context> ReadPipeline::Execute(
         [&]() -> bl::result<Context> {
           return opr->Eval(graph, params, std::move(ctx), timer);
         },
-        [&status](const gs::Status& err) {
+        [&status, &ctx](const gs::Status& err) {
           status = err;
-          return Context();
+          return ctx;
         },
         [&](const bl::error_info& err) {
           status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
                               "Error: " + std::to_string(err.error().value()) +
                                   ", Exception: " + err.exception()->what());
-          return Context();
+          return ctx;
         },
         [&]() {
           status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-          return Context();
+          return ctx;
         });
 
     if (!status.ok()) {

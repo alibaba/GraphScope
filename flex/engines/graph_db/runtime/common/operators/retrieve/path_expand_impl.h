@@ -181,7 +181,7 @@ void sssp_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view,
               const GraphReadInterface::vertex_set_t& vertices, size_t idx,
               int lower, int upper, SLVertexColumnBuilder& dest_col_builder,
               GeneralPathColumnBuilder& path_col_builder,
-              std::vector<std::shared_ptr<PathImpl>>& path_impls,
+              std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
               std::vector<size_t>& offsets, const PRED_T& pred) {
   std::vector<vid_t> cur;
   std::vector<vid_t> next;
@@ -204,8 +204,8 @@ void sssp_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view,
 
             dest_col_builder.push_back_opt(u);
             auto impl = PathImpl::make_path_impl(v_label, path);
-            path_col_builder.push_back_opt(Path::make_path(impl));
-            path_impls.emplace_back(impl);
+            path_col_builder.push_back_opt(Path(impl.get()));
+            path_impls.emplace_back(std::move(impl));
             offsets.push_back(idx);
           }
         }
@@ -221,8 +221,8 @@ void sssp_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view,
 
             dest_col_builder.push_back_opt(u);
             auto impl = PathImpl::make_path_impl(v_label, path);
-            path_col_builder.push_back_opt(Path::make_path(impl));
-            path_impls.emplace_back(impl);
+            path_col_builder.push_back_opt(Path(impl.get()));
+            path_impls.emplace_back(std::move(impl));
             offsets.push_back(idx);
           }
           for (auto& e : view.get_edges(u)) {
@@ -259,7 +259,7 @@ void sssp_both_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view0,
                    int lower, int upper,
                    SLVertexColumnBuilder& dest_col_builder,
                    GeneralPathColumnBuilder& path_col_builder,
-                   std::vector<std::shared_ptr<PathImpl>>& path_impls,
+                   std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
                    std::vector<size_t>& offsets, const PRED_T& pred) {
   std::vector<vid_t> cur;
   std::vector<vid_t> next;
@@ -282,8 +282,8 @@ void sssp_both_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view0,
 
             dest_col_builder.push_back_opt(u);
             auto impl = PathImpl::make_path_impl(v_label, path);
-            path_col_builder.push_back_opt(Path::make_path(impl));
-            path_impls.emplace_back(impl);
+            path_col_builder.push_back_opt(Path(impl.get()));
+            path_impls.emplace_back(std::move(impl));
             offsets.push_back(idx);
           }
         }
@@ -299,8 +299,8 @@ void sssp_both_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view0,
 
             dest_col_builder.push_back_opt(u);
             auto impl = PathImpl::make_path_impl(v_label, path);
-            path_col_builder.push_back_opt(Path::make_path(impl));
-            path_impls.emplace_back(impl);
+            path_col_builder.push_back_opt(Path(impl.get()));
+            path_impls.emplace_back(std::move(impl));
             offsets.push_back(idx);
           }
           for (auto& e : view0.get_edges(u)) {
@@ -452,15 +452,14 @@ single_source_shortest_path_with_order_by_length_limit_impl(
 template <typename EDATA_T, typename PRED_T>
 std::tuple<std::shared_ptr<IContextColumn>, std::shared_ptr<IContextColumn>,
            std::vector<size_t>>
-single_source_shortest_path_impl(const GraphReadInterface& graph,
-                                 const IVertexColumn& input, label_t e_label,
-                                 Direction dir, int lower, int upper,
-                                 const PRED_T& pred) {
+single_source_shortest_path_impl(
+    std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
+    const GraphReadInterface& graph, const IVertexColumn& input,
+    label_t e_label, Direction dir, int lower, int upper, const PRED_T& pred) {
   label_t v_label = *input.get_labels_set().begin();
   auto vertices = graph.GetVertexSet(v_label);
   SLVertexColumnBuilder dest_col_builder(v_label);
   GeneralPathColumnBuilder path_col_builder;
-  std::vector<std::shared_ptr<PathImpl>> path_impls;
   std::vector<size_t> offsets;
   if (dir == Direction::kIn || dir == Direction::kOut) {
     auto view =
@@ -483,7 +482,6 @@ single_source_shortest_path_impl(const GraphReadInterface& graph,
                     pred);
     });
   }
-  path_col_builder.set_path_impls(path_impls);
   return std::make_tuple(dest_col_builder.finish(), path_col_builder.finish(),
                          std::move(offsets));
 }
@@ -492,6 +490,7 @@ template <typename PRED_T>
 std::tuple<std::shared_ptr<IContextColumn>, std::shared_ptr<IContextColumn>,
            std::vector<size_t>>
 default_single_source_shortest_path_impl(
+    std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
     const GraphReadInterface& graph, const IVertexColumn& input,
     const std::vector<LabelTriplet>& labels, Direction dir, int lower,
     int upper, const PRED_T& pred) {
@@ -521,7 +520,6 @@ default_single_source_shortest_path_impl(
     }
   }
   GeneralPathColumnBuilder path_col_builder;
-  std::vector<std::shared_ptr<PathImpl>> path_impls;
   std::vector<size_t> offsets;
 
   std::shared_ptr<IContextColumn> dest_col(nullptr);
@@ -537,23 +535,19 @@ default_single_source_shortest_path_impl(
       while (depth < upper && !cur.empty()) {
         for (auto u : cur) {
           if (depth >= lower && pred(u.first, u.second)) {
-            std::vector<std::pair<label_t, vid_t>> path;
+            std::vector<VertexRecord> path;
             auto x = u;
             while (!(x.first == label && x.second == v)) {
-              path.push_back(x);
+              path.emplace_back(VertexRecord{x.first, x.second});
               x = parent[x];
             }
-            path.emplace_back(label, v);
+            path.emplace_back(VertexRecord{label, v});
             std::reverse(path.begin(), path.end());
 
             if (path.size() > 1) {
-              auto impl =
-                  PathImpl::make_path_impl(path[0].first, path[0].second);
-              for (size_t k = 1; k < path.size(); ++k) {
-                impl->expand(path[k].first, path[k].second);
-              }
-              path_col_builder.push_back_opt(Path::make_path(impl));
-              path_impls.emplace_back(impl);
+              auto impl = PathImpl::make_path_impl(std::move(path));
+              path_col_builder.push_back_opt(Path(impl.get()));
+              path_impls.emplace_back(std::move(impl));
 
               dest_col_builder.push_back_opt(u.second);
               offsets.push_back(idx);
@@ -597,23 +591,20 @@ default_single_source_shortest_path_impl(
       while (depth < upper && !cur.empty()) {
         for (auto u : cur) {
           if (depth >= lower && pred(u.first, u.second)) {
-            std::vector<std::pair<label_t, vid_t>> path;
+            std::vector<VertexRecord> path;
             auto x = u;
             while (!(x.first == label && x.second == v)) {
-              path.push_back(x);
+              path.emplace_back(VertexRecord{x.first, x.second});
               x = parent[x];
             }
-            path.emplace_back(label, v);
+            path.emplace_back(VertexRecord{label, v});
             std::reverse(path.begin(), path.end());
 
             if (path.size() > 1) {
-              auto impl =
-                  PathImpl::make_path_impl(path[0].first, path[0].second);
-              for (size_t k = 1; k < path.size(); ++k) {
-                impl->expand(path[k].first, path[k].second);
-              }
-              path_col_builder.push_back_opt(Path::make_path(impl));
-              path_impls.emplace_back(impl);
+              auto impl = PathImpl::make_path_impl(std::move(path));
+
+              path_col_builder.push_back_opt(Path(impl.get()));
+              path_impls.emplace_back(std::move(impl));
 
               dest_col_builder.push_back_vertex({u.first, u.second});
               offsets.push_back(idx);
@@ -646,7 +637,6 @@ default_single_source_shortest_path_impl(
 
     dest_col = dest_col_builder.finish();
   }
-  path_col_builder.set_path_impls(path_impls);
   return std::make_tuple(dest_col, path_col_builder.finish(),
                          std::move(offsets));
 }

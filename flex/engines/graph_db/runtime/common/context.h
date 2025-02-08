@@ -28,7 +28,9 @@ namespace runtime {
 
 class Context {
  public:
-  Context();
+  static Context InitContext() { return Context(); }
+  Context newContext() const;
+
   ~Context() = default;
 
   void clear();
@@ -70,6 +72,9 @@ class Context {
   std::vector<int> tag_ids;
 
   mutable std::shared_ptr<ValueCollection> value_collection;
+
+ private:
+  Context();
 };
 
 class ContextMeta {

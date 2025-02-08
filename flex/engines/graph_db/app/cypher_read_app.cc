@@ -25,31 +25,31 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
 
     gs::runtime::GraphReadInterface gri(txn);
 
-    gs::runtime::Context ctx;
+    gs::runtime::Context ctx = gs::runtime::Context::InitContext();
     gs::Status status = gs::Status::OK();
     {
       ctx = bl::try_handle_all(
-          [this, &gri, &plan]() -> bl::result<runtime::Context> {
+          [this, &gri, &plan, &ctx]() -> bl::result<runtime::Context> {
             return runtime::PlanParser::get()
                 .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
                                      plan)
                 .value()
-                .Execute(gri, runtime::Context(), {}, timer_);
+                .Execute(gri, std::move(ctx), {}, timer_);
           },
           [&status](const gs::Status& err) {
             status = err;
-            return runtime::Context();
+            return runtime::Context::InitContext();
           },
           [&](const bl::error_info& err) {
             status =
                 gs::Status(gs::StatusCode::INTERNAL_ERROR,
                            "Error: " + std::to_string(err.error().value()) +
                                ", Exception: " + err.exception()->what());
-            return runtime::Context();
+            return runtime::Context::InitContext();
           },
           [&]() {
             status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-            return runtime::Context();
+            return runtime::Context::InitContext();
           });
     }
 
@@ -101,8 +101,8 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     auto txn = graph.GetReadTransaction();
 
     gs::runtime::GraphReadInterface gri(txn);
-    auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(),
-                                                 params, timer_);
+    auto ctx = pipeline_cache_.at(query).Execute(
+        gri, runtime::Context::InitContext(), params, timer_);
     if (type == Schema::CYPHER_READ_PLUGIN_ID) {
       runtime::Sink::sink_encoder(ctx.value(), gri, output);
     } else {
