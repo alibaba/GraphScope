@@ -348,17 +348,19 @@ RTAnyType CaseWhenExpr::type() const {
   return type;
 }
 
-/**
-
-TupleExpr::TupleExpr(std::vector<std::unique_ptr<ExprBase>>&& exprs)
-    : exprs_(std::move(exprs)) {}
+TupleExpr::TupleExpr(const Context& ctx,
+                     std::vector<std::unique_ptr<ExprBase>>&& exprs)
+    : ctx_(ctx), exprs_(std::move(exprs)) {}
 
 RTAny TupleExpr::eval_path(size_t idx) const {
   std::vector<RTAny> ret;
   for (auto& expr : exprs_) {
     ret.push_back(expr->eval_path(idx));
   }
-  return RTAny::from_tuple(std::move(ret));
+  auto tup = Tuple::make_generic_tuple_impl(std::move(ret));
+  Tuple t(tup.get());
+  ctx_.value_collection->emplace_back(std::move(tup));
+  return RTAny::from_tuple(t);
 }
 
 RTAny TupleExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
@@ -366,7 +368,10 @@ RTAny TupleExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   for (auto& expr : exprs_) {
     ret.push_back(expr->eval_vertex(label, v, idx));
   }
-  return RTAny::from_tuple(std::move(ret));
+  auto tup = Tuple::make_generic_tuple_impl(std::move(ret));
+  Tuple t(tup.get());
+  ctx_.value_collection->emplace_back(std::move(tup));
+  return RTAny::from_tuple(t);
 }
 
 RTAny TupleExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -375,10 +380,13 @@ RTAny TupleExpr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
   for (auto& expr : exprs_) {
     ret.push_back(expr->eval_edge(label, src, dst, data, idx));
   }
-  return RTAny::from_tuple(std::move(ret));
+  auto tup = Tuple::make_generic_tuple_impl(std::move(ret));
+  Tuple t(tup.get());
+  ctx_.value_collection->emplace_back(std::move(tup));
+  return RTAny::from_tuple(t);
 }
 
-RTAnyType TupleExpr::type() const { return RTAnyType::kTuple; }*/
+RTAnyType TupleExpr::type() const { return RTAnyType::kTuple; }
 
 static RTAny parse_const_value(const common::Value& val) {
   switch (val.item_case()) {
@@ -417,9 +425,13 @@ struct TypedTupleBuilder {
     case RTAnyType::kStringValue:
       return TypedTupleBuilder<N, I - 1, std::string_view, Args...>()
           .build_typed_tuple(ctx, std::move(exprs));
-    default:
-      LOG(FATAL) << "not support type: "
-                 << static_cast<int>(exprs[I - 1]->type());
+    default: {
+      std::vector<std::unique_ptr<ExprBase>> exprs_vec;
+      for (auto& expr : exprs) {
+        exprs_vec.emplace_back(std::move(expr));
+      }
+      return std::make_unique<TupleExpr>(ctx, std::move(exprs_vec));
+    }
     }
   }
 };
@@ -661,16 +673,13 @@ static std::unique_ptr<ExprBase> build_expr(
         return TypedTupleBuilder<2, 2>().build_typed_tuple(ctx,
                                                            std::move(exprs));
       }
-      /**
+
       std::vector<std::unique_ptr<ExprBase>> exprs;
       for (int i = 0; i < op.keys_size(); ++i) {
         exprs.push_back(
             std::make_unique<VariableExpr>(graph, ctx, op.keys(i), var_type));
       }
-
-      return std::make_unique<TupleExpr>(std::move(exprs));*/
-      LOG(FATAL) << "not support" << opr.DebugString();
-      break;
+      return std::make_unique<TupleExpr>(ctx, std::move(exprs));
     }
     case common::ExprOpr::kMap: {
       auto op = opr.map();

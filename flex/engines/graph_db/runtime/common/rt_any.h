@@ -222,17 +222,37 @@ class TupleImpl : public TupleImplBase {
   ~TupleImpl() = default;
   TupleImpl(Args&&... args) : values(std::forward<Args>(args)...) {}
   TupleImpl(std::tuple<Args...>&& args) : values(std::move(args)) {}
-  bool operator<(const TupleImplBase& p) const {
+  bool operator<(const TupleImplBase& p) const override {
     return values < dynamic_cast<const TupleImpl<Args...>&>(p).values;
   }
-  bool operator==(const TupleImplBase& p) const {
+  bool operator==(const TupleImplBase& p) const override {
     return values == dynamic_cast<const TupleImpl<Args...>&>(p).values;
   }
 
-  RTAny get(size_t idx) const;
+  RTAny get(size_t idx) const override;
 
-  size_t size() const { return std::tuple_size_v<std::tuple<Args...>>; }
+  size_t size() const override {
+    return std::tuple_size_v<std::tuple<Args...>>;
+  }
   std::tuple<Args...> values;
+};
+
+template <>
+class TupleImpl<RTAny> : public TupleImplBase {
+ public:
+  TupleImpl() = default;
+  ~TupleImpl() = default;
+  TupleImpl(std::vector<RTAny>&& val) : values(std::move(val)) {}
+  bool operator<(const TupleImplBase& p) const override {
+    return values < dynamic_cast<const TupleImpl<RTAny>&>(p).values;
+  }
+  bool operator==(const TupleImplBase& p) const override {
+    return values == dynamic_cast<const TupleImpl<RTAny>&>(p).values;
+  }
+  size_t size() const override { return values.size(); }
+  RTAny get(size_t idx) const override;
+
+  std::vector<RTAny> values;
 };
 
 class Tuple {
@@ -242,6 +262,11 @@ class Tuple {
       std::tuple<Args...>&& args) {
     return std::make_unique<TupleImpl<Args...>>(std::move(args));
   }
+  static std::unique_ptr<TupleImplBase> make_generic_tuple_impl(
+      std::vector<RTAny>&& args) {
+    return std::make_unique<TupleImpl<RTAny>>(std::move(args));
+  }
+
   Tuple() = default;
   Tuple(TupleImplBase* impl) : impl_(impl) {}
   bool operator<(const Tuple& p) const { return *impl_ < *(p.impl_); }

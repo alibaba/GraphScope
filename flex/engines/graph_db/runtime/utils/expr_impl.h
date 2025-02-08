@@ -516,10 +516,10 @@ class CaseWhenExpr : public ExprBase {
       when_then_exprs_;
   std::unique_ptr<ExprBase> else_expr_;
 };
-/**
+
 class TupleExpr : public ExprBase {
  public:
-  TupleExpr(std::vector<std::unique_ptr<ExprBase>>&& exprs);
+  TupleExpr(const Context& ctx, std::vector<std::unique_ptr<ExprBase>>&& exprs);
 
   RTAny eval_path(size_t idx) const override;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override;
@@ -529,8 +529,9 @@ class TupleExpr : public ExprBase {
   RTAnyType type() const override;
 
  private:
+  const Context& ctx_;
   std::vector<std::unique_ptr<ExprBase>> exprs_;
-};*/
+};
 
 template <typename... Args>
 class TypedTupleExpr : public ExprBase {
