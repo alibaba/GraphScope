@@ -80,14 +80,9 @@ class GeneralPathColumn : public IPathColumn {
     }
   }
 
-  void set_path_impls(std::vector<std::shared_ptr<PathImpl>>&& path_impls) {
-    path_impls_.swap(path_impls);
-  }
-
  private:
   friend class GeneralPathColumnBuilder;
   std::vector<Path> data_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 class GeneralPathColumnBuilder : public IContextColumnBuilder {
@@ -99,21 +94,14 @@ class GeneralPathColumnBuilder : public IContextColumnBuilder {
     data_.push_back(val.as_path());
   }
   void reserve(size_t size) override { data_.reserve(size); }
-  void set_path_impls(
-      const std::vector<std::shared_ptr<PathImpl>>& path_impls) {
-    path_impls_ = path_impls;
-  }
   std::shared_ptr<IContextColumn> finish() override {
     auto col = std::make_shared<GeneralPathColumn>();
     col->data_.swap(data_);
-    col->set_path_impls(std::move(path_impls_));
-    path_impls_.clear();
     return col;
   }
 
  private:
   std::vector<Path> data_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 class OptionalGeneralPathColumn : public IPathColumn {
@@ -158,15 +146,10 @@ class OptionalGeneralPathColumn : public IPathColumn {
     }
   }
 
-  void set_path_impls(std::vector<std::shared_ptr<PathImpl>>&& path_impls) {
-    path_impls_.swap(path_impls);
-  }
-
  private:
   friend class OptionalGeneralPathColumnBuilder;
   std::vector<Path> data_;
   std::vector<bool> valids_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 class OptionalGeneralPathColumnBuilder : public IContextColumnBuilder {
@@ -189,23 +172,16 @@ class OptionalGeneralPathColumnBuilder : public IContextColumnBuilder {
     data_.reserve(size);
     valids_.reserve(size);
   }
-  void set_path_impls(
-      const std::vector<std::shared_ptr<PathImpl>>& path_impls) {
-    path_impls_ = path_impls;
-  }
   std::shared_ptr<IContextColumn> finish() override {
     auto col = std::make_shared<OptionalGeneralPathColumn>();
     col->data_.swap(data_);
     col->valids_.swap(valids_);
-    col->set_path_impls(std::move(path_impls_));
-    path_impls_.clear();
     return col;
   }
 
  private:
   std::vector<Path> data_;
   std::vector<bool> valids_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 }  // namespace runtime

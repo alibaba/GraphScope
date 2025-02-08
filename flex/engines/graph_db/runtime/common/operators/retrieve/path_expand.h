@@ -173,8 +173,9 @@ class PathExpand {
           params.labels[0].edge_label);
       if (properties.empty()) {
         auto tup = single_source_shortest_path_impl<grape::EmptyType, PRED_T>(
-            graph, *input_vertex_col, params.labels[0].edge_label, params.dir,
-            params.hop_lower, params.hop_upper, pred);
+            *ctx.value_collection, graph, *input_vertex_col,
+            params.labels[0].edge_label, params.dir, params.hop_lower,
+            params.hop_upper, pred);
         ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup),
                                std::get<2>(tup));
         ctx.set(params.alias, std::get<1>(tup));
@@ -182,32 +183,36 @@ class PathExpand {
       } else if (properties.size() == 1) {
         if (properties[0] == PropertyType::Int32()) {
           auto tup = single_source_shortest_path_impl<int, PRED_T>(
-              graph, *input_vertex_col, params.labels[0].edge_label, params.dir,
-              params.hop_lower, params.hop_upper, pred);
+              *ctx.value_collection, graph, *input_vertex_col,
+              params.labels[0].edge_label, params.dir, params.hop_lower,
+              params.hop_upper, pred);
           ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup),
                                  std::get<2>(tup));
           ctx.set(params.alias, std::get<1>(tup));
           return ctx;
         } else if (properties[0] == PropertyType::Int64()) {
           auto tup = single_source_shortest_path_impl<int64_t, PRED_T>(
-              graph, *input_vertex_col, params.labels[0].edge_label, params.dir,
-              params.hop_lower, params.hop_upper, pred);
+              *ctx.value_collection, graph, *input_vertex_col,
+              params.labels[0].edge_label, params.dir, params.hop_lower,
+              params.hop_upper, pred);
           ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup),
                                  std::get<2>(tup));
           ctx.set(params.alias, std::get<1>(tup));
           return ctx;
         } else if (properties[0] == PropertyType::Date()) {
           auto tup = single_source_shortest_path_impl<Date, PRED_T>(
-              graph, *input_vertex_col, params.labels[0].edge_label, params.dir,
-              params.hop_lower, params.hop_upper, pred);
+              *ctx.value_collection, graph, *input_vertex_col,
+              params.labels[0].edge_label, params.dir, params.hop_lower,
+              params.hop_upper, pred);
           ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup),
                                  std::get<2>(tup));
           ctx.set(params.alias, std::get<1>(tup));
           return ctx;
         } else if (properties[0] == PropertyType::Double()) {
           auto tup = single_source_shortest_path_impl<double, PRED_T>(
-              graph, *input_vertex_col, params.labels[0].edge_label, params.dir,
-              params.hop_lower, params.hop_upper, pred);
+              *ctx.value_collection, graph, *input_vertex_col,
+              params.labels[0].edge_label, params.dir, params.hop_lower,
+              params.hop_upper, pred);
           ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup),
                                  std::get<2>(tup));
           ctx.set(params.alias, std::get<1>(tup));
@@ -216,8 +221,8 @@ class PathExpand {
       }
     }
     auto tup = default_single_source_shortest_path_impl<PRED_T>(
-        graph, *input_vertex_col, params.labels, params.dir, params.hop_lower,
-        params.hop_upper, pred);
+        *ctx.value_collection, graph, *input_vertex_col, params.labels,
+        params.dir, params.hop_lower, params.hop_upper, pred);
     ctx.set_with_reshuffle(params.v_alias, std::get<0>(tup), std::get<2>(tup));
     ctx.set(params.alias, std::get<1>(tup));
     return ctx;

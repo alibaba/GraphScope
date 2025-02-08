@@ -106,11 +106,10 @@ class Project {
   static bl::result<Context> project(
       Context&& ctx, const std::vector<std::unique_ptr<ProjectExprBase>>& exprs,
       bool is_append = false) {
-    Context ret;
+    Context ret = ctx.newContext();
     if (is_append) {
       ret = ctx;
     }
-    ret.value_collection = ctx.value_collection;
     for (size_t i = 0; i < exprs.size(); ++i) {
       ret = exprs[i]->evaluate(ctx, std::move(ret));
     }
@@ -131,8 +130,7 @@ class Project {
     lower = std::max(lower, static_cast<size_t>(0));
     upper = std::min(upper, ctx.row_num());
 
-    Context ret;
-    ret.value_collection = ctx.value_collection;
+    Context ret = ctx.newContext();
 
     Context tmp(ctx);
     std::vector<int> alias;

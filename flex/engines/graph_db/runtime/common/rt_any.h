@@ -80,21 +80,29 @@ struct Relation {
 
 class PathImpl : public CpxValueBase {
  public:
-  static std::shared_ptr<PathImpl> make_path_impl(label_t label, vid_t v) {
-    auto new_path = std::make_shared<PathImpl>();
+  static std::unique_ptr<PathImpl> make_path_impl(label_t label, vid_t v) {
+    auto new_path = std::make_unique<PathImpl>();
     new_path->path_.push_back({label, v});
     return new_path;
   }
-  static std::shared_ptr<PathImpl> make_path_impl(
+  static std::unique_ptr<PathImpl> make_path_impl(
       label_t label, std::vector<vid_t>& path_ids) {
-    auto new_path = std::make_shared<PathImpl>();
+    auto new_path = std::make_unique<PathImpl>();
     for (auto id : path_ids) {
       new_path->path_.push_back({label, id});
     }
     return new_path;
   }
-  std::shared_ptr<PathImpl> expand(label_t label, vid_t v) const {
-    auto new_path = std::make_shared<PathImpl>();
+
+  static std::unique_ptr<PathImpl> make_path_impl(
+      const std::vector<VertexRecord>& path) {
+    auto new_path = std::make_unique<PathImpl>();
+    new_path->path_.insert(new_path->path_.end(), path.begin(), path.end());
+    return new_path;
+  }
+
+  std::unique_ptr<PathImpl> expand(label_t label, vid_t v) const {
+    auto new_path = std::make_unique<PathImpl>();
     new_path->path_ = path_;
     new_path->path_.push_back({label, v});
     return new_path;
@@ -121,11 +129,7 @@ class PathImpl : public CpxValueBase {
 class Path {
  public:
   Path() = default;
-  static Path make_path(const std::shared_ptr<PathImpl>& impl) {
-    Path new_path;
-    new_path.impl_ = impl.get();
-    return new_path;
-  }
+  Path(PathImpl* impl) : impl_(impl) {}
 
   std::string to_string() const { return impl_->to_string(); }
 
@@ -152,6 +156,7 @@ class Path {
 
   PathImpl* impl_;
 };
+
 class RTAny;
 
 class ListImplBase : public CpxValueBase {

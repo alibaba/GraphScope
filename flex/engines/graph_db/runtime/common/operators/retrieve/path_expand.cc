@@ -177,24 +177,42 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
   auto label_sets = input_vertex_list.get_labels_set();
   auto labels = params.labels;
   auto dir = params.dir;
-  std::vector<std::pair<std::shared_ptr<PathImpl>, size_t>> input;
-  std::vector<std::pair<std::shared_ptr<PathImpl>, size_t>> output;
-  std::vector<std::shared_ptr<PathImpl>> path_impls;
+  std::vector<std::pair<std::unique_ptr<PathImpl>, size_t>> input;
+  std::vector<std::pair<std::unique_ptr<PathImpl>, size_t>> output;
 
   GeneralPathColumnBuilder builder;
   if (dir == Direction::kOut) {
     foreach_vertex(input_vertex_list,
                    [&](size_t index, label_t label, vid_t v) {
                      auto p = PathImpl::make_path_impl(label, v);
-                     input.emplace_back(p, index);
+                     input.emplace_back(std::move(p), index);
                    });
     int depth = 0;
     while (depth < params.hop_upper) {
       output.clear();
+      if (depth + 1 < params.hop_upper) {
+        for (auto& [path, index] : input) {
+          auto end = path->get_end();
+          for (auto& label_triplet : labels) {
+            if (label_triplet.src_label == end.label_) {
+              auto oe_iter = graph.GetOutEdgeIterator(end.label_, end.vid_,
+                                                      label_triplet.dst_label,
+                                                      label_triplet.edge_label);
+              while (oe_iter.IsValid()) {
+                std::unique_ptr<PathImpl> new_path = path->expand(
+                    label_triplet.dst_label, oe_iter.GetNeighbor());
+                output.emplace_back(std::move(new_path), index);
+                oe_iter.Next();
+              }
+            }
+          }
+        }
+      }
+
       if (depth >= params.hop_lower) {
         for (auto& [path, index] : input) {
-          builder.push_back_opt(Path::make_path(path));
-          path_impls.emplace_back(path);
+          builder.push_back_opt(Path(path.get()));
+          ctx.value_collection->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -202,28 +220,10 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
         break;
       }
 
-      for (auto& [path, index] : input) {
-        auto end = path->get_end();
-        for (auto& label_triplet : labels) {
-          if (label_triplet.src_label == end.label_) {
-            auto oe_iter = graph.GetOutEdgeIterator(end.label_, end.vid_,
-                                                    label_triplet.dst_label,
-                                                    label_triplet.edge_label);
-            while (oe_iter.IsValid()) {
-              std::shared_ptr<PathImpl> new_path =
-                  path->expand(label_triplet.dst_label, oe_iter.GetNeighbor());
-              output.emplace_back(new_path, index);
-              oe_iter.Next();
-            }
-          }
-        }
-      }
-
       input.clear();
       std::swap(input, output);
       ++depth;
     }
-    builder.set_path_impls(path_impls);
     ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
 
     return ctx;
@@ -231,15 +231,35 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
     foreach_vertex(input_vertex_list,
                    [&](size_t index, label_t label, vid_t v) {
                      auto p = PathImpl::make_path_impl(label, v);
-                     input.emplace_back(p, index);
+                     input.emplace_back(std::move(p), index);
                    });
     int depth = 0;
     while (depth < params.hop_upper) {
       output.clear();
-      if (depth >= params.hop_lower) {
+
+      if (depth + 1 < params.hop_upper) {
         for (const auto& [path, index] : input) {
-          builder.push_back_opt(Path::make_path(path));
-          path_impls.emplace_back(path);
+          auto end = path->get_end();
+          for (const auto& label_triplet : labels) {
+            if (label_triplet.dst_label == end.label_) {
+              auto ie_iter = graph.GetInEdgeIterator(end.label_, end.vid_,
+                                                     label_triplet.src_label,
+                                                     label_triplet.edge_label);
+              while (ie_iter.IsValid()) {
+                std::unique_ptr<PathImpl> new_path = path->expand(
+                    label_triplet.src_label, ie_iter.GetNeighbor());
+                output.emplace_back(std::move(new_path), index);
+                ie_iter.Next();
+              }
+            }
+          }
+        }
+      }
+
+      if (depth >= params.hop_lower) {
+        for (auto& [path, index] : input) {
+          builder.push_back_opt(Path(path.get()));
+          ctx.value_collection->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -247,28 +267,10 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
         break;
       }
 
-      for (const auto& [path, index] : input) {
-        auto end = path->get_end();
-        for (const auto& label_triplet : labels) {
-          if (label_triplet.dst_label == end.label_) {
-            auto ie_iter = graph.GetInEdgeIterator(end.label_, end.vid_,
-                                                   label_triplet.src_label,
-                                                   label_triplet.edge_label);
-            while (ie_iter.IsValid()) {
-              std::shared_ptr<PathImpl> new_path =
-                  path->expand(label_triplet.src_label, ie_iter.GetNeighbor());
-              output.emplace_back(new_path, index);
-              ie_iter.Next();
-            }
-          }
-        }
-      }
-
       input.clear();
       std::swap(input, output);
       ++depth;
     }
-    builder.set_path_impls(path_impls);
     ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
 
     return ctx;
@@ -277,15 +279,45 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
     foreach_vertex(input_vertex_list,
                    [&](size_t index, label_t label, vid_t v) {
                      auto p = PathImpl::make_path_impl(label, v);
-                     input.emplace_back(p, index);
+                     input.emplace_back(std::move(p), index);
                    });
     int depth = 0;
     while (depth < params.hop_upper) {
       output.clear();
+      if (depth + 1 < params.hop_upper) {
+        for (auto& [path, index] : input) {
+          auto end = path->get_end();
+          for (auto& label_triplet : labels) {
+            if (label_triplet.src_label == end.label_) {
+              auto oe_iter = graph.GetOutEdgeIterator(end.label_, end.vid_,
+                                                      label_triplet.dst_label,
+                                                      label_triplet.edge_label);
+              while (oe_iter.IsValid()) {
+                auto new_path = path->expand(label_triplet.dst_label,
+                                             oe_iter.GetNeighbor());
+                output.emplace_back(std::move(new_path), index);
+                oe_iter.Next();
+              }
+            }
+            if (label_triplet.dst_label == end.label_) {
+              auto ie_iter = graph.GetInEdgeIterator(end.label_, end.vid_,
+                                                     label_triplet.src_label,
+                                                     label_triplet.edge_label);
+              while (ie_iter.IsValid()) {
+                auto new_path = path->expand(label_triplet.src_label,
+                                             ie_iter.GetNeighbor());
+                output.emplace_back(std::move(new_path), index);
+                ie_iter.Next();
+              }
+            }
+          }
+        }
+      }
+
       if (depth >= params.hop_lower) {
         for (auto& [path, index] : input) {
-          builder.push_back_opt(Path::make_path(path));
-          path_impls.emplace_back(path);
+          builder.push_back_opt(Path(path.get()));
+          ctx.value_collection->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -293,39 +325,10 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
         break;
       }
 
-      for (auto& [path, index] : input) {
-        auto end = path->get_end();
-        for (auto& label_triplet : labels) {
-          if (label_triplet.src_label == end.label_) {
-            auto oe_iter = graph.GetOutEdgeIterator(end.label_, end.vid_,
-                                                    label_triplet.dst_label,
-                                                    label_triplet.edge_label);
-            while (oe_iter.IsValid()) {
-              auto new_path =
-                  path->expand(label_triplet.dst_label, oe_iter.GetNeighbor());
-              output.emplace_back(new_path, index);
-              oe_iter.Next();
-            }
-          }
-          if (label_triplet.dst_label == end.label_) {
-            auto ie_iter = graph.GetInEdgeIterator(end.label_, end.vid_,
-                                                   label_triplet.src_label,
-                                                   label_triplet.edge_label);
-            while (ie_iter.IsValid()) {
-              auto new_path =
-                  path->expand(label_triplet.src_label, ie_iter.GetNeighbor());
-              output.emplace_back(new_path, index);
-              ie_iter.Next();
-            }
-          }
-        }
-      }
-
       input.clear();
       std::swap(input, output);
       ++depth;
     }
-    builder.set_path_impls(path_impls);
     ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
     return ctx;
   }
@@ -490,7 +493,6 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
   }
   SLVertexColumnBuilder builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
-  std::vector<std::shared_ptr<PathImpl>> path_impls;
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
     std::vector<vid_t> path;
     if (single_source_single_dest_shortest_path_impl(graph, params, v,
@@ -498,12 +500,10 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
       builder.push_back_opt(dest.second);
       shuffle_offset.push_back(index);
       auto impl = PathImpl::make_path_impl(label_triplet.src_label, path);
-      path_builder.push_back_opt(Path::make_path(impl));
-      path_impls.emplace_back(impl);
+      path_builder.push_back_opt(Path(impl.get()));
+      ctx.value_collection->emplace_back(std::move(impl));
     }
   });
-
-  path_builder.set_path_impls(path_impls);
 
   ctx.set_with_reshuffle(params.v_alias, builder.finish(), shuffle_offset);
   ctx.set(params.alias, path_builder.finish());
@@ -740,7 +740,6 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
   }
   SLVertexColumnBuilder builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
-  std::vector<std::shared_ptr<PathImpl>> path_impls;
   std::vector<size_t> shuffle_offset;
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
     std::vector<std::vector<vid_t>> paths;
@@ -749,13 +748,12 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
     for (auto& path : paths) {
       auto ptr = PathImpl::make_path_impl(label_triplet.src_label, path);
       builder.push_back_opt(dest.second);
-      path_builder.push_back_opt(Path::make_path(ptr));
-      path_impls.emplace_back(ptr);
+      path_builder.push_back_opt(Path(ptr.get()));
+      ctx.value_collection->emplace_back(std::move(ptr));
       shuffle_offset.push_back(index);
     }
   });
   ctx.set_with_reshuffle(params.v_alias, builder.finish(), shuffle_offset);
-  path_builder.set_path_impls(path_impls);
   ctx.set(params.alias, path_builder.finish());
   return ctx;
 }
