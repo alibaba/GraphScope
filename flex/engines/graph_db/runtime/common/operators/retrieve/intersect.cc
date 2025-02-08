@@ -268,7 +268,6 @@ bl::result<Context> Intersect::intersect(Context&& ctx,
   if (ctxs.empty()) {
     return ctx;
   }
-  ctx = ctxs[0].newContext();
   return intersect_impl(std::move(ctx), std::move(ctxs), key);
 }
 
