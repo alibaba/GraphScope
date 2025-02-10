@@ -267,7 +267,7 @@ void CreateAndQuery(std::string params) {
              << ", vif: " << vertex_input_format_class
              << ", eif: " << edge_input_format_class;
     if (efile.empty() || vfile.empty()) {
-      LOG(FATAL) << "Make sure efile and vfile are avalibale";
+      LOG(FATAL) << "Make sure efile and vfile are available";
     }
     fragment_id =
         LoadGiraphFragment(comm_spec, vfile, efile, vertex_input_format_class,
