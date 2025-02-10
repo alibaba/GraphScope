@@ -133,11 +133,9 @@ public class GremlinRecordParser implements RecordParser<Object> {
 
     private List<Object> parseCollection(
             IrResult.Collection collection, RelDataType componentType) {
-        List<Object> results =
-                collection.getCollectionList().stream()
-                        .map(k -> parseElement(k, componentType))
-                        .collect(Collectors.toList());
-        return results;
+        return collection.getCollectionList().stream()
+                .map(k -> parseElement(k, componentType))
+                .collect(Collectors.toList());
     }
 
     private List<Object> parseCollection(
