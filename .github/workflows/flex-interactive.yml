@@ -106,6 +106,7 @@ jobs:
         EOF
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
               --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
+              --admin-port 7778 --storedproc-port 10001 \
               --coordinator-config /tmp/coordinator.yaml
         sleep 20
         # test
@@ -114,7 +115,7 @@ jobs:
                           -s -v \
                           --cov=graphscope --cov-config=${GITHUB_WORKSPACE}/python/.coveragerc --cov-report=xml --cov-report=term \
                           --exitfirst \
-                          $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_fill_uploading.py
+                          $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_file_uploading.py
 
         # destroy instance
         gsctl instance destroy --type interactive -y

@@ -288,7 +288,7 @@ def deploy(
             cmd.extend(
                 [
                     "-v",
-                    f"{coordinator_config}:${COORDINATOR_DOCKER_DEFAULT_CONFIG_PATH}",
+                    f"{coordinator_config}:{COORDINATOR_DOCKER_DEFAULT_CONFIG_PATH}",
                 ]
             )
         image = f"{image_registry}/{type}:{image_tag}"
