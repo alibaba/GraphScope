@@ -30,7 +30,6 @@ import com.alibaba.graphscope.groot.service.models.GetGraphSchemaResponse;
 import com.alibaba.graphscope.groot.service.models.ServiceStatus;
 import com.alibaba.graphscope.groot.service.models.SnapshotStatus;
 import com.alibaba.graphscope.groot.service.models.VertexEdgeRequest;
-import com.alibaba.graphscope.groot.service.models.VertexRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -120,9 +119,14 @@ public class V1ApiController implements V1Api {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateVertex(
             @PathVariable("graph_id") String graphId,
-            @RequestBody(required = false) List<VertexRequest> vertexRequest) {
+            @RequestBody(required = false) VertexEdgeRequest vertexEdgeRequest) {
         try {
-            long si = vertexManagementService.updateVertices(vertexRequest);
+            long si;
+            if (vertexEdgeRequest.getEdgeRequest() == null) {
+                si = vertexManagementService.updateVertices(vertexEdgeRequest.getVertexRequest());
+            } else {
+                si = vertexManagementService.updateVerticesAndEdges(vertexEdgeRequest);
+            }
             return ApiUtil.createSuccessResponse("Vertices updated successfully", si);
         } catch (Exception e) {
             return ApiUtil.createErrorResponse(

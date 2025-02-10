@@ -95,4 +95,18 @@ public class VertexManagementService {
         }
         return grootClient.addVerticesAndEdges(vertices, edges);
     }
+
+    public long updateVerticesAndEdges(VertexEdgeRequest vertexEdgeRequest) {
+        List<Vertex> vertices = new ArrayList<>();
+        for (VertexRequest vertexRequest : vertexEdgeRequest.getVertexRequest()) {
+            Vertex vertex = DtoConverter.convertToVertex(vertexRequest);
+            vertices.add(vertex);
+        }
+        List<Edge> edges = new ArrayList<>();
+        for (EdgeRequest edgeRequest : vertexEdgeRequest.getEdgeRequest()) {
+            Edge edge = DtoConverter.convertToEdge(edgeRequest);
+            edges.add(edge);
+        }
+        return grootClient.updateVerticesAndEdges(vertices, edges);
+    }
 }

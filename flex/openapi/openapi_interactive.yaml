@@ -939,9 +939,7 @@ paths:
         content:
           application/json:
             schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VertexRequest'
+              $ref: '#/components/schemas/VertexEdgeRequest'
             example:
               label: "person"
               primary_key_value: 2
