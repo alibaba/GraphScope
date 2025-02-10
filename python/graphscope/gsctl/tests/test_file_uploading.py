@@ -26,9 +26,9 @@ import time
 
 import pytest
 
-from graphscope.gsctl.impl import upload_file
 from graphscope.gsctl.impl import connect_coordinator
 from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.impl import upload_file
 
 COORDINATOR_ENDPOINT = "http://127.0.0.1:8080"
 
