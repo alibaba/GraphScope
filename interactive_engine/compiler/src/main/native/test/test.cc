@@ -114,7 +114,8 @@ int main(int argc, char **argv)
     // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     // std::cout << "total execution time: " << duration << " ms" << std::endl;
-
+    std::cout<< "Code: " << plan.error_code << std::endl;
+    std::cout << "Details: \n" << plan.full_message << std::endl;
     std::cout << "Plan: " << plan.physical_plan.DebugString() << std::endl;
     std::cout << "schema: " << plan.result_schema << std::endl;
     return 0;

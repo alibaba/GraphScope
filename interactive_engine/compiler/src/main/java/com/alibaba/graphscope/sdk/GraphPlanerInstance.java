@@ -19,45 +19,20 @@
 package com.alibaba.graphscope.sdk;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.PlannerGroupManager;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlanFactory;
 
 public class GraphPlanerInstance {
-    private final GraphPlanner planner;
-    private final IrMeta meta;
+    private static GraphPlanner planner;
 
-    private static GraphPlanerInstance instance;
-
-    public GraphPlanerInstance(GraphPlanner planner, IrMeta meta) {
-        this.planner = planner;
-        this.meta = meta;
-    }
-
-    public static synchronized GraphPlanerInstance getInstance(
-            String configPath, GraphPlanner.IrMetaFetcherFactory metaFetcherFactory)
-            throws Exception {
-        if (instance == null) {
-            Configs configs = Configs.Factory.create(configPath);
+    public static synchronized GraphPlanner getInstance(Configs configs) {
+        if (planner == null) {
             GraphRelOptimizer optimizer =
                     new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
-            IrMetaFetcher metaFetcher =
-                    metaFetcherFactory.create(configs, optimizer.getGlogueHolder());
-            GraphPlanner planner =
-                    new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
-            instance = new GraphPlanerInstance(planner, metaFetcher.fetch().get());
+            planner = new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
         }
-        return instance;
-    }
-
-    public GraphPlanner getPlanner() {
         return planner;
-    }
-
-    public IrMeta getMeta() {
-        return meta;
     }
 }

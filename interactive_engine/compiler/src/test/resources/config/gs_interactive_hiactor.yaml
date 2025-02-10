@@ -20,6 +20,9 @@ compiler:
       - FilterMatchRule
       - ExtendIntersectRule
       - ExpandGetVFusionRule
+    cbo:
+      glogue:
+        size: 2
   meta:
     reader:
       schema:
@@ -35,6 +38,7 @@ compiler:
       disabled: false   # default false
       port: 8003  # default 7687
   query_timeout: 200 # query timeout in milliseconds, default 2000
+  query_max_iterations: 5
   calcite_default_charset: UTF-8
 http_service:
   default_listen_address: localhost

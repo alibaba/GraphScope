@@ -72,4 +72,51 @@ public class JNICompilePlanTest {
             Assert.assertTrue(e.getMessage().contains("exceeds the maximum allowed iterations"));
         }
     }
+
+    @Test
+    public void path_expand_invalid_hop_2_test() throws Exception {
+        try {
+            // the max hop will be set as unlimited if it is less than min hop
+            String query = "MATCH (n)-[*1..11]-() RETURN count(n), n";
+            PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("exceeds the maximum allowed iterations"));
+        }
+    }
+
+    @Test
+    public void vertex_label_not_found_test() {
+        String query =
+                "MATCH (src)-[e:calls*2..3]->(dest)\n"
+                        + "          WHERE dest.__domain__ = 'apm'\n"
+                        + "          RETURN src, dest, dest.__entity_type__";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("LABEL_NOT_FOUND", plan.errorCode);
+    }
+
+    @Test
+    public void edge_label_not_found_test() {
+        String query =
+                "MATCH (src:`acs@acs.vpc.vswitch`)-[e1]->(n1)<-[e2]-(n2)-[e3]->(n3)\n"
+                        + "WHERE src <> n2 AND n1.__entity_type__ <> n3.__entity_type__ AND NOT"
+                        + " (src)<-[e1:`related_to`]-(n1)\n"
+                        + "RETURN src, e1.__type__, n1, e2.__type__, n2, e3.__type__, n3";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("LABEL_NOT_FOUND", plan.errorCode);
+    }
+
+    @Test
+    public void schema_type_test() {
+        String query = "Match (src:`xzz@t1a`)-[:test2_2]-(dst:`xzz@t1b`) return src, dst";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("TYPE_INFERENCE_FAILED", plan.errorCode);
+    }
+
+    @Test
+    public void empty_results_test() {
+        // The compiler should infer empty results from LIMIT 0.
+        String query = "Match (src:`xzz@t1a`)-[]-(dst:`xzz@t1b`) return src, dst Limit 0";
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        Assert.assertEquals("EMPTY_RESULT", plan.errorCode);
+    }
 }
