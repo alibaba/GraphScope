@@ -267,9 +267,7 @@ def deploy(
                 )
                 return
             config = os.path.abspath(config)
-            cmd.extend(
-                ["-v", f"{config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"]
-            )
+            cmd.extend(["-v", f"{config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"])
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
         cmd.extend(
