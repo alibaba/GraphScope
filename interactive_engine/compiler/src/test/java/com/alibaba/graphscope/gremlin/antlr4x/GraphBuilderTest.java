@@ -1802,7 +1802,7 @@ public class GraphBuilderTest {
         Assert.assertEquals(
                 "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
                     + "  GraphLogicalProject($f0=[PATH_FUNCTION(a, FLAG(VERTEX_EDGE),"
-                    + " MAP(_UTF-8'weight', a.weight, _UTF-8'name', a.name))], isAppend=[true])\n"
+                    + " MAP(_UTF-8'name', a.name, _UTF-8'weight', a.weight))], isAppend=[true])\n"
                     + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
                     + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
