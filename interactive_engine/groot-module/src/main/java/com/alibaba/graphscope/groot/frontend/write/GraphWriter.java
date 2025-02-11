@@ -4,9 +4,12 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.exception.NotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
+import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphEdge;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
@@ -394,8 +397,9 @@ public class GraphWriter {
 
     private EdgeKind getEdgeKind(GraphSchema schema, DataRecord dataRecord) {
         EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
+        EdgeKind edgeKind;
         if (edgeTarget != null) {
-            return edgeTarget.getEdgeKind();
+            edgeKind = edgeTarget.getEdgeKind();
         } else {
             EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
             String label = edgeRecordKey.getLabel();
@@ -407,12 +411,40 @@ public class GraphWriter {
             GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
             GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
+            edgeKind =
+                    EdgeKind.newBuilder()
+                            .setEdgeLabelId(new LabelId(labelId))
+                            .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
+                            .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
+                            .build();
+        }
 
-            return EdgeKind.newBuilder()
-                    .setEdgeLabelId(new LabelId(labelId))
-                    .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
-                    .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
-                    .build();
+        // make sure the edgeKind exists in the schema
+        GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+        boolean edgeKindExists = false;
+        if (edgeDef instanceof DefaultGraphEdge) {
+            DefaultGraphEdge defaultGraphEdge = (DefaultGraphEdge) edgeDef;
+            List<EdgeRelation> relations = defaultGraphEdge.getRelationList();
+            for (EdgeRelation relation : relations) {
+                if (relation.getSource().getLabelId() == edgeKind.getSrcVertexLabelId().getId()
+                        && relation.getTarget().getLabelId()
+                                == edgeKind.getDstVertexLabelId().getId()) {
+                    edgeKindExists = true;
+                    break;
+                }
+            }
+        }
+        if (!edgeKindExists) {
+            throw new TypeNotFoundException(
+                    "schema element not found for edgeKind with {edgeLabel="
+                            + schema.getElement(edgeKind.getEdgeLabelId().getId()).getLabel()
+                            + ", sourceLabel="
+                            + schema.getElement(edgeKind.getSrcVertexLabelId().getId()).getLabel()
+                            + ", targetLabel="
+                            + schema.getElement(edgeKind.getDstVertexLabelId().getId()).getLabel()
+                            + "}");
+        } else {
+            return edgeKind;
         }
     }
 
