@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,9 +32,9 @@ import java.util.Optional;
  */
 public abstract class IrMetaFetcher {
     protected final IrMetaReader reader;
-    protected final IrMetaTracker tracker;
+    protected final List<IrMetaTracker> tracker;
 
-    protected IrMetaFetcher(IrMetaReader reader, IrMetaTracker tracker) {
+    protected IrMetaFetcher(IrMetaReader reader, List<IrMetaTracker> tracker) {
         this.reader = reader;
         this.tracker = tracker;
     }

@@ -29,21 +29,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public class StaticIrMetaFetcher extends IrMetaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(StaticIrMetaFetcher.class);
     private final IrMetaStats metaStats;
 
-    public StaticIrMetaFetcher(IrMetaReader dataReader, IrMetaTracker tracker) throws IOException {
+    public StaticIrMetaFetcher(IrMetaReader dataReader, List<IrMetaTracker> tracker)
+            throws IOException {
         super(dataReader, tracker);
         IrMeta meta = this.reader.readMeta();
-        GraphStatistics stats = (meta == null) ? null : fetchStats(meta);
+        tracker.forEach(t -> t.onSchemaChanged(meta));
+        GraphStatistics stats = null;
+        if (meta != null) {
+            try {
+                stats = fetchStats(meta);
+            } catch (Exception e) {
+            }
+        }
         this.metaStats =
                 new IrMetaStats(
                         meta.getSnapshotId(), meta.getSchema(), meta.getStoredProcedures(), stats);
         if (tracker != null && stats != null) {
-            tracker.onChanged(this.metaStats);
+            tracker.forEach(t -> t.onStatsChanged(this.metaStats));
         }
     }
 

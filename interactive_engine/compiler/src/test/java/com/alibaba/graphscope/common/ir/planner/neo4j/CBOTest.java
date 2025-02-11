@@ -59,10 +59,7 @@ public class CBOTest {
                                         + " JoinDecompositionRule, ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
-                Utils.mockIrMeta(
-                        "schema/ldbc.json",
-                        "statistics/ldbc1_statistics.json",
-                        optimizer.getGlogueHolder());
+                Utils.mockIrMeta("schema/ldbc.json", "statistics/ldbc1_statistics.json", optimizer);
     }
 
     @Test

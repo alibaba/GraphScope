@@ -26,7 +26,6 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
@@ -41,6 +40,7 @@ import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
@@ -56,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class GraphServer {
     private static final Logger logger = LoggerFactory.getLogger(GraphServer.class);
@@ -65,6 +66,7 @@ public class GraphServer {
     private final GraphProperties testGraph;
     private final GraphRelOptimizer optimizer;
     private final MetricsTool metricsTool;
+    private final QueryCache queryCache;
 
     private IrGremlinServer gremlinServer;
     private CypherBootstrapper cypherBootstrapper;
@@ -74,7 +76,8 @@ public class GraphServer {
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph,
-            GraphRelOptimizer optimizer) {
+            GraphRelOptimizer optimizer,
+            QueryCache queryCache) {
         this.configs = configs;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
@@ -82,13 +85,13 @@ public class GraphServer {
         this.optimizer = optimizer;
         this.metricsTool = new MetricsTool(configs);
         this.metricsTool.registerMetric(new MemoryMetric());
+        this.queryCache = queryCache;
     }
 
     public void start() throws Exception {
         ExecutionClient executionClient =
                 ExecutionClient.Factory.create(configs, channelFetcher, metricsTool);
         QueryIdGenerator idGenerator = new QueryIdGenerator(configs);
-        QueryCache queryCache = new QueryCache(configs);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
             GraphPlanner graphPlanner =
                     new GraphPlanner(configs, new LogicalPlanFactory.Gremlin(), optimizer);
@@ -177,23 +180,26 @@ public class GraphServer {
         }
         Configs configs = Configs.Factory.create(args[0]);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        QueryCache queryCache = new QueryCache(configs);
         IrMetaQueryCallback queryCallback =
-                new IrMetaQueryCallback(createIrMetaFetcher(configs, optimizer.getGlogueHolder()));
+                new IrMetaQueryCallback(
+                        createIrMetaFetcher(configs, ImmutableList.of(optimizer, queryCache)));
         GraphServer server =
                 new GraphServer(
                         configs,
                         getChannelFetcher(configs),
                         queryCallback,
                         getTestGraph(configs),
-                        optimizer);
+                        optimizer,
+                        queryCache);
         server.start();
     }
 
-    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs, List<IrMetaTracker> tracker)
             throws IOException {
         URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
         if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+            return new DynamicIrMetaFetcher(configs, new LocalIrMetaReader(configs), tracker);
         } else if (schemaUri.getScheme().equals("http")) {
             return new DynamicIrMetaFetcher(configs, new HttpIrMetaReader(configs), tracker);
         }
