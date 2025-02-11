@@ -103,6 +103,14 @@ core.*
 
 # Openapi generated code
 python/graphscope/flex/rest
+python/.openapi-generator/
+!python/graphscope/flex/rest/models/time_stamp_type.py
+!python/graphscope/flex/rest/models/date_type.py
+!python/graphscope/flex/rest/models/long_text.py
+
+.openapi-generator/
+
+coordinator/gscoordinator/flex/test/
 
 # Flex related
 flex/docs/

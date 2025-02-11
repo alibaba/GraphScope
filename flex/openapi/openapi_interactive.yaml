@@ -1306,8 +1306,10 @@ paths:
                 message: "Internal error"
 components:
   schemas:
+########################### Definition for GSDataType ###########################
+# Both Interactive and Coordinator use the same GSDataType definition, but we could
+# not include from another yaml file, so we need to define it twice.
     AnyValue: {}
-    # Corresponding to common.value, which store a any type value
     TypedValue:
       type: object
       required:
@@ -1387,6 +1389,7 @@ components:
       properties:
         timestamp:
           type: string
+          nullable: true
     DateType:
       x-body-name: date_type
       type: object
@@ -1395,6 +1398,7 @@ components:
       properties:
         date32:
           type: string
+          nullable: true
     TemporalType:
       x-body-name: temporal_type
       type: object

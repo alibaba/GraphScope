@@ -380,11 +380,6 @@ class GenerateFlexServer(Command):
         pass
 
     def run(self):
-        # tempdir
-        tempdir = os.path.join("/", tempfile.gettempprefix(), "gscoordinator")
-        if os.path.exists(tempdir):
-            shutil.rmtree(tempdir)
-        targetdir = os.path.join(repo_root, "gscoordinator", "flex")
         # generate
         specification = os.path.join(
             repo_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
@@ -397,7 +392,7 @@ class GenerateFlexServer(Command):
             "-i",
             str(specification),
             "-o",
-            str(tempdir),
+            repo_root,
             "--package-name",
             "gscoordinator.flex",
         ]
@@ -409,34 +404,34 @@ class GenerateFlexServer(Command):
         )
 
         # remove
-        if os.path.exists(os.path.join(targetdir, "models")):
-            shutil.rmtree(os.path.join(targetdir, "models"))
+        # if os.path.exists(os.path.join(targetdir, "models")):
+        #     shutil.rmtree(os.path.join(targetdir, "models"))
         # cp
-        subprocess.run(
-            [
-                "cp",
-                "-r",
-                os.path.join(tempdir, "gscoordinator", "flex", "models"),
-                os.path.join(targetdir, "models"),
-            ]
-        )
-        for filename in ["encoder.py", "typing_utils.py", "util.py"]:
-            subprocess.run(
-                [
-                    "cp",
-                    os.path.join(tempdir, "gscoordinator", "flex", filename),
-                    targetdir,
-                ]
-            )
-        subprocess.run(
-            [
-                "cp",
-                os.path.join(
-                    tempdir, "gscoordinator", "flex", "openapi", "openapi.yaml"
-                ),
-                os.path.join(targetdir, "openapi"),
-            ]
-        )
+        # subprocess.run(
+        #     [
+        #         "cp",
+        #         "-r",
+        #         os.path.join(tempdir, "gscoordinator", "flex", "models"),
+        #         os.path.join(targetdir, "models"),
+        #     ]
+        # )
+        # for filename in ["encoder.py", "typing_utils.py", "util.py"]:
+        #     subprocess.run(
+        #         [
+        #             "cp",
+        #             os.path.join(tempdir, "gscoordinator", "flex", filename),
+        #             targetdir,
+        #         ]
+        #     )
+        # subprocess.run(
+        #     [
+        #         "cp",
+        #         os.path.join(
+        #             tempdir, "gscoordinator", "flex", "openapi", "openapi.yaml"
+        #         ),
+        #         os.path.join(targetdir, "openapi"),
+        #     ]
+        # )
 
 
 setup(
