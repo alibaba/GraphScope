@@ -156,8 +156,14 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         if (throwsOnPropertyNotFound || ctxProperties.isEmpty()) {
             return ctxProperties.isEmpty() ? getAllProperties(tag) : ctxProperties;
         }
-        ctxProperties.retainAll(getAllProperties(tag));
-        return ctxProperties;
+        List<String> candidates = getAllProperties(tag);
+        return ctxProperties.stream()
+                .filter(
+                        k ->
+                                k.equals(T.label.getAccessor())
+                                        || k.equals(T.id.getAccessor())
+                                        || candidates.contains(k))
+                .collect(Collectors.toList());
     }
 
     private List<String> getElementMapProperties(List<String> properties) {
