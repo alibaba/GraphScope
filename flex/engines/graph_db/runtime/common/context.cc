@@ -36,6 +36,7 @@ void Context::set(int alias, std::shared_ptr<IContextColumn> col) {
     if (columns.size() <= static_cast<size_t>(alias)) {
       columns.resize(alias + 1, nullptr);
     }
+    assert(columns[alias] == nullptr);
     columns[alias] = col;
   }
 }
