@@ -154,6 +154,17 @@ struct TypedKeyCollector {
   ValueColumnBuilder<T> builder;
 };
 
+template <typename WRAPPER>
+struct VertexKeyCollector {
+  VertexKeyCollector(const Context& ctx) { builder.reserve(ctx.row_num()); }
+  void collect(const WRAPPER& expr, size_t idx) {
+    builder.push_back_vertex(expr(idx));
+  }
+  auto get(const WRAPPER&) { return builder.finish(); }
+
+  MLVertexColumnBuilder builder;
+};
+
 struct SLVertexWrapper {
   using V = vid_t;
   SLVertexWrapper(const SLVertexColumn& column) : column(column) {}
@@ -990,6 +1001,7 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
       std::vector<std::unique_ptr<ProjectExprBase>> exprs;
       int idx = 0;
       for (const auto& var : vars) {
+        auto tag = mappings[idx].first;
         auto alias = mappings[idx++].second;
         Var var_(graph, ctx, var, VarType::kPathVar);
         if (var_.type() == RTAnyType::kStringValue) {
@@ -1014,6 +1026,43 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
               std::make_unique<
                   ProjectExpr<decltype(wrapper), decltype(collector)>>(
                   std::move(wrapper), std::move(collector), alias));
+        } else if (var_.type() == RTAnyType::kVertex) {
+          auto& column = ctx.get(tag);
+          if (column->column_type() != ContextColumnType::kVertex) {
+            LOG(FATAL) << "Expect vertex column, "
+                       << static_cast<int>(column->column_type());
+          }
+          auto vertex_col = std::dynamic_pointer_cast<IVertexColumn>(column);
+          if (vertex_col->vertex_column_type() == VertexColumnType::kSingle) {
+            SLVertexWrapperBeta wrapper(
+                *dynamic_cast<const SLVertexColumn*>(vertex_col.get()));
+            VertexKeyCollector<decltype(wrapper)> collector(ctx);
+            exprs.emplace_back(
+                std::make_unique<
+                    ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                    std::move(wrapper), std::move(collector), alias));
+          } else if (vertex_col->vertex_column_type() ==
+                     VertexColumnType::kMultiple) {
+            auto typed_vertex_col =
+                std::dynamic_pointer_cast<MLVertexColumn>(vertex_col);
+            MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
+                *typed_vertex_col);
+            VertexKeyCollector<decltype(wrapper)> collector(ctx);
+            exprs.emplace_back(
+                std::make_unique<
+                    ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                    std::move(wrapper), std::move(collector), alias));
+          } else {
+            auto typed_vertex_col =
+                std::dynamic_pointer_cast<MSVertexColumn>(vertex_col);
+            MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
+                *typed_vertex_col);
+            VertexKeyCollector<decltype(wrapper)> collector(ctx);
+            exprs.emplace_back(
+                std::make_unique<
+                    ProjectExpr<decltype(wrapper), decltype(collector)>>(
+                    std::move(wrapper), std::move(collector), alias));
+          }
         } else {
           LOG(FATAL) << "unsupport" << static_cast<int>(var_.type());
         }
