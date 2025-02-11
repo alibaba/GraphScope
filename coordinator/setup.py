@@ -403,36 +403,6 @@ class GenerateFlexServer(Command):
             env=env,
         )
 
-        # remove
-        # if os.path.exists(os.path.join(targetdir, "models")):
-        #     shutil.rmtree(os.path.join(targetdir, "models"))
-        # cp
-        # subprocess.run(
-        #     [
-        #         "cp",
-        #         "-r",
-        #         os.path.join(tempdir, "gscoordinator", "flex", "models"),
-        #         os.path.join(targetdir, "models"),
-        #     ]
-        # )
-        # for filename in ["encoder.py", "typing_utils.py", "util.py"]:
-        #     subprocess.run(
-        #         [
-        #             "cp",
-        #             os.path.join(tempdir, "gscoordinator", "flex", filename),
-        #             targetdir,
-        #         ]
-        #     )
-        # subprocess.run(
-        #     [
-        #         "cp",
-        #         os.path.join(
-        #             tempdir, "gscoordinator", "flex", "openapi", "openapi.yaml"
-        #         ),
-        #         os.path.join(targetdir, "openapi"),
-        #     ]
-        # )
-
 
 setup(
     name=os.environ.get("package_name", "gs-coordinator"),
