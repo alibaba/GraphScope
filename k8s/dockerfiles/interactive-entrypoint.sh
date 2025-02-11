@@ -117,7 +117,7 @@ function launch_coordinator() {
     cat > $dst_coordinator_config_file << EOF
 session:
   instance_id: demo
-  launcher_type: hosts
+launcher_type: hosts
 coordinator:
   http_port: 8080
 EOF
