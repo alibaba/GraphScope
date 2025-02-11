@@ -15,8 +15,7 @@ Below is a list of all configurable items:
 | admin-port       | 7777    | The port of the interactive admin service       | v0.3          |
 | storedproc-port   | 10000    | The port of the interactive stored procedure service      | v0.3          |
 | cypher-port       | 7687    | The port of the cypher service       | v0.3          |
-| interactive-config | None    | The customized configuration file for engine interactive service | v0.4   |
-| coordinator-config | None    | The customized configuration file for coordinator service | v0.4 |
+| config | None    | The customized configuration file for engine interactive service | v0.4   |
 <!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
 
 
@@ -55,7 +54,7 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 To customize the service's settings, you can provide a YAML configuration file `interactive_config.yaml`. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-gsctl instance deploy --type interactive --interactive-config ./interactive_config.yaml
+gsctl instance deploy --type interactive --config ./interactive_config.yaml
 ```
 
 ```{note}
@@ -64,18 +63,12 @@ Please be aware that you're not required to configure every option. Simply adjus
 
 #### Customize Coordinator Service Configuration
 
-When deploying Interactive, a supplementary service called the Coordinator is also initiated. This service functions similarly to the `ApiServer` in Kubernetes, providing users with a consistent and standardized set of APIs to interact with the GraphScope platform. To apply a custom configuration, use the `--coordinator-config` option as shown below:
+When deploying Interactive, a supplementary service called the Coordinator is also initiated. This service functions similarly to the `ApiServer` in Kubernetes, providing users with a consistent and standardized set of APIs to interact with the GraphScope platform.
+You could also customize the configuration for coordinator service, just put the configuration in `coordinator` section.
 
-```bash
-gsctl instance deploy --type interactive --coordinator-config ./coordinator.yaml
-```
-
-An example of a coordinator configuration file is as follows:
+An example of a coordinator related configuration is as follows:
 
 ```yaml
-session:
-  instance_id: my_session
-
 coordinator:
   max_content_length: 5242880 # maximum bytes of content the coordinator can handle
 ```
@@ -141,6 +134,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
 | http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
+| coordinator.max_content_length | 1073741824 | The maximum length of a http request that coordinator could handle | 0.5 |
 
 #### TODOs
 

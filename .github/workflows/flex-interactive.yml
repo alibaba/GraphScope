@@ -69,7 +69,7 @@ jobs:
       run: |
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
-              --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
@@ -94,20 +94,13 @@ jobs:
         GS_TEST_DIR: /tmp/gstest
       run: |
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
-        cat > /tmp/coordinator.yaml << EOF
+        cat >>  ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml << EOF
         coordinator:
-          http_port: 8080
           max_content_length: 1048576 # 1MB
-
-        launcher_type: hosts
-
-        session:
-          instance_id: demo
         EOF
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
-              --coordinator-port ${COORDINATOR_PORT} --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
-              --admin-port 7778 --storedproc-port 10001 \
-              --coordinator-config /tmp/coordinator.yaml
+              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
+              --admin-port 7778 --storedproc-port 10001
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-cov pytest-timeout pytest-xdist
@@ -128,7 +121,7 @@ jobs:
         cd python && pip3 install -r requirements.txt && python3 setup.py build_proto
         python3 setup.py bdist_wheel
         pip3 install dist/*.whl
-        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --interactive-config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sleep 20
         # test
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/examples/python
