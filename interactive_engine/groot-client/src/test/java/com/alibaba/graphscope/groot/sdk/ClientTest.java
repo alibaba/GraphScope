@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
@@ -96,5 +98,22 @@ public class ClientTest {
                         Collections.singletonMap("id", "12345"),
                         Collections.singletonMap("id", "88888"),
                         Collections.singletonMap("weight", "20201111")));
+
+        // add an edge with invalid relation should throw exception
+        Exception exception =
+                assertThrows(
+                        Exception.class,
+                        () -> {
+                            client.addEdge(
+                                    new Edge(
+                                            "knows",
+                                            "person",
+                                            "software",
+                                            Collections.singletonMap("id", "12345"),
+                                            Collections.singletonMap("id", "88888"),
+                                            Collections.singletonMap("weight", "20201111")));
+                        });
+
+        System.out.println("Exception was thrown as expected: " + exception.getMessage());
     }
 }
