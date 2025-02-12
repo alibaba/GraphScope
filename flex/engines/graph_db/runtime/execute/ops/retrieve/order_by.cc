@@ -99,7 +99,7 @@ bl::result<ReadOpBuildResultT> OrderByOprBuilder::Build(
   const auto key = keys[0].first;
   const auto order = keys[0].second;
 
-  auto func = [key, order, upper](const Context& ctx)
+  auto func = [key, order, upper, &schema](const Context& ctx)
       -> std::optional<std::function<std::optional<std::vector<size_t>>(
           const GraphReadInterface& graph, const Context& ctx)>> {
     if (key.has_tag() &&
@@ -123,7 +123,9 @@ bl::result<ReadOpBuildResultT> OrderByOprBuilder::Build(
         std::string prop_name = key.property().key().name();
         auto vertex_col = std::dynamic_pointer_cast<IVertexColumn>(col);
         int label_num = vertex_col->get_labels_set().size();
-        if (prop_name == "id" && label_num == 1) {
+        if (label_num == 1 &&
+            prop_name == schema.get_vertex_primary_key_name(
+                             *vertex_col->get_labels_set().begin())) {
           return [=](const GraphReadInterface& graph,
                      const Context& ctx) -> std::optional<std::vector<size_t>> {
             std::vector<size_t> indices;

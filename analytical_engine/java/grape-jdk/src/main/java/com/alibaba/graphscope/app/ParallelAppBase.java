@@ -82,7 +82,7 @@ public interface ParallelAppBase<
      * @param graph fragment. The graph fragment providing accesses to graph data.
      * @param context context. User defined context which manages data during the whole
      *     computations.
-     * @param messageManager The message manger which manages messages between fragments.
+     * @param messageManager The message manager which manages messages between fragments.
      * @see IFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
@@ -97,7 +97,7 @@ public interface ParallelAppBase<
      * @param graph fragment. The graph fragment providing accesses to graph data.
      * @param context context. User defined context which manages data during the whole
      *     computations.
-     * @param messageManager The message manger which manages messages between fragments.
+     * @param messageManager The message manager which manages messages between fragments.
      * @see IFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager

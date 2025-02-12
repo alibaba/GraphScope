@@ -56,6 +56,7 @@ cypher_queries = vertex_only_cypher_queries + [
     "MATCH(a)-[b]->(c) return count(b)",
     "MATCH(a)-[b]->(c) return b",
     "MATCH(a)-[b]->(c) return c.id",
+    "MATCH(a)-[b]->(c) return count(c), c, c.id;",
 ]
 
 
@@ -370,6 +371,17 @@ def test_custom_pk_name(
     records = result.fetch(1)
     assert len(records) == 1 and records[0]["$f0"] == 2
 
+    # another test case that should cover extracting primary key after edge expand.
+    result = neo4j_session.run(
+        "MATCH (n:person)-[e]-(v:person)-[e2]->(s:software) where n.custom_id = 1 and v.custom_id = 4 return s.name;"
+    )
+    records = result.fetch(10)
+    assert (
+        len(records) == 2
+        and records[0]["name"] == "lop"
+        and records[1]["name"] == "ripple"
+    )
+
 
 def test_complex_query(interactive_session, neo4j_session, create_graph_algo_graph):
     """
@@ -400,6 +412,14 @@ def test_complex_query(interactive_session, neo4j_session, create_graph_algo_gra
 
     ping_thread.join()
     ping_thread_2.join()
+
+    result = neo4j_session.run("MATCH(n)-[*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
+
+    result = neo4j_session.run("MATCH(n)-[e*1..4]-() RETURN count(n),n;")
+    records = result.fetch(200)
+    assert len(records) == 184
 
 
 def test_x_csr_params(

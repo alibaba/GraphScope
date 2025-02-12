@@ -103,6 +103,14 @@ core.*
 
 # Openapi generated code
 python/graphscope/flex/rest
+python/.openapi-generator/
+!python/graphscope/flex/rest/models/time_stamp_type.py
+!python/graphscope/flex/rest/models/date_type.py
+!python/graphscope/flex/rest/models/long_text.py
+
+.openapi-generator/
+
+coordinator/gscoordinator/flex/test/
 
 # Flex related
 flex/docs/
@@ -156,8 +164,8 @@ flex/interactive/sdk/python/gs_interactive/exceptions.py
 flex/interactive/sdk/python/gs_interactive/rest.py
 !flex/interactive/sdk/python/gs_interactive/client/generated/__init__.py
 !flex/interactive/sdk/python/gs_interactive/models/long_text.py
-!flex/interactive/sdk/python/gs_interactive/models/date_type.py
 !flex/interactive/sdk/python/gs_interactive/models/time_stamp_type.py
+!flex/interactive/sdk/python/gs_interactive/models/date_type.py
 
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
 interactive_engine/groot-http/.openapi-generator/

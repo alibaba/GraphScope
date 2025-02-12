@@ -199,7 +199,7 @@ public class GiraphComputationFactory {
                     GiraphVertexIdManager<GRAPE_VID_T, OID_T> idManager,
                     ImmutableClassesGiraphConfiguration<OID_T, ?, EDATA_T> conf) {
         if (conf.getEdgeManager().equals("default")) {
-            logger.info("Using [Default] edge manger");
+            logger.info("Using [Default] edge manager");
             return new DefaultImmutableEdgeManager<
                     GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T, OID_T, EDATA_T>(
                     fragment, idManager, conf);

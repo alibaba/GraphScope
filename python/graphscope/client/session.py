@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" Manage sessions to the GraphScope coordinator.
-"""
+"""Manage sessions to the GraphScope coordinator."""
 
 import atexit
 import base64

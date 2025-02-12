@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-""" An almost-complete Python to Cython AST transformer, with injected
+"""An almost-complete Python to Cython AST transformer, with injected
     GRAPHSCOPE-specific translation.
 
 Python AST nodes are translated to corresponding Cython AST nodes as

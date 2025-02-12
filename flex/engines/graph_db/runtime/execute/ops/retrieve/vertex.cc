@@ -198,8 +198,8 @@ bl::result<ReadOpBuildResultT> VertexOprBuilder::Build(
       {
         label_t exact_pk_label;
         std::string exact_pk;
-        if (is_pk_exact_check(vertex.params().predicate(), exact_pk_label,
-                              exact_pk)) {
+        if (is_pk_exact_check(schema, vertex.params().predicate(),
+                              exact_pk_label, exact_pk)) {
           return std::make_pair(
               std::make_unique<GetVFromVerticesWithPKExactOpr>(
                   plan.plan(op_idx).opr().vertex(), p, exact_pk_label,

@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" Classes and functions used to construct dags.
-"""
+"""Classes and functions used to construct dags."""
 
 import hashlib
 import uuid

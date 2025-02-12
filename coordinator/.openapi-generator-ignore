@@ -1,0 +1,24 @@
+# OpenAPI Generator Ignore
+.dockerignore
+.gitignore
+.gitlab-ci.yml
+.travis.yml
+git_push.sh
+pyproject.toml
+requirements.txt
+setup.cfg
+setup.py
+test-requirements.txt
+tox.ini
+python.yml
+.openapi-generator/VERSION
+.openapi-generator/FILES
+README.md
+
+VERSION
+FILES
+Dockerfile
+
+gscoordinator/flex/__init__.py
+gscoordinator/flex/__main__.py
+gscoordinator/flex/controllers/

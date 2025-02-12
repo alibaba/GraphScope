@@ -419,7 +419,7 @@ public class GraphWriter {
                             .build();
         }
 
-        // make sure the edgeKind is valid in the schema
+        // make sure the edgeKind exists in the schema
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
         boolean edgeKindExists = false;
         if (edgeDef instanceof DefaultGraphEdge) {

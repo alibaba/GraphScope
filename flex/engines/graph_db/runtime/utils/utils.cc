@@ -177,7 +177,8 @@ bool vertex_property_topN(bool asc, size_t limit,
                           const std::string& prop_name,
                           std::vector<size_t>& offsets) {
   std::vector<PropertyType> prop_types;
-  for (auto l : col->get_labels_set()) {
+  const auto& labels = col->get_labels_set();
+  for (auto l : labels) {
     const auto& prop_names = graph.schema().get_vertex_property_names(l);
     int prop_names_size = prop_names.size();
     for (int prop_id = 0; prop_id < prop_names_size; ++prop_id) {
@@ -187,7 +188,7 @@ bool vertex_property_topN(bool asc, size_t limit,
       }
     }
   }
-  if (prop_types.empty()) {
+  if (prop_types.size() != labels.size()) {
     return false;
   }
   for (size_t k = 1; k < prop_types.size(); ++k) {

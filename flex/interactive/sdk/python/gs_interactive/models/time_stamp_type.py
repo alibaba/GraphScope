@@ -37,7 +37,6 @@ class TimeStampType(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
-        "extra": "forbid",
     }
 
 

@@ -34,6 +34,8 @@ namespace gs
 
   struct Plan
   {
+    std::string error_code;
+    std::string full_message;
     physical::PhysicalPlan physical_plan;
     std::string result_schema;
   };

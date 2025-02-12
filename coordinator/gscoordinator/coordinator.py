@@ -130,6 +130,7 @@ def start_http_service(config):
     initialize_client_wrapper(config)
     app = connexion.App(__name__, specification_dir="./flex/openapi/")
     app.app.json_encoder = JSONEncoder
+    app.app.config["MAX_CONTENT_LENGTH"] = config.coordinator.max_content_length
     app.add_api(
         "openapi.yaml",
         arguments={"title": "GraphScope FLEX HTTP SERVICE API"},

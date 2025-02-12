@@ -14,7 +14,7 @@ class StoredProcedureMeta(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, description=None, type=None, query=None, id=None, library=None, params=None, returns=None):  # noqa: E501
+    def __init__(self, name=None, description=None, type=None, query=None, id=None, library=None, params=None, returns=None, option=None):  # noqa: E501
         """StoredProcedureMeta - a model defined in OpenAPI
 
         :param name: The name of this StoredProcedureMeta.  # noqa: E501
@@ -33,6 +33,8 @@ class StoredProcedureMeta(Model):
         :type params: List[Parameter]
         :param returns: The returns of this StoredProcedureMeta.  # noqa: E501
         :type returns: List[Parameter]
+        :param option: The option of this StoredProcedureMeta.  # noqa: E501
+        :type option: Dict[str, object]
         """
         self.openapi_types = {
             'name': str,
@@ -42,7 +44,8 @@ class StoredProcedureMeta(Model):
             'id': str,
             'library': str,
             'params': List[Parameter],
-            'returns': List[Parameter]
+            'returns': List[Parameter],
+            'option': Dict[str, object]
         }
 
         self.attribute_map = {
@@ -53,7 +56,8 @@ class StoredProcedureMeta(Model):
             'id': 'id',
             'library': 'library',
             'params': 'params',
-            'returns': 'returns'
+            'returns': 'returns',
+            'option': 'option'
         }
 
         self._name = name
@@ -64,6 +68,7 @@ class StoredProcedureMeta(Model):
         self._library = library
         self._params = params
         self._returns = returns
+        self._option = option
 
     @classmethod
     def from_dict(cls, dikt) -> 'StoredProcedureMeta':
@@ -261,3 +266,24 @@ class StoredProcedureMeta(Model):
             raise ValueError("Invalid value for `returns`, must not be `None`")  # noqa: E501
 
         self._returns = returns
+
+    @property
+    def option(self) -> Dict[str, object]:
+        """Gets the option of this StoredProcedureMeta.
+
+
+        :return: The option of this StoredProcedureMeta.
+        :rtype: Dict[str, object]
+        """
+        return self._option
+
+    @option.setter
+    def option(self, option: Dict[str, object]):
+        """Sets the option of this StoredProcedureMeta.
+
+
+        :param option: The option of this StoredProcedureMeta.
+        :type option: Dict[str, object]
+        """
+
+        self._option = option

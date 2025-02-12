@@ -87,6 +87,10 @@ public class GraphPlanner {
         this.validator = new QueryExecutionValidator(graphConfig);
     }
 
+    public GraphRelOptimizer getOptimizer() {
+        return optimizer;
+    }
+
     public PlannerInstance instance(String query, IrMeta irMeta) {
         return instance(query, irMeta, null);
     }
