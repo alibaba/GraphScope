@@ -28,8 +28,12 @@ import time
 from typing import Union
 
 import requests
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
+
+from gscoordinator.flex.core.config import CLUSTER_TYPE
+
+if CLUSTER_TYPE == "KUBERNETES":
+    from kubernetes import client as kube_client
+    from kubernetes import config as kube_config
 
 logger = logging.getLogger("graphscope")
 

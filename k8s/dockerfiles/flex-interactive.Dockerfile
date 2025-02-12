@@ -34,6 +34,11 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     ls ~/GraphScope/interactive_engine/executor/ir && \
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
+# strip all .so in /opt/flex/lib
+RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
+# strip all binary in /opt/flex/bin
+RUN sudo strip /opt/flex/bin/bulk_loader /opt/flex/bin/interactive_server /opt/flex/bin/gen_code_from_plan
+
 # build coordinator
 RUN mkdir -p /opt/flex/wheel
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
@@ -108,7 +113,8 @@ RUN rm -rf /opt/flex/bin/run_app
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
-COPY --from=builder /usr/include/boost /usr/include/boost
+COPY --from=builder /usr/include/boost/filesystem* /usr/include/boost
+COPY --from=builder /usr/include/boost/format* /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
@@ -141,11 +147,6 @@ RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/fl
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcuda.so && \
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcudart.so
 
-# strip all .so in /opt/flex/lib
-RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
-# strip all binary in /opt/flex/bin
-RUN sudo strip /opt/flex/bin/bulk_loader /opt/flex/bin/interactive_server /opt/flex/bin/gen_code_from_plan
-
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \
   && sudo ln -sf -r /opt/flex/lib/* /usr/local/lib \
@@ -154,8 +155,11 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
       pip3 install --upgrade pip && \
-      pip3 install "numpy<2.0.0" && \
-      pip3 install /opt/flex/wheel/*.whl; \
+      # Those python packages is not used in this image
+      pip3 install /opt/flex/wheel/*.whl && \ 
+      pip3 uninstall pandas vineyard pyarrow botocore networkx numpy kubernetes \
+                    grpc etcd-distro grpcio-tools neo4j msgpack mypy-protobuf \
+                    Cython vineyard-io -y && \
       rm -rf ~/.cache/pip; \
     fi
 

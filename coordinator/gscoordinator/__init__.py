@@ -21,9 +21,14 @@ import sys
 
 from .version import __version__
 
-try:
-    import graphscope
-except ModuleNotFoundError:
-    # if graphscope is not installed, try to locate it by relative path,
-    # which is strong related with the directory structure of GraphScope
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "python"))
+SOLUTION = os.environ.get("SOLUTION", "GRAPHSCOPE_ONE")
+if SOLUTION != "INTERACTIVE":
+    # In Interactive SOLUTION, we don't need to import graphscope
+    try:
+        import graphscope
+    except ModuleNotFoundError:
+        # if graphscope is not installed, try to locate it by relative path,
+        # which is strong related with the directory structure of GraphScope
+        sys.path.insert(
+            0, os.path.join(os.path.dirname(__file__), "..", "..", "python")
+        )
