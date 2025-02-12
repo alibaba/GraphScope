@@ -176,17 +176,19 @@ def addVertex(sess: Session, graph_id: str):
 def updateVertex(sess: Session, graph_id: str):
     name_property = ModelProperty(name="name", value="Cindy")
     age_property = ModelProperty(name="age", value=24)
-    vertex_request = VertexRequest(
-        label="person",
+    vertex_edge_request = VertexEdgeRequest(
+        vertex_request=[
+        VertexRequest(label="person",
         primary_key_values= [
             ModelProperty(name="id", value=1),
         ],
         properties=[
             name_property,
             age_property,
-        ],
+        ]),
+        ]
     )
-    api_response = sess.update_vertex(graph_id, [vertex_request])
+    api_response = sess.update_vertex(graph_id, vertex_edge_request)
     if api_response.is_ok():
         print("The response of update_vertex", api_response)
     else:

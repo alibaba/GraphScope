@@ -26,7 +26,7 @@ import java.util.List;
 public interface VertexInterface {
     Result<String> addVertex(String graphId, VertexEdgeRequest request);
 
-    Result<String> updateVertex(String graphId, List<VertexRequest> request);
+    Result<String> updateVertex(String graphId, VertexEdgeRequest request);
 
     Result<VertexData> getVertex(String graphId, String label, Object primaryKey);
 

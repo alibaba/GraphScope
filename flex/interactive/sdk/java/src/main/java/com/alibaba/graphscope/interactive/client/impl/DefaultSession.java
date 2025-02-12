@@ -816,7 +816,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> updateVertex(String graphId, List<VertexRequest> requests) {
+    public Result<String> updateVertex(String graphId, VertexEdgeRequest requests) {
         try {
             ApiResponse<String> response = vertexApi.updateVertexWithHttpInfo(graphId, requests);
             return Result.fromResponse(response);

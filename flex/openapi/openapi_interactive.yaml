@@ -2360,7 +2360,6 @@ components:
       type: object
       required:
         - vertex_request
-        - edge_request
       properties:
         vertex_request:
           type: array

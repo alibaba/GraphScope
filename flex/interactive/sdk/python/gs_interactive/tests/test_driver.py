@@ -820,7 +820,9 @@ class TestDriver(unittest.TestCase):
                 ],
             )
         ]
-        resp = self._sess.update_vertex(self._graph_id, vertex_request)
+        resp = self._sess.update_vertex(
+            self._graph_id, VertexEdgeRequest(vertex_request=vertex_request)
+        )
         assert resp.is_ok()
 
         if os.getenv("ENGINE_TYPE") == "insight":

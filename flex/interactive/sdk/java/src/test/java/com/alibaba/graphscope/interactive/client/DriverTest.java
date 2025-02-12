@@ -449,7 +449,8 @@ public class DriverTest {
                         .addPropertiesItem(new Property().name("name").value("Cindy"))
                         .addPropertiesItem(new Property().name("age").value(24));
         Result<String> updateVertexResponse =
-                session.updateVertex(graphId, Arrays.asList(updateVertexRequest));
+                session.updateVertex(
+                        graphId, new VertexEdgeRequest().addVertexRequestItem(updateVertexRequest));
         assertOk(updateVertexResponse);
         getVertexResponse = session.getVertex(graphId, "person", 8);
         assertOk(getVertexResponse);

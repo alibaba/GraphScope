@@ -113,16 +113,21 @@ Result<std::string> GraphDBOperations::CreateEdge(
 Result<std::string> GraphDBOperations::UpdateVertex(
     GraphDBSession& session, rapidjson::Document&& input_json) {
   std::vector<VertexData> vertex_data;
-  std::vector<EdgeData> edge_data;
   const Schema& schema = session.schema();
   // input vertex data
   try {
-    if (!input_json.IsArray()) {
+    if (!input_json.IsObject() || !input_json.HasMember("vertex_request")) {
+      return Result<std::string>(
+          gs::Status(StatusCode::INVALID_SCHEMA,
+                     "Invalid input json, update vertex request should be "
+                     "object or vertex_request field not set"));
+    }
+    if (!input_json["vertex_request"].IsArray()) {
       return Result<std::string>(
           gs::Status(StatusCode::INVALID_SCHEMA,
                      "Invalid input json, vertex_request should be array"));
     }
-    for (auto& vertex_update : input_json.GetArray()) {
+    for (auto& vertex_update : input_json["vertex_request"].GetArray()) {
       vertex_data.push_back(inputVertex(vertex_update, schema, session));
     }
   } catch (std::exception& e) {
@@ -173,7 +178,6 @@ Result<std::string> GraphDBOperations::GetVertex(
     std::unordered_map<std::string, std::string>&& params) {
   rapidjson::Document result(rapidjson::kObjectType);
   std::vector<VertexData> vertex_data;
-  std::vector<EdgeData> edge_data;
   std::vector<std::string> property_names;
   const Schema& schema = session.schema();
   // input vertex data

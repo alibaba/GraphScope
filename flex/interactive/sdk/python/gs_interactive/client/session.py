@@ -159,7 +159,7 @@ class VertexInterface(metaclass=ABCMeta):
     def update_vertex(
         self,
         graph_id: StrictStr,
-        vertex_request: List[VertexRequest],
+        vertex_request: VertexEdgeRequest,
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -485,7 +485,7 @@ class DefaultSession(Session):
     def update_vertex(
         self,
         graph_id: StrictStr,
-        vertex_request: List[VertexRequest],
+        vertex_request: VertexEdgeRequest,
     ) -> Result[str]:
         """
         Update a vertex in the specified graph.
