@@ -121,7 +121,8 @@ void GraphDBService::init(const ServiceConfig& config) {
       config.enable_adhoc_handler);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
-        config.admin_port, config.get_exclusive_shard_id());
+        config.admin_port, config.get_exclusive_shard_id(),
+        config.admin_svc_max_content_length);
   }
 
   initialized_.store(true);
