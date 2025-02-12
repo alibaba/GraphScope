@@ -258,6 +258,7 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
 bl::result<ReadPipeline> PlanParser::parse_read_pipeline(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan) {
+  LOG(INFO) << plan.DebugString();
   auto ret = parse_read_pipeline_with_meta(schema, ctx_meta, plan);
   if (!ret) {
     return ret.error();
@@ -283,6 +284,34 @@ bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
   }
   return InsertPipeline(std::move(operators));
 }
+/**
+bl::result<UpdatePipeline> PlanParser::parse_update_pipeline(
+    const gs::Schema& schema, const ContextMeta& ctx_meta,
+    const physical::PhysicalPlan& plan) {
+  std::vector<std::unique_ptr<IUpdateOperator>> operators;
+  for (int i = 0; i < plan.plan_size(); ++i) {
+    auto op_kind = plan.plan(i).opr().op_kind_case();
+    if (update_op_builders_.find(op_kind) == update_op_builders_.end()) {
+      std::stringstream ss;
+      ss << "[Parse Failed] " << get_opr_name(op_kind)
+         << " failed to parse plan at index " << i;
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
+    }
+    auto op = update_op_builders_.at(op_kind)->Build(schema, plan, i);
+    if (!op) {
+      std::stringstream ss;
+      ss << "[Parse Failed]" << get_opr_name(op_kind)
+         << " failed to parse plan at index " << i;
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
+    }
+    operators.emplace_back(std::move(op));
+  }
+  return UpdatePipeline(std::move(operators));
+}*/
 
 }  // namespace runtime
 

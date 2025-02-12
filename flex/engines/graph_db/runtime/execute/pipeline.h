@@ -54,6 +54,31 @@ class InsertPipeline {
   std::vector<std::unique_ptr<IInsertOperator>> operators_;
 };
 
+class UpdatePipeline {
+ public:
+  UpdatePipeline(UpdatePipeline&& rhs)
+      : is_insert_opr_(rhs.is_insert_opr_),
+        operators_(std::move(rhs.operators_)),
+        insert_oprs_(std::move(rhs.insert_oprs_)) {}
+  UpdatePipeline(std::vector<std::unique_ptr<IUpdateOperator>>&& operators)
+      : is_insert_opr_(false), operators_(std::move(operators)) {}
+  UpdatePipeline(std::vector<std::unique_ptr<IInsertOperator>>&& operators)
+      : is_insert_opr_(true), insert_oprs_(std::move(operators)) {}
+  ~UpdatePipeline() = default;
+
+  bl::result<Context> Execute(GraphUpdateInterface& graph, Context&& ctx,
+                              const std::map<std::string, std::string>& params,
+                              OprTimer& timer);
+  bl::result<WriteContext> Execute(
+      GraphInsertInterface& graph, WriteContext&& ctx,
+      const std::map<std::string, std::string>& params, OprTimer& timer);
+
+ private:
+  bool is_insert_opr_;
+  std::vector<std::unique_ptr<IUpdateOperator>> operators_;
+  std::vector<std::unique_ptr<IInsertOperator>> insert_oprs_;
+};
+
 }  // namespace runtime
 
 }  // namespace gs

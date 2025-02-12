@@ -27,7 +27,17 @@
 namespace gs {
 
 namespace runtime {
+class IUpdateOperator {
+ public:
+  virtual ~IUpdateOperator() = default;
 
+  virtual std::string get_operator_name() const = 0;
+
+  virtual bl::result<Context> Eval(
+      GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params, Context&& ctx,
+      OprTimer& timer) = 0;
+};
 class IReadOperator {
  public:
   virtual ~IReadOperator() = default;
@@ -65,6 +75,11 @@ class IInsertOperator {
       GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params, WriteContext&& ctx,
       OprTimer& timer) = 0;
+
+  virtual bl::result<WriteContext> Eval(
+      GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params, WriteContext&& ctx,
+      OprTimer& timer) = 0;
 };
 
 class IInsertOperatorBuilder {
@@ -77,6 +92,15 @@ class IInsertOperatorBuilder {
   virtual physical::PhysicalOpr_Operator::OpKindCase GetOpKind() const = 0;
 };
 
+class IUpdateOperatorBuilder {
+ public:
+  virtual ~IUpdateOperatorBuilder() = default;
+  virtual int stepping(int i) { return i + 1; }
+
+  virtual std::unique_ptr<IUpdateOperator> Build(
+      const Schema& schema, const physical::PhysicalPlan& plan, int op_id) = 0;
+  virtual physical::PhysicalOpr_Operator::OpKindCase GetOpKind() const = 0;
+};
 }  // namespace runtime
 
 }  // namespace gs

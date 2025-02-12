@@ -118,13 +118,12 @@ class VertexGIdPathAccessor : public IAccessor {
   const IVertexColumn& vertex_col_;
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class VertexPropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  VertexPropertyPathAccessor(const GraphReadInterface& graph,
-                             const Context& ctx, int tag,
-                             const std::string& prop_name)
+  VertexPropertyPathAccessor(const GraphInterface& graph, const Context& ctx,
+                             int tag, const std::string& prop_name)
       : is_optional_(false),
         vertex_col_(*std::dynamic_pointer_cast<IVertexColumn>(ctx.get(tag))) {
     int label_num = graph.schema().vertex_label_num();
@@ -134,7 +133,8 @@ class VertexPropertyPathAccessor : public IAccessor {
       is_optional_ = true;
     }
     for (auto label : labels) {
-      property_columns_[label] = graph.GetVertexColumn<T>(label, prop_name);
+      property_columns_[label] =
+          graph.template GetVertexColumn<T>(label, prop_name);
       if (property_columns_[label].is_null()) {
         is_optional_ = true;
       }
@@ -174,7 +174,9 @@ class VertexPropertyPathAccessor : public IAccessor {
  private:
   bool is_optional_;
   const IVertexColumn& vertex_col_;
-  std::vector<GraphReadInterface::vertex_column_t<elem_t>> property_columns_;
+  using vertex_column_t =
+      typename GraphInterface::template vertex_column_t<elem_t>;
+  std::vector<vertex_column_t> property_columns_;
 };
 
 class VertexLabelPathAccessor : public IAccessor {
@@ -289,16 +291,17 @@ class VertexGIdVertexAccessor : public IAccessor {
   }
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class VertexPropertyVertexAccessor : public IAccessor {
  public:
   using elem_t = T;
-  VertexPropertyVertexAccessor(const GraphReadInterface& graph,
+
+  VertexPropertyVertexAccessor(const GraphInterface& graph,
                                const std::string& prop_name) {
     int label_num = graph.schema().vertex_label_num();
     for (int i = 0; i < label_num; ++i) {
-      property_columns_.emplace_back(
-          graph.GetVertexColumn<T>(static_cast<label_t>(i), prop_name));
+      property_columns_.emplace_back(graph.template GetVertexColumn<T>(
+          static_cast<label_t>(i), prop_name));
     }
   }
 
@@ -338,7 +341,9 @@ class VertexPropertyVertexAccessor : public IAccessor {
   }
 
  private:
-  std::vector<GraphReadInterface::vertex_column_t<T>> property_columns_;
+  using vertex_column_t =
+      typename GraphInterface::template vertex_column_t<elem_t>;
+  std::vector<vertex_column_t> property_columns_;
 };
 
 class EdgeIdPathAccessor : public IAccessor {
@@ -370,11 +375,11 @@ class EdgeIdPathAccessor : public IAccessor {
   const IEdgeColumn& edge_col_;
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class EdgePropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyPathAccessor(const GraphReadInterface& graph,
+  EdgePropertyPathAccessor(const GraphInterface& graph,
                            const std::string& prop_name, const Context& ctx,
                            int tag)
       : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {}
@@ -407,11 +412,11 @@ class EdgePropertyPathAccessor : public IAccessor {
   const IEdgeColumn& col_;
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class MultiPropsEdgePropertyPathAccessor : public IAccessor {
  public:
   using elem_t = T;
-  MultiPropsEdgePropertyPathAccessor(const GraphReadInterface& graph,
+  MultiPropsEdgePropertyPathAccessor(const GraphInterface& graph,
                                      const std::string& prop_name,
                                      const Context& ctx, int tag)
       : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
@@ -520,11 +525,11 @@ class EdgeLabelPathAccessor : public IAccessor {
   const IEdgeColumn& col_;
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class EdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
-  EdgePropertyEdgeAccessor(const GraphReadInterface& graph,
+  EdgePropertyEdgeAccessor(const GraphInterface& graph,
                            const std::string& name) {}
 
   elem_t typed_eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -545,11 +550,12 @@ class EdgePropertyEdgeAccessor : public IAccessor {
   }
 };
 
-template <typename T>
+template <typename GraphInterface, typename T>
 class MultiPropsEdgePropertyEdgeAccessor : public IAccessor {
  public:
   using elem_t = T;
-  MultiPropsEdgePropertyEdgeAccessor(const GraphReadInterface& graph,
+
+  MultiPropsEdgePropertyEdgeAccessor(const GraphInterface& graph,
                                      const std::string& name) {
     edge_label_num_ = graph.schema().edge_label_num();
     vertex_label_num_ = graph.schema().vertex_label_num();
@@ -719,27 +725,29 @@ std::shared_ptr<IAccessor> create_context_value_accessor(const Context& ctx,
                                                          int tag,
                                                          RTAnyType type);
 
+template <typename GraphInterface>
 std::shared_ptr<IAccessor> create_vertex_property_path_accessor(
-    const GraphReadInterface& graph, const Context& ctx, int tag,
-    RTAnyType type, const std::string& prop_name);
-
-std::shared_ptr<IAccessor> create_vertex_property_vertex_accessor(
-    const GraphReadInterface& graph, RTAnyType type,
+    const GraphInterface& graph, const Context& ctx, int tag, RTAnyType type,
     const std::string& prop_name);
+
+template <typename GraphInterface>
+std::shared_ptr<IAccessor> create_vertex_property_vertex_accessor(
+    const GraphInterface& graph, RTAnyType type, const std::string& prop_name);
 
 std::shared_ptr<IAccessor> create_vertex_label_path_accessor(const Context& ctx,
                                                              int tag);
 
+template <typename GraphInterface>
 std::shared_ptr<IAccessor> create_edge_property_path_accessor(
-    const GraphReadInterface& graph, const std::string& prop_name,
+    const GraphInterface& graph, const std::string& prop_name,
     const Context& ctx, int tag, RTAnyType type);
 
 std::shared_ptr<IAccessor> create_edge_label_path_accessor(const Context& ctx,
                                                            int tag);
 
+template <typename GraphInterface>
 std::shared_ptr<IAccessor> create_edge_property_edge_accessor(
-    const GraphReadInterface& graph, const std::string& prop_name,
-    RTAnyType type);
+    const GraphInterface& graph, const std::string& prop_name, RTAnyType type);
 
 }  // namespace runtime
 

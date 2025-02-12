@@ -34,6 +34,13 @@ class UnfoldInsertOpr : public IInsertOperator {
     return Unfold::unfold(std::move(ctx), tag_, alias_);
   }
 
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return Unfold::unfold(std::move(ctx), tag_, alias_);
+  }
+
  private:
   int tag_;
   int alias_;

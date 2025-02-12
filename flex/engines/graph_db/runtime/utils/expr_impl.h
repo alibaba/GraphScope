@@ -84,8 +84,7 @@ class ConstFalseExpr : public ExprBase {
 
 class VertexWithInSetExpr : public ExprBase {
  public:
-  VertexWithInSetExpr(const GraphReadInterface& graph, const Context& ctx,
-                      std::unique_ptr<ExprBase>&& key,
+  VertexWithInSetExpr(const Context& ctx, std::unique_ptr<ExprBase>&& key,
                       std::unique_ptr<ExprBase>&& val_set)
       : key_(std::move(key)), val_set_(std::move(val_set)) {
     assert(key_->type() == RTAnyType::kVertex);
@@ -125,8 +124,7 @@ class VertexWithInSetExpr : public ExprBase {
 };
 class VertexWithInListExpr : public ExprBase {
  public:
-  VertexWithInListExpr(const GraphReadInterface& graph, const Context& ctx,
-                       std::unique_ptr<ExprBase>&& key,
+  VertexWithInListExpr(const Context& ctx, std::unique_ptr<ExprBase>&& key,
                        std::unique_ptr<ExprBase>&& val_list)
       : key_(std::move(key)), val_list_(std::move(val_list)) {
     assert(key_->type() == RTAnyType::kVertex);
@@ -177,8 +175,8 @@ class VertexWithInListExpr : public ExprBase {
 template <typename T>
 class WithInExpr : public ExprBase {
  public:
-  WithInExpr(const GraphReadInterface& graph, const Context& ctx,
-             std::unique_ptr<ExprBase>&& key, const common::Value& array)
+  WithInExpr(const Context& ctx, std::unique_ptr<ExprBase>&& key,
+             const common::Value& array)
       : key_(std::move(key)) {
     if constexpr (std::is_same_v<T, int64_t>) {
       assert(array.item_case() == common::Value::kI64Array);
@@ -267,8 +265,10 @@ class WithInExpr : public ExprBase {
 
 class VariableExpr : public ExprBase {
  public:
-  VariableExpr(const GraphReadInterface& graph, const Context& ctx,
-               const common::Variable& pb, VarType var_type);
+  template <typename GraphInterface>
+  VariableExpr(const GraphInterface& graph, const Context& ctx,
+               const common::Variable& pb, VarType var_type)
+      : var_(graph, ctx, pb, var_type) {}
 
   RTAny eval_path(size_t idx) const override;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override;
@@ -848,8 +848,55 @@ class ToFloatExpr : public ExprBase {
   std::unique_ptr<ExprBase> args;
 };
 
+class StrConcatExpr : public ExprBase {
+ public:
+  StrConcatExpr(std::unique_ptr<ExprBase>&& lhs,
+                std::unique_ptr<ExprBase>&& rhs)
+      : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+  RTAny eval_path(size_t idx) const override {
+    std::string ret = std::string(lhs->eval_path(idx).as_string()) +
+                      std::string(rhs->eval_path(idx).as_string());
+    values.emplace_back(ret);
+    return RTAny::from_string(ret);
+  }
+
+  RTAny eval_path(size_t idx, int) const override {
+    if (lhs->eval_path(idx, 0).is_null() || rhs->eval_path(idx, 0).is_null()) {
+      return RTAny(RTAnyType::kNull);
+    }
+    return eval_path(idx);
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    std::string ret = std::string(lhs->eval_vertex(label, v, idx).as_string()) +
+                      std::string(rhs->eval_vertex(label, v, idx).as_string());
+    values.emplace_back(ret);
+    return RTAny::from_string(ret);
+  }
+
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    std::string ret =
+        std::string(lhs->eval_edge(label, src, dst, data, idx).as_string()) +
+        std::string(rhs->eval_edge(label, src, dst, data, idx).as_string());
+    values.emplace_back(ret);
+    return RTAny::from_string(ret);
+  }
+
+  RTAnyType type() const override { return RTAnyType::kStringValue; }
+  bool is_optional() const override {
+    return lhs->is_optional() || rhs->is_optional();
+  }
+
+ private:
+  std::unique_ptr<ExprBase> lhs;
+  std::unique_ptr<ExprBase> rhs;
+  mutable std::vector<std::string> values;
+};
+
+template <typename GraphInterface>
 std::unique_ptr<ExprBase> parse_expression(
-    const GraphReadInterface& graph, const Context& ctx,
+    const GraphInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type);
 

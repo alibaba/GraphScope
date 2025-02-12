@@ -45,6 +45,8 @@ class UpdateTransaction {
 
   timestamp_t timestamp() const;
 
+  const Schema& schema() const { return graph_.schema(); }
+
   void Commit();
 
   void Abort();
@@ -142,6 +144,7 @@ class UpdateTransaction {
   static void IngestWal(MutablePropertyFragment& graph,
                         const std::string& work_dir, uint32_t timestamp,
                         char* data, size_t length, Allocator& alloc);
+  Any GetVertexId(label_t label, vid_t lid) const;
 
  private:
   friend class GraphDBSession;

@@ -425,6 +425,10 @@ Any UpdateTransaction::GetVertexField(label_t label, vid_t lid,
   }
 }
 
+Any UpdateTransaction::GetVertexId(label_t label, vid_t lid) const {
+  return lid_to_oid(label, lid);
+}
+
 bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
                                        const Any& value) {
   auto& vertex_offset = vertex_offsets_[label];

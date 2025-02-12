@@ -57,7 +57,7 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
   gs::runtime::GraphInsertInterface gri(txn);
   auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::WriteContext(),
                                                params, timer_);
-
+  txn.Commit();
   return true;
 }
 AppWrapper CypherWriteAppFactory::CreateApp(const GraphDB& db) {

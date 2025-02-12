@@ -53,6 +53,16 @@ class LoadSingleEdgeOpr : public IInsertOperator {
                                   dst_index, prop_index);
   }
 
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return Load::load_single_edge(graph, std::move(ctx), src_label_id,
+                                  dst_label_id, edge_label_id, src_pk_type,
+                                  dst_pk_type, edge_prop_type, src_index,
+                                  dst_index, prop_index);
+  }
+
  private:
   int src_label_id, dst_label_id, edge_label_id, src_index, dst_index,
       prop_index;
@@ -85,6 +95,14 @@ class LoadSingleVertexOpr : public IInsertOperator {
                                     pk_type, id_col, properties, edges);
   }
 
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return Load::load_single_vertex(graph, std::move(ctx), vertex_label_id,
+                                    pk_type, id_col, properties, edges);
+  }
+
  private:
   int vertex_label_id, id_col;
   PropertyType pk_type;
@@ -107,6 +125,13 @@ class LoadOpr : public IInsertOperator {
 
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return Load::load(graph, std::move(ctx), vertex_mappings_, edge_mappings_);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
     return Load::load(graph, std::move(ctx), vertex_mappings_, edge_mappings_);

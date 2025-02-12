@@ -13,24 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
-#define RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
-
-#include "flex/engines/graph_db/runtime/common/context.h"
-#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/edge.h"
 
 namespace gs {
-
 namespace runtime {
-
-class Dedup {
- public:
-  static bl::result<WriteContext> dedup(WriteContext&& ctx,
-                                        const std::vector<size_t>& cols);
-};
-
+namespace ops {
+std::unique_ptr<IUpdateOperator> UEdgeExpandBuilder::Build(
+    const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
+  return nullptr;
+}
+}  // namespace ops
 }  // namespace runtime
-
 }  // namespace gs
-
-#endif  // RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_

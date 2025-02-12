@@ -23,7 +23,8 @@ namespace gs {
 
 namespace runtime {
 
-Var::Var(const GraphReadInterface& graph, const Context& ctx,
+template <typename GraphInterface>
+Var::Var(const GraphInterface& graph, const Context& ctx,
          const common::Variable& pb, VarType var_type)
     : getter_(nullptr) {
   int tag = -1;
@@ -136,6 +137,11 @@ Var::Var(const GraphReadInterface& graph, const Context& ctx,
     }
   }
 }
+
+template Var::Var(const GraphReadInterface& graph, const Context& ctx,
+                  const common::Variable& pb, VarType var_type);
+template Var::Var(const GraphUpdateInterface& graph, const Context& ctx,
+                  const common::Variable& pb, VarType var_type);
 
 Var::~Var() {}
 

@@ -28,7 +28,14 @@ class SinkInsertOpr : public IInsertOperator {
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    graph.Commit();
+    // graph.Commit();
+    return ctx;
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
     return ctx;
   }
 };

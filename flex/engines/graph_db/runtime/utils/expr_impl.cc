@@ -21,9 +21,6 @@ namespace gs {
 
 namespace runtime {
 
-VariableExpr::VariableExpr(const GraphReadInterface& graph, const Context& ctx,
-                           const common::Variable& pb, VarType var_type)
-    : var_(graph, ctx, pb, var_type) {}
 RTAny VariableExpr::eval_path(size_t idx) const { return var_.get(idx); }
 RTAny VariableExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   return var_.get_vertex(label, v, idx);
@@ -520,13 +517,15 @@ static inline int get_proiority(const common::ExprOpr& opr) {
   return 16;
 }
 
+template <typename GraphInterface>
 static std::unique_ptr<ExprBase> parse_expression_impl(
-    const GraphReadInterface& graph, const Context& ctx,
+    const GraphInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type);
 
+template <typename GraphInterface>
 static std::unique_ptr<ExprBase> build_expr(
-    const GraphReadInterface& graph, const Context& ctx,
+    const GraphInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     std::stack<common::ExprOpr>& opr_stack, VarType var_type) {
   while (!opr_stack.empty()) {
@@ -557,14 +556,14 @@ static std::unique_ptr<ExprBase> build_expr(
           auto key =
               std::make_unique<VariableExpr>(graph, ctx, lhs.var(), var_type);
           if (key->type() == RTAnyType::kI64Value) {
-            return std::make_unique<WithInExpr<int64_t>>(
-                graph, ctx, std::move(key), rhs.const_());
+            return std::make_unique<WithInExpr<int64_t>>(ctx, std::move(key),
+                                                         rhs.const_());
           } else if (key->type() == RTAnyType::kI32Value) {
-            return std::make_unique<WithInExpr<int32_t>>(
-                graph, ctx, std::move(key), rhs.const_());
+            return std::make_unique<WithInExpr<int32_t>>(ctx, std::move(key),
+                                                         rhs.const_());
           } else if (key->type() == RTAnyType::kStringValue) {
             return std::make_unique<WithInExpr<std::string>>(
-                graph, ctx, std::move(key), rhs.const_());
+                ctx, std::move(key), rhs.const_());
           } else {
             LOG(FATAL) << "not support";
           }
@@ -575,11 +574,11 @@ static std::unique_ptr<ExprBase> build_expr(
             auto val =
                 std::make_unique<VariableExpr>(graph, ctx, rhs.var(), var_type);
             if (val->type() == RTAnyType::kList) {
-              return std::make_unique<VertexWithInListExpr>(
-                  graph, ctx, std::move(key), std::move(val));
+              return std::make_unique<VertexWithInListExpr>(ctx, std::move(key),
+                                                            std::move(val));
             } else if (val->type() == RTAnyType::kSet) {
-              return std::make_unique<VertexWithInSetExpr>(
-                  graph, ctx, std::move(key), std::move(val));
+              return std::make_unique<VertexWithInSetExpr>(ctx, std::move(key),
+                                                           std::move(val));
             } else {
               LOG(FATAL) << "not support";
             }
@@ -705,6 +704,11 @@ static std::unique_ptr<ExprBase> build_expr(
         return std::make_unique<EndNodeExpr>(std::move(expr));
       } else if (name == "gs.function.toFloat") {
         return std::make_unique<ToFloatExpr>(std::move(expr));
+      } else if (name == "gs.function.concat") {
+        auto expr2 = parse_expression_impl(graph, ctx, params, op.parameters(1),
+                                           var_type);
+        return std::make_unique<StrConcatExpr>(std::move(expr),
+                                               std::move(expr2));
       } else {
         LOG(FATAL) << "not support udf" << opr.DebugString();
       }
@@ -721,8 +725,10 @@ static std::unique_ptr<ExprBase> build_expr(
   }
   return nullptr;
 }
+
+template <typename GraphInterface>
 static std::unique_ptr<ExprBase> parse_expression_impl(
-    const GraphReadInterface& graph, const Context& ctx,
+    const GraphInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
   std::stack<common::ExprOpr> opr_stack;
@@ -799,12 +805,23 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
   }
   return build_expr(graph, ctx, params, opr_stack2, var_type);
 }
+
+template <typename GraphInterface>
 std::unique_ptr<ExprBase> parse_expression(
-    const GraphReadInterface& graph, const Context& ctx,
+    const GraphInterface& graph, const Context& ctx,
     const std::map<std::string, std::string>& params,
     const common::Expression& expr, VarType var_type) {
   return parse_expression_impl(graph, ctx, params, expr, var_type);
 }
+
+template std::unique_ptr<ExprBase> parse_expression<GraphReadInterface>(
+    const GraphReadInterface&, const Context&,
+    const std::map<std::string, std::string>&, const common::Expression&,
+    VarType);
+template std::unique_ptr<ExprBase> parse_expression<GraphUpdateInterface>(
+    const GraphUpdateInterface&, const Context&,
+    const std::map<std::string, std::string>&, const common::Expression&,
+    VarType);
 
 }  // namespace runtime
 

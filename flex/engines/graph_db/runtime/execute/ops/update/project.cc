@@ -38,6 +38,17 @@ class ProjectInsertOpr : public IInsertOperator {
     return Project::project(std::move(ctx), exprs);
   }
 
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    std::vector<std::unique_ptr<WriteProjectExprBase>> exprs;
+    for (auto& expr : exprs_) {
+      exprs.push_back(expr(params));
+    }
+    return Project::project(std::move(ctx), exprs);
+  }
+
  private:
   std::vector<std::function<std::unique_ptr<WriteProjectExprBase>(
       const std::map<std::string, std::string>&)>>

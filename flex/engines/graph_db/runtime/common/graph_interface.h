@@ -18,6 +18,7 @@
 
 #include "flex/engines/graph_db/database/insert_transaction.h"
 #include "flex/engines/graph_db/database/read_transaction.h"
+#include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 
 namespace gs {
@@ -268,6 +269,35 @@ class VertexArray {
 
 }  // namespace graph_interface_impl
 
+namespace graph_update_interface_impl {
+template <typename PROP_T>
+class VertexColumn {
+ public:
+  VertexColumn() : txn_(nullptr), label_(0), col_id(-2) {}
+  VertexColumn(UpdateTransaction* txn, label_t label, int col_id)
+      : txn_(txn), label_(label), col_id(col_id) {}
+  inline PROP_T get_view(vid_t v) const {
+    // col_id == -1 means the primary key column
+    if (col_id == -1) {
+      return AnyConverter<PROP_T>::from_any(txn_->GetVertexId(label_, v));
+    } else if (col_id == -2) {
+      return PROP_T();
+    } else {
+      return AnyConverter<PROP_T>::from_any(
+          txn_->GetVertexField(label_, v, col_id));
+    }
+  }
+
+  // when the column is not found, the col_id is -1
+  inline bool is_null() const { return col_id == -2; }
+
+ private:
+  UpdateTransaction* txn_;
+  label_t label_;
+  int col_id;
+};
+}  // namespace graph_update_interface_impl
+
 class GraphReadInterface {
  public:
   template <typename PROP_T>
@@ -374,6 +404,91 @@ class GraphInsertInterface {
 
  private:
   gs::InsertTransaction& txn_;
+};
+
+class GraphUpdateInterface {
+ public:
+  template <typename PROP_T>
+  using vertex_column_t = graph_update_interface_impl::VertexColumn<PROP_T>;
+
+  template <typename PROP_T>
+  inline vertex_column_t<PROP_T> GetVertexColumn(
+      label_t label, const std::string& prop_name) const {
+    const auto& prop_names = txn_.schema().get_vertex_property_names(label);
+    for (size_t i = 0; i < prop_names.size(); i++) {
+      if (prop_names[i] == prop_name) {
+        return vertex_column_t<PROP_T>(&txn_, label, i);
+      }
+    }
+    const auto& pk = txn_.schema().get_vertex_primary_key(label);
+    CHECK(pk.size() == 1);
+
+    if (std::get<1>(pk[0]) == prop_name) {
+      return vertex_column_t<PROP_T>(&txn_, label, -1);
+    }
+    // null column
+    return vertex_column_t<PROP_T>(&txn_, label, -2);
+  }
+
+  GraphUpdateInterface(gs::UpdateTransaction& txn) : txn_(txn) {}
+  ~GraphUpdateInterface() {}
+
+  inline void SetVertexField(label_t label, vid_t lid, int col_id,
+                             const Any& value) {
+    txn_.SetVertexField(label, lid, col_id, value);
+  }
+
+  inline void SetEdgeData(bool dir, label_t label, vid_t v,
+                          label_t neighbor_label, vid_t nbr, label_t edge_label,
+                          const Any& value) {
+    txn_.SetEdgeData(dir, label, v, neighbor_label, nbr, edge_label, value);
+  }
+
+  inline bool GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
+                                 label_t neighbor_label, vid_t nbr,
+                                 label_t edge_label, Any& ret) const {
+    return txn_.GetUpdatedEdgeData(dir, label, v, neighbor_label, nbr,
+                                   edge_label, ret);
+  }
+
+  inline bool AddVertex(label_t label, const Any& id,
+                        const std::vector<Any>& props) {
+    return txn_.AddVertex(label, id, props);
+  }
+
+  inline bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+                      const Any& dst, label_t edge_label, const Any& prop) {
+    return txn_.AddEdge(src_label, src, dst_label, dst, edge_label, prop);
+  }
+
+  inline void Commit() { txn_.Commit(); }
+
+  inline void Abort() { txn_.Abort(); }
+
+  inline const Schema& schema() const { return txn_.schema(); }
+
+  inline Any GetVertexId(label_t label, vid_t index) const {
+    return txn_.GetVertexId(label, index);
+  }
+
+  inline auto GetVertexIterator(label_t label) const {
+    return txn_.GetVertexIterator(label);
+  }
+
+  inline auto GetOutEdgeIterator(label_t label, vid_t src,
+                                 label_t neighbor_label,
+                                 label_t edge_label) const {
+    return txn_.GetOutEdgeIterator(label, src, neighbor_label, edge_label);
+  }
+
+  inline auto GetInEdgeIterator(label_t label, vid_t src,
+                                label_t neighbor_label,
+                                label_t edge_label) const {
+    return txn_.GetInEdgeIterator(label, src, neighbor_label, edge_label);
+  }
+
+ private:
+  gs::UpdateTransaction& txn_;
 };
 
 }  // namespace runtime

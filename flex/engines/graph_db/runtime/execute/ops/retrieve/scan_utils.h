@@ -13,24 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
-#define RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
-
-#include "flex/engines/graph_db/runtime/common/context.h"
-#include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+#ifndef RUNTIME_EXECUTE_RETRIEVE_OPS_SCAN_UTILS_H_
+#define RUNTIME_EXECUTE_RETRIEVE_OPS_SCAN_UTILS_H_
+#include "flex/engines/graph_db/runtime/execute/operator.h"
 
 namespace gs {
-
 namespace runtime {
+namespace ops {
 
-class Dedup {
+class ScanUtils {
  public:
-  static bl::result<WriteContext> dedup(WriteContext&& ctx,
-                                        const std::vector<size_t>& cols);
+  static std::function<
+      std::vector<Any>(const std::map<std::string, std::string>&)>
+  parse_ids_with_type(PropertyType type,
+                      const algebra::IndexPredicate& triplet);
+
+  static bool check_idx_predicate(const physical::Scan& scan_opr,
+                                  bool& scan_oid);
 };
 
+}  // namespace ops
 }  // namespace runtime
-
 }  // namespace gs
-
-#endif  // RUNTIME_COMMON_OPERATORS_UPDATE_DEDUP_H_
+#endif  // RUNTIME_EXECUTE_RETRIEVE_OPS_SCAN_UTILS_H_
