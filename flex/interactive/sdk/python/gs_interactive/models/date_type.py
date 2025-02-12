@@ -86,6 +86,10 @@ class DateType(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
+        for key in obj:
+            if key not in cls.__properties:
+                raise ValueError(f"Unexpected field {key} for DateType")
+
         _obj = cls.model_validate({
             "date32": obj.get("date32")
         })
