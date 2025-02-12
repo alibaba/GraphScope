@@ -14,7 +14,7 @@ class ServiceStatus(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, graph_id=None, status=None, sdk_endpoints=None, start_time=None):  # noqa: E501
+    def __init__(self, graph_id=None, status=None, sdk_endpoints=None, info=None, start_time=None):  # noqa: E501
         """ServiceStatus - a model defined in OpenAPI
 
         :param graph_id: The graph_id of this ServiceStatus.  # noqa: E501
@@ -23,6 +23,8 @@ class ServiceStatus(Model):
         :type status: str
         :param sdk_endpoints: The sdk_endpoints of this ServiceStatus.  # noqa: E501
         :type sdk_endpoints: ServiceStatusSdkEndpoints
+        :param info: The info of this ServiceStatus.  # noqa: E501
+        :type info: str
         :param start_time: The start_time of this ServiceStatus.  # noqa: E501
         :type start_time: str
         """
@@ -30,6 +32,7 @@ class ServiceStatus(Model):
             'graph_id': str,
             'status': str,
             'sdk_endpoints': ServiceStatusSdkEndpoints,
+            'info': str,
             'start_time': str
         }
 
@@ -37,12 +40,14 @@ class ServiceStatus(Model):
             'graph_id': 'graph_id',
             'status': 'status',
             'sdk_endpoints': 'sdk_endpoints',
+            'info': 'info',
             'start_time': 'start_time'
         }
 
         self._graph_id = graph_id
         self._status = status
         self._sdk_endpoints = sdk_endpoints
+        self._info = info
         self._start_time = start_time
 
     @classmethod
@@ -126,6 +131,27 @@ class ServiceStatus(Model):
         """
 
         self._sdk_endpoints = sdk_endpoints
+
+    @property
+    def info(self) -> str:
+        """Gets the info of this ServiceStatus.
+
+
+        :return: The info of this ServiceStatus.
+        :rtype: str
+        """
+        return self._info
+
+    @info.setter
+    def info(self, info: str):
+        """Sets the info of this ServiceStatus.
+
+
+        :param info: The info of this ServiceStatus.
+        :type info: str
+        """
+
+        self._info = info
 
     @property
     def start_time(self) -> str:

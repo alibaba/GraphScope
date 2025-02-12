@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" GraphScope default configuration.
-"""
+"""GraphScope default configuration."""
 
 import base64
 import json

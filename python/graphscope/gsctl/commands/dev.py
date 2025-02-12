@@ -42,7 +42,8 @@ with open(v6d_version_file_path, "r", encoding="utf-8") as fp:
 # Interactive docker container config
 INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
 INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
-INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/interactive_config.yaml"
+INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/config.yaml"
+COORDINATOR_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/coordinator_config.yaml"
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps.sh")
@@ -191,7 +192,7 @@ def interactive(app, graphscope_repo, version):
     required=False,
 )
 @click.option(
-    "--interactive-config",
+    "--config",
     help="Interactive config file path [docker only]",
     required=False,
     default=None,
@@ -234,7 +235,7 @@ def deploy(
     storedproc_port,
     cypher_port,
     gremlin_port,
-    interactive_config,
+    config,
 ):  # noqa: F811
     """Deploy a GraphScope Flex instance"""
     cmd = []
@@ -258,17 +259,15 @@ def deploy(
         ]
         if gremlin_port != -1:
             cmd.extend(["-p", f"{gremlin_port}:8182"])
-        if interactive_config is not None:
-            if not os.path.isfile(interactive_config):
+        if config is not None:
+            if not os.path.isfile(config):
                 click.secho(
-                    f"Interactive config file {interactive_config} does not exist.",
+                    f"Interactive config file {config} does not exist.",
                     fg="red",
                 )
                 return
-            interactive_config = os.path.abspath(interactive_config)
-            cmd.extend(
-                ["-v", f"{interactive_config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"]
-            )
+            config = os.path.abspath(config)
+            cmd.extend(["-v", f"{config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"])
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
         cmd.extend(

@@ -14,26 +14,31 @@ class Parameter(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, type=None):  # noqa: E501
+    def __init__(self, name=None, type=None, allow_cast=None):  # noqa: E501
         """Parameter - a model defined in OpenAPI
 
         :param name: The name of this Parameter.  # noqa: E501
         :type name: str
         :param type: The type of this Parameter.  # noqa: E501
         :type type: GSDataType
+        :param allow_cast: The allow_cast of this Parameter.  # noqa: E501
+        :type allow_cast: bool
         """
         self.openapi_types = {
             'name': str,
-            'type': GSDataType
+            'type': GSDataType,
+            'allow_cast': bool
         }
 
         self.attribute_map = {
             'name': 'name',
-            'type': 'type'
+            'type': 'type',
+            'allow_cast': 'allow_cast'
         }
 
         self._name = name
         self._type = type
+        self._allow_cast = allow_cast
 
     @classmethod
     def from_dict(cls, dikt) -> 'Parameter':
@@ -91,3 +96,24 @@ class Parameter(Model):
             raise ValueError("Invalid value for `type`, must not be `None`")  # noqa: E501
 
         self._type = type
+
+    @property
+    def allow_cast(self) -> bool:
+        """Gets the allow_cast of this Parameter.
+
+
+        :return: The allow_cast of this Parameter.
+        :rtype: bool
+        """
+        return self._allow_cast
+
+    @allow_cast.setter
+    def allow_cast(self, allow_cast: bool):
+        """Sets the allow_cast of this Parameter.
+
+
+        :param allow_cast: The allow_cast of this Parameter.
+        :type allow_cast: bool
+        """
+
+        self._allow_cast = allow_cast

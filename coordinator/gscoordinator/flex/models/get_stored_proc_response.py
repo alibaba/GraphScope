@@ -14,7 +14,7 @@ class GetStoredProcResponse(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, description=None, type=None, query=None, id=None, library=None, params=None, returns=None, bound_graph=None, runnable=None):  # noqa: E501
+    def __init__(self, name=None, description=None, type=None, query=None, id=None, library=None, params=None, returns=None, option=None, bound_graph=None, runnable=None):  # noqa: E501
         """GetStoredProcResponse - a model defined in OpenAPI
 
         :param name: The name of this GetStoredProcResponse.  # noqa: E501
@@ -33,6 +33,8 @@ class GetStoredProcResponse(Model):
         :type params: List[Parameter]
         :param returns: The returns of this GetStoredProcResponse.  # noqa: E501
         :type returns: List[Parameter]
+        :param option: The option of this GetStoredProcResponse.  # noqa: E501
+        :type option: Dict[str, object]
         :param bound_graph: The bound_graph of this GetStoredProcResponse.  # noqa: E501
         :type bound_graph: str
         :param runnable: The runnable of this GetStoredProcResponse.  # noqa: E501
@@ -47,6 +49,7 @@ class GetStoredProcResponse(Model):
             'library': str,
             'params': List[Parameter],
             'returns': List[Parameter],
+            'option': Dict[str, object],
             'bound_graph': str,
             'runnable': bool
         }
@@ -60,6 +63,7 @@ class GetStoredProcResponse(Model):
             'library': 'library',
             'params': 'params',
             'returns': 'returns',
+            'option': 'option',
             'bound_graph': 'bound_graph',
             'runnable': 'runnable'
         }
@@ -72,6 +76,7 @@ class GetStoredProcResponse(Model):
         self._library = library
         self._params = params
         self._returns = returns
+        self._option = option
         self._bound_graph = bound_graph
         self._runnable = runnable
 
@@ -271,6 +276,27 @@ class GetStoredProcResponse(Model):
             raise ValueError("Invalid value for `returns`, must not be `None`")  # noqa: E501
 
         self._returns = returns
+
+    @property
+    def option(self) -> Dict[str, object]:
+        """Gets the option of this GetStoredProcResponse.
+
+
+        :return: The option of this GetStoredProcResponse.
+        :rtype: Dict[str, object]
+        """
+        return self._option
+
+    @option.setter
+    def option(self, option: Dict[str, object]):
+        """Sets the option of this GetStoredProcResponse.
+
+
+        :param option: The option of this GetStoredProcResponse.
+        :type option: Dict[str, object]
+        """
+
+        self._option = option
 
     @property
     def bound_graph(self) -> str:

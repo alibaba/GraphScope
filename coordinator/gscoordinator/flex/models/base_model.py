@@ -43,7 +43,7 @@ class Model:
                     if hasattr(item[1], "to_dict") else item,
                     value.items()
                 ))
-            else:
+            elif value is not None:
                 result[attr] = value
 
         return result

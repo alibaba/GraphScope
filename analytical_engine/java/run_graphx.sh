@@ -170,7 +170,7 @@ while test $# -ne 0; do
         shift
         if [[ "${TASK}" == *"load_fragment"* || "${TASK}" == *"run_pregel"* ]];
         then
-            log "Runing task:            "${TASK}
+            log "Running task:            "${TASK}
         else
             err "Received unrecognized task ${TASK}"
             exit 1
@@ -250,5 +250,5 @@ elif  [[ "${TASK}" == *"run_pregel"* ]];
 then
   run_pregel
 else
-  err "Not possible taks "${TASK}
+  err "Not possible task "${TASK}
 fi
