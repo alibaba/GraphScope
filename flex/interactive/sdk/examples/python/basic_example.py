@@ -199,8 +199,7 @@ def updateVertex(sess: Session, graph_id: str):
 
 def getVertex(sess: Session, graph_id: str):
     label = "person"  # str | The label name of querying vertex.
-    primary_key_value = ModelProperty(name="id", value=1)  # object | The primary key value of querying vertex.
-    api_response = sess.get_vertex(graph_id, label, primary_key_value)
+    api_response = sess.get_vertex(graph_id, label, 1)
     if api_response.is_ok():
         print("The response of get_vertex", api_response)
     else:
@@ -231,15 +230,13 @@ def getEdge(sess: Session, graph_id: str):
     src_label = "person"
     dst_label = "person"
     edge_label = "knows"
-    src_primary_key_values = [ModelProperty(name="id", value=1)]
-    dst_primary_key_values = [ModelProperty(name="id", value=8)]
     api_response = sess.get_edge(
         graph_id,
         edge_label,
         src_label,
-        src_primary_key_values,
+        1,
         dst_label,
-        dst_primary_key_values,
+        8,
     )
     if api_response.is_ok():
         print("The response of get_edge", api_response)
