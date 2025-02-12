@@ -86,10 +86,6 @@ class TimeStampType(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        for key in obj:
-            if key not in cls.__properties:
-                raise ValueError(f"Unexpected field {key} for TimeStampType")
-
         _obj = cls.model_validate({
             "timestamp": obj.get("timestamp")
         })
