@@ -29,6 +29,8 @@ from gscoordinator.flex.models.date_type import DateType
 from gscoordinator.flex.models.edge_mapping import EdgeMapping
 from gscoordinator.flex.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
 from gscoordinator.flex.models.error import Error
+from gscoordinator.flex.models.fixed_char import FixedChar
+from gscoordinator.flex.models.fixed_char_char import FixedCharChar
 from gscoordinator.flex.models.gs_data_type import GSDataType
 from gscoordinator.flex.models.get_alert_message_response import GetAlertMessageResponse
 from gscoordinator.flex.models.get_alert_receiver_response import GetAlertReceiverResponse
@@ -61,7 +63,10 @@ from gscoordinator.flex.models.string_type_string import StringTypeString
 from gscoordinator.flex.models.temporal_type import TemporalType
 from gscoordinator.flex.models.temporal_type_temporal import TemporalTypeTemporal
 from gscoordinator.flex.models.time_stamp_type import TimeStampType
+from gscoordinator.flex.models.typed_value import TypedValue
 from gscoordinator.flex.models.update_alert_message_status_request import UpdateAlertMessageStatusRequest
 from gscoordinator.flex.models.update_stored_proc_request import UpdateStoredProcRequest
 from gscoordinator.flex.models.upload_file_response import UploadFileResponse
+from gscoordinator.flex.models.var_char import VarChar
+from gscoordinator.flex.models.var_char_var_char import VarCharVarChar
 from gscoordinator.flex.models.vertex_mapping import VertexMapping

@@ -16,5 +16,4 @@
 # limitations under the License.
 #
 
-"""Dummy package dir for gs-engine package
-"""
+"""Dummy package dir for gs-engine package"""

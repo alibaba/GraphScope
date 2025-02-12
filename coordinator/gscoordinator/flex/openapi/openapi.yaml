@@ -6,10 +6,6 @@ info:
   description: |-
     This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about
     specification at [doc](https://swagger.io/specification/v3/).
-
-    Some useful links:
-    - [GraphScope Repository](https://github.com/alibaba/GraphScope)
-    - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1904,6 +1900,7 @@ paths:
                   cypher: neo4j://mock.api.cypher:7676
                   gremlin: ws://mock.api.gremlin/gremlin
                   hqps: http://mock.api.hqps:10000
+                info: Replace 127.0.0.1 with public ip if connecting from outside
                 start_time: 2024-01-01 00:00:00
               schema:
                 items:
@@ -2011,6 +2008,118 @@ components:
             $ref: '#/components/schemas/Error'
       description: Server error
   schemas:
+    AnyValue:
+      title: default_value
+    TypedValue:
+      properties:
+        type:
+          $ref: '#/components/schemas/GSDataType'
+        value:
+          title: default_value
+      required:
+      - type
+      - value
+      type: object
+    PrimitiveType:
+      example:
+        primitive_type: DT_SIGNED_INT32
+      properties:
+        primitive_type:
+          enum:
+          - DT_SIGNED_INT32
+          - DT_UNSIGNED_INT32
+          - DT_SIGNED_INT64
+          - DT_UNSIGNED_INT64
+          - DT_BOOL
+          - DT_FLOAT
+          - DT_DOUBLE
+          example: DT_SIGNED_INT32
+          title: primitive_type
+          type: string
+      required:
+      - primitive_type
+      title: PrimitiveType
+      type: object
+      x-body-name: primitive_type
+    LongText:
+      additionalProperties: false
+      properties:
+        long_text:
+          nullable: true
+          title: long_text
+          type: string
+      required:
+      - long_text
+      title: LongText
+      type: object
+      x-body-name: long_text
+    FixedChar:
+      additionalProperties: false
+      properties:
+        char:
+          $ref: '#/components/schemas/FixedChar_char'
+      required:
+      - char
+      title: FixedChar
+      type: object
+      x-body-name: fixed_char
+    VarChar:
+      additionalProperties: false
+      properties:
+        var_char:
+          $ref: '#/components/schemas/VarChar_var_char'
+      required:
+      - var_char
+      title: VarChar
+      type: object
+      x-body-name: var_char
+    StringType:
+      properties:
+        string:
+          $ref: '#/components/schemas/StringType_string'
+      required:
+      - string
+      title: StringType
+      type: object
+      x-body-name: string_type
+    TimeStampType:
+      properties:
+        timestamp:
+          nullable: true
+          title: timestamp
+          type: string
+      required:
+      - timestamp
+      title: TimeStampType
+      type: object
+      x-body-name: time_stamp_type
+    DateType:
+      properties:
+        date32:
+          nullable: true
+          title: date32
+          type: string
+      required:
+      - date32
+      title: DateType
+      type: object
+      x-body-name: date_type
+    TemporalType:
+      properties:
+        temporal:
+          $ref: '#/components/schemas/TemporalType_temporal'
+      required:
+      - temporal
+      title: TemporalType
+      type: object
+      x-body-name: temporal_type
+    GSDataType:
+      oneOf:
+      - $ref: '#/components/schemas/PrimitiveType'
+      - $ref: '#/components/schemas/StringType'
+      - $ref: '#/components/schemas/TemporalType'
+      title: GSDataType
+      x-body-name: gs_data_type
     APIResponse:
       type: string
     Error:
@@ -2031,8 +2140,6 @@ components:
       - code
       - message
       title: Error
-    AnyValue:
-      title: default_value
     RunningDeploymentInfo:
       example:
         creation_time: creation_time
@@ -2340,6 +2447,7 @@ components:
           hqps: hqps
           grpc: grpc
         status: Running
+        info: info
       properties:
         graph_id:
           title: graph_id
@@ -2352,6 +2460,10 @@ components:
           type: string
         sdk_endpoints:
           $ref: '#/components/schemas/ServiceStatus_sdk_endpoints'
+        info:
+          nullable: true
+          title: info
+          type: string
         start_time:
           title: start_time
           type: string
@@ -2377,72 +2489,10 @@ components:
       - file_path
       - metadata
       title: UploadFileResponse
-    LongText:
-      properties:
-        long_text:
-          nullable: true
-          title: long_text
-          type: string
-      required:
-      - long_text
-      title: LongText
-    PrimitiveType:
-      example:
-        primitive_type: DT_SIGNED_INT32
-      properties:
-        primitive_type:
-          enum:
-          - DT_SIGNED_INT32
-          - DT_UNSIGNED_INT32
-          - DT_SIGNED_INT64
-          - DT_UNSIGNED_INT64
-          - DT_BOOL
-          - DT_FLOAT
-          - DT_DOUBLE
-          title: primitive_type
-          type: string
-      required:
-      - primitive_type
-      title: PrimitiveType
-    StringType:
-      properties:
-        string:
-          $ref: '#/components/schemas/StringType_string'
-      required:
-      - string
-      title: StringType
-    TimeStampType:
-      properties:
-        timestamp:
-          title: timestamp
-          type: string
-      required:
-      - timestamp
-      title: TimeStampType
-    DateType:
-      properties:
-        date32:
-          title: date32
-          type: string
-      required:
-      - date32
-      title: DateType
-    TemporalType:
-      properties:
-        temporal:
-          $ref: '#/components/schemas/TemporalType_temporal'
-      required:
-      - temporal
-      title: TemporalType
-    GSDataType:
-      oneOf:
-      - $ref: '#/components/schemas/PrimitiveType'
-      - $ref: '#/components/schemas/StringType'
-      - $ref: '#/components/schemas/TemporalType'
-      title: GSDataType
     Parameter:
       example:
         name: name
+        allow_cast: true
         type:
           primitive_type: DT_SIGNED_INT32
       properties:
@@ -2451,6 +2501,9 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/GSDataType'
+        allow_cast:
+          title: allow_cast
+          type: boolean
       required:
       - name
       - type
@@ -2939,6 +2992,9 @@ components:
             items:
               $ref: '#/components/schemas/Parameter'
             type: array
+          option:
+            additionalProperties: true
+            type: object
         required:
         - id
         - library
@@ -2967,20 +3023,26 @@ components:
         description: description
         returns:
         - name: name
+          allow_cast: true
           type:
             primitive_type: DT_SIGNED_INT32
         - name: name
+          allow_cast: true
           type:
             primitive_type: DT_SIGNED_INT32
         id: id
         type: cpp
         params:
         - name: name
+          allow_cast: true
           type:
             primitive_type: DT_SIGNED_INT32
         - name: name
+          allow_cast: true
           type:
             primitive_type: DT_SIGNED_INT32
+        option:
+          key: ""
       title: GetStoredProcResponse
     UpdateStoredProcRequest:
       example:
@@ -3203,6 +3265,7 @@ components:
       - vertex_types
       title: GetGraphSchemaResponse
     GetGraphResponse:
+      additionalProperties: true
       example:
         creation_time: creation_time
         schema:
@@ -3321,20 +3384,26 @@ components:
           description: description
           returns:
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           id: id
           type: cpp
           params:
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
+          option:
+            key: ""
         - runnable: true
           library: library
           bound_graph: bound_graph
@@ -3343,20 +3412,26 @@ components:
           description: description
           returns:
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           id: id
           type: cpp
           params:
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
           - name: name
+            allow_cast: true
             type:
               primitive_type: DT_SIGNED_INT32
+          option:
+            key: ""
         name: name
         description: description
         schema_update_time: schema_update_time
@@ -3365,32 +3440,24 @@ components:
         data_update_time: data_update_time
       properties:
         id:
-          title: id
           type: string
         name:
-          title: name
           type: string
         description:
-          title: description
           type: string
         store_type:
           enum:
           - mutable_csr
-          title: store_type
           type: string
         creation_time:
-          title: creation_time
           type: string
         data_update_time:
-          title: data_update_time
           type: string
         schema_update_time:
-          title: schema_update_time
           type: string
         stored_procedures:
           items:
             $ref: '#/components/schemas/GetStoredProcResponse'
-          title: stored_procedures
           type: array
         schema:
           $ref: '#/components/schemas/GetGraphSchemaResponse'
@@ -3402,6 +3469,7 @@ components:
       - schema
       - schema_update_time
       title: GetGraphResponse
+      type: object
     ColumnMapping:
       example:
         column:
@@ -3962,6 +4030,35 @@ components:
           format: binary
           type: string
       type: object
+    FixedChar_char:
+      properties:
+        fixed_length:
+          title: fixed_length
+          type: integer
+      required:
+      - fixed_length
+      title: FixedChar_char
+      type: object
+    VarChar_var_char:
+      properties:
+        max_length:
+          title: max_length
+          type: integer
+      required:
+      - max_length
+      title: VarChar_var_char
+      type: object
+    StringType_string:
+      oneOf:
+      - $ref: '#/components/schemas/LongText'
+      - $ref: '#/components/schemas/FixedChar'
+      - $ref: '#/components/schemas/VarChar'
+      title: StringType_string
+    TemporalType_temporal:
+      oneOf:
+      - $ref: '#/components/schemas/TimeStampType'
+      - $ref: '#/components/schemas/DateType'
+      title: TemporalType_temporal
     ServiceStatus_sdk_endpoints:
       example:
         gremlin: gremlin
@@ -3982,16 +4079,6 @@ components:
           title: grpc
           type: string
       title: ServiceStatus_sdk_endpoints
-    StringType_string:
-      oneOf:
-      - $ref: '#/components/schemas/LongText'
-      title: StringType_string
-      type: object
-    TemporalType_temporal:
-      oneOf:
-      - $ref: '#/components/schemas/TimeStampType'
-      - $ref: '#/components/schemas/DateType'
-      title: TemporalType_temporal
     BaseVertexType_x_csr_params:
       description: Used for storage optimization
       example:

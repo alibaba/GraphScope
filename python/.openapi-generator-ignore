@@ -1,0 +1,23 @@
+# OpenAPI Generator Ignore
+docs/
+test/
+
+.github/
+.gitignore
+.gitlab-ci.yml
+.travis.yml
+git_push.sh
+pyproject.toml
+requirements.txt
+setup.cfg
+setup.py
+test-requirements.txt
+tox.ini
+python.yml
+.openapi-generator/
+README.md
+
+graphscope/__init__.py
+graphscope/flex/__init__.py
+graphscope/flex/rest/models/date_type.py
+graphscope/flex/rest/models/time_stamp_type.py

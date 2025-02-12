@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" Manage connections of the GraphScope store service.
-"""
+"""Manage connections of the GraphScope store service."""
 
 import base64
 import json
