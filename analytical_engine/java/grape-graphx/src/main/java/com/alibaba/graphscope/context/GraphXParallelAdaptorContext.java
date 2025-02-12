@@ -149,7 +149,7 @@ public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
      * super steps here.
      *
      * @param frag           The graph fragment providing accesses to graph data.
-     * @param messageManager The message manger which manages messages between fragments.
+     * @param messageManager The message manager which manages messages between fragments.
      * @param jsonObject     String args from cmdline.
      * @see IFragment
      * @see ParallelMessageManager
