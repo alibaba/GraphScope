@@ -39,7 +39,7 @@ public interface ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> extends Con
      * super steps here.
      *
      * @param frag The graph fragment providing accesses to graph data.
-     * @param messageManager The message manger which manages messages between fragments.
+     * @param messageManager The message manager which manages messages between fragments.
      * @param jsonObject String args from cmdline.
      * @see IFragment
      * @see ParallelMessageManager
