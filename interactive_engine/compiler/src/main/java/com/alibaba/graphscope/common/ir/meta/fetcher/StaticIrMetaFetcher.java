@@ -46,6 +46,7 @@ public class StaticIrMetaFetcher extends IrMetaFetcher {
             try {
                 stats = fetchStats(meta);
             } catch (Exception e) {
+                logger.error("failed to fetch graph statistics, error is {}", e);
             }
         }
         this.metaStats =
