@@ -991,6 +991,10 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
       int idx = 0;
       for (const auto& var : vars) {
         auto alias = mappings[idx++].second;
+        if (!var.has_property()) {
+          continue;
+        }
+
         Var var_(graph, ctx, var, VarType::kPathVar);
         if (var_.type() == RTAnyType::kStringValue) {
           TypedKeyCollector<std::string_view>::TypedKeyWrapper wrapper(
