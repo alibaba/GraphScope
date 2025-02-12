@@ -67,6 +67,13 @@ class GenerateFlexSDK(Command):
         pass
 
     def run(self):
+        # remove
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_client")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
+        if os.path.exists(targetdir):
+            shutil.rmtree(targetdir)
         # generate
         specification = os.path.join(
             pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
@@ -78,10 +85,10 @@ class GenerateFlexSDK(Command):
             "python",
             "-i",
             str(specification),
+            "-o",
+            str(tempdir),
             "--package-name",
             "graphscope.flex.rest",
-            "-o",
-            ".",
         ]
         print(" ".join(cmd))
         env = os.environ.copy()
@@ -89,6 +96,10 @@ class GenerateFlexSDK(Command):
         subprocess.check_call(
             cmd,
             env=env,
+        )
+        # cp
+        subprocess.run(
+            ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
         )
 
 
