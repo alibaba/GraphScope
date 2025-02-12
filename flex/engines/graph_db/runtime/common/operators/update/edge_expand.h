@@ -13,35 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_COMMON_OPERATORS_UPDATE_SCAN_H_
-#define RUNTIME_COMMON_OPERATORS_UPDATE_SCAN_H_
+#ifndef RUNTIME_COMMON_OPERATORS_UPDATE_EDGE_H_
+#define RUNTIME_COMMON_OPERATORS_UPDATE_EDGE_H_
+#include "flex/engines/graph_db/runtime/common/columns/edge_columns.h"
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/utils/params.h"
-
 namespace gs {
 namespace runtime {
-class UScan {
+class UEdgeExpand {
  public:
-  template <typename PRED_T>
-  static bl::result<Context> scan(const GraphUpdateInterface& graph,
-                                  Context&& ctx, const ScanParams& params,
-                                  const PRED_T& pred) {
-    MLVertexColumnBuilder builder;
-    for (auto& label : params.tables) {
-      auto vit = graph.GetVertexIterator(label);
-      for (; vit.IsValid(); vit.Next()) {
-        if (pred(label, vit.GetIndex())) {
-          builder.push_back_vertex(VertexRecord{label, vit.GetIndex()});
-        }
-      }
-    }
-    ctx.set(params.alias, builder.finish());
-    return ctx;
-  }
-};
+  static bl::result<Context> edge_expand_v_without_pred(
+      const GraphUpdateInterface& graph, Context&& ctx,
+      const EdgeExpandParams& params);
 
+  static bl::result<Context> edge_expand_e_without_pred(
+      const GraphUpdateInterface& graph, Context&& ctx,
+      const EdgeExpandParams& params);
+};
 }  // namespace runtime
 }  // namespace gs
-#endif
+#endif  // RUNTIME_COMMON_OPERATORS_UPDATE_EDGE_H_

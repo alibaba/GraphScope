@@ -19,18 +19,12 @@
 #include "flex/engines/graph_db/runtime/common/columns/vertex_columns.h"
 #include "flex/engines/graph_db/runtime/common/context.h"
 #include "flex/engines/graph_db/runtime/common/leaf_utils.h"
+#include "flex/engines/graph_db/runtime/utils/params.h"
 #include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 namespace gs {
 
 namespace runtime {
-struct ScanParams {
-  int alias;
-  std::vector<label_t> tables;
-  int32_t limit;
-
-  ScanParams() : alias(-1), limit(std::numeric_limits<int32_t>::max()) {}
-};
 class Scan {
  public:
   template <typename PRED_T>
