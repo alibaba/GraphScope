@@ -120,7 +120,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
 | http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
-| http_service.max_content_length | 1073741824 | The maximum length of a http request that admin http service could handle | 0.5 |
+| http_service.max_content_length | 1GB | The maximum length of a http request that admin http service could handle | 0.5 |
 
 #### TODOs
 
