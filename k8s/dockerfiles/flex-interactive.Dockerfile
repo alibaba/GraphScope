@@ -55,6 +55,8 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
+        # remove all code like from graphscope.* import.* in utils.py, except for get_tempdir
+        sed -i '/^from graphscope\.framework\..* import /{/get_tempdir/!d}' gscoordinator/utils.py && \
         python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/; \
     fi
