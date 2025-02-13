@@ -85,9 +85,9 @@ inline std::string formatEnumValue(const vineyard::ErrorCode& value) {
 
 #ifndef __FRAME_CURRENT_EXCEPTION_TYPENAME
 #if defined(__GLIBCXX__) || defined(__GLIBCPP__)
-#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                     \
-  do {                                                              \
-    std::exception_ptr __p = std::current_exception();              \
+#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                      \
+  do {                                                               \
+    std::exception_ptr __p = std::current_exception();               \
     var = __p ? __p.__cxa_exception_type()->name() : "unknown type"; \
   } while (0)
 #else
