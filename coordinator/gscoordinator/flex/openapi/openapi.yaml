@@ -1852,7 +1852,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
-          description: Successfuly cancelled the job
+          description: Successfully cancelled the job
         "500":
           content:
             application/json:

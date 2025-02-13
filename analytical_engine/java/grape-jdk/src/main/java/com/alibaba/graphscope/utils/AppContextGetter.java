@@ -192,7 +192,7 @@ public class AppContextGetter {
         try {
             ret = getBaseClassTemplateType(ctxClass, 1);
         } catch (Exception exception) {
-            logger.info("Exception ocurred: ");
+            logger.info("Exception occurred: ");
             exception.printStackTrace();
             ret = ctxObj.getDataClass();
             logger.info("vertex data context class: " + ret.getName());

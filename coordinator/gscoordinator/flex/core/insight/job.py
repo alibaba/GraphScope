@@ -84,7 +84,7 @@ class FetchDataloadingJobStatus(object):
                     s["log"] = rlt["message"]
             except Exception as e:
                 s["status"] = "FAILED"
-                s["log"] = "Internel error: {0}".format(str(e))
+                s["log"] = "Internal error: {0}".format(str(e))
             finally:
                 self._status = JobStatus.from_dict(s)
                 time.sleep(5)
@@ -329,7 +329,7 @@ class DataloadingJobScheduler(Scheduler):
                         log=rlt["message"],
                     )
         except Exception as e:
-            logger.error("Exception occured: ", str(e))
+            logger.error("Exception occurred: ", str(e))
             status = self.generate_job_status(
                 status="FAILED", end_time=datetime.datetime.now(), log=str(e)
             )

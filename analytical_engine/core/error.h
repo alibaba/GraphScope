@@ -88,7 +88,7 @@ inline std::string formatEnumValue(const vineyard::ErrorCode& value) {
 #define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                     \
   do {                                                              \
     std::exception_ptr __p = std::current_exception();              \
-    var = __p ? __p.__cxa_exception_type()->name() : "unknow type"; \
+    var = __p ? __p.__cxa_exception_type()->name() : "unknown type"; \
   } while (0)
 #else
 #define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                               \
