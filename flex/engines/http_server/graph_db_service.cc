@@ -48,7 +48,8 @@ ServiceConfig::ServiceConfig()
       metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
-      sharding_mode(DEFAULT_SHARDING_MODE) {}
+      sharding_mode(DEFAULT_SHARDING_MODE),
+      admin_svc_max_content_length(DEFAULT_MAX_CONTENT_LENGTH) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
