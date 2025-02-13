@@ -48,9 +48,14 @@ public class StringTypeStringDeserializer extends JsonDeserializer<StringTypeStr
             return new VarChar(varChar);
         } else if (node.has("long_text")) {
             return new LongText(jp.getCodec().treeToValue(node.get("long_text"), String.class));
-        } else if (node.has("fixed_char")) {
-            return new FixedChar(
-                    jp.getCodec().treeToValue(node.get("fixed_char"), FixedCharChar.class));
+        } else if (node.has("char")) {
+            FixedCharChar fixedChar = new FixedCharChar();
+            if (node.get("char").has("fixed_length")) {
+                fixedChar.setFixedLength(node.get("char").get("fixed_length").asInt());
+            } else {
+                throw new IOException("fixed_length not found in char");
+            }
+            return new FixedChar(fixedChar);
         } else {
             throw new IOException("Unknown variant for GSDataType");
         }
