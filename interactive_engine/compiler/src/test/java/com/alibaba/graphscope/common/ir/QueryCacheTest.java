@@ -84,6 +84,24 @@ public class QueryCacheTest {
         Assert.assertTrue(value1 != value3);
     }
 
+    @Test
+    public void query_cache_3_test() {
+        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "10"));
+        GraphPlanner graphPlanner =
+                new GraphPlanner(
+                        configs, new LogicalPlanFactory.Gremlin(), new GraphRelOptimizer(configs));
+        QueryCache cache = new QueryCache(configs);
+        QueryCache.Key key1 =
+                cache.createKey(
+                        graphPlanner.instance(
+                                "g.V().hasLabel('person').has('id', 1)", Utils.schemaMeta));
+        QueryCache.Key key2 =
+                cache.createKey(
+                        graphPlanner.instance(
+                                "g.V().hasLabel('person').has('id', 1L)", Utils.schemaMeta));
+        Assert.assertNotEquals(key1.hashCode(), key2.hashCode());
+    }
+
     // test cache invalidation after schema update
     @Test
     public void query_cache_schema_update_test() throws Exception {
