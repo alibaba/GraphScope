@@ -29,20 +29,14 @@ from concurrent import futures
 
 import connexion
 import grpc
-
-from gscoordinator.flex.core.config import SOLUTION
-
-if SOLUTION != "INTERACTIVE":
-    from graphscope.proto import coordinator_service_pb2_grpc
-    from gscoordinator.monitor import Monitor
-    from gscoordinator.servicer import init_graphscope_one_service_servicer
-    from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
-
 from flask_cors import CORS
 from graphscope.config import Config
+from graphscope.proto import coordinator_service_pb2_grpc
 
 from gscoordinator.flex.core.client_wrapper import initialize_client_wrapper
+from gscoordinator.flex.core.config import SOLUTION
 from gscoordinator.flex.encoder import JSONEncoder
+from gscoordinator.monitor import Monitor
 
 logger = logging.getLogger("graphscope")
 
@@ -121,6 +115,8 @@ def parse_sys_args():
 
 def get_servicer(config: Config):
     """Get servicer of specified solution under FLEX architecture"""
+    from gscoordinator.servicer import init_graphscope_one_service_servicer
+
     service_initializers = {
         "GraphScope One": init_graphscope_one_service_servicer,
     }
@@ -154,6 +150,8 @@ def start_server(
     config: Config,
 ):
     # register gRPC server
+    from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
+
     server = grpc.server(
         futures.ThreadPoolExecutor(max(4, os.cpu_count() or 1)),
         options=[
