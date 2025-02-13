@@ -183,8 +183,8 @@ public class LdbcTest {
                     + " imageFile=[message.imageFile],"
                     + " postOrCommentCreationDate=[message.creationDate], isAppend=[false])\n"
                     + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
-                    + " alias=[message], fusedFilter=[[<(_.creationDate, 20130301000000000)]],"
-                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + " alias=[message], fusedFilter=[[<(_.creationDate,"
+                    + " 20130301000000000:BIGINT)]], opt=[START], physicalOpt=[ITSELF])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[_], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
@@ -459,7 +459,7 @@ public class LdbcTest {
                     + " alias=[_], start_alias=[person])\n"
                     + "                    GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
-                    + " 2199023382370)])",
+                    + " 2199023382370:BIGINT)])",
                 after.explain().trim());
     }
 
@@ -581,7 +581,8 @@ public class LdbcTest {
                     + " tables=[HASCREATOR]}], alias=[message], startAlias=[person], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023382370)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
+                    + " 2199023382370:BIGINT)])",
                 after.explain().trim());
     }
 
@@ -616,8 +617,8 @@ public class LdbcTest {
                     + " commentOrPostCreationDate=[message.creationDate], isAppend=[false])\n"
                     + "    LogicalFilter(condition=[<>(friend, person)])\n"
                     + "      GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
-                    + " alias=[message], fusedFilter=[[<(_.creationDate, 20130301000000000)]],"
-                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + " alias=[message], fusedFilter=[[<(_.creationDate,"
+                    + " 20130301000000000:BIGINT)]], opt=[START], physicalOpt=[ITSELF])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[HASCREATOR]}], alias=[_], startAlias=[friend], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
@@ -630,7 +631,7 @@ public class LdbcTest {
                     + " alias=[_], start_alias=[person])\n"
                     + "              GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
-                    + " 2199023382370)])",
+                    + " 2199023382370:BIGINT)])",
                 after.explain().trim());
     }
 
@@ -854,7 +855,7 @@ public class LdbcTest {
                     + " opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "                      GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[PATTERN_VERTEX$0], opt=[VERTEX],"
-                    + " uniqueKeyFilters=[=(_.id, 2199023382370)])",
+                    + " uniqueKeyFilters=[=(_.id, 2199023382370:BIGINT)])",
                 after.explain().trim());
     }
 }
