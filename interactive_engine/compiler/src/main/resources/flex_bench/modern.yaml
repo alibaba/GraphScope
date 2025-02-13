@@ -4,62 +4,62 @@ schema:
       type_id: 0
       properties:
         - property_id: 0
-          property_name: type0
+          property_name: prop_int32
           property_type:
             primitive_type: DT_SIGNED_INT32
         - property_id: 1
-          property_name: type1
+          property_name: prop_uint32
           property_type:
             primitive_type: DT_UNSIGNED_INT32
         - property_id: 2
-          property_name: type2
+          property_name: prop_int64
           property_type:
             primitive_type: DT_SIGNED_INT64
         - property_id: 3
-          property_name: type3
+          property_name: prop_uint64
           property_type:
             primitive_type: DT_UNSIGNED_INT64
         - property_id: 4
-          property_name: type4
+          property_name: prop_bool
           property_type:
             primitive_type: DT_BOOL
         - property_id: 5
-          property_name: type5
+          property_name: prop_float
           property_type:
               primitive_type: DT_FLOAT
         - property_id: 6
-          property_name: type6
+          property_name: prop_double
           property_type:
               primitive_type: DT_DOUBLE
         - property_id: 7
-          property_name: type7
+          property_name: prop_text
           property_type:
               string:
                 long_text:
         - property_id: 8
-          property_name: type8
+          property_name: prop_char
           property_type:
               string:
                 char:
-                  fixed_length: 65536
+                  fixed_length: 4
         - property_id: 9
-          property_name: type9
+          property_name: prop_varchar
           property_type:
               string:
                 var_char:
-                  max_length: 65536
+                  max_length: 4
         - property_id: 10
-          property_name: type10
+          property_name: prop_date
           property_type:
               temporal:
                 date32:
         - property_id: 11
-          property_name: type11
+          property_name: prop_ts
           property_type:
               temporal:
                 timestamp:
       primary_keys:
-        - type0
+        - prop_int32
   edge_types:
     - type_name: knows
       type_id: 0
