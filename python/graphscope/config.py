@@ -265,6 +265,9 @@ class CoordinatorConfig:
     # For http server, limit the max content length of request. Mainly for file upload.
     max_content_length: int = 1024 * 1024 * 1024  # 1GB
 
+    # Only start coordinator http server, do not start others services.
+    http_server_only: bool = False
+
 
 @dataclass
 class HostsLauncherConfig:

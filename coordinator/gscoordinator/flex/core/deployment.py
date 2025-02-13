@@ -23,8 +23,6 @@ import socket
 
 import psutil
 from dateutil import tz
-from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
 
 from gscoordinator.flex.core.config import BATCHSIZE
 from gscoordinator.flex.core.config import CLUSTER_TYPE
@@ -34,12 +32,16 @@ from gscoordinator.flex.core.config import FRONTEND_TYPE
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import MAXSIZE
 from gscoordinator.flex.core.config import NAMESPACE
+from gscoordinator.flex.core.config import SOLUTION
 from gscoordinator.flex.core.config import STORAGE_TYPE
-from gscoordinator.flex.core.scheduler import schedule
 from gscoordinator.flex.core.stoppable_thread import StoppableThread
 from gscoordinator.flex.core.utils import encode_datetime
 from gscoordinator.flex.core.utils import resolve_api_client
 from gscoordinator.version import __version__
+
+if CLUSTER_TYPE == "KUBERNETES":
+    from kubernetes import client as kube_client
+    from kubernetes import watch as kube_watch
 
 logger = logging.getLogger("graphscope")
 
@@ -214,6 +216,7 @@ class KubeDeployment(Deployment):
         self._kube_watcher.start()
         # monitor resources every 60s and record the usage for half a day
         self._resource_usage = self.initialize_resource_usage()
+        from gscoordinator.flex.core.scheduler import schedule
         self._fetch_resource_usage_job = {
             schedule.every(60)
             .seconds.do(self._fetch_resource_usage_impl)

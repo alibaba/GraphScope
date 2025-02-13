@@ -19,5 +19,6 @@ README.md
 
 graphscope/__init__.py
 graphscope/flex/__init__.py
+graphscope/flex/rest/models/long_text.py
 graphscope/flex/rest/models/date_type.py
 graphscope/flex/rest/models/time_stamp_type.py
