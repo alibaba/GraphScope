@@ -34,10 +34,15 @@ namespace gs {
 class MutablePropertyFragment;
 class WalWriter;
 class VersionManager;
+class GraphDBSession;
 
 class UpdateTransaction {
  public:
-  UpdateTransaction(MutablePropertyFragment& graph, Allocator& alloc,
+  std::string run(const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
+
+  UpdateTransaction(const GraphDBSession& session,
+                    MutablePropertyFragment& graph, Allocator& alloc,
                     const std::string& work_dir, WalWriter& logger,
                     VersionManager& vm, timestamp_t timestamp);
 
@@ -146,6 +151,8 @@ class UpdateTransaction {
                         char* data, size_t length, Allocator& alloc);
   Any GetVertexId(label_t label, vid_t lid) const;
 
+  const GraphDBSession& GetSession() const;
+
  private:
   friend class GraphDBSession;
   void batch_commit(UpdateBatch& batch);
@@ -170,6 +177,8 @@ class UpdateTransaction {
   void applyVerticesUpdates();
 
   void applyEdgesUpdates();
+
+  const GraphDBSession& session_;
 
   MutablePropertyFragment& graph_;
   Allocator& alloc_;

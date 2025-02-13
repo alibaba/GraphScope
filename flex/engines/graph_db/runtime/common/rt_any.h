@@ -682,7 +682,8 @@ class RTAny {
 
   void sink(const GraphReadInterface& graph, int id,
             results::Column* column) const;
-  void sink(const GraphReadInterface& graph, Encoder& encoder) const;
+  template <typename GraphInterface>
+  void sink(const GraphInterface& graph, Encoder& encoder) const;
   void encode_sig(RTAnyType type, Encoder& encoder) const;
 
   std::string to_string() const;

@@ -54,8 +54,9 @@ bl::result<Context> ReadPipeline::Execute(
   return ctx;
 }
 
+template <typename GraphInterface>
 bl::result<WriteContext> InsertPipeline::Execute(
-    GraphInsertInterface& graph, WriteContext&& ctx,
+    GraphInterface& graph, WriteContext&& ctx,
     const std::map<std::string, std::string>& params, OprTimer& timer) {
   for (auto& opr : operators_) {
     gs::Status status = gs::Status::OK();
@@ -90,6 +91,14 @@ bl::result<WriteContext> InsertPipeline::Execute(
   }
   return ctx;
 }
+
+template bl::result<WriteContext> InsertPipeline::Execute(
+    GraphInsertInterface& graph, WriteContext&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer);
+
+template bl::result<WriteContext> InsertPipeline::Execute(
+    GraphUpdateInterface& graph, WriteContext&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer);
 
 bl::result<Context> UpdatePipeline::Execute(
     GraphUpdateInterface& graph, Context&& ctx,
@@ -128,7 +137,7 @@ bl::result<Context> UpdatePipeline::Execute(
 }
 
 bl::result<WriteContext> UpdatePipeline::Execute(
-    GraphInsertInterface& graph, WriteContext&& ctx,
+    GraphUpdateInterface& graph, WriteContext&& ctx,
     const std::map<std::string, std::string>& params, OprTimer& timer) {
   return inserts_->Execute(graph, std::move(ctx), params, timer);
 }

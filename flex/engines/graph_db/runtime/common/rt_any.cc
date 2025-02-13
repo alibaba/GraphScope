@@ -767,7 +767,9 @@ void sink_vertex(const GraphReadInterface& graph, const VertexRecord& vertex,
              prop->mutable_value());
   }
 }
-void RTAny::sink(const GraphReadInterface& graph, Encoder& encoder) const {
+
+template <typename GraphInterface>
+void RTAny::sink(const GraphInterface& graph, Encoder& encoder) const {
   if (type_ == RTAnyType::kList) {
     encoder.put_int(value_.list.size());
     for (size_t i = 0; i < value_.list.size(); ++i) {
@@ -804,6 +806,13 @@ void RTAny::sink(const GraphReadInterface& graph, Encoder& encoder) const {
     LOG(FATAL) << "not support for " << static_cast<int>(type_);
   }
 }
+
+template void RTAny::sink(const GraphReadInterface& graph,
+                          Encoder& encoder) const;
+
+template void RTAny::sink(const GraphUpdateInterface& graph,
+                          Encoder& encoder) const;
+
 void RTAny::sink(const GraphReadInterface& graph, int id,
                  results::Column* col) const {
   col->mutable_name_or_id()->set_id(id);

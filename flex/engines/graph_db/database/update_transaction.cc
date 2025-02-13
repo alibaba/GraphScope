@@ -16,20 +16,30 @@
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {
 
-UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
+std::string UpdateTransaction::run(
+    const std::string& cypher,
+    const std::map<std::string, std::string>& params) {
+  return gs::runtime::CypherRunnerImpl::run(*this, cypher, params);
+}
+
+UpdateTransaction::UpdateTransaction(const GraphDBSession& session,
+                                     MutablePropertyFragment& graph,
                                      Allocator& alloc,
                                      const std::string& work_dir,
                                      WalWriter& logger, VersionManager& vm,
                                      timestamp_t timestamp)
-    : graph_(graph),
+    : session_(session),
+      graph_(graph),
       alloc_(alloc),
       logger_(logger),
       vm_(vm),
@@ -891,5 +901,7 @@ void UpdateTransaction::applyEdgesUpdates() {
   added_edges_.clear();
   updated_edge_data_.clear();
 }
+
+const GraphDBSession& UpdateTransaction::GetSession() const { return session_; }
 
 }  // namespace gs

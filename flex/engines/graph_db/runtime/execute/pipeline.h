@@ -46,8 +46,9 @@ class InsertPipeline {
       : operators_(std::move(operators)) {}
   ~InsertPipeline() = default;
 
+  template <typename GraphInterface>
   bl::result<WriteContext> Execute(
-      GraphInsertInterface& graph, WriteContext&& ctx,
+      GraphInterface& graph, WriteContext&& ctx,
       const std::map<std::string, std::string>& params, OprTimer& timer);
 
  private:
@@ -72,7 +73,7 @@ class UpdatePipeline {
                               const std::map<std::string, std::string>& params,
                               OprTimer& timer);
   bl::result<WriteContext> Execute(
-      GraphInsertInterface& graph, WriteContext&& ctx,
+      GraphUpdateInterface& graph, WriteContext&& ctx,
       const std::map<std::string, std::string>& params, OprTimer& timer);
 
   bool is_insert() const { return is_insert_; }

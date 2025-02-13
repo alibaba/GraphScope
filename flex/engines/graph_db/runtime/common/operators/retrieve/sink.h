@@ -27,7 +27,8 @@ class Sink {
   static void sink(const Context& ctx, const GraphReadInterface& graph,
                    Encoder& output);
 
-  static void sink_encoder(const Context& ctx, const GraphReadInterface& graph,
+  template <typename GraphInterface>
+  static void sink_encoder(const Context& ctx, const GraphInterface& graph,
                            Encoder& encoder);
 
   // for debug

@@ -14,19 +14,22 @@
  */
 
 #include "flex/engines/graph_db/database/insert_transaction.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/allocators.h"
-
 namespace gs {
 
-InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
+InsertTransaction::InsertTransaction(const GraphDBSession& session,
+                                     MutablePropertyFragment& graph,
                                      Allocator& alloc, WalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
 
-    : graph_(graph),
+    : session_(session),
+      graph_(graph),
       alloc_(alloc),
       logger_(logger),
       vm_(vm),
@@ -35,6 +38,12 @@ InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
 }
 
 InsertTransaction::~InsertTransaction() { Abort(); }
+
+std::string InsertTransaction::run(
+    const std::string& cypher,
+    const std::map<std::string, std::string>& params) {
+  return gs::runtime::CypherRunnerImpl::run(*this, cypher, params);
+}
 
 bool InsertTransaction::AddVertex(label_t label, const Any& id,
                                   const std::vector<Any>& props) {
@@ -209,6 +218,8 @@ void InsertTransaction::clear() {
 }
 
 const Schema& InsertTransaction::schema() const { return graph_.schema(); }
+
+const GraphDBSession& InsertTransaction::GetSession() const { return session_; }
 
 #define likely(x) __builtin_expect(!!(x), 1)
 

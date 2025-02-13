@@ -39,7 +39,8 @@ void Sink::sink(const Context& ctx, const GraphReadInterface& graph,
   output.put_bytes(res.data(), res.size());
 }
 
-void Sink::sink_encoder(const Context& ctx, const GraphReadInterface& graph,
+template <typename GraphInterface>
+void Sink::sink_encoder(const Context& ctx, const GraphInterface& graph,
                         Encoder& encoder) {
   size_t row_num = ctx.row_num();
   for (size_t i = 0; i < row_num; ++i) {
@@ -54,6 +55,13 @@ void Sink::sink_encoder(const Context& ctx, const GraphReadInterface& graph,
     }
   }
 }
+
+template void Sink::sink_encoder(const Context& ctx,
+                                 const GraphReadInterface& graph,
+                                 Encoder& encoder);
+template void Sink::sink_encoder(const Context& ctx,
+                                 const GraphUpdateInterface& graph,
+                                 Encoder& encoder);
 
 void Sink::sink_beta(const Context& ctx, const GraphReadInterface& graph,
                      Encoder& output) {
