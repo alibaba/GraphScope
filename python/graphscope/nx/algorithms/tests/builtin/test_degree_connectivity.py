@@ -15,7 +15,7 @@
 # information.
 #
 """
-    Unit tests for average degree connectivity.
+Unit tests for average degree connectivity.
 """
 from itertools import permutations
 
