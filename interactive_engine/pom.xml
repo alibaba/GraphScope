@@ -428,6 +428,12 @@
         <groupId>org.apache.tinkerpop</groupId>
         <artifactId>gremlin-test</artifactId>
         <version>${tinkerpop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-simplekdc</artifactId>
+          </exclusion>
+        </exclusions>
         <scope>compile</scope>
       </dependency>
       <dependency>

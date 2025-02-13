@@ -120,6 +120,7 @@ session:
 launcher_type: hosts
 coordinator:
   http_port: 8080
+  http_server_only: true
 EOF
     python3 -m pip install pyyaml
     res=$(python3 -c "import yaml; config = yaml.safe_load(open('${DEFAULT_INTERACTIVE_CONFIG_FILE}')); print(yaml.dump(config.get('http_service', {}), default_flow_style=False, indent=4))")
