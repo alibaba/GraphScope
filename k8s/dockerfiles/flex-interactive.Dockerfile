@@ -49,6 +49,9 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         python3 setup.py build_proto && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/python && \
+        # Here is something hacky: There are many dependencies in graphscope client that are not used in flex-interactive scenario, we modify the __init__.py to avoid
+        # importing those dependencies. Otherwise it will cause error when running coordinator
+        sed -i 's/from graphscope.* import.*//g' graphscope/__init__.py && \
         export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
