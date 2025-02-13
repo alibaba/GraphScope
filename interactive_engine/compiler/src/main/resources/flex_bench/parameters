@@ -15,8 +15,8 @@ compare_float_double|16.10d|16.1f
 compare_float_double_loss|16.12d|empty
 compare_int32_double|16.0d|16
 compare_char_text|'abcd'|'abcd'
-compare_char_long_text|'abcd'|'abcde'
-compare_varchar_long_text|'abcd'|'abcde'
+compare_char_long_text|'abcde'|'abcd'
+compare_varchar_long_text|'abcde'|'abcd'
 compare_string_long_text|'abcde...'|'abcde...'
 compare_date32_i32|1200|1200
 compare_timestamp_i64|1678322400000|1678322400000
