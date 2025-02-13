@@ -42,5 +42,3 @@ http_service:
   admin_port: 7777
   query_port: 10000
   max_content_length: 1GB
-coordinator:
-  max_content_length: 1GB
