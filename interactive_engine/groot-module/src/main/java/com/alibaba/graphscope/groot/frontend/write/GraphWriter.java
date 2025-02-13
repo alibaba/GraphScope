@@ -464,6 +464,9 @@ public class GraphWriter {
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
             byte[] valBytes = properties.get(pk.getId()).getValBytes();
+            if (valBytes == null) {
+                throw new InvalidArgumentException("primary key value is null");
+            }
             pks.add(valBytes);
         }
         return pks;
