@@ -20,10 +20,10 @@
 namespace gs {
 namespace runtime {
 namespace ops {
-class UEdgeExpandBuilder : public IUpdateOperatorBuilder {
+class UEdgeExpandOprBuilder : public IUpdateOperatorBuilder {
  public:
-  UEdgeExpandBuilder() = default;
-  ~UEdgeExpandBuilder() = default;
+  UEdgeExpandOprBuilder() = default;
+  ~UEdgeExpandOprBuilder() = default;
 
   std::unique_ptr<IUpdateOperator> Build(const Schema& schema,
                                          const physical::PhysicalPlan& plan,

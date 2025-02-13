@@ -37,8 +37,8 @@ class PlanParser {
   void register_write_operator_builder(
       std::unique_ptr<IInsertOperatorBuilder>&& builder);
 
-  // void register_update_operator_builder(
-  //   std::unique_ptr<IUpdateOperatorBuilder>&& builder);
+  void register_update_operator_builder(
+      std::unique_ptr<IUpdateOperatorBuilder>&& builder);
 
   bl::result<std::pair<ReadPipeline, ContextMeta>>
   parse_read_pipeline_with_meta(const gs::Schema& schema,
@@ -53,8 +53,7 @@ class PlanParser {
       const gs::Schema& schema, const physical::PhysicalPlan& plan);
 
   bl::result<UpdatePipeline> parse_update_pipeline(
-      const gs::Schema& schema, const ContextMeta& ctx_meta,
-      const physical::PhysicalPlan& plan);
+      const gs::Schema& schema, const physical::PhysicalPlan& plan);
 
  private:
   std::vector<std::vector<
@@ -66,9 +65,9 @@ class PlanParser {
            std::unique_ptr<IInsertOperatorBuilder>>
       write_op_builders_;
 
-  // std::map<physical::PhysicalOpr_Operator::OpKindCase,
-  //        std::unique_ptr<IUpdateOperatorBuilder>>
-  //  update_op_builders_;
+  std::map<physical::PhysicalOpr_Operator::OpKindCase,
+           std::unique_ptr<IUpdateOperatorBuilder>>
+      update_op_builders_;
 };
 
 }  // namespace runtime

@@ -181,6 +181,27 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
 
 RTAnyType RTAny::type() const { return type_; }
 
+Any RTAny::to_any() const {
+  switch (type_) {
+  case RTAnyType::kBoolValue:
+    return Any(value_.b_val);
+  case RTAnyType::kI64Value:
+    return Any(value_.i64_val);
+  case RTAnyType::kI32Value:
+    return Any(value_.i32_val);
+  case RTAnyType::kF64Value:
+    return Any(value_.f64_val);
+  case RTAnyType::kStringValue:
+    return Any(std::string(value_.str_val));
+  case RTAnyType::kDate32:
+    return Any(value_.day);
+  case RTAnyType::kTimestamp:
+    return Any(value_.date);
+  default:
+    LOG(FATAL) << "not support for " << static_cast<int>(type_);
+  }
+}
+
 RTAny RTAny::from_vertex(label_t l, vid_t v) {
   RTAny ret;
   ret.type_ = RTAnyType::kVertex;

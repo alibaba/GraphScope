@@ -613,6 +613,7 @@ class RTAny {
   RTAny();
   RTAny(RTAnyType type);
   RTAny(const Any& val);
+  Any to_any() const;
   RTAny(const EdgeData& val);
   RTAny(const RTAny& rhs);
   RTAny(const Path& p);

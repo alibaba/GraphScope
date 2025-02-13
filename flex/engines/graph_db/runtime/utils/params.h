@@ -28,6 +28,14 @@ struct ScanParams {
 
   ScanParams() : alias(-1), limit(std::numeric_limits<int32_t>::max()) {}
 };
+
+struct GetVParams {
+  VOpt opt;
+  int tag;
+  std::vector<label_t> tables;
+  int alias;
+};
+
 struct EdgeExpandParams {
   int v_tag;
   std::vector<LabelTriplet> labels;

@@ -44,6 +44,32 @@ std::unique_ptr<IInsertOperator> SinkInsertOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   return std::make_unique<SinkInsertOpr>();
 }
+
+class USinkOpr : public IUpdateOperator {
+ public:
+  USinkOpr(const std::vector<int>& tag_ids) : tag_ids(tag_ids) {}
+
+  std::string get_operator_name() const override { return "USinkOpr"; }
+
+  bl::result<Context> Eval(GraphUpdateInterface& graph,
+                           const std::map<std::string, std::string>& params,
+                           Context&& ctx, OprTimer& timer) override {
+    ctx.tag_ids = tag_ids;
+    return ctx;
+  }
+  std::vector<int> tag_ids;
+};
+
+std::unique_ptr<IUpdateOperator> USinkOprBuilder::Build(
+    const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
+  auto& opr = plan.plan(op_idx).opr().sink();
+  std::vector<int> tag_ids;
+  for (auto& tag : opr.tags()) {
+    tag_ids.push_back(tag.tag().value());
+  }
+  return std::make_unique<USinkOpr>(tag_ids);
+}
+
 }  // namespace ops
 }  // namespace runtime
 }  // namespace gs

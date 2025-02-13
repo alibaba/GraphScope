@@ -13,33 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_EXECUTE_UPDATE_OPS_SET_H_
-#define RUNTIME_EXECUTE_UPDATE_OPS_SET_H_
+#ifndef RUNTIME_EXECUTE_OPS_VERTEX_H_
+#define RUNTIME_EXECUTE_OPS_VERTEX_H_
 #include "flex/engines/graph_db/runtime/execute/operator.h"
 
 namespace gs {
-
 namespace runtime {
-
 namespace ops {
-
-class USetOprBuilder : public IUpdateOperatorBuilder {
+class UVertexOprBuilder : public IUpdateOperatorBuilder {
  public:
-  USetOprBuilder() = default;
-  ~USetOprBuilder() = default;
+  UVertexOprBuilder() = default;
+  ~UVertexOprBuilder() = default;
 
   std::unique_ptr<IUpdateOperator> Build(const Schema& schema,
                                          const physical::PhysicalPlan& plan,
-                                         int op_idx);
-  physical::PhysicalOpr_Operator::OpKindCase GetOpKind() const {
-    return physical::PhysicalOpr_Operator::OpKindCase::kSet;
+                                         int op_idx) override;
+  physical::PhysicalOpr_Operator::OpKindCase GetOpKind() const override {
+    return physical::PhysicalOpr_Operator::OpKindCase::kVertex;
   }
 };
-
 }  // namespace ops
-
 }  // namespace runtime
-
 }  // namespace gs
-
-#endif  // RUNTIME_EXECUTE_UPDATE_OPS_SINK_H_
+#endif  // RUNTIME_EXECUTE_OPS_VERTEX_H_

@@ -15,7 +15,6 @@
 
 #include "flex/engines/graph_db/runtime/execute/ops/update/edge.h"
 #include "flex/engines/graph_db/runtime/common/operators/update/edge_expand.h"
-#include "flex/engines/graph_db/runtime/utils/params.h"
 #include "flex/engines/graph_db/runtime/utils/utils.h"
 
 namespace gs {
@@ -58,7 +57,7 @@ class UEdgeExpandEWithoutPredOpr : public IUpdateOperator {
   EdgeExpandParams params_;
 };
 
-std::unique_ptr<IUpdateOperator> UEdgeExpandBuilder::Build(
+std::unique_ptr<IUpdateOperator> UEdgeExpandOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   auto& edge = plan.plan(op_idx).opr().edge();
   auto& meta = plan.plan(op_idx).meta_data(0);

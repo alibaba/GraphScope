@@ -27,15 +27,32 @@ class SetOpr : public IUpdateOperator {
       : keys_(std::move(keys)), values_(std::move(values)) {}
 
   std::string get_operator_name() const override { return "SetOpr"; }
-  void set_vertex_property(GraphUpdateInterface& graph, label_t label,
+  bool set_vertex_property(GraphUpdateInterface& graph, label_t label,
                            vid_t vid, const std::string& key,
-                           const RTAny& value) {}
+                           const RTAny& value) {
+    const auto& properties = graph.schema().get_vertex_property_names(label);
+    size_t prop_id = properties.size();
+    for (size_t i = 0; i < properties.size(); i++) {
+      if (properties[i] == key) {
+        prop_id = i;
+        break;
+      }
+    }
+    if (prop_id == properties.size()) {
+      LOG(ERROR) << "Property " << key << " not found in vertex label "
+                 << label;
+      return false;
+    }
+    graph.SetVertexField(label, vid, prop_id, value.to_any());
+    return true;
+  }
 
-  void set_edge_property(GraphUpdateInterface& graph, const LabelTriplet& label,
+  bool set_edge_property(GraphUpdateInterface& graph, const LabelTriplet& label,
                          Direction dir, vid_t src, vid_t dst,
                          const std::string& key, const RTAny& value) {
-    auto edge = graph.GetOutEdgeIterator(label.src_label, src, label.dst_label,
-                                         label.edge_label);
+    graph.SetEdgeData(dir == Direction::kOut, label.src_label, src,
+                      label.dst_label, dst, label.edge_label, value.to_any());
+    return true;
   }
 
   bl::result<Context> Eval(GraphUpdateInterface& graph,
@@ -53,8 +70,11 @@ class SetOpr : public IUpdateOperator {
         for (size_t j = 0; j < ctx.row_num(); j++) {
           auto val = expr.eval_path(j);
           auto vertex = vertex_col->get_vertex(j);
-          set_vertex_property(graph, vertex.label_, vertex.vid_, key.second,
-                              val);
+          if (!set_vertex_property(graph, vertex.label_, vertex.vid_,
+                                   key.second, val)) {
+            LOG(ERROR) << "Failed to set vertex property";
+            RETURN_BAD_REQUEST_ERROR("Failed to set vertex property");
+          }
         }
       } else {
         auto edge_col = dynamic_cast<const IEdgeColumn*>(prop.get());
@@ -62,8 +82,11 @@ class SetOpr : public IUpdateOperator {
         for (size_t j = 0; j < ctx.row_num(); j++) {
           auto val = expr.eval_path(j);
           auto edge = edge_col->get_edge(j);
-          set_edge_property(graph, edge.label_triplet(), edge.dir_, edge.src_,
-                            edge.dst_, key.second, val);
+          if (!set_edge_property(graph, edge.label_triplet(), edge.dir_,
+                                 edge.src_, edge.dst_, key.second, val)) {
+            LOG(ERROR) << "Failed to set edge property";
+            RETURN_BAD_REQUEST_ERROR("Failed to set edge property");
+          }
         }
       }
     }
@@ -75,7 +98,7 @@ class SetOpr : public IUpdateOperator {
   std::vector<std::pair<int, std::string>> keys_;
   std::vector<common::Expression> values_;
 };
-std::unique_ptr<IUpdateOperator> SetOprBuilder::Build(
+std::unique_ptr<IUpdateOperator> USetOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   const auto& opr = plan.plan(op_idx).opr().set();
   std::vector<std::pair<int, std::string>> keys;

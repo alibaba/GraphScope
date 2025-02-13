@@ -17,7 +17,6 @@
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/scan.h"
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan_utils.h"
 #include "flex/engines/graph_db/runtime/utils/expr_impl.h"
-#include "flex/engines/graph_db/runtime/utils/params.h"
 
 namespace gs {
 namespace runtime {
