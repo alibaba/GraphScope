@@ -180,7 +180,7 @@ resp = sess.update_edge(
         edge_label="knows",
         src_primary_key_values=[ModelProperty(name="id", value=2)],
         dst_primary_key_values=[ModelProperty(name="id", value=4)],
-        properties=[ModelProperty(namegit="weight", value=3)],
+        properties=[ModelProperty(name="weight", value=3)],
     ),
 )
 print(resp)
