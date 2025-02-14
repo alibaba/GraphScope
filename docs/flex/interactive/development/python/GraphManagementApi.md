@@ -864,10 +864,10 @@ driver = Driver()
 sess = driver.session()
 
 graph_id = "1"
-# A snapshot_id for test. The ddl operations, e.g., create_vertex_type, will return the snapshot id.
+# A snapshot_id for test. The realtime write operations, such as add_vertex and add_edge, return a snapshot id.
 snapshot_id = "123"
 
-# get the status of specified snapshot_id, to see if it is available
+# To check if the written data is available for querying, retrieve the status of the specified snapshot id.
 resp = sess.get_snapshot_status(graph_id, snapshot_id)
 print(resp)
 assert resp.is_ok()
