@@ -40,6 +40,7 @@ import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.proto.frontend.Code;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -248,9 +249,11 @@ public class GraphPlanner {
                 (configs, tracker) -> {
                     URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
                     if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-                        return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+                        return new StaticIrMetaFetcher(
+                                new LocalIrMetaReader(configs), ImmutableList.of(tracker));
                     } else if (schemaUri.getScheme().equals("http")) {
-                        return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
+                        return new StaticIrMetaFetcher(
+                                new HttpIrMetaReader(configs), ImmutableList.of(tracker));
                     }
                     throw new IllegalArgumentException(
                             "unknown graph meta reader mode: " + schemaUri.getScheme());
@@ -263,7 +266,7 @@ public class GraphPlanner {
         Configs configs = Configs.Factory.create(configPath);
         GraphRelOptimizer optimizer =
                 new GraphRelOptimizer(configs, PlannerGroupManager.Static.class);
-        IrMetaFetcher metaFetcher = metaFetcherFactory.create(configs, optimizer.getGlogueHolder());
+        IrMetaFetcher metaFetcher = metaFetcherFactory.create(configs, optimizer);
         GraphPlanner planner =
                 new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
         PlannerInstance instance = planner.instance(queryString, metaFetcher.fetch().get());

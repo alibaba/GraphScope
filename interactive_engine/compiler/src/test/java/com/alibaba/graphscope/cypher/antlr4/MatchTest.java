@@ -56,9 +56,7 @@ public class MatchTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 com.alibaba.graphscope.common.ir.Utils.mockIrMeta(
-                        "config/modern/graph.yaml",
-                        "statistics/modern_statistics.json",
-                        optimizer.getGlogueHolder());
+                        "config/modern/graph.yaml", "statistics/modern_statistics.json", optimizer);
     }
 
     @Test

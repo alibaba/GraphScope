@@ -19,6 +19,8 @@ package com.alibaba.graphscope.common.ir.planner;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
@@ -26,7 +28,9 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.base.Preconditions;
@@ -43,28 +47,33 @@ import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Optimize graph relational tree which consists of match and other relational operators
  */
-public class GraphRelOptimizer implements Closeable {
+public class GraphRelOptimizer implements Closeable, IrMetaTracker {
+    private static final Logger logger = LoggerFactory.getLogger(GraphRelOptimizer.class);
     private final PlannerConfig config;
     private final RelBuilderFactory relBuilderFactory;
-    private final GlogueHolder glogueHolder;
     private final PlannerGroupManager plannerGroupManager;
+
+    private final AtomicReference<GlogueQuery> glogueRef;
 
     public GraphRelOptimizer(Configs graphConfig, Class<? extends PlannerGroupManager> instance) {
         try {
             this.config = new PlannerConfig(graphConfig);
             this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
-            this.glogueHolder = new GlogueHolder(graphConfig);
             this.plannerGroupManager =
                     instance.getDeclaredConstructor(PlannerConfig.class, RelBuilderFactory.class)
                             .newInstance(this.config, this.relBuilderFactory);
+            this.glogueRef = new AtomicReference<>();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -72,10 +81,6 @@ public class GraphRelOptimizer implements Closeable {
 
     public GraphRelOptimizer(Configs graphConfig) {
         this(graphConfig, PlannerGroupManager.Dynamic.class);
-    }
-
-    public GlogueHolder getGlogueHolder() {
-        return glogueHolder;
     }
 
     public RelOptPlanner getMatchPlanner() {
@@ -90,7 +95,7 @@ public class GraphRelOptimizer implements Closeable {
 
     public @Nullable RelMetadataQuery createMetaDataQuery(IrMeta irMeta) {
         if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
-            GlogueQuery gq = this.glogueHolder.getGlogue();
+            GlogueQuery gq = this.glogueRef.get();
             Preconditions.checkArgument(gq != null, "glogue is not ready");
             return new GraphRelMetadataQuery(
                     new GraphMetadataHandlerProvider(getMatchPlanner(), gq, this.config));
@@ -103,6 +108,21 @@ public class GraphRelOptimizer implements Closeable {
         if (this.plannerGroupManager != null) {
             this.plannerGroupManager.close();
         }
+    }
+
+    @Override
+    public void onSchemaChanged(IrMeta meta) {
+        if (this.plannerGroupManager != null) {
+            this.plannerGroupManager.clean();
+        }
+    }
+
+    @Override
+    public void onStatsChanged(IrMetaStats stats) {
+        GlogueSchema g = GlogueSchema.fromMeta(stats);
+        Glogue gl = new Glogue(g, config.getGlogueSize());
+        GlogueQuery gq = new GlogueQuery(gl);
+        this.glogueRef.compareAndSet(glogueRef.get(), gq);
     }
 
     public static class MatchOptimizer extends GraphShuttle {

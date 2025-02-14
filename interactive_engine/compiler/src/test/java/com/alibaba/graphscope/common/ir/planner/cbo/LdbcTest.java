@@ -33,9 +33,7 @@ public class LdbcTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 Utils.mockIrMeta(
-                        "schema/ldbc.json",
-                        "statistics/ldbc30_statistics.json",
-                        optimizer.getGlogueHolder());
+                        "schema/ldbc.json", "statistics/ldbc30_statistics.json", optimizer);
     }
 
     @Test

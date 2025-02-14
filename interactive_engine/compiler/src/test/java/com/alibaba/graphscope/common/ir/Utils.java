@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -100,8 +101,11 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_META_SCHEMA_URI.getKey(),
                                     schemaResource.toURI().getPath()));
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), null).fetch().get();
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), ImmutableList.of())
+                    .fetch()
+                    .get();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -120,7 +124,10 @@ public class Utils {
                                     schemaResource.toURI().getPath(),
                                     GraphConfig.GRAPH_META_STATISTICS_URI.getKey(),
                                     statisticsResource.toURI().getPath()));
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker).fetch().get();
+            return new StaticIrMetaFetcher(
+                            new LocalIrMetaReader(configs), ImmutableList.of(tracker))
+                    .fetch()
+                    .get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
