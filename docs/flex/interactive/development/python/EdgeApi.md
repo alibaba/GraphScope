@@ -32,16 +32,16 @@ edge_request = [
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=4,
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_value=[ModelProperty(name="id", value=4)],
         properties=[ModelProperty(name="weight", value=9.123)],
     ),
     EdgeRequest(
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=6,
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_values=[ModelProperty(name="id", value=6)],
         properties=[ModelProperty(name="weight", value=3.233)],
     ),
 ]
@@ -178,9 +178,9 @@ resp = sess.update_edge(
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=4,
-        properties=[ModelProperty(name="weight", value=3)],
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_values=[ModelProperty(name="id", value=4)],
+        properties=[ModelProperty(namegit="weight", value=3)],
     ),
 )
 print(resp)

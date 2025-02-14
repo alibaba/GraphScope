@@ -31,7 +31,9 @@ graph_id = "1"
 vertex_request = [
     VertexRequest(
         label="person",
-        primary_key_value=8,
+        primary_key_values=[
+            ModelProperty(name="id", value=8),
+        ],
         properties=[
             ModelProperty(name="name",value="mike"),
             ModelProperty(name="age", value=12),
@@ -171,7 +173,9 @@ graph_id = "1"
 
 vertex_request = VertexRequest(
     label="person",
-    primary_key_value=1,
+    primary_key_values=[
+        ModelProperty(name="id", value=1),
+    ],
     properties=[
         ModelProperty(name="name", value="Cindy"),
         ModelProperty(name="age", value=24),
