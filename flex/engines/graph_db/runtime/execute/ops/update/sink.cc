@@ -24,19 +24,25 @@ class SinkInsertOpr : public IInsertOperator {
 
   std::string get_operator_name() const override { return "SinkInsertOpr"; }
 
+  template <typename GraphInterface>
+  bl::result<gs::runtime::WriteContext> eval_impl(
+      GraphInterface& graph, const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) {
+    return ctx;
+  }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    // graph.Commit();
-    return ctx;
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphUpdateInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    return ctx;
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 };
 
