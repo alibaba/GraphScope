@@ -17,16 +17,36 @@
 #define RUNTIME_UTILS_CYPHER_RUNNER_IMPL_H_
 #include <map>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
 
 namespace gs {
 
 class ReadTransaction;
 class UpdateTransaction;
 class InsertTransaction;
-namespace runtime {
+class GraphDB;
 
-struct PlanCache;
+namespace runtime {
+struct PlanCache {
+  bool get(const std::string& query, std::string& plan) const {
+    std::shared_lock<std::shared_mutex> lock(mutex);
+    if (plan_cache.count(query)) {
+      plan = plan_cache.at(query);
+      return true;
+    }
+    return false;
+  }
+
+  void put(const std::string& query, const std::string& plan) {
+    std::unique_lock<std::shared_mutex> lock(mutex);
+    plan_cache[query] = plan;
+  }
+  mutable std::shared_mutex mutex;
+  std::unordered_map<std::string, std::string> plan_cache;
+};
 class CypherRunnerImpl {
  public:
   std::string run(gs::UpdateTransaction& tx, const std::string& cypher,
@@ -39,12 +59,18 @@ class CypherRunnerImpl {
 
   static CypherRunnerImpl& get();
 
+  bool gen_plan(const GraphDB& db, const std::string& query, std::string& plan);
+
+  const PlanCache& get_plan_cache() const;
+
+  void clear_cache();
+
  private:
   CypherRunnerImpl();
 
   CypherRunnerImpl(const CypherRunnerImpl&) = delete;
   CypherRunnerImpl& operator=(const CypherRunnerImpl&) = delete;
-  std::unique_ptr<PlanCache> plan_cache_;
+  PlanCache plan_cache_;
 };
 }  // namespace runtime
 }  // namespace gs

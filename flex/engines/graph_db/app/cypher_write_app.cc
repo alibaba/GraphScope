@@ -3,6 +3,7 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 
 #include "flex/engines/graph_db/runtime/execute/plan_parser.h"
+#include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 
 namespace gs {
 
@@ -21,30 +22,18 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
   if (!pipeline_cache_.count(query)) {
     if (plan_cache_.count(query)) {
     } else {
-      const std::string statistics = db_.work_dir() + "/statistics.json";
-      const std::string& compiler_yaml = db_.work_dir() + "/graph.yaml";
-      const std::string& tmp_dir = db_.work_dir() + "/runtime/tmp/";
+      physical::PhysicalPlan plan;
+      std::string plan_str;
 
-      auto& query_cache = db_.getQueryCache();
-      std::string_view plan_str;
-      if (query_cache.get(query, plan_str)) {
-        physical::PhysicalPlan plan;
-        if (!plan.ParseFromString(std::string(plan_str))) {
+      if (!gs::runtime::CypherRunnerImpl::get().gen_plan(db_, query,
+                                                         plan_str)) {
+        return false;
+      } else {
+        if (!plan.ParseFromString(plan_str)) {
+          LOG(ERROR) << "Parse plan failed for query: " << query;
           return false;
         }
-        plan_cache_[query] = plan;
-      } else {
-        const auto& compiler_path = db_.schema().get_compiler_path();
-
-        for (int i = 0; i < 3; ++i) {
-          if (!generate_plan(query, statistics, compiler_path, compiler_yaml,
-                             tmp_dir, plan_cache_)) {
-            LOG(ERROR) << "Generate plan failed for query: " << query;
-          } else {
-            query_cache.put(query, plan_cache_[query].SerializeAsString());
-            break;
-          }
-        }
+        plan_cache_[query] = std::move(plan);
       }
     }
     const auto& plan = plan_cache_[query];

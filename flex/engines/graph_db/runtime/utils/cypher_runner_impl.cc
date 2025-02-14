@@ -26,51 +26,41 @@
 namespace gs {
 namespace runtime {
 
-struct PlanCache {
-  bool get(const std::string& query, physical::PhysicalPlan& plan) {
-    std::shared_lock<std::shared_mutex> lock(mutex);
-    if (plan_cache.count(query)) {
-      plan = plan_cache[query];
-      return true;
-    }
-    return false;
-  }
-
-  void put(const std::string& query, const physical::PhysicalPlan& plan) {
-    std::unique_lock<std::shared_mutex> lock(mutex);
-    plan_cache[query] = plan;
-  }
-  std::shared_mutex mutex;
-  std::unordered_map<std::string, physical::PhysicalPlan> plan_cache;
-};
-
-template <typename GraphTransaction>
-bool gen_plan(const GraphTransaction& txn, const std::string query,
-              physical::PhysicalPlan& plan, PlanCache& plan_cache) {
-  const auto& db = txn.GetSession().db();
+bool CypherRunnerImpl::gen_plan(const GraphDB& db, const std::string& query,
+                                std::string& plan_str) {
+  auto& plan_cache = plan_cache_;
   const std::string statistics = db.work_dir() + "/statistics.json";
   const std::string& compiler_yaml = db.work_dir() + "/graph.yaml";
   const std::string& tmp_dir = db.work_dir() + "/runtime/tmp/";
   const auto& compiler_path = db.schema().get_compiler_path();
-  std::unordered_map<std::string, physical::PhysicalPlan> m;
-  if (plan_cache.get(query, plan)) {
+
+  if (plan_cache.get(query, plan_str)) {
     return true;
   }
+
+  physical::PhysicalPlan plan;
   if (!generate_plan(query, statistics, compiler_path, compiler_yaml, tmp_dir,
-                     m)) {
+                     plan)) {
     LOG(ERROR) << "Generate plan failed for query: " << query;
     return false;
   }
-  plan = m[query];
-  plan_cache.put(query, plan);
+  plan_cache.put(query, plan.SerializeAsString());
+  plan_str = plan.SerializeAsString();
   return true;
 }
+
 std::string CypherRunnerImpl::run(
     gs::UpdateTransaction& tx, const std::string& cypher,
     const std::map<std::string, std::string>& params) {
-  physical::PhysicalPlan plan;
-  if (!gen_plan(tx, cypher, plan, *plan_cache_)) {
+  std::string plan_str;
+  if (!gen_plan(tx.GetSession().db(), cypher, plan_str)) {
     std::string error = "    Generate plan failed: " + cypher;
+    return "";
+  }
+  physical::PhysicalPlan plan;
+  if (!plan.ParseFromString(plan_str)) {
+    LOG(ERROR) << "Parse plan failed for query: " << cypher;
+    std::string error = "    Parse plan failed: " + cypher;
     return "";
   }
   auto res =
@@ -108,9 +98,15 @@ std::string CypherRunnerImpl::run(
 std::string CypherRunnerImpl::run(
     const gs::ReadTransaction& tx, const std::string& cypher,
     const std::map<std::string, std::string>& params) {
-  physical::PhysicalPlan plan;
-  if (!gen_plan(tx, cypher, plan, *plan_cache_)) {
+  std::string plan_str;
+  if (!gen_plan(tx.GetSession().db(), cypher, plan_str)) {
     std::string error = "    Generate plan failed: " + cypher;
+    return "";
+  }
+  physical::PhysicalPlan plan;
+  if (!plan.ParseFromString(plan_str)) {
+    LOG(ERROR) << "Parse plan failed for query: " << cypher;
+    std::string error = "    Parse plan failed: " + cypher;
     return "";
   }
   ContextMeta ctx_meta;
@@ -139,10 +135,16 @@ std::string CypherRunnerImpl::run(
 std::string CypherRunnerImpl::run(
     InsertTransaction& tx, const std::string& cypher,
     const std::map<std::string, std::string>& params) {
-  physical::PhysicalPlan plan;
-  if (!gen_plan(tx, cypher, plan, *plan_cache_)) {
+  std::string plan_str;
+  if (!gen_plan(tx.GetSession().db(), cypher, plan_str)) {
     std::string error = "    Generate plan failed: " + cypher;
-    return error;
+    return "";
+  }
+  physical::PhysicalPlan plan;
+  if (!plan.ParseFromString(plan_str)) {
+    LOG(ERROR) << "Parse plan failed for query: " << cypher;
+    std::string error = "    Parse plan failed: " + cypher;
+    return "";
   }
   auto res = runtime::PlanParser::get().parse_write_pipeline(tx.schema(), plan);
   if (!res) {
@@ -162,13 +164,18 @@ std::string CypherRunnerImpl::run(
   return "";
 }
 
-CypherRunnerImpl::CypherRunnerImpl()
-    : plan_cache_(std::make_unique<PlanCache>()) {}
+CypherRunnerImpl::CypherRunnerImpl() : plan_cache_() {}
 
 CypherRunnerImpl& CypherRunnerImpl::get() {
   static CypherRunnerImpl runner;
   return runner;
 }
+
+const PlanCache& CypherRunnerImpl::get_plan_cache() const {
+  return plan_cache_;
+}
+
+void CypherRunnerImpl::clear_cache() { plan_cache_.plan_cache.clear(); }
 
 }  // namespace runtime
 }  // namespace gs
