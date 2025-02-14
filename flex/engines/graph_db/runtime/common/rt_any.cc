@@ -193,6 +193,7 @@ Any RTAny::to_any() const {
     return Any(value_.f64_val);
   case RTAnyType::kStringValue:
     return Any(std::string(value_.str_val));
+
   case RTAnyType::kDate32:
     return Any(value_.day);
   case RTAnyType::kTimestamp:
@@ -802,6 +803,10 @@ void RTAny::sink(const GraphInterface& graph, Encoder& encoder) const {
     for (auto& s : *value_.str_set) {
       encoder.put_string_view(s);
     }
+  } else if (type_ == RTAnyType::kVertex) {
+    // fix me
+    encoder.put_byte(value_.vertex.label_);
+    encoder.put_int(value_.vertex.vid_);
   } else {
     LOG(FATAL) << "not support for " << static_cast<int>(type_);
   }

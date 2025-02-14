@@ -16,6 +16,7 @@
 #ifndef RUNTIME_UTILS_CYPHER_RUNNER_IMPL_H_
 #define RUNTIME_UTILS_CYPHER_RUNNER_IMPL_H_
 #include <map>
+#include <memory>
 #include <string>
 
 namespace gs {
@@ -25,16 +26,25 @@ class UpdateTransaction;
 class InsertTransaction;
 namespace runtime {
 
+struct PlanCache;
 class CypherRunnerImpl {
  public:
-  static std::string run(gs::UpdateTransaction& tx, const std::string& cypher,
-                         const std::map<std::string, std::string>& params);
-  static std::string run(const gs::ReadTransaction& tx,
-                         const std::string& cypher,
-                         const std::map<std::string, std::string>& params);
+  std::string run(gs::UpdateTransaction& tx, const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
+  std::string run(const gs::ReadTransaction& tx, const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
 
-  static std::string run(gs::InsertTransaction& tx, const std::string& cypher,
-                         const std::map<std::string, std::string>& params);
+  std::string run(gs::InsertTransaction& tx, const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
+
+  static CypherRunnerImpl& get();
+
+ private:
+  CypherRunnerImpl();
+
+  CypherRunnerImpl(const CypherRunnerImpl&) = delete;
+  CypherRunnerImpl& operator=(const CypherRunnerImpl&) = delete;
+  std::unique_ptr<PlanCache> plan_cache_;
 };
 }  // namespace runtime
 }  // namespace gs

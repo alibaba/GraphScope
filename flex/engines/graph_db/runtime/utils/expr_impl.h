@@ -854,10 +854,10 @@ class StrConcatExpr : public ExprBase {
                 std::unique_ptr<ExprBase>&& rhs)
       : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
   RTAny eval_path(size_t idx) const override {
-    std::string ret = std::string(lhs->eval_path(idx).as_string()) +
+    std::string ret = std::string(lhs->eval_path(idx).as_string()) + ";" +
                       std::string(rhs->eval_path(idx).as_string());
     values.emplace_back(ret);
-    return RTAny::from_string(ret);
+    return RTAny::from_string(values[values.size() - 1]);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -869,18 +869,20 @@ class StrConcatExpr : public ExprBase {
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
     std::string ret = std::string(lhs->eval_vertex(label, v, idx).as_string()) +
+                      ";" +
                       std::string(rhs->eval_vertex(label, v, idx).as_string());
     values.emplace_back(ret);
-    return RTAny::from_string(ret);
+    return RTAny::from_string(values[values.size() - 1]);
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
     std::string ret =
         std::string(lhs->eval_edge(label, src, dst, data, idx).as_string()) +
+        ";" +
         std::string(rhs->eval_edge(label, src, dst, data, idx).as_string());
     values.emplace_back(ret);
-    return RTAny::from_string(ret);
+    return RTAny::from_string(values[values.size() - 1]);
   }
 
   RTAnyType type() const override { return RTAnyType::kStringValue; }

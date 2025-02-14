@@ -291,6 +291,19 @@ struct KeyBuilder {
   }
 };
 
+struct OptionalVarWrapper {
+  using V = RTAny;
+  std::optional<RTAny> operator()(size_t idx) const {
+    auto v = vars.get(idx, 0);
+    if (v.is_null()) {
+      return std::nullopt;
+    } else {
+      return v;
+    }
+  }
+  OptionalVarWrapper(Var&& vars) : vars(std::move(vars)) {}
+  Var vars;
+};
 struct VarWrapper {
   using V = RTAny;
   RTAny operator()(size_t idx) const { return vars.get(idx); }
@@ -807,14 +820,19 @@ std::unique_ptr<ReducerBase> make_general_reducer(
     const GraphReadInterface& graph, const Context& ctx, Var&& var,
     AggrKind kind, int alias) {
   if (kind == AggrKind::kCount) {
-    VarWrapper var_wrap(std::move(var));
     if (!var.is_optional()) {
+      VarWrapper var_wrap(std::move(var));
+
       CountReducer<VarWrapper, false> r(std::move(var_wrap));
       ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
-      LOG(FATAL) << "not support optional count\n";
+      OptionalVarWrapper var_wrap(std::move(var));
+      CountReducer<OptionalVarWrapper, true> r(std::move(var_wrap));
+      ValueCollector<int64_t> collector;
+      return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
+          std::move(r), std::move(collector), alias);
     }
   } else if (kind == AggrKind::kCountDistinct) {
     VarWrapper var_wrap(std::move(var));

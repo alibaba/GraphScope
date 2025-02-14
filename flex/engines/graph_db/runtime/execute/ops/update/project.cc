@@ -14,6 +14,7 @@
  */
 #include "flex/engines/graph_db/runtime/execute/ops/update/project.h"
 #include "flex/engines/graph_db/runtime/common/operators/update/project.h"
+#include "flex/engines/graph_db/runtime/utils/var.h"
 
 namespace gs {
 namespace runtime {
@@ -213,6 +214,105 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
   }
 
   return std::make_unique<ProjectInsertOpr>(exprs);
+}
+
+template <typename EXPR, typename T>
+struct ValueCollector {
+  ValueCollector() {}
+  void collect(const EXPR& e, int i) { builder.push_back_opt(e(i)); }
+  std::shared_ptr<IContextColumn> get() { return builder.finish(); }
+  ValueColumnBuilder<T> builder;
+};
+
+template <typename T>
+struct TypedVar {
+  TypedVar(Var&& var) : var(std::move(var)) {}
+  T operator()(int i) const { return TypedConverter<T>::to_typed(var.get(i)); }
+  Var var;
+};
+class ProjectUpdateOpr : public IUpdateOperator {
+ public:
+  ProjectUpdateOpr(std::vector<std::pair<common::Expression, int>>&& mappings,
+                   bool is_append)
+      : mappings_(std::move(mappings)), is_append_(is_append) {}
+  std::string get_operator_name() const override { return "ProjectUpdateOpr"; }
+
+  bl::result<gs::runtime::Context> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    std::vector<std::unique_ptr<UProjectExprBase>> exprs;
+    for (auto& [map, alias] : mappings_) {
+      if (map.operators_size() == 1 &&
+          map.operators(0).item_case() == common::ExprOpr::kVar) {
+        auto var = map.operators(0).var();
+        if (!var.has_property()) {
+          exprs.emplace_back(
+              std::make_unique<UDummyGetter>(var.tag().id(), alias));
+        } else {
+          Var var_(const_cast<const GraphUpdateInterface&>(graph), ctx, var,
+                   VarType::kPathVar);
+          if (var_.type() == RTAnyType::kI64Value) {
+            TypedVar<int64_t> getter(std::move(var_));
+            ValueCollector<TypedVar<int64_t>, int64_t> collector;
+            exprs.emplace_back(
+                std::make_unique<
+                    UProjectExpr<TypedVar<int64_t>,
+                                 ValueCollector<TypedVar<int64_t>, int64_t>>>(
+                    std::move(getter), std::move(collector), alias));
+          } else if (var_.type() == RTAnyType::kStringValue) {
+            TypedVar<std::string_view> getter(std::move(var_));
+            ValueCollector<TypedVar<std::string_view>, std::string_view>
+                collector;
+            exprs.emplace_back(
+                std::make_unique<
+                    UProjectExpr<TypedVar<std::string_view>,
+                                 ValueCollector<TypedVar<std::string_view>,
+                                                std::string_view>>>(
+                    std::move(getter), std::move(collector), alias));
+          } else if (var_.type() == RTAnyType::kI32Value) {
+            TypedVar<int32_t> getter(std::move(var_));
+            ValueCollector<TypedVar<int32_t>, int32_t> collector;
+            exprs.emplace_back(
+                std::make_unique<
+                    UProjectExpr<TypedVar<int32_t>,
+                                 ValueCollector<TypedVar<int32_t>, int32_t>>>(
+                    std::move(getter), std::move(collector), alias));
+          } else {
+            LOG(ERROR) << "project update only support var";
+            RETURN_BAD_REQUEST_ERROR("project update only support var");
+          }
+        }
+      } else {
+        LOG(ERROR) << "project update only support var";
+        RETURN_BAD_REQUEST_ERROR("project update only support var");
+      }
+    }
+    return UProject::project(std::move(ctx), exprs, is_append_);
+  }
+
+ private:
+  std::vector<std::pair<common::Expression, int>> mappings_;
+  bool is_append_;
+};
+
+std::unique_ptr<IUpdateOperator> UProjectOprBuilder::Build(
+    const Schema& schema, const physical::PhysicalPlan& plan, int op_id) {
+  auto project = plan.plan(op_id).opr().project();
+  bool is_append = project.is_append();
+  int mappings_size = project.mappings_size();
+  std::vector<std::pair<common::Expression, int>> mappings;
+  for (int i = 0; i < mappings_size; ++i) {
+    auto mapping = project.mappings(i);
+    int alias = mapping.has_alias() ? mapping.alias().value() : -1;
+    if (!mapping.has_expr()) {
+      LOG(ERROR) << "project mapping should have expr";
+      return nullptr;
+    }
+    mappings.emplace_back(common::Expression(mapping.expr()), alias);
+  }
+
+  return std::make_unique<ProjectUpdateOpr>(std::move(mappings), is_append);
 }
 
 }  // namespace ops

@@ -29,7 +29,7 @@ ReadTransaction::~ReadTransaction() { release(); }
 std::string ReadTransaction::run(
     const std::string& cypher,
     const std::map<std::string, std::string>& params) const {
-  return gs::runtime::CypherRunnerImpl::run(*this, cypher, params);
+  return gs::runtime::CypherRunnerImpl::get().run(*this, cypher, params);
 }
 
 timestamp_t ReadTransaction::timestamp() const { return timestamp_; }

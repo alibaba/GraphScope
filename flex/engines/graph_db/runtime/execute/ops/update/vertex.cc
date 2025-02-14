@@ -15,6 +15,7 @@
 
 #include "flex/engines/graph_db/runtime/execute/ops/update/vertex.h"
 #include "flex/engines/graph_db/runtime/common/operators/update/get_v.h"
+#include "flex/engines/graph_db/runtime/utils/expr_impl.h"
 #include "flex/engines/graph_db/runtime/utils/params.h"
 #include "flex/engines/graph_db/runtime/utils/utils.h"
 
@@ -40,6 +41,71 @@ class UGetVFromEdgeOpr : public IUpdateOperator {
  private:
   GetVParams params_;
 };
+
+class UGetVFromEdgeWithPredOpr : public IUpdateOperator {
+ public:
+  UGetVFromEdgeWithPredOpr(const GetVParams& params,
+                           const common::Expression& expr)
+      : params_(params), expr_(expr) {}
+  ~UGetVFromEdgeWithPredOpr() = default;
+
+  std::string get_operator_name() const override {
+    return "UGetVFromEdgeWithPredOpr";
+  }
+
+  bl::result<Context> Eval(GraphUpdateInterface& graph,
+                           const std::map<std::string, std::string>& params,
+                           Context&& ctx, OprTimer& timer) override {
+    auto expr = parse_expression<GraphUpdateInterface>(
+        graph, ctx, params, expr_, VarType::kPathVar);
+    if (expr->is_optional()) {
+      LOG(ERROR) << "GetV does not support optional expression now";
+      RETURN_BAD_REQUEST_ERROR("GetV does not support optional expression now");
+    }
+    LOG(INFO) << "GetVFromEdgeWithPredOpr";
+    return UGetV::get_vertex_from_edge(
+        graph, std::move(ctx), params_,
+        [&](size_t idx, label_t label, vid_t vid) {
+          return expr->eval_vertex(label, vid, idx).as_bool();
+        });
+  }
+
+ private:
+  GetVParams params_;
+  common::Expression expr_;
+};
+
+class UGetVFromVerticesWithPredOpr : public IUpdateOperator {
+ public:
+  UGetVFromVerticesWithPredOpr(const GetVParams& params,
+                               const common::Expression& expr)
+      : params_(params), expr_(expr) {}
+  ~UGetVFromVerticesWithPredOpr() = default;
+
+  std::string get_operator_name() const override {
+    return "UGetVFromVerticesWithPredOpr";
+  }
+
+  bl::result<Context> Eval(GraphUpdateInterface& graph,
+                           const std::map<std::string, std::string>& params,
+                           Context&& ctx, OprTimer& timer) override {
+    auto expr = parse_expression<GraphUpdateInterface>(
+        graph, ctx, params, expr_, VarType::kPathVar);
+    if (expr->is_optional()) {
+      LOG(ERROR) << "GetV does not support optional expression now";
+      RETURN_BAD_REQUEST_ERROR("GetV does not support optional expression now");
+    }
+    return UGetV::get_vertex_from_vertices(
+        graph, std::move(ctx), params_,
+        [&](size_t idx, label_t label, vid_t vid) {
+          return expr->eval_vertex(label, vid, idx).as_bool();
+        });
+  }
+
+ private:
+  GetVParams params_;
+  common::Expression expr_;
+};
 std::unique_ptr<IUpdateOperator> UVertexOprBuilder::Build(
     const Schema& schema, const physical::PhysicalPlan& plan, int op_idx) {
   const auto& vertex = plan.plan(op_idx).opr().vertex();
@@ -52,8 +118,15 @@ std::unique_ptr<IUpdateOperator> UVertexOprBuilder::Build(
   params.alias = alias;
   params.tables = parse_tables(vertex.params());
   if (vertex.params().has_predicate()) {
-    LOG(ERROR) << "GetV does not support predicate now";
-    return nullptr;
+    if (opt == VOpt::kEnd || opt == VOpt::kStart || opt == VOpt::kOther) {
+      return std::make_unique<UGetVFromEdgeWithPredOpr>(
+          params, vertex.params().predicate());
+    } else if (opt == VOpt::kItself) {
+      return std::make_unique<UGetVFromVerticesWithPredOpr>(
+          params, vertex.params().predicate());
+    }
+    return std::make_unique<UGetVFromEdgeWithPredOpr>(
+        params, vertex.params().predicate());
   }
   if (opt == VOpt::kEnd || opt == VOpt::kStart || opt == VOpt::kOther) {
     return std::make_unique<UGetVFromEdgeOpr>(params);

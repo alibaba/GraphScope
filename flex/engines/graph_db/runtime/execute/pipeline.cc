@@ -128,6 +128,7 @@ bl::result<Context> UpdatePipeline::Execute(
       std::stringstream ss;
       ss << "[Execute Failed] " << opr->get_operator_name()
          << " execute failed: " << status.ToString();
+      LOG(ERROR) << ss.str();
       auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
       return bl::new_error(err);
     }

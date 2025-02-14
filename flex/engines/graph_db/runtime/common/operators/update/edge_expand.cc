@@ -66,7 +66,42 @@ bl::result<Context> UEdgeExpand::edge_expand_e_without_pred(
   const auto& input_vertex_list =
       dynamic_cast<const IVertexColumn&>(*ctx.get(params.v_tag).get());
   std::vector<size_t> shuffle_offset;
-  BDMLEdgeColumnBuilder builder;
+  const auto& v_labels = input_vertex_list.get_labels_set();
+  std::vector<LabelTriplet> labels;
+  std::vector<std::pair<LabelTriplet, PropertyType>> edge_labels;
+  for (auto& label : params.labels) {
+    if (params.dir == Direction::kIn || params.dir == Direction::kBoth) {
+      if (v_labels.find(label.dst_label) != v_labels.end()) {
+        labels.push_back(label);
+        const auto& props = graph.schema().get_edge_properties(
+            label.src_label, label.dst_label, label.edge_label);
+        if (props.size() == 0) {
+          edge_labels.emplace_back(label, PropertyType::kEmpty);
+
+        } else if (props.size() == 1) {
+          edge_labels.emplace_back(label, props[0]);
+        } else {
+          edge_labels.emplace_back(label, PropertyType::kRecordView);
+        }
+        continue;
+      }
+    }
+    if (params.dir == Direction::kOut || params.dir == Direction::kBoth) {
+      if (v_labels.find(label.src_label) != v_labels.end()) {
+        labels.push_back(label);
+        const auto& props = graph.schema().get_edge_properties(
+            label.src_label, label.dst_label, label.edge_label);
+        if (props.size() == 0) {
+          edge_labels.emplace_back(label, PropertyType::kEmpty);
+        } else if (props.size() == 1) {
+          edge_labels.emplace_back(label, props[0]);
+        } else {
+          edge_labels.emplace_back(label, PropertyType::kRecordView);
+        }
+      }
+    }
+  }
+  BDMLEdgeColumnBuilder builder(edge_labels);
 
   if (params.dir == Direction::kBoth) {
     foreach_vertex(

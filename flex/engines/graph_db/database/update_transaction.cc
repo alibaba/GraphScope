@@ -29,7 +29,7 @@ namespace gs {
 std::string UpdateTransaction::run(
     const std::string& cypher,
     const std::map<std::string, std::string>& params) {
-  return gs::runtime::CypherRunnerImpl::run(*this, cypher, params);
+  return gs::runtime::CypherRunnerImpl::get().run(*this, cypher, params);
 }
 
 UpdateTransaction::UpdateTransaction(const GraphDBSession& session,

@@ -42,7 +42,7 @@ InsertTransaction::~InsertTransaction() { Abort(); }
 std::string InsertTransaction::run(
     const std::string& cypher,
     const std::map<std::string, std::string>& params) {
-  return gs::runtime::CypherRunnerImpl::run(*this, cypher, params);
+  return gs::runtime::CypherRunnerImpl::get().run(*this, cypher, params);
 }
 
 bool InsertTransaction::AddVertex(label_t label, const Any& id,

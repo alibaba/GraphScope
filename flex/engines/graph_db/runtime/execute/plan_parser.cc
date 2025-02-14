@@ -40,6 +40,7 @@
 
 #include "flex/engines/graph_db/runtime/execute/ops/update/edge.h"
 #include "flex/engines/graph_db/runtime/execute/ops/update/scan.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/select.h"
 #include "flex/engines/graph_db/runtime/execute/ops/update/set.h"
 #include "flex/engines/graph_db/runtime/execute/ops/update/vertex.h"
 
@@ -105,6 +106,9 @@ void PlanParser::init() {
   register_update_operator_builder(std::make_unique<ops::UScanOprBuilder>());
   register_update_operator_builder(std::make_unique<ops::USetOprBuilder>());
   register_update_operator_builder(std::make_unique<ops::UVertexOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::USinkOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::UProjectOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::USelectOprBuilder>());
 }
 
 PlanParser& PlanParser::get() {
@@ -262,7 +266,8 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
     if (i == old_i) {
       std::stringstream ss;
       ss << "[Parse Failed] " << get_opr_name(cur_op_kind)
-         << " failed to parse plan at index " << i << ": "
+         << " failed to parse plan at index " << i << " "
+         << plan.plan(i).DebugString() << ": "
          << ", last match error: " << status.ToString();
       auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
       LOG(ERROR) << err.ToString();
@@ -275,7 +280,6 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
 bl::result<ReadPipeline> PlanParser::parse_read_pipeline(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
     const physical::PhysicalPlan& plan) {
-  LOG(INFO) << plan.DebugString();
   auto ret = parse_read_pipeline_with_meta(schema, ctx_meta, plan);
   if (!ret) {
     return ret.error();
@@ -293,7 +297,7 @@ bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
       ss << "[Parse Failed] " << get_opr_name(op_kind)
          << " failed to parse plan at index " << i;
       auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
-      LOG(ERROR) << err.ToString();
+      //      LOG(ERROR) << err.ToString();
       return bl::new_error(err);
     }
     auto op = write_op_builders_.at(op_kind)->Build(schema, plan, i);
