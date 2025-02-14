@@ -896,6 +896,54 @@ class StrConcatExpr : public ExprBase {
   mutable std::vector<std::string> values;
 };
 
+class StrListSizeExpr : public ExprBase {
+ public:
+  StrListSizeExpr(std::unique_ptr<ExprBase>&& args) : args(std::move(args)) {}
+
+  RTAny eval_path(size_t idx) const override {
+    CHECK(args->type() == RTAnyType::kStringValue);
+    auto str_list = args->eval_path(idx).as_string();
+    return RTAny::from_int64(_size(str_list));
+  }
+
+  RTAny eval_path(size_t idx, int) const override {
+    auto list = args->eval_path(idx, 0);
+    if (list.is_null()) {
+      return RTAny(RTAnyType::kNull);
+    }
+    return eval_path(idx);
+  }
+
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
+    auto str_list = args->eval_vertex(label, v, idx).as_string();
+    return RTAny::from_int64(_size(str_list));
+  }
+
+  RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
+                  const Any& data, size_t idx) const override {
+    auto str_list = args->eval_edge(label, src, dst, data, idx).as_string();
+    return RTAny::from_int64(_size(str_list));
+  }
+
+  RTAnyType type() const override { return RTAnyType::kI32Value; }
+  bool is_optional() const override { return args->is_optional(); }
+
+ private:
+  int64_t _size(const std::string_view& sv) const {
+    if (sv.empty()) {
+      return 0;
+    }
+    int64_t ret = 1;
+    for (auto c : sv) {
+      if (c == ';') {
+        ++ret;
+      }
+    }
+    return ret;
+  }
+  std::unique_ptr<ExprBase> args;
+};
+
 template <typename GraphInterface>
 std::unique_ptr<ExprBase> parse_expression(
     const GraphInterface& graph, const Context& ctx,

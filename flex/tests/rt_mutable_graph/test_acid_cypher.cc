@@ -364,18 +364,18 @@ int64_t count_email_num(const std::string_view& sv) {
 
 std::map<std::string, int32_t> AtomicityCheck(GraphDB& db) {
   auto txn = db.GetReadTransaction();
-  std::string result =
-      txn.run("MATCH(p: PERSON) RETURN p.id, p.name, p.emails", {});
+  std::string result = txn.run(
+      "MATCH(p: PERSON) With p.id as id, p.name as name, p.emails as emails \n"
+      "  With id, CASE WHEN name <> \"\" THEN 1 ELSE 0 END as name_count, "
+      "gs.function.listSize(emails) as email_count\n"
+      "RETURN count(id) as numPersons, sum(name_count) as numNames, "
+      "sum(email_count) as numEmails",
+      {});
   gs::Decoder decoder(result.data(), result.size());
   std::map<std::string, int32_t> ret;
-  while (!decoder.empty()) {
-    decoder.get_long();
-    std::string_view name = decoder.get_string();
-    std::string_view emails = decoder.get_string();
-    ret["numPersons"] += 1;
-    ret["numEmails"] += count_email_num(emails);
-    ret["numNames"] += !name.empty();
-  }
+  ret["numPersons"] = decoder.get_long();
+  ret["numNames"] = decoder.get_int();
+  ret["numEmails"] = decoder.get_int();
 
   return ret;
 }
@@ -391,6 +391,8 @@ void AtomicityCTest(const std::string& work_dir, int thread_num) {
       result["numEmails"] == 4) {
     LOG(INFO) << "AtomicityCTest passed";
   } else {
+    LOG(ERROR) << result["numPersons"] << " " << result["numNames"] << " "
+               << result["numEmails"];
     LOG(FATAL) << "AtomicityCTest failed";
   }
 }

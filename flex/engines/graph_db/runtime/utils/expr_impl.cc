@@ -709,6 +709,8 @@ static std::unique_ptr<ExprBase> build_expr(
                                            var_type);
         return std::make_unique<StrConcatExpr>(std::move(expr),
                                                std::move(expr2));
+      } else if (name == "gs.function.listSize") {
+        return std::make_unique<StrListSizeExpr>(std::move(expr));
       } else {
         LOG(FATAL) << "not support udf" << opr.DebugString();
       }
