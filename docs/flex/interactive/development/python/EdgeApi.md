@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**add_edge**](EdgeApi.md#add_edge) | **POST** /v1/graph/{graph_id}/edge | Add edge to the graph
 [**get_edge**](EdgeApi.md#get_edge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
 [**update_edge**](EdgeApi.md#update_edge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property
-[**deleteEdge**](EdgeApi.md#deleteEdge) | **DELETE** /v1/graph/{graph_id}/edge | Remove edge from the graph
+[**delete_edge**](EdgeApi.md#deleteEdge) | **DELETE** /v1/graph/{graph_id}/edge | Remove edge from the graph
 
 # **add_edge**
 > [Result](./result.rst)[str] add_edge(graph_id, edge_request)

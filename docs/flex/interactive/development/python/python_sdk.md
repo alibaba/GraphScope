@@ -388,7 +388,7 @@ The Service APIs in interactive SDK are divided into five categories.
 All URIs are relative to `${INTERACTIVE_ADMIN_ENDPOINT}`
 
 Class | Method | HTTP request | Description | Interactive Support | Insight Support
------------- | ------------- | ------------- | -------------
+------------ | ------------- | ------------- | ------------- | ------------- | -------------
 *GraphManagementApi* | [**BulkLoading**](./GraphManagementApi.md#Bulkloading) | **POST** /v1/graph/{graph_id}/dataloading | | - [x] | - [ ]
 *GraphManagementApi* | [**CreateGraph**](./GraphManagementApi.md#CreateGraph) | **POST** /v1/graph | | - [x] | - [x]
 *GraphManagementApi* | [**DeleteGraph**](./GraphManagementApi.md#DeleteGraph) | **DELETE** /v1/graph/{graph_id} | | - [x] | - [x]
