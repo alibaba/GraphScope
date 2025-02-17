@@ -577,8 +577,6 @@ RTAny RTAny::operator+(const RTAny& other) const {
 }
 
 RTAny RTAny::operator-(const RTAny& other) const {
-  // assert(type_ == other.type_);
-
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val - other.value_.i32_val);
   } else if (type_ == RTAnyType::kI32Value &&
@@ -765,47 +763,6 @@ void sink_vertex(const GraphReadInterface& graph, const VertexRecord& vertex,
     prop->mutable_key()->set_name(names[i]);
     sink_any(graph.GetVertexProperty(vertex.label_, vertex.vid_, i),
              prop->mutable_value());
-  }
-}
-
-template <typename GraphInterface>
-void RTAny::sink(const GraphInterface& graph, Encoder& encoder) const {
-  if (type_ == RTAnyType::kList) {
-    encoder.put_int(value_.list.size());
-    for (size_t i = 0; i < value_.list.size(); ++i) {
-      value_.list.get(i).sink(graph, encoder);
-    }
-  } else if (type_ == RTAnyType::kTuple) {
-    for (size_t i = 0; i < value_.t.size(); ++i) {
-      value_.t.get(i).sink(graph, encoder);
-    }
-  } else if (type_ == RTAnyType::kStringValue) {
-    encoder.put_string_view(value_.str_val);
-  } else if (type_ == RTAnyType::kI64Value) {
-    encoder.put_long(value_.i64_val);
-  } else if (type_ == RTAnyType::kDate32) {
-    encoder.put_long(value_.day.to_timestamp());
-  } else if (type_ == RTAnyType::kTimestamp) {
-    encoder.put_long(value_.date.milli_second);
-  } else if (type_ == RTAnyType::kI32Value) {
-    encoder.put_int(value_.i32_val);
-  } else if (type_ == RTAnyType::kF64Value) {
-    int64_t long_value;
-    std::memcpy(&long_value, &value_.f64_val, sizeof(long_value));
-    encoder.put_long(long_value);
-  } else if (type_ == RTAnyType::kBoolValue) {
-    encoder.put_byte(value_.b_val ? static_cast<uint8_t>(1)
-                                  : static_cast<uint8_t>(0));
-  } else if (type_ == RTAnyType::kStringSetValue) {
-    encoder.put_int(value_.str_set->size());
-    for (auto& s : *value_.str_set) {
-      encoder.put_string_view(s);
-    }
-  } else if (type_ == RTAnyType::kVertex) {
-    encoder.put_byte(value_.vertex.label_);
-    encoder.put_int(value_.vertex.vid_);
-  } else {
-    LOG(FATAL) << "not support for " << static_cast<int>(type_);
   }
 }
 
