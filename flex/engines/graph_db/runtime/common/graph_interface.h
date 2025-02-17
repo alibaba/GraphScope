@@ -288,7 +288,7 @@ class VertexColumn {
     }
   }
 
-  // when the column is not found, the col_id is -1
+  // when the column is not found, the col_id is -2
   inline bool is_null() const { return col_id == -2; }
 
  private:

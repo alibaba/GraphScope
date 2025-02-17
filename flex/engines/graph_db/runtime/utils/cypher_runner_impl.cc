@@ -44,8 +44,8 @@ bool CypherRunnerImpl::gen_plan(const GraphDB& db, const std::string& query,
     LOG(ERROR) << "Generate plan failed for query: " << query;
     return false;
   }
-  plan_cache.put(query, plan.SerializeAsString());
   plan_str = plan.SerializeAsString();
+  plan_cache.put(query, plan_str);
   return true;
 }
 
