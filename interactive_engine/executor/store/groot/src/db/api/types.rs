@@ -103,6 +103,13 @@ impl From<ValueRef<'_>> for PropertyValue {
                     .map(String::from)
                     .collect(),
             ),
+            ValueType::UInt => todo!(),
+            ValueType::ULong => todo!(),
+            ValueType::Date32 => todo!(),
+            ValueType::Time32 => todo!(),
+            ValueType::Timestamp => todo!(),
+            ValueType::FixedChar(fixed_length) => todo!(),
+            ValueType::VarChar(max_length) => todo!(),
         }
     }
 }

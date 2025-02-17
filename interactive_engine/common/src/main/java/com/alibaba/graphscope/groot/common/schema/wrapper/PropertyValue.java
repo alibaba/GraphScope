@@ -16,6 +16,8 @@ package com.alibaba.graphscope.groot.common.schema.wrapper;
 import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.proto.groot.PropertyValuePb;
+import com.google.common.primitives.UnsignedInteger;
+import com.google.common.primitives.UnsignedLong;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
@@ -54,14 +56,24 @@ public class PropertyValue {
                     return Short.valueOf(valString);
                 case INT:
                     return Integer.valueOf(valString);
+                case UINT:
+                    return UnsignedInteger.valueOf(valString);
                 case LONG:
                     return Long.valueOf(valString);
+                case ULONG:
+                    return UnsignedLong.valueOf(valString);
                 case FLOAT:
                     return Float.valueOf(valString);
                 case DOUBLE:
                     return Double.valueOf(valString);
                 case STRING:
                     return valString;
+                case DATE:
+                    return Integer.valueOf(valString);
+                case TIME32:
+                    return Integer.valueOf(valString);
+                case TIMESTAMP:
+                    return Long.valueOf(valString);
                 default:
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }

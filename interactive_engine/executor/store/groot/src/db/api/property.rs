@@ -31,20 +31,27 @@ impl dyn PropertyMap {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueType {
-    Bool = 1,
-    Char = 2,
-    Short = 3,
-    Int = 4,
-    Long = 5,
-    Float = 6,
-    Double = 7,
-    String = 8,
-    Bytes = 9,
-    IntList = 10,
-    LongList = 11,
-    FloatList = 12,
-    DoubleList = 13,
-    StringList = 14,
+    Bool,
+    Char,
+    Short,
+    Int,
+    Long,
+    Float,
+    Double,
+    String,
+    Bytes,
+    IntList,
+    LongList,
+    FloatList,
+    DoubleList,
+    StringList,
+    UInt,
+    ULong,
+    Date32,
+    Time32,
+    Timestamp,
+    FixedChar(usize), // fixed_length
+    VarChar(usize),   // max_length
 }
 
 impl ValueType {
@@ -65,12 +72,19 @@ impl ValueType {
             ValueType::FloatList,
             ValueType::DoubleList,
             ValueType::StringList,
+            ValueType::UInt,
+            ValueType::ULong,
+            ValueType::Date32,
+            ValueType::Time32,
+            ValueType::Timestamp,
+            ValueType::FixedChar(1),
+            ValueType::VarChar(255),
         ]
     }
 
     #[cfg(test)]
     pub fn count() -> usize {
-        14
+        21
     }
 
     pub fn from_proto(pb: &DataTypePb) -> GraphResult<Self> {
@@ -89,6 +103,12 @@ impl ValueType {
             DataTypePb::FLOAT_LIST => Ok(ValueType::FloatList),
             DataTypePb::DOUBLE_LIST => Ok(ValueType::DoubleList),
             DataTypePb::STRING_LIST => Ok(ValueType::StringList),
+            DataTypePb::UINT => Ok(ValueType::UInt),
+            DataTypePb::ULONG => Ok(ValueType::ULong),
+            DataTypePb::DATE32 => Ok(ValueType::Date32),
+            DataTypePb::TIMESTAMP_MS => Ok(ValueType::Timestamp),
+            DataTypePb::FIXED_CHAR => Ok(ValueType::FixedChar(1)), // todo: fixed_length
+            DataTypePb::VAR_CHAR => Ok(ValueType::VarChar(255)),   // todo: max_length
             _ => {
                 let msg = format!("unsupported data type {:?}", pb);
                 let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
@@ -113,6 +133,13 @@ impl ValueType {
             ValueType::FloatList => Ok(DataTypePb::FLOAT_LIST),
             ValueType::DoubleList => Ok(DataTypePb::DOUBLE_LIST),
             ValueType::StringList => Ok(DataTypePb::STRING_LIST),
+            ValueType::UInt => Ok(DataTypePb::UINT),
+            ValueType::ULong => Ok(DataTypePb::ULONG),
+            ValueType::Date32 => Ok(DataTypePb::DATE32),
+            ValueType::Time32 => Ok(DataTypePb::TIME32_MS),
+            ValueType::Timestamp => Ok(DataTypePb::TIMESTAMP_MS),
+            ValueType::FixedChar(fixed_length) => Ok(DataTypePb::FIXED_CHAR),
+            ValueType::VarChar(max_length) => Ok(DataTypePb::VAR_CHAR),
         }
     }
 
@@ -124,7 +151,8 @@ impl ValueType {
             | ValueType::Int
             | ValueType::Long
             | ValueType::Float
-            | ValueType::Double => true,
+            | ValueType::Double
+            | ValueType::FixedChar(_) => true,
             _ => false,
         }
     }
@@ -136,6 +164,7 @@ impl ValueType {
             ValueType::Short => 2,
             ValueType::Int | ValueType::Float => 4,
             ValueType::Long | ValueType::Double => 8,
+            ValueType::FixedChar(len) => len,
             _ => panic!("{:?} doesn't has fixed len", self),
         }
     }
@@ -355,6 +384,13 @@ impl std::fmt::Debug for ValueRef<'_> {
                 write!(f, "DoubleArray({:?})", self.get_double_list().unwrap())
             }
             ValueType::StringList => write!(f, "StringArray({:?})", self.get_str_list().unwrap()),
+            ValueType::UInt => todo!(),
+            ValueType::ULong => todo!(),
+            ValueType::Date32 => todo!(),
+            ValueType::Time32 => todo!(),
+            ValueType::Timestamp => todo!(),
+            ValueType::FixedChar(fixed_length) => todo!(),
+            ValueType::VarChar(max_length) => todo!(),
         }
     }
 }

@@ -48,10 +48,16 @@ public class SerdeUtils {
                     return ByteBuffer.allocate(Integer.BYTES)
                             .putInt(Integer.valueOf(valObject.toString()))
                             .array();
+                case UINT:
+                    int uintValue = Integer.parseUnsignedInt(valObject.toString());
+                    return ByteBuffer.allocate(Integer.BYTES).putInt(uintValue).array();
                 case LONG:
                     return ByteBuffer.allocate(Long.BYTES)
                             .putLong(Long.valueOf(valObject.toString()))
                             .array();
+                case ULONG:
+                    long ulongValue = Long.parseUnsignedLong(valObject.toString());
+                    return ByteBuffer.allocate(Long.BYTES).putLong(ulongValue).array();
                 case FLOAT:
                     return ByteBuffer.allocate(Float.BYTES)
                             .putFloat(Float.valueOf(valObject.toString()))
@@ -148,6 +154,18 @@ public class SerdeUtils {
                         dos.write(bytes);
                     }
                     return bos.toByteArray();
+                case DATE:
+                    return ByteBuffer.allocate(Integer.BYTES)
+                            .putInt(Integer.valueOf(valObject.toString()))
+                            .array();
+                case TIME32:
+                    return ByteBuffer.allocate(Integer.BYTES)
+                            .putInt(Integer.valueOf(valObject.toString()))
+                            .array();
+                case TIMESTAMP:
+                    return ByteBuffer.allocate(Long.BYTES)
+                            .putLong(Long.valueOf(valObject.toString()))
+                            .array();
                 default:
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }

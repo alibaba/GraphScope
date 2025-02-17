@@ -39,7 +39,9 @@ public enum DataType {
     BYTES_LIST(15),
     DATE(16), // represent DATE32
     TIME32(17),
-    TIMESTAMP(18);
+    TIMESTAMP(18),
+    UINT(19),
+    ULONG(20);
 
     private final byte type;
 
@@ -85,6 +87,10 @@ public enum DataType {
                 return DataType.TIME32;
             case TIMESTAMP_MS:
                 return DataType.TIMESTAMP;
+            case UINT:
+                return DataType.UINT;
+            case ULONG:
+                return DataType.ULONG;
             default:
                 throw new InvalidDataTypeException("Unknown DataType: [" + pb + "]");
         }
@@ -139,6 +145,10 @@ public enum DataType {
                 return DataTypePb.TIME32_MS;
             case TIMESTAMP:
                 return DataTypePb.TIMESTAMP_MS;
+            case UINT:
+                return DataTypePb.UINT;
+            case ULONG:
+                return DataTypePb.ULONG;
             default:
                 throw new UnsupportedOperationException("Unsupported DataType: [" + this + "]");
         }
