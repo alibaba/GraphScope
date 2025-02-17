@@ -285,9 +285,15 @@ public class StoreService {
                                     ex);
                             attrs.put("message", ex.getMessage());
                             String msg = "Not supported operation in secondary mode";
+                            String msg2 = "less than current si_guard";
                             if (ex.getMessage().contains(msg)) {
                                 logger.warn("Ignored write in secondary instance, {}", msg);
                                 attrs.put("success", true);
+                            } else if (ex.getMessage().contains(msg2)) {
+                                // Non recoverable failure
+                                logger.error("Write batch failed. {}", batch.toProto(), ex);
+                                attrs.put("success", false);
+                                this.writeCounter.add(batch.getOperationCount(), attrs.build());
                             } else {
                                 attrs.put("success", false);
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
