@@ -40,7 +40,6 @@ bool CypherWriteApp::Query(GraphDBSession& graph, Decoder& input,
     pipeline_cache_.emplace(query, runtime::PlanParser::get()
                                        .parse_write_pipeline(db_.schema(), plan)
                                        .value());
-  } else {
   }
 
   gs::runtime::GraphInsertInterface gri(txn);
