@@ -252,8 +252,6 @@ void AtomicityInit(GraphDB& db, const std::string& work_dir, int thread_num) {
       "With $person_id as person_id, $name as name, $email as email\n"
       "CREATE(person : PERSON{id : person_id, name : name, emails : email}) ",
       {{"person_id", std::to_string(id1)}, {"name", name1}, {"email", email1}});
-  // CHECK(txn.AddVertex(person_label_id, generate_id(),
-  //                   {Any::From(id1), Any::From(name1), Any::From(email1)}));
   txn.run(
       "With $person_id as person_id, $name as name, $email as email\n"
       "CREATE(person : PERSON{id : person_id, name : name, emails : email}) ",
@@ -313,19 +311,6 @@ bool AtomicityRB(GraphDBSession& db, int64_t person1_id, int64_t person2_id,
          {"emails", empty_email}});
   }
   return true;
-}
-
-int64_t count_email_num(const std::string_view& sv) {
-  if (sv.empty()) {
-    return 0;
-  }
-  int64_t ret = 1;
-  for (auto c : sv) {
-    if (c == ';') {
-      ++ret;
-    }
-  }
-  return ret;
 }
 
 std::map<std::string, int32_t> AtomicityCheck(GraphDB& db) {
