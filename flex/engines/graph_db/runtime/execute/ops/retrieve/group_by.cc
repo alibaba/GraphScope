@@ -67,7 +67,7 @@ class GroupByOpr : public IReadOperator {
     for (auto& aggr : aggrs_) {
       reducers.push_back(aggr(graph, ctx));
     }
-    return GroupBy::group_by(graph, std::move(ctx), std::move(key),
+    return GroupBy::group_by(std::move(ctx), std::move(key),
                              std::move(reducers));
   }
 
@@ -118,7 +118,7 @@ class GroupByOprBeta : public IReadOperator {
     for (auto& aggr : aggrs_) {
       reducers.push_back(aggr(graph, ctx));
     }
-    return GroupBy::group_by(graph, std::move(ctx), std::move(key),
+    return GroupBy::group_by(std::move(ctx), std::move(key),
                              std::move(reducers));
   }
 
