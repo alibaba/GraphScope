@@ -25,6 +25,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/engines/graph_db/runtime/execute/plan_parser.h"
+#include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/utils/yaml_utils.h"
 
 #include "flex/third_party/httplib.h"
@@ -239,7 +240,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
 
   unlink((work_dir_ + "/statistics.json").c_str());
   graph_.generateStatistics(work_dir_);
-  query_cache_.cache.clear();
+  runtime::CypherRunnerImpl::get().clear_cache();
 
   return Result<bool>(true);
 }
@@ -506,8 +507,6 @@ size_t GraphDB::getExecutedQueryNum() const {
   }
   return ret;
 }
-
-QueryCache& GraphDB::getQueryCache() const { return query_cache_; }
 
 void GraphDB::OutputCypherProfiles(const std::string& prefix) {
   runtime::OprTimer read_timer, write_timer;

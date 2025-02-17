@@ -315,6 +315,9 @@ class ReadTransaction {
                   timestamp_t timestamp);
   ~ReadTransaction();
 
+  std::string run(const std::string& cypher,
+                  const std::map<std::string, std::string>& params) const;
+
   timestamp_t timestamp() const;
 
   void Commit();

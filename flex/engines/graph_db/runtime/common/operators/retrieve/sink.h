@@ -24,15 +24,68 @@ namespace runtime {
 
 class Sink {
  public:
-  static void sink(const Context& ctx, const GraphReadInterface& graph,
-                   Encoder& output);
+  template <typename GraphInterface>
+  static void sink(const Context& ctx, const GraphInterface& graph,
+                   Encoder& output) {
+    size_t row_num = ctx.row_num();
+    results::CollectiveResults results;
+    for (size_t i = 0; i < row_num; ++i) {
+      auto result = results.add_results();
+      for (size_t j : ctx.tag_ids) {
+        auto col = ctx.get(j);
+        if (col == nullptr) {
+          continue;
+        }
+        auto column = result->mutable_record()->add_columns();
+        auto val = col->get_elem(i);
+        val.sink(graph, j, column);
+      }
+    }
+    auto res = results.SerializeAsString();
+    output.put_bytes(res.data(), res.size());
+  }
 
-  static void sink_encoder(const Context& ctx, const GraphReadInterface& graph,
-                           Encoder& encoder);
+  template <typename GraphInterface>
+  static void sink_encoder(const Context& ctx, const GraphInterface& graph,
+                           Encoder& encoder) {
+    size_t row_num = ctx.row_num();
+    for (size_t i = 0; i < row_num; ++i) {
+      for (size_t j : ctx.tag_ids) {
+        auto col = ctx.get(j);
+        if (col == nullptr) {
+          continue;
+        }
+
+        auto val = col->get_elem(i);
+        val.sink(graph, encoder);
+      }
+    }
+  }
 
   // for debug
-  static void sink_beta(const Context& ctx, const GraphReadInterface& graph,
-                        Encoder& output);
+  template <typename GraphInterface>
+  static void sink_beta(const Context& ctx, const GraphInterface& graph,
+                        Encoder& output) {
+    size_t row_num = ctx.row_num();
+    std::stringstream ss;
+
+    for (size_t i = 0; i < row_num; ++i) {
+      for (size_t j : ctx.tag_ids) {
+        auto col = ctx.get(j);
+        if (col == nullptr) {
+          continue;
+        }
+        auto val = col->get_elem(i);
+        ss << val.to_string() << "|";
+      }
+      ss << std::endl;
+    }
+    ss << "========================================================="
+       << std::endl;
+    // std::cout << ss.str();
+    auto res = ss.str();
+    output.put_bytes(res.data(), res.size());
+  }
 };
 
 }  // namespace runtime
