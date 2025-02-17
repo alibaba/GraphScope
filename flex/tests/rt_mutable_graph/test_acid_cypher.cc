@@ -169,18 +169,6 @@ oid_t generate_id() {
   return current_id.fetch_add(1);
 }
 
-void append_string_to_field(gs::UpdateTransaction::vertex_iterator& vit,
-                            int col_id, const std::string& str) {
-  std::string cur_str = std::string(vit.GetField(col_id).AsStringView());
-  if (cur_str.empty()) {
-    cur_str = str;
-  } else {
-    cur_str += ";";
-    cur_str += str;
-  }
-  vit.SetField(col_id, Any::From(cur_str));
-}
-
 template <typename FUNC_T>
 void parallel_transaction(GraphDB& db, const FUNC_T& func, int txn_num) {
   std::vector<int> txn_ids;
@@ -227,28 +215,6 @@ void parallel_client(GraphDB& db, const FUNC_T& func) {
   for (auto& t : threads) {
     t.join();
   }
-}
-
-template <typename TXN_T>
-typename TXN_T::vertex_iterator get_random_vertex(TXN_T& txn,
-                                                  gs::label_t label_id) {
-  auto v0 = txn.GetVertexIterator(label_id);
-  int num = 0;
-  for (; v0.IsValid(); v0.Next()) {
-    ++num;
-  }
-  if (num == 0) {
-    return v0;
-  }
-  std::random_device rand_dev;
-  std::mt19937 gen(rand_dev());
-  std::uniform_int_distribution<int> dist(0, num - 1);
-  int picked = dist(gen);
-  auto v1 = txn.GetVertexIterator(label_id);
-  for (int i = 0; i != picked; ++i) {
-    v1.Next();
-  }
-  return v1;
 }
 
 // Atomicity
@@ -549,9 +515,6 @@ void G1AInit(GraphDB& db, const std::string& work_dir, int thread_num) {
 
 void G1A1(GraphDBSession& db, int64_t person_id) {
   auto txn = db.GetUpdateTransaction();
-  auto person_label_id = db.schema().get_vertex_label_id("PERSON");
-  // select a random person
-  auto vit = get_random_vertex(txn, person_label_id);
   std::map<std::string, std::string> parameters = {
       {"personId", std::to_string(person_id)}};
   auto res =
