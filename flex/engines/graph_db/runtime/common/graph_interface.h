@@ -273,14 +273,18 @@ namespace graph_update_interface_impl {
 template <typename PROP_T>
 class VertexColumn {
  public:
-  VertexColumn() : txn_(nullptr), label_(0), col_id(-2) {}
+  enum class ColState { kInvalidColId = -2, kPrimaryKeyColId = -1 };
+  VertexColumn()
+      : txn_(nullptr),
+        label_(0),
+        col_id(static_cast<int>(ColState::kInvalidColId)) {}
   VertexColumn(UpdateTransaction* txn, label_t label, int col_id)
       : txn_(txn), label_(label), col_id(col_id) {}
   inline PROP_T get_view(vid_t v) const {
     // col_id == -1 means the primary key column
-    if (col_id == -1) {
+    if (col_id == static_cast<int>(ColState::kPrimaryKeyColId)) {
       return AnyConverter<PROP_T>::from_any(txn_->GetVertexId(label_, v));
-    } else if (col_id == -2) {
+    } else if (col_id == static_cast<int>(ColState::kInvalidColId)) {
       return PROP_T();
     } else {
       return AnyConverter<PROP_T>::from_any(
@@ -289,7 +293,9 @@ class VertexColumn {
   }
 
   // when the column is not found, the col_id is -2
-  inline bool is_null() const { return col_id == -2; }
+  inline bool is_null() const {
+    return col_id == static_cast<int>(ColState::kInvalidColId);
+  }
 
  private:
   UpdateTransaction* txn_;
@@ -424,10 +430,15 @@ class GraphUpdateInterface {
     CHECK(pk.size() == 1);
 
     if (std::get<1>(pk[0]) == prop_name) {
-      return vertex_column_t<PROP_T>(&txn_, label, -1);
+      return vertex_column_t<PROP_T>(
+          &txn_, label,
+          static_cast<int>(
+              vertex_column_t<PROP_T>::ColState::kPrimaryKeyColId));
     }
     // null column
-    return vertex_column_t<PROP_T>(&txn_, label, -2);
+    return vertex_column_t<PROP_T>(
+        &txn_, label,
+        static_cast<int>(vertex_column_t<PROP_T>::ColState::kInvalidColId));
   }
 
   GraphUpdateInterface(gs::UpdateTransaction& txn) : txn_(txn) {}
