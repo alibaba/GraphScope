@@ -597,7 +597,6 @@ RTAny RTAny::operator-(const RTAny& other) const {
 }
 
 RTAny RTAny::operator/(const RTAny& other) const {
-  // assert(type_ == other.type_);
   bool has_i64 = false;
   bool has_f64 = false;
   double left_f64 = 0;
@@ -798,13 +797,11 @@ void RTAny::sink(const GraphInterface& graph, Encoder& encoder) const {
     encoder.put_byte(value_.b_val ? static_cast<uint8_t>(1)
                                   : static_cast<uint8_t>(0));
   } else if (type_ == RTAnyType::kStringSetValue) {
-    // fix me
     encoder.put_int(value_.str_set->size());
     for (auto& s : *value_.str_set) {
       encoder.put_string_view(s);
     }
   } else if (type_ == RTAnyType::kVertex) {
-    // fix me
     encoder.put_byte(value_.vertex.label_);
     encoder.put_int(value_.vertex.vid_);
   } else {
