@@ -16,6 +16,7 @@
  */
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan_utils.h"
+
 namespace gs {
 namespace runtime {
 namespace ops {
@@ -133,11 +134,6 @@ bool ScanUtils::check_idx_predicate(const physical::Scan& scan_opr,
   if (!scan_opr.has_params()) {
     return false;
   }
-  /**
-  const algebra::QueryParams& p = scan_opr.params();
-  if (p.has_predicate()) {
-    return false;
-  }*/
 
   if (!scan_opr.has_idx_predicate()) {
     return false;
