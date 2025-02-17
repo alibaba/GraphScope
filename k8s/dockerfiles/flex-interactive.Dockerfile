@@ -55,6 +55,8 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
+        # remove all code like from graphscope.* import.* in utils.py, except for get_tempdir
+        sed -i 's/^from graphscope\.framework.* import.*//g' gscoordinator/utils.py && \
         python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/; \
     fi
@@ -169,6 +171,7 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 # flex solution
 ENV SOLUTION=INTERACTIVE
+ENV GRAPHSCOPE_RUNTIME=/tmp/gs/
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \

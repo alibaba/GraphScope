@@ -41,5 +41,4 @@ http_service:
   default_listen_address: localhost
   admin_port: 7777
   query_port: 10000
-coordinator:
-  max_content_length: 1048576 # 1MB
+  max_content_length: 1GB

@@ -1345,9 +1345,9 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
 }
 
 seastar::future<admin_query_result> admin_actor::upload_file(
-    query_param&& query_param) {
-  auto& content = query_param.content;
-  auto upload_res = WorkDirManipulator::CreateFile(content);
+    graph_management_param&& query_param) {
+  auto upload_res = WorkDirManipulator::CreateFile(query_param.content.first,
+                                                   query_param.content.second);
   if (upload_res.ok()) {
     auto value = upload_res.value();
     return seastar::make_ready_future<admin_query_result>(

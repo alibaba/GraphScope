@@ -42,8 +42,7 @@ with open(v6d_version_file_path, "r", encoding="utf-8") as fp:
 # Interactive docker container config
 INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
 INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
-INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/config.yaml"
-COORDINATOR_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/coordinator_config.yaml"
+INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/interactive_config.yaml"
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps.sh")

@@ -37,6 +37,7 @@ from gscoordinator.flex.core.client_wrapper import initialize_client_wrapper
 from gscoordinator.flex.core.config import SOLUTION
 from gscoordinator.flex.encoder import JSONEncoder
 from gscoordinator.monitor import Monitor
+from gscoordinator.utils import human_readable_to_bytes
 
 logger = logging.getLogger("graphscope")
 
@@ -134,7 +135,9 @@ def start_http_service(config):
     initialize_client_wrapper(config)
     app = connexion.App(__name__, specification_dir="./flex/openapi/")
     app.app.json_encoder = JSONEncoder
-    app.app.config["MAX_CONTENT_LENGTH"] = config.coordinator.max_content_length
+    app.app.config["MAX_CONTENT_LENGTH"] = human_readable_to_bytes(
+        config.coordinator.max_content_length
+    )
     app.add_api(
         "openapi.yaml",
         arguments={"title": "GraphScope FLEX HTTP SERVICE API"},

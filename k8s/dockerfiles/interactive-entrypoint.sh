@@ -123,7 +123,11 @@ coordinator:
   http_server_only: true
 EOF
     python3 -m pip install pyyaml
-    res=$(python3 -c "import yaml; config = yaml.safe_load(open('${DEFAULT_INTERACTIVE_CONFIG_FILE}')); print(yaml.dump(config.get('coordinator', {}), default_flow_style=False, indent=4))")
+    res=$(python3 -c "import yaml; config = yaml.safe_load(open('${DEFAULT_INTERACTIVE_CONFIG_FILE}')); print(yaml.dump(config.get('http_service', {}), default_flow_style=False, indent=4))")
+    # Expect max_content_length: 1GB
+    max_content_length=$(echo "$res" | grep "max_content_length:" | cut -d':' -f2)
+    echo "  max_content_length: ${max_content_length}" >> $dst_coordinator_config_file
+
     # for each line in res, echo to dst_coordinator_config_file with 2 spaces indentation
     while IFS= read -r line; do
       echo "  $line" >> $dst_coordinator_config_file
