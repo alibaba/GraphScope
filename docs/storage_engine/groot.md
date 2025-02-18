@@ -112,7 +112,7 @@ It will specify the image tag to be pulled as latest while setting the username 
 ### Connecting to Groot
 Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the [Gremlin Query Language](https://tinkerpop.apache.org/gremlin.html).
 
-#### Interacting with GraphScope SDK
+#### Connecting with GraphScope SDK
 You can use the GraphScope SDK to interact with Groot. Below is an example workflow demonstrating how to get started:
 
 ##### Connection
@@ -187,7 +187,7 @@ schema.add_edge_label("knows").source("person").destination("person").add_proper
 schema.update()
 ```
 
-#### Interacting with Interactive SDK
+#### Connecting with Interactive SDK
 You can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot as well. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands.
 
 For the full documentation for interactive python sdk reference, please refer to [Python SDK Reference](../flex/interactive/development/python/python_sdk_ref.md).
