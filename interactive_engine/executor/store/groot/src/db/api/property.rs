@@ -3,8 +3,6 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use protobuf::ProtobufEnum;
-
 use super::error::*;
 use super::GraphResult;
 use crate::db::api::PropertyId;
@@ -29,7 +27,7 @@ impl dyn PropertyMap {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ValueType {
     Bool,
     Char,
@@ -213,10 +211,22 @@ impl<'a> ValueRef<'a> {
         Ok(get_int(self.data))
     }
 
+    pub fn get_uint(&self) -> GraphResult<u32> {
+        let res = self.check_type_match(ValueType::UInt);
+        res_unwrap!(res, get_uint)?;
+        Ok(get_uint(self.data) as u32)
+    }
+
     pub fn get_long(&self) -> GraphResult<i64> {
         let res = self.check_type_match(ValueType::Long);
         res_unwrap!(res, get_long)?;
         Ok(get_long(self.data))
+    }
+
+    pub fn get_ulong(&self) -> GraphResult<u64> {
+        let res = self.check_type_match(ValueType::ULong);
+        res_unwrap!(res, get_ulong)?;
+        Ok(get_ulong(self.data) as u64)
     }
 
     pub fn get_float(&self) -> GraphResult<f32> {
@@ -320,9 +330,17 @@ impl<'a> ValueRef<'a> {
 
     pub fn check_type_match(&self, value_type: ValueType) -> GraphResult<()> {
         if self.r#type != value_type {
-            let msg = format!("cannot transform {:?} to {:?}", self.r#type, value_type);
-            let err = gen_graph_err!(ErrorCode::VALUE_TYPE_MISMATCH, msg, check_type_match, value_type);
-            return Err(err);
+            if (self.r#type.eq(&ValueType::Date32) || self.r#type.eq(&ValueType::Time32))
+                && value_type.eq(&ValueType::Int)
+            {
+                return Ok(());
+            } else if self.r#type.eq(&ValueType::Timestamp) && value_type.eq(&ValueType::Long) {
+                return Ok(());
+            } else {
+                let msg = format!("cannot transform {:?} to {:?}", self.r#type, value_type);
+                let err = gen_graph_err!(ErrorCode::VALUE_TYPE_MISMATCH, msg, check_type_match, value_type);
+                return Err(err);
+            }
         }
         Ok(())
     }
@@ -532,11 +550,25 @@ fn get_int(data: &[u8]) -> i32 {
     reader.read_i32(0).to_be()
 }
 
+fn get_uint(data: &[u8]) -> u32 {
+    debug_assert_eq!(data.len(), 4);
+    let reader = UnsafeBytesReader::new(data);
+    // don't forget to_be here
+    reader.read_u32(0).to_be()
+}
+
 fn get_long(data: &[u8]) -> i64 {
     debug_assert_eq!(data.len(), 8);
     let reader = UnsafeBytesReader::new(data);
     // don't forget to_be here
     reader.read_i64(0).to_be()
+}
+
+fn get_ulong(data: &[u8]) -> u64 {
+    debug_assert_eq!(data.len(), 8);
+    let reader = UnsafeBytesReader::new(data);
+    // don't forget to_be here
+    reader.read_u64(0).to_be()
 }
 
 fn get_float(data: &[u8]) -> f32 {
