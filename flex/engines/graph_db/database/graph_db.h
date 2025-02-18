@@ -20,7 +20,6 @@
 
 #include <map>
 #include <mutex>
-#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -68,25 +67,6 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
-};
-
-struct QueryCache {
-  bool get(const std::string& key, std::string_view& value) {
-    std::shared_lock<std::shared_mutex> lock(mutex);
-    auto it = cache.find(key);
-    if (it != cache.end()) {
-      value = it->second;
-      return true;
-    }
-    return false;
-  }
-
-  void put(const std::string& key, const std::string_view& value) {
-    std::unique_lock<std::shared_mutex> lock(mutex);
-    cache[key] = value;
-  }
-  std::shared_mutex mutex;
-  std::unordered_map<std::string, std::string> cache;
 };
 
 class GraphDB {
@@ -178,8 +158,6 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
-  QueryCache& getQueryCache() const;
-
   std::string work_dir() const { return work_dir_; }
 
   void OutputCypherProfiles(const std::string& prefix);
@@ -213,8 +191,6 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
-
-  mutable QueryCache query_cache_;
 
   std::thread monitor_thread_;
   bool monitor_thread_running_;

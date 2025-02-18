@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.config.*;
 import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
@@ -35,6 +36,7 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.store.StoreService;
+import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,11 +60,12 @@ public class IrServiceProducer {
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         logger.info("IR configs: {}", irConfigs);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(irConfigs);
+        QueryCache cache = new QueryCache(irConfigs);
         IrMetaFetcher irMetaFetcher =
                 new DynamicIrMetaFetcher(
                         irConfigs,
                         new GrootIrMetaReader(schemaFetcher),
-                        optimizer.getGlogueHolder());
+                        ImmutableList.of(optimizer, cache));
         RoleClients<SnapshotUpdateClient> updateCommitter =
                 new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotUpdateClient::new);
         int frontendId = CommonConfig.NODE_IDX.get(configs);
@@ -76,7 +79,8 @@ public class IrServiceProducer {
                             channelFetcher,
                             queryManager,
                             TestGraphFactory.GROOT,
-                            optimizer);
+                            optimizer,
+                            cache);
 
             @Override
             public void start() {

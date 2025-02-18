@@ -36,6 +36,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.proto.frontend.Code;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
@@ -66,7 +67,7 @@ public class PlanUtils {
             GraphPlanner graphPlanner = GraphPlanerInstance.getInstance(configs);
             IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson, configs);
             IrMetaFetcher metaFetcher =
-                    new StaticIrMetaFetcher(reader, graphPlanner.getOptimizer().getGlogueHolder());
+                    new StaticIrMetaFetcher(reader, ImmutableList.of(graphPlanner.getOptimizer()));
             GraphPlanner.PlannerInstance plannerInstance =
                     graphPlanner.instance(query, metaFetcher.fetch().get());
             GraphPlanner.Summary summary = plannerInstance.plan();
@@ -93,7 +94,7 @@ public class PlanUtils {
         }
     }
 
-    static class StringMetaReader implements IrMetaReader {
+    public static class StringMetaReader implements IrMetaReader {
         private final String schemaYaml;
         private final String statsJson;
         private final Configs configs;

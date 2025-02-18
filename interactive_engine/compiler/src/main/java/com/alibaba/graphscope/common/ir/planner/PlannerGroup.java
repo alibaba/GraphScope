@@ -188,7 +188,7 @@ public class PlannerGroup {
             this.matchPlanner.addRule(rule);
         }
         List<RelOptRule> physicalRBORules = this.physicalPlanner.getRules();
-        this.physicalPlanner.clear();
+        physicalPlanner.clear();
         for (RelOptRule rule : physicalRBORules) {
             this.physicalPlanner.addRule(rule);
         }

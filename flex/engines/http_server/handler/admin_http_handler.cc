@@ -98,8 +98,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
           std::move(results));
     } else {
       return admin_actor_refs_[dst_executor]
-          .upload_file(
-              query_param{std::move(file_name_and_contents[cur_ind].second)})
+          .upload_file(graph_management_param{
+              std::move(file_name_and_contents[cur_ind])})
           .then_wrapped([this, dst_executor, cur_ind,
                          file_name_and_contents =
                              std::move(file_name_and_contents),
@@ -165,8 +165,8 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
     VLOG(10) << "filenames: " << gs::to_string(filenames);
     VLOG(10) << "content types" << gs::to_string(content_types);
     std::vector<std::pair<seastar::sstring, seastar::sstring>> res;
-    for (size_t i = 0; i < names.size(); ++i) {
-      res.emplace_back(names[i], contents[i]);
+    for (size_t i = 0; i < filenames.size(); ++i) {
+      res.emplace_back(filenames[i], contents[i]);
     }
     return res;
   }
@@ -642,15 +642,22 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
 };
 
 admin_http_handler::admin_http_handler(uint16_t http_port,
-                                       int32_t exclusive_shard_id)
-    : http_port_(http_port), exclusive_shard_id_(exclusive_shard_id) {}
+                                       int32_t exclusive_shard_id,
+                                       size_t max_content_length)
+    : http_port_(http_port),
+      exclusive_shard_id_(exclusive_shard_id),
+      max_content_length_(max_content_length) {}
 
 void admin_http_handler::start() {
   auto fut = seastar::alien::submit_to(
       *seastar::alien::internal::default_instance, 0, [this] {
         return server_.start()
             .then([this] { return set_routes(); })
-            .then([this] { return server_.listen(http_port_); })
+            .then([this] {
+              server_.server().local().set_content_length_limit(
+                  max_content_length_);
+              return server_.listen(http_port_);
+            })
             .then([this] {
               fmt::print(
                   "HQPS admin http handler is listening on port {} ...\n",

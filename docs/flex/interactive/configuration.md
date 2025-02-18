@@ -61,20 +61,6 @@ gsctl instance deploy --type interactive --config ./interactive_config.yaml
 Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the following sections.
 ```
 
-#### Customize Coordinator Service Configuration
-
-When deploying Interactive, a supplementary service called the Coordinator is also initiated. This service functions similarly to the `ApiServer` in Kubernetes, providing users with a consistent and standardized set of APIs to interact with the GraphScope platform.
-You could also customize the configuration for coordinator service, just put the configuration in `coordinator` section.
-
-An example of a coordinator related configuration is as follows:
-
-```yaml
-coordinator:
-  max_content_length: 5242880 # maximum bytes of content the coordinator can handle
-```
-
-For more details, consult [config.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/config.py).
-
 
 ##### Sample Configuration
 Here's a glimpse of what a typical YAML configuration file might look like:
@@ -134,7 +120,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
 | http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
-| coordinator.max_content_length | 1073741824 | The maximum length of a http request that coordinator could handle | 0.5 |
+| http_service.max_content_length | 1GB | The maximum length of a http request that admin http service could handle | 0.5 |
 
 #### TODOs
 

@@ -25,5 +25,19 @@ bl::result<WriteContext> Project::project(
   }
   return ret;
 }
+
+bl::result<Context> UProject::project(
+    Context&& ctx, const std::vector<std::unique_ptr<UProjectExprBase>>& exprs,
+    bool is_append) {
+  Context ret;
+  if (is_append) {
+    ret = ctx;
+  }
+  for (auto& expr : exprs) {
+    ret = expr->evaluate(ctx, std::move(ret));
+  }
+  return ret;
+}
+
 }  // namespace runtime
 }  // namespace gs

@@ -36,6 +36,20 @@ class ProjectInsertOprBuilder : public IInsertOperatorBuilder {
   }
 };
 
+class UProjectOprBuilder : public IUpdateOperatorBuilder {
+ public:
+  UProjectOprBuilder() = default;
+  ~UProjectOprBuilder() = default;
+
+  std::unique_ptr<IUpdateOperator> Build(const Schema& schema,
+                                         const physical::PhysicalPlan& plan,
+                                         int op_idx) override;
+
+  physical::PhysicalOpr_Operator::OpKindCase GetOpKind() const override {
+    return physical::PhysicalOpr_Operator::OpKindCase::kProject;
+  }
+};
+
 }  // namespace ops
 
 }  // namespace runtime

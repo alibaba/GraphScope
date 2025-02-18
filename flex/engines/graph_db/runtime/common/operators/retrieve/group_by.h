@@ -174,8 +174,7 @@ struct Reducer : public ReducerBase {
 class GroupBy {
  public:
   static bl::result<Context> group_by(
-      const GraphReadInterface& graph, Context&& ctx,
-      std::unique_ptr<KeyBase>&& key,
+      Context&& ctx, std::unique_ptr<KeyBase>&& key,
       std::vector<std::unique_ptr<ReducerBase>>&& aggrs) {
     auto [offsets, groups] = key->group(ctx);
     Context ret;

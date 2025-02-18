@@ -34,8 +34,8 @@ ReadTransaction GraphDBSession::GetReadTransaction() const {
 
 InsertTransaction GraphDBSession::GetInsertTransaction() {
   uint32_t ts = db_.version_manager_.acquire_insert_timestamp();
-  return InsertTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
-                           ts);
+  return InsertTransaction(*this, db_.graph_, alloc_, logger_,
+                           db_.version_manager_, ts);
 }
 
 SingleVertexInsertTransaction
@@ -53,7 +53,7 @@ SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
 
 UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+  return UpdateTransaction(*this, db_.graph_, alloc_, work_dir_, logger_,
                            db_.version_manager_, ts);
 }
 

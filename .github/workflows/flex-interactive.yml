@@ -67,6 +67,7 @@ jobs:
         COORDINATOR_PORT: 8080
         COORDINATOR_ENDPOINT: "http://127.0.0.1:8080"
       run: |
+        docker image inspect graphscope/interactive:latest --format='{{.Size}}'
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
               --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
@@ -94,10 +95,8 @@ jobs:
         GS_TEST_DIR: /tmp/gstest
       run: |
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
-        cat >>  ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml << EOF
-        coordinator:
-          max_content_length: 1048576 # 1MB
-        EOF
+        # replace max_content_length to 1MB
+        sed -i 's/max_content_length: .*/max_content_length: 1MB/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
               --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
               --admin-port 7778 --storedproc-port 10001
@@ -138,3 +137,8 @@ jobs:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
+
+    - name: Print container's log if job fails
+      if: failure()
+      run: |
+        docker logs gs-interactive-instance

@@ -24,20 +24,13 @@
 #include "flex/engines/graph_db/runtime/common/graph_interface.h"
 #include "flex/engines/graph_db/runtime/common/leaf_utils.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/edge_expand_impl.h"
+#include "flex/engines/graph_db/runtime/utils/params.h"
 #include "flex/engines/graph_db/runtime/utils/special_predicates.h"
 
 #include "glog/logging.h"
 
 namespace gs {
 namespace runtime {
-
-struct EdgeExpandParams {
-  int v_tag;
-  std::vector<LabelTriplet> labels;
-  int alias;
-  Direction dir;
-  bool is_optional;
-};
 
 class OprTimer;
 

@@ -75,11 +75,10 @@ void generate_compiler_configs(const std::string& graph_yaml,
   out.close();
 }
 
-bool generate_plan(
-    const std::string& query, const std::string& statistics,
-    const std::string& compiler_jar_path, const std::string& compiler_yaml,
-    const std::string& tmp_dir,
-    std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache) {
+bool generate_plan(const std::string& query, const std::string& statistics,
+                   const std::string& compiler_jar_path,
+                   const std::string& compiler_yaml, const std::string& tmp_dir,
+                   physical::PhysicalPlan& plan) {
   // dump query to file
   const char* compiler_jar = compiler_jar_path.c_str();
   if (compiler_jar_path == "") {
@@ -157,12 +156,9 @@ bool generate_plan(
         file.read(&buffer[0], size);
 
         file.close();
-        physical::PhysicalPlan plan;
         if (!plan.ParseFromString(std::string(buffer))) {
           return false;
         }
-
-        plan_cache[query] = plan;
       }
       // clean up temp files
       {

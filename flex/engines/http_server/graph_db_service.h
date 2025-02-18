@@ -47,6 +47,8 @@ struct ServiceConfig {
       0;  // 0 = INFO, 1 = WARNING, 2 = ERROR, 3 = FATAL
   static constexpr const ShardingMode DEFAULT_SHARDING_MODE =
       ShardingMode::EXCLUSIVE;
+  static constexpr const uint32_t DEFAULT_MAX_CONTENT_LENGTH =
+      1024 * 1024 * 1024;  // 1GB
 
   // Those has default value
   uint32_t bolt_port;
@@ -80,7 +82,8 @@ struct ServiceConfig {
 
   // Those has not default value
   std::string default_graph;
-  std::string engine_config_path;  // used for codegen.
+  std::string engine_config_path;       // used for codegen.
+  size_t admin_svc_max_content_length;  // max content length for admin service.
 
   ServiceConfig();
 
@@ -93,6 +96,20 @@ struct ServiceConfig {
     } else {
       LOG(FATAL) << "Invalid sharding mode: " << mode;
     }
+  }
+
+  void set_admin_svc_max_content_length(size_t max_content_length) {
+    this->admin_svc_max_content_length = max_content_length;
+  }
+
+  void set_admin_svc_max_content_length(const std::string& max_content_length) {
+    auto val = gs::human_readable_to_bytes(max_content_length);
+    if (val == 0) {
+      LOG(ERROR) << "Invalid max_content_length: " << max_content_length << ", "
+                 << "use default value: " << DEFAULT_MAX_CONTENT_LENGTH;
+      val = DEFAULT_MAX_CONTENT_LENGTH;
+    }
+    set_admin_svc_max_content_length(val);
   }
 
   int32_t get_exclusive_shard_id() const {
@@ -285,6 +302,12 @@ struct convert<server::ServiceConfig> {
         }
         service_config.set_sharding_mode(sharding_mode);
         VLOG(1) << "sharding_mode: " << sharding_mode;
+      }
+      if (http_service_node["max_content_length"]) {
+        service_config.set_admin_svc_max_content_length(
+            http_service_node["max_content_length"].as<std::string>());
+        LOG(INFO) << "max_content_length: "
+                  << service_config.admin_svc_max_content_length;
       }
     } else {
       LOG(ERROR) << "Fail to find http_service configuration";
