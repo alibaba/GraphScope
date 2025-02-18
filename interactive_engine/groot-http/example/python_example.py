@@ -15,6 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# A simple example to show how to use the Interactive Python SDK to interact with the Groot service.
+
 import argparse
 import os
 import time

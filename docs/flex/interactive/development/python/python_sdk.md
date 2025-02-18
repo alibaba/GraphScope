@@ -1,6 +1,6 @@
-# Python SDK Guild
+# Python SDK Guide
 
-The Interactive Python SDK guild is designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.
+The Interactive Python SDK guide is designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.
 
 ## Requirements.
 

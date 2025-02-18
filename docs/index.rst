@@ -76,7 +76,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine/gopt
    interactive_engine/graph_planner
    interactive_engine/benchmark_tool
-   interactive_engine/python_sdk
    .. interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
    .. interactive_engine/supported_gremlin_steps

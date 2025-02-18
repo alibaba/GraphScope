@@ -110,5 +110,4 @@ In addition to the above local-machine entr\'ee, we have prepared the following 
 - GIE can be [deployed standalone](./deployment.md) in a distributed environment to process very large graph.
 - GIE has been designed to [integrate with the Tinkerpop ecosystem](./tinkerpop/tinkerpop_gremlin.md), with necessary extensions such as some [syntactic sugars](./tinkerpop/supported_gremlin_steps.md) to ease the use of Gremlin.
 - GIE has been designed to [integrate with the Neo4j ecosystem](./neo4j/cypher_sdk.md).
-- GIE service can be integrated with the [Insight Python SDK](./python_sdk.md).
 - Learn more about the [design of GIE](./design_of_gie).

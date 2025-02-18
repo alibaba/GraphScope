@@ -112,7 +112,10 @@ It will specify the image tag to be pulled as latest while setting the username 
 ### Connecting to Groot
 Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the [Gremlin Query Language](https://tinkerpop.apache.org/gremlin.html).
 
-#### Connection
+#### Interacting with GraphScope SDK
+You can use the GraphScope SDK to interact with Groot. Below is an example workflow demonstrating how to get started:
+
+##### Connection
 In the previous step, upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. The following statement can be used to obtain and connect to Groot:
 
 ```python
@@ -134,7 +137,7 @@ In case a username and password were configured during the installation process,
 conn = graphscope.conn(grpc_endpoint, gremlin_endpoint, username="admin", password="123456")
 ```
 
-#### Building and Modifying Graph Models
+##### Building and Modifying Graph Models
 
 The graph object can be obtained through the `conn` object.
 
@@ -145,14 +148,14 @@ graph = conn.g()
 schema = graph.schema()
 ```
 
-#### Using Built-in Datasets
+##### Using Built-in Datasets
 
 If `dataset.modern=true` is set during installation, Groot will load a simple example dataset for quick start.
 
 ````{note}
 Not supported at this moment
 ````
-#### Customizing Models and Datasets
+##### Customizing Models and Datasets
 
 Users can also customize models and load their own datasets.
 
@@ -182,6 +185,228 @@ schema.add_edge_label("knows").source("person").destination("person").add_proper
         "date", "str"
     )
 schema.update()
+```
+
+#### Interacting with Interactive SDK
+You can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot as well. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands.
+
+For the full documentation for interactive python sdk reference, please refer to [Python SDK Reference](../flex/interactive/development/python/python_sdk_ref.md).
+For the full example on Groot, please refer to [Groot Python SDK Example](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot-http/example/python_example.py).
+
+
+##### Connection
+
+To begin, installing and deploying Groot will activate the Groot HTTP service by default. The service endpoint can be customized via the `frontend.httpPort` option, which is set to port 8080 by default.
+
+Once the service is up and running, you can connect to the Interactive service using the Interactive SDK. For Interactive Python SDK installation, please refer to [Python SDK Guide](../flex/interactive/development/python/python_sdk.md#installation--usage).
+Ensure that the following environment variables are properly set to facilitate the connection:
+
+```bash
+############################################################################################
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:8080
+############################################################################################
+```
+
+```{note}
+If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
+```
+
+##### Create a new graph
+
+To create a new graph, user need to specify the name, description, vertex types and edges types.
+For the detail data model of the graph, please refer to [Data Model](../../data_model). 
+
+In this example, we will create a simple graph with only one vertex type `persson`, and one edge type named `knows`.
+
+```python
+def create_graph(sess : Session):
+    # Define the graph schema via a python dict.
+    test_graph_def = {
+        "name": "test_graph",
+        "description": "This is a test graph",
+        "schema": {
+            "vertex_types": [
+                {
+                    "type_name": "person",
+                    "properties": [
+                        {
+                            "property_name": "id",
+                            "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                        },
+                        {
+                            "property_name": "name",
+                            "property_type": {"string": {"long_text": ""}},
+                        },
+                        {
+                            "property_name": "age",
+                            "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                        },
+                    ],
+                    "primary_keys": ["id"],
+                }
+            ],
+            "edge_types": [
+                {
+                    "type_name": "knows",
+                    "vertex_type_pair_relations": [
+                        {
+                            "source_vertex": "person",
+                            "destination_vertex": "person",
+                            "relation": "MANY_TO_MANY",
+                        }
+                    ],
+                    "properties": [
+                        {
+                            "property_name": "weight",
+                            "property_type": {"primitive_type": "DT_DOUBLE"},
+                        }
+                    ],
+                    "primary_keys": [],
+                }
+            ],
+        },
+    }
+    create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+    resp = sess.create_graph(create_graph_request)
+    assert resp.is_ok()
+    return resp.get_value().graph_id
+
+driver = Driver()
+sess = driver.session()
+
+graph_id = create_graph(sess)
+print("Created graph, id is ", graph_id)
+```
+
+In the aforementioned example, a graph named `test_graph` is defined using a python dictionaly. You can also define the graph using the programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). Upon calling the `createGraph` method, a string representing the unique identifier of the graph is returned.
+
+````{note}
+You might observe that we define the graph schema in YAML with `gsctl`, but switch to using `dict` in Python code. You may encounter challenges when converting between different formats.
+However, converting `YAML` to a Python `dict` is quite convenient.
+
+First, install pyYAML
+
+```bash
+pip3 install pyYAML
+```
+
+Then use pyYAML to convert the YAML string to a Python dict
+
+```python
+import yaml
+
+yaml_string = """
+...
+"""
+
+python_dict = yaml.safe_load(yaml_string)
+
+print(python_dict)
+```
+
+Afterwards, you can create a `CreateGraphRequest` from the Python dict.
+````
+
+##### Import data to the graph
+
+After a new graph is created, you may want to import data into the newly created graph. Currently, real-time data writing is supported via the HTTP service, and offline data loading will be supported via the HTTP service soon.
+
+For example, you can insert vertices and edges as follows:
+
+```python
+# Add vertices and edges
+vertex_request = [
+    VertexRequest(
+        label="person",
+        primary_key_values= [
+            ModelProperty(name="id", value=1),
+        ],
+        properties=[
+            ModelProperty(name="name", value="Alice"),
+            ModelProperty(name="age", value=20),
+        ],
+    ),
+    VertexRequest(
+        label="person",
+        primary_key_values= [
+            ModelProperty(name="id", value=8),
+        ],            
+        properties=[
+            ModelProperty(name="name", value="mike"),
+            ModelProperty(name="age", value=1),
+        ],
+    ),
+]
+edge_request = [
+    EdgeRequest(
+        src_label="person",
+        dst_label="person",
+        edge_label="knows",
+        src_primary_key_values=[ModelProperty(name="id", value=8)],
+        dst_primary_key_values=[ModelProperty(name="id", value=1)],
+        properties=[ModelProperty(name="weight", value=7)],
+    ),
+]
+api_response = sess.add_vertex(graph_id, vertex_edge_request=VertexEdgeRequest(vertex_request=vertex_request, edge_request=edge_request))
+
+# the response will return the snapshot_id after the realtime write.
+snapshot_id = ast.literal_eval(api_response.get_value()).get("snapshot_id")
+# get the snapshot status to check if the written data is available for querying
+snapshot_status =  sess.get_snapshot_status(graph_id, snapshot_id)
+
+```
+
+##### Modify the graph schema
+You may want to modify the graph schema to accommodate new types of vertices or edges, add properties to existing types, or delete existing types as needed.
+
+For example, you can create new vertex and edge types as follows:
+
+```python
+# create new vertex type
+create_vertex_type = CreateVertexType(
+    type_name="new_person",
+    properties=[
+        CreatePropertyMeta(
+            property_name="id",
+            property_type=GSDataType.from_dict({"primitive_type": "DT_SIGNED_INT64"}),
+        ),
+        CreatePropertyMeta(
+            property_name="name",
+            property_type=GSDataType.from_dict({"string": {"long_text": ""}}),
+        ),
+    ],
+    primary_keys=["id"],
+)
+api_response = sess.create_vertex_type(graph_id, create_vertex_type)
+
+# create new edge type
+create_edge_type = CreateEdgeType(
+    type_name="new_knows",
+    vertex_type_pair_relations=[
+        BaseEdgeTypeVertexTypePairRelationsInner(
+            source_vertex="new_person",
+            destination_vertex="new_person",
+            relation="MANY_TO_MANY",
+        )
+    ],
+    properties=[
+        CreatePropertyMeta(
+            property_name="weight",
+            property_type=GSDataType.from_dict({"primitive_type": "DT_DOUBLE"}),
+        )
+    ],
+)
+api_response = sess.create_edge_type(graph_id, create_edge_type)
+```
+
+##### Delete the graph
+
+Finally, we can delete the graph, as follows:
+
+```python
+resp = sess.delete_graph(graph_id)
+assert resp.is_ok()
+print("delete graph res: ", resp)
 ```
 
 ### Querying Data
