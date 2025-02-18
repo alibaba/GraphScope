@@ -346,7 +346,7 @@ template <>
 class TypedColumn<std::string_view> : public ColumnBase {
  public:
   TypedColumn(StorageStrategy strategy,
-              uint16_t width = PropertyType::STRING_DEFAULT_MAX_LENGTH)
+              uint16_t width = PropertyType::GetStringDefaultMaxLength())
       : strategy_(strategy), width_(width) {}
   ~TypedColumn() { close(); }
 
@@ -598,7 +598,7 @@ class StringMapColumn : public ColumnBase {
       : index_col_(strategy), meta_map_(nullptr) {
     meta_map_ = new LFIndexer<INDEX_T>();
     meta_map_->init(
-        PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH));
+        PropertyType::Varchar(PropertyType::GetStringDefaultMaxLength()));
   }
 
   ~StringMapColumn() {

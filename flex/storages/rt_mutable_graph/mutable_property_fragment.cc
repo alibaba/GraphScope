@@ -104,7 +104,7 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
           ie_mutable);
     } else if (properties[0] == PropertyType::kStringView) {
       return new DualCsr<std::string_view>(
-          oes, ies, gs::PropertyType::STRING_DEFAULT_MAX_LENGTH, oe_mutable,
+          oes, ies, gs::PropertyType::GetStringDefaultMaxLength(), oe_mutable,
           ie_mutable);
     }
   } else {

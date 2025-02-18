@@ -395,8 +395,8 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kStringView) {
       // Both varchar and string are treated as string. For String, we use the
-      // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
-      uint16_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
+      // default max length defined in PropertyType::GetStringDefaultMaxLength()
+      uint16_t max_length = PropertyType::GetStringDefaultMaxLength();
       if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
         max_length = property_types[0].additional_type_info.max_length;
       }
