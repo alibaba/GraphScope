@@ -22,7 +22,7 @@ impl dyn PropertyMap {
     pub fn from_proto(pb: &HashMap<PropertyId, PropertyValuePb>) -> HashMap<PropertyId, ValueRef> {
         let mut m = HashMap::new();
         for (id, val_pb) in pb {
-            let val_type = ValueType::from_i32(val_pb.get_data_type().value()).unwrap();
+            let val_type = ValueType::from_proto(&val_pb.get_data_type()).unwrap();
             m.insert(*id, ValueRef::new(val_type, val_pb.get_val()));
         }
         m
@@ -73,39 +73,46 @@ impl ValueType {
         14
     }
 
-    pub fn from_i32(x: i32) -> GraphResult<Self> {
-        match x {
-            x if x == ValueType::Bool as i32 => Ok(ValueType::Bool),
-            x if x == ValueType::Char as i32 => Ok(ValueType::Char),
-            x if x == ValueType::Short as i32 => Ok(ValueType::Short),
-            x if x == ValueType::Int as i32 => Ok(ValueType::Int),
-            x if x == ValueType::Long as i32 => Ok(ValueType::Long),
-            x if x == ValueType::Float as i32 => Ok(ValueType::Float),
-            x if x == ValueType::Double as i32 => Ok(ValueType::Double),
-            x if x == ValueType::String as i32 => Ok(ValueType::String),
-            x if x == ValueType::Bytes as i32 => Ok(ValueType::Bytes),
-            x if x == ValueType::IntList as i32 => Ok(ValueType::IntList),
-            x if x == ValueType::LongList as i32 => Ok(ValueType::LongList),
-            x if x == ValueType::FloatList as i32 => Ok(ValueType::FloatList),
-            x if x == ValueType::DoubleList as i32 => Ok(ValueType::DoubleList),
-            x if x == ValueType::StringList as i32 => Ok(ValueType::StringList),
+    pub fn from_proto(pb: &DataTypePb) -> GraphResult<Self> {
+        match pb {
+            DataTypePb::BOOL => Ok(ValueType::Bool),
+            DataTypePb::CHAR => Ok(ValueType::Char),
+            DataTypePb::SHORT => Ok(ValueType::Short),
+            DataTypePb::INT => Ok(ValueType::Int),
+            DataTypePb::LONG => Ok(ValueType::Long),
+            DataTypePb::FLOAT => Ok(ValueType::Float),
+            DataTypePb::DOUBLE => Ok(ValueType::Double),
+            DataTypePb::STRING => Ok(ValueType::String),
+            DataTypePb::BYTES => Ok(ValueType::Bytes),
+            DataTypePb::INT_LIST => Ok(ValueType::IntList),
+            DataTypePb::LONG_LIST => Ok(ValueType::LongList),
+            DataTypePb::FLOAT_LIST => Ok(ValueType::FloatList),
+            DataTypePb::DOUBLE_LIST => Ok(ValueType::DoubleList),
+            DataTypePb::STRING_LIST => Ok(ValueType::StringList),
             _ => {
-                let msg = format!("invalid input");
-                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_i32, x);
+                let msg = format!("unsupported data type {:?}", pb);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
                 Err(err)
             }
         }
     }
 
     pub fn to_proto(&self) -> GraphResult<DataTypePb> {
-        let v = *self as i32;
-        match DataTypePb::from_i32(v) {
-            None => {
-                let msg = format!("invalid input");
-                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, to_proto, v);
-                Err(err)
-            }
-            Some(pb) => Ok(pb),
+        match &self {
+            ValueType::Bool => Ok(DataTypePb::BOOL),
+            ValueType::Char => Ok(DataTypePb::CHAR),
+            ValueType::Short => Ok(DataTypePb::SHORT),
+            ValueType::Int => Ok(DataTypePb::INT),
+            ValueType::Long => Ok(DataTypePb::LONG),
+            ValueType::Float => Ok(DataTypePb::FLOAT),
+            ValueType::Double => Ok(DataTypePb::DOUBLE),
+            ValueType::String => Ok(DataTypePb::STRING),
+            ValueType::Bytes => Ok(DataTypePb::BYTES),
+            ValueType::IntList => Ok(DataTypePb::INT_LIST),
+            ValueType::LongList => Ok(DataTypePb::LONG_LIST),
+            ValueType::FloatList => Ok(DataTypePb::FLOAT_LIST),
+            ValueType::DoubleList => Ok(DataTypePb::DOUBLE_LIST),
+            ValueType::StringList => Ok(DataTypePb::STRING_LIST),
         }
     }
 
@@ -584,7 +591,7 @@ impl Value {
     }
 
     pub fn from_proto(pb: &PropertyValuePb) -> GraphResult<Self> {
-        let val_type = ValueType::from_i32(pb.get_data_type().value())?;
+        let val_type = ValueType::from_proto(&pb.get_data_type())?;
         Ok(Value::new(val_type, Vec::from(pb.get_val())))
     }
 
