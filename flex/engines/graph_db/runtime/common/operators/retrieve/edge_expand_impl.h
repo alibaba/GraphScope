@@ -1360,15 +1360,12 @@ template <typename EDATA_T, typename PRED_T>
 inline std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
 expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
                   label_t nbr_label, label_t edge_label, Direction dir,
-                  const PropertyType& prop_type, const PRED_T& pred) {
+                  const PropertyType& prop_type, const PRED_T& pred,
+                  const LabelTriplet& triplet) {
   label_t input_label = input.label();
-  CHECK((dir == Direction::kIn) || (dir == Direction::kOut));
-  LabelTriplet triplet(dir == Direction::kIn ? nbr_label : input_label,
-                       dir == Direction::kIn ? input_label : nbr_label,
-                       edge_label);
-  SDSLEdgeColumnBuilderBeta<EDATA_T> builder(dir, triplet, prop_type);
+  BDSLEdgeColumnBuilder builder(triplet, prop_type);
   std::vector<size_t> offsets;
-  if (dir == Direction::kIn) {
+  if (dir == Direction::kIn || dir == Direction::kBoth) {
     GraphReadInterface::graph_view_t<EDATA_T> view =
         graph.GetIncomingGraphView<EDATA_T>(input_label, nbr_label, edge_label);
     size_t idx = 0;
@@ -1377,14 +1374,14 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       for (auto& e : es) {
         Any edata = AnyConverter<EDATA_T>::to_any(e.get_data());
         if (pred(triplet, e.get_neighbor(), v, edata, dir, idx)) {
-          builder.push_back_opt(e.get_neighbor(), v, e.get_data());
+          builder.push_back_opt(e.get_neighbor(), v, edata, Direction::kIn);
           offsets.push_back(idx);
         }
       }
       ++idx;
     }
-  } else {
-    CHECK(dir == Direction::kOut);
+  }
+  if (dir == Direction::kOut || dir == Direction::kBoth) {
     GraphReadInterface::graph_view_t<EDATA_T> view =
         graph.GetOutgoingGraphView<EDATA_T>(input_label, nbr_label, edge_label);
     size_t idx = 0;
@@ -1393,7 +1390,7 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       for (auto& e : es) {
         Any edata = AnyConverter<EDATA_T>::to_any(e.get_data());
         if (pred(triplet, v, e.get_neighbor(), edata, dir, idx)) {
-          builder.push_back_opt(v, e.get_neighbor(), e.get_data());
+          builder.push_back_opt(v, e.get_neighbor(), edata, Direction::kOut);
           offsets.push_back(idx);
         }
       }
@@ -1416,10 +1413,14 @@ expand_edge_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   if (dir == Direction::kOut) {
     CHECK(triplet.src_label == input_label);
     std::get<0>(label_dir) = triplet.dst_label;
-  } else {
-    CHECK(dir == Direction::kIn);
+  } else if (dir == Direction::kIn) {
     CHECK(triplet.dst_label == input_label);
     std::get<0>(label_dir) = triplet.src_label;
+  } else {
+    CHECK(dir == Direction::kBoth);
+    // Which means the src_label and dst_label are both input_label
+    std::get<0>(label_dir) = triplet.src_label;
+    CHECK(triplet.src_label == triplet.dst_label);
   }
   std::get<1>(label_dir) = triplet.edge_label;
   std::get<2>(label_dir) = dir;
@@ -1429,29 +1430,29 @@ expand_edge_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   if (properties.empty()) {
     return expand_edge_ep_se<grape::EmptyType, PRED_T>(
         graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-        std::get<2>(label_dir), PropertyType::Empty(), pred);
+        std::get<2>(label_dir), PropertyType::Empty(), pred, triplet);
   } else if (properties.size() == 1) {
     const PropertyType& ed_type = properties[0];
     if (ed_type == PropertyType::Int32()) {
       return expand_edge_ep_se<int, PRED_T>(
           graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-          std::get<2>(label_dir), ed_type, pred);
+          std::get<2>(label_dir), ed_type, pred, triplet);
     } else if (ed_type == PropertyType::Int64()) {
       return expand_edge_ep_se<int64_t, PRED_T>(
           graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-          std::get<2>(label_dir), ed_type, pred);
+          std::get<2>(label_dir), ed_type, pred, triplet);
     } else if (ed_type == PropertyType::Date()) {
       return expand_edge_ep_se<Date, PRED_T>(
           graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-          std::get<2>(label_dir), ed_type, pred);
+          std::get<2>(label_dir), ed_type, pred, triplet);
     } else if (ed_type == PropertyType::Double()) {
       return expand_edge_ep_se<double, PRED_T>(
           graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-          std::get<2>(label_dir), ed_type, pred);
+          std::get<2>(label_dir), ed_type, pred, triplet);
     } else if (ed_type == PropertyType::StringView()) {
       return expand_edge_ep_se<std::string_view, PRED_T>(
           graph, input, std::get<0>(label_dir), std::get<1>(label_dir),
-          std::get<2>(label_dir), ed_type, pred);
+          std::get<2>(label_dir), ed_type, pred, triplet);
     } else {
       LOG(INFO) << "type - " << ed_type << " - not implemented, fallback";
     }

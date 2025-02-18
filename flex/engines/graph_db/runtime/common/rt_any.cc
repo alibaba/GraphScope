@@ -515,8 +515,14 @@ bool RTAny::operator==(const RTAny& other) const {
 
   if (type_ == RTAnyType::kI64Value) {
     return value_.i64_val == other.value_.i64_val;
+  } else if (type_ == RTAnyType::kU64Value) {
+    return value_.u64_val == other.value_.u64_val;
   } else if (type_ == RTAnyType::kI32Value) {
     return value_.i32_val == other.value_.i32_val;
+  } else if (type_ == RTAnyType::kF64Value) {
+    return value_.f64_val == other.value_.f64_val;
+  } else if (type_ == RTAnyType::kBoolValue) {
+    return value_.b_val == other.value_.b_val;
   } else if (type_ == RTAnyType::kStringValue) {
     return value_.str_val == other.value_.str_val;
   } else if (type_ == RTAnyType::kVertex) {

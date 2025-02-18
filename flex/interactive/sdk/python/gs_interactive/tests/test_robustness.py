@@ -56,6 +56,9 @@ cypher_queries = vertex_only_cypher_queries + [
     "MATCH(a)-[b]->(c) return b",
     "MATCH(a)-[b]->(c) return c.id",
     "MATCH(a)-[b]->(c) return count(c), c, c.id;",
+    "MATCH(a)-[e: knows { weight: 0.5 }]-(c) return e,a,c;",
+    "MATCH(a)<-[e: knows { weight: 0.5 }]-(c) return e,a,c;",
+    "MATCH(a)-[e: knows { weight: 0.5 }]->(c) return e,a,c;",
 ]
 
 
