@@ -251,7 +251,7 @@ public class SimpleMatchQueries {
     public static QueryContext get_simple_match_query_20_test() {
         String query =
                 "MATCH(a)-[b: LIKES {creationDate: 1294619734295}]-(c) WITH a.id as aId, c.id as"
-                    + " cId return aId, cId ORDER BY aId ASC, cId ASC limit 5;";
+                        + " cId return aId, cId ORDER BY aId ASC, cId ASC limit 5;";
         List<String> expected =
                 Arrays.asList(
                         "Record<{aId: 933, cId: 412317087328}>",
