@@ -18,12 +18,16 @@ package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.meta.schema.IrDataTypeConvertor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -189,5 +193,17 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
                     new ArbitraryMapType.KeyValueType(leastKeyType, leastValueType));
         }
         return createArbitraryMapType(leastKeyValueType, isNullable);
+    }
+
+    @Override
+    public RelDataType createSqlType(SqlTypeName typeName, int precision, int scale) {
+        if (typeName == SqlTypeName.DECIMAL
+                && precision == IrDataTypeConvertor.UINT64_PRECISION
+                && scale == IrDataTypeConvertor.UINT64_SCALE) {
+            RelDataType newType = new BasicSqlType(this.typeSystem, typeName, precision, scale);
+            newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
+            return this.canonize(newType);
+        }
+        return super.createSqlType(typeName, precision, scale);
     }
 }

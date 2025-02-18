@@ -45,6 +45,7 @@ import java.util.Objects;
 public interface IrDataTypeConvertor<T> {
     Logger logger = LoggerFactory.getLogger(IrDataTypeConvertor.class);
 
+    // support unsigned type as decimal type with fixed precision and scale
     int UINT32_PRECISION = 10;
     int UINT32_SCALE = 0;
     int UINT64_PRECISION = 20;
