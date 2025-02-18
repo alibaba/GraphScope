@@ -351,7 +351,10 @@ impl TryFrom<common_pb::Value> for Object {
             return match item {
                 Boolean(b) => Ok((*b).into()),
                 I32(i) => Ok((*i).into()),
+                U32(i) => Ok((*i).into()),
                 I64(i) => Ok((*i).into()),
+                U64(i) => Ok((*i).into()),
+                F32(f) => Ok((*f).into()),
                 F64(f) => Ok((*f).into()),
                 Str(s) => Ok(s.clone().into()),
                 Blob(blob) => Ok(blob.clone().into()),
@@ -369,9 +372,9 @@ impl TryFrom<common_pb::Value> for Object {
                     }
                     Ok(vec.into())
                 }
-                Date(date) => {
-                    Ok((DateTimeFormats::from_date32(date.item).map_err(|e| format!("{:?}", e))?).into())
-                }
+                Date(date) => Ok((DateTimeFormats::from_date32_dur(date.item)
+                    .map_err(|e| format!("{:?}", e))?)
+                .into()),
                 Time(time) => {
                     Ok((DateTimeFormats::from_time32(time.item).map_err(|e| format!("{:?}", e))?).into())
                 }
@@ -673,7 +676,10 @@ impl From<Object> for common_pb::Value {
                 Primitives::Integer(v) => common_pb::value::Item::I32(v),
                 Primitives::Long(v) => common_pb::value::Item::I64(v),
                 Primitives::ULLong(v) => common_pb::value::Item::Str(v.to_string()),
-                Primitives::Float(v) => common_pb::value::Item::F64(v),
+                Primitives::Float(v) => common_pb::value::Item::F32(v),
+                Primitives::UInteger(v) => common_pb::value::Item::U32(v),
+                Primitives::ULong(v) => common_pb::value::Item::U64(v),
+                Primitives::Double(v) => common_pb::value::Item::F64(v),
             },
             Object::String(s) => common_pb::value::Item::Str(s),
             Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),

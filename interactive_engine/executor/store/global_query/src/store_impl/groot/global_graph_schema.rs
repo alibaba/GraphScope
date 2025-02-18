@@ -62,6 +62,13 @@ impl Schema for GlobalGraphSchema {
             ValueType::FloatList => Some(DataType::ListFloat),
             ValueType::DoubleList => Some(DataType::ListDouble),
             ValueType::StringList => Some(DataType::ListString),
+            ValueType::UInt => Some(DataType::UInt),
+            ValueType::ULong => Some(DataType::ULong),
+            ValueType::Date32 => Some(DataType::Date32),
+            ValueType::Time32 => Some(DataType::Time32),
+            ValueType::Timestamp => Some(DataType::Timestamp),
+            ValueType::FixedChar(_) => todo!(),
+            ValueType::VarChar(_) => todo!(),
         }
     }
 
