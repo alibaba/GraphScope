@@ -240,8 +240,11 @@ int main(int argc, char** argv) {
       gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
     }
     db.Close();
-    auto load_res =
-        db.Open(schema_res.value(), data_path, service_config.shard_num);
+    gs::GraphDBConfig config(schema_res.value(), data_path, "",
+                             service_config.shard_num);
+    config.wal_writer_type = service_config.wal_writer_type;
+    config.wal_parser_type = service_config.wal_parser_type;
+    auto load_res = db.Open(config);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
                  << load_res.status().error_message();

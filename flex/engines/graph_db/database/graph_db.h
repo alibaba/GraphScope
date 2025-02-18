@@ -41,6 +41,7 @@ class GraphDBSession;
 struct SessionLocalContext;
 
 struct GraphDBConfig {
+  GraphDBConfig() = default;
   GraphDBConfig(const Schema& schema_, const std::string& data_dir_,
                 const std::string& compiler_path_ = "", int thread_num_ = 1)
       : schema(schema_),
@@ -50,7 +51,10 @@ struct GraphDBConfig {
         warmup(false),
         enable_monitoring(false),
         enable_auto_compaction(false),
-        memory_level(1) {}
+        memory_level(1),
+        wal_writer_type("local"),
+        wal_parser_type("local"),
+        wal_parsing_uri("") {}
 
   Schema schema;
   std::string data_dir;
@@ -67,6 +71,13 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
+  std::string wal_writer_type;  // local,or other customized wal writer
+  std::string wal_parser_type;  // local,or other customized wal parser
+  std::string
+      wal_parsing_uri;  // Doesn't take effect when wal_parser_type is local.
+  // When wal_parser_type is local, the wal_parsing_uri is fixed to
+  // $GRAPH_DATA_DIR/wal. When wal_parser_type is customized, the
+  // wal_parsing_uri is the uri of the wal directory.
 };
 
 class GraphDB {
@@ -162,17 +173,20 @@ class GraphDB {
 
   void OutputCypherProfiles(const std::string& prefix);
 
+  inline const GraphDBConfig& config() const { return config_; }
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
-  void ingestWals(const std::vector<std::string>& wals,
-                  const std::string& work_dir, int thread_num);
+  void ingestWals(IWalParser& parser, const std::string& work_dir,
+                  int thread_num);
 
   void initApps(
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
           plugins);
 
-  void openWalAndCreateContexts(const std::string& data_dir_path,
+  void openWalAndCreateContexts(const GraphDBConfig& config,
+                                const std::string& data_dir,
                                 MemoryStrategy allocator_strategy);
 
   void showAppMetrics() const;
@@ -181,6 +195,7 @@ class GraphDB {
 
   friend class GraphDBSession;
 
+  GraphDBConfig config_;
   std::string work_dir_;
   SessionLocalContext* contexts_;
 

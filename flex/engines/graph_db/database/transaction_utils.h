@@ -16,7 +16,7 @@
 #ifndef GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 #define GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 #include "glog/logging.h"

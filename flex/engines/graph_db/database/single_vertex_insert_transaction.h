@@ -24,13 +24,13 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
 
 class SingleVertexInsertTransaction {
  public:
   SingleVertexInsertTransaction(MutablePropertyFragment& graph,
-                                Allocator& alloc, WalWriter& logger,
+                                Allocator& alloc, IWalWriter& logger,
                                 VersionManager& vm, timestamp_t timestamp);
   ~SingleVertexInsertTransaction();
 
@@ -61,7 +61,7 @@ class SingleVertexInsertTransaction {
 
   Allocator& alloc_;
 
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 };

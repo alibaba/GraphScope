@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
       "warmup graph data")("memory-level,m",
                            bpo::value<int>()->default_value(1))(
       "compiler-path,c", bpo::value<std::string>()->default_value(""))(
-      "sharding-mode", bpo::value<std::string>()->default_value("cooperative"));
+      "sharding-mode", bpo::value<std::string>()->default_value("cooperative"))(
+      "wal-type", bpo::value<std::string>()->default_value("local"));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -84,6 +85,7 @@ int main(int argc, char** argv) {
   }
   gs::GraphDBConfig config(schema.value(), data_path, compiler_path, shard_num);
   config.memory_level = memory_level;
+  config.wal_writer_type = vm["wal-type"].as<std::string>();
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }

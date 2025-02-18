@@ -13,93 +13,42 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/database/wal.h"
-
-#include <chrono>
+#include "flex/engines/graph_db/database/wal/local_wal_parser.h"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
 #include <filesystem>
+#include "flex/engines/graph_db/database/wal/wal.h"
 
 namespace gs {
 
-void WalWriter::open(const std::string& prefix, int thread_id) {
-  const int max_version = 65536;
-  for (int version = 0; version != max_version; ++version) {
-    std::string path = prefix + "/thread_" + std::to_string(thread_id) + "_" +
-                       std::to_string(version) + ".wal";
-    if (std::filesystem::exists(path)) {
-      continue;
-    }
-    fd_ = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
-    break;
-  }
-  if (fd_ == -1) {
-    LOG(FATAL) << "Failed to open wal file " << strerror(errno);
-  }
-  if (ftruncate(fd_, TRUNC_SIZE) != 0) {
-    LOG(FATAL) << "Failed to truncate wal file " << strerror(errno);
-  }
-  file_size_ = TRUNC_SIZE;
-  file_used_ = 0;
-}
-
-void WalWriter::close() {
-  if (fd_ != -1) {
-    if (::close(fd_) != 0) {
-      LOG(FATAL) << "Failed to close file" << strerror(errno);
-    }
-    fd_ = -1;
-    file_size_ = 0;
-    file_used_ = 0;
-  }
-}
-
-#define unlikely(x) __builtin_expect(!!(x), 0)
-
-void WalWriter::append(const char* data, size_t length) {
-  if (unlikely(fd_ == -1)) {
-    return;
-  }
-  size_t expected_size = file_used_ + length;
-  if (expected_size > file_size_) {
-    size_t new_file_size = (expected_size / TRUNC_SIZE + 1) * TRUNC_SIZE;
-    if (ftruncate(fd_, new_file_size) != 0) {
-      LOG(FATAL) << "Failed to truncate wal file " << strerror(errno);
-    }
-    file_size_ = new_file_size;
-  }
-
-  file_used_ += length;
-
-  if (static_cast<size_t>(write(fd_, data, length)) != length) {
-    LOG(FATAL) << "Failed to write wal file " << strerror(errno);
-  }
-
-#if 1
-#ifdef F_FULLFSYNC
-  if (fcntl(fd_, F_FULLFSYNC) != 0) {
-    LOG(FATAL) << "Failed to fcntl sync wal file " << strerrno(errno);
-  }
-#else
-  // if (fsync(fd_) != 0) {
-  if (fdatasync(fd_) != 0) {
-    LOG(FATAL) << "Failed to fsync wal file " << strerror(errno);
-  }
-#endif
-#endif
-}
-
-#undef unlikely
-
 static constexpr size_t MAX_WALS_NUM = 134217728;
 
-WalsParser::WalsParser(const std::vector<std::string>& paths)
-    : insert_wal_list_(NULL), insert_wal_list_size_(0) {
+void LocalWalParser::Init() {
+  WalParserFactory::RegisterWalParser(
+      "local", static_cast<WalParserFactory::wal_parser_initializer_t>(
+                   &LocalWalParser::Make));
+}
+
+LocalWalParser::LocalWalParser()
+    : insert_wal_list_(NULL), insert_wal_list_size_(0) {}
+
+void LocalWalParser::open(const std::string& wal_dir) {
+  if (!std::filesystem::exists(wal_dir)) {
+    std::filesystem::create_directory(wal_dir);
+  }
+
+  std::vector<std::string> paths;
+  for (const auto& entry : std::filesystem::directory_iterator(wal_dir)) {
+    paths.push_back(entry.path().string());
+  }
   for (auto path : paths) {
     LOG(INFO) << "Start to ingest WALs from file: " << path;
     size_t file_size = std::filesystem::file_size(path);
     if (file_size == 0) {
       continue;
     }
-    int fd = open(path.c_str(), O_RDONLY);
+    int fd = ::open(path.c_str(), O_RDONLY);
     void* mmapped_buffer = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (mmapped_buffer == MAP_FAILED) {
       LOG(FATAL) << "mmap failed...";
@@ -152,7 +101,7 @@ WalsParser::WalsParser(const std::vector<std::string>& paths)
   }
 }
 
-WalsParser::~WalsParser() {
+LocalWalParser::~LocalWalParser() {
   if (insert_wal_list_ != NULL) {
     munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
   }
@@ -165,14 +114,18 @@ WalsParser::~WalsParser() {
   }
 }
 
-uint32_t WalsParser::last_ts() const { return last_ts_; }
+uint32_t LocalWalParser::last_ts() const { return last_ts_; }
 
-const WalContentUnit& WalsParser::get_insert_wal(uint32_t ts) const {
+const WalContentUnit& LocalWalParser::get_insert_wal(uint32_t ts) const {
   return insert_wal_list_[ts];
 }
 
-const std::vector<UpdateWalUnit>& WalsParser::update_wals() const {
+const std::vector<UpdateWalUnit>& LocalWalParser::get_update_wals() const {
   return update_wal_list_;
 }
+
+const bool LocalWalParser::registered_ = WalParserFactory::RegisterWalParser(
+    "local", static_cast<WalParserFactory::wal_parser_initializer_t>(
+                 &LocalWalParser::Make));
 
 }  // namespace gs

@@ -49,7 +49,10 @@ ServiceConfig::ServiceConfig()
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
       sharding_mode(DEFAULT_SHARDING_MODE),
-      admin_svc_max_content_length(DEFAULT_MAX_CONTENT_LENGTH) {}
+      admin_svc_max_content_length(DEFAULT_MAX_CONTENT_LENGTH),
+      wal_writer_type(DEFAULT_WAL_WRITER_TYPE),
+      wal_parser_type(DEFAULT_WAL_PARSER_TYPE),
+      wal_parsing_uri(DEFAULT_WAL_URI) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
@@ -98,6 +101,8 @@ void openGraph(const gs::GraphId& graph_id,
   gs::GraphDBConfig config(schema_res.value(), data_dir, "",
                            service_config.shard_num);
   config.memory_level = service_config.memory_level;
+  config.wal_writer_type = service_config.wal_writer_type;
+  config.wal_parser_type = service_config.wal_parser_type;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }

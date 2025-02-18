@@ -23,7 +23,7 @@
 #include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/engines/graph_db/runtime/execute/plan_parser.h"
 #include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/utils/yaml_utils.h"
@@ -34,17 +34,19 @@ namespace gs {
 
 struct SessionLocalContext {
   SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id,
-                      MemoryStrategy allocator_strategy)
+                      MemoryStrategy allocator_strategy,
+                      std::unique_ptr<IWalWriter> in_logger)
       : allocator(allocator_strategy,
                   (allocator_strategy != MemoryStrategy::kSyncToFile
                        ? ""
                        : thread_local_allocator_prefix(work_dir, thread_id))),
-        session(db, allocator, logger, work_dir, thread_id) {}
-  ~SessionLocalContext() { logger.close(); }
+        logger(std::move(in_logger)),
+        session(db, allocator, *logger, work_dir, thread_id) {}
+  ~SessionLocalContext() { logger->close(); }
   Allocator allocator;
   char _padding0[128 - sizeof(Allocator) % 128];
-  WalWriter logger;
-  char _padding1[4096 - sizeof(WalWriter) - sizeof(Allocator) -
+  std::unique_ptr<IWalWriter> logger;
+  char _padding1[4096 - sizeof(IWalWriter) - sizeof(Allocator) -
                  sizeof(_padding0)];
   GraphDBSession session;
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
@@ -64,6 +66,7 @@ GraphDB::~GraphDB() {
 
     free(contexts_);
   }
+  WalWriterFactory::Finalize();
 }
 
 GraphDB& GraphDB::get() {
@@ -86,6 +89,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
 }
 
 Result<bool> GraphDB::Open(const GraphDBConfig& config) {
+  config_ = config;
   const std::string& data_dir = config.data_dir;
   const Schema& schema = config.schema;
   if (!std::filesystem::exists(data_dir)) {
@@ -142,7 +146,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     allocator_strategy = MemoryStrategy::kHugepagePrefered;
   }
 
-  openWalAndCreateContexts(data_dir, allocator_strategy);
+  openWalAndCreateContexts(config, data_dir, allocator_strategy);
 
   if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);
@@ -228,8 +232,9 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
           VLOG(10) << "Trigger auto compaction";
           last_compaction_at = query_num_after;
           timestamp_t ts = this->version_manager_.acquire_update_timestamp();
-          auto txn = CompactTransaction(this->graph_, this->contexts_[0].logger,
-                                        this->version_manager_, ts);
+          auto txn =
+              CompactTransaction(this->graph_, *this->contexts_[0].logger,
+                                 this->version_manager_, ts);
           OutputCypherProfiles("./" + std::to_string(ts) + "_");
           txn.Commit();
           VLOG(10) << "Finish compaction";
@@ -344,7 +349,7 @@ void GraphDB::GetAppInfo(Encoder& output) {
 
 static void IngestWalRange(SessionLocalContext* contexts,
                            MutablePropertyFragment& graph,
-                           const WalsParser& parser, uint32_t from, uint32_t to,
+                           const IWalParser& parser, uint32_t from, uint32_t to,
                            int thread_num) {
   std::atomic<uint32_t> cur_ts(from);
   std::vector<std::thread> threads(thread_num);
@@ -372,11 +377,10 @@ static void IngestWalRange(SessionLocalContext* contexts,
   }
 }
 
-void GraphDB::ingestWals(const std::vector<std::string>& wals,
-                         const std::string& work_dir, int thread_num) {
-  WalsParser parser(wals);
+void GraphDB::ingestWals(IWalParser& parser, const std::string& work_dir,
+                         int thread_num) {
   uint32_t from_ts = 1;
-  for (auto& update_wal : parser.update_wals()) {
+  for (auto& update_wal : parser.get_update_wals()) {
     uint32_t to_ts = update_wal.timestamp;
     if (from_ts < to_ts) {
       IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
@@ -452,30 +456,33 @@ void GraphDB::initApps(
             << ", from " << plugins.size();
 }
 
-void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
+void GraphDB::openWalAndCreateContexts(const GraphDBConfig& config,
+                                       const std::string& data_dir,
                                        MemoryStrategy allocator_strategy) {
-  std::string wal_dir_path = wal_dir(data_dir);
-  if (!std::filesystem::exists(wal_dir_path)) {
-    std::filesystem::create_directory(wal_dir_path);
-  }
-
-  std::vector<std::string> wal_files;
-  for (const auto& entry : std::filesystem::directory_iterator(wal_dir_path)) {
-    wal_files.push_back(entry.path().string());
-  }
-
+  WalWriterFactory::Init();
+  WalParserFactory::Init();
   contexts_ = static_cast<SessionLocalContext*>(
       aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
   std::filesystem::create_directories(allocator_dir(data_dir));
-  for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i])
-        SessionLocalContext(*this, data_dir, i, allocator_strategy);
+  std::string wal_ingesting_uri = config.wal_parsing_uri;
+  if (config.wal_writer_type == "local") {
+    if (!wal_ingesting_uri.empty()) {
+      LOG(WARNING) << "wal_parsing_uri is set, but wal_writer_type is local, "
+                      "ignore wal_parsing_uri";
+    }
+    wal_ingesting_uri = wal_dir(data_dir);
   }
-  ingestWals(wal_files, data_dir, thread_num_);
 
   for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].logger.open(wal_dir_path, i);
+    new (&contexts_[i]) SessionLocalContext(
+        *this, data_dir, i, allocator_strategy,
+        std::move(WalWriterFactory::CreateWalWriter(config.wal_writer_type)));
+    contexts_[i].logger->open(wal_ingesting_uri, i);
   }
+
+  auto wal_parser = WalParserFactory::CreateWalParser(config.wal_writer_type,
+                                                      wal_ingesting_uri);
+  ingestWals(*wal_parser, data_dir, thread_num_);
 
   initApps(graph_.schema().GetPlugins());
   VLOG(1) << "Successfully restore load plugins";
