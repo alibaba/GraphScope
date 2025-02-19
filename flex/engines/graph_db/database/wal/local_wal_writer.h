@@ -36,7 +36,6 @@ class LocalWalWriter : public IWalWriter {
   std::string type() const override { return "local"; }
 
  private:
-  int thread_id_;
   int fd_;
   size_t file_size_;
   size_t file_used_;
