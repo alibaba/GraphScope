@@ -112,91 +112,16 @@ It will specify the image tag to be pulled as latest while setting the username 
 ### Connecting to Groot
 Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the [Gremlin Query Language](https://tinkerpop.apache.org/gremlin.html).
 
-#### Connecting with GraphScope SDK
-You can use the GraphScope SDK to interact with Groot. Below is an example workflow demonstrating how to get started:
-
-##### Connection
-In the previous step, upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. The following statement can be used to obtain and connect to Groot:
-
-```python
-import os
-import graphscope
-node_ip = os.environ["NODE_IP"]
-grpc_port = os.environ["GRPC_PORT"]
-gremlin_port = os.environ["GREMLIN_PORT"]
-grpc_endpoint = f"{node_ip}:{grpc_port}"
-gremlin_endpoint = f"{node_ip}:{gremlin_port}"
-
-conn = graphscope.conn(grpc_endpoint, gremlin_endpoint)
-```
-
-In case a username and password were configured during the installation process, they will need to be provided when establishing a connection.
-
-
-```python
-conn = graphscope.conn(grpc_endpoint, gremlin_endpoint, username="admin", password="123456")
-```
-
-##### Building and Modifying Graph Models
-
-The graph object can be obtained through the `conn` object.
-
-
-```python
-graph = conn.g()
-# Create schema
-schema = graph.schema()
-```
-
-##### Using Built-in Datasets
-
-If `dataset.modern=true` is set during installation, Groot will load a simple example dataset for quick start.
-
-````{note}
-Not supported at this moment
-````
-##### Customizing Models and Datasets
-
-Users can also customize models and load their own datasets.
-
-Common statements used to define graph models are as follows:
-
-```python
-schema.add_vertex_label('v_label_name').add_primary_key('pk_name', 'type').property('prop_name_1', 'type').property('prop_name_2', 'type')
-schema.add_edge_label('e_label_name').source('src_label').destination('dst_label').property('prop_name_3', 'type')
-schema.drop('label')
-schema.drop('label', 'src_label', 'dst_label')
-schema.update()
-```
-
-A graph model defines several labels, each with a label name and several properties (`.property()`).
-
-Among them, point labels can define primary keys (`.add_primary_key()`), and edge labels need to define the source label (`.source()`) and destination label (`.destination()`). `.drop()` is used to delete a label. `.update()` submits a transaction to apply changes.
-
-Here is an example of a simple model that defines the relationship between people who know each other, with the labels `person` -> `knows` <- `person`. The model includes:
-
-`person` label, which includes a primary key named `id` of type `long`, and a property named name of type `str`.
-`knows` label, which includes a primary key named `date` of type `str`, with the source and destination labels both being person.
-```python
-schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
-        "name", "str"
-    )
-schema.add_edge_label("knows").source("person").destination("person").add_property(
-        "date", "str"
-    )
-schema.update()
-```
-
-#### Connecting with Interactive SDK
-You can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot as well. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands.
+You can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands.
 
 For the full documentation for interactive python sdk reference, please refer to [Python SDK Reference](../flex/interactive/development/python/python_sdk_ref.md).
 For the full example on Groot, please refer to [Groot Python SDK Example](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot-http/example/python_example.py).
 
 
-##### Connection
+#### Connection
 
 To begin, installing and deploying Groot will activate the Groot HTTP service by default. The service endpoint can be customized via the `frontend.httpPort` option, which is set to port 8080 by default.
+Upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. You can retrieve the `NODE_IP` from these environment variables.
 
 Once the service is up and running, you can connect to the Interactive service using the Interactive SDK. For Interactive Python SDK installation, please refer to [Python SDK Guide](../flex/interactive/development/python/python_sdk.md#installation--usage).
 Ensure that the following environment variables are properly set to facilitate the connection:
@@ -208,10 +133,10 @@ Ensure that the following environment variables are properly set to facilitate t
 ```
 
 ```{note}
-If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
+Use the value of NODE_IP to replace 127.0.0.1 in the connection string. If you have customized the ports when deploying Interactive, remember to replace the default port with your customized port.
 ```
 
-##### Create a new graph
+#### Create a new graph
 
 To create a new graph, user need to specify the name, description, vertex types and edges types.
 For the detail data model of the graph, please refer to [Data Model](../../data_model). 
@@ -307,7 +232,7 @@ print(python_dict)
 Afterwards, you can create a `CreateGraphRequest` from the Python dict.
 ````
 
-##### Import data to the graph
+#### Import data to the graph
 
 After a new graph is created, you may want to import data into the newly created graph. Currently, real-time data writing is supported via the HTTP service, and offline data loading will be supported via the HTTP service soon.
 
@@ -356,7 +281,7 @@ snapshot_status =  sess.get_snapshot_status(graph_id, snapshot_id)
 
 ```
 
-##### Modify the graph schema
+#### Modify the graph schema
 You may want to modify the graph schema to accommodate new types of vertices or edges, add properties to existing types, or delete existing types as needed.
 
 For example, you can create new vertex and edge types as follows:
@@ -399,7 +324,7 @@ create_edge_type = CreateEdgeType(
 api_response = sess.create_edge_type(graph_id, create_edge_type)
 ```
 
-##### Delete the graph
+#### Delete the graph
 
 Finally, we can delete the graph, as follows:
 
