@@ -319,7 +319,7 @@ class MutableNbrSlice {
  public:
   using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
-  MutableNbrSlice() : ptr_(nullptr), size_(0) {};
+  MutableNbrSlice() : ptr_(nullptr), size_(0){};
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~MutableNbrSlice() = default;
@@ -497,7 +497,7 @@ class MutableNbrSliceMut {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
   using nbr_ptr_t = MutableNbr<EDATA_T>*;
-  MutableNbrSliceMut() : ptr_(nullptr), size_(0) {};
+  MutableNbrSliceMut() : ptr_(nullptr), size_(0){};
   ~MutableNbrSliceMut() = default;
 
   void set_size(int size) { size_ = size; }

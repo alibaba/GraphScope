@@ -533,7 +533,7 @@ jobs:
         SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_edge.yaml 
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
-        GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test /tmp/csr-data-dir/
     
 
     - name: Test update transaction
@@ -545,7 +545,7 @@ jobs:
         SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_edge.yaml 
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
-        GLOG_v=10 ./tests/rt_mutable_graph/test_update_transaction ${SCHEMA_FILE} /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_update_transaction /tmp/csr-data-dir/
 
     - name: Test multiple properties edge
       env:
@@ -556,7 +556,7 @@ jobs:
         SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge.yaml
         BULK_LOAD_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge_import.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
-        GLOG_v=10 ./tests/rt_mutable_graph/multiple_props_edge_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/multiple_props_edge_test /tmp/csr-data-dir/
     
     - name: Test immutable csr
       env:
@@ -567,7 +567,7 @@ jobs:
         SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_immutable_csr.yaml
         BULK_LOAD_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge_import.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
-        GLOG_v=10 ./tests/rt_mutable_graph/immutable_csr_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/immutable_csr_test /tmp/csr-data-dir/
 
     - name: Test schema parsing and loading on modern graph
       env:

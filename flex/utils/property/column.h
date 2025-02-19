@@ -717,7 +717,7 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
   index_col_.set_value(idx, lid);
 }
 
-using DefaultStringMapColumn = StringMapColumn<uint16_t>;
+using DefaultStringMapColumn = StringMapColumn<uint8_t>;
 
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem,

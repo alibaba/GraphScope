@@ -142,7 +142,7 @@ class TypedMutableCsrBase : public TypedCsrBase<EDATA_T> {
 template <>
 class TypedCsrBase<RecordView> : public CsrBase {
  public:
-   virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
+  virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                          timestamp_t ts = 0) = 0;
   virtual void put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                    timestamp_t ts, Allocator& alloc) = 0;
