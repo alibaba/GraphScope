@@ -41,7 +41,10 @@ int main(int argc, char** argv) {
                            bpo::value<int>()->default_value(1))(
       "compiler-path,c", bpo::value<std::string>()->default_value(""))(
       "sharding-mode", bpo::value<std::string>()->default_value("cooperative"))(
-      "wal-type", bpo::value<std::string>()->default_value("local"));
+      "wal-writer-type", bpo::value<std::string>()->default_value("local"))(
+      "wal-parser-type", bpo::value<std::string>()->default_value("local"))(
+      "wal-parser-uri", bpo::value<std::string>()->default_value(""))(
+      "wal-writer-uri", bpo::value<std::string>()->default_value(""));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -85,7 +88,10 @@ int main(int argc, char** argv) {
   }
   gs::GraphDBConfig config(schema.value(), data_path, compiler_path, shard_num);
   config.memory_level = memory_level;
-  config.wal_writer_type = vm["wal-type"].as<std::string>();
+  config.wal_writer_type = vm["wal-writer-type"].as<std::string>();
+  config.wal_parser_type = vm["wal-parser-type"].as<std::string>();
+  config.wal_parsing_uri = vm["wal-parser-uri"].as<std::string>();
+  config.wal_writing_uri = vm["wal-writer-uri"].as<std::string>();
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }

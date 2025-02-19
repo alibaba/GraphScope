@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include <dlfcn.h>
 #include <memory>
 #include <utility>
-#include "flex/engines/graph_db/database/wal/wal.h"
 
 #include <boost/algorithm/string.hpp>
 

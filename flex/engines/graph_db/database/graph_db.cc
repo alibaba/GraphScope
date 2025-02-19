@@ -67,6 +67,7 @@ GraphDB::~GraphDB() {
     free(contexts_);
   }
   WalWriterFactory::Finalize();
+  WalParserFactory::Finalize();
 }
 
 GraphDB& GraphDB::get() {

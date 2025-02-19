@@ -12,8 +12,9 @@ compute_engine:
     type: file # file/sqlite/etcd
   wal_writer_type: local # should we use two configuration, wal_writer_type, wal_parser_type?
   wal_parser_type: local
-  # wal_parsing_uri: 
-  # When wal_parser_type is local, wal_parsing_uri doesn't take effect, 
+  # wal_parsing_uri: ""
+  # wal_writing_uri: ""
+  # When wal_parser_type is local, <wal_parsing_uri> and <wal_writing_uri> doesn't take effect, 
   # when wal_parser_type is customized, this should be set to some uri, and will be passed to parser.open()
 compiler:
   planner:

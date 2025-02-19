@@ -28,7 +28,6 @@ class LocalWalParser : public IWalParser {
     return std::unique_ptr<IWalParser>(new LocalWalParser());
   }
 
-  // LocalWalParser(const std::vector<std::string>& paths);
   LocalWalParser();
   ~LocalWalParser();
 

@@ -135,8 +135,6 @@ class WalParserFactory {
                                 wal_parser_initializer_t initializer);
 
  private:
-  static std::unordered_map<std::string, wal_writer_initializer_t>&
-  getKnownWalWriters();
   static std::unordered_map<std::string, wal_parser_initializer_t>&
   getKnownWalParsers();
 };
