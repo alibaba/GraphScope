@@ -76,6 +76,8 @@ helm status demo
 | frontend.service.type | Kubernetes Service type of frontend | NodePort |
 | frontend.query.per.second.limit | the maximum qps can be handled by frontend service | 2147483647 (without limitation) |
 | query.execution.timeout.ms | the total execution time for a query | 3000000 |
+| frontend.service.httpPort | Groot http service port | 8080|
+| neo4j.bolt.server.disabled | Disable neo4j or not | true |
 
 
 If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
@@ -109,22 +111,29 @@ auth:
 
 It will specify the image tag to be pulled as latest while setting the username and password.
 
-### Connecting to Groot
-Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the [Gremlin Query Language](https://tinkerpop.apache.org/gremlin.html).
+## User Guide
+Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries with [Gremlin Query Language](https://tinkerpop.apache.org/gremlin.html) and [Cypher Query Language](https://neo4j.com/docs/getting-started/cypher/).
 
-You can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands.
+We can use the [Interactive SDK](../flex/interactive/development/python/python_sdk_ref.md) to interact with Groot. The Interactive SDK offers a unified interface for managing and querying interactive engines, including the [GIE](../interactive_engine/design_of_gie.md) based on Groot store for low-latency demands, and [GraphScope Interactive](../flex/interactive_intro.md) for high-QPS demands. We provide the following workflow example.
 
-For the full documentation for interactive python sdk reference, please refer to [Python SDK Reference](../flex/interactive/development/python/python_sdk_ref.md).
-For the full example on Groot, please refer to [Groot Python SDK Example](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot-http/example/python_example.py).
+### Installation
 
+Once the service is up and running, the Groot HTTP service will be activated by default. You can connect to the service using the Interactive SDK. To install the SDK, use the following pip command:
 
-#### Connection
+```bash
+pip3 install gs_interactive
+```
 
-To begin, installing and deploying Groot will activate the Groot HTTP service by default. The service endpoint can be customized via the `frontend.httpPort` option, which is set to port 8080 by default.
-Upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. You can retrieve the `NODE_IP` from these environment variables.
+Then import the package:
+```python
+import gs_interactive
+```
 
-Once the service is up and running, you can connect to the Interactive service using the Interactive SDK. For Interactive Python SDK installation, please refer to [Python SDK Guide](../flex/interactive/development/python/python_sdk.md#installation--usage).
-Ensure that the following environment variables are properly set to facilitate the connection:
+ For more details, please refer to [Python SDK Guide](../flex/interactive/development/python/python_sdk.md#installation--usage).
+
+### Connection
+
+To connect the service, ensure that the following environment variables are properly set to facilitate the connection:
 
 ```bash
 ############################################################################################
@@ -132,13 +141,15 @@ Ensure that the following environment variables are properly set to facilitate t
 ############################################################################################
 ```
 
-```{note}
-Use the value of NODE_IP to replace 127.0.0.1 in the connection string. If you have customized the ports when deploying Interactive, remember to replace the default port with your customized port.
-```
 
-#### Create a new graph
+Note: After executing the Helm command to obtain connection information, the details are stored in environment variables. Retrieve the NODE_IP from these variables and replace `127.0.0.1` in your connection string with its value.
 
-To create a new graph, user need to specify the name, description, vertex types and edges types.
+Additionally, the service endpoint port can be customized using the `frontend.service.httpPort` option, which defaults to 8080. If you have customized the ports when deploying Interactive, ensure you replace the default port with your specified port.
+
+
+### Create a new graph
+
+To create a new graph, you need to specify the name, description, vertex types and edges types.
 For the detail data model of the graph, please refer to [Data Model](../../data_model). 
 
 In this example, we will create a simple graph with only one vertex type `persson`, and one edge type named `knows`.
@@ -232,9 +243,9 @@ print(python_dict)
 Afterwards, you can create a `CreateGraphRequest` from the Python dict.
 ````
 
-#### Import data to the graph
+### Import data to the graph
 
-After a new graph is created, you may want to import data into the newly created graph. Currently, real-time data writing is supported via the HTTP service, and offline data loading will be supported via the HTTP service soon.
+After creating a new graph, you may want to import data into it. Real-time data writing is currently supported via the HTTP service. 
 
 For example, you can insert vertices and edges as follows:
 
@@ -281,7 +292,37 @@ snapshot_status =  sess.get_snapshot_status(graph_id, snapshot_id)
 
 ```
 
-#### Modify the graph schema
+Additionally, we provide an offline data loading tool. For more information, refer to [Offline Data Loading](./groot.md#offline-data-loading).
+
+### Query Data
+
+Now you may want to query the data. We support both Gremlin and Cypher query languages.
+
+#### Submit Gremlin Queries
+
+You can submit gremlin queries as follows:
+
+```python
+gremlin_client = driver.getGremlinClient()
+resp = gremlin_client.submit("g.V().count()")
+for result in resp:
+    print(result)
+```
+
+#### Submit Cypher Queries
+
+You can submit cypher queries as follows:
+
+```python
+neo4j_session = driver.getNeo4jSession()
+resp = neo4j_session.run("MATCH (n) RETURN COUNT(n);")
+for result in resp:
+    print(result)
+```
+
+Note: The Neo4j Bolt protocol is disabled by default in Groot. To enable Cypher queries, set `neo4j.bolt.server.disabled=false`.
+
+### Modify the graph schema
 You may want to modify the graph schema to accommodate new types of vertices or edges, add properties to existing types, or delete existing types as needed.
 
 For example, you can create new vertex and edge types as follows:
@@ -324,9 +365,9 @@ create_edge_type = CreateEdgeType(
 api_response = sess.create_edge_type(graph_id, create_edge_type)
 ```
 
-#### Delete the graph
+### Delete the graph
 
-Finally, we can delete the graph, as follows:
+Finally, you can delete the graph, as follows:
 
 ```python
 resp = sess.delete_graph(graph_id)
@@ -334,7 +375,9 @@ assert resp.is_ok()
 print("delete graph res: ", resp)
 ```
 
-### Querying Data
+For the full example on Groot, please refer to [Groot Python SDK Example](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot-http/example/python_example.py).
+
+<!-- ### Querying Data
 #### Python
 
 Using the connection information obtained earlier, we can perform Gremlin queries in Python.
@@ -370,152 +413,15 @@ client = Client(
     )
 print(client.submit("g.V().limit(2)").all().result())
 client.close()
-```
+``` -->
 
-#### Java
+## Offline Data Loading
 
-1. Create a directory structure as follows, where pom.xml and Main.java are files
+There are two methods for importing data. The first is real-time writing, as introduced in the [previous section](./groot.md#import-data-to-the-graph). The second is batch importing data from external storage, such as HDFS, using an offline import tool. This section introduces the offline data loading process.
 
-```
-gremlin
-├── pom.xml
-└── src
-    ├── main
-        ├── java
-            └── org
-                └── example
-                    └── Main.java
-```
+Note: Offline import will **overwrite** the full data of the imported label.
 
-2. Configure `pom.xml` as follows:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>org.example</groupId>
-    <artifactId>gremlin</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    
-    <packaging>jar</packaging>
-    <name>GremlinExample</name>
-    <url>https://maven.apache.org</url>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>gremlin-driver</artifactId>
-            <version>3.6.1</version>
-        </dependency>
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <executable>java</executable>
-                    <arguments>
-                        <argument>-classpath</argument>
-                        <classpath/>
-                        <argument>org.example.Main</argument>
-                    </arguments>
-                    <mainClass>org.example.Main</mainClass>
-                    <complianceLevel>1.11</complianceLevel>
-                    <killAfter>-1</killAfter>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-</project>
-```
-
-3. Configure `Main.java` as follows:
-
-```java
-package org.example;
-
-import org.apache.tinkerpop.gremlin.driver.*;
-
-public class Main {
-
-    public static void main(String[] args) {
-        Cluster.Builder builder = Cluster.build();
-        builder.addContactPoint("127.0.0.1");
-        builder.port(8182);
-        builder.credentials("username", "password");
-        Cluster cluster = builder.create();
-
-        Client client = cluster.connect();
-        ResultSet results = client.submit("g.V().limit(3).valueMap()");
-        for (Result result : results) {
-            System.out.println(result.getObject());
-        }
-        client.close();
-        cluster.close();
-    }
-}
-```
-
-4. Execute the program
-
-```bash
-mvn compile exec:exec
-```
-
-#### Node.js
-
-1. Install package `gremlin` for javascript
-
-```bash
-npm install gremlin
-```
-
-2. Execute these codes
-
-```javascript
-const gremlin = require('gremlin');
-const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
-const Graph = gremlin.structure.Graph;
-
-graph_url = `ws://{gremlin_endpoint}/gremlin`
-remoteConn = new DriverRemoteConnection(graph_url,{});
-
-const graph = new Graph();
-const g = graph.traversal().withRemote(remoteConn);
-
-g.V().limit(2).count().next().
-    then(data => {
-        console.log(data);
-        remoteConn.close();
-    }).catch(error => {
-        console.log('ERROR', error);
-        remoteConn.close();
-    });
-```
-
-Now since we have only defined the schema, and there is no data yet, the query result would be empty. So the next step is to load data.
-
-## Data Import
-
-There are two methods for importing data. One method is to batch import data from external storage (such as HDFS) using an offline import tool, and the other is to perform real-time writing using statements provided by the SDK.
-
-Note: Offline import will **overwrite* the full data of the imported label.
-
-### Offline Import
-#### Prerequisite
+### Prerequisite
 - Hadoop Cluster
 - Data import tool [data_load.tar.gz](https://github.com/alibaba/GraphScope/releases/download/v0.20.0/data_load.tar.gz)
 
@@ -525,7 +431,7 @@ Extract data_load.tar.gz, where `data_load/bin/load_tool.sh` is the tool that wi
 tar xzvf data_load.tar.gz
 ```
 
-#### Data Format
+### Data Format
 Source data needs to be stored in HDFS in a certain format. Each file includes data related to a type of vertex or edge label. 
 
 The following is an example of the data related to the `person` vertex label and the `knows` edge label, which contains the `person`->`knows`<-`person` relationship.
@@ -552,7 +458,7 @@ The rest lines are the data records. Each line represents one record. Data field
 
 All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.
 
-#### Loading Process
+### Loading Process
 The loading process contains three steps:
 
 1. A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job
@@ -561,7 +467,7 @@ The loading process contains three steps:
 
 3. Commit to the online service so that data is ready for serving queries
 
-##### Build: Building a partitioned graph
+#### 1. Build: Building a partitioned graph
 
   Build data by running the hadoop map-reduce job with following command:
   
@@ -636,87 +542,6 @@ Else, please proceed to ingest and commit.
   **Note: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.**
 
 
-### Realtime Write
-
-Groot graph have several methods for realtime write as follows:
-
-#### Python
-
-Refer to [test_store_service.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py) for examples.
-
-```python
-# Inserts one vertex
-def insert_vertex(self, vertex: VertexRecordKey, properties: dict) -> int: pass
-
-# Inserts a list of vertices
-def insert_vertices(self, vertices: list) -> int: pass
-
-# Update one vertex to new properties
-def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict) -> int: pass
-
-# Delete one vertex
-def delete_vertex(self, vertex_pk: VertexRecordKey) -> int: pass
-
-# Delete a list of vertices
-def delete_vertices(self, vertex_pks: list) -> int: pass
-
-# Insert one edge
-def insert_edge(self, edge: EdgeRecordKey, properties: dict) -> int: pass
-
-# Insert a list of edges
-def insert_edges(self, edges: list) -> int: pass
-
-# Update one edge to new properties
-def update_edge_properties(self, edge: EdgeRecordKey, properties: dict) -> int: pass
-
-# Delete one edge
-def delete_edge(self, edge: EdgeRecordKey) -> int: pass
-
-# Delete a list of edges
-def delete_edges(self, edge_pks: list) -> int: pass
-
-# Make sure the snapshot is available
-def remote_flush(self, snapshot_id: int): pass
-```
-
-We use two utility class called `VertexRecordKey` and `EdgeRecordKey` to denote the key to uniquely identify a record.
-
-
-```python
-class VertexRecordKey:
-    """Unique identifier of a vertex.
-    The primary key may be a dict, the key is the property name,
-    and the value is the data.
-    """
-    def __init__(self, label, primary_key):
-        self.label: str = label
-        self.primary_key: dict = primary_key
-
-class EdgeRecordKey:
-    """Unique identifier of an edge.
-    The `eid` is required in Update and Delete, which is a
-    system generated unsigned integer. User need to get that eid
-    by other means such as gremlin query.
-    """
-    def __init__(self, label, src_vertex_key, dst_vertex_key, eid=None):
-        self.label: str = label
-        self.src_vertex_key: VertexRecordKey = src_vertex_key
-        self.dst_vertex_key: VertexRecordKey = dst_vertex_key
-        self.eid: int = eid  # Only required in update and delete operation
-```
-
-
-#### Java
-
-We also have a java sdk for realtime write and schema management.
-
-APIs including:
-  - Create and inspect graph schema
-  - Insert / delete / update vertices
-  - Insert / delete / update edges
-  - Clear properties of vertices or edges by property name
-
-Refer to [RealtimeWrite.java](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java) for examples.
 
 
 ### Other features
@@ -805,6 +630,11 @@ This would produce an image named `graphscope/graphscope-store:latest`.
 ### Persistence
 
 Groot stores the graph data in `/var/lib/graphscope-store` directory in the Store Pod and the metadata in `/etc/groot/my.meta` directory in the Coordinator Pod.
+
+### Interactive SDK
+
+#### Python SDK
+We have demonstrated the Python SDK in the user guide example. For the full documentation for interactive python sdk reference, please refer to [Python SDK Reference](../flex/interactive/development/python/python_sdk_ref.md).
 
 ### Troubleshooting
 #### Viewing logs
