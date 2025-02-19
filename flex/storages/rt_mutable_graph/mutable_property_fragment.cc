@@ -107,7 +107,8 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     }
   } else {
     // TODO: fix me, storage strategy not set
-    return new DualCsr<RecordView>(oes, ies, prop_names, properties, {});
+    return new DualCsr<RecordView>(oes, ies, prop_names, properties, {},
+                                   oe_mutable, ie_mutable);
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;

@@ -322,6 +322,89 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   timestamp_t unsorted_since_;
 };
 
+template <>
+class ImmutableCsr<RecordView> : public TypedImmutableCsrBase<RecordView> {
+ public:
+  using nbr_t = ImmutableNbr<size_t>;
+  using slice_t = ImmutableNbrSlice<RecordView>;
+  ImmutableCsr(Table& table) : table_(table), csr_() {}
+  ~ImmutableCsr() {}
+
+  size_t batch_init(const std::string& name, const std::string& work_dir,
+                    const std::vector<int>& degree,
+                    double reserve_ratio = 1.2) override {
+    return csr_.batch_init(name, work_dir, degree, reserve_ratio);
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio = 1.2) override {
+    return csr_.batch_init_in_memory(degree, reserve_ratio);
+  }
+
+  void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
+                                 timestamp_t ts = 0) override {
+    csr_.batch_put_edge(src, dst, data, ts);
+  }
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {
+    csr_.open(name, snapshot_dir, work_dir);
+  }
+
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {
+    csr_.open_in_memory(prefix, v_cap);
+  }
+
+  void open_with_hugepages(const std::string& prefix, size_t v_cap) override {
+    csr_.open_with_hugepages(prefix, v_cap);
+  }
+
+  void dump(const std::string& name,
+            const std::string& new_snapshot_dir) override {
+    csr_.dump(name, new_snapshot_dir);
+  }
+
+  void warmup(int thread_num) const override { csr_.warmup(thread_num); }
+
+  void resize(vid_t vnum) override { csr_.resize(vnum); }
+
+  size_t size() const override { return csr_.size(); }
+
+  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
+    return std::make_shared<ImmutableCsrConstEdgeIter<RecordView>>(
+        get_edges(v));
+  }
+
+  CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new ImmutableCsrConstEdgeIter<RecordView>(get_edges(v));
+  }
+  std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
+    return nullptr;
+  }
+
+  void put_edge(vid_t src, vid_t dst, size_t data, timestamp_t ts,
+                Allocator& alloc) {
+    csr_.put_edge(src, dst, data, ts, alloc);
+  }
+
+  void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
+                           Allocator& alloc) override {
+    csr_.put_edge(src, dst, index, ts, alloc);
+  }
+
+  slice_t get_edges(vid_t i) const override {
+    return slice_t(csr_.get_edges(i), table_);
+  }
+
+  void close() override { csr_.close(); }
+
+  size_t edge_num() const override { return csr_.edge_num(); }
+
+ private:
+  Table& table_;
+  ImmutableCsr<size_t> csr_;
+};
+
 template <typename EDATA_T>
 class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
  public:
