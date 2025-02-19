@@ -1420,10 +1420,11 @@ expand_edge_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   if (dir == Direction::kOut) {
     CHECK(triplet.src_label == input_label);
     std::get<0>(label_dir) = triplet.dst_label;
-  } else {
-    CHECK(dir == Direction::kIn);
+  } else if (dir == Direction::kIn) {
     CHECK(triplet.dst_label == input_label);
     std::get<0>(label_dir) = triplet.src_label;
+  } else {
+    return std::make_pair(nullptr, std::vector<size_t>());
   }
   std::get<1>(label_dir) = triplet.edge_label;
   std::get<2>(label_dir) = dir;
