@@ -247,6 +247,7 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     if (vnum > adj_lists_.size()) {
       size_t old_size = adj_lists_.size();
       adj_lists_.resize(vnum);
+      degree_list_.resize(vnum);
       for (size_t k = old_size; k != vnum; ++k) {
         adj_lists_[k] = NULL;
         degree_list_[k] = 0;
