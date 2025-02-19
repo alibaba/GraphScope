@@ -126,8 +126,12 @@ class BasicFragmentLoader {
       if (prop[0].IsVarchar()) {
         max_length = prop[0].additional_type_info.max_length;
       }
-      dual_csr_list_[index] =
-          new DualCsr<std::string_view>(oe_strategy, ie_strategy, max_length);
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      dual_csr_list_[index] = new DualCsr<std::string_view>(
+          oe_strategy, ie_strategy, max_length, oe_mutable, ie_mutable);
     } else {
       bool oe_mutable = schema_.outgoing_edge_mutable(
           src_label_name, dst_label_name, edge_label_name);
