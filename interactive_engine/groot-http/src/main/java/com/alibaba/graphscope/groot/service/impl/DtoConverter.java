@@ -160,6 +160,9 @@ public class DtoConverter {
     }
 
     private static Map<String, String> convertToPropertyMap(List<Property> properties) {
+        if (properties == null) {
+            return null;
+        }
         Map<String, String> propertyMap = new HashMap<>();
         for (Property property : properties) {
             String value = extractValue(property.getValue());
