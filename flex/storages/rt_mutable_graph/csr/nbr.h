@@ -166,6 +166,9 @@ class ImmutableNbrSlice<std::string_view> {
   using const_nbr_t = const ColumnNbr;
   using const_nbr_ptr_t = const ColumnNbr;
   ImmutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  ImmutableNbrSlice(const ImmutableNbrSlice<size_t>& slice,
+                    const StringColumn& column)
+      : slice_(slice), column_(column) {}
   ImmutableNbrSlice(const ImmutableNbrSlice& rhs)
       : slice_(rhs.slice_), column_(rhs.column_) {}
   ~ImmutableNbrSlice() = default;

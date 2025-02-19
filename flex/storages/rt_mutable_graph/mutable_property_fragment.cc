@@ -100,10 +100,12 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
       return new DualCsr<float>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
       return new DualCsr<std::string_view>(
-          oes, ies, properties[0].additional_type_info.max_length);
+          oes, ies, properties[0].additional_type_info.max_length, oe_mutable,
+          ie_mutable);
     } else if (properties[0] == PropertyType::kStringView) {
       return new DualCsr<std::string_view>(
-          oes, ies, gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+          oes, ies, gs::PropertyType::STRING_DEFAULT_MAX_LENGTH, oe_mutable,
+          ie_mutable);
     }
   } else {
     // TODO: fix me, storage strategy not set
