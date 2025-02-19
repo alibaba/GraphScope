@@ -144,26 +144,31 @@ bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
   return true;
 }
 
-void InsertTransaction::Commit() {
+bool InsertTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
-    return;
+    return true;
   }
   if (arc_.GetSize() == sizeof(WalHeader)) {
     vm_.release_insert_timestamp(timestamp_);
     clear();
-    return;
+    return true;
   }
   auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
 
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+    LOG(ERROR) << "Failed to append wal log";
+    Abort();
+    return false;
+  }
   IngestWal(graph_, timestamp_, arc_.GetBuffer() + sizeof(WalHeader),
             header->length, alloc_);
 
   vm_.release_insert_timestamp(timestamp_);
   clear();
+  return true;
 }
 
 void InsertTransaction::Abort() {

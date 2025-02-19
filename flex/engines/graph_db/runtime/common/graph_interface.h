@@ -402,7 +402,7 @@ class GraphInsertInterface {
     return txn_.AddEdge(src_label, src, dst_label, dst, edge_label, prop);
   }
 
-  inline void Commit() { txn_.Commit(); }
+  inline bool Commit() { return txn_.Commit(); }
 
   inline void Abort() { txn_.Abort(); }
 
@@ -472,7 +472,7 @@ class GraphUpdateInterface {
     return txn_.AddEdge(src_label, src, dst_label, dst, edge_label, prop);
   }
 
-  inline void Commit() { txn_.Commit(); }
+  inline bool Commit() { return txn_.Commit(); }
 
   inline void Abort() { txn_.Abort(); }
 

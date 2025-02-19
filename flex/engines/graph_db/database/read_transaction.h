@@ -320,7 +320,7 @@ class ReadTransaction {
 
   timestamp_t timestamp() const;
 
-  void Commit();
+  bool Commit();
 
   void Abort();
 

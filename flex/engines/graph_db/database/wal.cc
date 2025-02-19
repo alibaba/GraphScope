@@ -54,9 +54,9 @@ void WalWriter::close() {
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-void WalWriter::append(const char* data, size_t length) {
+bool WalWriter::append(const char* data, size_t length) {
   if (unlikely(fd_ == -1)) {
-    return;
+    return false;
   }
   size_t expected_size = file_used_ + length;
   if (expected_size > file_size_) {
@@ -70,7 +70,8 @@ void WalWriter::append(const char* data, size_t length) {
   file_used_ += length;
 
   if (static_cast<size_t>(write(fd_, data, length)) != length) {
-    LOG(FATAL) << "Failed to write wal file " << strerror(errno);
+    LOG(ERROR) << "Failed to write wal file " << strerror(errno);
+    return false;
   }
 
 #if 1
@@ -81,8 +82,9 @@ void WalWriter::append(const char* data, size_t length) {
 #else
   // if (fsync(fd_) != 0) {
   if (fdatasync(fd_) != 0) {
-    LOG(FATAL) << "Failed to fsync wal file " << strerror(errno);
+    LOG(ERROR) << "Failed to fsync wal file " << strerror(errno);
   }
+  return true;
 #endif
 #endif
 }
