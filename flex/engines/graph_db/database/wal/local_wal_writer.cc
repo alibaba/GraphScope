@@ -32,6 +32,9 @@ std::unique_ptr<IWalWriter> LocalWalWriter::Make() {
 }
 
 void LocalWalWriter::open(const std::string& prefix, int thread_id) {
+  if (!std::filesystem::exists(prefix)) {
+    std::filesystem::create_directories(prefix);
+  }
   const int max_version = 65536;
   for (int version = 0; version != max_version; ++version) {
     std::string path = prefix + "/thread_" + std::to_string(thread_id) + "_" +

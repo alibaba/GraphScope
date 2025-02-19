@@ -54,7 +54,8 @@ struct GraphDBConfig {
         memory_level(1),
         wal_writer_type("local"),
         wal_parser_type("local"),
-        wal_parsing_uri("") {}
+        wal_parsing_uri(""),
+        wal_writing_uri("") {}
 
   Schema schema;
   std::string data_dir;
@@ -73,11 +74,12 @@ struct GraphDBConfig {
   int memory_level;
   std::string wal_writer_type;  // local,or other customized wal writer
   std::string wal_parser_type;  // local,or other customized wal parser
-  std::string
-      wal_parsing_uri;  // Doesn't take effect when wal_parser_type is local.
-  // When wal_parser_type is local, the wal_parsing_uri is fixed to
-  // $GRAPH_DATA_DIR/wal. When wal_parser_type is customized, the
-  // wal_parsing_uri is the uri of the wal directory.
+  std::string wal_parsing_uri;
+  std::string wal_writing_uri;
+  // Customized <wal_parsing_uri> and <wal_writing_uri> won't take effect when
+  // wal_writer_type is local. When wal_writer_type is local, the
+  // wal_writing_uri is fixed to $GRAPH_DATA_DIR/wal. When wal_writer_type is
+  // customized, the wal_writing_uri is the uri of the wal directory.
 };
 
 class GraphDB {

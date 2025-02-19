@@ -94,6 +94,7 @@ struct ServiceConfig {
   std::string wal_writer_type,
       wal_parser_type;  // wal writer and parser type. Could be different ?
   std::string wal_parsing_uri;  // The uri of the wal directory.
+  std::string wal_writing_uri;  // The uri of the wal directory.
 
   ServiceConfig();
 
@@ -279,15 +280,21 @@ struct convert<server::ServiceConfig> {
           }
         }
       }
-      if (engine_node["wal_type"]) {
+      if (engine_node["wal_writer_type"]) {
         service_config.wal_writer_type =
-            engine_node["wal_type"].as<std::string>();
+            engine_node["wal_writer_type"].as<std::string>();
+      }
+      if (engine_node["wal_parser_type"]) {
         service_config.wal_parser_type =
-            engine_node["wal_type"].as<std::string>();
+            engine_node["wal_parser_type"].as<std::string>();
       }
       if (engine_node["wal_parsing_uri"]) {
         service_config.wal_parsing_uri =
             engine_node["wal_parsing_uri"].as<std::string>();
+      }
+      if (engine_node["wal_writing_uri"]) {
+        service_config.wal_writing_uri =
+            engine_node["wal_writing_uri"].as<std::string>();
       }
     } else {
       LOG(ERROR) << "Fail to find compute_engine configuration";

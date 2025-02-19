@@ -244,6 +244,8 @@ int main(int argc, char** argv) {
                              service_config.shard_num);
     config.wal_writer_type = service_config.wal_writer_type;
     config.wal_parser_type = service_config.wal_parser_type;
+    config.wal_parsing_uri = service_config.wal_parsing_uri;
+    config.wal_writing_uri = service_config.wal_writing_uri;
     auto load_res = db.Open(config);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
