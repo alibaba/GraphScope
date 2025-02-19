@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
@@ -50,6 +51,9 @@ public interface IrDataTypeConvertor<T> {
     int UINT32_SCALE = 0;
     int UINT64_PRECISION = 20;
     int UINT64_SCALE = 0;
+
+    BigDecimal UINT32_MAX = new BigDecimal("4294967295");
+    BigDecimal UINT64_MAX = new BigDecimal("18446744073709551615");
 
     RelDataType convert(T dataFrom);
 

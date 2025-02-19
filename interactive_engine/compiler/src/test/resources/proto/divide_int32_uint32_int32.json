@@ -1,0 +1,183 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "prop_int32"
+              },
+              "type": {
+                "primitiveType": "DT_SIGNED_INT32"
+              }
+            }, {
+              "propId": {
+                "name": "prop_uint32"
+              },
+              "type": {
+                "primitiveType": "DT_UNSIGNED_INT32"
+              }
+            }, {
+              "propId": {
+                "name": "prop_int64"
+              },
+              "type": {
+                "primitiveType": "DT_SIGNED_INT64"
+              }
+            }, {
+              "propId": {
+                "name": "prop_uint64"
+              },
+              "type": {
+                "primitiveType": "DT_UNSIGNED_INT64"
+              }
+            }, {
+              "propId": {
+                "name": "prop_bool"
+              },
+              "type": {
+                "primitiveType": "DT_BOOL"
+              }
+            }, {
+              "propId": {
+                "name": "prop_float"
+              },
+              "type": {
+                "primitiveType": "DT_FLOAT"
+              }
+            }, {
+              "propId": {
+                "name": "prop_double"
+              },
+              "type": {
+                "primitiveType": "DT_DOUBLE"
+              }
+            }, {
+              "propId": {
+                "name": "prop_text"
+              },
+              "type": {
+                "string": {
+                  "longText": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "prop_char"
+              },
+              "type": {
+                "string": {
+                  "char": {
+                    "fixedLength": 4
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "prop_varchar"
+              },
+              "type": {
+                "string": {
+                  "varChar": {
+                    "maxLength": 4
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "prop_date"
+              },
+              "type": {
+                "temporal": {
+                  "date32": {
+                  }
+                }
+              }
+            }, {
+              "propId": {
+                "name": "prop_ts"
+              },
+              "type": {
+                "temporal": {
+                  "timestamp": {
+                  }
+                }
+              }
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "const": {
+                "i32": 2
+              },
+              "nodeType": {
+                "dataType": {
+                  "primitiveType": "DT_SIGNED_INT32"
+                }
+              }
+            }, {
+              "arith": "DIV",
+              "nodeType": {
+                "dataType": {
+                  "primitiveType": "DT_UNSIGNED_INT64"
+                }
+              }
+            }, {
+              "const": {
+                "u64": "3"
+              },
+              "nodeType": {
+                "dataType": {
+                  "primitiveType": "DT_UNSIGNED_INT64"
+                }
+              }
+            }]
+          },
+          "alias": 1
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": {
+          "primitiveType": "DT_UNSIGNED_INT64"
+        }
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "tags": [{
+          "tag": 1
+        }],
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

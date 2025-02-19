@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.function.GraphFunctions;
+import com.alibaba.graphscope.common.ir.meta.schema.IrDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
@@ -38,15 +39,18 @@ import com.google.common.collect.Maps;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.NlsString;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -220,6 +224,35 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     @Override
     public ExprVisitorResult visitOC_UnaryAddOrSubtractExpression(
             CypherGSParser.OC_UnaryAddOrSubtractExpressionContext ctx) {
+        String text = ctx.getText().toLowerCase();
+        // convert unary add to unsigned integer
+        if (text.startsWith("+")) {
+            String value = text.substring(1);
+            if (text.endsWith("l")) {
+                value = value.substring(0, value.length() - 1);
+            }
+            BigDecimal decimal = new BigDecimal(value);
+            RelDataType type;
+            if (decimal.compareTo(IrDataTypeConvertor.UINT32_MAX) <= 0 && !text.endsWith("l")) {
+                type =
+                        builder.getTypeFactory()
+                                .createSqlType(
+                                        SqlTypeName.DECIMAL,
+                                        IrDataTypeConvertor.UINT32_PRECISION,
+                                        IrDataTypeConvertor.UINT32_SCALE);
+            } else if (decimal.compareTo(IrDataTypeConvertor.UINT64_MAX) <= 0) {
+                type =
+                        builder.getTypeFactory()
+                                .createSqlType(
+                                        SqlTypeName.DECIMAL,
+                                        IrDataTypeConvertor.UINT64_PRECISION,
+                                        IrDataTypeConvertor.UINT64_SCALE);
+            } else {
+                throw new IllegalArgumentException(
+                        "value: " + decimal + " exceeds the range of uint64");
+            }
+            return new ExprVisitorResult(builder.getRexBuilder().makeLiteral(decimal, type));
+        }
         ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);

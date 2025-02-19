@@ -84,6 +84,9 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
     @Override
     public Object visitOC_DoubleLiteral(CypherGSParser.OC_DoubleLiteralContext ctx) {
         String floatLiteral = ctx.getText().toLowerCase();
+        if (floatLiteral.endsWith("f")) {
+            return Float.valueOf(floatLiteral);
+        }
         return Double.valueOf(floatLiteral);
     }
 

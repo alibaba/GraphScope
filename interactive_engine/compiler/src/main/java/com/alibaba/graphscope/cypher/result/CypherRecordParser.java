@@ -303,6 +303,17 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 return Values.intValue(value.getI32());
             case I64:
                 return Values.longValue(value.getI64());
+            case U32:
+                // cypher does not support u32 directly, represent u32 as long, which is enough to
+                // hold u32 value.
+                return Values.longValue(value.getU32());
+            case U64:
+                // cypher does not support u64 directly, represent u64 as long,
+                // user need to convert long to u64 and handle the overflow cases at the
+                // client-side.
+                return Values.longValue(value.getU64());
+            case F32:
+                return Values.floatValue(value.getF32());
             case F64:
                 return Values.doubleValue(value.getF64());
             case STR:

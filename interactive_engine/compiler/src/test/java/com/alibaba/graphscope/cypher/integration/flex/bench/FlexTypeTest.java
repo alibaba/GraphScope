@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.cypher.integration.flex.bench;
 
+import com.alibaba.graphscope.cypher.antlr4.Utils;
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 
 import org.javatuples.Pair;
@@ -28,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -37,11 +40,10 @@ public class FlexTypeTest {
 
     /**
      * start compiler before the test:
-     *   make run graph.schema=./src/test/resources/flex_bench/modern.yaml graph.planner.opt=CBO graph.physical.opt=proto
+     *   make run graph.schema=./src/test/resources/flex_bench/modern.yaml graph.planner.opt=CBO graph.physical.opt=proto disable.expr.simplify=true
      */
     @BeforeClass
     public static void setUp() {
-
         String neo4jServerUrl =
                 System.getProperty("neo4j.bolt.server.url", "neo4j://localhost:7687");
         session = GraphDatabase.driver(neo4jServerUrl).session();
@@ -124,14 +126,18 @@ public class FlexTypeTest {
                 resultSupplier.get().list();
                 Assert.fail("overflow exception should have been thrown");
             } catch (Exception e) {
-                Assert.assertTrue(e.getMessage().contains("overflow"));
+                Assert.assertTrue(
+                        "cannot catch overflow exception from execution message",
+                        e.getMessage().contains("overflow"));
             }
         } else if (expected.size() == 1 && expected.get(0).equals("NaN")) {
             try {
                 resultSupplier.get().list();
                 Assert.fail("NaN exception should have been thrown");
             } catch (Exception e) {
-                Assert.assertTrue(e.getMessage().contains("NaN"));
+                Assert.assertTrue(
+                        "cannot catch NaN exception from execution message",
+                        e.getMessage().contains("NaN"));
             }
         } else {
             List<Record> records = resultSupplier.get().list();
@@ -141,14 +147,17 @@ public class FlexTypeTest {
             for (int i = 0; i < expected.size(); i++) {
                 Value actual = single.get(i);
                 String expectedValue = expected.get(i);
+                boolean unsigned = false;
                 if (expectedValue.startsWith("+")) {
                     expectedValue = expectedValue.substring(1);
+                    unsigned = true;
                 }
                 String upperCase = expectedValue.toUpperCase();
                 if (upperCase.endsWith("L") || upperCase.endsWith("D") || upperCase.endsWith("F")) {
                     expectedValue = expectedValue.substring(0, expectedValue.length() - 1);
                 }
-                Assert.assertEquals(expectedValue, actual.asString());
+                String actualValue = getActualValue(actual, unsigned);
+                Assert.assertEquals(expectedValue, actualValue);
             }
         }
     }
@@ -156,5 +165,13 @@ public class FlexTypeTest {
     @AfterClass
     public static void tearDown() {
         session.close();
+    }
+
+    public String getActualValue(Value actual, boolean unsigned) {
+        if (unsigned) {
+            long value = actual.asLong();
+            return new BigDecimal(new BigInteger(1, Utils.longToBytes(value))).toString();
+        }
+        return actual.toString();
     }
 }

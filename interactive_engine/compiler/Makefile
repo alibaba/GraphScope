@@ -25,6 +25,7 @@ physical:=
 procedure:=
 extra:=
 config.path:=conf/ir.compiler.properties
+disable.expr.simplify:=
 
 build:
 	cd $(CUR_DIR)/.. && \
@@ -63,6 +64,7 @@ run:
 	  -Dgraph.planner.rules=${graph.planner.rules} \
 	  -Dgraph.planner.opt=${graph.planner.opt} \
 	  -Dgraph.statistics=${graph.statistics} \
+	  -Ddisable.expr.simplify={disable.expr.simplify} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'
