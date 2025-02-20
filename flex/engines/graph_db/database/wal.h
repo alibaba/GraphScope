@@ -58,7 +58,7 @@ class WalWriter {
 
   void close();
 
-  void append(const char* data, size_t length);
+  bool append(const char* data, size_t length);
 
  private:
   int fd_;

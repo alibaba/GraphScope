@@ -251,3 +251,14 @@ The mapping between status codes and HTTP codes is shown in the table below.
 | IO_ERROR(105)             | 500         |
 | QUERY_FAILED(106)         | 500         |
 | default                             | 500         |
+
+
+### Transactions
+
+In Interactive's execution engine, transactions such as `ReadTransaction`, `UpdateTransaction`, and `InsertTransaction` are employed to maintain data consistency and integrity throughout operations. Each transaction can either succeed or fail, and it is important to understand the transactional guarantees provided by Interactive:
+
+1. For every transaction, we first write the Write-Ahead Log (WAL) to persistent storage before applying it to the graph data. This ensures a reliable record of the transaction steps.
+
+2. If a transaction returns `false` during the `commit()` process, the error occurred prior to applying the WAL to the graph data. This type of failure could arise during the construction of the WAL or during its writing phase.
+
+3. It is important to note that errors can still occur when replaying the WAL to the graph database. Replaying might fail due to limitations in resources or due to unforeseen bugs. **However,** any errors encountered during this stage will be handled via exceptions or may result in process failure. Currently, there is no established mechanism to handle such failures. Future improvements should focus on implementing failover strategies, potentially allowing the GraphDB to continue replaying the WAL until it succeeds.
