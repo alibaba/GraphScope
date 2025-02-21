@@ -50,10 +50,10 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_MAX_CONTENT_LENGTH =
       1024 * 1024 * 1024;  // 1GB
   static constexpr const char* DEFAULT_WAL_URI =
-      "$GRAPH_DATA_DIR/wal";  // By default we will use the wal directory in
-                              // the graph data directory. The $GRAPH_DATA_DIR
-                              // is a placeholder, which will be replaced by the
-                              // actual graph data directory.
+      "{GRAPH_DATA_DIR}/wal";  // By default we will use the wal directory in
+                               // the graph data directory. The {GRAPH_DATA_DIR}
+                               // is a placeholder, which will be replaced by
+                               // the actual graph data directory.
 
   // Those has default value
   uint32_t bolt_port;
