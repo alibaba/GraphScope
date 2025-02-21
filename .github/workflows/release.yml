@@ -10,8 +10,8 @@ on:
     # Trigger the workflow at 03:00(CST) every day.
     - cron: '00 19 * * *'
   push:
-    tags:
-      - 'v*'
+    # tags:
+      # - 'v*'
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
