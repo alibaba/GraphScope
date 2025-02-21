@@ -21,17 +21,12 @@
 
 namespace gs {
 
-void LocalWalWriter::Init() {
-  WalWriterFactory::RegisterWalWriter(
-      "local", static_cast<WalWriterFactory::wal_writer_initializer_t>(
-                   &LocalWalWriter::Make));
-}
-
 std::unique_ptr<IWalWriter> LocalWalWriter::Make() {
   return std::unique_ptr<IWalWriter>(new LocalWalWriter());
 }
 
-void LocalWalWriter::open(const std::string& prefix, int thread_id) {
+void LocalWalWriter::open(const std::string& wal_uri, int thread_id) {
+  auto prefix = get_wal_uri_path(wal_uri);
   if (!std::filesystem::exists(prefix)) {
     std::filesystem::create_directories(prefix);
   }
@@ -105,7 +100,7 @@ bool LocalWalWriter::append(const char* data, size_t length) {
 #undef unlikely
 
 const bool LocalWalWriter::registered_ = WalWriterFactory::RegisterWalWriter(
-    "local", static_cast<WalWriterFactory::wal_writer_initializer_t>(
-                 &LocalWalWriter::Make));
+    "file", static_cast<WalWriterFactory::wal_writer_initializer_t>(
+                &LocalWalWriter::Make));
 
 }  // namespace gs

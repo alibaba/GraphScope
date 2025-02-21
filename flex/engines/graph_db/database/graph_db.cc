@@ -467,40 +467,27 @@ void GraphDB::openWalAndCreateContexts(const GraphDBConfig& config,
   std::filesystem::create_directories(allocator_dir(data_dir));
 
   // Open the wal writer.
-  std::string wal_writing_uri = config.wal_writing_uri;
-  if (config.wal_writer_type == "local") {
-    if (!wal_writing_uri.empty()) {
-      LOG(WARNING) << "wal_writing_uri is set, but wal_writer_type is local, "
-                      "ignore wal_writing_uri";
-    }
-    wal_writing_uri = wal_dir(data_dir);
+  std::string wal_uri = config.wal_uri;
+  if (wal_uri.empty()) {
+    LOG(ERROR) << "wal_uri is not set, use default wal_uri";
+    wal_uri = wal_dir(data_dir);
+  } else if (wal_uri.find("{GRAPH_DATA_DIR}") != std::string::npos) {
+    LOG(INFO) << "Template {GRAPH_DATA_DIR} found in wal_uri, replace it with "
+                 "data_dir";
+    wal_uri = std::regex_replace(wal_uri, std::regex("\\{GRAPH_DATA_DIR\\}"),
+                                 data_dir);
   }
-  if (wal_writing_uri.empty()) {
-    LOG(FATAL) << "wal_writing_uri is not set";
-  }
+  VLOG(1) << "Using wal uri: " << wal_uri;
   for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i]) SessionLocalContext(
-        *this, data_dir, i, allocator_strategy,
-        WalWriterFactory::CreateWalWriter(config.wal_writer_type));
-    contexts_[i].logger->open(wal_writing_uri, i);
+    new (&contexts_[i])
+        SessionLocalContext(*this, data_dir, i, allocator_strategy,
+                            WalWriterFactory::CreateWalWriter(wal_uri));
+    contexts_[i].logger->open(wal_uri, i);
   }
 
-  // Create the wal parser and ingest the wals.
-  std::string wal_ingesting_uri = config.wal_parsing_uri;
-  if (config.wal_parser_type == "local") {
-    if (!wal_ingesting_uri.empty()) {
-      LOG(WARNING) << "wal_parsing_uri is set, but wal_parser_type is local, "
-                      "ignore wal_parsing_uri";
-    }
-    wal_ingesting_uri = wal_dir(data_dir);
-  }
-  if (wal_ingesting_uri.empty()) {
-    LOG(WARNING) << "wal_parsing_uri is not set, skip ingesting wals";
-  } else {
-    auto wal_parser = WalParserFactory::CreateWalParser(config.wal_parser_type,
-                                                        wal_ingesting_uri);
-    ingestWals(*wal_parser, data_dir, thread_num_);
-  }
+  auto wal_parser = WalParserFactory::CreateWalParser(wal_uri);
+  ingestWals(*wal_parser, data_dir, thread_num_);
+
   initApps(graph_.schema().GetPlugins());
   VLOG(1) << "Successfully restore load plugins";
 }

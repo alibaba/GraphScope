@@ -48,11 +48,15 @@ struct UpdateWalUnit {
   size_t size{0};
 };
 
+std::string get_wal_uri_scheme(const std::string& uri);
+std::string get_wal_uri_path(const std::string& uri);
+
 /**
  * The interface of wal writer.
  */
 class IWalWriter {
  public:
+  static constexpr size_t MAX_WALS_NUM = 134217728;
   virtual ~IWalWriter() {}
 
   virtual std::string type() const = 0;
@@ -84,7 +88,9 @@ class IWalParser {
   /**
    * Open wals from a uri and parse the wal files.
    */
-  virtual void open(const std::string& wal_dir) = 0;
+  virtual void open(const std::string& wal_uri) = 0;
+
+  virtual void close() = 0;
 
   virtual uint32_t last_ts() const = 0;
 
@@ -108,7 +114,7 @@ class WalWriterFactory {
   static void Finalize();
 
   static std::unique_ptr<IWalWriter> CreateWalWriter(
-      const std::string& wal_writer_type);
+      const std::string& wal_uri);
 
   static bool RegisterWalWriter(const std::string& wal_writer_type,
                                 wal_writer_initializer_t initializer);
@@ -129,9 +135,9 @@ class WalParserFactory {
   static void Finalize();
 
   static std::unique_ptr<IWalParser> CreateWalParser(
-      const std::string& wal_writer_type, const std::string& wal_dir);
+      const std::string& wal_uri);
 
-  static bool RegisterWalParser(const std::string& wal_writer_type,
+  static bool RegisterWalParser(const std::string& wal_parser_type,
                                 wal_parser_initializer_t initializer);
 
  private:

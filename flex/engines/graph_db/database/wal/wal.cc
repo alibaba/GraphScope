@@ -22,37 +22,44 @@
 
 namespace gs {
 
-void WalWriterFactory::Init() {
-  if (getenv("FLEX_OTHER_WAL_WRITERS")) {
-    auto other_writers = getenv("FLEX_OTHER_WAL_WRITERS");
-    std::vector<std::string> writers;
-    ::boost::split(writers, other_writers,
-                   ::boost::is_any_of(std::string(1, ':')));
-    for (auto const& writer : writers) {
-      if (!writer.empty()) {
-        if (dlopen(writer.c_str(), RTLD_GLOBAL | RTLD_NOW) == nullptr) {
-          LOG(WARNING) << "Failed to load wal writer " << writer
-                       << ", reason = " << dlerror();
-        } else {
-          LOG(INFO) << "Loaded wal writer: " << writer;
-        }
-      }
-    }
-  } else {
-    VLOG(1) << "No extra wal writers provided";
+std::string get_wal_uri_scheme(const std::string& uri) {
+  std::string scheme;
+  auto pos = uri.find("://");
+  if (pos != std::string::npos) {
+    scheme = uri.substr(0, pos);
   }
+  if (scheme.empty()) {
+    LOG(INFO) << "No scheme found in wal uri: " << uri
+              << ", using default scheme: file";
+    scheme = "file";
+  }
+  return scheme;
 }
+
+std::string get_wal_uri_path(const std::string& uri) {
+  std::string path;
+  auto pos = uri.find("://");
+  if (pos != std::string::npos) {
+    path = uri.substr(pos + 3);
+  } else {
+    path = uri;
+  }
+  return path;
+}
+
+void WalWriterFactory::Init() {}
 
 void WalWriterFactory::Finalize() {}
 
 std::unique_ptr<IWalWriter> WalWriterFactory::CreateWalWriter(
-    const std::string& wal_writer_type) {
+    const std::string& wal_uri) {
   auto& known_writers_ = getKnownWalWriters();
-  auto iter = known_writers_.find(wal_writer_type);
+  auto scheme = get_wal_uri_scheme(wal_uri);
+  auto iter = known_writers_.find(scheme);
   if (iter != known_writers_.end()) {
     return iter->second();
   } else {
-    LOG(FATAL) << "Unknown wal writer: " << wal_writer_type;
+    LOG(FATAL) << "Unknown wal writer: " << scheme << " for uri: " << wal_uri;
   }
 }
 
@@ -75,37 +82,19 @@ WalWriterFactory::getKnownWalWriters() {
 
 ////////////////////////// WalParserFactory //////////////////////////
 
-void WalParserFactory::Init() {
-  if (getenv("FLEX_OTHER_WAL_PARSERS")) {
-    auto other_parsers = getenv("FLEX_OTHER_WAL_PARSERS");
-    std::vector<std::string> parsers;
-    ::boost::split(parsers, other_parsers,
-                   ::boost::is_any_of(std::string(1, ':')));
-    for (auto const& parser : parsers) {
-      if (!parser.empty()) {
-        if (dlopen(parser.c_str(), RTLD_GLOBAL | RTLD_NOW) == nullptr) {
-          LOG(WARNING) << "Failed to load wal parser " << parser
-                       << ", reason = " << dlerror();
-        } else {
-          LOG(INFO) << "Loaded wal parser: " << parser;
-        }
-      }
-    }
-  } else {
-    VLOG(1) << "No extra wal parsers";
-  }
-}
+void WalParserFactory::Init() {}
 
 void WalParserFactory::Finalize() {}
 
 std::unique_ptr<IWalParser> WalParserFactory::CreateWalParser(
-    const std::string& wal_writer_type, const std::string& wal_dir) {
+    const std::string& wal_uri) {
   auto& know_parsers_ = getKnownWalParsers();
-  auto iter = know_parsers_.find(wal_writer_type);
+  auto scheme = get_wal_uri_scheme(wal_uri);
+  auto iter = know_parsers_.find(scheme);
   if (iter != know_parsers_.end()) {
-    return iter->second(wal_dir);
+    return iter->second(wal_uri);
   } else {
-    LOG(FATAL) << "Unknown wal parser: " << wal_writer_type;
+    LOG(FATAL) << "Unknown wal parser: " << scheme << " for uri: " << wal_uri;
   }
 }
 

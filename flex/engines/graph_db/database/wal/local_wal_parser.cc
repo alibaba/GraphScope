@@ -22,18 +22,11 @@
 
 namespace gs {
 
-static constexpr size_t MAX_WALS_NUM = 134217728;
-
-void LocalWalParser::Init() {
-  WalParserFactory::RegisterWalParser(
-      "local", static_cast<WalParserFactory::wal_parser_initializer_t>(
-                   &LocalWalParser::Make));
-}
-
 LocalWalParser::LocalWalParser()
     : insert_wal_list_(NULL), insert_wal_list_size_(0) {}
 
-void LocalWalParser::open(const std::string& wal_dir) {
+void LocalWalParser::open(const std::string& wal_uri) {
+  auto wal_dir = get_wal_uri_path(wal_uri);
   if (!std::filesystem::exists(wal_dir)) {
     std::filesystem::create_directory(wal_dir);
   }
@@ -65,9 +58,10 @@ void LocalWalParser::open(const std::string& wal_dir) {
     insert_wal_list_size_ = 0;
   }
   insert_wal_list_ = static_cast<WalContentUnit*>(
-      mmap(NULL, MAX_WALS_NUM * sizeof(WalContentUnit), PROT_READ | PROT_WRITE,
-           MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
-  insert_wal_list_size_ = MAX_WALS_NUM;
+      mmap(NULL, IWalWriter::MAX_WALS_NUM * sizeof(WalContentUnit),
+           PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE,
+           -1, 0));
+  insert_wal_list_size_ = IWalWriter::MAX_WALS_NUM;
   for (size_t i = 0; i < mmapped_ptrs_.size(); ++i) {
     char* ptr = static_cast<char*>(mmapped_ptrs_[i]);
     while (true) {
@@ -101,16 +95,18 @@ void LocalWalParser::open(const std::string& wal_dir) {
   }
 }
 
-LocalWalParser::~LocalWalParser() {
+void LocalWalParser::close() {
   if (insert_wal_list_ != NULL) {
     munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
+    insert_wal_list_ = NULL;
+    insert_wal_list_size_ = 0;
   }
   size_t ptr_num = mmapped_ptrs_.size();
   for (size_t i = 0; i < ptr_num; ++i) {
     munmap(mmapped_ptrs_[i], mmapped_size_[i]);
   }
   for (auto fd : fds_) {
-    close(fd);
+    ::close(fd);
   }
 }
 
@@ -125,7 +121,7 @@ const std::vector<UpdateWalUnit>& LocalWalParser::get_update_wals() const {
 }
 
 const bool LocalWalParser::registered_ = WalParserFactory::RegisterWalParser(
-    "local", static_cast<WalParserFactory::wal_parser_initializer_t>(
-                 &LocalWalParser::Make));
+    "file", static_cast<WalParserFactory::wal_parser_initializer_t>(
+                &LocalWalParser::Make));
 
 }  // namespace gs
