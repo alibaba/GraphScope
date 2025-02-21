@@ -165,6 +165,8 @@ jobs:
     needs: [build-interactive-image-amd64, build-interactive-image-arm64]
 
     steps:
+    - uses: actions/checkout@v4
+    
     - name: Add envs to GITHUB_ENV
       run: |
         short_sha=$(git rev-parse --short HEAD)
