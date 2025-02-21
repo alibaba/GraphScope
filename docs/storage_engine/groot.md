@@ -141,10 +141,16 @@ To connect the service, ensure that the following environment variables are prop
 ############################################################################################
 ```
 
+Then you can connect to the Groot Service as follows:
+```python
+import gs_interactive
 
-Note: After executing the Helm command to obtain connection information, the details are stored in environment variables. Retrieve the NODE_IP from these variables and replace `127.0.0.1` in your connection string with its value.
+driver = Driver()
+sess = driver.session()
+```
+Once the connection is established, you can use the `driver`and `sess` objects to interact with the Groot Service, as illustrated in the following demonstrations.
 
-Additionally, the service endpoint port can be customized using the `frontend.service.httpPort` option, which defaults to 8080. If you have customized the ports when deploying Interactive, ensure you replace the default port with your specified port.
+Note: After executing the Helm command to obtain connection information, the details are stored in environment variables. Retrieve the `NODE_IP` from these variables and replace `127.0.0.1` in your connection string with its value. Besides, the service endpoint port can be customized using the `frontend.service.httpPort` option, which defaults to 8080. If you have customized the ports when deploying Interactive, ensure you replace the default port with your specified port.
 
 
 ### Create a new graph
@@ -206,9 +212,6 @@ def create_graph(sess : Session):
     resp = sess.create_graph(create_graph_request)
     assert resp.is_ok()
     return resp.get_value().graph_id
-
-driver = Driver()
-sess = driver.session()
 
 graph_id = create_graph(sess)
 print("Created graph, id is ", graph_id)
