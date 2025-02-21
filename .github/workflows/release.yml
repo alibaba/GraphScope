@@ -181,13 +181,13 @@ jobs:
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
 
         # create
-        sudo docker manifest create \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA} \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-amd64 \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-arm64
+        # sudo docker manifest create \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA} \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-amd64 \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-arm64
 
         # push
-        sudo docker manifest push ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}
+        # sudo docker manifest push ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}
 
         # Remove old latest manifest
         sudo docker manifest rm ${{ env.INTERACTIVE_IMAGE }}:latest
