@@ -96,6 +96,41 @@ public class TypeTest {
     }
 
     @Test
+    public void divide_int32_int32_overflow_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        builder.disableSimplify();
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (p:person)\n" + "    RETURN -2147483648 / -1", builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[/(-2147483648, -1)], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[p], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void divide_int64_int32_overflow_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        builder.disableSimplify();
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (p:person)\n" + "    RETURN -9223372036854775808L / -1",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[/(-9223372036854775808:BIGINT, -1)], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[p], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
     public void convert_int32_to_uint32_test() {
         BigDecimal expected = new BigDecimal("4294967284");
         long signedVal = expected.longValue();

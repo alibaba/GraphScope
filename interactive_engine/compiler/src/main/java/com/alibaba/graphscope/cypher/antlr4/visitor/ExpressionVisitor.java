@@ -225,13 +225,24 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     public ExprVisitorResult visitOC_UnaryAddOrSubtractExpression(
             CypherGSParser.OC_UnaryAddOrSubtractExpressionContext ctx) {
         String text = ctx.getText().toLowerCase();
-        // convert unary add to unsigned integer
         if (text.startsWith("+")) {
-            String value = text.substring(1);
-            if (text.endsWith("l")) {
-                value = value.substring(0, value.length() - 1);
-            }
-            BigDecimal decimal = new BigDecimal(value);
+            text = text.substring(1);
+        }
+        Object integerValue;
+        try {
+            // check the expr is actual an integer value.
+            integerValue = LiteralVisitor.INSTANCE.parseInteger(text);
+        } catch (Exception e) {
+            // if not an integer, i.e. -a.age, then convert to the normal expression
+            ExprVisitorResult operand =
+                    visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
+            List<SqlOperator> operators =
+                    Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
+            return Utils.unaryCall(operators, operand, builder);
+        }
+        // parse to unsigned types
+        if (ctx.getText().startsWith("+")) {
+            BigDecimal decimal = new BigDecimal(integerValue.toString());
             RelDataType type;
             if (decimal.compareTo(IrDataTypeConvertor.UINT32_MAX) <= 0 && !text.endsWith("l")) {
                 type =
@@ -253,10 +264,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             }
             return new ExprVisitorResult(builder.getRexBuilder().makeLiteral(decimal, type));
         }
-        ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
-        List<SqlOperator> operators =
-                Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
-        return Utils.unaryCall(operators, operand, builder);
+        return new ExprVisitorResult(builder.literal(integerValue));
     }
 
     @Override
