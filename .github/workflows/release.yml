@@ -12,11 +12,6 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/release.yml'
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
@@ -72,8 +67,7 @@ jobs:
         packages_dir: upload_pypi/
 
   build-interactive-image-amd64:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
-    if: true
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-22.04
 
     steps:
@@ -119,8 +113,7 @@ jobs:
         sudo docker push ${{ env.INTERACTIVE_IMAGE }}:${{ steps.tag.outputs.TAG }}-amd64
 
   build-interactive-image-arm64:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
-    if: true
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -166,8 +159,7 @@ jobs:
         sudo docker push ${{ env.INTERACTIVE_IMAGE }}:${{ steps.tag.outputs.TAG }}-arm64
 
   push-interactive-image-manifest:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
-    if: true
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-22.04
 
     needs: [build-interactive-image-amd64, build-interactive-image-arm64]
