@@ -457,33 +457,6 @@ struct OptionalMapCollector {
   auto get() { return builder->finish(nullptr); }
   std::shared_ptr<IContextColumnBuilder> builder;
 };
-/**
-struct StringArrayCollector {
-  struct StringArrayExprWrapper {
-    using V = std::vector<std::string>;
-    StringArrayExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    std::vector<std::string> operator()(size_t idx) const {
-      // TODO: fix this
-      auto v = expr.eval_path(idx).as_string_set();
-      std::vector<std::string> ret;
-      ret.reserve(v.size());
-      for (auto& s : v) {
-        ret.push_back(s);
-      }
-      return ret;
-    }
-    Expr expr;
-  };
-
-  using EXPR = StringArrayExprWrapper;
-  StringArrayCollector(const EXPR& expr) : builder(expr.expr.builder()) {}
-  void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx);
-    builder->push_back_elem(v);
-  }
-  auto get() { return builder->finish(nullptr); }
-  std::shared_ptr<IContextColumnBuilder> builder;
-};*/
 
 template <typename EXPR, typename RESULT_T>
 struct CaseWhenCollector {
@@ -1188,21 +1161,7 @@ make_project_expr(const common::Expression& expr,
     case RTAnyType::kDate32: {
       return _make_project_expr<Day>(expr, alias);
     } break;
-    // todo: fix this
-    case RTAnyType::kList: {
-      LOG(INFO) << "not support" << data_type.DebugString();
-      /**return [=](const GraphReadInterface& graph,
-                 const std::map<std::string, std::string>& params,
-                 const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
-        Expr e(graph, ctx, params, expr, VarType::kPathVar);
-        StringArrayCollector::EXPR expr(std::move(e));
-        StringArrayCollector collector(expr);
-        collector.builder->reserve(ctx.row_num());
-        return std::make_unique<ProjectExpr<typename StringArrayCollector::EXPR,
-                                            StringArrayCollector>>(
-            std::move(expr), collector, alias);
-      };*/
-    } break;
+
     // compiler bug here
     case RTAnyType::kUnknown: {
       return make_project_expr(expr, alias);
