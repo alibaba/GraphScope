@@ -73,9 +73,7 @@ public class GraphBuilderTest {
         optimizer = new GraphRelOptimizer(configs);
         irMeta =
                 Utils.mockIrMeta(
-                        "schema/modern.json",
-                        "statistics/modern_statistics.json",
-                        optimizer.getGlogueHolder());
+                        "schema/modern.json", "statistics/modern_statistics.json", optimizer);
     }
 
     public static RelNode eval(String query) {
@@ -96,9 +94,7 @@ public class GraphBuilderTest {
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
         IrMeta irMeta =
                 Utils.mockIrMeta(
-                        "schema/ldbc.json",
-                        "statistics/ldbc30_statistics.json",
-                        optimizer.getGlogueHolder());
+                        "schema/ldbc.json", "statistics/ldbc30_statistics.json", optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode node =
                 eval(
@@ -1870,9 +1866,7 @@ public class GraphBuilderTest {
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
         IrMeta irMeta =
                 Utils.mockIrMeta(
-                        "schema/ldbc.json",
-                        "statistics/ldbc30_statistics.json",
-                        optimizer.getGlogueHolder());
+                        "schema/ldbc.json", "statistics/ldbc30_statistics.json", optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode node1 =
                 eval(

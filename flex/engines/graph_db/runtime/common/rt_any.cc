@@ -181,6 +181,28 @@ RTAny& RTAny::operator=(const RTAny& rhs) {
 
 RTAnyType RTAny::type() const { return type_; }
 
+Any RTAny::to_any() const {
+  switch (type_) {
+  case RTAnyType::kBoolValue:
+    return Any(value_.b_val);
+  case RTAnyType::kI64Value:
+    return Any(value_.i64_val);
+  case RTAnyType::kI32Value:
+    return Any(value_.i32_val);
+  case RTAnyType::kF64Value:
+    return Any(value_.f64_val);
+  case RTAnyType::kStringValue:
+    return Any(std::string(value_.str_val));
+
+  case RTAnyType::kDate32:
+    return Any(value_.day);
+  case RTAnyType::kTimestamp:
+    return Any(value_.date);
+  default:
+    LOG(FATAL) << "not support for " << static_cast<int>(type_);
+  }
+}
+
 RTAny RTAny::from_vertex(label_t l, vid_t v) {
   RTAny ret;
   ret.type_ = RTAnyType::kVertex;
@@ -493,8 +515,14 @@ bool RTAny::operator==(const RTAny& other) const {
 
   if (type_ == RTAnyType::kI64Value) {
     return value_.i64_val == other.value_.i64_val;
+  } else if (type_ == RTAnyType::kU64Value) {
+    return value_.u64_val == other.value_.u64_val;
   } else if (type_ == RTAnyType::kI32Value) {
     return value_.i32_val == other.value_.i32_val;
+  } else if (type_ == RTAnyType::kF64Value) {
+    return value_.f64_val == other.value_.f64_val;
+  } else if (type_ == RTAnyType::kBoolValue) {
+    return value_.b_val == other.value_.b_val;
   } else if (type_ == RTAnyType::kStringValue) {
     return value_.str_val == other.value_.str_val;
   } else if (type_ == RTAnyType::kVertex) {
@@ -555,8 +583,6 @@ RTAny RTAny::operator+(const RTAny& other) const {
 }
 
 RTAny RTAny::operator-(const RTAny& other) const {
-  // assert(type_ == other.type_);
-
   if (type_ == RTAnyType::kI64Value && other.type_ == RTAnyType::kI32Value) {
     return RTAny::from_int64(value_.i64_val - other.value_.i32_val);
   } else if (type_ == RTAnyType::kI32Value &&
@@ -575,7 +601,6 @@ RTAny RTAny::operator-(const RTAny& other) const {
 }
 
 RTAny RTAny::operator/(const RTAny& other) const {
-  // assert(type_ == other.type_);
   bool has_i64 = false;
   bool has_f64 = false;
   double left_f64 = 0;
@@ -746,43 +771,13 @@ void sink_vertex(const GraphReadInterface& graph, const VertexRecord& vertex,
              prop->mutable_value());
   }
 }
-void RTAny::sink(const GraphReadInterface& graph, Encoder& encoder) const {
-  if (type_ == RTAnyType::kList) {
-    encoder.put_int(value_.list.size());
-    for (size_t i = 0; i < value_.list.size(); ++i) {
-      value_.list.get(i).sink(graph, encoder);
-    }
-  } else if (type_ == RTAnyType::kTuple) {
-    for (size_t i = 0; i < value_.t.size(); ++i) {
-      value_.t.get(i).sink(graph, encoder);
-    }
-  } else if (type_ == RTAnyType::kStringValue) {
-    encoder.put_string_view(value_.str_val);
-  } else if (type_ == RTAnyType::kI64Value) {
-    encoder.put_long(value_.i64_val);
-  } else if (type_ == RTAnyType::kDate32) {
-    encoder.put_long(value_.day.to_timestamp());
-  } else if (type_ == RTAnyType::kTimestamp) {
-    encoder.put_long(value_.date.milli_second);
-  } else if (type_ == RTAnyType::kI32Value) {
-    encoder.put_int(value_.i32_val);
-  } else if (type_ == RTAnyType::kF64Value) {
-    int64_t long_value;
-    std::memcpy(&long_value, &value_.f64_val, sizeof(long_value));
-    encoder.put_long(long_value);
-  } else if (type_ == RTAnyType::kBoolValue) {
-    encoder.put_byte(value_.b_val ? static_cast<uint8_t>(1)
-                                  : static_cast<uint8_t>(0));
-  } else if (type_ == RTAnyType::kStringSetValue) {
-    // fix me
-    encoder.put_int(value_.str_set->size());
-    for (auto& s : *value_.str_set) {
-      encoder.put_string_view(s);
-    }
-  } else {
-    LOG(FATAL) << "not support for " << static_cast<int>(type_);
-  }
-}
+
+template void RTAny::sink(const GraphReadInterface& graph,
+                          Encoder& encoder) const;
+
+template void RTAny::sink(const GraphUpdateInterface& graph,
+                          Encoder& encoder) const;
+
 void RTAny::sink(const GraphReadInterface& graph, int id,
                  results::Column* col) const {
   col->mutable_name_or_id()->set_id(id);

@@ -51,6 +51,8 @@ public class GarbageCollectManager {
                                     logger.info("Offline version updated to {}", offlineVersion);
                                 }
                             }
+                        } else {
+                            logger.error("hashmap is empty");
                         }
                     } catch (Exception e) {
                         logger.error(

@@ -24,11 +24,25 @@ class DedupInsertOpr : public IInsertOperator {
  public:
   DedupInsertOpr(const std::vector<size_t>& keys) : keys(keys) {}
 
+  template <typename GraphInterface>
+  bl::result<gs::runtime::WriteContext> eval_impl(
+      GraphInterface& graph, const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) {
+    return Dedup::dedup(std::move(ctx), keys);
+  }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    return Dedup::dedup(graph, std::move(ctx), keys);
+    return eval_impl(graph, params, std::move(ctx), timer);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 
   std::string get_operator_name() const override { return "DedupInsertOpr"; }

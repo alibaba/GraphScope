@@ -29,12 +29,10 @@ namespace runtime {
 
 class Dedup {
  public:
-  static bl::result<Context> dedup(const GraphReadInterface& graph,
-                                   Context&& ctx,
+  static bl::result<Context> dedup(Context&& ctx,
                                    const std::vector<size_t>& cols);
   static bl::result<Context> dedup(
-      const GraphReadInterface& graph, Context&& ctx,
-      const std::vector<std::function<RTAny(size_t)>>& vars);
+      Context&& ctx, const std::vector<std::function<RTAny(size_t)>>& vars);
 };
 
 }  // namespace runtime

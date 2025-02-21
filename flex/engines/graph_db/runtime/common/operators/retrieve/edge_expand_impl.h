@@ -1383,7 +1383,7 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       }
       ++idx;
     }
-  } else {
+  } else if (dir == Direction::kOut) {
     CHECK(dir == Direction::kOut);
     GraphReadInterface::graph_view_t<EDATA_T> view =
         graph.GetOutgoingGraphView<EDATA_T>(input_label, nbr_label, edge_label);
@@ -1399,6 +1399,10 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       }
       ++idx;
     }
+  } else {
+    // We will handle edge_expand with both direction outside this function, in
+    // EdgeExpand::expand_edge.
+    return std::make_pair(nullptr, std::vector<size_t>());
   }
 
   return std::make_pair(builder.finish(), std::move(offsets));
@@ -1416,10 +1420,11 @@ expand_edge_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   if (dir == Direction::kOut) {
     CHECK(triplet.src_label == input_label);
     std::get<0>(label_dir) = triplet.dst_label;
-  } else {
-    CHECK(dir == Direction::kIn);
+  } else if (dir == Direction::kIn) {
     CHECK(triplet.dst_label == input_label);
     std::get<0>(label_dir) = triplet.src_label;
+  } else {
+    return std::make_pair(nullptr, std::vector<size_t>());
   }
   std::get<1>(label_dir) = triplet.edge_label;
   std::get<2>(label_dir) = dir;

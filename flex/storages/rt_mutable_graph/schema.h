@@ -46,7 +46,6 @@ class Schema {
   static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
   static constexpr const char* VARCHAR_KEY = "varchar";
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
-  static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
 
   // The builtin plugins are reserved for the system.
   static constexpr uint8_t BUILTIN_PLUGIN_NUM = 4;

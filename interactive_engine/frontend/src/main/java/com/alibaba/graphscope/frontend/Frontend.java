@@ -22,8 +22,10 @@ import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
+import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,17 +49,20 @@ public class Frontend implements AutoCloseable {
     public void start() throws Exception {
         ChannelFetcher channelFetcher = new HostsRpcChannelFetcher(configs);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        QueryCache cache = new QueryCache(configs);
         IrMetaQueryCallback queryCallback =
                 new IrMetaQueryCallback(
                         new StaticIrMetaFetcher(
-                                new VineyardIrMetaReader(configs), optimizer.getGlogueHolder()));
+                                new VineyardIrMetaReader(configs),
+                                ImmutableList.of(optimizer, cache)));
         this.graphServer =
                 new GraphServer(
                         this.configs,
                         channelFetcher,
                         queryCallback,
                         TestGraphFactory.VINEYARD,
-                        optimizer);
+                        optimizer,
+                        cache);
         this.graphServer.start();
     }
 

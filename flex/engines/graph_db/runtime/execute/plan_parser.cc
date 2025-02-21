@@ -38,6 +38,12 @@
 #include "flex/engines/graph_db/runtime/execute/ops/update/sink.h"
 #include "flex/engines/graph_db/runtime/execute/ops/update/unfold.h"
 
+#include "flex/engines/graph_db/runtime/execute/ops/update/edge.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/scan.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/select.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/set.h"
+#include "flex/engines/graph_db/runtime/execute/ops/update/vertex.h"
+
 namespace gs {
 
 namespace runtime {
@@ -94,6 +100,15 @@ void PlanParser::init() {
       std::make_unique<ops::SinkInsertOprBuilder>());
   register_write_operator_builder(
       std::make_unique<ops::UnfoldInsertOprBuilder>());
+
+  register_update_operator_builder(
+      std::make_unique<ops::UEdgeExpandOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::UScanOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::USetOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::UVertexOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::USinkOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::UProjectOprBuilder>());
+  register_update_operator_builder(std::make_unique<ops::USelectOprBuilder>());
 }
 
 PlanParser& PlanParser::get() {
@@ -111,6 +126,12 @@ void PlanParser::register_write_operator_builder(
     std::unique_ptr<IInsertOperatorBuilder>&& builder) {
   auto op = builder->GetOpKind();
   write_op_builders_[op] = std::move(builder);
+}
+
+void PlanParser::register_update_operator_builder(
+    std::unique_ptr<IUpdateOperatorBuilder>&& builder) {
+  auto op = builder->GetOpKind();
+  update_op_builders_[op] = std::move(builder);
 }
 
 #if 1
@@ -245,7 +266,8 @@ PlanParser::parse_read_pipeline_with_meta(const gs::Schema& schema,
     if (i == old_i) {
       std::stringstream ss;
       ss << "[Parse Failed] " << get_opr_name(cur_op_kind)
-         << " failed to parse plan at index " << i << ": "
+         << " failed to parse plan at index " << i << " "
+         << plan.plan(i).DebugString() << ": "
          << ", last match error: " << status.ToString();
       auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
       LOG(ERROR) << err.ToString();
@@ -270,6 +292,14 @@ bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
   std::vector<std::unique_ptr<IInsertOperator>> operators;
   for (int i = 0; i < plan.plan_size(); ++i) {
     auto op_kind = plan.plan(i).opr().op_kind_case();
+    if (write_op_builders_.find(op_kind) == write_op_builders_.end()) {
+      std::stringstream ss;
+      ss << "[Parse Failed] " << get_opr_name(op_kind)
+         << " failed to parse plan at index " << i;
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      //      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
+    }
     auto op = write_op_builders_.at(op_kind)->Build(schema, plan, i);
     if (!op) {
       std::stringstream ss;
@@ -282,6 +312,38 @@ bl::result<InsertPipeline> PlanParser::parse_write_pipeline(
     operators.emplace_back(std::move(op));
   }
   return InsertPipeline(std::move(operators));
+}
+
+bl::result<UpdatePipeline> PlanParser::parse_update_pipeline(
+    const gs::Schema& schema, const physical::PhysicalPlan& plan) {
+  auto res = parse_write_pipeline(schema, plan);
+  // insert pipeline
+  if (res) {
+    return UpdatePipeline(std::move(res.value()));
+  }
+  std::vector<std::unique_ptr<IUpdateOperator>> operators;
+  for (int i = 0; i < plan.plan_size(); ++i) {
+    auto op_kind = plan.plan(i).opr().op_kind_case();
+    if (update_op_builders_.find(op_kind) == update_op_builders_.end()) {
+      std::stringstream ss;
+      ss << "[Parse Failed] " << get_opr_name(op_kind)
+         << " failed to parse plan at index " << i;
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
+    }
+    auto op = update_op_builders_.at(op_kind)->Build(schema, plan, i);
+    if (!op) {
+      std::stringstream ss;
+      ss << "[Parse Failed]" << get_opr_name(op_kind)
+         << " failed to parse plan at index " << i;
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      LOG(ERROR) << err.ToString();
+      return bl::new_error(err);
+    }
+    operators.emplace_back(std::move(op));
+  }
+  return UpdatePipeline(std::move(operators));
 }
 
 }  // namespace runtime

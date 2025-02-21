@@ -110,6 +110,8 @@ impl ValueType {
             _ => {
                 let msg = format!("unsupported data type {:?}", pb);
                 let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
+                let msg = format!("unsupported data type {:?}", pb);
+                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
                 Err(err)
             }
         }
@@ -659,6 +661,7 @@ impl Value {
     }
 
     pub fn from_proto(pb: &PropertyValuePb) -> GraphResult<Self> {
+        let val_type = ValueType::from_proto(&pb.get_data_type())?;
         let val_type = ValueType::from_proto(&pb.get_data_type())?;
         Ok(Value::new(val_type, Vec::from(pb.get_val())))
     }

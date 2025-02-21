@@ -121,6 +121,19 @@ impl Primitives {
         }
     }
 
+    pub fn is_negative(&self) -> bool {
+        match self {
+            Primitives::Byte(v) => *v < 0,
+            Primitives::Integer(v) => *v < 0,
+            Primitives::Long(v) => *v < 0,
+            Primitives::UInteger(_) => false,
+            Primitives::ULong(_) => false,
+            Primitives::ULLong(_) => false,
+            Primitives::Float(v) => *v < 0.0,
+            Primitives::Double(v) => *v < 0.0,
+        }
+    }
+
     #[inline]
     pub fn as_bool(&self) -> Result<bool, CastError> {
         Ok(self.as_u8()? != 0_u8)
@@ -440,27 +453,42 @@ impl PartialEq for Primitives {
         match self {
             Primitives::Byte(v) => match other {
                 Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
                 _ => other.as_i8().map(|o| o == *v).unwrap_or(false),
             },
             Primitives::Integer(v) => match other {
                 Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
                 _ => other.as_i32().map(|o| o == *v).unwrap_or(false),
+            },
+            Primitives::UInteger(v) => match other {
+                Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
+                _ => other.as_u32().map(|o| o == *v).unwrap_or(false),
             },
             Primitives::Long(v) => match other {
                 Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
                 _ => other.as_i64().map(|o| o == *v).unwrap_or(false),
+            },
+            Primitives::ULong(v) => match other {
+                Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
+                _ => other.as_u64().map(|o| o == *v).unwrap_or(false),
             },
             Primitives::ULLong(v) => match other {
                 Primitives::Double(o) => (*v as f64).eq(o),
+                Primitives::Float(o) => (*v as f32).eq(o),
                 _ => other
                     .as_u128()
                     .map(|o| o == *v)
                     .unwrap_or(false),
             },
+            Primitives::Float(v) => match other {
+                Primitives::Double(o) => (*v as f64).eq(o),
+                _ => other.as_f32().map(|o| o == *v).unwrap_or(false),
+            },
             Primitives::Double(v) => other.as_f64().map(|o| o == *v).unwrap_or(false),
-            Primitives::UInteger(_) => todo!(),
-            Primitives::ULong(_) => todo!(),
-            Primitives::Float(_) => todo!(),
         }
     }
 }
@@ -472,19 +500,41 @@ impl PartialOrd for Primitives {
         match self {
             Primitives::Byte(v) => match other {
                 Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
                 _ => other.as_i8().map(|o| v.cmp(&o)).ok(),
             },
             Primitives::Integer(v) => match other {
                 Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
                 _ => other.as_i32().map(|o| v.cmp(&o)).ok(),
+            },
+            Primitives::UInteger(v) => match other {
+                Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
+                _ => other.as_u32().map(|o| v.cmp(&o)).ok(),
             },
             Primitives::Long(v) => match other {
                 Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
                 _ => other.as_i64().map(|o| v.cmp(&o)).ok(),
+            },
+            Primitives::ULong(v) => match other {
+                Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
+                _ => other.as_u64().map(|o| v.cmp(&o)).ok(),
             },
             Primitives::ULLong(v) => match other {
                 Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                // may overflow
+                Primitives::Float(o) => (*v as f32).partial_cmp(o),
                 _ => other.as_u128().map(|o| v.cmp(&o)).ok(),
+            },
+            Primitives::Float(v) => match other {
+                Primitives::Double(o) => (*v as f64).partial_cmp(o),
+                _ => other
+                    .as_f32()
+                    .map(|o| v.partial_cmp(&o))
+                    .unwrap_or(None),
             },
             Primitives::Double(v) => other
                 .as_f64()

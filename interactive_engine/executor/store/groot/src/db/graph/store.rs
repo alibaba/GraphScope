@@ -670,7 +670,7 @@ impl MultiVersionGraph for GraphStore {
         if Path::new(data_file_path.as_str()).exists() {
             if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
-                println!("Ingesting file: {} with size: {} bytes", data_file_path, size);
+                info!("Ingesting file: {} with size: {} bytes", data_file_path, size);
             }
             self.ingest(data_file_path.as_str())?
         }

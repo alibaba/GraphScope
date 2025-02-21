@@ -25,9 +25,12 @@ namespace runtime {
 
 class Expr {
  public:
-  Expr(const GraphReadInterface& graph, const Context& ctx,
+  template <typename GraphInterface>
+  Expr(const GraphInterface& graph, const Context& ctx,
        const std::map<std::string, std::string>& params,
-       const common::Expression& expr, VarType var_type);
+       const common::Expression& expr, VarType var_type) {
+    expr_ = parse_expression(graph, ctx, params, expr, var_type);
+  }
 
   RTAny eval_path(size_t idx) const;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const;

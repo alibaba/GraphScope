@@ -139,4 +139,60 @@ std::string memory_to_mb_str(uint64_t mem_bytes) {
   return std::to_string(mem_mb) + "MB";
 }
 
+// Possible input: 1KB, 1B, 1K, 2Gi, 4GB
+size_t human_readable_to_bytes(const std::string& human_readable_bytes) {
+  // Check if the input is empty
+  if (human_readable_bytes.empty()) {
+    return 0;
+  }
+
+  // Define the multipliers for various size units
+  static std::unordered_map<std::string, size_t> multipliers = {
+      {"B", 1},
+      {"KB", 1024ul},
+      {"MB", 1024ul * 1024},
+      {"GB", 1024ul * 1024 * 1024},
+      {"KiB", 1024ul},
+      {"MiB", 1024ul * 1024},
+      {"GiB", 1024ul * 1024 * 1024}};
+
+  size_t pos = 0;
+
+  // Read and validate the numeric part
+  while (pos < human_readable_bytes.size() &&
+         (isdigit(human_readable_bytes[pos]) ||
+          human_readable_bytes[pos] == '.' ||
+          human_readable_bytes[pos] == ' ')) {
+    pos++;
+  }
+
+  // If no numeric part, return 0
+  if (pos == 0) {
+    return 0;
+  }
+
+  // Extract the numeric portion as a string
+  std::string number_str = human_readable_bytes.substr(0, pos);
+  double number = std::stod(number_str);  // Convert to double for calculation
+
+  // Read the unit part
+  std::string unit;
+  if (pos < human_readable_bytes.size()) {
+    unit = human_readable_bytes.substr(pos);
+  }
+
+  // Normalize the unit to uppercase
+  if (!unit.empty()) {
+    std::transform(unit.begin(), unit.end(), unit.begin(), ::toupper);
+  }
+
+  // If the unit is not in the multipliers map, return 0
+  if (multipliers.count(unit) == 0) {
+    return 0;
+  }
+
+  // Calculate bytes
+  return static_cast<size_t>(number * multipliers[unit]);
+}
+
 }  // namespace gs

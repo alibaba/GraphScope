@@ -46,12 +46,42 @@ class InsertPipeline {
       : operators_(std::move(operators)) {}
   ~InsertPipeline() = default;
 
+  template <typename GraphInterface>
   bl::result<WriteContext> Execute(
-      GraphInsertInterface& graph, WriteContext&& ctx,
+      GraphInterface& graph, WriteContext&& ctx,
       const std::map<std::string, std::string>& params, OprTimer& timer);
 
  private:
   std::vector<std::unique_ptr<IInsertOperator>> operators_;
+};
+
+class UpdatePipeline {
+ public:
+  UpdatePipeline(UpdatePipeline&& rhs)
+      : is_insert_(rhs.is_insert_),
+        operators_(std::move(rhs.operators_)),
+        inserts_(std::move(rhs.inserts_)) {}
+  UpdatePipeline(std::vector<std::unique_ptr<IUpdateOperator>>&& operators)
+      : is_insert_(false), operators_(std::move(operators)) {}
+  UpdatePipeline(InsertPipeline&& insert)
+      : is_insert_(true),
+        inserts_(
+            std::make_unique<InsertPipeline>(std::move(std::move(insert)))) {}
+  ~UpdatePipeline() = default;
+
+  bl::result<Context> Execute(GraphUpdateInterface& graph, Context&& ctx,
+                              const std::map<std::string, std::string>& params,
+                              OprTimer& timer);
+  bl::result<WriteContext> Execute(
+      GraphUpdateInterface& graph, WriteContext&& ctx,
+      const std::map<std::string, std::string>& params, OprTimer& timer);
+
+  bool is_insert() const { return is_insert_; }
+
+ private:
+  bool is_insert_;
+  std::vector<std::unique_ptr<IUpdateOperator>> operators_;
+  std::unique_ptr<InsertPipeline> inserts_;
 };
 
 }  // namespace runtime

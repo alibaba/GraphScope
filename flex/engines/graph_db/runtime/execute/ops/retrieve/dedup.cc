@@ -29,7 +29,7 @@ class DedupOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    return Dedup::dedup(graph, std::move(ctx), tag_ids_);
+    return Dedup::dedup(std::move(ctx), tag_ids_);
   }
 
   std::vector<size_t> tag_ids_;
@@ -58,7 +58,7 @@ class DedupWithPropertyOpr : public IReadOperator {
             [&ctx, tag](size_t i) { return ctx.get(tag)->get_elem(i); });
       }
     }
-    return Dedup::dedup(graph, std::move(ctx), keys);
+    return Dedup::dedup(std::move(ctx), keys);
   }
 
   algebra::Dedup opr_;
