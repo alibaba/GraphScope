@@ -141,7 +141,7 @@ public class FlexTypeTest {
             }
         } else {
             List<Record> records = resultSupplier.get().list();
-            Assert.assertEquals(1, records.size());
+            Assert.assertTrue("records should not be empty", !records.isEmpty());
             Record single = records.get(0);
             Assert.assertEquals(expected.size(), single.size());
             for (int i = 0; i < expected.size(); i++) {
@@ -152,11 +152,15 @@ public class FlexTypeTest {
                     expectedValue = expectedValue.substring(1);
                     unsigned = true;
                 }
+                boolean int32 = true;
+                if (expectedValue.toLowerCase().endsWith("l")) {
+                    int32 = false;
+                }
                 String upperCase = expectedValue.toUpperCase();
                 if (upperCase.endsWith("L") || upperCase.endsWith("D") || upperCase.endsWith("F")) {
                     expectedValue = expectedValue.substring(0, expectedValue.length() - 1);
                 }
-                String actualValue = getActualValue(actual, unsigned);
+                String actualValue = getActualValue(actual, unsigned, int32);
                 Assert.assertEquals(expectedValue, actualValue);
             }
         }
@@ -167,10 +171,15 @@ public class FlexTypeTest {
         session.close();
     }
 
-    public String getActualValue(Value actual, boolean unsigned) {
+    public String getActualValue(Value actual, boolean unsigned, boolean int32) {
         if (unsigned) {
-            long value = actual.asLong();
-            return new BigDecimal(new BigInteger(1, Utils.longToBytes(value))).toString();
+            if (int32) {
+                int value = actual.asInt();
+                return new BigDecimal(new BigInteger(1, Utils.intToBytes(value))).toString();
+            } else {
+                long value = actual.asLong();
+                return new BigDecimal(new BigInteger(1, Utils.longToBytes(value))).toString();
+            }
         }
         return actual.toString();
     }

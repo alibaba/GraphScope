@@ -58,4 +58,11 @@ public abstract class Utils {
         buffer.putLong(value);
         return buffer.array();
     }
+
+    public static byte[] intToBytes(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(value);
+        return buffer.array();
+    }
 }

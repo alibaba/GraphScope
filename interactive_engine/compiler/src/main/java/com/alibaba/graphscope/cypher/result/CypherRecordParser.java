@@ -304,9 +304,10 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
             case I64:
                 return Values.longValue(value.getI64());
             case U32:
-                // cypher does not support u32 directly, represent u32 as long, which is enough to
-                // hold u32 value.
-                return Values.longValue(value.getU32());
+                // cypher does not support u32 directly, represent u32 as int,
+                // user need to convert int to u32 and handle the overflow cases at the
+                // client-side.
+                return Values.intValue(value.getU32());
             case U64:
                 // cypher does not support u64 directly, represent u64 as long,
                 // user need to convert long to u64 and handle the overflow cases at the
