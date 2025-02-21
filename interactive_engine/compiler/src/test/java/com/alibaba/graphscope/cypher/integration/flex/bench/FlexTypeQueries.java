@@ -580,142 +580,128 @@ public class FlexTypeQueries {
 
     public class MinusTest {
 
-        // divide_int32_int32|2,1|2
+        // minus_int32_int32|12,13|-1
         /**
-         * Divide an int32 value by an int32 value, the result is within the range of int32.
+         * Minus an int32 value with an int32 value, the result is within the range of int32.
          *
          * Expected Results:
-         *      The query should return an int32 type value, identical to the quotient of $1 and $2.
+         *      The query should return an int32 type value, identical to the difference of $1 and $2.
          */
-        public QueryContext divide_int32_int32_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int32_int32");
+        public QueryContext minus_int32_int32_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int32_int32");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
 
-        // divide_int32_int32_overflow|-2147483648,-1|overflow
+        // minus_int32_int32_overflow|2147483647,-1|overflow
         /**
-         * Divide an int32 value by an int32 value, the result exceeds the range of int32.
-         *
-         * Expected Results:
-         *      The query should throw an overflow exception due to int32 overflow.
-         */
-        public QueryContext divide_int32_int32_overflow_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int32_int32_overflow");
-            query = parameter.render(query);
-            return new QueryContext(query, parameter.results);
-        }
-
-        // divide_int32_uint32_int32|2,+1|2
-        /**
-         * Divide an int32 value by an uint32 value, the result is within the range of int32.
-         *
-         * Expected Results:
-         *      The query should return an int32 type value, identical to the quotient of $1 and $2.
-         */
-        public QueryContext divide_int32_uint32_int32_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int32_uint32_int32");
-            query = parameter.render(query);
-            return new QueryContext(query, parameter.results);
-        }
-
-        // divide_uint32_int32_uint32|+4294967295,1|+4294967295
-        /**
-         * Divide an uint32 value by an int32 value, the result is out of the range of int32 but within the range of uint32.
-         *
-         * Expected Results:
-         *      The query should return a uint32 type value, identical to the quotient of $1 and $2.
-         */
-        public QueryContext divide_uint32_int32_uint32_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_uint32_int32_uint32");
-            query = parameter.render(query);
-            return new QueryContext(query, parameter.results);
-        }
-
-        // divide_uint32_int32_overflow|+4294967295,-1|overflow
-        /**
-         * Divide an uint32 value by a negative int32 value, the result exceeds the range of int32 (SIGNED_INT32_MIN).
+         * Minus an int32 value with an int32 value, the result exceeds the range of int32.
          *
          * Expected Results:
          *      The query should throw an overflow exception due to int32 overflow.
          */
-        public QueryContext divide_uint32_int32_overflow_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_uint32_int32_overflow");
+        public QueryContext minus_int32_int32_overflow_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int32_int32_overflow");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
 
-        // divide_int32_int64|2,1L|2L
+        // minus_int32_uint32_int32|12,+13|-1
         /**
-         * Divide an int32 value by an int64 value, the result is within the range of int64.
+         * Minus an int32 value with an uint32 value, the result is within the range of int32.
          *
          * Expected Results:
-         *      The query should return an int64 type value, identical to the quotient of $1 and $2.
+         *      The query should return an int32 type value, identical to the difference of $1 and $2.
          */
-        public QueryContext divide_int32_int64_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int32_int64");
+        public QueryContext minus_int32_uint32_int32_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int32_uint32_int32");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
 
-        // divide_int64_int32_overflow|-9223372036854775808L,-1|overflow
+        // minus_uint32_int32_uint32|+2147483647,-10|+2147483657
         /**
-         * Divide an int64 value by an int32 value, the result exceeds the range of int64.
+         * Minus an uint32 value with an int32 value, the result is within the range of uint32.
+         *
+         * Expected Results:
+         *      The query should return an uint32 type value, identical to the difference of $1 and $2.
+         */
+        public QueryContext minus_uint32_int32_uint32_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_uint32_int32_uint32");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        // minus_uint32_int32_overflow|+4294967295,-1|overflow
+        /**
+         * Minus an uint32 value with an int32 value, the result exceeds the range of uint32.
+         *
+         * Expected Results:
+         *      The query should throw an overflow exception due to uint32 overflow.
+         */
+        public QueryContext minus_uint32_int32_overflow_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_uint32_int32_overflow");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        // minus_int32_int64|12,13L|-1L
+        /**
+         * Minus an int32 value with an int64 value, the result is within the range of int64.
+         *
+         * Expected Results:
+         *      The query should return an int64 type value, identical to the difference of $1 and $2.
+         */
+        public QueryContext minus_int32_int64_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int32_int64");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        // minus_int64_int32_overflow|9223372036854775807L,-10|overflow
+        /**
+         * Minus an int64 value with an int32 value, the result exceeds the range of int64.
          *
          * Expected Results:
          *      The query should throw an overflow exception due to int64 overflow.
          */
-        public QueryContext divide_int64_int32_overflow_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int64_int32_overflow");
+        public QueryContext minus_int64_int32_overflow_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int64_int32_overflow");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
 
-        // divide_int32_double|2,1.12d|1.77d
+        // minus_int32_double|12,13.12d|-1.12d
         /**
-         * Divide an int32 value by a double value, the result is within the range of double.
+         * Minus an int32 value with a double value, the result is within the range of double.
          *
          * Expected Results:
-         *      The query should return a double type value, identical to the quotient of $1 and $2.
+         *      The query should return a double type value, identical to the difference of $1 and $2.
          */
-        public QueryContext divide_int32_double_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_int32_double");
+        public QueryContext minus_int32_double_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_int32_double");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
 
-        // divide_float_double|2.0f,1.12d|1.78d
+        // minus_float_double|12.0f,13.12d|-1.12d
         /**
-         * Divide a float value by a double value, the result is within the range of double.
+         * Minus a float value with a double value, the result is within the range of double.
          *
          * Expected Results:
-         *      The query should return a double type value, identical to the quotient of $1 and $2.
+         *      The query should return a double type value, identical to the difference of $1 and $2.
          */
-        public QueryContext divide_float_double_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_float_double");
-            query = parameter.render(query);
-            return new QueryContext(query, parameter.results);
-        }
-
-        // divide_float_double_NaN|2.0f,0.0d|NaN
-        /**
-         * Divide a float value by a double value, where the divisor is zero, resulting in NaN.
-         *
-         * Expected Results:
-         *      The query should return NaN as the result of division by zero.
-         */
-        public QueryContext divide_float_double_NaN_test() {
-            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 / $2";
-            Parameter parameter = queryParameters.get("divide_float_double_NaN");
+        public QueryContext minus_float_double_test() {
+            String query = "MATCH (p:person {prop_int32: 933})\n" + "    RETURN $1 - $2";
+            Parameter parameter = queryParameters.get("minus_float_double");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
