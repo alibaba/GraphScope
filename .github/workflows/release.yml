@@ -190,7 +190,7 @@ jobs:
         # sudo docker manifest push ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}
 
         # Remove old latest manifest
-        sudo docker manifest rm ${{ env.INTERACTIVE_IMAGE }}:latest
+        sudo docker manifest rm ${{ env.INTERACTIVE_IMAGE }}:latest || true
         sudo docker manifest create \
           ${{ env.INTERACTIVE_IMAGE }}:latest \
           ${{ env.INTERACTIVE_IMAGE }}:latest-amd64 \
