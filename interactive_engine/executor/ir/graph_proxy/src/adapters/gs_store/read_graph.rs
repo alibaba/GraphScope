@@ -679,21 +679,28 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
         Object::Primitive(p) => match p {
             Primitives::Byte(b) => Property::Char(b as u8),
             Primitives::Integer(i) => Property::Int(i),
+            // will support u32 in groot soon.
+            Primitives::UInteger(i) => Property::Int(i as i32),
             Primitives::Long(i) => Property::Long(i),
+            // will support u64 in groot soon.
+            Primitives::ULong(i) => Property::Long(i as i64),
             Primitives::ULLong(i) => Property::Long(i as i64),
-            Primitives::Float(f) => Property::Double(f),
+            Primitives::Float(f) => Property::Float(f),
+            Primitives::Double(f) => Property::Double(f),
         },
         Object::String(s) => Property::String(s),
         Object::Vector(vec) => {
             if let Some(probe) = vec.get(0) {
                 match probe {
                     Object::Primitive(p) => match p {
-                        Primitives::Byte(_) | Primitives::Integer(_) => Property::ListInt(
-                            vec.into_iter()
-                                .map(|i| i.as_i32().unwrap())
-                                .collect(),
-                        ),
-                        Primitives::Long(_) => Property::ListLong(
+                        Primitives::Byte(_) | Primitives::Integer(_) | Primitives::UInteger(_) => {
+                            Property::ListInt(
+                                vec.into_iter()
+                                    .map(|i| i.as_i32().unwrap())
+                                    .collect(),
+                            )
+                        }
+                        Primitives::Long(_) | Primitives::ULong(_) => Property::ListLong(
                             vec.into_iter()
                                 .map(|i| i.as_i64().unwrap())
                                 .collect(),
@@ -703,7 +710,12 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
                                 .map(|i| i.as_u128().unwrap() as i64)
                                 .collect(),
                         ),
-                        Primitives::Float(_) => Property::ListDouble(
+                        Primitives::Float(_) => Property::ListFloat(
+                            vec.into_iter()
+                                .map(|i| i.as_f32().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::Double(_) => Property::ListDouble(
                             vec.into_iter()
                                 .map(|i| i.as_f64().unwrap())
                                 .collect(),
