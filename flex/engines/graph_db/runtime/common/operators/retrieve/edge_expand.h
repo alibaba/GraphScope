@@ -141,7 +141,57 @@ class EdgeExpand {
         ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
         return ctx;
       } else {
-        LOG(FATAL) << "expand edge both";
+        auto& input_vertex_list = *input_vertex_list_ptr;
+        auto& props = graph.schema().get_edge_properties(
+            params.labels[0].src_label, params.labels[0].dst_label,
+            params.labels[0].edge_label);
+        auto src_label = params.labels[0].src_label;
+        auto dst_label = params.labels[0].dst_label;
+        auto edge_label = params.labels[0].edge_label;
+        PropertyType pt = PropertyType::kEmpty;
+        if (!props.empty()) {
+          pt = props[0];
+        }
+        if (props.size() > 1) {
+          pt = PropertyType::kRecordView;
+        }
+        BDSLEdgeColumnBuilder builder(params.labels[0], pt);
+
+        foreach_vertex(
+            input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+              if (label == src_label) {
+                auto oe_iter =
+                    graph.GetOutEdgeIterator(label, v, dst_label, edge_label);
+                while (oe_iter.IsValid()) {
+                  auto nbr = oe_iter.GetNeighbor();
+                  if (pred(params.labels[0], v, nbr, oe_iter.GetData(),
+                           Direction::kOut, index)) {
+                    assert(oe_iter.GetData().type == pt);
+                    builder.push_back_opt(v, nbr, oe_iter.GetData(),
+                                          Direction::kOut);
+                    shuffle_offset.push_back(index);
+                  }
+                  oe_iter.Next();
+                }
+              }
+              if (label == dst_label) {
+                auto ie_iter =
+                    graph.GetInEdgeIterator(label, v, src_label, edge_label);
+                while (ie_iter.IsValid()) {
+                  auto nbr = ie_iter.GetNeighbor();
+                  if (pred(params.labels[0], nbr, v, ie_iter.GetData(),
+                           Direction::kIn, index)) {
+                    assert(ie_iter.GetData().type == pt);
+                    builder.push_back_opt(nbr, v, ie_iter.GetData(),
+                                          Direction::kIn);
+                    shuffle_offset.push_back(index);
+                  }
+                  ie_iter.Next();
+                }
+              }
+            });
+        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        return ctx;
       }
     } else {
       LOG(INFO) << "not hit, fallback";

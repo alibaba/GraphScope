@@ -34,7 +34,10 @@ std::string ReadTransaction::run(
 
 timestamp_t ReadTransaction::timestamp() const { return timestamp_; }
 
-void ReadTransaction::Commit() { release(); }
+bool ReadTransaction::Commit() {
+  release();
+  return true;
+}
 
 void ReadTransaction::Abort() { release(); }
 

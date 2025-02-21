@@ -31,14 +31,18 @@ CompactTransaction::~CompactTransaction() { Abort(); }
 
 timestamp_t CompactTransaction::timestamp() const { return timestamp_; }
 
-void CompactTransaction::Commit() {
+bool CompactTransaction::Commit() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
     auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
     header->length = 0;
     header->timestamp = timestamp_;
     header->type = 1;
 
-    logger_.append(arc_.GetBuffer(), arc_.GetSize());
+    if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+      LOG(ERROR) << "Failed to append wal log";
+      Abort();
+      return false;
+    }
     arc_.Clear();
 
     LOG(INFO) << "before compact - " << timestamp_;
@@ -48,6 +52,7 @@ void CompactTransaction::Commit() {
     vm_.release_update_timestamp(timestamp_);
     timestamp_ = std::numeric_limits<timestamp_t>::max();
   }
+  return true;
 }
 
 void CompactTransaction::Abort() {

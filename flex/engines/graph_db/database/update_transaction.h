@@ -52,7 +52,7 @@ class UpdateTransaction {
 
   const Schema& schema() const { return graph_.schema(); }
 
-  void Commit();
+  bool Commit();
 
   void Abort();
 
@@ -155,7 +155,7 @@ class UpdateTransaction {
 
  private:
   friend class GraphDBSession;
-  void batch_commit(UpdateBatch& batch);
+  bool batch_commit(UpdateBatch& batch);
 
   void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
                                  label_t neighbor_label, vid_t nbr,

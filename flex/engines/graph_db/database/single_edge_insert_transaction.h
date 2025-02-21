@@ -41,7 +41,7 @@ class SingleEdgeInsertTransaction {
 
   timestamp_t timestamp() const;
 
-  void Commit();
+  bool Commit();
 
  private:
   void clear();

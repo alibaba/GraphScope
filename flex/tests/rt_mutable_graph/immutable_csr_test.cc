@@ -20,13 +20,14 @@
 #include <glog/logging.h>
 
 namespace gs {
-class TestMultiplePropertiesEdge {
+class TestImmutableCsr {
  public:
-  TestMultiplePropertiesEdge(GraphDB& db)
+  TestImmutableCsr(GraphDB& db)
       : db_(db),
         src_label_(db.graph().schema().get_vertex_label_id("person")),
         dst_label_(db.graph().schema().get_vertex_label_id("software")),
-        edge_label_(db.graph().schema().get_edge_label_id("created")) {}
+        edge_label_(db.graph().schema().get_edge_label_id("created")),
+        know_label_(db.graph().schema().get_edge_label_id("knows")) {}
 
   void test() {
     int64_t src;
@@ -34,11 +35,8 @@ class TestMultiplePropertiesEdge {
     src = 1;
     test_get_edge(src);
     src = 1;
-    dst = "5";
+    dst = "3";
     test_get_graph_view(src, dst);
-    src = 3;
-    dst = "5";
-    test_add_edge(src, dst);
   }
 
   void test_get_edge(int64_t oid) {
@@ -56,7 +54,8 @@ class TestMultiplePropertiesEdge {
         << "Inconsistent type, Except: string, Got " << data[0].type;
     CHECK(data[1].type == PropertyType::kInt32)
         << "Inconsistent type, Except: int, Got " << data[1].type;
-    std::cout << data[0].AsStringView() << " " << data[1].AsInt32() << "\n";
+    std::cout << oe->get_neighbor() << " " << data[0].AsStringView() << " "
+              << data[1].AsInt32() << "\n";
     LOG(INFO) << "Finish test get edge\n";
   }
 
@@ -68,7 +67,7 @@ class TestMultiplePropertiesEdge {
     CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
 
     {
-      auto graph_view = txn.GetOutgoingGraphView<RecordView>(
+      auto graph_view = txn.GetOutgoingImmutableGraphView<RecordView>(
           src_label_, dst_label_, edge_label_);
       auto oes = graph_view.get_edges(src_lid);
       for (auto& oe : oes) {
@@ -81,58 +80,27 @@ class TestMultiplePropertiesEdge {
       }
     }
     {
-      auto graph_view = txn.GetIncomingGraphView<RecordView>(
+      auto graph_view = txn.GetIncomingImmutableGraphView<RecordView>(
           dst_label_, src_label_, edge_label_);
-      auto ie = graph_view.get_edges(dst_lid);
-
-      for (auto& e : ie) {
-        auto record = e.get_data();
+      auto ies = graph_view.get_edges(dst_lid);
+      LOG(INFO) << ies.estimated_degree() << "\n";
+      for (auto& ie : ies) {
+        auto record = ie.get_data();
         LOG(INFO) << record[0].AsStringView() << "|" << record[1].AsInt32()
                   << "\n";
       }
     }
-    LOG(INFO) << "Finish test get GraphView\n";
-  }
-
-  void test_add_edge(int64_t src, const std::string& dst) {
-    {
-      auto txn = db_.GetSingleVertexInsertTransaction();
-      std::string name = "test-3";
-      int age = 34;
-      CHECK(txn.AddVertex(src_label_, src, {Any::From(name), Any::From(age)}))
-          << "Add vertex failed";
-      txn.Commit();
-    }
-    vid_t src_lid, dst_lid;
-    CHECK(db_.graph().get_lid(src_label_, src, src_lid));
-    CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
 
     {
-      auto txn = db_.GetSingleEdgeInsertTransaction();
-      std::string_view str = "test";
-      CHECK(txn.AddEdge(src_label_, src, dst_label_, dst, edge_label_,
-                        {Any::From(str), Any::From(2012)}))
-          << "Add edge failed\n";
-      txn.Commit();
-    }
-    {
-      auto txn = db_.GetReadTransaction();
-      auto graph_view = txn.GetOutgoingGraphView<RecordView>(
-          src_label_, dst_label_, edge_label_);
+      auto graph_view = txn.GetOutgoingImmutableGraphView<std::string_view>(
+          src_label_, src_label_, know_label_);
       auto oes = graph_view.get_edges(src_lid);
       for (auto& oe : oes) {
         auto data = oe.get_data();
-        CHECK(data.size() == 2)
-            << "Inconsistent size, Excepted: 2, Got " << data.size() << "\n";
-        CHECK(data.get_field<std::string_view>(0) == "test")
-            << "Inconsistent value, Excepted: test, Got "
-            << data.get_field<std::string_view>(0) << "\n";
-        CHECK(data.get_field<int32_t>(1) == 2012)
-            << "Inconsistent value, Excepted: 2012, Got "
-            << data.get_field<int32_t>(1) << "\n";
+        LOG(INFO) << data << "\n";
       }
     }
-    LOG(INFO) << "Finish test add edge\n";
+    LOG(INFO) << "Finish test get GraphView\n";
   }
 
  private:
@@ -140,10 +108,11 @@ class TestMultiplePropertiesEdge {
   label_t src_label_;
   label_t dst_label_;
   label_t edge_label_;
+  label_t know_label_;
 };
 
 }  // namespace gs
-// ./string_edge_property_test data_dir
+// ./immutable_csr_test data_dir
 int main(int argc, char** argv) {
   bool warmup = false;
   uint32_t shard_num = 1;
@@ -152,6 +121,7 @@ int main(int argc, char** argv) {
   std::string data_path = "";
 
   data_path = argv[1];
+
   graph_schema_path = data_path + "/graph.yaml";
 
   double t0 = -grape::GetCurrentTime();
@@ -168,7 +138,8 @@ int main(int argc, char** argv) {
   t0 += grape::GetCurrentTime();
 
   LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
-  gs::TestMultiplePropertiesEdge(db).test();
+  gs::TestImmutableCsr(db).test();
+  LOG(INFO) << "Finished test immutable csr\n";
   db.Close();
   std::filesystem::remove_all(data_path + "/wal/");
   {
@@ -178,7 +149,7 @@ int main(int argc, char** argv) {
     t0 += grape::GetCurrentTime();
 
     LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
-    gs::TestMultiplePropertiesEdge(db).test();
+    gs::TestImmutableCsr(db).test();
   }
   return 0;
 }

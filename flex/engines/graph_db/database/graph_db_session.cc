@@ -58,8 +58,7 @@ UpdateTransaction GraphDBSession::GetUpdateTransaction() {
 }
 
 bool GraphDBSession::BatchUpdate(UpdateBatch& batch) {
-  GetUpdateTransaction().batch_commit(batch);
-  return true;
+  return GetUpdateTransaction().batch_commit(batch);
 }
 
 const MutablePropertyFragment& GraphDBSession::graph() const {
