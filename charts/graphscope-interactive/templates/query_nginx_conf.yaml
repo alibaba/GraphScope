@@ -1,0 +1,46 @@
+apiVersion: v1  
+kind: ConfigMap  
+metadata:  
+  name: {{ .Release.Name }}-query-nginx-config  
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configmap
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:  
+  nginx.conf: |
+    events {}  
+    http {
+        resolver local=on valid=5s;
+        upstream my_service_1 {
+          {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
+          {{- $replicaCount := .Values.secondary.replicaCount | int }}  
+          {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
+          {{- $port := .Values.secondary.service.queryPort | int }}
+          {{- if eq $replicaCount 1 }}
+          server {{ printf "%s-0.%s:%d;" $baseName $serviceName $port | quote }};
+          {{- else }}
+          {{- range $i := until (sub $replicaCount 1 | int )  }}  
+          server {{ printf "%s-%d.%s:%d" $baseName $i $serviceName $port | quote }};
+          {{- end }}
+          server {{ printf "%s-%d.%s:%d" $baseName (sub $replicaCount 1) $serviceName $port | quote }};
+          {{- end }}
+        }
+
+        server {
+            listen 10000;  
+            server_name localhost;  
+
+            location / {  
+                proxy_pass http://my_service_1;  
+                proxy_set_header Host $host;  
+                proxy_set_header X-Real-IP $remote_addr;  
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+                proxy_set_header X-Forwarded-Proto $scheme;  
+            }  
+        }
+    }

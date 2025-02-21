@@ -13,13 +13,13 @@ metadata:
   {{- end }}
 data:
   interactive_config.yaml: |-
-    log_level: {{ .Values.engine.logLevel  }}
+    log_level: {{ .Values.logLevel  }}
     default_graph: {{ .Values.defaultGraph }}
     compute_engine:
       type: hiactor
       workers:
-        - ENGINE_SERVICE_HOST:10000
-      thread_num_per_worker: {{ .Values.engine.threadNumPerWorker }}
+        - localhost:10000
+      thread_num_per_worker: {{ .Values.primary.threadNumPerWorker }}
     compiler:
       planner:
         is_on: true
@@ -29,7 +29,7 @@ data:
           - FilterMatchRule
           - NotMatchToAntiJoinRule
       endpoint:
-        default_listen_address: ENGINE_SERVICE_HOST
+        default_listen_address: localhost
         bolt_connector:
           disabled: false
           port: {{ .Values.frontend.service.cypherPort }}
@@ -38,10 +38,6 @@ data:
           port: {{ .Values.frontend.service.gremlinPort  }}
       query_timeout: {{ .Values.frontend.service.queryTimeout  }}
     http_service:
-      default_listen_address: ENGINE_SERVICE_HOST
-      admin_port: {{ .Values.engine.service.adminPort  }}
-      query_port: {{ .Values.engine.service.queryPort  }}
-  setup.sh: |-
-    #!/bin/bash
-    sudo sed -e "s/ENGINE_SERVICE_HOST/${ENGINE_SERVICE_HOST}/g" ${ENGINE_CONFIG_PATH} > ${REAL_ENGINE_CONFIG_PATH}
-    echo "Finish set ENGINE_SERVICE_HOST to ${ENGINE_SERVICE_HOST}"
+      default_listen_address: localhost
+      admin_port: {{ .Values.primary.service.adminPort  }}
+      query_port: {{ .Values.primary.service.queryPort  }}
