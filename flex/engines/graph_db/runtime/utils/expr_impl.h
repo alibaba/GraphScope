@@ -602,9 +602,9 @@ class TypedTupleExpr : public ExprBase {
 
 class MapExpr : public ExprBase {
  public:
-  MapExpr(std::vector<std::string>&& keys,
+  MapExpr(const Context& ctx, std::vector<RTAny>&& keys,
           std::vector<std::unique_ptr<ExprBase>>&& values)
-      : keys(std::move(keys)), value_exprs(std::move(values)) {
+      : ctx_(ctx), keys(std::move(keys)), value_exprs(std::move(values)) {
     assert(keys.size() == values.size());
   }
 
@@ -613,10 +613,9 @@ class MapExpr : public ExprBase {
     for (size_t i = 0; i < keys.size(); i++) {
       ret.push_back(value_exprs[i]->eval_path(idx));
     }
-    values.emplace_back(ret);
-    size_t id = values.size() - 1;
-    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
-    auto map = Map::make_map(map_impl);
+    auto map_impl = MapImpl::make_map_impl(keys, ret);
+    auto map = Map::make_map(map_impl.get());
+    ctx_.value_collection->emplace_back(std::move(map_impl));
     return RTAny::from_map(map);
   }
 
@@ -625,12 +624,12 @@ class MapExpr : public ExprBase {
     for (size_t i = 0; i < keys.size(); i++) {
       ret.push_back(value_exprs[i]->eval_path(idx, 0));
     }
-    values.emplace_back(ret);
-    size_t id = values.size() - 1;
-    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
-    auto map = Map::make_map(map_impl);
+    auto map_impl = MapImpl::make_map_impl(keys, ret);
+    auto map = Map::make_map(map_impl.get());
+    ctx_.value_collection->emplace_back(std::move(map_impl));
     return RTAny::from_map(map);
   }
+
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
     LOG(FATAL) << "not implemented";
     return RTAny();
@@ -654,14 +653,13 @@ class MapExpr : public ExprBase {
 
   std::shared_ptr<IContextColumnBuilder> builder() const override {
     auto builder = std::make_shared<MapValueColumnBuilder>();
-    builder->set_keys(keys);
     return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
   }
 
  private:
-  std::vector<std::string> keys;
+  const Context& ctx_;
+  std::vector<RTAny> keys;
   std::vector<std::unique_ptr<ExprBase>> value_exprs;
-  mutable std::vector<std::vector<RTAny>> values;
 };
 
 class ListExprBase : public ExprBase {
@@ -878,14 +876,17 @@ class ToFloatExpr : public ExprBase {
 
 class StrConcatExpr : public ExprBase {
  public:
-  StrConcatExpr(std::unique_ptr<ExprBase>&& lhs,
+  StrConcatExpr(const Context& ctx, std::unique_ptr<ExprBase>&& lhs,
                 std::unique_ptr<ExprBase>&& rhs)
-      : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+      : ctx_(ctx), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
   RTAny eval_path(size_t idx) const override {
     std::string ret = std::string(lhs->eval_path(idx).as_string()) + ";" +
                       std::string(rhs->eval_path(idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -899,8 +900,11 @@ class StrConcatExpr : public ExprBase {
     std::string ret = std::string(lhs->eval_vertex(label, v, idx).as_string()) +
                       ";" +
                       std::string(rhs->eval_vertex(label, v, idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -909,8 +913,11 @@ class StrConcatExpr : public ExprBase {
         std::string(lhs->eval_edge(label, src, dst, data, idx).as_string()) +
         ";" +
         std::string(rhs->eval_edge(label, src, dst, data, idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAnyType type() const override { return RTAnyType::kStringValue; }
@@ -919,9 +926,9 @@ class StrConcatExpr : public ExprBase {
   }
 
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> lhs;
   std::unique_ptr<ExprBase> rhs;
-  mutable std::vector<std::string> values;
 };
 
 class StrListSizeExpr : public ExprBase {

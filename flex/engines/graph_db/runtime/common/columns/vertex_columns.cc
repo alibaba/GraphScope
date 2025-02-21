@@ -26,7 +26,7 @@ std::shared_ptr<IContextColumn> SLVertexColumn::shuffle(
   for (auto offset : offsets) {
     builder.push_back_opt(vertices_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> SLVertexColumn::optional_shuffle(
@@ -40,7 +40,7 @@ std::shared_ptr<IContextColumn> SLVertexColumn::optional_shuffle(
       builder.push_back_opt(vertices_[offset]);
     }
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> MLVertexColumn::optional_shuffle(
@@ -54,7 +54,7 @@ std::shared_ptr<IContextColumn> MLVertexColumn::optional_shuffle(
       builder.push_back_opt(vertices_[offset]);
     }
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> OptionalMLVertexColumn::shuffle(
@@ -64,12 +64,14 @@ std::shared_ptr<IContextColumn> OptionalMLVertexColumn::shuffle(
   for (auto offset : offsets) {
     builder.push_back_vertex(vertices_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
-std::shared_ptr<IContextColumn> OptionalMLVertexColumnBuilder::finish() {
+std::shared_ptr<IContextColumn> OptionalMLVertexColumnBuilder::finish(
+    const std::shared_ptr<Arena>& arena) {
   auto ret = std::make_shared<OptionalMLVertexColumn>();
   ret->vertices_.swap(vertices_);
   ret->labels_.swap(labels_);
+  ret->set_arena(arena);
   return ret;
 }
 void SLVertexColumn::generate_dedup_offset(std::vector<size_t>& offsets) const {
@@ -114,7 +116,7 @@ SLVertexColumn::generate_aggregate_offset() const {
     ++idx;
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(this->get_arena()), std::move(offsets));
 }
 
 std::shared_ptr<IContextColumn> SLVertexColumn::union_col(
@@ -133,15 +135,17 @@ std::shared_ptr<IContextColumn> SLVertexColumn::union_col(
       for (auto v : col.vertices_) {
         builder.push_back_opt(v);
       }
-      return builder.finish();
+      return builder.finish(nullptr);
     }
   }
   LOG(FATAL) << "not support...";
   return nullptr;
 }
 
-std::shared_ptr<IContextColumn> SLVertexColumnBuilder::finish() {
+std::shared_ptr<IContextColumn> SLVertexColumnBuilder::finish(
+    const std::shared_ptr<Arena>& arena) {
   auto ret = std::make_shared<SLVertexColumn>(label_);
+  ret->set_arena(arena);
   ret->vertices_.swap(vertices_);
   return ret;
 }
@@ -153,7 +157,7 @@ std::shared_ptr<IContextColumn> MSVertexColumn::shuffle(
   for (auto offset : offsets) {
     builder.push_back_vertex(get_vertex(offset));
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 ISigColumn* SLVertexColumn::generate_signature() const {
@@ -165,7 +169,8 @@ ISigColumn* MSVertexColumn::generate_signature() const {
   return nullptr;
 }
 
-std::shared_ptr<IContextColumn> MSVertexColumnBuilder::finish() {
+std::shared_ptr<IContextColumn> MSVertexColumnBuilder::finish(
+    const std::shared_ptr<Arena>& arena) {
   if (!cur_list_.empty()) {
     vertices_.emplace_back(cur_label_, std::move(cur_list_));
     cur_list_.clear();
@@ -176,6 +181,7 @@ std::shared_ptr<IContextColumn> MSVertexColumnBuilder::finish() {
     label_set.insert(pair.first);
   }
   ret->vertices_.swap(vertices_);
+  ret->set_arena(arena);
   return ret;
 }
 
@@ -186,7 +192,7 @@ std::shared_ptr<IContextColumn> MLVertexColumn::shuffle(
   for (auto offset : offsets) {
     builder.push_back_vertex(vertices_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 ISigColumn* MLVertexColumn::generate_signature() const {
@@ -206,10 +212,12 @@ void MLVertexColumn::generate_dedup_offset(std::vector<size_t>& offsets) const {
   }
 }
 
-std::shared_ptr<IContextColumn> MLVertexColumnBuilder::finish() {
+std::shared_ptr<IContextColumn> MLVertexColumnBuilder::finish(
+    const std::shared_ptr<Arena>& arena) {
   auto ret = std::make_shared<MLVertexColumn>();
   ret->vertices_.swap(vertices_);
   ret->labels_.swap(labels_);
+  ret->set_arena(arena);
   return ret;
 }
 
@@ -253,7 +261,7 @@ std::shared_ptr<IContextColumn> OptionalSLVertexColumn::shuffle(
   for (auto offset : offsets) {
     builder.push_back_opt(vertices_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> OptionalSLVertexColumn::optional_shuffle(
@@ -267,7 +275,7 @@ std::shared_ptr<IContextColumn> OptionalSLVertexColumn::optional_shuffle(
       builder.push_back_opt(vertices_[offset]);
     }
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> OptionalMLVertexColumn::optional_shuffle(
@@ -281,16 +289,18 @@ std::shared_ptr<IContextColumn> OptionalMLVertexColumn::optional_shuffle(
       builder.push_back_opt(vertices_[offset]);
     }
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 ISigColumn* OptionalSLVertexColumn::generate_signature() const {
   return new SigColumn<vid_t>(vertices_);
 }
 
-std::shared_ptr<IContextColumn> OptionalSLVertexColumnBuilder::finish() {
+std::shared_ptr<IContextColumn> OptionalSLVertexColumnBuilder::finish(
+    const std::shared_ptr<Arena>& arena) {
   auto ret = std::make_shared<OptionalSLVertexColumn>(label_);
   ret->vertices_.swap(vertices_);
+  ret->set_arena(arena);
   return ret;
 }
 

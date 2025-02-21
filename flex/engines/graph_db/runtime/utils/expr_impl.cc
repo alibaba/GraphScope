@@ -683,23 +683,20 @@ static std::unique_ptr<ExprBase> build_expr(
     }
     case common::ExprOpr::kMap: {
       auto op = opr.map();
-      std::vector<std::string> keys_vec;
+      std::vector<RTAny> keys_vec;
       std::vector<std::unique_ptr<ExprBase>> exprs;
       for (int i = 0; i < op.key_vals_size(); ++i) {
         auto key = op.key_vals(i).key();
         auto val = op.key_vals(i).val();
         auto any = parse_const_value(key);
-        assert(any.type() == RTAnyType::kStringValue);
-        {
-          auto str = any.as_string();
-          keys_vec.push_back(std::string(str));
-        }
+        keys_vec.push_back(any);
         exprs.emplace_back(
             std::make_unique<VariableExpr>(graph, ctx, val,
                                            var_type));  // just for parse
       }
       if (exprs.size() > 0) {
-        return std::make_unique<MapExpr>(std::move(keys_vec), std::move(exprs));
+        return std::make_unique<MapExpr>(ctx, std::move(keys_vec),
+                                         std::move(exprs));
       }
       LOG(FATAL) << "not support" << opr.DebugString();
     }
@@ -721,7 +718,7 @@ static std::unique_ptr<ExprBase> build_expr(
       } else if (name == "gs.function.concat") {
         auto expr2 = parse_expression_impl(graph, ctx, params, op.parameters(1),
                                            var_type);
-        return std::make_unique<StrConcatExpr>(std::move(expr),
+        return std::make_unique<StrConcatExpr>(ctx, std::move(expr),
                                                std::move(expr2));
       } else if (name == "gs.function.listSize") {
         return std::make_unique<StrListSizeExpr>(std::move(expr));

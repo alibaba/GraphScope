@@ -105,7 +105,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
           shuffle_offset.push_back(index);
         }
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
@@ -149,7 +150,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kIn) {
       auto& input_vertex_list =
@@ -193,7 +195,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
   }
@@ -254,7 +257,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
@@ -293,7 +297,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else {
       auto& input_vertex_list =
@@ -331,7 +336,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
           }
         }
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
   } else {
@@ -376,7 +382,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         } else if (params.dir == Direction::kIn) {
@@ -396,7 +402,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         }
@@ -443,7 +449,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
           });
         }
 
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     } else if (params.dir == Direction::kBoth) {
@@ -474,7 +481,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
             }
           }
         });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else {
         BDMLEdgeColumnBuilder builder(label_props);
@@ -507,7 +515,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     }
@@ -697,7 +706,7 @@ Context expand_vertex_ep_lt_ml_impl(
     }
     ++csr_idx;
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }
@@ -826,7 +835,7 @@ Context expand_vertex_ep_gt_sl_impl(
       ++idx;
     }
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }
@@ -870,7 +879,7 @@ Context expand_vertex_ep_gt_ml_impl(
     }
     ++csr_idx;
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }

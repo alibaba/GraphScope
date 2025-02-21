@@ -25,7 +25,7 @@ std::shared_ptr<IContextColumn> GeneralPathColumn::shuffle(
   for (auto& offset : offsets) {
     builder.push_back_opt(data_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> GeneralPathColumn::optional_shuffle(
@@ -39,7 +39,7 @@ std::shared_ptr<IContextColumn> GeneralPathColumn::optional_shuffle(
       builder.push_back_opt(data_[offset], true);
     }
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumnBuilder> GeneralPathColumn::builder() const {
@@ -54,7 +54,7 @@ std::shared_ptr<IContextColumn> OptionalGeneralPathColumn::shuffle(
   for (auto& offset : offsets) {
     builder.push_back_opt(data_[offset], valids_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumnBuilder> OptionalGeneralPathColumn::builder()

@@ -91,7 +91,8 @@ class GetV {
           }
         }
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (column->edge_column_type() == EdgeColumnType::kSDSL) {
       label_t output_vertex_label{0};
@@ -122,7 +123,8 @@ class GetV {
               }
             });
       }
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
     LOG(ERROR) << "Unsupported edge column type: "
@@ -148,7 +150,8 @@ class GetV {
         builder.push_back_vertex({label, vid});
         shuffle_offset.push_back(index);
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
     auto column = std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(params.tag));
@@ -217,7 +220,8 @@ class GetV {
               }
             });
       }
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (column->edge_column_type() == EdgeColumnType::kSDML) {
       auto& input_edge_list =
@@ -235,7 +239,7 @@ class GetV {
           extract_labels(input_edge_list.get_labels(), params.tables, opt);
       if (labels.size() == 0) {
         MLVertexColumnBuilder builder;
-        ctx.set_with_reshuffle(params.alias, builder.finish(), {});
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr), {});
         return ctx;
       }
       if (labels.size() > 1) {
@@ -261,7 +265,8 @@ class GetV {
                 }
               });
         }
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     } else if (column->edge_column_type() == EdgeColumnType::kBDSL) {
@@ -288,7 +293,7 @@ class GetV {
                 }
                 shuffle_offset.push_back(index);
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         } else {
@@ -304,7 +309,7 @@ class GetV {
                   shuffle_offset.push_back(index);
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         }
@@ -333,7 +338,7 @@ class GetV {
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         } else {
@@ -355,7 +360,7 @@ class GetV {
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         }
@@ -382,7 +387,8 @@ class GetV {
               shuffle_offset.push_back(index);
             });
 
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else {
         if (params.tables.size() == 1) {
@@ -403,7 +409,7 @@ class GetV {
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
 
         } else {
@@ -427,7 +433,7 @@ class GetV {
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
         }
         return ctx;
@@ -469,7 +475,7 @@ class GetV {
                            offset.push_back(idx);
                          }
                        });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr), offset);
 
       } else {
         MLVertexColumnBuilder builder;
@@ -480,7 +486,7 @@ class GetV {
                            offset.push_back(idx);
                          }
                        });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr), offset);
       }
     }
     return ctx;

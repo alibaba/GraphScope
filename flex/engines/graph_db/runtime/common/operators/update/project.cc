@@ -29,7 +29,7 @@ bl::result<WriteContext> Project::project(
 bl::result<Context> UProject::project(
     Context&& ctx, const std::vector<std::unique_ptr<UProjectExprBase>>& exprs,
     bool is_append) {
-  Context ret;
+  Context ret = ctx.newContext();
   if (is_append) {
     ret = ctx;
   }

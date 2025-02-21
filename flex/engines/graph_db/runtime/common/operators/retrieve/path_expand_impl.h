@@ -39,7 +39,7 @@ iterative_expand_vertex_on_graph_view(
   SLVertexColumnBuilder builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   if (upper == 1) {
     CHECK_EQ(lower, 0);
@@ -48,7 +48,7 @@ iterative_expand_vertex_on_graph_view(
       builder.push_back_opt(v);
       offsets.push_back(idx++);
     }
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   // upper >= 2
   std::vector<std::pair<vid_t, vid_t>> input_list;
@@ -92,7 +92,7 @@ iterative_expand_vertex_on_graph_view(
     ++depth;
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T>
@@ -105,7 +105,7 @@ iterative_expand_vertex_on_dual_graph_view(
   SLVertexColumnBuilder builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   if (upper == 1) {
     CHECK_EQ(lower, 0);
@@ -114,7 +114,7 @@ iterative_expand_vertex_on_dual_graph_view(
       builder.push_back_opt(v);
       offsets.push_back(idx++);
     }
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   // upper >= 2
   std::vector<std::pair<vid_t, vid_t>> input_list;
@@ -166,7 +166,7 @@ iterative_expand_vertex_on_dual_graph_view(
     ++depth;
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>
@@ -180,8 +180,7 @@ void sssp_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view,
               label_t v_label, vid_t v,
               const GraphReadInterface::vertex_set_t& vertices, size_t idx,
               int lower, int upper, SLVertexColumnBuilder& dest_col_builder,
-              GeneralPathColumnBuilder& path_col_builder,
-              std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
+              GeneralPathColumnBuilder& path_col_builder, Arena& path_impls,
               std::vector<size_t>& offsets, const PRED_T& pred) {
   std::vector<vid_t> cur;
   std::vector<vid_t> next;
@@ -259,8 +258,8 @@ void sssp_both_dir(const GraphReadInterface::graph_view_t<EDATA_T>& view0,
                    int lower, int upper,
                    SLVertexColumnBuilder& dest_col_builder,
                    GeneralPathColumnBuilder& path_col_builder,
-                   std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
-                   std::vector<size_t>& offsets, const PRED_T& pred) {
+                   Arena& path_impls, std::vector<size_t>& offsets,
+                   const PRED_T& pred) {
   std::vector<vid_t> cur;
   std::vector<vid_t> next;
   cur.push_back(v);
@@ -445,17 +444,18 @@ single_source_shortest_path_with_order_by_length_limit_impl(
     });
   }
 
-  return std::make_tuple(dest_col_builder.finish(), path_len_builder.finish(),
-                         std::move(offsets));
+  return std::make_tuple(dest_col_builder.finish(nullptr),
+                         path_len_builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
 std::tuple<std::shared_ptr<IContextColumn>, std::shared_ptr<IContextColumn>,
            std::vector<size_t>>
-single_source_shortest_path_impl(
-    std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
-    const GraphReadInterface& graph, const IVertexColumn& input,
-    label_t e_label, Direction dir, int lower, int upper, const PRED_T& pred) {
+single_source_shortest_path_impl(const GraphReadInterface& graph,
+                                 const IVertexColumn& input, label_t e_label,
+                                 Direction dir, int lower, int upper,
+                                 const PRED_T& pred) {
+  std::shared_ptr<Arena> path_impls = std::make_shared<Arena>();
   label_t v_label = *input.get_labels_set().begin();
   auto vertices = graph.GetVertexSet(v_label);
   SLVertexColumnBuilder dest_col_builder(v_label);
@@ -468,7 +468,7 @@ single_source_shortest_path_impl(
             : graph.GetOutgoingGraphView<EDATA_T>(v_label, v_label, e_label);
     foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
       sssp_dir(view, label, v, vertices, idx, lower, upper, dest_col_builder,
-               path_col_builder, path_impls, offsets, pred);
+               path_col_builder, *path_impls, offsets, pred);
     });
   } else {
     CHECK(dir == Direction::kBoth);
@@ -478,11 +478,12 @@ single_source_shortest_path_impl(
         graph.GetIncomingGraphView<EDATA_T>(v_label, v_label, e_label);
     foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
       sssp_both_dir(oe_view, ie_view, v_label, v, vertices, idx, lower, upper,
-                    dest_col_builder, path_col_builder, path_impls, offsets,
+                    dest_col_builder, path_col_builder, *path_impls, offsets,
                     pred);
     });
   }
-  return std::make_tuple(dest_col_builder.finish(), path_col_builder.finish(),
+  return std::make_tuple(dest_col_builder.finish(nullptr),
+                         path_col_builder.finish(path_impls),
                          std::move(offsets));
 }
 
@@ -490,7 +491,6 @@ template <typename PRED_T>
 std::tuple<std::shared_ptr<IContextColumn>, std::shared_ptr<IContextColumn>,
            std::vector<size_t>>
 default_single_source_shortest_path_impl(
-    std::vector<std::unique_ptr<CpxValueBase>>& path_impls,
     const GraphReadInterface& graph, const IVertexColumn& input,
     const std::vector<LabelTriplet>& labels, Direction dir, int lower,
     int upper, const PRED_T& pred) {
@@ -499,6 +499,7 @@ default_single_source_shortest_path_impl(
       label_num);
   const auto& input_labels_set = input.get_labels_set();
   std::set<label_t> dest_labels;
+  std::shared_ptr<Arena> path_impls = std::make_shared<Arena>();
   for (auto& triplet : labels) {
     if (!graph.schema().exist(triplet.src_label, triplet.dst_label,
                               triplet.edge_label)) {
@@ -547,7 +548,7 @@ default_single_source_shortest_path_impl(
             if (path.size() > 1) {
               auto impl = PathImpl::make_path_impl(std::move(path));
               path_col_builder.push_back_opt(Path(impl.get()));
-              path_impls.emplace_back(std::move(impl));
+              path_impls->emplace_back(std::move(impl));
 
               dest_col_builder.push_back_opt(u.second);
               offsets.push_back(idx);
@@ -578,7 +579,7 @@ default_single_source_shortest_path_impl(
       }
     });
 
-    dest_col = dest_col_builder.finish();
+    dest_col = dest_col_builder.finish(nullptr);
   } else {
     MLVertexColumnBuilder dest_col_builder;
 
@@ -604,7 +605,7 @@ default_single_source_shortest_path_impl(
               auto impl = PathImpl::make_path_impl(std::move(path));
 
               path_col_builder.push_back_opt(Path(impl.get()));
-              path_impls.emplace_back(std::move(impl));
+              path_impls->emplace_back(std::move(impl));
 
               dest_col_builder.push_back_vertex({u.first, u.second});
               offsets.push_back(idx);
@@ -635,9 +636,9 @@ default_single_source_shortest_path_impl(
       }
     });
 
-    dest_col = dest_col_builder.finish();
+    dest_col = dest_col_builder.finish(nullptr);
   }
-  return std::make_tuple(dest_col, path_col_builder.finish(),
+  return std::make_tuple(dest_col, path_col_builder.finish(path_impls),
                          std::move(offsets));
 }
 

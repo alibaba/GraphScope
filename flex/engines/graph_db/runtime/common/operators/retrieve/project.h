@@ -64,7 +64,7 @@ struct ProjectExpr : public ProjectExprBase {
     for (size_t i = 0; i < row_num; ++i) {
       collector_.collect(expr_, i);
     }
-    ret.set(alias_, collector_.get(expr_));
+    ret.set(alias_, collector_.get());
     return ret;
   }
 

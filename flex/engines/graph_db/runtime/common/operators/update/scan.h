@@ -37,7 +37,7 @@ class UScan {
         }
       }
     }
-    ctx.set(params.alias, builder.finish());
+    ctx.set(params.alias, builder.finish(nullptr));
     return ctx;
   }
 };
