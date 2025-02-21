@@ -34,6 +34,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -401,7 +402,7 @@ public class DriverTest {
         VertexRequest vertexRequest =
                 new VertexRequest()
                         .label("person")
-                        .primaryKeyValue(8)
+                        .primaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
                         .addPropertiesItem(new Property().name("name").value("mike"))
                         .addPropertiesItem(new Property().name("age").value(12));
         EdgeRequest edgeRequest1 =
@@ -409,16 +410,16 @@ public class DriverTest {
                         .srcLabel("person")
                         .dstLabel("person")
                         .edgeLabel("knows")
-                        .srcPrimaryKeyValue(8)
-                        .dstPrimaryKeyValue(1)
+                        .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
+                        .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(1)))
                         .addPropertiesItem(new Property().name("weight").value(7.0));
         EdgeRequest edgeRequest2 =
                 new EdgeRequest()
                         .srcLabel("person")
                         .dstLabel("person")
                         .edgeLabel("knows")
-                        .srcPrimaryKeyValue(8)
-                        .dstPrimaryKeyValue(2)
+                        .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
+                        .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
                         .addPropertiesItem(new Property().name("weight").value(5.0));
 
         VertexEdgeRequest vertexEdgeRequest =
@@ -444,10 +445,12 @@ public class DriverTest {
         VertexRequest updateVertexRequest =
                 new VertexRequest()
                         .label("person")
-                        .primaryKeyValue(8)
+                        .primaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
                         .addPropertiesItem(new Property().name("name").value("Cindy"))
                         .addPropertiesItem(new Property().name("age").value(24));
-        Result<String> updateVertexResponse = session.updateVertex(graphId, updateVertexRequest);
+        Result<String> updateVertexResponse =
+                session.updateVertex(
+                        graphId, new VertexEdgeRequest().addVertexRequestItem(updateVertexRequest));
         assertOk(updateVertexResponse);
         getVertexResponse = session.getVertex(graphId, "person", 8);
         assertOk(getVertexResponse);
@@ -462,16 +465,16 @@ public class DriverTest {
                         .srcLabel("person")
                         .dstLabel("person")
                         .edgeLabel("knows")
-                        .srcPrimaryKeyValue(2)
-                        .dstPrimaryKeyValue(4)
+                        .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                        .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(4)))
                         .addPropertiesItem(new Property().name("weight").value(9.123));
         EdgeRequest edgeRequest4 =
                 new EdgeRequest()
                         .srcLabel("person")
                         .dstLabel("person")
                         .edgeLabel("knows")
-                        .srcPrimaryKeyValue(2)
-                        .dstPrimaryKeyValue(6)
+                        .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                        .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(6)))
                         .addPropertiesItem(new Property().name("weight").value(3.233));
         List<EdgeRequest> edgeRequests = new ArrayList<>();
         edgeRequests.add(edgeRequest3);
@@ -502,10 +505,11 @@ public class DriverTest {
                         .srcLabel("person")
                         .dstLabel("person")
                         .edgeLabel("knows")
-                        .srcPrimaryKeyValue(2)
-                        .dstPrimaryKeyValue(4)
+                        .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                        .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(4)))
                         .addPropertiesItem(new Property().name("weight").value(3.0));
-        Result<String> updateEdgeResponse = session.updateEdge(graphId, updateEdgeRequest);
+        Result<String> updateEdgeResponse =
+                session.updateEdge(graphId, Arrays.asList(updateEdgeRequest));
         assertOk(updateEdgeResponse);
         getEdgeResponse = session.getEdge(graphId, "knows", "person", 2, "person", 4);
         assertOk(getEdgeResponse);

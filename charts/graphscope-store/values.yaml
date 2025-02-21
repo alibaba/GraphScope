@@ -139,6 +139,8 @@ frontend:
 
     cypherPort: 7687
 
+    httpPort: 8080
+
     ## Internal port for communication between components.
     ##
     port: 55555

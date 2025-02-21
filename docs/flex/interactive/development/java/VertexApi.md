@@ -37,7 +37,7 @@ public class Example {
     VertexRequest vertexRequest =
         new VertexRequest()
                 .label("person")
-                .primaryKeyValue(8)
+                .primaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
                 .addPropertiesItem(new Property().name("name").value("mike"))
                 .addPropertiesItem(new Property().name("age").value(12));
     VertexEdgeRequest vertexEdgeRequest =
@@ -179,7 +179,7 @@ public class Example {
     VertexRequest updateVertexRequest =
         new VertexRequest()
                 .label("person")
-                .primaryKeyValue(8)
+                .primaryKeyValues(Arrays.asList(new Property().name("id").value(8)))
                 .addPropertiesItem(new Property().name("name").value("Cindy"))
                 .addPropertiesItem(new Property().name("age").value(24));
     Result<String> updateVertexResponse = session.updateVertex(graphId, updateVertexRequest);

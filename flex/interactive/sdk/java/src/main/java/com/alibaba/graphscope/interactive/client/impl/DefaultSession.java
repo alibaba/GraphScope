@@ -427,16 +427,9 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> deleteEdge(
-            String graphName,
-            String srcLabel,
-            Object srcPrimaryKeyValue,
-            String dstLabel,
-            Object dstPrimaryKeyValue) {
+    public Result<String> deleteEdge(String graphName, List<DeleteEdgeRequest> requests) {
         try {
-            ApiResponse<String> response =
-                    edgeApi.deleteEdgeWithHttpInfo(
-                            graphName, srcLabel, srcPrimaryKeyValue, dstLabel, dstPrimaryKeyValue);
+            ApiResponse<String> response = edgeApi.deleteEdgeWithHttpInfo(graphName, requests);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -445,7 +438,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> updateEdge(String graphName, EdgeRequest edgeRequest) {
+    public Result<String> updateEdge(String graphName, List<EdgeRequest> edgeRequest) {
         try {
             ApiResponse<String> response = edgeApi.updateEdgeWithHttpInfo(graphName, edgeRequest);
             return Result.fromResponse(response);
@@ -823,9 +816,9 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> updateVertex(String graphId, VertexRequest request) {
+    public Result<String> updateVertex(String graphId, VertexEdgeRequest requests) {
         try {
-            ApiResponse<String> response = vertexApi.updateVertexWithHttpInfo(graphId, request);
+            ApiResponse<String> response = vertexApi.updateVertexWithHttpInfo(graphId, requests);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -846,10 +839,10 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> deleteVertex(String graphId, String label, Object primaryKey) {
+    public Result<String> deleteVertex(String graphId, List<DeleteVertexRequest> requests) {
         try {
             ApiResponse<String> response =
-                    vertexApi.deleteVertexWithHttpInfo(graphId, label, primaryKey);
+                    vertexApi.deleteVertexWithHttpInfo(graphId, requests); // label, primaryKey
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();

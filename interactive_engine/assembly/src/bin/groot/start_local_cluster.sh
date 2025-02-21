@@ -16,6 +16,9 @@ GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 # coordinator
 python3 -m gs_flex_coordinator || true
 
+# start http server
+# GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start_http &
+
 # Start container with port mapping
 # docker run -p 12312:12312 -p 55556:55556 -p 8080:8080 graphscope/graphscope-store:latest /usr/local/groot/bin/start_local_cluster.sh
 

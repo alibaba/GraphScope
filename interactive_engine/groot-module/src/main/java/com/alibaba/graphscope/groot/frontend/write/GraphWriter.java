@@ -435,13 +435,18 @@ public class GraphWriter {
             }
         }
         if (!edgeKindExists) {
+            String sourceLabel =
+                    schema.getElement(edgeKind.getSrcVertexLabelId().getId()).getLabel();
+            String targetLabel =
+                    schema.getElement(edgeKind.getDstVertexLabelId().getId()).getLabel();
+            String edgeLabel = schema.getElement(edgeKind.getEdgeLabelId().getId()).getLabel();
             throw new TypeNotFoundException(
                     "schema element not found for edgeKind with {edgeLabel="
-                            + schema.getElement(edgeKind.getEdgeLabelId().getId()).getLabel()
+                            + edgeLabel
                             + ", sourceLabel="
-                            + schema.getElement(edgeKind.getSrcVertexLabelId().getId()).getLabel()
+                            + sourceLabel
                             + ", targetLabel="
-                            + schema.getElement(edgeKind.getDstVertexLabelId().getId()).getLabel()
+                            + targetLabel
                             + "}");
         } else {
             return edgeKind;
@@ -459,6 +464,9 @@ public class GraphWriter {
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
             byte[] valBytes = properties.get(pk.getId()).getValBytes();
+            if (valBytes == null) {
+                throw new InvalidArgumentException("primary key value is null");
+            }
             pks.add(valBytes);
         }
         return pks;

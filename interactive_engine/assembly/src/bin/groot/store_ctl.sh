@@ -17,6 +17,8 @@ usage() {
   Commands:
 
     start            Start individual groot server. If no arguments given, start all servers as local deployment
+
+	start_http       Start groot http server
 END
 }
 
@@ -77,6 +79,23 @@ start_server() {
 		"$@" # > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
+# start groot http server
+start_http_server() {
+	_setup_env
+	# spring boot config file only support .properties or .yml files
+	echo "GROOT_CONF_FILE: ${GROOT_CONF_FILE}"
+	echo "GROOT_LOGBACK_FILE: ${GROOT_LOGBACK_FILE}"
+	GROOT_HTTP_CONF_FILE="${GROOT_CONF_FILE}.properties"
+	HTTP_LOG_NAME="${LOG_NAME}-http"
+	if [ -f "${GROOT_CONF_FILE}" ] && [ ! -f "${GROOT_HTTP_CONF_FILE}" ]; then
+  		cp "${GROOT_CONF_FILE}" "${GROOT_HTTP_CONF_FILE}"
+	fi
+	java -Dlogging.config="${GROOT_LOGBACK_FILE}" \
+     -Dspring.config.location="${GROOT_HTTP_CONF_FILE}" \
+     -jar "${GROOT_HOME}/lib/groot-http-0.0.1-SNAPSHOT.jar" \
+	 "$@" # > >(tee -a "${LOG_DIR}/${HTTP_LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${HTTP_LOG_NAME}.err" >&2)
+}
+
 # parse argv
 while test $# -ne 0; do
 	arg=$1
@@ -88,6 +107,10 @@ while test $# -ne 0; do
 		;;
 	start)
 		start_server "$@"
+		exit
+		;;
+	start_http)
+		start_http_server "$@"
 		exit
 		;;
 	*)

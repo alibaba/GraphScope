@@ -38,16 +38,16 @@ public class Example {
                     .srcLabel("person")
                     .dstLabel("person")
                     .edgeLabel("knows")
-                    .srcPrimaryKeyValue(2)
-                    .dstPrimaryKeyValue(4)
+                    .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                    .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(4)))
                     .addPropertiesItem(new Property().name("weight").value(9.123));
     EdgeRequest edgeRequest4 =
             new EdgeRequest()
                     .srcLabel("person")
                     .dstLabel("person")
                     .edgeLabel("knows")
-                    .srcPrimaryKeyValue(2)
-                    .dstPrimaryKeyValue(6)
+                    .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                    .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(6)))
                     .addPropertiesItem(new Property().name("weight").value(3.233));
     List<EdgeRequest> edgeRequests = new ArrayList<>();
     edgeRequests.add(edgeRequest3);
@@ -187,8 +187,8 @@ public class Example {
                 .srcLabel("person")
                 .dstLabel("person")
                 .edgeLabel("knows")
-                .srcPrimaryKeyValue(2)
-                .dstPrimaryKeyValue(4)
+                .srcPrimaryKeyValues(Arrays.asList(new Property().name("id").value(2)))
+                .dstPrimaryKeyValues(Arrays.asList(new Property().name("id").value(4)))
                 .addPropertiesItem(new Property().name("weight").value(3.0));
     Result<String> updateEdgeResponse = session.updateEdge(graphId, updateEdgeRequest);
     if (!updateEdgeResponse.isOk()) {
