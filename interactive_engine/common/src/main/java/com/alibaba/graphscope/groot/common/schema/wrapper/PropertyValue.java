@@ -20,6 +20,11 @@ import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 import com.google.protobuf.ByteString;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -69,11 +74,65 @@ public class PropertyValue {
                 case STRING:
                     return valString;
                 case DATE:
-                    return Integer.valueOf(valString);
+                {
+                    try {
+                        return Integer.valueOf(valString);
+                    } catch (Exception e) {
+                       try {
+                        LocalDate date = LocalDate.parse(valString, DateTimeFormatter.ISO_LOCAL_DATE);
+                        long epochDays = date.toEpochDay();
+                        return Integer.valueOf((int) epochDays);
+                       } catch (Exception e1) {
+                           throw new InvalidArgumentException("unable to parse date string to date. DataType ["
+                                   + dataType
+                                   + "], Object ["
+                                   + valString
+                                   + "], class ["
+                                   + valString.getClass()
+                                   + "]", e1);
+                       }
+                    }
+                }
                 case TIME32:
-                    return Integer.valueOf(valString);
+                    {
+                        try {
+                            return Integer.valueOf(valString);
+                        } catch (Exception e) {
+                            try {
+                                LocalTime time = LocalTime.parse(valString, DateTimeFormatter.ISO_LOCAL_TIME);
+                                int seconds = time.toSecondOfDay();
+                                return Integer.valueOf(seconds);
+                            } catch (Exception e1) {
+                                throw new InvalidArgumentException("unable to parse time32 string to int. DataType ["
+                                        + dataType
+                                        + "], Object ["
+                                        + valString
+                                        + "], class ["
+                                        + valString.getClass()
+                                        + "]", e1);
+                            }
+                        }
+                    }
                 case TIMESTAMP:
-                    return Long.valueOf(valString);
+                    {
+                        try {
+                            return Long.valueOf(valString);
+                        } catch (Exception e) {
+                            try {
+                                LocalDateTime dateTime = LocalDateTime.parse(valString, DateTimeFormatter.ISO_DATE_TIME);
+                                long millis = dateTime.toEpochSecond(ZoneOffset.UTC) * 1000;
+                                return Long.valueOf(millis);
+                            } catch (Exception e1) {
+                                throw new InvalidArgumentException("unable to parse timestamp string to long. DataType ["
+                                        + dataType
+                                        + "], Object ["
+                                        + valString
+                                        + "], class ["
+                                        + valString.getClass()
+                                        + "]", e1);
+                            }
+                        }
+                    }
                 default:
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }

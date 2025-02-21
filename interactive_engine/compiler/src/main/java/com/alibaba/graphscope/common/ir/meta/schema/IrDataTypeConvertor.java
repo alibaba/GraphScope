@@ -77,9 +77,17 @@ public interface IrDataTypeConvertor<T> {
                 case INT:
                     // 4-bytes signed integer
                     return typeFactory.createSqlType(SqlTypeName.INTEGER);
+                case UINT:
+                    // 4-bytes unsigned integer
+                    return typeFactory.createSqlType(
+                                SqlTypeName.DECIMAL, UINT32_PRECISION, UINT32_SCALE);
                 case LONG:
                     // 8-bytes signed integer
                     return typeFactory.createSqlType(SqlTypeName.BIGINT);
+                case ULONG:
+                    // 8-bytes unsigned integer
+                    return typeFactory.createSqlType(
+                                SqlTypeName.DECIMAL, UINT64_PRECISION, UINT64_SCALE);
                 case FLOAT:
                     // single precision floating point, 4 bytes
                     return typeFactory.createSqlType(SqlTypeName.FLOAT);

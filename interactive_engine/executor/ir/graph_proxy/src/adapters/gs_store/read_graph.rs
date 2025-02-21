@@ -699,14 +699,6 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
                             )
                         }
                         Primitives::Long(_) | Primitives::ULong(_) => Property::ListLong(
-                        Primitives::Byte(_) | Primitives::Integer(_) | Primitives::UInteger(_) => {
-                            Property::ListInt(
-                                vec.into_iter()
-                                    .map(|i| i.as_i32().unwrap())
-                                    .collect(),
-                            )
-                        }
-                        Primitives::Long(_) | Primitives::ULong(_) => Property::ListLong(
                             vec.into_iter()
                                 .map(|i| i.as_i64().unwrap())
                                 .collect(),
@@ -716,12 +708,6 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
                                 .map(|i| i.as_u128().unwrap() as i64)
                                 .collect(),
                         ),
-                        Primitives::Float(_) => Property::ListFloat(
-                            vec.into_iter()
-                                .map(|i| i.as_f32().unwrap())
-                                .collect(),
-                        ),
-                        Primitives::Double(_) => Property::ListDouble(
                         Primitives::Float(_) => Property::ListFloat(
                             vec.into_iter()
                                 .map(|i| i.as_f32().unwrap())
