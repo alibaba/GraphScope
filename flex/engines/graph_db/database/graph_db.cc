@@ -46,8 +46,8 @@ struct SessionLocalContext {
   Allocator allocator;
   char _padding0[128 - sizeof(Allocator) % 128];
   std::unique_ptr<IWalWriter> logger;
-  char _padding1[4096 - sizeof(IWalWriter) - sizeof(Allocator) -
-                 sizeof(_padding0)];
+  char _padding1[4096 - sizeof(std::unique_ptr<IWalWriter>) -
+                 sizeof(Allocator) - sizeof(_padding0)];
   GraphDBSession session;
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
 };
