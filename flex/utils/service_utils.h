@@ -142,7 +142,7 @@ inline bool from_json(const rapidjson::Value& j, PropertyType& p) {
         p = PropertyType::Varchar(
             j["string"]["var_char"]["max_length"].GetInt());
       } else {
-        p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+        p = PropertyType::Varchar(PropertyType::GetStringDefaultMaxLength());
       }
     } else {
       throw std::invalid_argument("Unknown string type: " +

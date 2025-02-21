@@ -122,7 +122,7 @@ class BasicFragmentLoader {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
 
-      size_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
+      size_t max_length = PropertyType::GetStringDefaultMaxLength();
       if (prop[0].IsVarchar()) {
         max_length = prop[0].additional_type_info.max_length;
       }

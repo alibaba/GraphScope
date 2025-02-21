@@ -91,7 +91,7 @@ template <>
 class TypedEmptyColumn<std::string_view> : public ColumnBase {
  public:
   TypedEmptyColumn(
-      int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH) {}
+      int32_t max_length = PropertyType::GetStringDefaultMaxLength()) {}
   ~TypedEmptyColumn() {}
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -164,7 +164,7 @@ std::shared_ptr<ColumnBase> CreateColumn(
       return std::make_shared<StringEmptyColumn>();
     } else if (type == PropertyType::kStringView) {
       return std::make_shared<StringEmptyColumn>(
-          gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+          gs::PropertyType::GetStringDefaultMaxLength());
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringEmptyColumn>(
           type.additional_type_info.max_length);
