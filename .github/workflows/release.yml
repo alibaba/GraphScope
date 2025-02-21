@@ -165,6 +165,8 @@ jobs:
     needs: [build-interactive-image-amd64, build-interactive-image-arm64]
 
     steps:
+    - uses: actions/checkout@v4
+    
     - name: Add envs to GITHUB_ENV
       run: |
         short_sha=$(git rev-parse --short HEAD)
@@ -178,16 +180,16 @@ jobs:
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
 
         # create
-        sudo docker manifest create \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA} \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-amd64 \
-          ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-arm64
+        # sudo docker manifest create \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA} \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-amd64 \
+        #   ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-arm64
 
         # push
-        sudo docker manifest push ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}
+        # sudo docker manifest push ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}
 
         # Remove old latest manifest
-        sudo docker manifest rm ${{ env.INTERACTIVE_IMAGE }}:latest
+        sudo docker manifest rm ${{ env.INTERACTIVE_IMAGE }}:latest || true
         sudo docker manifest create \
           ${{ env.INTERACTIVE_IMAGE }}:latest \
           ${{ env.INTERACTIVE_IMAGE }}:latest-amd64 \
