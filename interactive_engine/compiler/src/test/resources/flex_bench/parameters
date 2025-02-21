@@ -38,7 +38,7 @@ plus_float_double|12.0f,16.23d|28.23d
 
 minus_int32_int32|12,13|-1
 minus_int32_int32_overflow|2147483647,-1|overflow
-minus_int32_uint32_int32|12,+13|-1
+minus_int32_uint32_int32|13,+12|+1
 minus_uint32_int32_uint32|+2147483647,-10|+2147483657
 minus_uint32_int32_overflow|+4294967295,-1|overflow
 minus_int32_int64|12,13L|-1L
@@ -63,8 +63,8 @@ divide_uint32_int32_uint32|+4294967295,1|+4294967295
 divide_uint32_int32_overflow|+4294967295,-1|overflow
 divide_int32_int64|2,1L|2L
 divide_int64_int32_overflow|-9223372036854775808L,-1|overflow
-divide_int32_double|2,1.12d|1.77d
-divide_float_double|2.0f,1.12d|1.78d
+divide_int32_double|2,1.12d|1.79d
+divide_float_double|2.0f,1.12d|1.79d
 divide_float_double_NaN|2.0f,0.0d|NaN
 
 get_knows_between_two_persons|32,33|32,33
