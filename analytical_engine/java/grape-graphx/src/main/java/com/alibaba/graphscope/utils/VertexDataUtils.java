@@ -56,21 +56,21 @@ public class VertexDataUtils {
                 DoubleDouble dd = (DoubleDouble) array.get(i);
                 ffiByteVectorOutput.writeDouble(dd.a());
                 ffiByteVectorOutput.writeDouble(dd.b());
-                ffiOffset.set(i, (int) (ffiByteVectorOutput.bytesWriten() - prevBytesWritten));
-                prevBytesWritten = ffiByteVectorOutput.bytesWriten();
+                ffiOffset.set(i, (int) (ffiByteVectorOutput.bytesWritten() - prevBytesWritten));
+                prevBytesWritten = ffiByteVectorOutput.bytesWritten();
             }
         } else {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(ffiByteVectorOutput);
             for (int i = 0; i < size; ++i) {
                 objectOutputStream.writeObject(array.get(i));
-                ffiOffset.set(i, (int) (ffiByteVectorOutput.bytesWriten() - prevBytesWritten));
-                prevBytesWritten = ffiByteVectorOutput.bytesWriten();
+                ffiOffset.set(i, (int) (ffiByteVectorOutput.bytesWritten() - prevBytesWritten));
+                prevBytesWritten = ffiByteVectorOutput.bytesWritten();
             }
             objectOutputStream.flush();
         }
 
         ffiByteVectorOutput.finishSetting();
-        long writenBytes = ffiByteVectorOutput.bytesWriten();
+        long writenBytes = ffiByteVectorOutput.bytesWritten();
         logger.info(
                 "write data array {} of type {}, writen bytes {}",
                 size,

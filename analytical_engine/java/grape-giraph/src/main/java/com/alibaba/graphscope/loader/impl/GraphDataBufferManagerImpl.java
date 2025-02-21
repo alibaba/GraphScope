@@ -170,14 +170,14 @@ public class GraphDataBufferManagerImpl implements GraphDataBufferManager {
     @Override
     public synchronized void addVertex(int threadId, Writable id, Writable value)
             throws IOException {
-        int bytes = (int) -vidOutputStream[threadId].bytesWriten();
+        int bytes = (int) -vidOutputStream[threadId].bytesWritten();
         id.write(vidOutputStream[threadId]);
-        bytes += vidOutputStream[threadId].bytesWriten();
+        bytes += vidOutputStream[threadId].bytesWritten();
         idOffsetsArr[threadId].push_back(bytes);
 
-        int bytes2 = (int) -vdataOutputStream[threadId].bytesWriten();
+        int bytes2 = (int) -vdataOutputStream[threadId].bytesWritten();
         value.write(vdataOutputStream[threadId]);
-        bytes2 += vdataOutputStream[threadId].bytesWriten();
+        bytes2 += vdataOutputStream[threadId].bytesWritten();
         vdataOffsetsArr[threadId].push_back(bytes2);
     }
 
@@ -187,19 +187,19 @@ public class GraphDataBufferManagerImpl implements GraphDataBufferManager {
         int bytesEdgeSrcOffset = 0, bytesEdgeDstOffset = 0, bytesDataOffsets = 0;
 
         for (Edge edge : edges) {
-            bytesEdgeSrcOffset = (int) -edgeSrcIdOutputStream[threadId].bytesWriten();
+            bytesEdgeSrcOffset = (int) -edgeSrcIdOutputStream[threadId].bytesWritten();
             id.write(edgeSrcIdOutputStream[threadId]);
-            bytesEdgeSrcOffset += edgeSrcIdOutputStream[threadId].bytesWriten();
+            bytesEdgeSrcOffset += edgeSrcIdOutputStream[threadId].bytesWritten();
             edgeSrcIdOffsetArr[threadId].push_back(bytesEdgeSrcOffset);
 
-            bytesEdgeDstOffset = (int) -edgeDstOutputStream[threadId].bytesWriten();
+            bytesEdgeDstOffset = (int) -edgeDstOutputStream[threadId].bytesWritten();
             edge.getTargetVertexId().write(edgeDstOutputStream[threadId]);
-            bytesEdgeDstOffset += edgeDstOutputStream[threadId].bytesWriten();
+            bytesEdgeDstOffset += edgeDstOutputStream[threadId].bytesWritten();
             edgeDstIdOffsetArr[threadId].push_back(bytesEdgeDstOffset);
 
-            bytesDataOffsets = (int) -edgeDataOutStream[threadId].bytesWriten();
+            bytesDataOffsets = (int) -edgeDataOutStream[threadId].bytesWritten();
             edge.getValue().write(edgeDataOutStream[threadId]);
-            bytesDataOffsets += edgeDataOutStream[threadId].bytesWriten();
+            bytesDataOffsets += edgeDataOutStream[threadId].bytesWritten();
             edgeDataOffsetsArr[threadId].push_back(bytesDataOffsets);
         }
     }
@@ -210,19 +210,19 @@ public class GraphDataBufferManagerImpl implements GraphDataBufferManager {
             throws IOException {
         int bytesEdgeSrcOffset = 0, bytesEdgeDstOffset = 0, bytesDataOffsets = 0;
 
-        bytesEdgeSrcOffset = (int) -edgeSrcIdOutputStream[threadId].bytesWriten();
+        bytesEdgeSrcOffset = (int) -edgeSrcIdOutputStream[threadId].bytesWritten();
         srcId.write(edgeSrcIdOutputStream[threadId]);
-        bytesEdgeSrcOffset += edgeSrcIdOutputStream[threadId].bytesWriten();
+        bytesEdgeSrcOffset += edgeSrcIdOutputStream[threadId].bytesWritten();
         edgeSrcIdOffsetArr[threadId].push_back(bytesEdgeSrcOffset);
 
-        bytesEdgeDstOffset = (int) -edgeDstOutputStream[threadId].bytesWriten();
+        bytesEdgeDstOffset = (int) -edgeDstOutputStream[threadId].bytesWritten();
         dstId.write(edgeDstOutputStream[threadId]);
-        bytesEdgeDstOffset += edgeDstOutputStream[threadId].bytesWriten();
+        bytesEdgeDstOffset += edgeDstOutputStream[threadId].bytesWritten();
         edgeDstIdOffsetArr[threadId].push_back(bytesEdgeDstOffset);
 
-        bytesDataOffsets = (int) -edgeDataOutStream[threadId].bytesWriten();
+        bytesDataOffsets = (int) -edgeDataOutStream[threadId].bytesWritten();
         value.write(edgeDataOutStream[threadId]);
-        bytesDataOffsets += edgeDataOutStream[threadId].bytesWriten();
+        bytesDataOffsets += edgeDataOutStream[threadId].bytesWritten();
         edgeDataOffsetsArr[threadId].push_back(bytesDataOffsets);
 
         //        logger.debug("worker [{}] adding edge [{}]->[{}], value {}", workerId, srcId,

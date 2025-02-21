@@ -1587,7 +1587,7 @@ def _parse_java_app_type(java_class_path, real_algo):
         elif line.find("ParallelAppBase") != -1:
             _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
-            raise Exception("Error occured in verifying user app")
+            raise Exception("Error occurred in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
@@ -1754,7 +1754,7 @@ VERETX_MAP_CLASS_MAP = {
 
 def _codegen_graph_info(attr):
     # These getter functions are intended for lazy evaluation,
-    # cause they are not always avaiable in all types of graphs
+    # cause they are not always available in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
             return attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore")

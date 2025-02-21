@@ -21,7 +21,7 @@ As for the dataset, we use 3 XL-size LDBC datasets.
 |   graph500-26  	|    32,804,978   	| 1,051,922,853 	|     32.1    	|
 | com-friendster 	|    65,608,366   	| 1,806,067,135 	|     27.5    	|
 
-## Refered algorithm implementation
+## Referred algorithm implementation
 
 - SSSP
     - [Java]()

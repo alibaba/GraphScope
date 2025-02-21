@@ -113,11 +113,11 @@ public class FFIByteVectorStreamTest {
         for (int i = 0; i < 25; ++i) {
             outputStream.writeInt(i);
         }
-        Assert.assertTrue(outputStream.bytesWriten() == 100);
+        Assert.assertTrue(outputStream.bytesWritten() == 100);
         FFIByteVector vector = outputStream.getVector();
         System.out.println("Buffer size: " + vector.size() + ", size: " + vector.size);
         outputStream.finishSetting();
         vector = outputStream.getVector();
-        Assert.assertTrue(vector.size == outputStream.bytesWriten());
+        Assert.assertTrue(vector.size == outputStream.bytesWritten());
     }
 }

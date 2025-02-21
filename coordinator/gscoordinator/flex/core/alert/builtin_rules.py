@@ -114,7 +114,7 @@ class GremlinServiceAvailableAlert(AlertRule):
             available = False
             message = "Gremlin service unavailable: {0}".format(str(e))
         finally:
-            # unable to distinguish whether frontend or excutor is unavailable,
+            # unable to distinguish whether frontend or executor is unavailable,
             # so we set the target "-"
             if not available:
                 alert_message = self.generate_alert_message("-", message)
