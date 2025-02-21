@@ -172,6 +172,12 @@ class VertexWithInListExpr : public ExprBase {
   std::unique_ptr<ExprBase> val_list_;
 };
 
+#define PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(dst_vector_name, array_name) \
+  size_t len = array_name.item_size();                                   \
+  for (size_t idx = 0; idx < len; ++idx) {                               \
+    dst_vector_name.push_back(array_name.item(idx));                     \
+  }
+
 template <typename T>
 class WithInExpr : public ExprBase {
  public:
@@ -179,23 +185,40 @@ class WithInExpr : public ExprBase {
              const common::Value& array)
       : key_(std::move(key)) {
     if constexpr (std::is_same_v<T, int64_t>) {
-      assert(array.item_case() == common::Value::kI64Array);
-      size_t len = array.i64_array().item_size();
-      for (size_t idx = 0; idx < len; ++idx) {
-        container_.push_back(array.i64_array().item(idx));
+      if (array.item_case() == common::Value::kI64Array) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i64_array());
+      } else if (array.item_case() == common::Value::kI32Array) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i32_array());
+      } else {
+        // TODO(zhanglei,lexiao): We should support more types here, and if type
+        // conversion fails, we should return an error.
+        LOG(ERROR) << "Could not convert array with type " << array.item_case()
+                   << " to int64_t array";
+      }
+    } else if constexpr (std::is_same_v<T, uint64_t>) {
+      if (array.item_case() == common::Value::kI64Array) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i64_array());
+      } else if (array.item_case() == common::Value::kI32Array) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i32_array());
+      } else {
+        LOG(ERROR) << "Could not convert array with type " << array.item_case()
+                   << " to int64_t array";
       }
     } else if constexpr (std::is_same_v<T, int32_t>) {
-      assert(array.item_case() == common::Value::kI32Array);
-      size_t len = array.i32_array().item_size();
-      for (size_t idx = 0; idx < len; ++idx) {
-        container_.push_back(array.i32_array().item(idx));
+      if (array.item_case() == common::Value::kI32Array) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i32_array());
+      } else if constexpr (std::is_same_v<T, int64_t>) {
+        PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i64_array());
+      } else {
+        LOG(ERROR) << "Could not convert array with type " << array.item_case()
+                   << " to int32_t array";
       }
+    } else if constexpr (std::is_same_v<T, double>) {
+      assert(array.item_case() == common::Value::kF64Array);
+      PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.f64_array());
     } else if constexpr (std::is_same_v<T, std::string>) {
       assert(array.item_case() == common::Value::kStrArray);
-      size_t len = array.str_array().item_size();
-      for (size_t idx = 0; idx < len; ++idx) {
-        container_.push_back(array.str_array().item(idx));
-      }
+      PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.str_array());
     } else {
       LOG(FATAL) << "not implemented";
     }

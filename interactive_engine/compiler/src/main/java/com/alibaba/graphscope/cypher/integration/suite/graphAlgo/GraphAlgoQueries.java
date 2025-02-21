@@ -247,4 +247,11 @@ public class GraphAlgoQueries {
         List<String> expected = Arrays.asList("Record<{id: 0}>");
         return new QueryContext(query, expected);
     }
+
+    // Test WithInExpression
+    public static QueryContext get_graph_algo_test15() {
+        String query = "MATCH(a)-[b:WorkOn]->(c) where elementId(a) in [0,1] return a.id;";
+        List<String> expected = Arrays.asList("Record<{id: 0}>", "Record<{id: 1}>");
+        return new QueryContext(query, expected);
+    }
 }
