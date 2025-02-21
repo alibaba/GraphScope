@@ -487,7 +487,7 @@ static Context default_left_outer_join(Context&& ctx, Context&& ctx2,
   ctx.reshuffle(offsets);
   for (size_t i = 0; i < ctx2.col_num(); i++) {
     if (builders[i] != nullptr) {
-      ctx.set(i, builders[i]->finish());
+      ctx.set(i, builders[i]->finish(ctx2.get(i)->get_arena()));
     } else if (i >= ctx.col_num()) {
       ctx.set(i, nullptr);
     }

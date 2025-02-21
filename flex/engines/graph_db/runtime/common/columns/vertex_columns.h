@@ -167,7 +167,8 @@ class SLVertexColumnBuilder : public IVertexColumnBuilder {
   }
   inline void push_back_opt(vid_t v) { vertices_.push_back(v); }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   std::vector<vid_t> vertices_;
@@ -246,7 +247,8 @@ class OptionalSLVertexColumnBuilder : public IOptionalVertexColumnBuilder {
     vertices_.emplace_back(std::numeric_limits<vid_t>::max());
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   label_t label_;
@@ -334,29 +336,6 @@ class MSVertexColumn : public IVertexColumn {
   std::set<label_t> labels_;
 };
 
-#if 0
-class MSVertexColumnBuilder : public IVertexColumnBuilder {
- public:
-  MSVertexColumnBuilder() = default;
-  ~MSVertexColumnBuilder() = default;
-
-  void reserve(size_t size) override;
-
-  void push_back_vertex(const std::pair<label_t, vid_t>& v) override;
-
-  void start_label(label_t label);
-
-  void push_back_opt(vid_t v);
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
-  label_t cur_label_;
-  std::vector<vid_t> cur_list_;
-
-  std::vector<std::pair<label_t, std::vector<vid_t>>> vertices_;
-};
-#else
 class MSVertexColumnBuilder : public IVertexColumnBuilder {
  public:
   MSVertexColumnBuilder() = default;
@@ -387,7 +366,8 @@ class MSVertexColumnBuilder : public IVertexColumnBuilder {
 
   inline void push_back_opt(vid_t v) { cur_list_.push_back(v); }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   label_t cur_label_;
@@ -395,7 +375,6 @@ class MSVertexColumnBuilder : public IVertexColumnBuilder {
 
   std::vector<std::pair<label_t, std::vector<vid_t>>> vertices_;
 };
-#endif
 
 class MLVertexColumnBuilder;
 
@@ -470,7 +449,8 @@ class MLVertexColumnBuilder : public IVertexColumnBuilder {
     vertices_.push_back(v);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   std::vector<VertexRecord> vertices_;
@@ -564,7 +544,8 @@ class OptionalMLVertexColumnBuilder : public IOptionalVertexColumnBuilder {
     this->push_back_opt(val.as_vertex());
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>& arena) override;
 
  private:
   std::vector<VertexRecord> vertices_;

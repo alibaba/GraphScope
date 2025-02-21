@@ -323,7 +323,8 @@ class OptionalSDSLEdgeColumnBuilder : public IOptionalContextColumnBuilder {
     edges_.emplace_back(src, dst);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class SDSLEdgeColumn;
@@ -678,7 +679,8 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
     edges_.emplace_back(src, dst);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class SDSLEdgeColumn;
@@ -713,7 +715,8 @@ class SDSLEdgeColumnBuilderBeta : public IContextColumnBuilder {
     prop_col_ptr_->set(len, data);
   }
 
-  std::shared_ptr<IContextColumn> finish() override {
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override {
     auto ret = std::make_shared<SDSLEdgeColumn>(dir_, label_, prop_type_,
                                                 std::vector<PropertyType>());
     ret->edges_.swap(edges_);
@@ -758,7 +761,8 @@ class BDSLEdgeColumnBuilder : public IContextColumnBuilder {
     edges_.emplace_back(src, dst, dir);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class BDSLEdgeColumn;
@@ -807,7 +811,8 @@ class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
     LOG(FATAL) << "Not implemented";
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class SDMLEdgeColumn;
@@ -872,7 +877,8 @@ class BDMLEdgeColumnBuilder : public IContextColumnBuilder {
     edges_.emplace_back(index, src, dst, prop_cols_[index]->size(), dir);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class BDMLEdgeColumn;
@@ -916,7 +922,8 @@ class OptionalBDSLEdgeColumnBuilder : public IOptionalContextColumnBuilder {
                         std::numeric_limits<vid_t>::max(), false);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class BDSLEdgeColumn;

@@ -41,7 +41,7 @@ class Scan {
           builder.push_back_opt(vid);
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MSVertexColumnBuilder builder;
 
@@ -54,7 +54,7 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
@@ -77,7 +77,7 @@ class Scan {
           cur_limit--;
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MSVertexColumnBuilder builder;
 
@@ -97,7 +97,7 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
@@ -126,7 +126,7 @@ class Scan {
           cur_limit--;
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MLVertexColumnBuilder builder;
 
@@ -145,7 +145,7 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
@@ -176,7 +176,7 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       std::vector<std::pair<label_t, vid_t>> vids;
 
@@ -200,13 +200,13 @@ class Scan {
       if (vids.size() == 1) {
         SLVertexColumnBuilder builder(vids[0].first);
         builder.push_back_opt(vids[0].second);
-        ctx.set(params.alias, builder.finish());
+        ctx.set(params.alias, builder.finish(nullptr));
       } else {
         MLVertexColumnBuilder builder;
         for (auto& pair : vids) {
           builder.push_back_vertex({pair.first, pair.second});
         }
-        ctx.set(params.alias, builder.finish());
+        ctx.set(params.alias, builder.finish(nullptr));
       }
     }
     return ctx;

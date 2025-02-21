@@ -27,7 +27,7 @@ bl::result<Context> Scan::find_vertex_with_oid(Context&& ctx,
   if (graph.GetVertexIndex(label, oid, vid)) {
     builder.push_back_opt(vid);
   }
-  ctx.set(alias, builder.finish());
+  ctx.set(alias, builder.finish(nullptr));
   return ctx;
 }
 
@@ -42,7 +42,7 @@ bl::result<Context> Scan::find_vertex_with_gid(Context&& ctx,
     LOG(ERROR) << "Invalid label id: "
                << static_cast<int>(GlobalId::get_label_id(gid));
   }
-  ctx.set(alias, builder.finish());
+  ctx.set(alias, builder.finish(nullptr));
   return ctx;
 }
 

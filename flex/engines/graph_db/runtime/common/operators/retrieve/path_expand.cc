@@ -87,7 +87,8 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
         }
         ++depth;
       }
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kBoth) {
       std::set<label_t> labels;
@@ -160,7 +161,8 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
         }
         depth++;
       }
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
   }
@@ -224,7 +226,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+                           shuffle_offset);
+    ctx.value_collection = std::make_shared<Arena>();
 
     return ctx;
   } else if (dir == Direction::kIn) {
@@ -271,7 +275,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+                           shuffle_offset);
+    ctx.value_collection = std::make_shared<Arena>();
 
     return ctx;
 
@@ -329,7 +335,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+                           shuffle_offset);
+    ctx.value_collection = std::make_shared<Arena>();
     return ctx;
   }
   LOG(ERROR) << "not support path expand options";
@@ -505,8 +513,10 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
     }
   });
 
-  ctx.set_with_reshuffle(params.v_alias, builder.finish(), shuffle_offset);
-  ctx.set(params.alias, path_builder.finish());
+  ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
+                         shuffle_offset);
+  ctx.set(params.alias, path_builder.finish(ctx.value_collection));
+  ctx.value_collection = std::make_shared<Arena>();
   return ctx;
 }
 
@@ -753,8 +763,10 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
       shuffle_offset.push_back(index);
     }
   });
-  ctx.set_with_reshuffle(params.v_alias, builder.finish(), shuffle_offset);
-  ctx.set(params.alias, path_builder.finish());
+  ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
+                         shuffle_offset);
+  ctx.set(params.alias, path_builder.finish(ctx.value_collection));
+  ctx.value_collection = std::make_shared<Arena>();
   return ctx;
 }
 

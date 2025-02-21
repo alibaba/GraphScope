@@ -26,7 +26,7 @@ std::shared_ptr<IContextColumn> ValueColumn<std::string_view>::shuffle(
   for (auto offset : offsets) {
     builder.push_back_opt(data_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
@@ -35,28 +35,25 @@ std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
   for (size_t i : offsets) {
     builder.push_back_opt(data_[i], valid_[i]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumn> MapValueColumn::shuffle(
     const std::vector<size_t>& offsets) const {
   MapValueColumnBuilder builder;
   builder.reserve(offsets.size());
-  builder.set_keys(keys_);
   for (auto offset : offsets) {
-    builder.push_back_opt(values_[offset]);
+    builder.push_back_opt(data_[offset]);
   }
-  return builder.finish();
+  return builder.finish(this->get_arena());
 }
 
 std::shared_ptr<IContextColumnBuilder> MapValueColumn::builder() const {
   auto builder = std::make_shared<MapValueColumnBuilder>();
-  builder->set_keys(keys_);
   return builder;
 }
 
 template class ValueColumn<int>;
-template class ValueColumn<std::set<std::string>>;
 
 }  // namespace runtime
 

@@ -27,12 +27,17 @@ namespace gs {
 
 namespace runtime {
 
-class CpxValueBase {
+class CObject {
  public:
-  virtual ~CpxValueBase() = default;
+  virtual ~CObject() = default;
 };
 
-using ValueCollection = std::vector<std::unique_ptr<CpxValueBase>>;
+using Arena = std::vector<std::unique_ptr<CObject>>;
+
+struct ArenaRef : public CObject {
+  ArenaRef(const std::shared_ptr<Arena>& arena) : arena_(arena) {}
+  std::shared_ptr<Arena> arena_;
+};
 
 class VertexRecord {
  public:
@@ -78,7 +83,7 @@ struct Relation {
   VertexRecord end_node() const { return {label, dst}; }
 };
 
-class PathImpl : public CpxValueBase {
+class PathImpl : public CObject {
  public:
   static std::unique_ptr<PathImpl> make_path_impl(label_t label, vid_t v) {
     auto new_path = std::make_unique<PathImpl>();
@@ -159,7 +164,7 @@ class Path {
 
 class RTAny;
 
-class ListImplBase : public CpxValueBase {
+class ListImplBase : public CObject {
  public:
   virtual ~ListImplBase() = default;
   virtual bool operator<(const ListImplBase& p) const = 0;
@@ -182,14 +187,18 @@ class List {
   RTAny get(size_t idx) const;
   ListImplBase* impl_;
 };
-class SetImplBase : public CpxValueBase {
+
+enum class RTAnyType;
+class SetImplBase : public CObject {
  public:
   virtual ~SetImplBase() = default;
   virtual bool operator<(const SetImplBase& p) const = 0;
   virtual bool operator==(const SetImplBase& p) const = 0;
   virtual size_t size() const = 0;
+  virtual std::vector<RTAny> values() const = 0;
   virtual void insert(const RTAny& val) = 0;
   virtual bool exists(const RTAny& val) const = 0;
+  virtual RTAnyType type() const = 0;
 };
 
 template <typename T>
@@ -203,10 +212,14 @@ class Set {
   bool operator<(const Set& p) const { return *impl_ < *(p.impl_); }
   bool operator==(const Set& p) const { return *(impl_) == *(p.impl_); }
   bool exists(const RTAny& val) const { return impl_->exists(val); }
+  std::vector<RTAny> values() const { return impl_->values(); }
+
+  RTAnyType elem_type() const;
+  size_t size() const { return impl_->size(); }
   SetImplBase* impl_;
 };
 
-class TupleImplBase : public CpxValueBase {
+class TupleImplBase : public CObject {
  public:
   virtual ~TupleImplBase() = default;
   virtual bool operator<(const TupleImplBase& p) const = 0;
@@ -276,19 +289,32 @@ class Tuple {
   TupleImplBase* impl_;
 };
 
-class MapImpl : public CpxValueBase {
+class MapImpl : public CObject {
  public:
-  static MapImpl make_map_impl(const std::vector<std::string>* keys,
-                               const std::vector<RTAny>* values) {
-    MapImpl map_impl;
-    map_impl.keys = keys;
-    map_impl.values = values;
-    return map_impl;
+  static std::unique_ptr<MapImpl> make_map_impl(
+      const std::vector<RTAny>& keys, const std::vector<RTAny>& values) {
+    auto new_map = std::make_unique<MapImpl>();
+    new_map->keys = keys;
+    new_map->values = values;
+    return new_map;
   }
-  size_t size() const { return keys->size(); }
+  size_t size() const { return keys.size(); }
 
-  const std::vector<std::string>* keys;
-  const std::vector<RTAny>* values;
+  std::vector<RTAny> keys;
+  std::vector<RTAny> values;
+};
+
+class StringImpl : public CObject {
+ public:
+  std::string_view str_view() const {
+    return std::string_view(str.data(), str.size());
+  }
+  static std::unique_ptr<StringImpl> make_string_impl(const std::string& str) {
+    auto new_str = std::make_unique<StringImpl>();
+    new_str->str = str;
+    return new_str;
+  }
+  std::string str;
 };
 
 enum class RTAnyType {
@@ -300,8 +326,6 @@ enum class RTAnyType {
   kF64Value,
   kBoolValue,
   kStringValue,
-  kVertexSetValue,
-  kStringSetValue,
   kUnknown,
   kDate32,
   kTimestamp,
@@ -320,17 +344,17 @@ PropertyType rt_type_to_property_type(RTAnyType type);
 
 class Map {
  public:
-  static Map make_map(MapImpl impl) {
+  static Map make_map(MapImpl* impl) {
     Map m;
     m.map_ = impl;
     return m;
   }
-  std::pair<const std::vector<std::string>*, const std::vector<RTAny>*>
-  key_vals() const {
-    return std::make_pair(map_.keys, map_.values);
+  std::pair<const std::vector<RTAny>, const std::vector<RTAny>> key_vals()
+      const {
+    return std::make_pair(map_->keys, map_->values);
   }
 
-  MapImpl map_;
+  MapImpl* map_;
 };
 
 struct pod_string_view {
@@ -633,7 +657,6 @@ union RTAnyValue {
   double f64_val;
   Day day;
   Date date;
-  const std::set<std::string>* str_set;
   std::string_view str_val;
   Path p;
   Tuple t;
@@ -670,7 +693,6 @@ class RTAny {
   static RTAny from_int32(int v);
   static RTAny from_string(const std::string& str);
   static RTAny from_string(const std::string_view& str);
-  static RTAny from_string_set(const std::set<std::string>& str_set);
   static RTAny from_date32(Day v);
   static RTAny from_timestamp(Date v);
 
@@ -689,7 +711,6 @@ class RTAny {
   double as_double() const;
   VertexRecord as_vertex() const;
   const EdgeRecord& as_edge() const;
-  const std::set<std::string>& as_string_set() const;
   std::string_view as_string() const;
   Path as_path() const;
   Tuple as_tuple() const;
@@ -709,6 +730,7 @@ class RTAny {
 
   void sink(const GraphReadInterface& graph, int id,
             results::Column* column) const;
+
   template <typename GraphInterface>
   void sink(const GraphInterface& graph, Encoder& encoder) const {
     if (type_ == RTAnyType::kList) {
@@ -737,10 +759,11 @@ class RTAny {
     } else if (type_ == RTAnyType::kBoolValue) {
       encoder.put_byte(value_.b_val ? static_cast<uint8_t>(1)
                                     : static_cast<uint8_t>(0));
-    } else if (type_ == RTAnyType::kStringSetValue) {
-      encoder.put_int(value_.str_set->size());
-      for (auto& s : *value_.str_set) {
-        encoder.put_string_view(s);
+    } else if (type_ == RTAnyType::kSet) {
+      encoder.put_int(value_.set.size());
+      auto value = value_.set.values();
+      for (const auto& val : value) {
+        val.sink(graph, encoder);
       }
     } else if (type_ == RTAnyType::kVertex) {
       encoder.put_byte(value_.vertex.label_);
@@ -781,18 +804,6 @@ struct TypedConverter<int32_t> {
   static int32_t typed_from_string(const std::string& str) {
     return std::stoi(str);
   }
-};
-
-template <>
-struct TypedConverter<std::set<std::string>> {
-  static RTAnyType type() { return RTAnyType::kStringSetValue; }
-  static const std::set<std::string> to_typed(const RTAny& val) {
-    return val.as_string_set();
-  }
-  static RTAny from_typed(const std::set<std::string>& val) {
-    return RTAny::from_string_set(val);
-  }
-  static const std::string name() { return "set<string>"; }
 };
 
 template <>
@@ -1000,6 +1011,8 @@ class SetImpl : public SetImplBase {
     return std::unique_ptr<SetImplBase>(static_cast<SetImplBase*>(new_set));
   }
 
+  RTAnyType type() const override { return TypedConverter<T>::type(); }
+
   bool exists(const RTAny& val) const override {
     return set_.find(TypedConverter<T>::to_typed(val)) != set_.end();
   }
@@ -1018,6 +1031,14 @@ class SetImpl : public SetImplBase {
   }
   void insert(const T& val) { set_.insert(val); }
   size_t size() const override { return set_.size(); }
+
+  std::vector<RTAny> values() const override {
+    std::vector<RTAny> res;
+    for (const auto& v : set_) {
+      res.push_back(TypedConverter<T>::from_typed(v));
+    }
+    return res;
+  }
   std::set<T> set_;
 };
 
@@ -1035,6 +1056,17 @@ class SetImpl<VertexRecord> : public SetImplBase {
     }
     return std::unique_ptr<SetImplBase>(static_cast<SetImplBase*>(new_set));
   }
+
+  std::vector<RTAny> values() const override {
+    std::vector<RTAny> res;
+    for (auto& v : set_) {
+      res.push_back(RTAny::from_vertex(VertexRecord{
+          static_cast<label_t>(v & 0xff), static_cast<vid_t>(v >> 8)}));
+    }
+    return res;
+  }
+
+  RTAnyType type() const override { return RTAnyType::kVertex; }
 
   bool exists(const RTAny& val) const override {
     auto v = TypedConverter<VertexRecord>::to_typed(val);

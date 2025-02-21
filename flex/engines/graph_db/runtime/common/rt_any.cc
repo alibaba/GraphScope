@@ -20,6 +20,8 @@ namespace gs {
 namespace runtime {
 RTAny List::get(size_t idx) const { return impl_->get(idx); }
 
+RTAnyType Set::elem_type() const { return impl_->type(); }
+
 RTAny Tuple::get(size_t idx) const { return impl_->get(idx); }
 PropertyType rt_type_to_property_type(RTAnyType type) {
   switch (type) {
@@ -267,13 +269,6 @@ RTAny RTAny::from_string(const std::string_view& str) {
   return ret;
 }
 
-RTAny RTAny::from_string_set(const std::set<std::string>& str_set) {
-  RTAny ret;
-  ret.type_ = RTAnyType::kStringSetValue;
-  ret.value_.str_set = &str_set;
-  return ret;
-}
-
 RTAny RTAny::from_date32(Day v) {
   RTAny ret;
   ret.type_ = RTAnyType::kDate32;
@@ -371,10 +366,6 @@ VertexRecord RTAny::as_vertex() const {
 const EdgeRecord& RTAny::as_edge() const {
   assert(type_ == RTAnyType::kEdge);
   return value_.edge;
-}
-const std::set<std::string>& RTAny::as_string_set() const {
-  assert(type_ == RTAnyType::kStringSetValue);
-  return *value_.str_set;
 }
 
 Set RTAny::as_set() const {
@@ -684,8 +675,6 @@ void RTAny::sink_impl(common::Value* value) const {
     value->set_str(value_.str_val.data(), value_.str_val.size());
   } else if (type_ == RTAnyType::kI32Value) {
     value->set_i32(value_.i32_val);
-  } else if (type_ == RTAnyType::kStringSetValue) {
-    LOG(FATAL) << "not support string set sink";
   } else if (type_ == RTAnyType::kDate32) {
     value->set_i64(value_.day.to_timestamp());
   } else if (type_ == RTAnyType::kTimestamp) {
@@ -792,10 +781,10 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
       value_.list.get(i).sink_impl(
           collection->add_collection()->mutable_object());
     }
-  } else if (type_ == RTAnyType::kStringSetValue) {
+  } else if (type_ == RTAnyType::kSet) {
     auto collection = col->mutable_entry()->mutable_collection();
-    for (auto& s : *value_.str_set) {
-      collection->add_collection()->mutable_object()->set_str(s);
+    for (auto& val : value_.set.values()) {
+      val.sink_impl(collection->add_collection()->mutable_object());
     }
   } else if (type_ == RTAnyType::kTuple) {
     auto collection = col->mutable_entry()->mutable_collection();
@@ -809,14 +798,14 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
   } else if (type_ == RTAnyType::kMap) {
     auto mp = col->mutable_entry()->mutable_map();
     auto [keys_ptr, vals_ptr] = value_.map.key_vals();
-    auto& keys = *keys_ptr;
-    auto& vals = *vals_ptr;
+    auto& keys = keys_ptr;
+    auto& vals = vals_ptr;
     for (size_t i = 0; i < keys.size(); ++i) {
       if (vals[i].is_null()) {
         continue;
       }
       auto ret = mp->add_key_values();
-      ret->mutable_key()->set_str(keys[i]);
+      keys[i].sink_impl(ret->mutable_key());
       if (vals[i].type_ == RTAnyType::kVertex) {
         auto v = ret->mutable_value()->mutable_element()->mutable_vertex();
         sink_vertex(graph, vals[i].as_vertex(), v);
@@ -939,10 +928,10 @@ std::string RTAny::to_string() const {
 #else
     return std::to_string(value_.vertex.vid_);
 #endif
-  } else if (type_ == RTAnyType::kStringSetValue) {
+  } else if (type_ == RTAnyType::kSet) {
     std::string ret = "{";
-    for (auto& str : *value_.str_set) {
-      ret += str;
+    for (auto& val : value_.set.values()) {
+      ret += val.to_string();
       ret += ", ";
     }
     ret += "}";
