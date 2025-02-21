@@ -1,0 +1,147 @@
+/* Referred and derived from https://github.com/flyteorg/furo/blob/main/src/furo/assets/styles/flyte.css */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: bold;
+}
+
+.caption-text {
+  font-size: 15px;
+  /* color: #696969; */
+  color: #333333;
+}
+
+div.sphinx-bs .card {
+  flex-direction: row;
+}
+
+/* sphinx-panels custom styles */
+div.sphinx-bs .card-header {
+  border-bottom: none;
+  background-color: var(--color-background-primary);
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  width: 28%;
+  float: left;
+}
+
+.sphinx-bs .card-header:first-child {
+  border-radius: calc(0.25rem - 1px) 0 0 calc(0.25rem - 1px);
+}
+
+div.sphinx-bs .card-header .sphinx-bs.btn,
+div.sphinx-bs .card-body .sphinx-bs.btn,
+div.sphinx-bs .card-header p.card-text {
+  font-size: 1rem;
+  text-decoration: none;
+  word-spacing: 2.5px;
+  color: var(--color-sidebar-link-text);
+}
+
+div.sphinx-bs .card-header p.card-text a {
+  text-align: left;
+}
+
+.sphinx-bs.btn:focus {
+  box-shadow: none;
+}
+
+div.sphinx-bs .card-body {
+  width: 72%;
+  float: left;
+}
+
+.sphinx-bs .card-body .fa {
+  color: var(--color-sidebar-link-text);
+}
+
+.sphinx-bs .card-body:hover .fa {
+  color: var(--color-link--hover);
+}
+
+.sphinx-bs .card-body .fa {
+  font-size: 2rem;
+}
+
+div.sphinx-bs .card:hover {
+  box-shadow: none !important;
+  border-color: #cca9ff;
+}
+
+div.sphinx-bs .card:hover .card-header {
+  background-color: #f2e9ff;
+  color: #fff;
+}
+
+body[data-theme="dark"] div.sphinx-bs .card:hover {
+  border-color: #2a144a;
+}
+
+body[data-theme="dark"] div.sphinx-bs .card:hover .card-header {
+  background-color: #2a144a;
+  color: #fff;
+}
+
+/* make sure hover style is consistent if user prefers dark theme at OS level */
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) div.sphinx-bs .card:hover {
+    border-color: #2a144a;
+  }
+  body:not([data-theme="light"]) div.sphinx-bs .card:hover .card-header {
+    background-color: #2a144a;
+    color: #fff;
+  }
+}
+
+div.sphinx-bs .card:hover .sphinx-bs.btn {
+  color: var(--color-link);
+}
+
+div.sphinx-bs .card:hover .card-body .sphinx-bs.btn {
+  color: var(--color-link--hover);
+}
+
+.getting-started-panels div.sphinx-bs .sphinx-bs.btn:hover {
+  border-color: var(--color-link);
+  background-color: #9d68e4;
+  color: #ffffff;
+}
+
+div.sphinx-bs .card {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+}
+
+.center-card-content p {
+  margin: auto !important;
+}
+
+.sphinx-tabs {
+  padding-top: 10px;
+}
+
+.sphinx-tabs-tab {
+  color: var(--color-link);
+}
+
+/* sphinx tabs */
+.sphinx-tabs-tab[aria-selected="true"] {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-bottom: 1px solid var(--color-background-secondary);
+}
+
+.sphinx-tabs-panel {
+  border: 1px solid var(--color-background-border);
+  background: var(--color-background-secondary);
+  border-top: 0;
+}
+
+[role="tablist"] {
+  border-bottom: 1px solid var(--color-background-border);
+}

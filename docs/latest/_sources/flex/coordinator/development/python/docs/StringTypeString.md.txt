@@ -6,6 +6,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **long_text** | **str** |  | 
+**char** | [**FixedCharChar**](FixedCharChar.md) |  | 
+**var_char** | [**VarCharVarChar**](VarCharVarChar.md) |  | 
 
 ## Example
 

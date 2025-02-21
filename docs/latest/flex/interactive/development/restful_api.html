@@ -1090,7 +1090,8 @@ ul.nav-tabs {
   "type" : "object",
   "properties" : {
     "date32" : {
-      "type" : "string"
+      "type" : "string",
+      "nullable" : true
     }
   },
   "x-body-name" : "date_type"
@@ -1521,6 +1522,10 @@ ul.nav-tabs {
     },
     "type" : {
       "$ref" : "#/components/schemas/GSDataType"
+    },
+    "allow_cast" : {
+      "type" : "boolean",
+      "example" : true
     }
   },
   "x-body-name" : "parameter"
@@ -1775,7 +1780,8 @@ ul.nav-tabs {
   "type" : "object",
   "properties" : {
     "timestamp" : {
-      "type" : "string"
+      "type" : "string",
+      "nullable" : true
     }
   },
   "x-body-name" : "time_stamp_type"

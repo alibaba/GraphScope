@@ -1,5 +1,5 @@
-<map id="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal.h" name="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal.h">
-<area shape="rect" id="node1" title=" " alt="" coords="359,5,586,61"/>
+<map id="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal/wal.h" name="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal/wal.h">
+<area shape="rect" id="node1" title=" " alt="" coords="410,5,637,61"/>
 <area shape="rect" id="node2" title=" " alt="" coords="5,109,68,136"/>
 <area shape="rect" id="node3" title=" " alt="" coords="92,109,195,136"/>
 <area shape="rect" id="node4" title=" " alt="" coords="219,109,294,136"/>
@@ -8,5 +8,6 @@
 <area shape="rect" id="node7" title=" " alt="" coords="543,109,605,136"/>
 <area shape="rect" id="node8" title=" " alt="" coords="630,109,689,136"/>
 <area shape="rect" id="node9" title=" " alt="" coords="713,109,777,136"/>
-<area shape="rect" id="node10" title=" " alt="" coords="801,109,915,136"/>
+<area shape="rect" id="node10" title=" " alt="" coords="801,109,925,136"/>
+<area shape="rect" id="node11" title=" " alt="" coords="950,109,1065,136"/>
 </map>

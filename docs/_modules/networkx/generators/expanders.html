@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>networkx.generators.expanders - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -694,8 +695,8 @@ MathJax = {
 <span></span><span class="sd">&quot;&quot;&quot;Provides explicit constructions of expander graphs.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;margulis_gabber_galil_graph&quot;</span><span class="p">,</span> <span class="s2">&quot;chordal_cycle_graph&quot;</span><span class="p">,</span> <span class="s2">&quot;paley_graph&quot;</span><span class="p">]</span>
 
@@ -732,7 +733,7 @@ MathJax = {
 <span class="c1">#     (x, (y + (2*x + 1)) % n),</span>
 <span class="c1">#     (x, (y + (2*x + 2)) % n),</span>
 <span class="c1">#</span>
-<div class="viewcode-block" id="margulis_gabber_galil_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html#graphscope.nx.generators.expanders.margulis_gabber_galil_graph">[docs]</a><span class="k">def</span> <span class="nf">margulis_gabber_galil_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="margulis_gabber_galil_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html#graphscope.nx.generators.expanders.margulis_gabber_galil_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">margulis_gabber_galil_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the Margulis-Gabber-Galil undirected MultiGraph on `n^2` nodes.</span>
 
 <span class="sd">    The undirected MultiGraph is regular with degree `8`. Nodes are integer</span>
@@ -774,7 +775,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="chordal_cycle_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html#graphscope.nx.generators.expanders.chordal_cycle_graph">[docs]</a><span class="k">def</span> <span class="nf">chordal_cycle_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="chordal_cycle_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html#graphscope.nx.generators.expanders.chordal_cycle_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">chordal_cycle_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the chordal cycle graph on `p` nodes.</span>
 
 <span class="sd">    The returned graph is a cycle graph on `p` nodes with chords joining each</span>
@@ -837,7 +838,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="paley_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.paley_graph.html#graphscope.nx.generators.expanders.paley_graph">[docs]</a><span class="k">def</span> <span class="nf">paley_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="paley_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.paley_graph.html#graphscope.nx.generators.expanders.paley_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">paley_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Paley (p-1)/2-regular graph on p nodes.</span>
 
 <span class="sd">    The returned graph is a graph on Z/pZ with edges between x and y</span>

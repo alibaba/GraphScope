@@ -1,0 +1,15 @@
+
+
+# VertexRequest
+
+
+## Properties
+
+| Name | Type | Description | Notes |
+|------------ | ------------- | ------------- | -------------|
+|**label** | **String** |  |  |
+|**primaryKeyValue** | **Object** |  |  |
+|**properties** | [**List&lt;Property&gt;**](Property.md) |  |  |
+
+
+

@@ -75,15 +75,18 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="graph__db_8h_source.html">flex/engines/graph_db/database/graph_db.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="adhoc__app_8h_source.html">flex/engines/graph_db/app/adhoc_app.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="count__vertices_8h_source.html">flex/engines/graph_db/app/builtin/count_vertices.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="k__hop__neighbors_8h_source.html">flex/engines/graph_db/app/builtin/k_hop_neighbors.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="pagerank_8h_source.html">flex/engines/graph_db/app/builtin/pagerank.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="shortest__path__among__three_8h_source.html">flex/engines/graph_db/app/builtin/shortest_path_among_three.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="cypher__read__app_8h_source.html">flex/engines/graph_db/app/cypher_read_app.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="cypher__write__app_8h_source.html">flex/engines/graph_db/app/cypher_write_app.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hqps__app_8h_source.html">flex/engines/graph_db/app/hqps_app.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="server__app_8h_source.html">flex/engines/graph_db/app/server_app.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="graph__db__session_8h_source.html">flex/engines/graph_db/database/graph_db_session.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="wal_8h_source.html">flex/engines/graph_db/database/wal.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="wal_8h_source.html">flex/engines/graph_db/database/wal/wal.h</a>&quot;</code><br />
+<code>#include &quot;flex/engines/graph_db/runtime/execute/plan_parser.h&quot;</code><br />
+<code>#include &quot;flex/engines/graph_db/runtime/utils/cypher_runner_impl.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="yaml__utils_8h_source.html">flex/utils/yaml_utils.h</a>&quot;</code><br />
 <code>#include &quot;flex/third_party/httplib.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -91,56 +94,56 @@ Include dependency graph for graph_db.cc:</div>
 <div class="dyncontent">
 <div class="center"><img src="graph__db_8cc__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2graph__db_8cc" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2graph__db_8cc" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2graph__db_8cc">
-<area shape="rect" title=" " alt="" coords="1217,5,1449,61"/>
-<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="822,221,1007,262"/>
-<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="941,637,1104,663"/>
-<area shape="rect" href="wal_8h.html" title=" " alt="" coords="314,533,462,574"/>
-<area shape="rect" href="adhoc__app_8h.html" title=" " alt="" coords="1019,117,1178,158"/>
-<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="1449,213,1623,269"/>
-<area shape="rect" href="count__vertices_8h.html" title=" " alt="" coords="1429,109,1587,165"/>
-<area shape="rect" href="k__hop__neighbors_8h.html" title=" " alt="" coords="1611,109,1773,165"/>
-<area shape="rect" href="pagerank_8h.html" title=" " alt="" coords="1797,117,1992,158"/>
-<area shape="rect" href="shortest__path__among__three_8h.html" title=" " alt="" coords="2017,109,2191,165"/>
-<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="1202,117,1353,158"/>
-<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="834,117,995,158"/>
-<area shape="rect" title=" " alt="" coords="2216,124,2395,151"/>
-<area shape="rect" title=" " alt="" coords="789,540,856,567"/>
-<area shape="rect" title=" " alt="" coords="857,332,908,359"/>
-<area shape="rect" title=" " alt="" coords="425,332,489,359"/>
-<area shape="rect" title=" " alt="" coords="224,637,288,663"/>
-<area shape="rect" title=" " alt="" coords="1870,793,1933,820"/>
-<area shape="rect" href="app__base_8h.html" title=" " alt="" coords="857,429,1007,470"/>
-<area shape="rect" href="insert__transaction_8h.html" title=" " alt="" coords="1967,421,2118,477"/>
-<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="1184,429,1419,470"/>
-<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1179,525,1365,581"/>
-<area shape="rect" href="single__edge__insert__transaction_8h.html" title=" " alt="" coords="2244,421,2441,477"/>
-<area shape="rect" href="single__vertex__insert__transaction_8h.html" title=" " alt="" coords="2466,421,2673,477"/>
-<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="1613,317,1771,373"/>
-<area shape="rect" href="version__manager_8h.html" title=" " alt="" coords="77,525,238,581"/>
-<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="564,325,783,366"/>
-<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="584,533,765,574"/>
-<area shape="rect" href="app__utils_8h.html" title=" " alt="" coords="1659,719,1813,745"/>
-<area shape="rect" title=" " alt="" coords="1129,793,1188,820"/>
-<area shape="rect" title=" " alt="" coords="931,540,1002,567"/>
-<area shape="rect" title=" " alt="" coords="1556,793,1636,820"/>
-<area shape="rect" title=" " alt="" coords="1440,540,1499,567"/>
-<area shape="rect" title=" " alt="" coords="363,793,477,820"/>
-<area shape="rect" href="storages_2rt__mutable__graph_2types_8h.html" title=" " alt="" coords="1820,629,2001,671"/>
-<area shape="rect" href="allocators_8h.html" title=" " alt="" coords="2041,540,2199,567"/>
-<area shape="rect" href="utils_2property_2types_8h.html" title=" " alt="" coords="1726,533,1863,574"/>
-<area shape="rect" title=" " alt="" coords="2166,629,2309,671"/>
-<area shape="rect" title=" " alt="" coords="1299,719,1431,745"/>
-<area shape="rect" title=" " alt="" coords="859,793,949,820"/>
-<area shape="rect" href="result_8h.html" title=" " alt="" coords="1043,719,1173,745"/>
-<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="1443,421,1629,477"/>
-<area shape="rect" title=" " alt="" coords="137,637,199,663"/>
-<area shape="rect" title=" " alt="" coords="414,637,517,663"/>
-<area shape="rect" title=" " alt="" coords="37,637,112,663"/>
-<area shape="rect" title=" " alt="" coords="541,637,627,663"/>
-<area shape="rect" title=" " alt="" coords="651,637,714,663"/>
-<area shape="rect" href="compact__transaction_8h.html" title=" " alt="" coords="2326,525,2495,581"/>
-<area shape="rect" href="column_8h.html" title=" " alt="" coords="1806,429,1943,470"/>
-<area shape="rect" title=" " alt="" coords="1731,213,1890,269"/>
+<area shape="rect" title=" " alt="" coords="1442,5,1674,61"/>
+<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="721,221,907,262"/>
+<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="1415,629,1578,656"/>
+<area shape="rect" href="wal_8h.html" title=" " alt="" coords="480,533,655,574"/>
+<area shape="rect" href="count__vertices_8h.html" title=" " alt="" coords="939,109,1097,165"/>
+<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="1378,213,1551,269"/>
+<area shape="rect" href="k__hop__neighbors_8h.html" title=" " alt="" coords="1121,109,1283,165"/>
+<area shape="rect" href="pagerank_8h.html" title=" " alt="" coords="521,117,715,158"/>
+<area shape="rect" href="shortest__path__among__three_8h.html" title=" " alt="" coords="740,109,915,165"/>
+<area shape="rect" href="cypher__read__app_8h.html" title=" " alt="" coords="1999,117,2199,158"/>
+<area shape="rect" href="cypher__write__app_8h.html" title=" " alt="" coords="1771,117,1975,158"/>
+<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="1596,117,1747,158"/>
+<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="1359,117,1520,158"/>
+<area shape="rect" title=" " alt="" coords="2274,109,2429,165"/>
+<area shape="rect" title=" " alt="" coords="2453,109,2633,165"/>
+<area shape="rect" title=" " alt="" coords="2658,124,2837,151"/>
+<area shape="rect" title=" " alt="" coords="1661,436,1727,463"/>
+<area shape="rect" title=" " alt="" coords="266,332,317,359"/>
+<area shape="rect" title=" " alt="" coords="341,332,405,359"/>
+<area shape="rect" title=" " alt="" coords="342,629,406,656"/>
+<area shape="rect" title=" " alt="" coords="2141,793,2204,820"/>
+<area shape="rect" href="app__base_8h.html" title=" " alt="" coords="2048,325,2199,366"/>
+<area shape="rect" href="insert__transaction_8h.html" title=" " alt="" coords="1216,317,1367,373"/>
+<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="1442,325,1677,366"/>
+<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1403,525,1590,581"/>
+<area shape="rect" href="single__edge__insert__transaction_8h.html" title=" " alt="" coords="581,317,778,373"/>
+<area shape="rect" href="single__vertex__insert__transaction_8h.html" title=" " alt="" coords="803,317,1009,373"/>
+<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="1033,317,1192,373"/>
+<area shape="rect" href="version__manager_8h.html" title=" " alt="" coords="5,525,167,581"/>
+<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="215,429,434,470"/>
+<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="890,533,1071,574"/>
+<area shape="rect" href="app__utils_8h.html" title=" " alt="" coords="2039,711,2192,738"/>
+<area shape="rect" title=" " alt="" coords="1655,793,1714,820"/>
+<area shape="rect" title=" " alt="" coords="2031,436,2101,463"/>
+<area shape="rect" title=" " alt="" coords="1153,793,1267,820"/>
+<area shape="rect" title=" " alt="" coords="1412,711,1544,738"/>
+<area shape="rect" title=" " alt="" coords="1006,793,1097,820"/>
+<area shape="rect" href="result_8h.html" title=" " alt="" coords="1619,711,1750,738"/>
+<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="1027,421,1214,477"/>
+<area shape="rect" title=" " alt="" coords="252,629,315,656"/>
+<area shape="rect" title=" " alt="" coords="569,629,672,656"/>
+<area shape="rect" title=" " alt="" coords="149,629,223,656"/>
+<area shape="rect" title=" " alt="" coords="697,629,782,656"/>
+<area shape="rect" title=" " alt="" coords="483,629,545,656"/>
+<area shape="rect" title=" " alt="" coords="908,629,1032,656"/>
+<area shape="rect" title=" " alt="" coords="539,213,697,269"/>
+<area shape="rect" href="compact__transaction_8h.html" title=" " alt="" coords="1803,317,1972,373"/>
+<area shape="rect" href="column_8h.html" title=" " alt="" coords="1825,704,1963,745"/>
+<area shape="rect" title=" " alt="" coords="1805,213,1959,269"/>
+<area shape="rect" title=" " alt="" coords="1983,221,2141,262"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -156,8 +159,8 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a09439d7756551cdd269f6409ce2d9743"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a09439d7756551cdd269f6409ce2d9743">gs::IngestWalRange</a> (SessionLocalContext *contexts, MutablePropertyFragment &amp;graph, const WalsParser &amp;parser, uint32_t from, uint32_t to, int thread_num)</td></tr>
-<tr class="separator:a09439d7756551cdd269f6409ce2d9743"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2494221483c76ab3f40697e40ce2bf0"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ac2494221483c76ab3f40697e40ce2bf0">gs::IngestWalRange</a> (SessionLocalContext *contexts, MutablePropertyFragment &amp;graph, const IWalParser &amp;parser, uint32_t from, uint32_t to, int thread_num)</td></tr>
+<tr class="separator:ac2494221483c76ab3f40697e40ce2bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

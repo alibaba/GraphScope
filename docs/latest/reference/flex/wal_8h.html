@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Flex: /home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal.h File Reference</title>
+<title>Flex: /home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal/wal.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,13 +62,14 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_83040b2426fd14f30f85bf1fbd97af90.html">flex</a></li><li class="navelem"><a class="el" href="dir_74c203ea010b566e2aa7523d4d870365.html">engines</a></li><li class="navelem"><a class="el" href="dir_36ec3549fd5133a6f61eb5067c6256de.html">graph_db</a></li><li class="navelem"><a class="el" href="dir_b22b7d531418ac8eb6812a94ced2c381.html">database</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_83040b2426fd14f30f85bf1fbd97af90.html">flex</a></li><li class="navelem"><a class="el" href="dir_74c203ea010b566e2aa7523d4d870365.html">engines</a></li><li class="navelem"><a class="el" href="dir_36ec3549fd5133a6f61eb5067c6256de.html">graph_db</a></li><li class="navelem"><a class="el" href="dir_b22b7d531418ac8eb6812a94ced2c381.html">database</a></li><li class="navelem"><a class="el" href="dir_a8273d77570bd975a101d4b4a8cd5689.html">wal</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">wal.h File Reference</div>  </div>
 </div><!--header-->
@@ -81,13 +82,14 @@ $(function() {
 <code>#include &lt;queue&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;thread&gt;</code><br />
+<code>#include &lt;unordered_map&gt;</code><br />
 <code>#include &quot;glog/logging.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for wal.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="wal_8h__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8h" alt=""/></div>
-<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8h" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8h">
-<area shape="rect" title=" " alt="" coords="359,5,586,61"/>
+<div class="center"><img src="wal_8h__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8h" alt=""/></div>
+<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8h" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8h">
+<area shape="rect" title=" " alt="" coords="410,5,637,61"/>
 <area shape="rect" title=" " alt="" coords="5,109,68,136"/>
 <area shape="rect" title=" " alt="" coords="92,109,195,136"/>
 <area shape="rect" title=" " alt="" coords="219,109,294,136"/>
@@ -96,44 +98,51 @@ Include dependency graph for wal.h:</div>
 <area shape="rect" title=" " alt="" coords="543,109,605,136"/>
 <area shape="rect" title=" " alt="" coords="630,109,689,136"/>
 <area shape="rect" title=" " alt="" coords="713,109,777,136"/>
-<area shape="rect" title=" " alt="" coords="801,109,915,136"/>
+<area shape="rect" title=" " alt="" coords="801,109,925,136"/>
+<area shape="rect" title=" " alt="" coords="950,109,1065,136"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="wal_8h__dep__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8hdep" alt=""/></div>
-<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8hdep" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8hdep">
-<area shape="rect" title=" " alt="" coords="1597,5,1824,61"/>
-<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="1063,109,1289,180"/>
-<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="1468,591,1700,647"/>
-<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="836,228,1063,299"/>
-<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1388,228,1615,299"/>
-<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="1639,228,1865,299"/>
-<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="1364,117,1639,173"/>
-<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="1539,347,1765,417"/>
-<area shape="rect" href="wal_8cc.html" title=" " alt="" coords="1991,117,2217,173"/>
-<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="1133,347,1360,417"/>
-<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="1137,228,1364,299"/>
-<area shape="rect" href="adhoc__app_8h.html" title=" " alt="" coords="2492,473,2719,529"/>
-<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="1129,473,1356,529"/>
-<area shape="rect" href="count__vertices_8h.html" title=" " alt="" coords="879,465,1105,536"/>
-<area shape="rect" href="k__hop__neighbors_8h.html" title=" " alt="" coords="1380,465,1607,536"/>
-<area shape="rect" href="pagerank_8h.html" title=" " alt="" coords="1681,473,1917,529"/>
-<area shape="rect" href="shortest__path__among__three_8h.html" title=" " alt="" coords="1991,465,2217,536"/>
-<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="2241,473,2468,529"/>
-<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="628,473,855,529"/>
-<area shape="rect" href="graph__db__operations_8cc.html" title=" " alt="" coords="327,584,553,655"/>
-<area shape="rect" href="graph__db__operations_8h.html" title=" " alt="" coords="327,465,553,536"/>
-<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="76,465,303,536"/>
-<area shape="rect" href="adhoc__app_8cc.html" title=" " alt="" coords="2492,591,2719,647"/>
-<area shape="rect" href="count__vertices_8cc.html" title=" " alt="" coords="879,584,1105,655"/>
-<area shape="rect" href="k__hop__neighbors_8cc.html" title=" " alt="" coords="1217,584,1444,655"/>
-<area shape="rect" href="pagerank_8cc.html" title=" " alt="" coords="1724,591,1967,647"/>
-<area shape="rect" href="shortest__path__among__three_8cc.html" title=" " alt="" coords="1991,584,2217,655"/>
-<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="2241,591,2468,647"/>
-<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="628,591,855,647"/>
-<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="201,354,428,410"/>
+<div class="center"><img src="wal_8h__dep__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8hdep" alt=""/></div>
+<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8hdep" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8hdep">
+<area shape="rect" title=" " alt="" coords="2396,5,2623,61"/>
+<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="5,109,232,180"/>
+<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="1451,591,1683,647"/>
+<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="181,465,408,536"/>
+<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1695,228,1921,299"/>
+<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="2347,228,2573,299"/>
+<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="2016,117,2291,173"/>
+<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="3537,465,3764,536"/>
+<area shape="rect" href="local__wal__parser_8cc.html" title=" " alt="" coords="2648,228,2875,299"/>
+<area shape="rect" href="local__wal__parser_8h.html" title=" " alt="" coords="2635,109,2861,180"/>
+<area shape="rect" href="local__wal__writer_8cc.html" title=" " alt="" coords="2924,228,3151,299"/>
+<area shape="rect" href="local__wal__writer_8h.html" title=" " alt="" coords="2936,109,3163,180"/>
+<area shape="rect" href="wal_8cc.html" title=" " alt="" coords="3187,117,3413,173"/>
+<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="1996,347,2223,417"/>
+<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="2096,228,2323,299"/>
+<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="1495,473,1721,529"/>
+<area shape="rect" href="count__vertices_8h.html" title=" " alt="" coords="683,465,909,536"/>
+<area shape="rect" href="k__hop__neighbors_8h.html" title=" " alt="" coords="933,465,1160,536"/>
+<area shape="rect" href="pagerank_8h.html" title=" " alt="" coords="1185,473,1421,529"/>
+<area shape="rect" href="shortest__path__among__three_8h.html" title=" " alt="" coords="1745,465,1972,536"/>
+<area shape="rect" href="cypher__read__app_8h.html" title=" " alt="" coords="2517,473,2758,529"/>
+<area shape="rect" href="cypher__write__app_8h.html" title=" " alt="" coords="2247,473,2492,529"/>
+<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="432,473,659,529"/>
+<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="1996,473,2223,529"/>
+<area shape="rect" href="graph__db__operations_8cc.html" title=" " alt="" coords="3084,584,3311,655"/>
+<area shape="rect" href="graph__db__operations_8h.html" title=" " alt="" coords="3084,465,3311,536"/>
+<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="2833,465,3060,536"/>
+<area shape="rect" href="count__vertices_8cc.html" title=" " alt="" coords="683,584,909,655"/>
+<area shape="rect" href="k__hop__neighbors_8cc.html" title=" " alt="" coords="933,584,1160,655"/>
+<area shape="rect" href="pagerank_8cc.html" title=" " alt="" coords="1184,591,1427,647"/>
+<area shape="rect" href="shortest__path__among__three_8cc.html" title=" " alt="" coords="1745,584,1972,655"/>
+<area shape="rect" href="cypher__read__app_8cc.html" title=" " alt="" coords="2741,591,2987,647"/>
+<area shape="rect" href="cypher__write__app_8cc.html" title=" " alt="" coords="2320,591,2571,647"/>
+<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="432,591,659,647"/>
+<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="1996,591,2223,647"/>
+<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="2833,354,3060,410"/>
 </map>
 </div>
 </div>
@@ -147,15 +156,26 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1UpdateWalUnit.html">gs::UpdateWalUnit</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalWriter.html">gs::WalWriter</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IWalWriter.html">gs::IWalWriter</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html">gs::WalsParser</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IWalParser.html">gs::IWalParser</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalWriterFactory.html">gs::WalWriterFactory</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalParserFactory.html">gs::WalParserFactory</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a4dfbc764e04a98c27be9ecae6ccedca7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a4dfbc764e04a98c27be9ecae6ccedca7">gs::get_wal_uri_scheme</a> (const std::string &amp;uri)</td></tr>
+<tr class="separator:a4dfbc764e04a98c27be9ecae6ccedca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab27f01634dc63386b0357c4fd353280c"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab27f01634dc63386b0357c4fd353280c">gs::get_wal_uri_path</a> (const std::string &amp;uri)</td></tr>
+<tr class="separator:ab27f01634dc63386b0357c4fd353280c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->
