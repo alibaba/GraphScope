@@ -288,7 +288,7 @@ class ListValueColumn : public ListValueColumnBase {
       return unfold_impl<Map>();
     } else {
       LOG(FATAL) << "not implemented for " << this->column_info() << " "
-                 << static_cast<int>(data_[0].elem_type());
+                 << static_cast<int>(elem_type_);
       return {nullptr, std::vector<size_t>()};
     }
   }
