@@ -56,7 +56,7 @@ bl::result<Context> UEdgeExpand::edge_expand_v_without_pred(
           }
         });
   }
-  ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+  ctx.set_with_reshuffle(params.alias, builder.finish(nullptr), shuffle_offset);
   return ctx;
 }
 
@@ -127,7 +127,8 @@ bl::result<Context> UEdgeExpand::edge_expand_e_without_pred(
             }
           }
         });
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offset);
     return ctx;
   } else if (params.dir == Direction::kIn) {
     foreach_vertex(
@@ -144,7 +145,8 @@ bl::result<Context> UEdgeExpand::edge_expand_e_without_pred(
             }
           }
         });
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offset);
     return ctx;
   } else if (params.dir == Direction::kOut) {
     foreach_vertex(
@@ -161,7 +163,8 @@ bl::result<Context> UEdgeExpand::edge_expand_e_without_pred(
             }
           }
         });
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offset);
     return ctx;
   }
   LOG(ERROR) << "should not reach here: " << static_cast<int>(params.dir);

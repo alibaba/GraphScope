@@ -53,8 +53,11 @@ class GroupByOpr : public IReadOperator {
   GroupByOpr(std::function<std::unique_ptr<KeyBase>(const GraphReadInterface&,
                                                     const Context&)>&& key_fun,
              std::vector<std::function<std::unique_ptr<ReducerBase>(
-                 const GraphReadInterface&, const Context&)>>&& aggrs)
-      : key_fun_(std::move(key_fun)), aggrs_(std::move(aggrs)) {}
+                 const GraphReadInterface&, const Context&)>>&& aggrs,
+             const std::vector<std::pair<int, int>>& dependencies)
+      : key_fun_(std::move(key_fun)),
+        aggrs_(std::move(aggrs)),
+        dependencies_(dependencies) {}
 
   std::string get_operator_name() const override { return "GroupByOpr"; }
 
@@ -62,13 +65,37 @@ class GroupByOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    std::vector<std::shared_ptr<Arena>> arenas;
+    if (!dependencies_.empty()) {
+      arenas.resize(ctx.col_num(), nullptr);
+      for (size_t i = 0; i < ctx.col_num(); ++i) {
+        if (ctx.get(i)) {
+          arenas[i] = ctx.get(i)->get_arena();
+        }
+      }
+    }
     auto key = key_fun_(graph, ctx);
     std::vector<std::unique_ptr<ReducerBase>> reducers;
     for (auto& aggr : aggrs_) {
       reducers.push_back(aggr(graph, ctx));
     }
-    return GroupBy::group_by(std::move(ctx), std::move(key),
-                             std::move(reducers));
+    auto ret =
+        GroupBy::group_by(std::move(ctx), std::move(key), std::move(reducers));
+    if (!ret) {
+      return ret;
+    }
+    for (auto& [idx, deps] : dependencies_) {
+      std::shared_ptr<Arena> arena = std::make_shared<Arena>();
+      auto arena1 = ret.value().get(idx)->get_arena();
+      if (arena1) {
+        arena->emplace_back(std::make_unique<ArenaRef>(arena1));
+      }
+      if (arenas[deps]) {
+        arena->emplace_back(std::make_unique<ArenaRef>(arenas[deps]));
+      }
+      ret.value().get(idx)->set_arena(arena);
+    }
+    return ret;
   }
 
  private:
@@ -78,6 +105,7 @@ class GroupByOpr : public IReadOperator {
   std::vector<std::function<std::unique_ptr<ReducerBase>(
       const GraphReadInterface&, const Context&)>>
       aggrs_;
+  std::vector<std::pair<int, int>> dependencies_;
 };
 
 class GroupByOprBeta : public IReadOperator {
@@ -88,10 +116,12 @@ class GroupByOprBeta : public IReadOperator {
                  std::function<std::unique_ptr<KeyBase>(
                      const GraphReadInterface&, const Context&)>&& key_fun,
                  std::vector<std::function<std::unique_ptr<ReducerBase>(
-                     const GraphReadInterface&, const Context&)>>&& aggrs)
+                     const GraphReadInterface&, const Context&)>>&& aggrs,
+                 std::vector<std::pair<int, int>> dependencies)
       : key_project_func_(std::move(key_project_func)),
         key_fun_(std::move(key_fun)),
-        aggrs_(std::move(aggrs)) {}
+        aggrs_(std::move(aggrs)),
+        dependencies_(dependencies) {}
 
   std::string get_operator_name() const override { return "GroupByOpr"; }
 
@@ -99,6 +129,15 @@ class GroupByOprBeta : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    std::vector<std::shared_ptr<Arena>> arenas;
+    if (!dependencies_.empty()) {
+      arenas.resize(ctx.col_num(), nullptr);
+      for (size_t i = 0; i < ctx.col_num(); ++i) {
+        if (ctx.get(i)) {
+          arenas[i] = ctx.get(i)->get_arena();
+        }
+      }
+    }
     auto key_project = key_project_func_(graph, ctx);
     auto tmp = ctx;
 
@@ -118,8 +157,23 @@ class GroupByOprBeta : public IReadOperator {
     for (auto& aggr : aggrs_) {
       reducers.push_back(aggr(graph, ctx));
     }
-    return GroupBy::group_by(std::move(ctx), std::move(key),
-                             std::move(reducers));
+    auto ret_ctx =
+        GroupBy::group_by(std::move(ctx), std::move(key), std::move(reducers));
+    if (!ret_ctx) {
+      return ret_ctx;
+    }
+    for (auto& [idx, deps] : dependencies_) {
+      std::shared_ptr<Arena> arena = std::make_shared<Arena>();
+      auto arena1 = ret_ctx.value().get(idx)->get_arena();
+      if (arena1) {
+        arena->emplace_back(std::make_unique<ArenaRef>(arena1));
+      }
+      if (arenas[deps]) {
+        arena->emplace_back(std::make_unique<ArenaRef>(arenas[deps]));
+      }
+      ret_ctx.value().get(idx)->set_arena(arena);
+    }
+    return ret_ctx;
   }
 
  private:
@@ -132,6 +186,7 @@ class GroupByOprBeta : public IReadOperator {
   std::vector<std::function<std::unique_ptr<ReducerBase>(
       const GraphReadInterface&, const Context&)>>
       aggrs_;
+  std::vector<std::pair<int, int>> dependencies_;
 };
 
 template <typename T>
@@ -145,12 +200,15 @@ struct TypedKeyCollector {
     Var expr;
   };
 
-  TypedKeyCollector(const Context& ctx) { builder.reserve(ctx.row_num()); }
+  TypedKeyCollector(const Context& ctx) : ctx_(ctx) {
+    builder.reserve(ctx.row_num());
+  }
   void collect(const TypedKeyWrapper& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get(const TypedKeyWrapper&) { return builder.finish(); }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
 
+  const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
 
@@ -640,96 +698,64 @@ struct AvgReducer<
 
 template <typename T>
 struct SetCollector {
+  SetCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(std::set<T>&& val) {
-    auto set = builder.allocate_set();
-    auto set_impl = dynamic_cast<SetImpl<T>*>(set.impl_);
-    for (auto& v : val) {
-      set_impl->insert(v);
-    }
-    builder.push_back_opt(set);
+    auto set = SetImpl<T>::make_set_impl(std::move(val));
+    Set st(set.get());
+    ctx_.value_collection->emplace_back(std::move(set));
+    builder.push_back_opt(st);
   }
-  auto get() { return builder.finish(); }
-  SetValueColumnBuilder<T> builder;
-};
-
-template <>
-struct SetCollector<std::string_view> {
-  void init(size_t size) { builder.reserve(size); }
-  void collect(std::set<std::string_view>&& val) {
-    std::set<std::string> set;
-    for (auto& s : val) {
-      set.insert(std::string(s));
-    }
-
-    builder.push_back_opt(std::move(set));
-  }
-  auto get() { return builder.finish(); }
-  ValueColumnBuilder<std::set<std::string>> builder;
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
+  const Context& ctx_;
+  ValueColumnBuilder<Set> builder;
 };
 
 template <typename T>
 struct ValueCollector {
+  ValueCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(T&& val) { builder.push_back_opt(std::move(val)); }
-  auto get() { return builder.finish(); }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
+  const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
 
 struct VertexCollector {
   void init(size_t size) { builder.reserve(size); }
   void collect(VertexRecord&& val) { builder.push_back_vertex(std::move(val)); }
-  auto get() { return builder.finish(); }
+  auto get() { return builder.finish(nullptr); }
   MLVertexColumnBuilder builder;
 };
 
 template <typename T>
 struct ListCollector {
-  void init(size_t size) { builder.reserve(size); }
+  ListCollector(const Context& ctx)
+      : ctx_(ctx),
+        builder(std::make_shared<ListValueColumnBuilder>(
+            TypedConverter<T>::type())) {}
+  void init(size_t size) { builder->reserve(size); }
   void collect(std::vector<T>&& val) {
     auto impl = ListImpl<T>::make_list_impl(std::move(val));
-    auto list = List::make_list(impl);
-    impls.emplace_back(impl);
-    builder.push_back_opt(list);
+    List list(impl.get());
+    ctx_.value_collection->emplace_back(std::move(impl));
+    builder->push_back_opt(list);
   }
-  auto get() {
-    builder.set_list_impls(impls);
-    return builder.finish();
-  }
-  std::vector<std::shared_ptr<ListImplBase>> impls;
-  ListValueColumnBuilder<T> builder;
-};
 
-template <>
-struct ListCollector<std::string_view> {
-  void init(size_t size) { builder.reserve(size); }
-  void collect(std::vector<std::string_view>&& val) {
-    std::vector<std::string> vec;
-    vec.reserve(val.size());
-    for (auto& s : val) {
-      vec.push_back(std::string(s));
-    }
-    auto impl = ListImpl<std::string_view>::make_list_impl(std::move(vec));
-    auto list = List::make_list(impl);
-    impls.emplace_back(impl);
-    builder.push_back_opt(list);
-  }
-  auto get() {
-    builder.set_list_impls(impls);
-    return builder.finish();
-  }
-  std::vector<std::shared_ptr<ListImplBase>> impls;
-  ListValueColumnBuilder<std::string> builder;
+  auto get() { return builder->finish(ctx_.get_and_clear_arena()); }
+
+  const Context& ctx_;
+  std::shared_ptr<ListValueColumnBuilder> builder;
 };
 
 template <typename EXPR, bool IS_OPTIONAL>
-std::unique_ptr<ReducerBase> _make_reducer(EXPR&& expr, AggrKind kind,
-                                           int alias) {
+std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
+                                           AggrKind kind, int alias) {
   switch (kind) {
   case AggrKind::kSum: {
     if constexpr (std::is_arithmetic<typename EXPR::V>::value) {
       SumReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-      ValueCollector<typename EXPR::V> collector;
+      ValueCollector<typename EXPR::V> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -739,25 +765,25 @@ std::unique_ptr<ReducerBase> _make_reducer(EXPR&& expr, AggrKind kind,
   }
   case AggrKind::kCountDistinct: {
     CountDistinctReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<int64_t> collector;
+    ValueCollector<int64_t> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kCount: {
     CountReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<int64_t> collector;
+    ValueCollector<int64_t> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kMin: {
     MinReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<typename EXPR::V> collector;
+    ValueCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kMax: {
     MaxReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<typename EXPR::V> collector;
+    ValueCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
@@ -768,27 +794,27 @@ std::unique_ptr<ReducerBase> _make_reducer(EXPR&& expr, AggrKind kind,
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
-      ValueCollector<typename EXPR::V> collector;
+      ValueCollector<typename EXPR::V> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     }
   }
   case AggrKind::kToSet: {
     ToSetReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    SetCollector<typename EXPR::V> collector;
+    SetCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kToList: {
     ToListReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ListCollector<typename EXPR::V> collector;
+    ListCollector<typename EXPR::V> collector(ctx);
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kAvg: {
     if constexpr (std::is_arithmetic<typename EXPR::V>::value) {
       AvgReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-      ValueCollector<typename EXPR::V> collector;
+      ValueCollector<typename EXPR::V> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -808,12 +834,12 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
                                           AggrKind kind, int alias) {
   if (var.is_optional()) {
     OptionalTypedVarWrapper<T> wrapper(std::move(var));
-    return _make_reducer<decltype(wrapper), true>(std::move(wrapper), kind,
+    return _make_reducer<decltype(wrapper), true>(ctx, std::move(wrapper), kind,
                                                   alias);
   } else {
     TypedVarWrapper<T> wrapper(std::move(var));
-    return _make_reducer<decltype(wrapper), false>(std::move(wrapper), kind,
-                                                   alias);
+    return _make_reducer<decltype(wrapper), false>(ctx, std::move(wrapper),
+                                                   kind, alias);
   }
 }
 std::unique_ptr<ReducerBase> make_general_reducer(
@@ -824,13 +850,13 @@ std::unique_ptr<ReducerBase> make_general_reducer(
       VarWrapper var_wrap(std::move(var));
 
       CountReducer<VarWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector;
+      ValueCollector<int64_t> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
       OptionalVarWrapper var_wrap(std::move(var));
       CountReducer<OptionalVarWrapper, true> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector;
+      ValueCollector<int64_t> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     }
@@ -838,7 +864,7 @@ std::unique_ptr<ReducerBase> make_general_reducer(
     VarWrapper var_wrap(std::move(var));
     if (!var.is_optional()) {
       CountDistinctReducer<VarWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector;
+      ValueCollector<int64_t> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -857,7 +883,7 @@ std::unique_ptr<ReducerBase> make_pair_reducer(const GraphReadInterface& graph,
     VarPairWrapper var_wrap(std::move(fst), std::move(snd));
     if ((!fst.is_optional()) && (!snd.is_optional())) {
       CountReducer<VarPairWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector;
+      ValueCollector<int64_t> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -867,7 +893,7 @@ std::unique_ptr<ReducerBase> make_pair_reducer(const GraphReadInterface& graph,
     VarPairWrapper var_wrap(std::move(fst), std::move(snd));
     if (!fst.is_optional() && !snd.is_optional()) {
       CountDistinctReducer<VarPairWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector;
+      ValueCollector<int64_t> collector(ctx);
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -891,45 +917,45 @@ std::unique_ptr<ReducerBase> make_reducer(const GraphReadInterface& graph,
         if (vertex_col->vertex_column_type() == VertexColumnType::kSingle) {
           SLVertexWrapperBeta wrapper(
               *dynamic_cast<const SLVertexColumn*>(vertex_col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (vertex_col->vertex_column_type() ==
                    VertexColumnType::kMultiple) {
           auto typed_vertex_col =
               std::dynamic_pointer_cast<MLVertexColumn>(vertex_col);
           MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
               *typed_vertex_col);
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else {
           auto typed_vertex_col =
               std::dynamic_pointer_cast<MSVertexColumn>(vertex_col);
           MLVertexWrapper<decltype(*typed_vertex_col)> wrapper(
               *typed_vertex_col);
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         }
       } else if (col->column_type() == ContextColumnType::kValue) {
         if (col->elem_type() == RTAnyType::kI64Value) {
           ValueWrapper<int64_t> wrapper(
               *dynamic_cast<const ValueColumn<int64_t>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kI32Value) {
           ValueWrapper<int32_t> wrapper(
               *dynamic_cast<const ValueColumn<int32_t>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kStringValue) {
           ValueWrapper<std::string_view> wrapper(
               *dynamic_cast<const ValueColumn<std::string_view>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         } else if (col->elem_type() == RTAnyType::kTimestamp) {
           ValueWrapper<Date> wrapper(
               *dynamic_cast<const ValueColumn<Date>*>(col.get()));
-          return _make_reducer<decltype(wrapper), false>(std::move(wrapper),
-                                                         kind, alias);
+          return _make_reducer<decltype(wrapper), false>(
+              ctx, std::move(wrapper), kind, alias);
         }
       }
     }
@@ -1065,7 +1091,7 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
   std::vector<std::function<std::unique_ptr<ReducerBase>(
       const GraphReadInterface&, const Context&)>>
       reduces;
-
+  std::vector<std::pair<int, int>> dependencies;
   for (int i = 0; i < func_num; ++i) {
     auto& func = opr.functions(i);
     auto aggr_kind = parse_aggregate(func.aggregate());
@@ -1085,6 +1111,14 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
       continue;
     }
     auto& var = func.vars(0);
+    if (aggr_kind == AggrKind::kToList || aggr_kind == AggrKind::kToSet ||
+        aggr_kind == AggrKind::kFirst || aggr_kind == AggrKind::kMin ||
+        aggr_kind == AggrKind::kMax) {
+      if (!var.has_property()) {
+        int tag = var.has_tag() ? var.tag().id() : -1;
+        dependencies.emplace_back(alias, tag);
+      }
+    }
 
     reduces.emplace_back(
         [alias, aggr_kind, var](
@@ -1094,15 +1128,18 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
         });
   }
   if (!has_property) {
-    return std::make_pair(std::make_unique<GroupByOpr>(std::move(make_key_func),
-                                                       std::move(reduces)),
-                          meta);
-  } else {
-    return std::make_pair(std::make_unique<GroupByOprBeta>(
-                              std::move(make_project_func),
-                              std::move(make_key_func), std::move(reduces)),
+    return std::make_pair(
+        std::make_unique<GroupByOpr>(std::move(make_key_func),
+                                     std::move(reduces), dependencies),
 
-                          meta);
+        meta);
+  } else {
+    return std::make_pair(
+        std::make_unique<GroupByOprBeta>(std::move(make_project_func),
+                                         std::move(make_key_func),
+                                         std::move(reduces), dependencies),
+
+        meta);
   }
 }
 

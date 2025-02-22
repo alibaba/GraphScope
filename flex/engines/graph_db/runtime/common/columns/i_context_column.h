@@ -112,58 +112,37 @@ class SigColumn<Relation> : public ISigColumn {
 };
 
 template <>
+class SigColumn<Set> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<Set>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return 0;
+  }
+
+ private:
+  const Set* data_;
+};
+
+template <>
+class SigColumn<Map> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<Map>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return 0;
+  }
+
+ private:
+  const Map* data_;
+};
+template <>
 class SigColumn<std::string_view> : public ISigColumn {
  public:
-  SigColumn(const std::vector<std::string>& data) {
-    std::unordered_map<std::string, size_t> table;
-    sig_list_.reserve(data.size());
-    for (auto& str : data) {
-      auto iter = table.find(str);
-      if (iter == table.end()) {
-        size_t idx = table.size();
-        table.emplace(str, idx);
-        sig_list_.push_back(idx);
-      } else {
-        sig_list_.push_back(iter->second);
-      }
-    }
-  }
-  ~SigColumn() = default;
-  inline size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
-
- private:
-  std::vector<size_t> sig_list_;
-};
-
-template <>
-class SigColumn<std::set<std::string>> : public ISigColumn {
- public:
-  SigColumn(const std::vector<std::set<std::string>>& data) {
-    std::map<std::set<std::string>, size_t> table;
-    sig_list_.reserve(data.size());
-    for (auto& str : data) {
-      auto iter = table.find(str);
-      if (iter == table.end()) {
-        size_t idx = table.size();
-        table.emplace(str, idx);
-        sig_list_.push_back(idx);
-      } else {
-        sig_list_.push_back(iter->second);
-      }
-    }
-  }
-  ~SigColumn() = default;
-  inline size_t get_sig(size_t idx) const override { return sig_list_[idx]; }
-
- private:
-  std::vector<size_t> sig_list_;
-};
-
-template <>
-class SigColumn<std::vector<vid_t>> : public ISigColumn {
- public:
-  SigColumn(const std::vector<std::vector<vid_t>>& data) {
-    std::map<std::vector<vid_t>, size_t> table;
+  SigColumn(const std::vector<std::string_view>& data) {
+    std::unordered_map<std::string_view, size_t> table;
     sig_list_.reserve(data.size());
     for (auto& str : data) {
       auto iter = table.find(str);
@@ -200,8 +179,6 @@ class IContextColumn {
   virtual ContextColumnType column_type() const = 0;
 
   virtual RTAnyType elem_type() const = 0;
-
-  virtual std::shared_ptr<IContextColumnBuilder> builder() const = 0;
 
   virtual std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
       const {
@@ -258,6 +235,10 @@ class IContextColumn {
     LOG(INFO) << "order by limit not implemented for " << this->column_info();
     return false;
   }
+
+  virtual std::shared_ptr<Arena> get_arena() const { return nullptr; }
+
+  virtual void set_arena(const std::shared_ptr<Arena>& arena) {}
 };
 
 class IContextColumnBuilder {
@@ -268,7 +249,8 @@ class IContextColumnBuilder {
   virtual void reserve(size_t size) = 0;
   virtual void push_back_elem(const RTAny& val) = 0;
 
-  virtual std::shared_ptr<IContextColumn> finish() = 0;
+  virtual std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>& ptr) = 0;
 };
 
 class IOptionalContextColumnBuilder : public IContextColumnBuilder {

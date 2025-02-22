@@ -312,7 +312,7 @@ class SPOrderByLimitOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto sp_vertex_pred = pred_(graph, params);
-    bl::result<gs::runtime::Context> ret;
+    bl::result<gs::runtime::Context> ret = ctx.newContext();
     if (sp_vertex_pred->data_type() == RTAnyType::kStringValue) {
       ret = _invoke<std::string_view>(graph, std::move(ctx),
                                       std::move(sp_vertex_pred));
@@ -379,9 +379,8 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    Context tmp;
-    auto v_pred =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+    auto v_pred = parse_expression(graph, std::move(ctx), params, pred_,
+                                   VarType::kVertexVar);
     auto pred = [&v_pred](label_t label, vid_t vid) {
       return v_pred->eval_vertex(label, vid, 0).as_bool();
     };
@@ -493,9 +492,8 @@ class SPGPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    Context tmp;
-    auto predicate =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+    auto predicate = parse_expression(graph, std::move(ctx), params, pred_,
+                                      VarType::kVertexVar);
     auto pred = [&predicate](label_t label, vid_t v) {
       return predicate->eval_vertex(label, v, 0).as_bool();
     };

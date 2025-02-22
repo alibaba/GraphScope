@@ -64,7 +64,7 @@ struct ProjectExpr : public ProjectExprBase {
     for (size_t i = 0; i < row_num; ++i) {
       collector_.collect(expr_, i);
     }
-    ret.set(alias_, collector_.get(expr_));
+    ret.set(alias_, collector_.get());
     return ret;
   }
 
@@ -106,7 +106,7 @@ class Project {
   static bl::result<Context> project(
       Context&& ctx, const std::vector<std::unique_ptr<ProjectExprBase>>& exprs,
       bool is_append = false) {
-    Context ret;
+    Context ret = ctx.newContext();
     if (is_append) {
       ret = ctx;
     }
@@ -130,7 +130,7 @@ class Project {
     lower = std::max(lower, static_cast<size_t>(0));
     upper = std::min(upper, ctx.row_num());
 
-    Context ret;
+    Context ret = ctx.newContext();
 
     Context tmp(ctx);
     std::vector<int> alias;

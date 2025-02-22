@@ -77,7 +77,7 @@ expand_vertex_on_graph_view(
     ++idx;
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -148,7 +148,7 @@ expand_vertex_on_graph_view_optional(
     });
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -223,7 +223,7 @@ expand_vertex_np_me_sp(
       ++idx;
     }
 
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
     MSVertexColumnBuilder builder;
@@ -247,7 +247,7 @@ expand_vertex_np_me_sp(
       }
       ++csr_idx;
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
 
   return std::make_pair(col, std::move(offsets));
@@ -318,7 +318,7 @@ expand_vertex_np_me_sp_optional(
       ++idx;
     });
 
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     OptionalMLVertexColumnBuilder builder;
     size_t csr_idx = 0;
@@ -352,7 +352,7 @@ expand_vertex_np_me_sp_optional(
 
       ++csr_idx;
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
 
   return std::make_pair(col, std::move(offsets));
@@ -389,7 +389,7 @@ expand_vertex_np_me_mp(
     }
     ++idx;
   }
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -461,7 +461,7 @@ expand_vertex_np_se(
         }
       });
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     MLVertexColumnBuilder builder;
     if (all_exist) {
@@ -489,7 +489,7 @@ expand_vertex_np_se(
         }
       });
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -557,7 +557,7 @@ expand_vertex_np_se(
         idx += input.seg_vertices(k).size();
       }
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
     MSVertexColumnBuilder builder;
@@ -583,7 +583,7 @@ expand_vertex_np_se(
         idx += input.seg_vertices(k).size();
       }
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -643,7 +643,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     MLVertexColumnBuilder builder;
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
@@ -663,7 +663,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -734,7 +734,7 @@ expand_vertex_np_me_sp_optional(
         offsets.push_back(idx);
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     OptionalMLVertexColumnBuilder builder;
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t vid) {
@@ -765,7 +765,7 @@ expand_vertex_np_me_sp_optional(
         offsets.push_back(idx);
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -826,7 +826,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     MLVertexColumnBuilder builder;
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
@@ -846,7 +846,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -879,7 +879,7 @@ expand_vertex_np_me_mp(
       }
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>
@@ -912,7 +912,7 @@ expand_vertex_np_me_mp(
       }
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>
@@ -954,7 +954,7 @@ expand_vertex_optional_impl(
       offsets.push_back(idx);
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename GPRED_T, typename EDATA_T>
@@ -1051,7 +1051,7 @@ expand_vertex_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
     MLVertexColumnBuilder builder;
     std::vector<size_t> offsets;
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1168,7 +1168,7 @@ expand_vertex_impl(const GraphReadInterface& graph, const MLVertexColumn& input,
   if (ed_types.size() == 0) {
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
     MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1278,7 +1278,7 @@ expand_vertex_impl(const GraphReadInterface& graph, const MSVertexColumn& input,
   if (ed_types.empty()) {
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
     MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1405,7 +1405,7 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
     return std::make_pair(nullptr, std::vector<size_t>());
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>

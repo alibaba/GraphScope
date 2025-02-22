@@ -28,10 +28,10 @@ namespace runtime {
 class Scan {
  public:
   template <typename PRED_T>
-  static bl::result<Context> scan_vertex(const GraphReadInterface& graph,
+  static bl::result<Context> scan_vertex(Context&& ctx,
+                                         const GraphReadInterface& graph,
                                          const ScanParams& params,
                                          const PRED_T& predicate) {
-    Context ctx;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
       SLVertexColumnBuilder builder(label);
@@ -41,7 +41,7 @@ class Scan {
           builder.push_back_opt(vid);
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MSVertexColumnBuilder builder;
 
@@ -54,16 +54,15 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
 
   template <typename PRED_T>
   static bl::result<Context> scan_vertex_with_limit(
-      const GraphReadInterface& graph, const ScanParams& params,
+      Context&& ctx, const GraphReadInterface& graph, const ScanParams& params,
       const PRED_T& predicate) {
-    Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
@@ -78,7 +77,7 @@ class Scan {
           cur_limit--;
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MSVertexColumnBuilder builder;
 
@@ -98,21 +97,21 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
 
   static bl::result<Context> scan_vertex_with_special_vertex_predicate(
-      const GraphReadInterface& graph, const ScanParams& params,
+      Context&& ctx, const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& pred);
 
   template <typename PRED_T>
-  static bl::result<Context> filter_gids(const GraphReadInterface& graph,
+  static bl::result<Context> filter_gids(Context&& ctx,
+                                         const GraphReadInterface& graph,
                                          const ScanParams& params,
                                          const PRED_T& predicate,
                                          const std::vector<int64_t>& gids) {
-    Context ctx;
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
@@ -127,7 +126,7 @@ class Scan {
           cur_limit--;
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       MLVertexColumnBuilder builder;
 
@@ -146,21 +145,21 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     }
     return ctx;
   }
 
   static bl::result<Context> filter_gids_with_special_vertex_predicate(
-      const GraphReadInterface& graph, const ScanParams& params,
+      Context&& ctx, const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& predicate, const std::vector<int64_t>& oids);
 
   template <typename PRED_T>
-  static bl::result<Context> filter_oids(const GraphReadInterface& graph,
+  static bl::result<Context> filter_oids(Context&& ctx,
+                                         const GraphReadInterface& graph,
                                          const ScanParams& params,
                                          const PRED_T& predicate,
                                          const std::vector<Any>& oids) {
-    Context ctx;
     auto limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
@@ -177,7 +176,7 @@ class Scan {
           }
         }
       }
-      ctx.set(params.alias, builder.finish());
+      ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
       std::vector<std::pair<label_t, vid_t>> vids;
 
@@ -201,28 +200,28 @@ class Scan {
       if (vids.size() == 1) {
         SLVertexColumnBuilder builder(vids[0].first);
         builder.push_back_opt(vids[0].second);
-        ctx.set(params.alias, builder.finish());
+        ctx.set(params.alias, builder.finish(nullptr));
       } else {
         MLVertexColumnBuilder builder;
         for (auto& pair : vids) {
           builder.push_back_vertex({pair.first, pair.second});
         }
-        ctx.set(params.alias, builder.finish());
+        ctx.set(params.alias, builder.finish(nullptr));
       }
     }
     return ctx;
   }
 
   static bl::result<Context> filter_oids_with_special_vertex_predicate(
-      const GraphReadInterface& graph, const ScanParams& params,
+      Context&& ctx, const GraphReadInterface& graph, const ScanParams& params,
       const SPVertexPredicate& predicate, const std::vector<Any>& oids);
 
   static bl::result<Context> find_vertex_with_oid(
-      const GraphReadInterface& graph, label_t label, const Any& pk,
-      int32_t alias);
+      Context&& ctx, const GraphReadInterface& graph, label_t label,
+      const Any& pk, int32_t alias);
 
   static bl::result<Context> find_vertex_with_gid(
-      const GraphReadInterface& graph, label_t label, int64_t pk,
+      Context&& ctx, const GraphReadInterface& graph, label_t label, int64_t pk,
       int32_t alias);
 };
 

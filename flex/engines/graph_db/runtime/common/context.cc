@@ -21,7 +21,16 @@ namespace gs {
 
 namespace runtime {
 
-Context::Context() : head(nullptr), offset_ptr(nullptr) {}
+Context::Context()
+    : head(nullptr),
+      offset_ptr(nullptr),
+      value_collection(std::make_shared<Arena>()) {}
+
+Context Context::newContext() const {
+  Context ctx;
+  ctx.value_collection = value_collection;
+  return ctx;
+}
 
 void Context::clear() {
   columns.clear();
@@ -211,11 +220,12 @@ void Context::gen_offset() {
   for (size_t i = 0; i < prev_row_num; ++i) {
     builder.push_back_opt(i);
   }
-  offset_ptr = std::dynamic_pointer_cast<ValueColumn<size_t>>(builder.finish());
+  offset_ptr =
+      std::dynamic_pointer_cast<ValueColumn<size_t>>(builder.finish(nullptr));
 }
 
 Context Context::union_ctx(const Context& other) const {
-  Context ctx;
+  Context ctx = this->newContext();
   CHECK(columns.size() == other.columns.size());
   for (size_t i = 0; i < col_num(); ++i) {
     if (columns[i] != nullptr) {
