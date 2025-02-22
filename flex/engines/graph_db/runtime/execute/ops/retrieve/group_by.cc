@@ -206,11 +206,7 @@ struct TypedKeyCollector {
   void collect(const TypedKeyWrapper& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
 
   const Context& ctx_;
   ValueColumnBuilder<T> builder;
@@ -710,11 +706,7 @@ struct SetCollector {
     ctx_.value_collection->emplace_back(std::move(set));
     builder.push_back_opt(st);
   }
-  auto get() {
-    auto col = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return col;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<Set> builder;
 };
@@ -724,11 +716,7 @@ struct ValueCollector {
   ValueCollector(const Context& ctx) : ctx_(ctx) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(T&& val) { builder.push_back_opt(std::move(val)); }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
@@ -754,11 +742,7 @@ struct ListCollector {
     builder->push_back_opt(list);
   }
 
-  auto get() {
-    auto ret = builder->finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder->finish(ctx_.get_and_clear_arena()); }
 
   const Context& ctx_;
   std::shared_ptr<ListValueColumnBuilder> builder;

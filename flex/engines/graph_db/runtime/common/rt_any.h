@@ -966,15 +966,15 @@ class ListImpl : ListImplBase {
     return std::unique_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
   }
 
-  bool operator<(const ListImplBase& p) const {
+  bool operator<(const ListImplBase& p) const override {
     return list_ < (dynamic_cast<const ListImpl<T>&>(p)).list_;
   }
-  bool operator==(const ListImplBase& p) const {
+  bool operator==(const ListImplBase& p) const override {
     return list_ == (dynamic_cast<const ListImpl<T>&>(p)).list_;
   }
-  size_t size() const { return list_.size(); }
+  size_t size() const override { return list_.size(); }
   RTAnyType type() const override { return TypedConverter<T>::type(); }
-  RTAny get(size_t idx) const {
+  RTAny get(size_t idx) const override {
     if (is_valid_[idx]) {
       return TypedConverter<T>::from_typed(list_[idx]);
     } else {
