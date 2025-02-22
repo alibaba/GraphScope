@@ -40,12 +40,10 @@ class ExprBase {
                           const Any& data, size_t idx, int) const {
     return eval_edge(label, src, dst, data, idx);
   }
-  virtual std::shared_ptr<IContextColumnBuilder> builder() const {
-    LOG(FATAL) << "not implemented";
-    return nullptr;
-  }
 
   virtual bool is_optional() const { return false; }
+
+  virtual RTAnyType elem_type() const { return RTAnyType::kEmpty; }
 
   virtual ~ExprBase() = default;
 };
@@ -297,10 +295,6 @@ class VariableExpr : public ExprBase {
   RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const override;
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx, int) const override;
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return var_.builder();
-  }
 
   bool is_optional() const override { return var_.is_optional(); }
 
@@ -651,11 +645,6 @@ class MapExpr : public ExprBase {
     return false;
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto builder = std::make_shared<MapValueColumnBuilder>();
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
-  }
-
  private:
   const Context& ctx_;
   std::vector<RTAny> keys;
@@ -702,9 +691,7 @@ class RelationshipsExpr : public ListExprBase {
 
   bool is_optional() const override { return args->is_optional(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::make_shared<ListValueColumnBuilder<Relation>>();
-  }
+  RTAnyType elem_type() const override { return RTAnyType::kRelation; }
 
  private:
   const Context& ctx_;
@@ -746,9 +733,7 @@ class NodesExpr : public ListExprBase {
 
   bool is_optional() const override { return args->is_optional(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::make_shared<ListValueColumnBuilder<VertexRecord>>();
-  }
+  RTAnyType elem_type() const override { return RTAnyType::kVertex; }
 
  private:
   const Context& ctx_;

@@ -66,8 +66,6 @@ class GeneralPathColumn : public IPathColumn {
     return nullptr;
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override;
-
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
   }
@@ -139,8 +137,6 @@ class OptionalGeneralPathColumn : public IPathColumn {
     LOG(FATAL) << "not implemented for " << this->column_info();
     return nullptr;
   }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override;
 
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);

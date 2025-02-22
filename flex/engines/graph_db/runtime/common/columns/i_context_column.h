@@ -112,6 +112,33 @@ class SigColumn<Relation> : public ISigColumn {
 };
 
 template <>
+class SigColumn<Set> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<Set>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return 0;
+  }
+
+ private:
+  const Set* data_;
+};
+
+template <>
+class SigColumn<Map> : public ISigColumn {
+ public:
+  SigColumn(const std::vector<Map>& data) : data_(data.data()) {}
+  ~SigColumn() = default;
+  inline size_t get_sig(size_t idx) const override {
+    LOG(FATAL) << "not implemented";
+    return 0;
+  }
+
+ private:
+  const Map* data_;
+};
+template <>
 class SigColumn<std::string_view> : public ISigColumn {
  public:
   SigColumn(const std::vector<std::string_view>& data) {
@@ -152,8 +179,6 @@ class IContextColumn {
   virtual ContextColumnType column_type() const = 0;
 
   virtual RTAnyType elem_type() const = 0;
-
-  virtual std::shared_ptr<IContextColumnBuilder> builder() const = 0;
 
   virtual std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
       const {

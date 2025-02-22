@@ -101,11 +101,6 @@ class SLVertexColumn : public SLVertexColumnBase {
   std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offset) const override;
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<SLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
-
   std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
       const override {
     auto ptr = std::make_shared<OptionalSLVertexColumnBuilder>(label_);
@@ -181,11 +176,6 @@ class OptionalSLVertexColumn : public SLVertexColumnBase {
   ~OptionalSLVertexColumn() = default;
 
   inline size_t size() const override { return vertices_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<OptionalSLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
 
   std::string column_info() const override {
     return "OptionalSLVertex[" + std::to_string(size()) + "]";
@@ -267,11 +257,6 @@ class MSVertexColumn : public IVertexColumn {
       ret += pair.second.size();
     }
     return ret;
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<MSVertexColumnBuilder>();
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
   }
 
   std::string column_info() const override {
@@ -386,11 +371,6 @@ class MLVertexColumn : public MLVertexColumnBase {
 
   inline size_t size() const override { return vertices_.size(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<MLVertexColumnBuilder>(labels_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
-
   std::string column_info() const override {
     std::string labels;
     for (auto label : labels_) {
@@ -463,11 +443,6 @@ class OptionalMLVertexColumn : public MLVertexColumnBase {
   ~OptionalMLVertexColumn() = default;
 
   inline size_t size() const override { return vertices_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<OptionalMLVertexColumnBuilder>();
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
 
   std::string column_info() const override {
     std::string labels;

@@ -163,6 +163,7 @@ class Path {
 };
 
 class RTAny;
+enum class RTAnyType;
 
 class ListImplBase : public CObject {
  public:
@@ -170,6 +171,7 @@ class ListImplBase : public CObject {
   virtual bool operator<(const ListImplBase& p) const = 0;
   virtual bool operator==(const ListImplBase& p) const = 0;
   virtual size_t size() const = 0;
+  virtual RTAnyType type() const = 0;
   virtual RTAny get(size_t idx) const = 0;
 };
 
@@ -185,10 +187,10 @@ class List {
   bool operator==(const List& p) const { return *(impl_) == *(p.impl_); }
   size_t size() const { return impl_->size(); }
   RTAny get(size_t idx) const;
+  RTAnyType elem_type() const;
   ListImplBase* impl_;
 };
 
-enum class RTAnyType;
 class SetImplBase : public CObject {
  public:
   virtual ~SetImplBase() = default;
@@ -299,6 +301,12 @@ class MapImpl : public CObject {
     return new_map;
   }
   size_t size() const { return keys.size(); }
+  bool operator<(const MapImpl& p) const {
+    return std::tie(keys, values) < std::tie(p.keys, p.values);
+  }
+  bool operator==(const MapImpl& p) const {
+    return std::tie(keys, values) == std::tie(p.keys, p.values);
+  }
 
   std::vector<RTAny> keys;
   std::vector<RTAny> values;
@@ -353,6 +361,8 @@ class Map {
       const {
     return std::make_pair(map_->keys, map_->values);
   }
+  bool operator<(const Map& p) const { return *map_ < *(p.map_); }
+  bool operator==(const Map& p) const { return *map_ == *(p.map_); }
 
   MapImpl* map_;
 };
@@ -891,6 +901,13 @@ struct TypedConverter<Map> {
 };
 
 template <>
+struct TypedConverter<Set> {
+  static RTAnyType type() { return RTAnyType::kSet; }
+  static Set to_typed(const RTAny& val) { return val.as_set(); }
+  static RTAny from_typed(Set val) { return RTAny::from_set(val); }
+  static const std::string name() { return "set"; }
+};
+template <>
 struct TypedConverter<Relation> {
   static RTAnyType type() { return RTAnyType::kRelation; }
   static Relation to_typed(const RTAny& val) { return val.as_relation(); }
@@ -956,6 +973,7 @@ class ListImpl : ListImplBase {
     return list_ == (dynamic_cast<const ListImpl<T>&>(p)).list_;
   }
   size_t size() const { return list_.size(); }
+  RTAnyType type() const override { return TypedConverter<T>::type(); }
   RTAny get(size_t idx) const {
     if (is_valid_[idx]) {
       return TypedConverter<T>::from_typed(list_[idx]);
@@ -965,38 +983,6 @@ class ListImpl : ListImplBase {
   }
 
   std::vector<T> list_;
-  std::vector<bool> is_valid_;
-};
-
-template <>
-class ListImpl<std::string_view> : public ListImplBase {
- public:
-  ListImpl() = default;
-  static std::unique_ptr<ListImplBase> make_list_impl(
-      std::vector<std::string>&& vals) {
-    auto new_list = new ListImpl<std::string_view>();
-    new_list->list_ = std::move(vals);
-    new_list->is_valid_.resize(new_list->list_.size(), true);
-    return std::unique_ptr<ListImplBase>(static_cast<ListImplBase*>(new_list));
-  }
-
-  bool operator<(const ListImplBase& p) const {
-    return list_ < (dynamic_cast<const ListImpl<std::string_view>&>(p)).list_;
-  }
-  bool operator==(const ListImplBase& p) const {
-    return list_ == (dynamic_cast<const ListImpl<std::string_view>&>(p)).list_;
-  }
-  size_t size() const { return list_.size(); }
-  RTAny get(size_t idx) const {
-    if (is_valid_[idx]) {
-      return TypedConverter<std::string_view>::from_typed(
-          std::string_view(list_[idx].data(), list_[idx].size()));
-    } else {
-      return RTAny(RTAnyType::kNull);
-    }
-  }
-
-  std::vector<std::string> list_;
   std::vector<bool> is_valid_;
 };
 
