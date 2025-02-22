@@ -22,6 +22,8 @@ RTAny List::get(size_t idx) const { return impl_->get(idx); }
 
 RTAnyType Set::elem_type() const { return impl_->type(); }
 
+RTAnyType List::elem_type() const { return impl_->type(); }
+
 RTAny Tuple::get(size_t idx) const { return impl_->get(idx); }
 PropertyType rt_type_to_property_type(RTAnyType type) {
   switch (type) {

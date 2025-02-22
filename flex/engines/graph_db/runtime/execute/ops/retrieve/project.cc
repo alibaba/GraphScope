@@ -346,7 +346,9 @@ struct ListCollector {
   };
   using EXPR = ListExprWrapper;
   ListCollector(const Context& ctx, const EXPR& expr)
-      : ctx_(ctx), builder_(expr.expr.builder()) {}
+      : ctx_(ctx),
+        builder_(
+            std::make_shared<ListValueColumnBuilder>(expr.expr.elem_type())) {}
 
   void collect(const EXPR& expr, size_t idx) {
     builder_->push_back_elem(expr.expr.eval_path(idx));
@@ -357,7 +359,7 @@ struct ListCollector {
     return ret;
   }
   const Context& ctx_;
-  std::shared_ptr<IContextColumnBuilder> builder_;
+  std::shared_ptr<ListValueColumnBuilder> builder_;
 };
 
 struct TupleCollector {
@@ -425,14 +427,18 @@ struct MapCollector {
   };
   using EXPR = MapExprWrapper;
 
-  MapCollector(const EXPR& expr) : builder(expr.expr.builder()) {}
+  MapCollector(const Context& ctx, const EXPR& expr) : ctx_(ctx) {}
   void collect(const EXPR& expr, size_t idx) {
     auto v = expr.expr.eval_path(idx);
-    builder->push_back_elem(v);
+    builder.push_back_elem(v);
   }
-  // TODO: fix this
-  auto get() { return builder->finish(nullptr); }
-  std::shared_ptr<IContextColumnBuilder> builder;
+  auto get() {
+    auto ret = builder.finish(ctx_.value_collection);
+    ctx_.value_collection = std::make_shared<Arena>();
+    return ret;
+  }
+  const Context& ctx_;
+  ValueColumnBuilder<Map> builder;
 };
 
 struct OptionalMapCollector {
@@ -449,13 +455,18 @@ struct OptionalMapCollector {
     Expr expr;
   };
   using EXPR = OptionalMapExprWrapper;
-  OptionalMapCollector(const EXPR& expr) : builder(expr.expr.builder()) {}
+  OptionalMapCollector(const Context& ctx, const EXPR& expr) : ctx_(ctx) {}
   void collect(const EXPR& expr, size_t idx) {
     auto v = expr.expr.eval_path(idx, 0);
-    builder->push_back_elem(v);
+    builder.push_back_elem(v);
   }
-  auto get() { return builder->finish(nullptr); }
-  std::shared_ptr<IContextColumnBuilder> builder;
+  auto get() {
+    auto ret = builder.finish(ctx_.value_collection);
+    ctx_.value_collection = std::make_shared<Arena>();
+    return ret;
+  }
+  const Context& ctx_;
+  OptionalValueColumnBuilder<Map> builder;
 };
 
 template <typename EXPR, typename RESULT_T>
@@ -933,13 +944,13 @@ make_project_expr(const common::Expression& expr, int alias) {
     case RTAnyType::kMap: {
       if (!e.is_optional()) {
         MapCollector::EXPR expr(std::move(e));
-        MapCollector collector(expr);
+        MapCollector collector(ctx, expr);
         return std::make_unique<
             ProjectExpr<typename MapCollector::EXPR, MapCollector>>(
             std::move(expr), collector, alias);
       } else {
         OptionalMapCollector::EXPR expr(std::move(e));
-        OptionalMapCollector collector(expr);
+        OptionalMapCollector collector(ctx, expr);
         return std::make_unique<ProjectExpr<typename OptionalMapCollector::EXPR,
                                             OptionalMapCollector>>(
             std::move(expr), collector, alias);

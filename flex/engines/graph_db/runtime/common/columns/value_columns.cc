@@ -38,19 +38,14 @@ std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
   return builder.finish(this->get_arena());
 }
 
-std::shared_ptr<IContextColumn> MapValueColumn::shuffle(
+std::shared_ptr<IContextColumn> ListValueColumn::shuffle(
     const std::vector<size_t>& offsets) const {
-  MapValueColumnBuilder builder;
+  ListValueColumnBuilder builder(this->elem_type_);
   builder.reserve(offsets.size());
   for (auto offset : offsets) {
     builder.push_back_opt(data_[offset]);
   }
   return builder.finish(this->get_arena());
-}
-
-std::shared_ptr<IContextColumnBuilder> MapValueColumn::builder() const {
-  auto builder = std::make_shared<MapValueColumnBuilder>();
-  return builder;
 }
 
 template class ValueColumn<int>;

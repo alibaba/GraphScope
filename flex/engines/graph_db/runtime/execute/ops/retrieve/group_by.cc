@@ -716,7 +716,7 @@ struct SetCollector {
     return col;
   }
   const Context& ctx_;
-  SetValueColumnBuilder<T> builder;
+  ValueColumnBuilder<Set> builder;
 };
 
 template <typename T>
@@ -742,46 +742,26 @@ struct VertexCollector {
 
 template <typename T>
 struct ListCollector {
-  ListCollector(const Context& ctx) : ctx_(ctx) {}
-  void init(size_t size) { builder.reserve(size); }
+  ListCollector(const Context& ctx)
+      : ctx_(ctx),
+        builder(std::make_shared<ListValueColumnBuilder>(
+            TypedConverter<T>::type())) {}
+  void init(size_t size) { builder->reserve(size); }
   void collect(std::vector<T>&& val) {
     auto impl = ListImpl<T>::make_list_impl(std::move(val));
     List list(impl.get());
     ctx_.value_collection->emplace_back(std::move(impl));
-    builder.push_back_opt(list);
+    builder->push_back_opt(list);
   }
 
   auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
+    auto ret = builder->finish(ctx_.value_collection);
     ctx_.value_collection = std::make_shared<Arena>();
     return ret;
   }
-  ListValueColumnBuilder<T> builder;
-  const Context& ctx_;
-};
 
-template <>
-struct ListCollector<std::string_view> {
-  ListCollector(const Context& ctx) : ctx_(ctx) {}
-  void init(size_t size) { builder.reserve(size); }
-  void collect(std::vector<std::string_view>&& val) {
-    std::vector<std::string> vec;
-    vec.reserve(val.size());
-    for (auto& s : val) {
-      vec.push_back(std::string(s));
-    }
-    auto impl = ListImpl<std::string_view>::make_list_impl(std::move(vec));
-    List list(impl.get());
-    ctx_.value_collection->emplace_back(std::move(impl));
-    builder.push_back_opt(list);
-  }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
   const Context& ctx_;
-  ListValueColumnBuilder<std::string> builder;
+  std::shared_ptr<ListValueColumnBuilder> builder;
 };
 
 template <typename EXPR, bool IS_OPTIONAL>

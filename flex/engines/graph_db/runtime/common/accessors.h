@@ -85,10 +85,6 @@ class VertexPathAccessor : public IAccessor {
     return RTAny::from_vertex(typed_eval_path(idx));
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return vertex_col_.builder();
-  }
-
  private:
   const IVertexColumn& vertex_col_;
 };
@@ -108,10 +104,6 @@ class VertexGIdPathAccessor : public IAccessor {
 
   RTAny eval_path(size_t idx) const override {
     return RTAny::from_int64(typed_eval_path(idx));
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return vertex_col_.builder();
   }
 
  private:
@@ -236,10 +228,6 @@ class ContextValueAccessor : public IAccessor {
       return RTAny(RTAnyType::kNull);
     }
     return eval_path(idx);
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return col_.builder();
   }
 
  private:
@@ -367,10 +355,6 @@ class EdgeIdPathAccessor : public IAccessor {
     return RTAny::from_edge(typed_eval_path(idx));
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return edge_col_.builder();
-  }
-
  private:
   const IEdgeColumn& edge_col_;
 };
@@ -402,10 +386,6 @@ class EdgePropertyPathAccessor : public IAccessor {
       return RTAny(RTAnyType::kNull);
     }
     return eval_path(idx);
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return col_.builder();
   }
 
  private:
@@ -490,10 +470,6 @@ class MultiPropsEdgePropertyPathAccessor : public IAccessor {
     return eval_path(idx);
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return col_.builder();
-  }
-
  private:
   const IEdgeColumn& col_;
   std::vector<size_t> prop_index_;
@@ -515,10 +491,6 @@ class EdgeLabelPathAccessor : public IAccessor {
   elem_t typed_eval_path(size_t idx) const {
     const auto& e = col_.get_edge(idx);
     return static_cast<int32_t>(e.label_triplet_.edge_label);
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return col_.builder();
   }
 
  private:
@@ -664,10 +636,6 @@ class PathIdPathAccessor : public IAccessor {
   elem_t typed_eval_path(size_t idx) const { return path_col_.get_path(idx); }
 
   RTAny eval_path(size_t idx) const override { return path_col_.get_elem(idx); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return path_col_.builder();
-  }
 
  private:
   const IPathColumn& path_col_;
