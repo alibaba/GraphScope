@@ -226,9 +226,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+    ctx.set_with_reshuffle(params.alias,
+                           builder.finish(ctx.get_and_clear_arena()),
                            shuffle_offset);
-    ctx.value_collection = std::make_shared<Arena>();
 
     return ctx;
   } else if (dir == Direction::kIn) {
@@ -275,9 +275,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+    ctx.set_with_reshuffle(params.alias,
+                           builder.finish(ctx.get_and_clear_arena()),
                            shuffle_offset);
-    ctx.value_collection = std::make_shared<Arena>();
 
     return ctx;
 
@@ -335,9 +335,9 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(ctx.value_collection),
+    ctx.set_with_reshuffle(params.alias,
+                           builder.finish(ctx.get_and_clear_arena()),
                            shuffle_offset);
-    ctx.value_collection = std::make_shared<Arena>();
     return ctx;
   }
   LOG(ERROR) << "not support path expand options";
@@ -515,8 +515,7 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
 
   ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
                          shuffle_offset);
-  ctx.set(params.alias, path_builder.finish(ctx.value_collection));
-  ctx.value_collection = std::make_shared<Arena>();
+  ctx.set(params.alias, path_builder.finish(ctx.get_and_clear_arena()));
   return ctx;
 }
 
@@ -765,8 +764,7 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
   });
   ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
                          shuffle_offset);
-  ctx.set(params.alias, path_builder.finish(ctx.value_collection));
-  ctx.value_collection = std::make_shared<Arena>();
+  ctx.set(params.alias, path_builder.finish(ctx.get_and_clear_arena()));
   return ctx;
 }
 

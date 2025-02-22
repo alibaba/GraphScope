@@ -226,9 +226,7 @@ struct ValueCollector {
   ValueCollector(const Context& ctx) : ctx_(ctx) {}
   void collect(const EXPR& e, int i) { builder.push_back_opt(e(i)); }
   std::shared_ptr<IContextColumn> get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
+    return builder.finish(ctx_.get_and_clear_arena());
   }
   const Context& ctx_;
   ValueColumnBuilder<T> builder;

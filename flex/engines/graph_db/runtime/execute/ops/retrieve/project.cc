@@ -44,11 +44,7 @@ struct ValueCollector {
     auto val = expr.expr.eval_path(idx);
     builder.push_back_opt(TypedConverter<T>::to_typed(val));
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
@@ -110,11 +106,7 @@ struct PropertyValueCollector {
   void collect(const EXPR& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
 
   const Context& ctx_;
   ValueColumnBuilder<typename EXPR::V> builder;
@@ -280,11 +272,7 @@ struct OptionalValueCollector {
       builder.push_back_opt(TypedConverter<T>::to_typed(val), true);
     }
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   OptionalValueColumnBuilder<T> builder;
 };
@@ -353,11 +341,7 @@ struct ListCollector {
   void collect(const EXPR& expr, size_t idx) {
     builder_->push_back_elem(expr.expr.eval_path(idx));
   }
-  auto get() {
-    auto ret = builder_->finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder_->finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   std::shared_ptr<ListValueColumnBuilder> builder_;
 };
@@ -377,11 +361,7 @@ struct TupleCollector {
     auto v = expr.expr.eval_path(idx);
     builder.push_back_elem(v);
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<Tuple> builder;
 };
@@ -409,11 +389,7 @@ struct OptionalTupleCollector {
       builder.push_back_elem(v);
     }
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   OptionalValueColumnBuilder<Tuple> builder;
 };
@@ -432,11 +408,7 @@ struct MapCollector {
     auto v = expr.expr.eval_path(idx);
     builder.push_back_elem(v);
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<Map> builder;
 };
@@ -460,11 +432,7 @@ struct OptionalMapCollector {
     auto v = expr.expr.eval_path(idx, 0);
     builder.push_back_elem(v);
   }
-  auto get() {
-    auto ret = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return ret;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   OptionalValueColumnBuilder<Map> builder;
 };
@@ -477,11 +445,7 @@ struct CaseWhenCollector {
   void collect(const EXPR& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() {
-    auto col = builder.finish(ctx_.value_collection);
-    ctx_.value_collection = std::make_shared<Arena>();
-    return col;
-  }
+  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
   const Context& ctx_;
   ValueColumnBuilder<RESULT_T> builder;
 };
