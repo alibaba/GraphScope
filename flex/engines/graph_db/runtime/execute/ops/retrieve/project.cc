@@ -346,97 +346,6 @@ struct ListCollector {
   std::shared_ptr<ListValueColumnBuilder> builder_;
 };
 
-struct TupleCollector {
-  TupleCollector(const Context& ctx) : ctx_(ctx) {}
-  struct TupleExprWrapper {
-    using V = Tuple;
-    TupleExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    Tuple operator()(size_t idx) const {
-      return expr.eval_path(idx).as_tuple();
-    }
-    Expr expr;
-  };
-  using EXPR = TupleExprWrapper;
-  void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx);
-    builder.push_back_elem(v);
-  }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
-  ValueColumnBuilder<Tuple> builder;
-};
-
-struct OptionalTupleCollector {
-  OptionalTupleCollector(const Context& ctx) : ctx_(ctx) {}
-  struct OptionalTupleExprWrapper {
-    using V = std::optional<Tuple>;
-    OptionalTupleExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    std::optional<Tuple> operator()(size_t idx) const {
-      auto val = expr.eval_path(idx, 0);
-      if (val.is_null()) {
-        return std::nullopt;
-      }
-      return val.as_tuple();
-    }
-    Expr expr;
-  };
-  using EXPR = OptionalTupleExprWrapper;
-  void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx, 0);
-    if (v.is_null()) {
-      builder.push_back_null();
-    } else {
-      builder.push_back_elem(v);
-    }
-  }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
-  OptionalValueColumnBuilder<Tuple> builder;
-};
-
-struct MapCollector {
-  struct MapExprWrapper {
-    using V = Map;
-    MapExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    Map operator()(size_t idx) const { return expr.eval_path(idx).as_map(); }
-    Expr expr;
-  };
-  using EXPR = MapExprWrapper;
-
-  MapCollector(const Context& ctx, const EXPR& expr) : ctx_(ctx) {}
-  void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx);
-    builder.push_back_elem(v);
-  }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
-  ValueColumnBuilder<Map> builder;
-};
-
-struct OptionalMapCollector {
-  struct OptionalMapExprWrapper {
-    using V = std::optional<Map>;
-    OptionalMapExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    std::optional<Map> operator()(size_t idx) const {
-      auto val = expr.eval_path(idx, 0);
-      if (val.is_null()) {
-        return std::nullopt;
-      }
-      return val.as_map();
-    }
-    Expr expr;
-  };
-  using EXPR = OptionalMapExprWrapper;
-  OptionalMapCollector(const Context& ctx, const EXPR& expr) : ctx_(ctx) {}
-  void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx, 0);
-    builder.push_back_elem(v);
-  }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
-  OptionalValueColumnBuilder<Map> builder;
-};
-
 template <typename EXPR, typename RESULT_T>
 struct CaseWhenCollector {
   CaseWhenCollector(const Context& ctx) : ctx_(ctx) {
@@ -884,19 +793,7 @@ make_project_expr(const common::Expression& expr, int alias) {
           std::move(e), collector, alias);
     } break;
     case RTAnyType::kTuple: {
-      if (e.is_optional()) {
-        OptionalTupleCollector collector(ctx);
-        collector.builder.reserve(ctx.row_num());
-        return std::make_unique<ProjectExpr<
-            typename OptionalTupleCollector::EXPR, OptionalTupleCollector>>(
-            std::move(e), collector, alias);
-      } else {
-        TupleCollector collector(ctx);
-        collector.builder.reserve(ctx.row_num());
-        return std::make_unique<
-            ProjectExpr<typename TupleCollector::EXPR, TupleCollector>>(
-            std::move(e), collector, alias);
-      }
+      return _make_project_expr<Tuple>(std::move(e), alias, ctx);
     } break;
     case RTAnyType::kList: {
       ListCollector::EXPR expr(std::move(e));
@@ -906,19 +803,7 @@ make_project_expr(const common::Expression& expr, int alias) {
           std::move(expr), collector, alias);
     } break;
     case RTAnyType::kMap: {
-      if (!e.is_optional()) {
-        MapCollector::EXPR expr(std::move(e));
-        MapCollector collector(ctx, expr);
-        return std::make_unique<
-            ProjectExpr<typename MapCollector::EXPR, MapCollector>>(
-            std::move(expr), collector, alias);
-      } else {
-        OptionalMapCollector::EXPR expr(std::move(e));
-        OptionalMapCollector collector(ctx, expr);
-        return std::make_unique<ProjectExpr<typename OptionalMapCollector::EXPR,
-                                            OptionalMapCollector>>(
-            std::move(expr), collector, alias);
-      }
+      return _make_project_expr<Map>(std::move(e), alias, ctx);
     } break;
     default:
       LOG(FATAL) << "not support - " << static_cast<int>(e.type());
