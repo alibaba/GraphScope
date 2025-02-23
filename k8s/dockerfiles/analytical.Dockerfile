@@ -39,7 +39,7 @@ COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs
 RUN chmod +x /opt/graphscope/bin/*
 
-# RUN apt-get update -y && apt-get install openssh-server dnsutils -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install openssh-server dnsutils -y && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/run/sshd
 
