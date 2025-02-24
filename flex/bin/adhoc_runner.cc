@@ -83,7 +83,7 @@ gs::runtime::Context eval_plan(
   gs::runtime::GraphReadInterface gri(txn);
   gs::runtime::OprTimer timer;
 
-  gs::runtime::Context ctx = gs::runtime::Context::InitContext();
+  gs::runtime::Context ctx;
   {
     ctx = bl::try_handle_all(
         [&plan, &params, &gri, &timer, &ctx]() {
