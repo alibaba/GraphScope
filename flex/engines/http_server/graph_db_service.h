@@ -49,6 +49,11 @@ struct ServiceConfig {
       ShardingMode::EXCLUSIVE;
   static constexpr const uint32_t DEFAULT_MAX_CONTENT_LENGTH =
       1024 * 1024 * 1024;  // 1GB
+  static constexpr const char* DEFAULT_WAL_URI =
+      "{GRAPH_DATA_DIR}/wal";  // By default we will use the wal directory in
+                               // the graph data directory. The {GRAPH_DATA_DIR}
+                               // is a placeholder, which will be replaced by
+                               // the actual graph data directory.
 
   // Those has default value
   uint32_t bolt_port;
@@ -84,6 +89,7 @@ struct ServiceConfig {
   std::string default_graph;
   std::string engine_config_path;       // used for codegen.
   size_t admin_svc_max_content_length;  // max content length for admin service.
+  std::string wal_uri;                  // The uri of the wal storage.
 
   ServiceConfig();
 
@@ -268,6 +274,9 @@ struct convert<server::ServiceConfig> {
             return false;
           }
         }
+      }
+      if (engine_node["wal_uri"]) {
+        service_config.wal_uri = engine_node["wal_uri"].as<std::string>();
       }
     } else {
       LOG(ERROR) << "Fail to find compute_engine configuration";

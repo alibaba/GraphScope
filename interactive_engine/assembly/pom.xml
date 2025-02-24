@@ -66,6 +66,11 @@
         </dependency>
         <dependency>
           <groupId>com.alibaba.graphscope</groupId>
+          <artifactId>groot-http</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>executor</artifactId>
           <version>${project.version}</version>
         </dependency>

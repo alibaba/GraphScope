@@ -115,6 +115,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | log_level     |  INFO   | The level of database log, INFO/WARNING/ERROR/FATAL | 0.0.1 |
 | verbose_level     |  0   | The verbose level of database log, should be a int | 0.0.3 |
 | compute_engine.thread_num_per_worker | 1 | The number of threads will be used to process the queries. Increase the number can benefit the query throughput | 0.0.1 |
+| compute_engine.wal_uri    | file://{GRAPH_DATA_DIR}/wal | The location where Interactive will store and access WALs. `GRAPH_DATA_DIR` is a placeholder that will be populated by Interactive. | 0.5 |
 | compiler.planner.is_on | true | Determines if query optimization is enabled for compiling Cypher queries  | 0.0.1 |
 | compiler.planner.opt | RBO | Specifies the optimizer to be used for query optimization. Currently, only the Rule-Based Optimizer (RBO) is supported | 0.0.1 |
 | compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
@@ -124,6 +125,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
 | http_service.max_content_length | 1GB | The maximum length of a http request that admin http service could handle | 0.5 |
 | storage.string_default_max_length | 256 | The default maximum size for a string field | 0.5 |
+
 
 #### TODOs
 
