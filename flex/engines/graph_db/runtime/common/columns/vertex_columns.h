@@ -101,12 +101,6 @@ class SLVertexColumn : public SLVertexColumnBase {
   std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offset) const override;
 
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    auto ptr = std::make_shared<OptionalSLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(ptr);
-  }
-
   inline VertexRecord get_vertex(size_t idx) const override {
     return {label_, vertices_[idx]};
   }
