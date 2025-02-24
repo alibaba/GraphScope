@@ -248,9 +248,14 @@ class ListValueColumn : public ListValueColumnBase {
       ++i;
     }
 
-    // TODO: we shouldn't use the same arena as the original column. The
-    // ownership of list elements should be released.
-    return {builder->finish(this->get_arena()), offsets};
+    if constexpr (std::is_same_v<T, std::string_view> ||
+                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map>) {
+      // TODO: we shouldn't use the same arena as the original column.
+      // The ownership of list elements should be released.
+      return {builder->finish(this->get_arena()), offsets};
+    } else {
+      return {builder->finish(nullptr), offsets};
+    }
   }
 
   std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>> unfold()
