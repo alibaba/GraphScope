@@ -31,6 +31,7 @@ from gs_interactive.tests.conftest import delete_procedure
 from gs_interactive.tests.conftest import ensure_compiler_schema_ready
 from gs_interactive.tests.conftest import import_data_to_full_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
+from gs_interactive.tests.conftest import import_data_to_modern_graph_temporal_type
 from gs_interactive.tests.conftest import import_data_to_new_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
@@ -56,6 +57,9 @@ cypher_queries = vertex_only_cypher_queries + [
     "MATCH(a)-[b]->(c) return b",
     "MATCH(a)-[b]->(c) return c.id",
     "MATCH(a)-[b]->(c) return count(c), c, c.id;",
+    "MATCH(a)-[e: knows { weight: 0.5 }]-(c) return e,a,c;",
+    "MATCH(a)<-[e: knows { weight: 0.5 }]-(c) return e,a,c;",
+    "MATCH(a)-[e: knows { weight: 0.5 }]->(c) return e,a,c;",
 ]
 
 
@@ -520,3 +524,19 @@ def test_multiple_edge_property(
     for i in range(len(records)):
         assert records[i]["e"]["weight"] == expected_result[i]["weight"]
         assert records[i]["e"]["since"] == expected_result[i]["since"]
+
+
+def test_create_graph_with_temporal_type(
+    interactive_session, neo4j_session, create_modern_graph_with_temporal_type
+):
+    print("[Test create graph with temporal type]")
+    import_data_to_modern_graph_temporal_type(
+        interactive_session, create_modern_graph_with_temporal_type
+    )
+    start_service_on_graph(interactive_session, create_modern_graph_with_temporal_type)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph_with_temporal_type
+    )
+    result = neo4j_session.run("MATCH (n: person) return n.birthday AS birthday;")
+    records = result.fetch(10)
+    assert len(records) == 4

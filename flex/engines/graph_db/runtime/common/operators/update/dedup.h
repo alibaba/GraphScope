@@ -25,8 +25,7 @@ namespace runtime {
 
 class Dedup {
  public:
-  static bl::result<WriteContext> dedup(const GraphInsertInterface& graph,
-                                        WriteContext&& ctx,
+  static bl::result<WriteContext> dedup(WriteContext&& ctx,
                                         const std::vector<size_t>& cols);
 };
 

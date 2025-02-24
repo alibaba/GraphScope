@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**add_vertex**](VertexApi.md#add_vertex) | **POST** /v1/graph/{graph_id}/vertex | Add vertex to the graph
 [**get_vertex**](VertexApi.md#get_vertex) | **GET** /v1/graph/{graph_id}/vertex | Get the vertex&#39;s properties with vertex primary key.
 [**update_vertex**](VertexApi.md#update_vertex) | **PUT** /v1/graph/{graph_id}/vertex | Update vertex&#39;s property
+[**delete_vertex**](VertexApi.md#delete_vertex) | **DELETE** /v1/graph/{graph_id}/vertex | Delete vertex from the graph
 
 
 # **add_vertex**
@@ -30,7 +31,9 @@ graph_id = "1"
 vertex_request = [
     VertexRequest(
         label="person",
-        primary_key_value=8,
+        primary_key_values=[
+            ModelProperty(name="id", value=8),
+        ],
         properties=[
             ModelProperty(name="name",value="mike"),
             ModelProperty(name="age", value=12),
@@ -170,7 +173,9 @@ graph_id = "1"
 
 vertex_request = VertexRequest(
     label="person",
-    primary_key_value=1,
+    primary_key_values=[
+        ModelProperty(name="id", value=1),
+    ],
     properties=[
         ModelProperty(name="name", value="Cindy"),
         ModelProperty(name="age", value=24),
@@ -216,3 +221,68 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
+# **delete_vertex**
+> [Result](./result.rst)[str] delete_vertex(graph_id, delete_vertex_request)
+
+Delete the vertex from the specified graph. 
+
+### Example
+
+
+```python
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import *
+
+driver = Driver()
+sess = driver.session()
+
+graph_id = "1"
+
+delete_vertex_request = [
+    DeleteVertexRequest(
+        label="person",
+        primary_key_values= ModelProperty(name="id", value=1)
+    ),
+]
+resp = sess.delete_vertex(
+    graph_id,
+    delete_vertex_request
+)
+print(resp)
+assert resp.is_ok()
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **graph_id** | **str**|  | 
+ **delete_vertex_request** | [**DeleteVertexRequest**](DeleteVertexRequest.md)|  | 
+
+### Return type
+
+[Result](./result.rst)[**str**]
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Successfully deleted vertex |  -  |
+**400** | Invalid input vertex |  -  |
+**404** | Graph not found |  -  |
+**500** | Server internal error |  -  |
+
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)

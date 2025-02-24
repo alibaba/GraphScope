@@ -47,17 +47,47 @@ public enum DataType {
         this.type = (byte) type;
     }
 
-    private static final DataType[] TYPES = DataType.values();
-
-    public static DataType fromId(byte id) {
-        if (id < 0 || id >= TYPES.length) {
-            throw new InvalidDataTypeException("Unknown DataType: [" + id + "]");
-        }
-        return TYPES[id];
-    }
-
     public static DataType parseProto(DataTypePb pb) {
-        return fromId((byte) pb.getNumber());
+        switch (pb) {
+            case UNKNOWN:
+                return DataType.UNKNOWN;
+            case BOOL:
+                return DataType.BOOL;
+            case CHAR:
+                return DataType.CHAR;
+            case SHORT:
+                return DataType.SHORT;
+            case INT:
+                return DataType.INT;
+            case LONG:
+                return DataType.LONG;
+            case FLOAT:
+                return DataType.FLOAT;
+            case DOUBLE:
+                return DataType.DOUBLE;
+            case STRING:
+                return DataType.STRING;
+            case BYTES:
+                return DataType.BYTES;
+            case INT_LIST:
+                return DataType.INT_LIST;
+            case LONG_LIST:
+                return DataType.LONG_LIST;
+            case FLOAT_LIST:
+                return DataType.FLOAT_LIST;
+            case DOUBLE_LIST:
+                return DataType.DOUBLE_LIST;
+            case STRING_LIST:
+                return DataType.STRING_LIST;
+            case DATE32:
+                return DataType.DATE;
+            case TIME32_MS:
+                return DataType.TIME32;
+            case TIMESTAMP_MS:
+                return DataType.TIMESTAMP;
+            default:
+                throw new InvalidDataTypeException("Unknown DataType: [" + pb + "]");
+        }
     }
 
     public static DataType parseString(String type) {
@@ -72,7 +102,46 @@ public enum DataType {
     }
 
     public DataTypePb toProto() {
-        return DataTypePb.forNumber(type);
+        switch (this) {
+            case UNKNOWN:
+                return DataTypePb.UNKNOWN;
+            case BOOL:
+                return DataTypePb.BOOL;
+            case CHAR:
+                return DataTypePb.CHAR;
+            case SHORT:
+                return DataTypePb.SHORT;
+            case INT:
+                return DataTypePb.INT;
+            case LONG:
+                return DataTypePb.LONG;
+            case FLOAT:
+                return DataTypePb.FLOAT;
+            case DOUBLE:
+                return DataTypePb.DOUBLE;
+            case STRING:
+                return DataTypePb.STRING;
+            case BYTES:
+                return DataTypePb.BYTES;
+            case INT_LIST:
+                return DataTypePb.INT_LIST;
+            case LONG_LIST:
+                return DataTypePb.LONG_LIST;
+            case FLOAT_LIST:
+                return DataTypePb.FLOAT_LIST;
+            case DOUBLE_LIST:
+                return DataTypePb.DOUBLE_LIST;
+            case STRING_LIST:
+                return DataTypePb.STRING_LIST;
+            case DATE:
+                return DataTypePb.DATE32;
+            case TIME32:
+                return DataTypePb.TIME32_MS;
+            case TIMESTAMP:
+                return DataTypePb.TIMESTAMP_MS;
+            default:
+                throw new UnsupportedOperationException("Unsupported DataType: [" + this + "]");
+        }
     }
 
     @Override

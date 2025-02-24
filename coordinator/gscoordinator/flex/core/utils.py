@@ -28,8 +28,8 @@ import time
 from typing import Union
 
 import requests
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
+
+from gscoordinator.flex.core.config import CLUSTER_TYPE
 
 logger = logging.getLogger("graphscope")
 
@@ -53,6 +53,9 @@ def resolve_api_client(k8s_config_file=None):
     RuntimeError will be raised if resolution failed.
     """
     try:
+        from kubernetes import client as kube_client
+        from kubernetes import config as kube_config
+
         # load from kubernetes config file
         kube_config.load_kube_config(k8s_config_file)
     except:  # noqa: E722
@@ -99,6 +102,7 @@ def get_service_endpoints(  # noqa: C901
     """
     start_time = time.time()
 
+    from kubernetes import client as kube_client
     core_api = kube_client.CoreV1Api(api_client)
     svc = core_api.read_namespaced_service(name=name, namespace=namespace)
 

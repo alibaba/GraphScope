@@ -106,7 +106,11 @@ class DualCsr : public DualCsrBase {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<EDATA_T>();
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<EDATA_T>();
+      if (ie_mutable) {
+        in_csr_ = new MutableCsr<EDATA_T>();
+      } else {
+        in_csr_ = new ImmutableCsr<EDATA_T>();
+      }
     } else if (ie_strategy == EdgeStrategy::kSingle) {
       if (ie_mutable) {
         in_csr_ = new SingleMutableCsr<EDATA_T>();
@@ -117,7 +121,11 @@ class DualCsr : public DualCsrBase {
     if (oe_strategy == EdgeStrategy::kNone) {
       out_csr_ = new EmptyCsr<EDATA_T>();
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<EDATA_T>();
+      if (oe_mutable) {
+        out_csr_ = new MutableCsr<EDATA_T>();
+      } else {
+        out_csr_ = new ImmutableCsr<EDATA_T>();
+      }
     } else if (oe_strategy == EdgeStrategy::kSingle) {
       if (oe_mutable) {
         out_csr_ = new SingleMutableCsr<EDATA_T>();
@@ -246,23 +254,40 @@ class DualCsr : public DualCsrBase {
 template <>
 class DualCsr<std::string_view> : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, uint16_t width)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, uint16_t width,
+          bool oe_mutable, bool ie_mutable)
       : in_csr_(nullptr),
         out_csr_(nullptr),
         column_(StorageStrategy::kMem, width) {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<std::string_view>(column_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<std::string_view>(column_);
+      if (ie_mutable) {
+        in_csr_ = new MutableCsr<std::string_view>(column_);
+      } else {
+        in_csr_ = new ImmutableCsr<std::string_view>(column_);
+      }
     } else if (ie_strategy == EdgeStrategy::kSingle) {
-      in_csr_ = new SingleMutableCsr<std::string_view>(column_);
+      if (ie_mutable) {
+        in_csr_ = new SingleMutableCsr<std::string_view>(column_);
+      } else {
+        in_csr_ = new SingleImmutableCsr<std::string_view>(column_);
+      }
     }
     if (oe_strategy == EdgeStrategy::kNone) {
       out_csr_ = new EmptyCsr<std::string_view>(column_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<std::string_view>(column_);
+      if (oe_mutable) {
+        out_csr_ = new MutableCsr<std::string_view>(column_);
+      } else {
+        out_csr_ = new ImmutableCsr<std::string_view>(column_);
+      }
     } else if (oe_strategy == EdgeStrategy::kSingle) {
-      out_csr_ = new SingleMutableCsr<std::string_view>(column_);
+      if (oe_mutable) {
+        out_csr_ = new SingleMutableCsr<std::string_view>(column_);
+      } else {
+        out_csr_ = new SingleImmutableCsr<std::string_view>(column_);
+      }
     }
   }
   ~DualCsr() {
@@ -420,7 +445,8 @@ class DualCsr<RecordView> : public DualCsrBase {
   DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
           const std::vector<std::string>& col_name,
           const std::vector<PropertyType>& property_types,
-          const std::vector<StorageStrategy>& storage_strategies)
+          const std::vector<StorageStrategy>& storage_strategies,
+          bool oe_mutable, bool ie_mutable)
       : col_name_(col_name),
         property_types_(property_types),
         storage_strategies_(storage_strategies),
@@ -429,16 +455,32 @@ class DualCsr<RecordView> : public DualCsrBase {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<RecordView>(table_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<RecordView>(table_);
+      if (ie_mutable) {
+        in_csr_ = new MutableCsr<RecordView>(table_);
+      } else {
+        in_csr_ = new ImmutableCsr<RecordView>(table_);
+      }
     } else {
-      in_csr_ = new SingleMutableCsr<RecordView>(table_);
+      if (ie_mutable) {
+        in_csr_ = new SingleMutableCsr<RecordView>(table_);
+      } else {
+        in_csr_ = new SingleImmutableCsr<RecordView>(table_);
+      }
     }
     if (oe_strategy == EdgeStrategy::kNone) {
       out_csr_ = new EmptyCsr<RecordView>(table_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<RecordView>(table_);
+      if (oe_mutable) {
+        out_csr_ = new MutableCsr<RecordView>(table_);
+      } else {
+        out_csr_ = new ImmutableCsr<RecordView>(table_);
+      }
     } else {
-      out_csr_ = new SingleMutableCsr<RecordView>(table_);
+      if (oe_mutable) {
+        out_csr_ = new SingleMutableCsr<RecordView>(table_);
+      } else {
+        out_csr_ = new SingleImmutableCsr<RecordView>(table_);
+      }
     }
   }
 
@@ -598,8 +640,8 @@ class DualCsr<RecordView> : public DualCsrBase {
   const std::vector<std::string>& col_name_;
   const std::vector<PropertyType>& property_types_;
   const std::vector<StorageStrategy>& storage_strategies_;
-  TypedMutableCsrBase<RecordView>* in_csr_;
-  TypedMutableCsrBase<RecordView>* out_csr_;
+  TypedCsrBase<RecordView>* in_csr_;
+  TypedCsrBase<RecordView>* out_csr_;
   std::atomic<size_t> table_idx_;
   Table table_;
 };

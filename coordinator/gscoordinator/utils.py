@@ -2170,3 +2170,36 @@ def replace_string_in_dict(dict_obj, old, new):
     elif isinstance(dict_obj, str):
         return dict_obj.replace(old, new)
     return dict_obj
+
+
+# Reference: https://gist.github.com/beugley/ccd69945346759eb6142272a6d69b4e0
+def human_readable_to_bytes(size):
+    """Given a human-readable byte string (e.g. 2G, 30M, 20K),
+    return the number of bytes.  Will raise an exception if the argument has
+    unexpected form.
+    """
+    # Try to parse the size as if the unit was coded on 1 char.
+    try:
+        numeric_size = float(size[:-1])
+        unit = size[-1]
+    except ValueError:
+        try:
+            # Try to parse the size as if the unit was coded on 2 chars.
+            numeric_size = float(size[:-2])
+            unit = size[-2:-1]
+        except ValueError:
+            raise ValueError("Can't convert %r to bytes" % size)
+
+    unit = unit.upper()
+
+    # Now we have a numeric value and a unit. Check the unit and convert to bytes.
+    if unit == "G":
+        bytes = numeric_size * 1073741824
+    elif unit == "M":
+        bytes = numeric_size * 1048576
+    elif unit == "K":
+        bytes = numeric_size * 1024
+    else:
+        bytes = numeric_size
+
+    return int(bytes)

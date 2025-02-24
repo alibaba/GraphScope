@@ -44,6 +44,8 @@ public abstract class PlannerGroupManager implements Closeable {
     @Override
     public void close() {}
 
+    public void clean() {}
+
     public abstract PlannerGroup getCurrentGroup();
 
     public static class Static extends PlannerGroupManager {
@@ -57,6 +59,13 @@ public abstract class PlannerGroupManager implements Closeable {
         @Override
         public PlannerGroup getCurrentGroup() {
             return this.singleGroup;
+        }
+
+        @Override
+        public void clean() {
+            if (this.singleGroup != null) {
+                this.singleGroup.clear();
+            }
         }
     }
 
@@ -89,7 +98,7 @@ public abstract class PlannerGroupManager implements Closeable {
                                                 + " in JVM, with free memory: {}, total memory: {}",
                                         freeMemBytes,
                                         totalMemBytes);
-                                plannerGroups.forEach(PlannerGroup::clear);
+                                clean();
                             }
                         } catch (Throwable t) {
                             logger.error("failed to clear planner group.", t);
@@ -118,6 +127,11 @@ public abstract class PlannerGroupManager implements Closeable {
             } catch (Exception e) {
                 logger.error("failed to close planner group manager.", e);
             }
+        }
+
+        @Override
+        public synchronized void clean() {
+            plannerGroups.forEach(PlannerGroup::clear);
         }
     }
 }

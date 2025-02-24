@@ -24,6 +24,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Sarg;
 import org.apache.calcite.util.Util;
@@ -131,5 +132,16 @@ public class GraphRexBuilder extends RexBuilder {
                             type);
         }
         return super.makeCast(type, operand);
+    }
+
+    @Override
+    public RexNode makeCall(RelDataType returnType, SqlOperator op, List<RexNode> exprs) {
+        return new GraphRexCall(returnType, op, exprs);
+    }
+
+    @Override
+    public RexNode makeCall(SqlOperator op, List<? extends RexNode> exprs) {
+        RelDataType type = this.deriveReturnType(op, exprs);
+        return new GraphRexCall(type, op, exprs);
     }
 }

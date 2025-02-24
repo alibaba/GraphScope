@@ -18,14 +18,14 @@
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/version_manager.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
 
 SingleEdgeInsertTransaction::SingleEdgeInsertTransaction(
-    MutablePropertyFragment& graph, Allocator& alloc, WalWriter& logger,
+    MutablePropertyFragment& graph, Allocator& alloc, IWalWriter& logger,
     VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
@@ -109,15 +109,19 @@ timestamp_t SingleEdgeInsertTransaction::timestamp() const {
   return timestamp_;
 }
 
-void SingleEdgeInsertTransaction::Commit() {
+bool SingleEdgeInsertTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
-    return;
+    return false;
   }
   auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+    LOG(ERROR) << "Failed to append wal log";
+    Abort();
+    return false;
+  }
 
   grape::OutArchive arc;
   {
@@ -134,6 +138,7 @@ void SingleEdgeInsertTransaction::Commit() {
                     timestamp_, arc, alloc_);
   vm_.release_insert_timestamp(timestamp_);
   clear();
+  return true;
 }
 
 void SingleEdgeInsertTransaction::clear() {

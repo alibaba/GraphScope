@@ -15,13 +15,13 @@
 
 #include "flex/engines/graph_db/database/compact_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {
 
 CompactTransaction::CompactTransaction(MutablePropertyFragment& graph,
-                                       WalWriter& logger, VersionManager& vm,
+                                       IWalWriter& logger, VersionManager& vm,
                                        timestamp_t timestamp)
     : graph_(graph), logger_(logger), vm_(vm), timestamp_(timestamp) {
   arc_.Resize(sizeof(WalHeader));
@@ -31,14 +31,18 @@ CompactTransaction::~CompactTransaction() { Abort(); }
 
 timestamp_t CompactTransaction::timestamp() const { return timestamp_; }
 
-void CompactTransaction::Commit() {
+bool CompactTransaction::Commit() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
     auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
     header->length = 0;
     header->timestamp = timestamp_;
     header->type = 1;
 
-    logger_.append(arc_.GetBuffer(), arc_.GetSize());
+    if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+      LOG(ERROR) << "Failed to append wal log";
+      Abort();
+      return false;
+    }
     arc_.Clear();
 
     LOG(INFO) << "before compact - " << timestamp_;
@@ -48,6 +52,7 @@ void CompactTransaction::Commit() {
     vm_.release_update_timestamp(timestamp_);
     timestamp_ = std::numeric_limits<timestamp_t>::max();
   }
+  return true;
 }
 
 void CompactTransaction::Abort() {

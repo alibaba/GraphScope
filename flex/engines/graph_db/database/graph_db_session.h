@@ -31,7 +31,7 @@
 namespace gs {
 
 class GraphDB;
-class WalWriter;
+class IWalWriter;
 
 class GraphDBSession {
  public:
@@ -49,7 +49,7 @@ class GraphDBSession {
   static constexpr const char* kCypherJsonStr = "\x01";
   static constexpr const char* kCypherProtoAdhocStr = "\x02";
   static constexpr const char* kCypherProtoProcedureStr = "\x03";
-  GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
+  GraphDBSession(GraphDB& db, Allocator& alloc, IWalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
         alloc_(alloc),
@@ -183,7 +183,7 @@ class GraphDBSession {
   }
   GraphDB& db_;
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   std::string work_dir_;
   int thread_id_;
 

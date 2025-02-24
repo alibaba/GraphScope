@@ -10,6 +10,7 @@ compute_engine:
     type: cpp-mcsr
   metadata_store:
     type: file # file/sqlite/etcd
+  wal_uri: file://{GRAPH_DATA_DIR}/wal # Could be file://{GRAPH_DATA_DIR}/wal or other supported storage class. GRAPH_DATA_DIR is the placeholder for the graph data directory.
 compiler:
   planner:
     is_on: true
@@ -41,5 +42,4 @@ http_service:
   default_listen_address: localhost
   admin_port: 7777
   query_port: 10000
-coordinator:
-  max_content_length: 1048576 # 1MB
+  max_content_length: 1GB

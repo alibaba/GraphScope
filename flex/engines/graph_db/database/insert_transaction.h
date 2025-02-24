@@ -27,13 +27,18 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
+class GraphDBSession;
 
 class InsertTransaction {
  public:
-  InsertTransaction(MutablePropertyFragment& graph, Allocator& alloc,
-                    WalWriter& logger, VersionManager& vm,
+  std::string run(const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
+
+  InsertTransaction(const GraphDBSession& session,
+                    MutablePropertyFragment& graph, Allocator& alloc,
+                    IWalWriter& logger, VersionManager& vm,
                     timestamp_t timestamp);
 
   ~InsertTransaction();
@@ -43,7 +48,7 @@ class InsertTransaction {
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
                const Any& dst, label_t edge_label, const Any& prop);
 
-  void Commit();
+  bool Commit();
 
   void Abort();
 
@@ -54,12 +59,15 @@ class InsertTransaction {
 
   const Schema& schema() const;
 
+  const GraphDBSession& GetSession() const;
+
  private:
   void clear();
 
   static bool get_vertex_with_retries(MutablePropertyFragment& graph,
                                       label_t label, const Any& oid,
                                       vid_t& lid);
+  const GraphDBSession& session_;
 
   grape::InArchive arc_;
 
@@ -68,7 +76,7 @@ class InsertTransaction {
   MutablePropertyFragment& graph_;
 
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 };

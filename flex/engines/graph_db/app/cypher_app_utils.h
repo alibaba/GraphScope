@@ -22,11 +22,10 @@
 #include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
-bool generate_plan(
-    const std::string& query, const std::string& statistics,
-    const std::string& compiler_jar_path, const std::string& compiler_yaml,
-    const std::string& tmp_dir,
-    std::unordered_map<std::string, physical::PhysicalPlan>& plan_cache);
+bool generate_plan(const std::string& query, const std::string& statistics,
+                   const std::string& compiler_jar_path,
+                   const std::string& compiler_yaml, const std::string& tmp_dir,
+                   physical::PhysicalPlan& plan_cache);
 void parse_params(std::string_view sw,
                   std::map<std::string, std::string>& params);
 }  // namespace gs

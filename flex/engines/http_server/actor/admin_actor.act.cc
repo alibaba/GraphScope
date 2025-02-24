@@ -1002,9 +1002,12 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
           // use the previous thread num
           auto thread_num = db.SessionNum();
+          auto config = db.config();
+          config.data_dir = data_dir_value;
+          config.schema = schema_value;
           db.Close();
           VLOG(10) << "Closed the previous graph db";
-          if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
+          if (!db.Open(config).ok()) {
             LOG(ERROR) << "Fail to load graph from data directory: "
                        << data_dir_value;
             if (!prev_lock) {  // If the graph is not locked before, and we
@@ -1345,9 +1348,9 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
 }
 
 seastar::future<admin_query_result> admin_actor::upload_file(
-    query_param&& query_param) {
-  auto& content = query_param.content;
-  auto upload_res = WorkDirManipulator::CreateFile(content);
+    graph_management_param&& query_param) {
+  auto upload_res = WorkDirManipulator::CreateFile(query_param.content.first,
+                                                   query_param.content.second);
   if (upload_res.ok()) {
     auto value = upload_res.value();
     return seastar::make_ready_future<admin_query_result>(
