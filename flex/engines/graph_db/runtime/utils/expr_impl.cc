@@ -564,9 +564,6 @@ static std::unique_ptr<ExprBase> build_expr(
           } else if (key->type() == RTAnyType::kI32Value) {
             return std::make_unique<WithInExpr<int32_t>>(ctx, std::move(key),
                                                          rhs.const_());
-          } else if (key->type() == RTAnyType::kF64Value) {
-            return std::make_unique<WithInExpr<double>>(ctx, std::move(key),
-                                                        rhs.const_());
           } else if (key->type() == RTAnyType::kStringValue) {
             return std::make_unique<WithInExpr<std::string>>(
                 ctx, std::move(key), rhs.const_());

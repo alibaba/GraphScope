@@ -192,8 +192,8 @@ class WithInExpr : public ExprBase {
       } else {
         // TODO(zhanglei,lexiao): We should support more types here, and if type
         // conversion fails, we should return an error.
-        LOG(ERROR) << "Could not convert array with type " << array.item_case()
-                   << " to int64_t array";
+        LOG(INFO) << "Could not convert array with type " << array.item_case()
+                  << " to int64_t array";
       }
     } else if constexpr (std::is_same_v<T, uint64_t>) {
       if (array.item_case() == common::Value::kI64Array) {
@@ -201,8 +201,8 @@ class WithInExpr : public ExprBase {
       } else if (array.item_case() == common::Value::kI32Array) {
         PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i32_array());
       } else {
-        LOG(ERROR) << "Could not convert array with type " << array.item_case()
-                   << " to int64_t array";
+        LOG(INFO) << "Could not convert array with type " << array.item_case()
+                  << " to int64_t array";
       }
     } else if constexpr (std::is_same_v<T, int32_t>) {
       if (array.item_case() == common::Value::kI32Array) {
@@ -210,12 +210,9 @@ class WithInExpr : public ExprBase {
       } else if constexpr (std::is_same_v<T, int64_t>) {
         PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.i64_array());
       } else {
-        LOG(ERROR) << "Could not convert array with type " << array.item_case()
-                   << " to int32_t array";
+        LOG(INFO) << "Could not convert array with type " << array.item_case()
+                  << " to int32_t array";
       }
-    } else if constexpr (std::is_same_v<T, double>) {
-      assert(array.item_case() == common::Value::kF64Array);
-      PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.f64_array());
     } else if constexpr (std::is_same_v<T, std::string>) {
       assert(array.item_case() == common::Value::kStrArray);
       PARSER_COMMON_VALUE_ARRAY_TO_VECTOR(container_, array.str_array());
