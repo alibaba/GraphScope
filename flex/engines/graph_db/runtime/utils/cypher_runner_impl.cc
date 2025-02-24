@@ -81,7 +81,7 @@ std::string CypherRunnerImpl::run(
       return "";
     }
   } else {
-    auto ctx = pipeline.Execute(graph, Context::InitContext(), params, timer);
+    auto ctx = pipeline.Execute(graph, Context(), params, timer);
     if (!ctx) {
       LOG(ERROR) << "Execute pipeline failed for query: " << cypher;
       std::string error = "    Execute pipeline failed: " + cypher;
@@ -121,7 +121,7 @@ std::string CypherRunnerImpl::run(
   auto pipeline = std::move(res.value());
   GraphReadInterface graph(tx);
 
-  auto ctx = pipeline.Execute(graph, Context::InitContext(), params, timer);
+  auto ctx = pipeline.Execute(graph, Context(), params, timer);
   if (!ctx) {
     LOG(ERROR) << "Execute pipeline failed for query: " << cypher;
     std::string error = "    Execute pipeline failed: " + cypher;

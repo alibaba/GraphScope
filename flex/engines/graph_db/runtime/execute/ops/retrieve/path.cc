@@ -312,7 +312,7 @@ class SPOrderByLimitOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto sp_vertex_pred = pred_(graph, params);
-    bl::result<gs::runtime::Context> ret = ctx.newContext();
+    bl::result<gs::runtime::Context> ret;
     if (sp_vertex_pred->data_type() == RTAnyType::kStringValue) {
       ret = _invoke<std::string_view>(graph, std::move(ctx),
                                       std::move(sp_vertex_pred));

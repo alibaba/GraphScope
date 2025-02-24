@@ -127,7 +127,7 @@ static Context single_vertex_column_inner_join(Context&& ctx, Context&& ctx2,
   }
   ctx.reshuffle(left_offset);
   ctx2.reshuffle(right_offset);
-  Context ret = ctx.newContext();
+  Context ret;
   for (size_t i = 0; i < ctx.col_num(); i++) {
     ret.set(i, ctx.get(i));
   }
@@ -207,7 +207,7 @@ static Context dual_vertex_column_inner_join(Context&& ctx, Context&& ctx2,
   }
   ctx.reshuffle(left_offset);
   ctx2.reshuffle(right_offset);
-  Context ret = ctx.newContext();
+  Context ret;
   for (size_t i = 0; i < ctx.col_num(); i++) {
     ret.set(i, ctx.get(i));
   }
@@ -256,7 +256,7 @@ static Context default_inner_join(Context&& ctx, Context&& ctx2,
   }
   ctx.reshuffle(left_offset);
   ctx2.reshuffle(right_offset);
-  Context ret = ctx.newContext();
+  Context ret;
   for (size_t i = 0; i < ctx.col_num(); i++) {
     ret.set(i, ctx.get(i));
   }

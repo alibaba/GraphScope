@@ -106,7 +106,7 @@ class Project {
   static bl::result<Context> project(
       Context&& ctx, const std::vector<std::unique_ptr<ProjectExprBase>>& exprs,
       bool is_append = false) {
-    Context ret = ctx.newContext();
+    Context ret;
     if (is_append) {
       ret = ctx;
     }
@@ -130,7 +130,7 @@ class Project {
     lower = std::max(lower, static_cast<size_t>(0));
     upper = std::min(upper, ctx.row_num());
 
-    Context ret = ctx.newContext();
+    Context ret;
 
     Context tmp(ctx);
     std::vector<int> alias;

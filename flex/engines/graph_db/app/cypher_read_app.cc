@@ -25,7 +25,7 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
 
     gs::runtime::GraphReadInterface gri(txn);
 
-    gs::runtime::Context ctx = gs::runtime::Context::InitContext();
+    gs::runtime::Context ctx;
     gs::Status status = gs::Status::OK();
     {
       ctx = bl::try_handle_all(
@@ -101,8 +101,8 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     auto txn = graph.GetReadTransaction();
 
     gs::runtime::GraphReadInterface gri(txn);
-    auto ctx = pipeline_cache_.at(query).Execute(
-        gri, runtime::Context::InitContext(), params, timer_);
+    auto ctx = pipeline_cache_.at(query).Execute(gri, runtime::Context(),
+                                                 params, timer_);
     if (type == Schema::CYPHER_READ_PLUGIN_ID) {
       runtime::Sink::sink_encoder(ctx.value(), gri, output);
     } else {

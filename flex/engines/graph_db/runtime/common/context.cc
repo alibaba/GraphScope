@@ -26,12 +26,6 @@ Context::Context()
       offset_ptr(nullptr),
       value_collection(std::make_shared<Arena>()) {}
 
-Context Context::newContext() const {
-  Context ctx;
-  ctx.value_collection = value_collection;
-  return ctx;
-}
-
 void Context::clear() {
   columns.clear();
   head.reset();
@@ -225,7 +219,7 @@ void Context::gen_offset() {
 }
 
 Context Context::union_ctx(const Context& other) const {
-  Context ctx = this->newContext();
+  Context ctx;
   CHECK(columns.size() == other.columns.size());
   for (size_t i = 0; i < col_num(); ++i) {
     if (columns[i] != nullptr) {
