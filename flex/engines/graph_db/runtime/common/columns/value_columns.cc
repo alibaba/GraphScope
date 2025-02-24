@@ -19,25 +19,6 @@ namespace gs {
 
 namespace runtime {
 
-std::shared_ptr<IContextColumn> ValueColumn<std::string_view>::shuffle(
-    const std::vector<size_t>& offsets) const {
-  ValueColumnBuilder<std::string_view> builder;
-  builder.reserve(offsets.size());
-  for (auto offset : offsets) {
-    builder.push_back_opt(data_[offset]);
-  }
-  return builder.finish(this->get_arena());
-}
-
-std::shared_ptr<IContextColumn> OptionalValueColumn<std::string_view>::shuffle(
-    const std::vector<size_t>& offsets) const {
-  OptionalValueColumnBuilder<std::string_view> builder;
-  for (size_t i : offsets) {
-    builder.push_back_opt(data_[i], valid_[i]);
-  }
-  return builder.finish(this->get_arena());
-}
-
 std::shared_ptr<IContextColumn> ListValueColumn::shuffle(
     const std::vector<size_t>& offsets) const {
   ListValueColumnBuilder builder(this->elem_type_);
@@ -47,8 +28,6 @@ std::shared_ptr<IContextColumn> ListValueColumn::shuffle(
   }
   return builder.finish(this->get_arena());
 }
-
-template class ValueColumn<int>;
 
 }  // namespace runtime
 
