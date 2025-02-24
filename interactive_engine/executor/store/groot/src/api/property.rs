@@ -558,7 +558,6 @@ impl Property {
         *self == Property::Null
     }
 
-    // todo: is this method necessary?
     pub fn transform(&self, data_type: &DataType) -> GraphTraceResult<Vec<u8>> {
         if self.is_data_type(data_type) {
             return Ok(self.to_vec());

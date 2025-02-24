@@ -404,13 +404,17 @@ impl std::fmt::Debug for ValueRef<'_> {
                 write!(f, "DoubleArray({:?})", self.get_double_list().unwrap())
             }
             ValueType::StringList => write!(f, "StringArray({:?})", self.get_str_list().unwrap()),
-            ValueType::UInt => todo!(),
-            ValueType::ULong => todo!(),
-            ValueType::Date32 => todo!(),
-            ValueType::Time32 => todo!(),
-            ValueType::Timestamp => todo!(),
-            ValueType::FixedChar(fixed_length) => todo!(),
-            ValueType::VarChar(max_length) => todo!(),
+            ValueType::UInt => write!(f, "UInt({})", get_uint(self.data)),
+            ValueType::ULong => write!(f, "ULong({})", get_ulong(self.data)),
+            ValueType::Date32 => write!(f, "Date32({})", get_int(self.data)),
+            ValueType::Time32 => write!(f, "Time32({})", get_int(self.data)),
+            ValueType::Timestamp => write!(f, "Timestamp({})", get_long(self.data)),
+            ValueType::FixedChar(_) => {
+                write!(f, "FixedChar({:?})", ::std::str::from_utf8(self.data))
+            }
+            ValueType::VarChar(_) => {
+                write!(f, "VarChar({:?})", ::std::str::from_utf8(self.data))
+            }
         }
     }
 }
@@ -661,7 +665,6 @@ impl Value {
     }
 
     pub fn from_proto(pb: &PropertyValuePb) -> GraphResult<Self> {
-        let val_type = ValueType::from_proto(&pb.get_data_type())?;
         let val_type = ValueType::from_proto(&pb.get_data_type())?;
         Ok(Value::new(val_type, Vec::from(pb.get_val())))
     }
