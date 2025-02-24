@@ -29,27 +29,27 @@ bool CypherReadApp::Query(const GraphDBSession& graph, Decoder& input,
     gs::Status status = gs::Status::OK();
     {
       ctx = bl::try_handle_all(
-          [this, &gri, &plan, &ctx]() -> bl::result<runtime::Context> {
+          [this, &gri, &plan]() -> bl::result<runtime::Context> {
             return runtime::PlanParser::get()
                 .parse_read_pipeline(gri.schema(), gs::runtime::ContextMeta(),
                                      plan)
                 .value()
-                .Execute(gri, std::move(ctx), {}, timer_);
+                .Execute(gri, runtime::Context(), {}, timer_);
           },
-          [&status, &ctx](const gs::Status& err) {
+          [&status](const gs::Status& err) {
             status = err;
-            return ctx;
+            return runtime::Context();
           },
           [&](const bl::error_info& err) {
             status =
                 gs::Status(gs::StatusCode::INTERNAL_ERROR,
                            "Error: " + std::to_string(err.error().value()) +
                                ", Exception: " + err.exception()->what());
-            return ctx;
+            return runtime::Context();
           },
           [&]() {
             status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-            return ctx;
+            return runtime::Context();
           });
     }
 
