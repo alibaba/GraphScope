@@ -444,18 +444,8 @@ static Context default_left_outer_join(Context&& ctx, Context&& ctx2,
     }
   }
 
-  std::vector<std::shared_ptr<IOptionalContextColumnBuilder>> builders;
-  for (size_t i = 0; i < ctx2.col_num(); i++) {
-    if (std::find(params.right_columns.begin(), params.right_columns.end(),
-                  i) == params.right_columns.end() &&
-        ctx2.get(i) != nullptr) {
-      builders.emplace_back(ctx2.get(i)->optional_builder());
-    } else {
-      builders.emplace_back(nullptr);
-    }
-  }
-
   std::vector<size_t> offsets;
+  std::vector<size_t> right_offsets;
   size_t left_size = ctx.row_num();
   for (size_t r_i = 0; r_i < left_size; r_i++) {
     std::vector<char> bytes;
@@ -467,27 +457,23 @@ static Context default_left_outer_join(Context&& ctx, Context&& ctx2,
     }
     std::string cur(bytes.begin(), bytes.end());
     if (right_map.find(cur) == right_map.end()) {
-      for (size_t i = 0; i < ctx2.col_num(); i++) {
-        if (builders[i] != nullptr) {
-          builders[i]->push_back_null();
-        }
-      }
+      right_offsets.emplace_back(std::numeric_limits<size_t>::max());
       offsets.emplace_back(r_i);
     } else {
       for (auto idx : right_map[cur]) {
-        for (size_t i = 0; i < ctx2.col_num(); i++) {
-          if (builders[i] != nullptr) {
-            builders[i]->push_back_elem(ctx2.get(i)->get_elem(idx));
-          }
-        }
+        right_offsets.emplace_back(idx);
         offsets.emplace_back(r_i);
       }
     }
   }
   ctx.reshuffle(offsets);
+  for (auto idx : params.right_columns) {
+    ctx2.remove(idx);
+  }
+  ctx2.optional_reshuffle(right_offsets);
   for (size_t i = 0; i < ctx2.col_num(); i++) {
-    if (builders[i] != nullptr) {
-      ctx.set(i, builders[i]->finish(ctx2.get(i)->get_arena()));
+    if (ctx2.get(i) != nullptr) {
+      ctx.set(i, ctx2.get(i));
     } else if (i >= ctx.col_num()) {
       ctx.set(i, nullptr);
     }

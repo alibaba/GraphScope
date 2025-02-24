@@ -57,12 +57,6 @@ class ValueColumn : public IValueColumn<T> {
     return ContextColumnType::kValue;
   }
 
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
-        std::make_shared<OptionalValueColumnBuilder<T>>());
-  }
-
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
 

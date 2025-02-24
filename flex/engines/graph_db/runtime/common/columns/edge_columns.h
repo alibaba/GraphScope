@@ -143,13 +143,6 @@ class SDSLEdgeColumn : public IEdgeColumn {
 
   inline Direction dir() const { return dir_; }
 
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
-        std::make_shared<OptionalSDSLEdgeColumnBuilder>(dir_, label_,
-                                                        prop_type_));
-  }
-
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     // TODO: dedup with property value
     ColumnsUtils::generate_dedup_offset(edges_, size(), offsets);
@@ -355,11 +348,6 @@ class BDSLEdgeColumn : public IEdgeColumn {
            ", size = " + std::to_string(edges_.size());
   }
 
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
-        std::make_shared<OptionalBDSLEdgeColumnBuilder>(label_, prop_type_));
-  }
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
   std::shared_ptr<IContextColumn> optional_shuffle(

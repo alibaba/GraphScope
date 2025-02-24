@@ -139,12 +139,6 @@ class IContextColumn {
 
   virtual RTAnyType elem_type() const = 0;
 
-  virtual std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const {
-    LOG(FATAL) << "not implemented for " << this->column_info();
-    return nullptr;
-  }
-
   virtual std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const {
     LOG(FATAL) << "not implemented for " << this->column_info();
