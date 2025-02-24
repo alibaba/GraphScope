@@ -160,7 +160,7 @@ impl Property {
                     Ok(Property::ULong(*v as u64))
                 }
             }
-            Primitives::Float(v) => Ok(Property::Float(*v as f32)),
+            Primitives::Float(v) => Ok(Property::Float(*v)),
             Primitives::Double(v) => Ok(Property::Double(*v)),
         }
     }
