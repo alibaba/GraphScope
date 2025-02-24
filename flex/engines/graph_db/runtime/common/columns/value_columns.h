@@ -44,11 +44,7 @@ class IValueColumn : public IContextColumn {
 template <typename T>
 class ValueColumn : public IValueColumn<T> {
  public:
-  ValueColumn() {
-    if constexpr (std::is_same_v<T, std::pair<label_t, vid_t>>) {
-      LOG(FATAL) << "not implemented for " << this->column_info();
-    }
-  }
+  ValueColumn() {}
   ~ValueColumn() = default;
 
   inline size_t size() const override { return data_.size(); }
@@ -85,7 +81,9 @@ class ValueColumn : public IValueColumn<T> {
   inline const std::vector<T>& data() const { return data_; }
 
   ISigColumn* generate_signature() const override {
-    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple>) {
+    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple> or
+                  std::is_same_v<T, Map> or std::is_same_v<T, Set> or
+                  std::is_same_v<T, Relation>) {
       LOG(FATAL) << "not implemented for " << this->column_info();
       return nullptr;
     } else {
@@ -113,55 +111,6 @@ class ValueColumn : public IValueColumn<T> {
   template <typename _T>
   friend class ValueColumnBuilder;
   std::vector<T> data_;
-  std::shared_ptr<Arena> arena_;
-};
-
-template <>
-class ValueColumn<std::string_view> : public IValueColumn<std::string_view> {
- public:
-  ValueColumn() = default;
-  ~ValueColumn() = default;
-
-  inline size_t size() const override { return data_.size(); }
-
-  std::string column_info() const override {
-    return "ValueColumn<" + TypedConverter<std::string_view>::name() + ">[" +
-           std::to_string(size()) + "]";
-  }
-  inline ContextColumnType column_type() const override {
-    return ContextColumnType::kValue;
-  }
-
-  inline RTAnyType elem_type() const override {
-    return RTAnyType::kStringValue;
-  }
-  std::shared_ptr<IContextColumn> shuffle(
-      const std::vector<size_t>& offsets) const override;
-
-  inline RTAny get_elem(size_t idx) const override {
-    return RTAny::from_string(data_[idx]);
-  }
-
-  inline std::string_view get_value(size_t idx) const override {
-    return data_[idx];
-  }
-
-  ISigColumn* generate_signature() const override {
-    return new SigColumn<std::string_view>(data_);
-  }
-
-  void generate_dedup_offset(std::vector<size_t>& offsets) const override {
-    ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
-  }
-  void set_arena(const std::shared_ptr<Arena>& arena) override {
-    arena_ = arena;
-  }
-
-  std::shared_ptr<Arena> get_arena() const override { return arena_; }
-
- private:
-  friend class ValueColumnBuilder<std::string_view>;
-  std::vector<std::string_view> data_;
   std::shared_ptr<Arena> arena_;
 };
 
@@ -249,7 +198,8 @@ class ListValueColumn : public ListValueColumnBase {
     }
 
     if constexpr (std::is_same_v<T, std::string_view> ||
-                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map>) {
+                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map> ||
+                  std::is_same_v<T, Set>) {
       // TODO: we shouldn't use the same arena as the original column.
       // The ownership of list elements should be released.
       return {builder->finish(this->get_arena()), offsets};
@@ -375,7 +325,9 @@ class OptionalValueColumn : public IValueColumn<T> {
   inline T get_value(size_t idx) const override { return data_[idx]; }
 
   ISigColumn* generate_signature() const override {
-    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple>) {
+    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple> or
+                  std::is_same_v<T, Map> or std::is_same_v<T, Set> or
+                  std::is_same_v<T, Relation>) {
       LOG(FATAL) << "not implemented for " << this->column_info();
       return nullptr;
     } else {
@@ -390,65 +342,15 @@ class OptionalValueColumn : public IValueColumn<T> {
   bool has_value(size_t idx) const override { return valid_[idx]; }
   bool is_optional() const override { return true; }
 
+  void set_arena(const std::shared_ptr<Arena>& arena) override {
+    arena_ = arena;
+  }
+  std::shared_ptr<Arena> get_arena() const override { return arena_; }
+
  private:
   template <typename _T>
   friend class OptionalValueColumnBuilder;
   std::vector<T> data_;
-  std::vector<bool> valid_;
-};
-
-template <>
-class OptionalValueColumn<std::string_view>
-    : public IValueColumn<std::string_view> {
- public:
-  OptionalValueColumn() = default;
-  ~OptionalValueColumn() = default;
-
-  inline size_t size() const override { return data_.size(); }
-
-  std::string column_info() const override {
-    return "OptionalValueColumn<" + TypedConverter<std::string_view>::name() +
-           ">[" + std::to_string(size()) + "]";
-  }
-  inline ContextColumnType column_type() const override {
-    return ContextColumnType::kOptionalValue;
-  }
-
-  std::shared_ptr<IContextColumn> shuffle(
-      const std::vector<size_t>& offsets) const override;
-  RTAnyType elem_type() const override {
-    auto type = RTAnyType::kStringValue;
-    return type;
-  }
-  inline RTAny get_elem(size_t idx) const override {
-    return RTAny::from_string(data_[idx]);
-  }
-
-  inline std::string_view get_value(size_t idx) const override {
-    return data_[idx];
-  }
-
-  ISigColumn* generate_signature() const override {
-    LOG(FATAL) << "not implemented for " << this->column_info();
-    return nullptr;
-  }
-
-  void generate_dedup_offset(std::vector<size_t>& offsets) const override {
-    ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
-  }
-
-  inline bool has_value(size_t idx) const override { return valid_[idx]; }
-  inline bool is_optional() const override { return true; }
-
-  void set_arena(const std::shared_ptr<Arena>& arena) override {
-    arena_ = arena;
-  }
-
-  std::shared_ptr<Arena> get_arena() const override { return arena_; }
-
- private:
-  friend class OptionalValueColumnBuilder<std::string_view>;
-  std::vector<std::string_view> data_;
   std::vector<bool> valid_;
   std::shared_ptr<Arena> arena_;
 };
@@ -491,81 +393,6 @@ class OptionalValueColumnBuilder : public IOptionalContextColumnBuilder {
  private:
   std::vector<T> data_;
   std::vector<bool> valid_;
-};
-
-template <>
-class OptionalValueColumnBuilder<std::string_view>
-    : public IOptionalContextColumnBuilder {
- public:
-  OptionalValueColumnBuilder() = default;
-  ~OptionalValueColumnBuilder() = default;
-
-  void reserve(size_t size) override {
-    data_.reserve(size);
-    valid_.reserve(size);
-  }
-
-  inline void push_back_elem(const RTAny& val) override {
-    data_.push_back(val.as_string());
-    valid_.push_back(true);
-  }
-
-  inline void push_back_opt(const std::string& val, bool valid) {
-    data_.push_back(val);
-    valid_.push_back(valid);
-  }
-
-  inline void push_back_opt(const std::string_view& val, bool valid) {
-    data_.emplace_back(val);
-    valid_.push_back(valid);
-  }
-
-  inline void push_back_null() override {
-    data_.emplace_back();
-    valid_.push_back(false);
-  }
-
-  std::shared_ptr<IContextColumn> finish(
-      const std::shared_ptr<Arena>& arena) override {
-    auto ret = std::make_shared<OptionalValueColumn<std::string_view>>();
-    ret->data_.swap(data_);
-    ret->valid_.swap(valid_);
-    ret->set_arena(arena);
-    return std::dynamic_pointer_cast<IContextColumn>(ret);
-  }
-
- private:
-  std::vector<std::string_view> data_;
-  std::vector<bool> valid_;
-};
-
-template <>
-class ValueColumnBuilder<std::string_view> : public IContextColumnBuilder {
- public:
-  ValueColumnBuilder() = default;
-  ~ValueColumnBuilder() = default;
-
-  void reserve(size_t size) override { data_.reserve(size); }
-  inline void push_back_elem(const RTAny& val) override {
-    data_.push_back(val.as_string());
-  }
-
-  inline void push_back_opt(const std::string& val) { data_.push_back(val); }
-
-  inline void push_back_opt(const std::string_view& val) {
-    data_.emplace_back(val);
-  }
-
-  std::shared_ptr<IContextColumn> finish(
-      const std::shared_ptr<Arena>& ptr) override {
-    auto ret = std::make_shared<ValueColumn<std::string_view>>();
-    ret->set_arena(ptr);
-    ret->data_.swap(data_);
-    return ret;
-  }
-
- private:
-  std::vector<std::string_view> data_;
 };
 
 template <typename T>
