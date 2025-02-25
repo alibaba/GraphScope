@@ -25,6 +25,7 @@ import re
 import socket
 import string
 import time
+import traceback
 from typing import Union
 
 import requests
@@ -161,8 +162,8 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logger.info(str(e))
-                return str(e), 500
+                logger.info("Exception occurred: %s, %s", str(e), traceback.format_exc())
+                return f"Exception occurred: {str(e)}, traceback {traceback.format_exc()}", 500
 
         return wrapper
 
