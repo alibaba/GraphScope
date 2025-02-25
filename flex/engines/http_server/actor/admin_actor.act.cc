@@ -449,7 +449,7 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
         gs::Result<seastar::sstring>(all_graph_meta_res.status()));
   } else {
     VLOG(10) << "Successfully list graphs";
-    // collect all 'schema' field into a json stirng
+    // collect all 'schema' field into a json string
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(merge_graph_and_plugin_meta(
             metadata_store_, all_graph_meta_res.value())));

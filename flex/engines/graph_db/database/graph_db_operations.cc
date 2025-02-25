@@ -344,7 +344,7 @@ Status GraphDBOperations::checkVertexSchema(
          col_index++) {
       if (input_property_names[col_index] != properties_name[col_index]) {
         throw std::runtime_error(
-            "properties name not match, pleace check the order and name");
+            "properties name not match, please check the order and name");
       }
       vertex.properties[col_index] = ConvertStringToAny(
           vertex.properties[col_index].to_string(), properties_type[col_index]);

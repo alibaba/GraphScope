@@ -106,7 +106,7 @@ public class WritableRequestEncoder extends ChannelOutboundHandlerAdapter {
                 buf.setInt(0, buf.writerIndex() - SIZE_OF_INT);
                 if (logger.isDebugEnabled()) {
                     logger.debug(
-                            "Encode msg, type: [{}], writen bytes: [{}]",
+                            "Encode msg, type: [{}], written bytes: [{}]",
                             request.getRequestType().getClazz().getName(),
                             buf.readableBytes());
                 }
@@ -161,7 +161,7 @@ public class WritableRequestEncoder extends ChannelOutboundHandlerAdapter {
 //
 //            out.setInt(0, out.writerIndex() - SIZE_OF_INT);
 //            logger.info("Encode msg, type: " + request.getRequestType().getClazz().getName() + ",
-// writen bytes: " + out.readableBytes());
+// written bytes: " + out.readableBytes());
 //        }
 //        else {
 //            logger.error("Encoder: got instance " + msg + ", expect a WritableRequest");

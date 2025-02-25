@@ -320,7 +320,7 @@ Result<bool> DefaultGraphMetaStore::LockGraphIndices(const GraphId& graph_id) {
           } else if (old_value == UNLOCKED) {
             return std::string(LOCKED);
           } else {
-            LOG(ERROR) << "Unknow value: " << old_value;
+            LOG(ERROR) << "Unknown value: " << old_value;
             return old_value;
           }
         });
@@ -348,7 +348,7 @@ Result<bool> DefaultGraphMetaStore::UnlockGraphIndices(
                        << "'s indices is already unlocked";
           return std::string(UNLOCKED);
         } else {
-          LOG(ERROR) << "Unknow value: " << old_value;
+          LOG(ERROR) << "Unknown value: " << old_value;
           return old_value;
         }
       });
@@ -383,7 +383,7 @@ Result<bool> DefaultGraphMetaStore::LockGraphPlugins(const GraphId& graph_id) {
           } else if (old_value == UNLOCKED) {
             return std::string(LOCKED);
           } else {
-            LOG(ERROR) << "Unknow value: " << old_value;
+            LOG(ERROR) << "Unknown value: " << old_value;
             return old_value;
           }
         });
@@ -412,7 +412,7 @@ Result<bool> DefaultGraphMetaStore::UnlockGraphPlugins(
                        << "'s plugins is already unlocked";
           return std::string(UNLOCKED);
         } else {
-          LOG(ERROR) << "Unknow value: " << old_value;
+          LOG(ERROR) << "Unknown value: " << old_value;
           return old_value;
         }
       });

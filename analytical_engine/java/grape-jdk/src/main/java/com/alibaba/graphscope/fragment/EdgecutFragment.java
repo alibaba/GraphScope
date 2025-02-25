@@ -27,7 +27,7 @@ import com.alibaba.graphscope.ds.VertexRange;
  * and vertex-cut, please refers to
  * https://spark.apache.org/docs/1.6.2/graphx-programming-guide.html#optimized-representation
  *
- * <p>If we have an edge a-&lt;b cutted by the partitioner, and a is in frag_0, and b in frag_1.
+ * <p>If we have an edge a-&lt;b cut by the partitioner, and a is in frag_0, and b in frag_1.
  * Then:a-&lt;b is a crossing edge, a is an inner_vertex in frag_0, b is an outer_vertex in frag_0.
  *
  * @param <OID_T> original vertex id type.

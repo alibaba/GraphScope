@@ -72,7 +72,7 @@ public class VertexDataUtils {
         ffiByteVectorOutput.finishSetting();
         long writenBytes = ffiByteVectorOutput.bytesWritten();
         logger.info(
-                "write data array {} of type {}, writen bytes {}",
+                "write data array {} of type {}, written bytes {}",
                 size,
                 clz.getName(),
                 writenBytes);

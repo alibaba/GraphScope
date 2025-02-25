@@ -8,7 +8,7 @@ In most cases, the performance gap is below *2x*, moreover, when running pageran
 
 ## Evaluation Settings
 
-The evaluation is conducted on a cluster of 4 instances, each of them is equiped with following hardwares.
+The evaluation is conducted on a cluster of 4 instances, each of them is equipped with following hardwares.
 
 - CPU: Intel(R) Xeon(R) Platinum 8163 CPU @ 2.50GHz, 96 cores
 - Memory: 400GB

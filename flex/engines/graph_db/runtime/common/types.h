@@ -101,7 +101,7 @@ inline ostream& operator<<(ostream& os, gs::runtime::JoinKind k) {
   } else if (k == gs::runtime::JoinKind::kLeftOuterJoin) {
     os << "left_outer_join";
   } else {
-    os << "unknwon join";
+    os << "unknown join";
   }
   return os;
 }

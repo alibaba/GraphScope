@@ -36,7 +36,7 @@ enum class ContextDataType {
 };
 
 /* N.B. These values should be the same as vineyard::TypeToInt::value. Because
- * theses values are used to decode in Python side. Refer:
+ * these values are used to decode in Python side. Refer:
  * python.graphscope.framework.utils._to_numpy_dtype
  */
 inline int ContextDataTypeToInt(ContextDataType type) {

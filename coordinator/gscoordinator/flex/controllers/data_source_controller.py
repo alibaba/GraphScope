@@ -47,7 +47,7 @@ def get_datasource_by_id(graph_id):  # noqa: E501
 def unbind_edge_datasource(graph_id, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
     """unbind_edge_datasource
 
-    Unbind datas ource on an edge type # noqa: E501
+    Unbind datas source on an edge type # noqa: E501
 
     :param graph_id: 
     :type graph_id: str

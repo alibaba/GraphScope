@@ -542,7 +542,7 @@ inline RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
       case ::common::PrimitiveType::DT_ANY:
         return RTAnyType::kUnknown;
       default:
-        LOG(FATAL) << "unrecoginized primitive type - " << pt;
+        LOG(FATAL) << "unrecognized primitive type - " << pt;
         break;
       }
     }
@@ -554,14 +554,14 @@ inline RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
       } else if (ddt.temporal().item_case() == ::common::Temporal::kTimestamp) {
         return RTAnyType::kTimestamp;
       } else {
-        LOG(FATAL) << "unrecoginized temporal type - "
+        LOG(FATAL) << "unrecognized temporal type - "
                    << ddt.temporal().DebugString();
       }
     }
     case ::common::DataType::kArray:
       return RTAnyType::kList;
     default:
-      LOG(FATAL) << "unrecoginized data type - " << ddt.DebugString();
+      LOG(FATAL) << "unrecognized data type - " << ddt.DebugString();
       break;
     }
   } break;
@@ -575,7 +575,7 @@ inline RTAnyType parse_from_ir_data_type(const ::common::IrDataType& dt) {
         GraphDataType_GraphElementOpt_EDGE:
       return RTAnyType::kEdge;
     default:
-      LOG(FATAL) << "unrecoginized graph data type";
+      LOG(FATAL) << "unrecognized graph data type";
       break;
     }
   } break;
