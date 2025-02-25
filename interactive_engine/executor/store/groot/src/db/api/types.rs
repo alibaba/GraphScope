@@ -64,13 +64,13 @@ pub enum PropertyValue {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FixedCharValue {
-    value: Vec<char>,
+    value: String,
     fixed_length: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct VarCharValue {
-    value: Vec<char>,
+    value: String,
     max_length: usize,
 }
 
@@ -128,19 +128,11 @@ impl From<ValueRef<'_>> for PropertyValue {
             ValueType::Time32 => PropertyValue::Time32(value_ref.get_time32().unwrap()),
             ValueType::Timestamp => PropertyValue::Timestamp(value_ref.get_timestamp().unwrap()),
             ValueType::FixedChar(fixed) => PropertyValue::FixedChar(FixedCharValue {
-                value: value_ref
-                    .get_fixed_char()
-                    .unwrap()
-                    .chars()
-                    .collect(),
+                value: value_ref.get_fixed_char(*fixed).unwrap(),
                 fixed_length: *fixed,
             }),
             ValueType::VarChar(max) => PropertyValue::VarChar(VarCharValue {
-                value: value_ref
-                    .get_var_char()
-                    .unwrap()
-                    .chars()
-                    .collect(),
+                value: String::from(value_ref.get_var_char(*max).unwrap()),
                 max_length: *max,
             }),
         }

@@ -106,8 +106,8 @@ impl ValueType {
             DataTypePb::DATE32 => Ok(ValueType::Date32),
             DataTypePb::TIME32_MS => Ok(ValueType::Time32),
             DataTypePb::TIMESTAMP_MS => Ok(ValueType::Timestamp),
-            DataTypePb::FIXED_CHAR => Ok(ValueType::FixedChar(1)), // todo: fixed_length
-            DataTypePb::VAR_CHAR => Ok(ValueType::VarChar(255)),   // todo: max_length
+            DataTypePb::FIXED_CHAR => Ok(ValueType::FixedChar(1)), // todo: add fixed_length in pb
+            DataTypePb::VAR_CHAR => Ok(ValueType::VarChar(255)),   // todo: add max_length in pb
             _ => {
                 let msg = format!("unsupported data type {:?}", pb);
                 let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
@@ -249,18 +249,36 @@ impl<'a> ValueRef<'a> {
             .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_str))
     }
 
-    pub fn get_fixed_char(&self) -> GraphResult<&str> {
-        let res = self.check_type_match(ValueType::FixedChar(1));
-        res_unwrap!(res, get_fixed_char)?;
-        ::std::str::from_utf8(self.data)
-            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_fixed_char))
+    pub fn get_fixed_char(&self, fixed_length: usize) -> GraphResult<String> {
+        let res = self.check_type_match(ValueType::FixedChar(fixed_length));
+        res_unwrap!(res, get_var_char)?;
+        let str = ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_fixed_char))?;
+        // confirm the length
+        if str.len() > fixed_length {
+            // truncate
+            Ok(str[..fixed_length].to_string())
+        } else if str.len() < fixed_length {
+            // pad with space
+            let mut buf = vec![b' '; fixed_length];
+            buf[..str.len()].copy_from_slice(str.as_bytes());
+            Ok(::std::str::from_utf8(&buf).unwrap().to_string())
+        } else {
+            Ok(str.to_string())
+        }
     }
 
-    pub fn get_var_char(&self) -> GraphResult<&str> {
-        let res = self.check_type_match(ValueType::VarChar(255));
+    pub fn get_var_char(&self, max_length: usize) -> GraphResult<&str> {
+        let res = self.check_type_match(ValueType::VarChar(max_length));
         res_unwrap!(res, get_var_char)?;
-        ::std::str::from_utf8(self.data)
-            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_var_char))
+        let str = ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_var_char))?;
+        if str.len() > max_length {
+            // truncate
+            Ok(&str[..max_length])
+        } else {
+            Ok(str)
+        }
     }
 
     pub fn get_bytes(&self) -> GraphResult<&[u8]> {
