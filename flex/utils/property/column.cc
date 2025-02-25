@@ -230,8 +230,8 @@ void TypedColumn<std::string_view>::set_value_safe(
       size_t new_len = std::max(extra_size_ * new_avg_width, pos_.load());
       lock.unlock();
       extra_buffer_.resize(extra_buffer_.size(), new_len);
+      lock.lock();
     }
-    lock.lock();
     extra_buffer_.set(idx - basic_size_, offset, value);
   } else if (idx < basic_size_) {
     size_t offset = basic_pos_.fetch_add(value.size());
@@ -240,8 +240,8 @@ void TypedColumn<std::string_view>::set_value_safe(
       size_t new_len = std::max(basic_size_ * new_avg_width, basic_pos_.load());
       lock.unlock();
       basic_buffer_.resize(basic_buffer_.size(), new_len);
+      lock.lock();
     }
-    lock.lock();
     basic_buffer_.set(idx, offset, value);
   } else {
     LOG(FATAL) << "Index out of range";

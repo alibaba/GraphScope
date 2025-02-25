@@ -346,9 +346,14 @@ class TypedColumn<grape::EmptyType> : public ColumnBase {
 template <>
 class TypedColumn<std::string_view> : public ColumnBase {
  public:
-  TypedColumn(StorageStrategy strategy,
-              uint16_t width = PropertyType::GetStringDefaultMaxLength())
-      : strategy_(strategy), width_(width) {}
+  TypedColumn(StorageStrategy strategy, uint16_t width)
+      : strategy_(strategy),
+        width_(width),
+        type_(PropertyType::Varchar(width_)) {}
+  TypedColumn(StorageStrategy strategy)
+      : strategy_(strategy),
+        width_(PropertyType::GetStringDefaultMaxLength()),
+        type_(PropertyType::kStringView) {}
   ~TypedColumn() { close(); }
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -506,7 +511,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
-  PropertyType type() const override { return PropertyType::Varchar(width_); }
+  PropertyType type() const override { return type_; }
 
   void set_value(size_t idx, const std::string_view& val) {
     auto copied_val = val;
@@ -590,6 +595,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   StorageStrategy strategy_;
   std::shared_mutex rw_mutex_;
   uint16_t width_;
+  PropertyType type_;
 };
 
 using StringColumn = TypedColumn<std::string_view>;
