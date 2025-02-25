@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>GIE for Gremlin - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -341,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
@@ -633,9 +634,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../v0.29.0/index.html">
+              <dd><a href="../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -718,12 +719,12 @@ FrontEnd service, which offers functionalities similar to the official Tinkerpop
 </pre></div>
 </div>
 <p>Then connect to the service and run queries:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">gremlin_python</span> <span class="kn">import</span> <span class="n">statics</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.structure.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.process.graph_traversal</span> <span class="kn">import</span> <span class="n">__</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.process.strategies</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.driver.driver_remote_connection</span> <span class="kn">import</span> <span class="n">DriverRemoteConnection</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python</span><span class="w"> </span><span class="kn">import</span> <span class="n">statics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python.structure.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python.process.graph_traversal</span><span class="w"> </span><span class="kn">import</span> <span class="n">__</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python.process.strategies</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python.driver.driver_remote_connection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DriverRemoteConnection</span>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">()</span>
 <span class="n">gremlin_endpoint</span> <span class="o">=</span> <span class="c1"># the GIE Frontend service endpoint you&#39;ve obtained</span>
@@ -741,8 +742,8 @@ FrontEnd service, which offers functionalities similar to the official Tinkerpop
 Gremlin-Python and will automatically acquire the endpoint.</p>
 </div>
 <p>In large-scale data processing scenarios, streaming the returned data is often necessary to avoid Out of Memory (OOM) issues caused by handling a large volume of data, which provides benefits such as memory efficiency, continuous processing, incremental analysis, reduced latency, scalability, and resource optimization. It enables you to handle and analyze vast amounts of data effectively while mitigating the risk of memory-related issues. Here is an example to guide you how to collect results in a streaming way by python sdk.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
-<span class="kn">from</span> <span class="nn">gremlin_python.driver.client</span> <span class="kn">import</span> <span class="n">Client</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">queue</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gremlin_python.driver.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="n">graph_url</span> <span class="o">=</span> <span class="c1"># the GIE Frontend service endpoint you&#39;ve obtained</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>

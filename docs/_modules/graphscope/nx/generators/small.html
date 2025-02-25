@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.nx.generators.small - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../../v0.29.0/index.html">
+              <dd><a href="../../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -710,16 +711,16 @@ MathJax = {
 <span class="c1"># information.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nxa</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nxa</span>
 
-<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">UnimplementedError</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.generators.classic</span> <span class="kn">import</span> <span class="n">complete_graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.generators.classic</span> <span class="kn">import</span> <span class="n">cycle_graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.generators.classic</span> <span class="kn">import</span> <span class="n">empty_graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.generators.classic</span> <span class="kn">import</span> <span class="n">path_graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope</span><span class="w"> </span><span class="kn">import</span> <span class="n">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnimplementedError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx</span><span class="w"> </span><span class="kn">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx.generators.classic</span><span class="w"> </span><span class="kn">import</span> <span class="n">complete_graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx.generators.classic</span><span class="w"> </span><span class="kn">import</span> <span class="n">cycle_graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx.generators.classic</span><span class="w"> </span><span class="kn">import</span> <span class="n">empty_graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx.generators.classic</span><span class="w"> </span><span class="kn">import</span> <span class="n">path_graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.nx.utils.compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">patch_docstring</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;make_small_graph&quot;</span><span class="p">,</span>
@@ -748,7 +749,7 @@ MathJax = {
 <span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">make_small_undirected_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_small_undirected_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a small undirected graph described by graph_description.</span>
 
@@ -761,7 +762,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="make_small_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.make_small_graph.html#graphscope.nx.generators.small.make_small_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">make_small_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">make_small_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_small_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span> <span class="s2">&quot;edgelist&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;ltype must be either adjacencylist or edgelist&quot;</span><span class="p">)</span>
 
@@ -790,7 +791,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="LCF_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.LCF_graph.html#graphscope.nx.generators.small.LCF_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">LCF_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">LCF_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">shift_list</span><span class="p">,</span> <span class="n">repeats</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">LCF_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">shift_list</span><span class="p">,</span> <span class="n">repeats</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
 
@@ -821,7 +822,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="bull_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.bull_graph.html#graphscope.nx.generators.small.bull_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">bull_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">bull_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bull_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Bull Graph&quot;</span><span class="p">,</span>
@@ -833,7 +834,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="chvatal_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.chvatal_graph.html#graphscope.nx.generators.small.chvatal_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">chvatal_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">chvatal_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chvatal_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Chvatal Graph&quot;</span><span class="p">,</span>
@@ -858,7 +859,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="cubical_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.cubical_graph.html#graphscope.nx.generators.small.cubical_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">cubical_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">cubical_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cubical_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Platonic Cubical Graph&quot;</span><span class="p">,</span>
@@ -879,14 +880,14 @@ MathJax = {
 
 
 <div class="viewcode-block" id="desargues_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.desargues_graph.html#graphscope.nx.generators.small.desargues_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">desargues_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">desargues_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">desargues_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">],</span> <span class="mi">5</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Desargues Graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="diamond_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.diamond_graph.html#graphscope.nx.generators.small.diamond_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">diamond_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">diamond_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">diamond_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Diamond Graph&quot;</span><span class="p">,</span>
@@ -898,14 +899,14 @@ MathJax = {
 
 
 <div class="viewcode-block" id="dodecahedral_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.dodecahedral_graph.html#graphscope.nx.generators.small.dodecahedral_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">dodecahedral_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">dodecahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dodecahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Dodecahedral Graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="frucht_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.frucht_graph.html#graphscope.nx.generators.small.frucht_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">frucht_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">frucht_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">frucht_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">cycle_graph</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span>
         <span class="p">[</span>
@@ -928,19 +929,19 @@ MathJax = {
 
 
 <div class="viewcode-block" id="heawood_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.heawood_graph.html#graphscope.nx.generators.small.heawood_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">heawood_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">heawood_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">heawood_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">7</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Heawood Graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<span class="k">def</span> <span class="nf">hoffman_singleton_graph</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hoffman_singleton_graph</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the Hoffman-Singleton Graph.&quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="n">UnimplementedError</span><span class="p">(</span><span class="s2">&quot;hoffman_singleton_graph not support in graphscope.nx&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="house_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.house_graph.html#graphscope.nx.generators.small.house_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">house_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">house_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">house_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;House Graph&quot;</span><span class="p">,</span>
@@ -952,7 +953,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="house_x_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.house_x_graph.html#graphscope.nx.generators.small.house_x_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">house_x_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">house_x_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">house_x_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;House-with-X-inside Graph&quot;</span><span class="p">,</span>
@@ -964,7 +965,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="icosahedral_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.icosahedral_graph.html#graphscope.nx.generators.small.icosahedral_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">icosahedral_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">icosahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">icosahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Platonic Icosahedral Graph&quot;</span><span class="p">,</span>
@@ -989,7 +990,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="krackhardt_kite_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.krackhardt_kite_graph.html#graphscope.nx.generators.small.krackhardt_kite_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">krackhardt_kite_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">krackhardt_kite_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">krackhardt_kite_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Krackhardt Kite Social Network&quot;</span><span class="p">,</span>
@@ -1012,14 +1013,14 @@ MathJax = {
 
 
 <div class="viewcode-block" id="moebius_kantor_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.moebius_kantor_graph.html#graphscope.nx.generators.small.moebius_kantor_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">moebius_kantor_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">moebius_kantor_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">moebius_kantor_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">8</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Moebius-Kantor Graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="octahedral_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.octahedral_graph.html#graphscope.nx.generators.small.octahedral_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">octahedral_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">octahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">octahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Platonic Octahedral Graph&quot;</span><span class="p">,</span>
@@ -1031,14 +1032,14 @@ MathJax = {
 
 
 <div class="viewcode-block" id="pappus_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.pappus_graph.html#graphscope.nx.generators.small.pappus_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">pappus_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">pappus_graph</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pappus_graph</span><span class="p">():</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Pappus Graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="petersen_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.petersen_graph.html#graphscope.nx.generators.small.petersen_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">petersen_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">petersen_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">petersen_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Petersen Graph&quot;</span><span class="p">,</span>
@@ -1061,7 +1062,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="sedgewick_maze_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.sedgewick_maze_graph.html#graphscope.nx.generators.small.sedgewick_maze_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">sedgewick_maze_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">sedgewick_maze_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sedgewick_maze_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
@@ -1073,14 +1074,14 @@ MathJax = {
 
 
 <div class="viewcode-block" id="tetrahedral_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.tetrahedral_graph.html#graphscope.nx.generators.small.tetrahedral_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">tetrahedral_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">tetrahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tetrahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">complete_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Platonic Tetrahedral graph&quot;</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="truncated_cube_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_cube_graph.html#graphscope.nx.generators.small.truncated_cube_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">truncated_cube_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">truncated_cube_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">truncated_cube_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Truncated Cube Graph&quot;</span><span class="p">,</span>
@@ -1117,7 +1118,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="truncated_tetrahedron_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html#graphscope.nx.generators.small.truncated_tetrahedron_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">truncated_tetrahedron_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">truncated_tetrahedron_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">truncated_tetrahedron_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">path_graph</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="c1">#    G.add_edges_from([(1,3),(1,10),(2,7),(4,12),(5,12),(6,8),(9,11)])</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
@@ -1126,7 +1127,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="tutte_graph"><a class="viewcode-back" href="../../../../reference/networkx/generated/graphscope.nx.generators.small.tutte_graph.html#graphscope.nx.generators.small.tutte_graph">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">nxa</span><span class="o">.</span><span class="n">tutte_graph</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">tutte_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tutte_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Tutte&#39;s Graph&quot;</span><span class="p">,</span>

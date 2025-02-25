@@ -1,8 +1,11 @@
 <map id="gs::TypedCsrBase&lt; RecordView &gt;" name="gs::TypedCsrBase&lt; RecordView &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="152,49,348,90"/>
-<area shape="rect" id="node3" href="$classgs_1_1TypedMutableCsrBase.html" title=" " alt="" coords="396,49,585,90"/>
-<area shape="rect" id="node2" href="$classgs_1_1CsrBase.html" title=" " alt="" coords="5,56,104,83"/>
-<area shape="rect" id="node4" href="$classgs_1_1EmptyCsr_3_01RecordView_01_4.html" title=" " alt="" coords="639,5,854,32"/>
-<area shape="rect" id="node5" href="$classgs_1_1MutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="633,56,860,83"/>
-<area shape="rect" id="node6" href="$classgs_1_1SingleMutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="667,107,826,149"/>
+<area shape="rect" id="node1" title=" " alt="" coords="152,125,348,167"/>
+<area shape="rect" id="node3" href="$classgs_1_1TypedImmutableCsrBase.html" title=" " alt="" coords="396,71,603,112"/>
+<area shape="rect" id="node6" href="$classgs_1_1TypedMutableCsrBase.html" title=" " alt="" coords="405,157,594,199"/>
+<area shape="rect" id="node2" href="$classgs_1_1CsrBase.html" title=" " alt="" coords="5,133,104,159"/>
+<area shape="rect" id="node4" href="$classgs_1_1ImmutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="665,5,863,47"/>
+<area shape="rect" id="node5" href="$classgs_1_1SingleImmutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="675,71,853,112"/>
+<area shape="rect" id="node7" href="$classgs_1_1EmptyCsr_3_01RecordView_01_4.html" title=" " alt="" coords="657,137,871,163"/>
+<area shape="rect" id="node8" href="$classgs_1_1MutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="651,187,877,214"/>
+<area shape="rect" id="node9" href="$classgs_1_1SingleMutableCsr_3_01RecordView_01_4.html" title=" " alt="" coords="685,239,843,280"/>
 </map>

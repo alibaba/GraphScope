@@ -26,12 +26,12 @@ json = "{}"
 # create an instance of GetGraphResponse from a JSON string
 get_graph_response_instance = GetGraphResponse.from_json(json)
 # print the JSON string representation of the object
-print(GetGraphResponse.to_json())
+print GetGraphResponse.to_json()
 
 # convert the object into a dict
 get_graph_response_dict = get_graph_response_instance.to_dict()
 # create an instance of GetGraphResponse from a dict
-get_graph_response_from_dict = GetGraphResponse.from_dict(get_graph_response_dict)
+get_graph_response_form_dict = get_graph_response.from_dict(get_graph_response_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

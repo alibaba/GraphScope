@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**add_edge**](EdgeApi.md#add_edge) | **POST** /v1/graph/{graph_id}/edge | Add edge to the graph
 [**get_edge**](EdgeApi.md#get_edge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
 [**update_edge**](EdgeApi.md#update_edge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property
-
+[**delete_edge**](EdgeApi.md#deleteEdge) | **DELETE** /v1/graph/{graph_id}/edge | Remove edge from the graph
 
 # **add_edge**
 > [Result](./result.rst)[str] add_edge(graph_id, edge_request)
@@ -32,16 +32,16 @@ edge_request = [
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=4,
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_value=[ModelProperty(name="id", value=4)],
         properties=[ModelProperty(name="weight", value=9.123)],
     ),
     EdgeRequest(
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=6,
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_values=[ModelProperty(name="id", value=6)],
         properties=[ModelProperty(name="weight", value=3.233)],
     ),
 ]
@@ -178,8 +178,8 @@ resp = sess.update_edge(
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=2,
-        dst_primary_key_value=4,
+        src_primary_key_values=[ModelProperty(name="id", value=2)],
+        dst_primary_key_values=[ModelProperty(name="id", value=4)],
         properties=[ModelProperty(name="weight", value=3)],
     ),
 )
@@ -220,3 +220,75 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
 
+# **delete_edge**
+> [Result](./result.rst)[str] delete_edge(graph_id, delete_edge_request)
+
+Delete an edge from the graph.
+
+### Example
+
+
+```python
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import *
+
+driver = Driver()
+sess = driver.session()
+
+graph_id = "1"
+
+delete_edge_request = [
+    EdgeRequest(
+        src_label="person",
+        dst_label="person",
+        edge_label="knows",
+        src_primary_key_value=[ModelProperty(name="id", value=2)]
+        dst_primary_key_value=[ModelProperty(name="id", value=4)]
+    ),
+    EdgeRequest(
+        src_label="person",
+        dst_label="person",
+        edge_label="knows",
+        src_primary_key_value=[ModelProperty(name="id", value=2)]
+        dst_primary_key_value=[ModelProperty(name="id", value=6)]
+    ),
+]
+resp = sess.delete_edge(graph_id, [delete_edge_request])
+print(resp)
+assert resp.is_ok()
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **graph_id** | **str**|  | 
+ **delete_edge_request** | [**List[DeleteEdgeRequest]**](DeleteEdgeRequest.md)|  | 
+
+### Return type
+
+[Result](./result.rst)[str]
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Successfully insert the edge |  -  |
+**400** | Invalid input edge |  -  |
+**404** | Graph or edge not exists |  -  |
+**500** | Server internal error |  -  |
+
+[[Back to top]](#) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to python_sdk]](python_sdk.md)
