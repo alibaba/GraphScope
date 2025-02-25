@@ -61,7 +61,8 @@ class UGetV {
       LOG(ERROR) << "current only support BDML edge column";
       RETURN_BAD_REQUEST_ERROR("current only support BDML edge column");
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offsets);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offsets);
     return ctx;
   }
 
@@ -85,7 +86,8 @@ class UGetV {
                        shuffle_offsets.push_back(index);
                      }
                    });
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offsets);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offsets);
     return ctx;
   }
 };

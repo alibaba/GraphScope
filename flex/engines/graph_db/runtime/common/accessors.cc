@@ -37,9 +37,6 @@ std::shared_ptr<IAccessor> create_context_value_accessor(const Context& ctx,
     return std::make_shared<ContextValueAccessor<Day>>(ctx, tag);
   case RTAnyType::kTimestamp:
     return std::make_shared<ContextValueAccessor<Date>>(ctx, tag);
-  case RTAnyType::kStringSetValue:
-    return std::make_shared<ContextValueAccessor<std::set<std::string>>>(ctx,
-                                                                         tag);
   case RTAnyType::kBoolValue:
     return std::make_shared<ContextValueAccessor<bool>>(ctx, tag);
   case RTAnyType::kTuple:

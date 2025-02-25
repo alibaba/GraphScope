@@ -120,6 +120,7 @@ std::string CypherRunnerImpl::run(
   OprTimer timer;
   auto pipeline = std::move(res.value());
   GraphReadInterface graph(tx);
+
   auto ctx = pipeline.Execute(graph, Context(), params, timer);
   if (!ctx) {
     LOG(ERROR) << "Execute pipeline failed for query: " << cypher;

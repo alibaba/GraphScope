@@ -265,6 +265,9 @@ static bl::result<Context> intersect_impl(Context&& ctx,
 
 bl::result<Context> Intersect::intersect(Context&& ctx,
                                          std::vector<Context>&& ctxs, int key) {
+  if (ctxs.empty()) {
+    return ctx;
+  }
   return intersect_impl(std::move(ctx), std::move(ctxs), key);
 }
 

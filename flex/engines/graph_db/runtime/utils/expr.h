@@ -43,15 +43,10 @@ class Expr {
 
   RTAnyType type() const;
 
-  std::shared_ptr<IContextColumnBuilder> builder() const {
-    return expr_->builder();
-  }
+  // for container such as list, set etc.
+  RTAnyType elem_type() const { return expr_->elem_type(); }
 
   bool is_optional() const { return expr_->is_optional(); }
-
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
-    return expr_->get_list_impls();
-  }
 
  private:
   std::unique_ptr<ExprBase> expr_;

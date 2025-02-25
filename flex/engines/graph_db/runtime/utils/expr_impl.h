@@ -40,17 +40,12 @@ class ExprBase {
                           const Any& data, size_t idx, int) const {
     return eval_edge(label, src, dst, data, idx);
   }
-  virtual std::shared_ptr<IContextColumnBuilder> builder() const {
-    LOG(FATAL) << "not implemented";
-    return nullptr;
-  }
 
   virtual bool is_optional() const { return false; }
 
+  virtual RTAnyType elem_type() const { return RTAnyType::kEmpty; }
+
   virtual ~ExprBase() = default;
-  virtual std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
-    LOG(FATAL) << "not implemented";
-  }
 };
 
 class ConstTrueExpr : public ExprBase {
@@ -301,10 +296,6 @@ class VariableExpr : public ExprBase {
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx, int) const override;
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return var_.builder();
-  }
-
   bool is_optional() const override { return var_.is_optional(); }
 
  private:
@@ -519,10 +510,10 @@ class CaseWhenExpr : public ExprBase {
       when_then_exprs_;
   std::unique_ptr<ExprBase> else_expr_;
 };
-/**
+
 class TupleExpr : public ExprBase {
  public:
-  TupleExpr(std::vector<std::unique_ptr<ExprBase>>&& exprs);
+  TupleExpr(const Context& ctx, std::vector<std::unique_ptr<ExprBase>>&& exprs);
 
   RTAny eval_path(size_t idx) const override;
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override;
@@ -532,14 +523,16 @@ class TupleExpr : public ExprBase {
   RTAnyType type() const override;
 
  private:
+  const Context& ctx_;
   std::vector<std::unique_ptr<ExprBase>> exprs_;
-};*/
+};
 
 template <typename... Args>
 class TypedTupleExpr : public ExprBase {
  public:
-  TypedTupleExpr(std::array<std::unique_ptr<ExprBase>, sizeof...(Args)>&& exprs)
-      : exprs_(std::move(exprs)) {
+  TypedTupleExpr(const Context& ctx,
+                 std::array<std::unique_ptr<ExprBase>, sizeof...(Args)>&& exprs)
+      : ctx_(ctx), exprs_(std::move(exprs)) {
     assert(exprs.size() == sizeof...(Args));
   }
 
@@ -551,8 +544,11 @@ class TypedTupleExpr : public ExprBase {
   }
 
   RTAny eval_path(size_t idx) const override {
-    return RTAny::from_tuple(
-        eval_path_impl(std::index_sequence_for<Args...>(), idx));
+    auto tup = eval_path_impl(std::index_sequence_for<Args...>(), idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   template <std::size_t... Is>
@@ -564,8 +560,12 @@ class TypedTupleExpr : public ExprBase {
   }
 
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
-    return RTAny::from_tuple(
-        eval_vertex_impl(std::index_sequence_for<Args...>(), label, v, idx));
+    auto tup =
+        eval_vertex_impl(std::index_sequence_for<Args...>(), label, v, idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   template <std::size_t... Is>
@@ -579,21 +579,26 @@ class TypedTupleExpr : public ExprBase {
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx) const override {
-    return RTAny::from_tuple(eval_edge_impl(std::index_sequence_for<Args...>(),
-                                            label, src, dst, data, idx));
+    auto tup = eval_edge_impl(std::index_sequence_for<Args...>(), label, src,
+                              dst, data, idx);
+    auto t = Tuple::make_tuple_impl(std::move(tup));
+    Tuple ret(t.get());
+    ctx_.value_collection->emplace_back(std::move(t));
+    return RTAny::from_tuple(ret);
   }
 
   RTAnyType type() const override { return RTAnyType::kTuple; }
 
  private:
+  const Context& ctx_;
   std::array<std::unique_ptr<ExprBase>, sizeof...(Args)> exprs_;
 };
 
 class MapExpr : public ExprBase {
  public:
-  MapExpr(std::vector<std::string>&& keys,
+  MapExpr(const Context& ctx, std::vector<RTAny>&& keys,
           std::vector<std::unique_ptr<ExprBase>>&& values)
-      : keys(std::move(keys)), value_exprs(std::move(values)) {
+      : ctx_(ctx), keys(std::move(keys)), value_exprs(std::move(values)) {
     assert(keys.size() == values.size());
   }
 
@@ -602,10 +607,9 @@ class MapExpr : public ExprBase {
     for (size_t i = 0; i < keys.size(); i++) {
       ret.push_back(value_exprs[i]->eval_path(idx));
     }
-    values.emplace_back(ret);
-    size_t id = values.size() - 1;
-    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
-    auto map = Map::make_map(map_impl);
+    auto map_impl = MapImpl::make_map_impl(keys, ret);
+    auto map = Map::make_map(map_impl.get());
+    ctx_.value_collection->emplace_back(std::move(map_impl));
     return RTAny::from_map(map);
   }
 
@@ -614,12 +618,12 @@ class MapExpr : public ExprBase {
     for (size_t i = 0; i < keys.size(); i++) {
       ret.push_back(value_exprs[i]->eval_path(idx, 0));
     }
-    values.emplace_back(ret);
-    size_t id = values.size() - 1;
-    auto map_impl = MapImpl::make_map_impl(&keys, &values[id]);
-    auto map = Map::make_map(map_impl);
+    auto map_impl = MapImpl::make_map_impl(keys, ret);
+    auto map = Map::make_map(map_impl.get());
+    ctx_.value_collection->emplace_back(std::move(map_impl));
     return RTAny::from_map(map);
   }
+
   RTAny eval_vertex(label_t label, vid_t v, size_t idx) const override {
     LOG(FATAL) << "not implemented";
     return RTAny();
@@ -641,16 +645,10 @@ class MapExpr : public ExprBase {
     return false;
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto builder = std::make_shared<MapValueColumnBuilder>();
-    builder->set_keys(keys);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(builder);
-  }
-
  private:
-  std::vector<std::string> keys;
+  const Context& ctx_;
+  std::vector<RTAny> keys;
   std::vector<std::unique_ptr<ExprBase>> value_exprs;
-  mutable std::vector<std::vector<RTAny>> values;
 };
 
 class ListExprBase : public ExprBase {
@@ -660,14 +658,16 @@ class ListExprBase : public ExprBase {
 };
 class RelationshipsExpr : public ListExprBase {
  public:
-  RelationshipsExpr(std::unique_ptr<ExprBase>&& args) : args(std::move(args)) {}
+  RelationshipsExpr(const Context& ctx, std::unique_ptr<ExprBase>&& args)
+      : ctx_(ctx), args(std::move(args)) {}
   RTAny eval_path(size_t idx) const override {
     assert(args->type() == RTAnyType::kPath);
     auto path = args->eval_path(idx).as_path();
     auto rels = path.relationships();
     auto ptr = ListImpl<Relation>::make_list_impl(std::move(rels));
-    impls.push_back(ptr);
-    return RTAny::from_list(List::make_list(ptr));
+    List rel_list(ptr.get());
+    ctx_.value_collection->emplace_back(std::move(ptr));
+    return RTAny::from_list(rel_list);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -691,28 +691,25 @@ class RelationshipsExpr : public ListExprBase {
 
   bool is_optional() const override { return args->is_optional(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::make_shared<ListValueColumnBuilder<Relation>>();
-  }
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const override {
-    return impls;
-  }
+  RTAnyType elem_type() const override { return RTAnyType::kRelation; }
 
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> args;
-  mutable std::vector<std::shared_ptr<ListImplBase>> impls;
 };
 
 class NodesExpr : public ListExprBase {
  public:
-  NodesExpr(std::unique_ptr<ExprBase>&& args) : args(std::move(args)) {}
+  NodesExpr(const Context& ctx, std::unique_ptr<ExprBase>&& args)
+      : ctx_(ctx), args(std::move(args)) {}
   RTAny eval_path(size_t idx) const override {
     assert(args->type() == RTAnyType::kPath);
     auto path = args->eval_path(idx).as_path();
     auto nodes = path.nodes();
     auto ptr = ListImpl<VertexRecord>::make_list_impl(std::move(nodes));
-    impls.push_back(ptr);
-    return RTAny::from_list(List::make_list(ptr));
+    List node_list(ptr.get());
+    ctx_.value_collection->emplace_back(std::move(ptr));
+    return RTAny::from_list(node_list);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -736,17 +733,11 @@ class NodesExpr : public ListExprBase {
 
   bool is_optional() const override { return args->is_optional(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::make_shared<ListValueColumnBuilder<VertexRecord>>();
-  }
-
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const override {
-    return impls;
-  }
+  RTAnyType elem_type() const override { return RTAnyType::kVertex; }
 
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> args;
-  mutable std::vector<std::shared_ptr<ListImplBase>> impls;
 };
 
 class StartNodeExpr : public ExprBase {
@@ -870,14 +861,17 @@ class ToFloatExpr : public ExprBase {
 
 class StrConcatExpr : public ExprBase {
  public:
-  StrConcatExpr(std::unique_ptr<ExprBase>&& lhs,
+  StrConcatExpr(const Context& ctx, std::unique_ptr<ExprBase>&& lhs,
                 std::unique_ptr<ExprBase>&& rhs)
-      : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+      : ctx_(ctx), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
   RTAny eval_path(size_t idx) const override {
     std::string ret = std::string(lhs->eval_path(idx).as_string()) + ";" +
                       std::string(rhs->eval_path(idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAny eval_path(size_t idx, int) const override {
@@ -891,8 +885,11 @@ class StrConcatExpr : public ExprBase {
     std::string ret = std::string(lhs->eval_vertex(label, v, idx).as_string()) +
                       ";" +
                       std::string(rhs->eval_vertex(label, v, idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
@@ -901,8 +898,11 @@ class StrConcatExpr : public ExprBase {
         std::string(lhs->eval_edge(label, src, dst, data, idx).as_string()) +
         ";" +
         std::string(rhs->eval_edge(label, src, dst, data, idx).as_string());
-    values.emplace_back(ret);
-    return RTAny::from_string(values[values.size() - 1]);
+    auto ptr = StringImpl::make_string_impl(ret);
+    auto sv = ptr->str_view();
+    ctx_.value_collection->emplace_back(std::move(ptr));
+
+    return RTAny::from_string(sv);
   }
 
   RTAnyType type() const override { return RTAnyType::kStringValue; }
@@ -911,9 +911,9 @@ class StrConcatExpr : public ExprBase {
   }
 
  private:
+  const Context& ctx_;
   std::unique_ptr<ExprBase> lhs;
   std::unique_ptr<ExprBase> rhs;
-  mutable std::vector<std::string> values;
 };
 
 class StrListSizeExpr : public ExprBase {

@@ -38,49 +38,47 @@ std::shared_ptr<IContextColumn> any_vec_to_column(
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_bool());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else if (first == RTAnyType::kI32Value) {
     ValueColumnBuilder<int32_t> builder;
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_int32());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else if (first == RTAnyType::kI64Value) {
     ValueColumnBuilder<int64_t> builder;
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_int64());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else if (first == RTAnyType::kU64Value) {
     ValueColumnBuilder<uint64_t> builder;
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_uint64());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else if (first == RTAnyType::kF64Value) {
     ValueColumnBuilder<double> builder;
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_double());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else if (first == RTAnyType::kStringValue) {
     ValueColumnBuilder<std::string_view> builder;
+    std::shared_ptr<Arena> arena = std::make_shared<Arena>();
     for (auto& any : any_vec) {
-      builder.push_back_elem(any);
+      auto ptr = StringImpl::make_string_impl(std::string(any.as_string()));
+      auto sv = ptr->str_view();
+      arena->emplace_back(std::move(ptr));
+      builder.push_back_opt(sv);
     }
-    return builder.finish();
-  } else if (first == RTAnyType::kStringSetValue) {
-    ValueColumnBuilder<std::set<std::string>> builder;
-    for (auto& any : any_vec) {
-      builder.push_back_opt(any.as_string_set());
-    }
-    return builder.finish();
+    return builder.finish(arena);
   } else if (first == RTAnyType::kTimestamp) {
     ValueColumnBuilder<Date> builder;
     for (auto& any : any_vec) {
       builder.push_back_opt(any.as_timestamp());
     }
-    return builder.finish();
+    return builder.finish(nullptr);
   } else {
     LOG(FATAL) << "Unsupported RTAny type: " << static_cast<int>(first);
   }
