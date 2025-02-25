@@ -17,13 +17,21 @@
 
 namespace gs {
 std::shared_ptr<IGraphMetaStore> MetadataStoreFactory::Create(
-    MetadataStoreType type, const std::string& path) {
-  switch (type) {
-  case MetadataStoreType::kLocalFile:
+    const std::string& metadata_store_uri) {
+  auto scheme = get_uri_scheme(metadata_store_uri);
+  if (scheme == "file") {
     return std::make_shared<DefaultGraphMetaStore>(
-        std::make_unique<LocalFileMetadataStore>(path));
-  default:
-    LOG(FATAL) << "Unsupported metadata store type: " << static_cast<int>(type);
+        std::make_unique<LocalFileMetadataStore>(
+            get_uri_path(metadata_store_uri)));
+  }
+#ifdef BUILD_ETCD_METASTORE
+  else if (scheme == "http") {  // assume http uri must be etcd
+    return std::make_shared<DefaultGraphMetaStore>(
+        std::make_unique<ETCDMetadataStore>(metadata_store_uri));
+  }
+#endif
+  else {
+    LOG(FATAL) << "Unsupported metadata store type: " << scheme;
   }
   return nullptr;
 }

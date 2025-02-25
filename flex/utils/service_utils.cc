@@ -17,6 +17,31 @@
 
 namespace gs {
 
+std::string get_uri_scheme(const std::string& uri) {
+  std::string scheme;
+  auto pos = uri.find("://");
+  if (pos != std::string::npos) {
+    scheme = uri.substr(0, pos);
+  }
+  if (scheme.empty()) {
+    LOG(INFO) << "No scheme found in wal uri: " << uri
+              << ", using default scheme: file";
+    scheme = "file";
+  }
+  return scheme;
+}
+
+std::string get_uri_path(const std::string& uri) {
+  std::string path;
+  auto pos = uri.find("://");
+  if (pos != std::string::npos) {
+    path = uri.substr(pos + 3);
+  } else {
+    path = uri;
+  }
+  return path;
+}
+
 static unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys,
     lastTotalIdle;
 
