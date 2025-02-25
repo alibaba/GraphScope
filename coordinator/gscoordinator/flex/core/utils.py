@@ -25,6 +25,7 @@ import re
 import socket
 import string
 import time
+import traceback
 from typing import Union
 
 import requests
@@ -161,8 +162,8 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logger.info(str(e))
-                return str(e), 500
+                logger.info("Exception occurred: %s, %s", str(e), traceback.format_exc())
+                return f"Exception occurred: {str(e)}, traceback {traceback.format_exc()}", 500
 
         return wrapper
 
@@ -245,7 +246,7 @@ def get_public_ip() -> Union[str, None]:
 
 
 def data_type_to_groot(property_type):
-    if property_type["primitive_type"] is not None:
+    if "primitive_type" in property_type:
         t = property_type["primitive_type"]
         if t == "DT_DOUBLE":
             return "double"
@@ -253,7 +254,7 @@ def data_type_to_groot(property_type):
             return "long"
         else:
             raise RuntimeError(f"Data type {t} is not supported yet.")
-    elif property_type["string"] is not None:
+    elif "string" in property_type:
         return "str"
     else:
         raise RuntimeError(f"Data type {str(property_type)} is not supported yet.")
