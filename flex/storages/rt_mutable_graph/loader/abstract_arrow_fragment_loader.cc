@@ -38,6 +38,53 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
   }
 }
 
+void set_column_from_string_array_safe(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<size_t>& offset) {
+  auto type = array->type();
+  auto size = col->size();
+  auto typed_col = dynamic_cast<gs::TypedColumn<std::string_view>*>(col);
+  CHECK(typed_col != nullptr) << "Column type mismatched.";
+  CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
+      << "Inconsistent data type, expect string, but got " << type->ToString();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::large_utf8())) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw;
+        if (casted->IsNull(k)) {
+          VLOG(1) << "Found null string in vertex property.";
+          sw = "";
+        } else {
+          sw = std::string_view(str.data(), str.size());
+        }
+        if (offset[cur_ind] >= size) {
+          cur_ind++;
+        } else {
+          typed_col->set_value_safe(offset[cur_ind++], sw);
+        }
+      }
+    }
+  } else {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw(str.data(), str.size());
+        if (offset[cur_ind] >= size) {
+          cur_ind++;
+        } else {
+          typed_col->set_value_safe(offset[cur_ind++], sw);
+        }
+      }
+    }
+  }
+}
+
 void set_column_from_string_array(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
                                   const std::vector<size_t>& offset) {
@@ -113,7 +160,7 @@ void set_properties_column(gs::ColumnBase* col,
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kStringView) {
-    set_column_from_string_array(col, array, offset);
+    set_column_from_string_array_safe(col, array, offset);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }

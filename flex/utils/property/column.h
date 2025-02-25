@@ -16,6 +16,7 @@
 #ifndef GRAPHSCOPE_PROPERTY_COLUMN_H_
 #define GRAPHSCOPE_PROPERTY_COLUMN_H_
 
+#include <shared_mutex>
 #include <string>
 #include <string_view>
 #include "grape/utils/concurrent_queue.h"
@@ -478,6 +479,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   size_t size() const override { return basic_size_ + extra_size_; }
 
   void resize(size_t size) override {
+    std::unique_lock<std::shared_mutex> lock(rw_mutex_);
     if (size < basic_buffer_.size()) {
       basic_size_ = size;
       extra_size_ = 0;
@@ -547,6 +549,8 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
+  void set_value_safe(size_t idx, const std::string_view& value);
+
   inline std::string_view get_view(size_t idx) const {
     return idx < basic_size_ ? basic_buffer_.get(idx)
                              : extra_buffer_.get(idx - basic_size_);
@@ -584,6 +588,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   std::atomic<size_t> pos_;
   std::atomic<size_t> basic_pos_;
   StorageStrategy strategy_;
+  std::shared_mutex rw_mutex_;
   uint16_t width_;
 };
 
