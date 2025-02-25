@@ -69,8 +69,8 @@ mod tests {
     }
 
     #[test]
-    fn test_primitive_float_as() {
-        let a = Primitives::Float(8.1);
+    fn test_primitive_double_as() {
+        let a = Primitives::Double(8.1);
         assert!(a.as_i8().is_err());
         assert!(a.as_i16().is_err());
         assert!(a.as_i32().is_err());
