@@ -124,11 +124,25 @@ impl From<ValueRef<'_>> for PropertyValue {
                     .map(String::from)
                     .collect(),
             ),
-            ValueType::Date32 => PropertyValue::Date32(value_ref.get_int().unwrap()),
-            ValueType::Time32 => PropertyValue::Time32(value_ref.get_int().unwrap()),
-            ValueType::Timestamp => PropertyValue::Timestamp(value_ref.get_long().unwrap()),
-            ValueType::FixedChar(fixed_length) => todo!(),
-            ValueType::VarChar(max_length) => todo!(),
+            ValueType::Date32 => PropertyValue::Date32(value_ref.get_date32().unwrap()),
+            ValueType::Time32 => PropertyValue::Time32(value_ref.get_time32().unwrap()),
+            ValueType::Timestamp => PropertyValue::Timestamp(value_ref.get_timestamp().unwrap()),
+            ValueType::FixedChar(fixed) => PropertyValue::FixedChar(FixedCharValue {
+                value: value_ref
+                    .get_fixed_char()
+                    .unwrap()
+                    .chars()
+                    .collect(),
+                fixed_length: *fixed,
+            }),
+            ValueType::VarChar(max) => PropertyValue::VarChar(VarCharValue {
+                value: value_ref
+                    .get_var_char()
+                    .unwrap()
+                    .chars()
+                    .collect(),
+                max_length: *max,
+            }),
         }
     }
 }

@@ -104,12 +104,11 @@ impl ValueType {
             DataTypePb::UINT => Ok(ValueType::UInt),
             DataTypePb::ULONG => Ok(ValueType::ULong),
             DataTypePb::DATE32 => Ok(ValueType::Date32),
+            DataTypePb::TIME32_MS => Ok(ValueType::Time32),
             DataTypePb::TIMESTAMP_MS => Ok(ValueType::Timestamp),
             DataTypePb::FIXED_CHAR => Ok(ValueType::FixedChar(1)), // todo: fixed_length
             DataTypePb::VAR_CHAR => Ok(ValueType::VarChar(255)),   // todo: max_length
             _ => {
-                let msg = format!("unsupported data type {:?}", pb);
-                let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
                 let msg = format!("unsupported data type {:?}", pb);
                 let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
                 Err(err)
@@ -138,8 +137,8 @@ impl ValueType {
             ValueType::Date32 => Ok(DataTypePb::DATE32),
             ValueType::Time32 => Ok(DataTypePb::TIME32_MS),
             ValueType::Timestamp => Ok(DataTypePb::TIMESTAMP_MS),
-            ValueType::FixedChar(fixed_length) => Ok(DataTypePb::FIXED_CHAR),
-            ValueType::VarChar(max_length) => Ok(DataTypePb::VAR_CHAR),
+            ValueType::FixedChar(_fixed_length) => Ok(DataTypePb::FIXED_CHAR),
+            ValueType::VarChar(_max_length) => Ok(DataTypePb::VAR_CHAR),
         }
     }
 
@@ -250,10 +249,42 @@ impl<'a> ValueRef<'a> {
             .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_str))
     }
 
+    pub fn get_fixed_char(&self) -> GraphResult<&str> {
+        let res = self.check_type_match(ValueType::FixedChar(1));
+        res_unwrap!(res, get_fixed_char)?;
+        ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_fixed_char))
+    }
+
+    pub fn get_var_char(&self) -> GraphResult<&str> {
+        let res = self.check_type_match(ValueType::VarChar(255));
+        res_unwrap!(res, get_var_char)?;
+        ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_var_char))
+    }
+
     pub fn get_bytes(&self) -> GraphResult<&[u8]> {
         let res = self.check_type_match(ValueType::Bytes);
         res_unwrap!(res, get_str)?;
         Ok(self.data)
+    }
+
+    pub fn get_date32(&self) -> GraphResult<i32> {
+        let res = self.check_type_match(ValueType::Date32);
+        res_unwrap!(res, get_date32)?;
+        Ok(get_int(self.data))
+    }
+
+    pub fn get_time32(&self) -> GraphResult<i32> {
+        let res = self.check_type_match(ValueType::Time32);
+        res_unwrap!(res, get_time32)?;
+        Ok(get_int(self.data))
+    }
+
+    pub fn get_timestamp(&self) -> GraphResult<i64> {
+        let res = self.check_type_match(ValueType::Timestamp);
+        res_unwrap!(res, get_timestamp)?;
+        Ok(get_long(self.data))
     }
 
     pub fn get_int_list(&self) -> GraphResult<NumericArray<i32>> {
@@ -332,17 +363,9 @@ impl<'a> ValueRef<'a> {
 
     pub fn check_type_match(&self, value_type: ValueType) -> GraphResult<()> {
         if self.r#type != value_type {
-            if (self.r#type.eq(&ValueType::Date32) || self.r#type.eq(&ValueType::Time32))
-                && value_type.eq(&ValueType::Int)
-            {
-                return Ok(());
-            } else if self.r#type.eq(&ValueType::Timestamp) && value_type.eq(&ValueType::Long) {
-                return Ok(());
-            } else {
-                let msg = format!("cannot transform {:?} to {:?}", self.r#type, value_type);
-                let err = gen_graph_err!(ErrorCode::VALUE_TYPE_MISMATCH, msg, check_type_match, value_type);
-                return Err(err);
-            }
+            let msg = format!("cannot transform {:?} to {:?}", self.r#type, value_type);
+            let err = gen_graph_err!(ErrorCode::VALUE_TYPE_MISMATCH, msg, check_type_match, value_type);
+            return Err(err);
         }
         Ok(())
     }
@@ -698,9 +721,19 @@ impl Value {
         Value::new(ValueType::Int, data)
     }
 
+    pub fn uint(v: u32) -> Self {
+        let data = transform::u32_to_vec(v.to_be());
+        Value::new(ValueType::UInt, data)
+    }
+
     pub fn long(v: i64) -> Self {
         let data = transform::i64_to_vec(v.to_be());
         Value::new(ValueType::Long, data)
+    }
+
+    pub fn ulong(v: u64) -> Self {
+        let data = transform::u64_to_vec(v.to_be());
+        Value::new(ValueType::ULong, data)
     }
 
     pub fn float(v: f32) -> Self {
@@ -718,9 +751,46 @@ impl Value {
         Value::new(ValueType::String, data)
     }
 
+    pub fn fixed_char(v: &str, len: usize) -> Self {
+        let str = if v.len() > len {
+            // truncate the string
+            &v[..len]
+        } else {
+            v
+        };
+        let data = str.as_bytes().to_vec();
+        Value::new(ValueType::FixedChar(len), data)
+    }
+
+    pub fn var_char(v: &str, max_len: usize) -> Self {
+        let str = if v.len() > max_len {
+            // truncate the string
+            &v[..max_len]
+        } else {
+            v
+        };
+        let data = str.as_bytes().to_vec();
+        Value::new(ValueType::VarChar(max_len), data)
+    }
+
     pub fn bytes(v: &[u8]) -> Self {
         let data = v.to_vec();
         Value::new(ValueType::Bytes, data)
+    }
+
+    pub fn date32(v: i32) -> Self {
+        let data = transform::i32_to_vec(v.to_be());
+        Value::new(ValueType::Date32, data)
+    }
+
+    pub fn time32(v: i32) -> Self {
+        let data = transform::i32_to_vec(v.to_be());
+        Value::new(ValueType::Time32, data)
+    }
+
+    pub fn timestamp(v: i64) -> Self {
+        let data = transform::i64_to_vec(v.to_be());
+        Value::new(ValueType::Timestamp, data)
     }
 
     pub fn int_list(v: &[i32]) -> Self {
