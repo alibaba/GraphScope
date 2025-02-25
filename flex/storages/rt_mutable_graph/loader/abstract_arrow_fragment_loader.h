@@ -72,7 +72,8 @@ void set_column(gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
 // For String types.
 void set_column_from_string_array(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
-                                  const std::vector<size_t>& offset);
+                                  const std::vector<size_t>& offset,
+                                  bool enable_resize = false);
 
 void set_column_from_timestamp_array(gs::ColumnBase* col,
                                      std::shared_ptr<arrow::ChunkedArray> array,
