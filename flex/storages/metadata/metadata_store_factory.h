@@ -18,22 +18,22 @@
 
 #include <string>
 #include "flex/storages/metadata/default_graph_meta_store.h"
+#ifdef BUILD_ETCD_METASTORE
+#include "flex/storages/metadata/etcd_metadata_store.h"
+#endif
 #include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/metadata/local_file_metadata_store.h"
 
 namespace gs {
 
-enum class MetadataStoreType {
-  kLocalFile,
-};
 /**
  * @brief LoaderFactory is a factory class to create IFragmentLoader.
  * Support Using dynamically built library as plugin.
  */
 class MetadataStoreFactory {
  public:
-  static std::shared_ptr<IGraphMetaStore> Create(MetadataStoreType type,
-                                                 const std::string& path);
+  static std::shared_ptr<IGraphMetaStore> Create(
+      const std::string& metadata_store_uri);
 };
 }  // namespace gs
 

@@ -26,7 +26,7 @@ LocalWalParser::LocalWalParser()
     : insert_wal_list_(NULL), insert_wal_list_size_(0) {}
 
 void LocalWalParser::open(const std::string& wal_uri) {
-  auto wal_dir = get_wal_uri_path(wal_uri);
+  auto wal_dir = get_uri_path(wal_uri);
   if (!std::filesystem::exists(wal_dir)) {
     std::filesystem::create_directory(wal_dir);
   }
