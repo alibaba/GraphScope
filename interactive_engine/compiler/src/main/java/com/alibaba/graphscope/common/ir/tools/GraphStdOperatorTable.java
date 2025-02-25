@@ -191,7 +191,7 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+                    OperandTypes.or(OperandTypes.DATETIME_INTERVAL, OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED));
 
     public static final SqlBinaryOperator NOT_EQUALS =
             new SqlBinaryOperator(

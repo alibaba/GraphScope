@@ -69,4 +69,10 @@ divide_float_double_NaN|2.0f,0.0d|NaN
 
 get_knows_between_two_persons|32,33|32,33
 
+compare_i32_within_i32_array|[32,123]|32
+compare_i32_within_i64_array|[32L,123L]|32
+compare_i64_within_i32_array|[1234567890,12]|1234567890L
+compare_float_within_double_array|[3.14d,6.71d,8.90d]|3.14f
+compare_char_within_string_array|["abcde","cdefg"]|"abcd"
+
 

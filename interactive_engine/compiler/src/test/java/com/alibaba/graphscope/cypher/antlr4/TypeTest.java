@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.antlr4;
+package com.alibaba.graphscope.cypher.integration.flex.bench;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuild
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.utils.FileUtils;
+import com.alibaba.graphscope.cypher.antlr4.Utils;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -34,7 +35,7 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public class TypeTest {
+public class UnitTypeTest {
     private static Configs configs;
     private static IrMeta irMeta;
     private static GraphRelOptimizer optimizer;
@@ -174,5 +175,53 @@ public class TypeTest {
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("proto/divide_int32_uint32_int32.json"),
                 builder1.build().explain().trim());
+    }
+
+    @Test
+    public void compare_date32_i32_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (p:person)\n"
+                                        + "    WHERE p.prop_date = 20132\n"
+                                        + "    RETURN p.prop_date",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals("GraphLogicalProject(prop_date=[p.prop_date], isAppend=[false])\n" +
+                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], fusedFilter=[[=(_.prop_date, 20132)]], opt=[VERTEX])", after.explain().trim());
+    }
+
+    @Test
+    public void compare_timestamp_i64_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (p:person)\n"
+                                        + "    WHERE p.prop_ts = 1739454301000L\n"
+                                        + "    RETURN p.prop_ts",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals("GraphLogicalProject(prop_ts=[p.prop_ts], isAppend=[false])\n" +
+                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], fusedFilter=[[=(_.prop_ts, 1739454301000:BIGINT)]], opt=[VERTEX])", after.explain().trim());
+    }
+
+    @Test
+    public void compare_int32_int64_array_test() {
+        String query =
+                "MATCH (p:person) Where p.prop_int32 in [123L, 456] RETURN p.prop_int32";
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                query,
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals("GraphLogicalProject(prop_int32=[p.prop_int32], isAppend=[false])\n" +
+                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], opt=[VERTEX], uniqueKeyFilters=[SEARCH(_.prop_int32, Sarg[123L:BIGINT, 456L:BIGINT]:BIGINT)])", after.explain().trim());
     }
 }

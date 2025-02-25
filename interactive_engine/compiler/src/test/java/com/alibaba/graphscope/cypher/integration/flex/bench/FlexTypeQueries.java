@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.integration.flex.bench;
 
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.io.FileUtils;
@@ -26,28 +27,21 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class FlexTypeQueries {
     private final Map<String, Parameter> queryParameters;
 
-    private static class Parameter {
-        private final String name;
-        private final List<String> parameters;
-        private final List<String> results;
+    public static class Parameter {
+        public final String name;
+        public final List<String> parameters;
+        public final List<String> results;
 
         public Parameter(String line) {
             String[] parts = line.split("\\|");
             Preconditions.checkArgument(parts.length >= 3, "invalid parameter line: " + line);
             this.name = parts[0].trim();
-            this.parameters =
-                    List.of(parts[1].trim().split(",")).stream()
-                            .map(k -> k.trim())
-                            .collect(Collectors.toList());
-            this.results =
-                    List.of(parts[2].trim().split(",")).stream()
-                            .map(k -> k.trim())
-                            .collect(Collectors.toList());
+            this.parameters = parseParameters(parts[1].trim());
+            this.results = parseParameters(parts[2].trim());
         }
 
         public String render(String template) {
@@ -55,6 +49,42 @@ public class FlexTypeQueries {
                 template = template.replaceAll("\\$" + i, parameters.get(i - 1));
             }
             return template;
+        }
+
+        private List<String> parseParameters(String input) {
+            List<String> result = Lists.newArrayList();
+            StringBuilder token = new StringBuilder();
+            int bracketLevel = 0;
+
+            for (int i = 0; i < input.length(); i++) {
+                char ch = input.charAt(i);
+                if (ch == '[') {
+                    if (bracketLevel == 0 && token.length() > 0) {
+                        result.add(token.toString().trim());
+                        token.setLength(0);
+                    }
+                    bracketLevel++;
+                } else if (ch == ']') {
+                    bracketLevel--;
+                }
+
+                if (bracketLevel > 0 || ch != ',') {
+                    token.append(ch);
+                }
+
+                if (ch == ',' && bracketLevel == 0) {
+                    if (token.length() > 0) {
+                        result.add(token.toString().trim());
+                        token.setLength(0);
+                    }
+                }
+            }
+
+            if (token.length() > 0) {
+                result.add(token.toString());
+            }
+
+            return result;
         }
     }
 
@@ -444,8 +474,72 @@ public class FlexTypeQueries {
          */
         public QueryContext compare_timestamp_i64_test() {
             String query =
-                    "MATCH (p:person)\n" + "    WHERE p.prop_ts = $1\n" + "    RETURN p.prop_ts";
+                    "MATCH (p:person)\n"
+                            + "    WHERE p.prop_ts = $1\n"
+                            + "    RETURN p.prop_ts";
             Parameter parameter = queryParameters.get("compare_timestamp_i64");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        /**
+         * Check the property value is one of the element in the given i32 array.
+         * The prop_int32 is the primary key, which will be converted to index predicate in physical proto.
+         * The execution layer should handle the primary key of within in the index predicate correctly.
+         * @return
+         */
+        public QueryContext compare_i32_within_i32_array_test() {
+            String query =
+                    "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
+            Parameter parameter = queryParameters.get("compare_i32_within_i32_array");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        /**
+         * Check the property value is one of the element in the given i64 array.
+         * @return
+         */
+        public QueryContext compare_i32_within_i64_array_test() {
+            String query =
+                    "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
+            Parameter parameter = queryParameters.get("compare_i32_within_i64_array");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        /**
+         * Check the property value is one of the element in the given i32 array.
+         * @return
+         */
+        public QueryContext compare_i64_within_i32_array_test() {
+            String query =
+                    "MATCH (p:person) Where p.prop_int64 in $1 RETURN p.prop_int64";
+            Parameter parameter = queryParameters.get("compare_i64_within_i32_array");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        /**
+         * Check the property value is one of the element in the given double array.
+         * @return
+         */
+        public QueryContext compare_float_within_double_array_test() {
+            String query =
+                    "MATCH (p:person) Where p.prop_float in $1 RETURN p.prop_float";
+            Parameter parameter = queryParameters.get("compare_float_within_double_array");
+            query = parameter.render(query);
+            return new QueryContext(query, parameter.results);
+        }
+
+        /**
+         * Check the property value is one of the element in the given string array.
+         * @return
+         */
+        public QueryContext compare_char_within_string_array_test() {
+            String query =
+                    "MATCH (p:person) Where p.prop_char in $1 RETURN p.prop_char";
+            Parameter parameter = queryParameters.get("compare_char_within_string_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
         }
