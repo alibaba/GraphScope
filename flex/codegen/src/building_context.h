@@ -181,7 +181,7 @@ class BuildingContext {
   // int32_t GetCurrentCtxId() const { return ctx_id_; }
   bool EmptyContext() const { return ctx_id_ == 0; }
 
-  // return a pair indicate the direction of assigning, also increate cur ctx id
+  // return a pair indicate the direction of assigning, also increase cur ctx id
   std::pair<std::string, std::string> GetPrevAndNextCtxName() {
     std::string ctx_name = ctx_prefix_ + CONTEXT_NAME + std::to_string(ctx_id_);
     std::string ctx_name2 =
