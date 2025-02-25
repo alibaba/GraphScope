@@ -228,10 +228,6 @@ void TypedColumn<std::string_view>::set_value_safe(
       size_t new_avg_width =
           (pos_.load() + idx - basic_size_) / (idx - basic_size_ + 1);
       size_t new_len = std::max(extra_size_ * new_avg_width, pos_.load());
-      LOG(INFO) << "Resize :" << (&extra_buffer_) << " " << pos_.load() << " "
-                << extra_buffer_.data_size() << " " << new_len << " " << idx
-                << " " << new_avg_width << " " << extra_size_;
-
       lock.unlock();
       std::unique_lock<std::shared_mutex> w_lock(rw_mutex_);
       if (pos_.load() > extra_buffer_.data_size()) {
