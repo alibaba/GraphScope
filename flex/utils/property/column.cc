@@ -225,12 +225,12 @@ void TypedColumn<std::string_view>::set_value_safe(
   if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
     size_t offset = pos_.fetch_add(value.size());
     if (pos_.load() > extra_buffer_.data_size()) {
-      size_t new_avg_width =
-          (pos_.load() + idx - basic_size_) / (idx - basic_size_ + 1);
-      size_t new_len = std::max(extra_size_ * new_avg_width, pos_.load());
       lock.unlock();
       std::unique_lock<std::shared_mutex> w_lock(rw_mutex_);
       if (pos_.load() > extra_buffer_.data_size()) {
+        size_t new_avg_width =
+            (pos_.load() + idx - basic_size_) / (idx - basic_size_ + 1);
+        size_t new_len = std::max(extra_size_ * new_avg_width, pos_.load());
         extra_buffer_.resize(extra_buffer_.size(), new_len);
       }
       w_lock.unlock();
@@ -240,11 +240,12 @@ void TypedColumn<std::string_view>::set_value_safe(
   } else if (idx < basic_size_) {
     size_t offset = basic_pos_.fetch_add(value.size());
     if (basic_pos_.load() > basic_buffer_.data_size()) {
-      size_t new_avg_width = (basic_pos_.load() + idx) / (idx + 1);
-      size_t new_len = std::max(basic_size_ * new_avg_width, basic_pos_.load());
       lock.unlock();
       std::unique_lock<std::shared_mutex> w_lock(rw_mutex_);
       if (basic_pos_.load() > basic_buffer_.data_size()) {
+        size_t new_avg_width = (basic_pos_.load() + idx) / (idx + 1);
+        size_t new_len =
+            std::max(basic_size_ * new_avg_width, basic_pos_.load());
         basic_buffer_.resize(basic_buffer_.size(), new_len);
       }
       w_lock.unlock();
