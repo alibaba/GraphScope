@@ -176,7 +176,7 @@ class SLVertexColumnBuilder : public IVertexColumnBuilder {
     assert(labels.size() == 1);
   }
 
-    std::vector<vid_t> vertices_;
+  std::vector<vid_t> vertices_;
   label_t label_;
   bool is_optional_ = false;
 };
@@ -439,8 +439,9 @@ class MLVertexColumnBuilder : public IVertexColumnBuilder {
       const std::shared_ptr<Arena>&) override;
 
  private:
-  MLVertexColumnBuilder() = default;
-  MLVertexColumnBuilder(const std::set<label_t>& labels) : labels_(labels) {}
+  MLVertexColumnBuilder() : is_optional_(false) {}
+  MLVertexColumnBuilder(const std::set<label_t>& labels)
+      : labels_(labels), is_optional_(false) {}
 
   std::vector<VertexRecord> vertices_;
   std::set<label_t> labels_;
