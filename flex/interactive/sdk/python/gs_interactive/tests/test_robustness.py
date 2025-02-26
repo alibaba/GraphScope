@@ -38,6 +38,9 @@ from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_grap
 from gs_interactive.tests.conftest import (
     import_data_to_vertex_only_modern_graph_no_wait,
 )
+from gs_interactive.tests.conftest import (
+    import_long_string_data_data_to_vertex_only_modern_graph,
+)
 from gs_interactive.tests.conftest import run_cypher_test_suite
 from gs_interactive.tests.conftest import send_get_request_periodically
 from gs_interactive.tests.conftest import start_service_on_graph
@@ -540,3 +543,21 @@ def test_create_graph_with_temporal_type(
     result = neo4j_session.run("MATCH (n: person) return n.birthday AS birthday;")
     records = result.fetch(10)
     assert len(records) == 4
+
+
+def test_graph_with_long_text_property(
+    interactive_session, neo4j_session, create_vertex_only_modern_graph
+):
+    print("[Test graph with long text property]")
+    import_long_string_data_data_to_vertex_only_modern_graph(
+        interactive_session, create_vertex_only_modern_graph
+    )
+    start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_vertex_only_modern_graph
+    )
+    result = neo4j_session.run("MATCH (n: person) return n.name AS name;")
+    records = result.fetch(10)
+    assert len(records) == 4
+    for record in records:
+        assert len(record["name"]) > 4096

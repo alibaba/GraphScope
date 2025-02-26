@@ -1183,6 +1183,34 @@ def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     assert wait_job_finish(sess, job_id)
 
 
+def import_long_string_data_data_to_vertex_only_modern_graph(
+    sess: Session, graph_id: str
+):
+    schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
+    # create a long string file under MODERN_GRAPH_DATA_DIR
+    long_string_file = os.path.join(MODERN_GRAPH_DATA_DIR, "person_long_string.csv")
+
+    # By default, the max length of a string property is 256,
+    # a string with length 4096 should be enough to test the long string feature
+    def generate_large_string(sample: str):
+        return sample * 4096
+
+    with open(long_string_file, "w") as f:
+        f.write("id|name|age\n")
+        f.write("1|" + generate_large_string("marko") + "|29\n")
+        f.write("2|" + generate_large_string("vadas") + "|27\n")
+        f.write("4|" + generate_large_string("josh") + "|32\n")
+        f.write("6|" + generate_large_string("peter") + "|35\n")
+
+    schema_mapping.vertex_mappings[0].inputs[0] = "person_long_string.csv"
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+    # return a callable to clean up the long string file
+    os.remove(long_string_file)
+
+
 def import_data_to_full_graph_algo_graph(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(graph_algo_graph_import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
