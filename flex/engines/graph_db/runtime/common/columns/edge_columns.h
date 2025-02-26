@@ -604,7 +604,7 @@ class BDMLEdgeColumn : public IEdgeColumn {
  private:
   friend class BDMLEdgeColumnBuilder;
   friend class OptionalBDMLEdgeColumn;
-  std::map<LabelTriplet, int8_t> index_;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> labels_;
   std::vector<std::tuple<label_t, vid_t, vid_t, size_t, bool>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
@@ -872,7 +872,7 @@ class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
     prop_cols_[0]->resize(prop_cols_[0]->size() + 1);
   }
 
-  inline void push_back_endpoints(int8_t index, vid_t src, vid_t dst) {
+  inline void push_back_endpoints(label_t index, vid_t src, vid_t dst) {
     LOG(FATAL) << "Not implemented";
   }
 
@@ -896,7 +896,7 @@ class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
   friend class SDMLEdgeColumn;
   Direction dir_;
   bool is_optional_;
-  std::map<LabelTriplet, int8_t> index_;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> edge_labels_;
   std::vector<std::tuple<label_t, vid_t, vid_t, size_t>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
