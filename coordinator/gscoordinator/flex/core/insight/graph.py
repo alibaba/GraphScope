@@ -19,6 +19,7 @@
 import datetime
 import itertools
 import logging
+import time
 
 import graphscope
 from dateutil import tz
