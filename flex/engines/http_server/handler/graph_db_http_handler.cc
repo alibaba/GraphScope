@@ -42,22 +42,25 @@
 
 class query_dispatcher {
  public:
-  query_dispatcher(uint32_t shard_concurrency)
+  query_dispatcher(uint32_t shard_num, uint32_t shard_concurrency)
       :
 #if RANDOM_DISPATCHER
         rd_(),
         gen_(rd_()),
-        dis_(0, shard_concurrency - 1)
+        executor_dis_(0, shard_concurrency - 1),
+        shard_dis_(0, shard_num - 1)
 #else
-        shard_concurrency_(shard_concurrency),
-        executor_idx_(0)
+        local_shard_id_(hiactor::local_shard_id()),
+        shard_num_(shard_num),
+        executor_idx_(0),
+        shard_concurrency_(shard_concurrency)
 #endif  // RANDOM_DISPATCHER
   {
   }
 
   inline int get_executor_idx() {
 #if RANDOM_DISPATCHER
-    return dis_(gen_);
+    return executor_dis_(gen_);
 #else
     auto idx = executor_idx_;
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
@@ -65,14 +68,25 @@ class query_dispatcher {
 #endif  // RANDOM_DISPATCHER
   }
 
+  inline int get_shard_idx() {
+#if RANDOM_DISPATCHER
+    return shard_dis_(gen_);
+#else
+    return local_shard_id_;
+#endif  // RANDOM_DISPATCHER
+  }
+
  private:
 #if RANDOM_DISPATCHER
   std::random_device rd_;
   std::mt19937 gen_;
-  std::uniform_int_distribution<> dis_;
+  std::uniform_int_distribution<> executor_dis_;
+  std::uniform_int_distribution<> shard_dis_;
 #else
-  int shard_concurrency_;
+  int local_shard_id_;
+  int shard_num_;
   int executor_idx_;
+  int shard_concurrency_;
 #endif
 };
 
@@ -158,7 +172,7 @@ class stored_proc_handler : public StoppableHandler {
                       uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
-        dispatcher_(shard_concurrency) {
+        dispatcher_(cooperative_shard_num, shard_concurrency) {
     auto& executors = get_executors();
     CHECK(executors.size() >= StoppableHandler::shard_id());
     executors[StoppableHandler::shard_id()].reserve(shard_concurrency);
@@ -219,6 +233,7 @@ class stored_proc_handler : public StoppableHandler {
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
     auto dst_executor = dispatcher_.get_executor_idx();
+    auto dst_shard = dispatcher_.get_shard_idx();
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
     if (req->param.exists("graph_id") && req->param["graph_id"] != "current") {
@@ -237,7 +252,7 @@ class stored_proc_handler : public StoppableHandler {
     auto& method = req->_method;
     if (method == "POST") {
       if (path.find("vertex") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .create_vertex(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -246,7 +261,7 @@ class stored_proc_handler : public StoppableHandler {
                                                   std::move(fut));
                 });
       } else if (path.find("edge") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .create_edge(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -257,7 +272,7 @@ class stored_proc_handler : public StoppableHandler {
       }
     } else if (method == "GET") {
       if (path.find("vertex") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .get_vertex(
                 graph_management_query_param{std::move(req->query_parameters)})
             .then_wrapped(
@@ -267,7 +282,7 @@ class stored_proc_handler : public StoppableHandler {
                                                   std::move(fut));
                 });
       } else if (path.find("edge") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .get_edge(
                 graph_management_query_param{std::move(req->query_parameters)})
             .then_wrapped(
@@ -279,7 +294,7 @@ class stored_proc_handler : public StoppableHandler {
       }
     } else if (method == "DELETE") {
       if (path.find("vertex") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .delete_vertex(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -288,7 +303,7 @@ class stored_proc_handler : public StoppableHandler {
                                                   std::move(fut));
                 });
       } else if (path.find("edge") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .delete_edge(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -299,7 +314,7 @@ class stored_proc_handler : public StoppableHandler {
       }
     } else if (method == "PUT") {
       if (path.find("vertex") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .update_vertex(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -308,7 +323,7 @@ class stored_proc_handler : public StoppableHandler {
                                                   std::move(fut));
                 });
       } else if (path.find("edge") != seastar::sstring::npos) {
-        return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        return get_executors()[dst_shard][dst_executor]
             .update_edge(query_param{std::move(req->content)})
             .then_wrapped(
                 [rep = std::move(rep)](
@@ -355,7 +370,7 @@ class stored_proc_handler : public StoppableHandler {
     auto start_ts = gs::GetCurrentTimeStamp();
 #endif  // HAVE_OPENTELEMETRY_CPP
 
-    return get_executors()[StoppableHandler::shard_id()][dst_executor]
+    return get_executors()[dst_shard][dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
         .then([last_byte
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -468,7 +483,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
                               uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
-        dispatcher_(shard_concurrency) {
+        dispatcher_(cooperative_shard_num, shard_concurrency) {
     auto& executor_refs = get_executors();
     CHECK(executor_refs.size() >= StoppableHandler::shard_id());
     executor_refs[StoppableHandler::shard_id()].reserve(shard_concurrency_);
@@ -531,6 +546,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
     auto dst_executor = dispatcher_.get_executor_idx();
+    auto dst_shard = dispatcher_.get_shard_idx();
 
     if (path != "/v1/graph/current/adhoc_query" &&
         req->param.exists("graph_id")) {
@@ -573,7 +589,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
         // The content contains the path to dynamic library
     req->content.append(gs::Schema::ADHOC_READ_PLUGIN_ID_STR, 1);
     req->content.append(gs::GraphDBSession::kCypherProtoAdhocStr, 1);
-    return get_executors()[StoppableHandler::shard_id()][dst_executor]
+    return get_executors()[dst_shard][dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
         .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -656,7 +672,7 @@ class adhoc_query_handler : public StoppableHandler {
                       uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
-        dispatcher_(shard_concurrency) {
+        dispatcher_(cooperative_shard_num, shard_concurrency) {
     auto& executor_refs = get_executors();
     CHECK(executor_refs.size() >= StoppableHandler::shard_id());
     executor_refs[StoppableHandler::shard_id()].reserve(shard_concurrency_);
@@ -725,6 +741,7 @@ class adhoc_query_handler : public StoppableHandler {
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
     auto dst_executor = dispatcher_.get_executor_idx();
+    auto dst_shard = dispatcher_.get_shard_idx();
     if (path != "/v1/graph/current/adhoc_query" &&
         req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
@@ -760,7 +777,7 @@ class adhoc_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
     return get_codegen_actors()[StoppableHandler::shard_id()][0]
         .do_codegen(query_param{std::move(req->content)})
-        .then([this, dst_executor
+        .then([this, dst_shard, dst_executor
 #ifdef HAVE_OPENTELEMETRY_CPP
                ,
                codegen_span = codegen_span, tracer = tracer, options = options,
@@ -778,7 +795,7 @@ class adhoc_query_handler : public StoppableHandler {
         // The content contains the path to dynamic library
           param.content.append(gs::Schema::HQPS_ADHOC_READ_PLUGIN_ID_STR, 1);
           param.content.append(gs::GraphDBSession::kCypherProtoAdhocStr, 1);
-          return get_executors()[StoppableHandler::shard_id()][dst_executor]
+          return get_executors()[dst_shard][dst_executor]
               .run_graph_db_query(query_param{std::move(param.content)})
               .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
