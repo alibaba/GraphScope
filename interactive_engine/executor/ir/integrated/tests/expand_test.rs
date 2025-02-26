@@ -670,7 +670,9 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
-        let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
+        // the zero-degree vertex should not be included in the result
+        // (v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)
+        let mut expected_results = vec![(v2, 1), (v3, 3), (v4, 1), (v5, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_vertex() {
                 if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
