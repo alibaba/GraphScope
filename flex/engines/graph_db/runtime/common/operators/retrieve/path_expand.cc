@@ -45,7 +45,7 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
         labels.emplace(label.dst_label);
       }
 
-      MLVertexColumnBuilder builder(labels);
+      auto builder = MLVertexColumnBuilder::builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
       foreach_vertex(input_vertex_list,
@@ -96,7 +96,7 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
         labels.emplace(label.dst_label);
       }
 
-      MLVertexColumnBuilder builder(labels);
+      auto builder = MLVertexColumnBuilder::builder(labels);
       std::vector<std::tuple<label_t, vid_t, size_t>> input;
       std::vector<std::tuple<label_t, vid_t, size_t>> output;
       auto input_vertex_list =
@@ -499,7 +499,7 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
         "only support same src and dst label and both "
         "direction");
   }
-  SLVertexColumnBuilder builder(label_triplet.dst_label);
+  auto builder = SLVertexColumnBuilder::builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
     std::vector<vid_t> path;
@@ -747,7 +747,7 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
     LOG(ERROR) << "only support same src and dst label";
     RETURN_UNSUPPORTED_ERROR("only support same src and dst label");
   }
-  SLVertexColumnBuilder builder(label_triplet.dst_label);
+  auto builder = SLVertexColumnBuilder::builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
   std::vector<size_t> shuffle_offset;
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {

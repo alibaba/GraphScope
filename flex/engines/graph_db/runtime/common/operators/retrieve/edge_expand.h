@@ -459,8 +459,8 @@ class EdgeExpand {
 
     T1 param = TypedConverter<T1>::typed_from_string(val);
 
-    SLVertexColumnBuilder builder1(d1_nbr_label);
-    SLVertexColumnBuilder builder2(d2_nbr_label);
+    auto builder1 = SLVertexColumnBuilder::builder(d1_nbr_label);
+    auto builder2 = SLVertexColumnBuilder::builder(d2_nbr_label);
     std::vector<size_t> offsets;
 
     size_t idx = 0;

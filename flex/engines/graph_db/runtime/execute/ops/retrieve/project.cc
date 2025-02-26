@@ -287,7 +287,8 @@ struct VertexExprWrapper {
 };
 struct SLVertexCollector {
   using EXPR = VertexExprWrapper;
-  SLVertexCollector(label_t v_label) : builder(v_label) {}
+  SLVertexCollector(label_t v_label)
+      : builder(SLVertexColumnBuilder::builder(v_label)) {}
   void collect(const EXPR& expr, size_t idx) {
     auto v = expr.expr.eval_path(idx).as_vertex();
     builder.push_back_opt(v.vid_);
@@ -298,6 +299,7 @@ struct SLVertexCollector {
 
 struct MLVertexCollector {
   using EXPR = VertexExprWrapper;
+  MLVertexCollector() : builder(MLVertexColumnBuilder::builder()) {}
   void collect(const EXPR& expr, size_t idx) {
     auto v = expr.expr.eval_path(idx).as_vertex();
     builder.push_back_vertex(v);

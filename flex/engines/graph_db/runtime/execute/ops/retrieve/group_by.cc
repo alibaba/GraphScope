@@ -722,6 +722,7 @@ struct ValueCollector {
 };
 
 struct VertexCollector {
+  VertexCollector() : builder(MLVertexColumnBuilder::builder()) {}
   void init(size_t size) { builder.reserve(size); }
   void collect(VertexRecord&& val) { builder.push_back_vertex(std::move(val)); }
   auto get() { return builder.finish(nullptr); }

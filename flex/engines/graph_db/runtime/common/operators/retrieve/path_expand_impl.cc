@@ -24,7 +24,7 @@ iterative_expand_vertex(const GraphReadInterface& graph,
                         const SLVertexColumn& input, label_t edge_label,
                         Direction dir, int lower, int upper) {
   int input_label = input.label();
-  SLVertexColumnBuilder builder(input_label);
+  auto builder = SLVertexColumnBuilder::builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
     return std::make_pair(builder.finish(nullptr), std::move(offsets));

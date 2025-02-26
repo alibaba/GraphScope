@@ -22,7 +22,7 @@ bl::result<Context> Scan::find_vertex_with_oid(Context&& ctx,
                                                const GraphReadInterface& graph,
                                                label_t label, const Any& oid,
                                                int32_t alias) {
-  SLVertexColumnBuilder builder(label);
+  auto builder = SLVertexColumnBuilder::builder(label);
   vid_t vid;
   if (graph.GetVertexIndex(label, oid, vid)) {
     builder.push_back_opt(vid);
@@ -35,7 +35,7 @@ bl::result<Context> Scan::find_vertex_with_gid(Context&& ctx,
                                                const GraphReadInterface& graph,
                                                label_t label, int64_t gid,
                                                int32_t alias) {
-  SLVertexColumnBuilder builder(label);
+  auto builder = SLVertexColumnBuilder::builder(label);
   if (GlobalId::get_label_id(gid) == label) {
     builder.push_back_opt(GlobalId::get_vid(gid));
   } else {

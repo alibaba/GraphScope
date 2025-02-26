@@ -34,7 +34,7 @@ class Scan {
                                          const PRED_T& predicate) {
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
-      SLVertexColumnBuilder builder(label);
+      auto builder = SLVertexColumnBuilder::builder(label);
       auto vertices = graph.GetVertexSet(label);
       for (auto vid : vertices) {
         if (predicate(label, vid)) {
@@ -66,7 +66,7 @@ class Scan {
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
-      SLVertexColumnBuilder builder(label);
+      auto builder = SLVertexColumnBuilder::builder(label);
       auto vertices = graph.GetVertexSet(label);
       for (auto vid : vertices) {
         if (cur_limit <= 0) {
@@ -115,7 +115,7 @@ class Scan {
     int32_t cur_limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
-      SLVertexColumnBuilder builder(label);
+      auto builder = SLVertexColumnBuilder::builder(label);
       for (auto gid : gids) {
         if (cur_limit <= 0) {
           break;
@@ -128,7 +128,7 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
-      MLVertexColumnBuilder builder;
+      auto builder = MLVertexColumnBuilder::builder();
 
       for (auto label : params.tables) {
         if (cur_limit <= 0) {
@@ -163,7 +163,7 @@ class Scan {
     auto limit = params.limit;
     if (params.tables.size() == 1) {
       label_t label = params.tables[0];
-      SLVertexColumnBuilder builder(label);
+      auto builder = SLVertexColumnBuilder::builder(label);
       for (auto oid : oids) {
         if (limit <= 0) {
           break;
@@ -198,11 +198,11 @@ class Scan {
         }
       }
       if (vids.size() == 1) {
-        SLVertexColumnBuilder builder(vids[0].first);
+        auto builder = SLVertexColumnBuilder::builder(vids[0].first);
         builder.push_back_opt(vids[0].second);
         ctx.set(params.alias, builder.finish(nullptr));
       } else {
-        MLVertexColumnBuilder builder;
+        auto builder = MLVertexColumnBuilder::builder();
         for (auto& pair : vids) {
           builder.push_back_vertex({pair.first, pair.second});
         }

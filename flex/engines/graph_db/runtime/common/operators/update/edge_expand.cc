@@ -22,7 +22,7 @@ bl::result<Context> UEdgeExpand::edge_expand_v_without_pred(
   const auto& input_vertex_list =
       dynamic_cast<const IVertexColumn&>(*ctx.get(params.v_tag).get());
   std::vector<size_t> shuffle_offset;
-  MLVertexColumnBuilder builder;
+  auto builder = MLVertexColumnBuilder::builder();
   if (params.dir == Direction::kIn || params.dir == Direction::kBoth) {
     foreach_vertex(
         input_vertex_list, [&](size_t index, label_t label, vid_t v) {

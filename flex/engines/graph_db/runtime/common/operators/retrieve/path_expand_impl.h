@@ -36,7 +36,7 @@ iterative_expand_vertex_on_graph_view(
     const GraphReadInterface::graph_view_t<EDATA_T>& view,
     const SLVertexColumn& input, int lower, int upper) {
   int input_label = input.label();
-  SLVertexColumnBuilder builder(input_label);
+  auto builder = SLVertexColumnBuilder::builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
     return std::make_pair(builder.finish(nullptr), std::move(offsets));
@@ -102,7 +102,7 @@ iterative_expand_vertex_on_dual_graph_view(
     const GraphReadInterface::graph_view_t<EDATA_T>& oview,
     const SLVertexColumn& input, int lower, int upper) {
   int input_label = input.label();
-  SLVertexColumnBuilder builder(input_label);
+  auto builder = SLVertexColumnBuilder::builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
     return std::make_pair(builder.finish(nullptr), std::move(offsets));
@@ -427,7 +427,7 @@ single_source_shortest_path_with_order_by_length_limit_impl(
     int limit_upper) {
   label_t v_label = *input.get_labels_set().begin();
   auto vertices = graph.GetVertexSet(v_label);
-  SLVertexColumnBuilder dest_col_builder(v_label);
+  auto dest_col_builder = SLVertexColumnBuilder::builder(v_label);
   ValueColumnBuilder<int32_t> path_len_builder;
 
   std::vector<size_t> offsets;
@@ -458,7 +458,7 @@ single_source_shortest_path_impl(const GraphReadInterface& graph,
   std::shared_ptr<Arena> path_impls = std::make_shared<Arena>();
   label_t v_label = *input.get_labels_set().begin();
   auto vertices = graph.GetVertexSet(v_label);
-  SLVertexColumnBuilder dest_col_builder(v_label);
+  auto dest_col_builder = SLVertexColumnBuilder::builder(v_label);
   GeneralPathColumnBuilder path_col_builder;
   std::vector<size_t> offsets;
   if (dir == Direction::kIn || dir == Direction::kOut) {
@@ -525,7 +525,8 @@ default_single_source_shortest_path_impl(
 
   std::shared_ptr<IContextColumn> dest_col(nullptr);
   if (dest_labels.size() == 1) {
-    SLVertexColumnBuilder dest_col_builder(*dest_labels.begin());
+    auto dest_col_builder =
+        SLVertexColumnBuilder::builder(*dest_labels.begin());
 
     foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
       std::vector<std::pair<label_t, vid_t>> cur;
@@ -581,7 +582,7 @@ default_single_source_shortest_path_impl(
 
     dest_col = dest_col_builder.finish(nullptr);
   } else {
-    MLVertexColumnBuilder dest_col_builder;
+    auto dest_col_builder = MLVertexColumnBuilder::builder();
 
     foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
       std::vector<std::pair<label_t, vid_t>> cur;

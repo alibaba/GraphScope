@@ -823,7 +823,7 @@ Context expand_vertex_ep_gt_sl_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  SLVertexColumnBuilder builder(std::get<0>(label_dirs[0]));
+  auto builder = SLVertexColumnBuilder::builder(std::get<0>(label_dirs[0]));
   std::vector<size_t> offsets;
   for (auto& csr : views) {
     size_t idx = 0;

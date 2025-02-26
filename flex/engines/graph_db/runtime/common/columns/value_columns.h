@@ -206,17 +206,17 @@ class ListValueColumn : public ListValueColumnBase {
       const override {
     if (elem_type_ == RTAnyType::kVertex) {
       std::vector<size_t> offsets;
-      auto builder = std::make_shared<MLVertexColumnBuilder>();
+      auto builder = MLVertexColumnBuilder::builder();
       size_t i = 0;
       for (const auto& list : data_) {
         for (size_t j = 0; j < list.size(); ++j) {
           auto elem = list.get(j);
-          builder->push_back_elem(elem);
+          builder.push_back_elem(elem);
           offsets.push_back(i);
         }
         ++i;
       }
-      return {builder->finish(nullptr), offsets};
+      return {builder.finish(nullptr), offsets};
     } else if (elem_type_ == RTAnyType::kI64Value) {
       return unfold_impl<int64_t>();
     } else if (elem_type_ == RTAnyType::kF64Value) {
