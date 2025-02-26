@@ -79,7 +79,8 @@ class EdgeExpand {
           pt = PropertyType::kRecordView;
         }
 
-        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+        auto builder = SDSLEdgeColumnBuilder::builder(Direction::kIn,
+                                                      params.labels[0], pt);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -118,7 +119,8 @@ class EdgeExpand {
           pt = PropertyType::kRecordView;
         }
 
-        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+        auto builder = SDSLEdgeColumnBuilder::builder(Direction::kOut,
+                                                      params.labels[0], pt);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -157,7 +159,7 @@ class EdgeExpand {
         if (props.size() > 1) {
           pt = PropertyType::kRecordView;
         }
-        BDSLEdgeColumnBuilder builder(params.labels[0], pt);
+        auto builder = BDSLEdgeColumnBuilder::builder(params.labels[0], pt);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -211,7 +213,7 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        BDMLEdgeColumnBuilder builder(label_props);
+        auto builder = BDMLEdgeColumnBuilder::builder(label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -265,7 +267,8 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        SDMLEdgeColumnBuilder builder(Direction::kOut, label_props);
+        auto builder =
+            SDMLEdgeColumnBuilder::builder(Direction::kOut, label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -303,7 +306,8 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        SDMLEdgeColumnBuilder builder(Direction::kIn, label_props);
+        auto builder =
+            SDMLEdgeColumnBuilder::builder(Direction::kIn, label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {

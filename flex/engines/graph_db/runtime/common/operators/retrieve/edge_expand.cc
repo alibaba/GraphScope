@@ -74,7 +74,7 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalBDSLEdgeColumnBuilder builder(triplet, pt);
+      auto builder = BDSLEdgeColumnBuilder::optional_builder(triplet, pt);
       foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
                                             vid_t v) {
         bool has_edge = false;
@@ -126,7 +126,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalSDSLEdgeColumnBuilder builder(Direction::kOut, triplet, pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::optional_builder(Direction::kOut, triplet, pt);
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
                        if (label == triplet.src_label) {
@@ -171,7 +172,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalSDSLEdgeColumnBuilder builder(Direction::kIn, triplet, pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::optional_builder(Direction::kIn, triplet, pt);
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
                        if (label == triplet.dst_label) {
@@ -238,7 +240,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         pt = props[0];
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::builder(Direction::kIn, params.labels[0], pt);
 
       label_t dst_label = params.labels[0].dst_label;
       foreach_vertex(input_vertex_list,
@@ -278,7 +281,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         pt = PropertyType::kRecordView;
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::builder(Direction::kOut, params.labels[0], pt);
       label_t src_label = params.labels[0].src_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
@@ -310,7 +314,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
       if (!props.empty()) {
         pt = props[0];
       }
-      BDSLEdgeColumnBuilder builder(params.labels[0], pt);
+      auto builder = BDSLEdgeColumnBuilder::builder(params.labels[0], pt);
       foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
                                             vid_t v) {
         if (label == params.labels[0].src_label) {
@@ -367,8 +371,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         if (params.dir == Direction::kOut) {
           auto& triplet = labels[0];
-          SDSLEdgeColumnBuilder builder(Direction::kOut, triplet,
-                                        label_props[0].second);
+          auto builder = SDSLEdgeColumnBuilder::builder(
+              Direction::kOut, triplet, label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.src_label) {
@@ -387,8 +391,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
           return ctx;
         } else if (params.dir == Direction::kIn) {
           auto& triplet = labels[0];
-          SDSLEdgeColumnBuilder builder(Direction::kIn, triplet,
-                                        label_props[0].second);
+          auto builder = SDSLEdgeColumnBuilder::builder(Direction::kIn, triplet,
+                                                        label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.dst_label) {
@@ -410,7 +414,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
 
-        SDMLEdgeColumnBuilder builder(params.dir, label_props);
+        auto builder = SDMLEdgeColumnBuilder::builder(params.dir, label_props);
         if (params.dir == Direction::kOut) {
           foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
                                                 vid_t v) {
@@ -455,7 +459,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
       }
     } else if (params.dir == Direction::kBoth) {
       if (labels.size() == 1) {
-        BDSLEdgeColumnBuilder builder(labels[0], label_props[0].second);
+        auto builder =
+            BDSLEdgeColumnBuilder::builder(labels[0], label_props[0].second);
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
@@ -485,7 +490,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                                shuffle_offset);
         return ctx;
       } else {
-        BDMLEdgeColumnBuilder builder(label_props);
+        auto builder = BDMLEdgeColumnBuilder::builder(label_props);
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         foreach_vertex(

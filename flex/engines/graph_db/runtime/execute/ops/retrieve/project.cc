@@ -309,6 +309,7 @@ struct MLVertexCollector {
 };
 
 struct EdgeCollector {
+  EdgeCollector() : builder(BDMLEdgeColumnBuilder::builder()) {}
   struct EdgeExprWrapper {
     using V = EdgeRecord;
 

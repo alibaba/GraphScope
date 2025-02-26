@@ -101,7 +101,7 @@ bl::result<Context> UEdgeExpand::edge_expand_e_without_pred(
       }
     }
   }
-  BDMLEdgeColumnBuilder builder(edge_labels);
+  auto builder = BDMLEdgeColumnBuilder::builder(edge_labels);
 
   if (params.dir == Direction::kBoth) {
     foreach_vertex(
