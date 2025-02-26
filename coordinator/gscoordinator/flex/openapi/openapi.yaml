@@ -1126,7 +1126,7 @@ paths:
       x-openapi-router-controller: gscoordinator.flex.controllers.data_source_controller
   /api/v1/graph/{graph_id}/datasource/edge/{type_name}:
     delete:
-      description: Unbind datas ource on an edge type
+      description: Unbind datas source on an edge type
       operationId: unbind_edge_datasource
       parameters:
       - explode: false
