@@ -22,8 +22,10 @@
 
 namespace gs {
 
-LocalWalParser::LocalWalParser()
-    : insert_wal_list_(NULL), insert_wal_list_size_(0) {}
+LocalWalParser::LocalWalParser(const std::string& wal_uri)
+    : insert_wal_list_(NULL), insert_wal_list_size_(0) {
+  LocalWalParser::open(wal_uri);
+}
 
 void LocalWalParser::open(const std::string& wal_uri) {
   auto wal_dir = get_wal_uri_path(wal_uri);
