@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will walk you through the process of setting up the coordinator, connecting to it via [gsctl](../../utilities/gs.md) and execuing your first command.
+This guide will walk you through the process of setting up the coordinator, connecting to it via [gsctl](../../utilities/gs.md) and executing your first command.
 
 ## Preparation
 

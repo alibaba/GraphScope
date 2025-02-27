@@ -374,7 +374,7 @@ mod tests {
                 assert_eq!(simple_plan.nodes.len(), 1);
             }
             Err(error) => {
-                panic!("generate simple plan for ldbc pattern case0 faild: {:?}", error)
+                panic!("generate simple plan for ldbc pattern case0 failed: {:?}", error)
             }
         }
     }
