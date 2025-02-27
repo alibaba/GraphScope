@@ -15,16 +15,18 @@
 
 #ifndef ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
 #define ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_
+
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-class PageRank
-    : public CypherReadAppBase<std::string, std::string, double, int, double> {
+class PageRank : public CypherReadAppBase<std::string, std::string, std::string,
+                                          double, int, double> {
  public:
   PageRank() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
-                                   std::string vertex_label,
+                                   std::string src_vertex_label,
+                                   std::string dst_vertex_label,
                                    std::string edge_label,
                                    double damping_factor, int max_iterations,
                                    double epsilon);

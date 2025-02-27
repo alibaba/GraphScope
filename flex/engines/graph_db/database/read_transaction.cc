@@ -137,6 +137,20 @@ ReadTransaction::edge_iterator ReadTransaction::GetInEdgeIterator(
           graph_.get_incoming_edges(label, u, neighbor_label, edge_label)};
 }
 
+size_t ReadTransaction::GetOutDegree(label_t label, vid_t u,
+                                     label_t neighbor_label,
+                                     label_t edge_label) const {
+  return graph_.get_outgoing_edges(label, u, neighbor_label, edge_label)
+      ->size();
+}
+
+size_t ReadTransaction::GetInDegree(label_t label, vid_t u,
+                                    label_t neighbor_label,
+                                    label_t edge_label) const {
+  return graph_.get_incoming_edges(label, u, neighbor_label, edge_label)
+      ->size();
+}
+
 void ReadTransaction::release() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
     vm_.release_read_timestamp();
