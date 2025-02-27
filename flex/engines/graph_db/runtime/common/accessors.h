@@ -419,16 +419,16 @@ class MultiPropsEdgePropertyPathAccessor : public IAccessor {
   MultiPropsEdgePropertyPathAccessor(const GraphInterface& graph,
                                      const std::string& prop_name,
                                      const Context& ctx, int tag)
-      : col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
+      : graph_(graph),
+        col_(*std::dynamic_pointer_cast<IEdgeColumn>(ctx.get(tag))) {
     const auto& labels = col_.get_labels();
     vertex_label_num_ = graph.schema().vertex_label_num();
     edge_label_num_ = graph.schema().edge_label_num();
-    prop_index_.resize(
-        2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
-        std::numeric_limits<size_t>::max());
+    prop_index_.resize(graph.schema().get_edge_triplet_num(),
+                       std::numeric_limits<size_t>::max());
     for (auto& label : labels) {
-      size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
-                   label.dst_label * edge_label_num_ + label.edge_label;
+      size_t idx = graph.schema().get_edge_triplet_id(
+          label.src_label, label.dst_label, label.edge_label);
       const auto& names = graph.schema().get_edge_property_names(
           label.src_label, label.dst_label, label.edge_label);
       for (size_t i = 0; i < names.size(); ++i) {
@@ -478,8 +478,8 @@ class MultiPropsEdgePropertyPathAccessor : public IAccessor {
   bool is_optional() const override { return col_.is_optional(); }
 
   size_t get_index(const LabelTriplet& label) const {
-    size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
-                 label.dst_label * edge_label_num_ + label.edge_label;
+    size_t idx = graph_.schema().get_edge_triplet_id(
+        label.src_label, label.dst_label, label.edge_label);
     return prop_index_[idx];
   }
 
@@ -495,6 +495,7 @@ class MultiPropsEdgePropertyPathAccessor : public IAccessor {
   }
 
  private:
+  const GraphInterface& graph_;
   const IEdgeColumn& col_;
   std::vector<size_t> prop_index_;
   size_t vertex_label_num_;
@@ -556,32 +557,23 @@ class MultiPropsEdgePropertyEdgeAccessor : public IAccessor {
   using elem_t = T;
 
   MultiPropsEdgePropertyEdgeAccessor(const GraphInterface& graph,
-                                     const std::string& name) {
+                                     const std::string& name)
+      : graph_(graph) {
     edge_label_num_ = graph.schema().edge_label_num();
     vertex_label_num_ = graph.schema().vertex_label_num();
-    indexs.resize(2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_,
+    indexs.resize(graph.schema().get_edge_triplet_num(),
                   std::numeric_limits<size_t>::max());
-    for (label_t src_label = 0; src_label < vertex_label_num_; ++src_label) {
-      auto src = graph.schema().get_vertex_label_name(src_label);
-      for (label_t dst_label = 0; dst_label < vertex_label_num_; ++dst_label) {
-        auto dst = graph.schema().get_vertex_label_name(dst_label);
-        for (label_t edge_label = 0; edge_label < edge_label_num_;
-             ++edge_label) {
-          auto edge = graph.schema().get_edge_label_name(edge_label);
-          if (!graph.schema().exist(src, dst, edge)) {
-            continue;
-          }
-          size_t idx = src_label * vertex_label_num_ * edge_label_num_ +
-                       dst_label * edge_label_num_ + edge_label;
-          const std::vector<std::string>& names =
-              graph.schema().get_edge_property_names(src_label, dst_label,
-                                                     edge_label);
-          for (size_t i = 0; i < names.size(); ++i) {
-            if (names[i] == name) {
-              indexs[idx] = i;
-              break;
-            }
-          }
+
+    for (size_t index = 0; index < graph.schema().get_edge_triplet_num();
+         ++index) {
+      auto label = graph.schema().get_edge_triplet(index);
+      const std::vector<std::string>& names =
+          graph.schema().get_edge_property_names(
+              std::get<0>(label), std::get<1>(label), std::get<2>(label));
+      for (size_t i = 0; i < names.size(); ++i) {
+        if (names[i] == name) {
+          indexs[index] = i;
+          break;
         }
       }
     }
@@ -613,12 +605,13 @@ class MultiPropsEdgePropertyEdgeAccessor : public IAccessor {
   }
 
   size_t get_index(const LabelTriplet& label) const {
-    size_t idx = label.src_label * vertex_label_num_ * edge_label_num_ +
-                 label.dst_label * edge_label_num_ + label.edge_label;
+    size_t idx = graph_.schema().get_edge_triplet_id(
+        label.src_label, label.dst_label, label.edge_label);
     return indexs[idx];
   }
 
  private:
+  const GraphInterface& graph_;
   std::vector<size_t> indexs;
   size_t vertex_label_num_;
   size_t edge_label_num_;

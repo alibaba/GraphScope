@@ -996,7 +996,7 @@ class SinkOp {
         auto mutable_edge =
             new_col->mutable_entry()->mutable_element()->mutable_edge();
         CHECK(iter != end_iter);
-        auto unique_edge_label = generate_edge_label_id(
+        auto unique_edge_label = graph.schema().get_edge_triplet_id(
             iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
         mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
         mutable_edge->set_id(encode_unique_edge_id(
@@ -1033,7 +1033,7 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_edge =
               new_col->mutable_entry()->mutable_element()->mutable_edge();
-          auto unique_edge_label = generate_edge_label_id(
+          auto unique_edge_label = graph.schema().get_edge_triplet_id(
               iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
           mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
           mutable_edge->set_id(encode_unique_edge_id(
@@ -1154,19 +1154,6 @@ class SinkOp {
     unique_edge_id = unique_edge_id | (src << 20);
     unique_edge_id = unique_edge_id | dst;
     return unique_edge_id;
-  }
-
-  // actually produce uint24_t.
-  static uint32_t generate_edge_label_id(label_id_t src_label_id,
-                                         label_id_t dst_label_id,
-                                         label_id_t edge_label_id) {
-    uint32_t unique_edge_label_id = src_label_id;
-    static constexpr int num_bits = sizeof(label_id_t) * 8;
-    unique_edge_label_id = unique_edge_label_id << num_bits;
-    unique_edge_label_id = unique_edge_label_id | dst_label_id;
-    unique_edge_label_id = unique_edge_label_id << num_bits;
-    unique_edge_label_id = unique_edge_label_id | edge_label_id;
-    return unique_edge_label_id;
   }
 };
 }  // namespace gs

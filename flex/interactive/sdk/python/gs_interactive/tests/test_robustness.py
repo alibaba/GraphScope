@@ -25,12 +25,14 @@ import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
+from gs_interactive.tests.conftest import MANY_LABEL_GRAPH_LABEL_NUM
 from gs_interactive.tests.conftest import call_procedure  # noqa: E402
 from gs_interactive.tests.conftest import create_procedure
 from gs_interactive.tests.conftest import delete_procedure
 from gs_interactive.tests.conftest import ensure_compiler_schema_ready
 from gs_interactive.tests.conftest import import_data_to_full_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
+from gs_interactive.tests.conftest import import_data_to_many_label_graph
 from gs_interactive.tests.conftest import import_data_to_modern_graph_temporal_type
 from gs_interactive.tests.conftest import import_data_to_new_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
@@ -561,3 +563,25 @@ def test_graph_with_long_text_property(
     assert len(records) == 4
     for record in records:
         assert len(record["name"]) > 4096
+
+
+def test_many_label_graph(interactive_session, neo4j_session, create_many_label_graph):
+    print("[Test many label graph]")
+    import_data_to_many_label_graph(interactive_session, create_many_label_graph)
+    start_service_on_graph(interactive_session, create_many_label_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_many_label_graph
+    )
+
+    # Get number vertex labels
+    result = neo4j_session.run("MATCH (n) return count(distinct(labels(n)));")
+    record = result.fetch(1)
+    assert record[0]["$f0"] == MANY_LABEL_GRAPH_LABEL_NUM
+
+    result = neo4j_session.run(
+        f"MATCH (n: person{MANY_LABEL_GRAPH_LABEL_NUM - 1}) return count(n)"
+    )
+    record = result.fetch(1)
+    assert (
+        record[0]["$f0"] == 1
+    )  # only one vertex with label person_{MANY_LABEL_GRAPH_LABEL_NUM - 1}

@@ -29,17 +29,9 @@ MutablePropertyFragment::~MutablePropertyFragment() {
     degree_list[i] = lf_indexers_[i].size();
     vertex_data_[i].resize(degree_list[i]);
   }
-  for (size_t src_label = 0; src_label != vertex_label_num_; ++src_label) {
-    for (size_t dst_label = 0; dst_label != vertex_label_num_; ++dst_label) {
-      for (size_t e_label = 0; e_label != edge_label_num_; ++e_label) {
-        size_t index = src_label * vertex_label_num_ * edge_label_num_ +
-                       dst_label * edge_label_num_ + e_label;
-        if (dual_csr_list_[index] != NULL) {
-          dual_csr_list_[index]->Resize(degree_list[src_label],
-                                        degree_list[dst_label]);
-          delete dual_csr_list_[index];
-        }
-      }
+  for (auto ptr : dual_csr_list_) {
+    if (ptr != NULL) {
+      delete ptr;
     }
   }
 }
@@ -204,95 +196,73 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
     vertex_capacities[i] = vertex_capacity;
   }
 
-  ie_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
-  oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
+  ie_.resize(schema_.get_edge_triplet_num(), NULL);
+  oe_.resize(schema_.get_edge_triplet_num(), NULL);
 
-  dual_csr_list_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_,
-                        NULL);
+  dual_csr_list_.resize(schema_.get_edge_triplet_num(), NULL);
 
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-       ++src_label_i) {
-    std::string src_label =
-        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
-      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-        std::string edge_label =
-            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
-        if (!schema_.exist(src_label, dst_label, edge_label)) {
-          continue;
-        }
-        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
-                       dst_label_i * edge_label_num_ + e_label_i;
-        auto& properties =
-            schema_.get_edge_properties(src_label, dst_label, edge_label);
-        EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
-            src_label, dst_label, edge_label);
-        EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
-            src_label, dst_label, edge_label);
-        bool oe_mutable =
-            schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
-        bool ie_mutable =
-            schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
+  for (size_t index = 0; index < schema_.get_edge_triplet_num(); ++index) {
+    auto triplet = schema_.get_edge_triplet(index);
+    auto src_label_i = std::get<0>(triplet);
+    auto dst_label_i = std::get<1>(triplet);
+    auto src_label = schema_.get_vertex_label_name(std::get<0>(triplet));
+    auto dst_label = schema_.get_vertex_label_name(std::get<1>(triplet));
+    auto edge_label = schema_.get_edge_label_name(std::get<2>(triplet));
 
-        auto& prop_names =
-            schema_.get_edge_property_names(src_label, dst_label, edge_label);
+    auto& properties =
+        schema_.get_edge_properties(src_label, dst_label, edge_label);
+    EdgeStrategy oe_strategy =
+        schema_.get_outgoing_edge_strategy(src_label, dst_label, edge_label);
+    EdgeStrategy ie_strategy =
+        schema_.get_incoming_edge_strategy(src_label, dst_label, edge_label);
+    bool oe_mutable =
+        schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
+    bool ie_mutable =
+        schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
 
-        dual_csr_list_[index] = create_csr(oe_strategy, ie_strategy, properties,
-                                           oe_mutable, ie_mutable, prop_names);
-        ie_[index] = dual_csr_list_[index]->GetInCsr();
-        oe_[index] = dual_csr_list_[index]->GetOutCsr();
-        if (memory_level == 0) {
-          dual_csr_list_[index]->Open(
-              oe_prefix(src_label, dst_label, edge_label),
-              ie_prefix(src_label, dst_label, edge_label),
-              edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
-              tmp_dir_path);
-        } else if (memory_level >= 2) {
-          dual_csr_list_[index]->OpenWithHugepages(
-              oe_prefix(src_label, dst_label, edge_label),
-              ie_prefix(src_label, dst_label, edge_label),
-              edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
-              vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
-        } else {
-          dual_csr_list_[index]->OpenInMemory(
-              oe_prefix(src_label, dst_label, edge_label),
-              ie_prefix(src_label, dst_label, edge_label),
-              edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
-              vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
-        }
-        dual_csr_list_[index]->Resize(vertex_capacities[src_label_i],
-                                      vertex_capacities[dst_label_i]);
-      }
+    auto& prop_names =
+        schema_.get_edge_property_names(src_label, dst_label, edge_label);
+
+    dual_csr_list_[index] = create_csr(oe_strategy, ie_strategy, properties,
+                                       oe_mutable, ie_mutable, prop_names);
+    ie_[index] = dual_csr_list_[index]->GetInCsr();
+    oe_[index] = dual_csr_list_[index]->GetOutCsr();
+    if (memory_level == 0) {
+      dual_csr_list_[index]->Open(
+          oe_prefix(src_label, dst_label, edge_label),
+          ie_prefix(src_label, dst_label, edge_label),
+          edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
+          tmp_dir_path);
+    } else if (memory_level >= 2) {
+      dual_csr_list_[index]->OpenWithHugepages(
+          oe_prefix(src_label, dst_label, edge_label),
+          ie_prefix(src_label, dst_label, edge_label),
+          edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
+          vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
+    } else {
+      dual_csr_list_[index]->OpenInMemory(
+          oe_prefix(src_label, dst_label, edge_label),
+          ie_prefix(src_label, dst_label, edge_label),
+          edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
+          vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
     }
+    dual_csr_list_[index]->Resize(vertex_capacities[src_label_i],
+                                  vertex_capacities[dst_label_i]);
   }
 }
 
 void MutablePropertyFragment::Compact(uint32_t version) {
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-       ++src_label_i) {
-    std::string src_label =
-        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
-      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-        std::string edge_label =
-            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
-        if (!schema_.exist(src_label, dst_label, edge_label)) {
-          continue;
-        }
-        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
-                       dst_label_i * edge_label_num_ + e_label_i;
-        if (dual_csr_list_[index] != NULL) {
-          if (schema_.get_sort_on_compaction(src_label, dst_label,
-                                             edge_label)) {
-            dual_csr_list_[index]->SortByEdgeData(version);
-          }
-        }
+  for (size_t index = 0; index < schema_.get_edge_triplet_num(); ++index) {
+    auto src_label_name = schema_.get_vertex_label_name(
+        std::get<0>(schema_.get_edge_triplet(index)));
+    auto dst_label_name = schema_.get_vertex_label_name(
+        std::get<1>(schema_.get_edge_triplet(index)));
+    auto edge_label_name = schema_.get_edge_label_name(
+        std::get<2>(schema_.get_edge_triplet(index)));
+    if (dual_csr_list_[index] != NULL) {
+      if (schema_.get_sort_on_compaction(src_label_name, dst_label_name,
+                                         edge_label_name)) {
+        dual_csr_list_[index]->SortByEdgeData(version);
       }
     }
   }
@@ -322,36 +292,17 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
                          snapshot_dir_path);
   }
 
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-       ++src_label_i) {
-    std::string src_label =
-        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
-      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-        std::string edge_label =
-            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
-        if (!schema_.exist(src_label, dst_label, edge_label)) {
-          continue;
-        }
-        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
-                       dst_label_i * edge_label_num_ + e_label_i;
-        if (dual_csr_list_[index] != NULL) {
-          dual_csr_list_[index]->Resize(vertex_num[src_label_i],
-                                        vertex_num[dst_label_i]);
-          if (schema_.get_sort_on_compaction(src_label, dst_label,
-                                             edge_label)) {
-            dual_csr_list_[index]->SortByEdgeData(version + 1);
-          }
-          dual_csr_list_[index]->Dump(
-              oe_prefix(src_label, dst_label, edge_label),
-              ie_prefix(src_label, dst_label, edge_label),
-              edata_prefix(src_label, dst_label, edge_label),
-              snapshot_dir_path);
-        }
-      }
+  for (size_t index = 0; index < schema_.get_edge_triplet_num(); ++index) {
+    if (dual_csr_list_[index] != NULL) {
+      auto triplet = schema_.get_edge_triplet(index);
+      auto src_label_name = schema_.get_vertex_label_name(std::get<0>(triplet));
+      auto dst_label_name = schema_.get_vertex_label_name(std::get<1>(triplet));
+      auto edge_label_name = schema_.get_edge_label_name(std::get<2>(triplet));
+      dual_csr_list_[index]->Dump(
+          oe_prefix(src_label_name, dst_label_name, edge_label_name),
+          ie_prefix(src_label_name, dst_label_name, edge_label_name),
+          edata_prefix(src_label_name, dst_label_name, edge_label_name),
+          snapshot_dir_path);
     }
   }
   set_snapshot_version(work_dir, version);
@@ -375,8 +326,7 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          label_t edge_label, timestamp_t ts,
                                          grape::OutArchive& arc,
                                          Allocator& alloc) {
-  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
-                 dst_label * edge_label_num_ + edge_label;
+  size_t index = schema_.get_edge_triplet_id(src_label, dst_label, edge_label);
   dual_csr_list_[index]->IngestEdge(src_lid, dst_lid, arc, ts, alloc);
 }
 
@@ -384,8 +334,7 @@ void MutablePropertyFragment::UpdateEdge(label_t src_label, vid_t src_lid,
                                          label_t dst_label, vid_t dst_lid,
                                          label_t edge_label, timestamp_t ts,
                                          const Any& arc, Allocator& alloc) {
-  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
-                 dst_label * edge_label_num_ + edge_label;
+  size_t index = schema_.get_edge_triplet_id(src_label, dst_label, edge_label);
   dual_csr_list_[index]->UpdateEdge(src_lid, dst_lid, arc, ts, alloc);
 }
 const Schema& MutablePropertyFragment::schema() const { return schema_; }
@@ -398,8 +347,7 @@ vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
 
 size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
                                          label_t dst_label) const {
-  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
-                 dst_label * edge_label_num_ + edge_label;
+  size_t index = schema_.get_edge_triplet_id(src_label, dst_label, edge_label);
   if (dual_csr_list_[index] != NULL) {
     return dual_csr_list_[index]->EdgeNum();
   } else {
@@ -483,24 +431,15 @@ void MutablePropertyFragment::generateStatistics(
   size_t edge_label_num = schema_.edge_label_num();
   std::vector<std::thread> count_threads;
   std::vector<size_t> edge_count_list(dual_csr_list_.size(), 0);
-  for (size_t src_label = 0; src_label < vertex_label_num; ++src_label) {
-    const auto& src_label_name = schema_.get_vertex_label_name(src_label);
-    for (size_t dst_label = 0; dst_label < vertex_label_num; ++dst_label) {
-      const auto& dst_label_name = schema_.get_vertex_label_name(dst_label);
-      for (size_t edge_label = 0; edge_label < edge_label_num; ++edge_label) {
-        const auto& edge_label_name = schema_.get_edge_label_name(edge_label);
-        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
-          size_t index = src_label * vertex_label_num * edge_label_num +
-                         dst_label * edge_label_num + edge_label;
-          if (dual_csr_list_[index] != NULL) {
-            count_threads.emplace_back([&edge_count_list, index, this] {
-              edge_count_list[index] = dual_csr_list_[index]->EdgeNum();
-            });
-          }
-        }
-      }
+
+  for (size_t index = 0; index < dual_csr_list_.size(); ++index) {
+    if (dual_csr_list_[index] != NULL) {
+      count_threads.emplace_back([&edge_count_list, index, this] {
+        edge_count_list[index] = dual_csr_list_[index]->EdgeNum();
+      });
     }
   }
+
   for (auto& t : count_threads) {
     t.join();
   }
@@ -515,23 +454,23 @@ void MutablePropertyFragment::generateStatistics(
     ss += "\"vertex_type_pair_statistics\": [\n";
     bool first = true;
     std::string props_content{};
-    for (size_t src_label = 0; src_label < vertex_label_num; ++src_label) {
-      const auto& src_label_name = schema_.get_vertex_label_name(src_label);
-      for (size_t dst_label = 0; dst_label < vertex_label_num; ++dst_label) {
-        const auto& dst_label_name = schema_.get_vertex_label_name(dst_label);
-        size_t index = src_label * vertex_label_num * edge_label_num +
-                       dst_label * edge_label_num + edge_label;
-        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
-          if (!first) {
-            ss += ",\n";
-          }
-          first = false;
-          ss += "{\n\"source_vertex\" : \"" + src_label_name + "\", \n";
-          ss += "\"destination_vertex\" : \"" + dst_label_name + "\", \n";
-          ss += "\"count\" : " + std::to_string(edge_count_list[index]) + "\n";
-          edge_count += edge_count_list[index];
-          ss += "}";
+    for (size_t index = 0; index < dual_csr_list_.size(); ++index) {
+      if (dual_csr_list_[index] != NULL) {
+        auto triplet = schema_.get_edge_triplet(index);
+        auto src_label = std::get<0>(triplet);
+        auto dst_label = std::get<1>(triplet);
+
+        if (!first) {
+          ss += ",\n";
         }
+        first = false;
+        ss += "{\n\"source_vertex\" : \"" +
+              schema_.get_vertex_label_name(src_label) + "\", \n";
+        ss += "\"destination_vertex\" : \"" +
+              schema_.get_vertex_label_name(dst_label) + "\", \n";
+        ss += "\"count\" : " + std::to_string(edge_count_list[index]) + "\n";
+        edge_count += edge_count_list[index];
+        ss += "}";
       }
     }
 
