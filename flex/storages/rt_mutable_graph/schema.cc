@@ -96,6 +96,8 @@ void Schema::add_edge_label(const std::string& src_label,
 
   auto triplet_id =
       insert_edge_triplet(src_label_id, dst_label_id, edge_label_id);
+  VLOG(10) << "insert edge triplet: " << src_label_id << ", " << dst_label_id
+           << ", " << edge_label_id << " -> " << triplet_id;
   eproperties_.emplace_back(properties);
   assert(triplet_id == eproperties_.size() - 1);
   if (properties.size() > 1) {

@@ -686,7 +686,7 @@ size_t UpdateTransaction::get_in_csr_index(label_t src_label, label_t dst_label,
 size_t UpdateTransaction::get_out_csr_index(label_t src_label,
                                             label_t dst_label,
                                             label_t edge_label) const {
-  return graph_.schema().get_edge_triplet_id(dst_label, src_label, edge_label) +
+  return graph_.schema().get_edge_triplet_id(src_label, dst_label, edge_label) +
          graph_.schema().get_edge_triplet_num();
 }
 
