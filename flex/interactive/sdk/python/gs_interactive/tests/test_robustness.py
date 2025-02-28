@@ -260,10 +260,12 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         create_modern_graph,
         "pagerank",
         '"person"',
+        '"person"',
         '"knows"',
         "0.85",
         "100",
         "0.000001",
+        "10",
     )
 
     call_procedure(
