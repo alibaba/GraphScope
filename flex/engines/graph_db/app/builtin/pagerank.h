@@ -21,15 +21,16 @@
 
 namespace gs {
 class PageRank : public CypherReadAppBase<std::string, std::string, std::string,
-                                          double, int, double> {
+                                          double, int32_t, double, int32_t> {
  public:
   PageRank() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
                                    std::string src_vertex_label,
                                    std::string dst_vertex_label,
                                    std::string edge_label,
-                                   double damping_factor, int max_iterations,
-                                   double epsilon);
+                                   double damping_factor,
+                                   int32_t max_iterations, double epsilon,
+                                   int32_t result_limit) override;
 };
 
 class PageRankFactory : public AppFactoryBase {

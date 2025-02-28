@@ -13,44 +13,43 @@
  * limitations under the License.
  */
 #include "flex/engines/graph_db/app/builtin/pagerank.h"
+#include "flex/engines/graph_db/runtime/common/graph_interface.h"
+#include "flex/engines/graph_db/runtime/common/rt_any.h"
 
 namespace gs {
 
-void write_result(const ReadTransaction& txn,
-                  results::CollectiveResults& results,
-                  const label_t& vertex_label,
-                  const std::vector<double>& pagerank) {
-  auto vertex_label_name = txn.schema().get_vertex_label_name(vertex_label);
-  for (size_t j = 0; j < pagerank.size(); ++j) {
-    int64_t oid_ = txn.GetVertexId(vertex_label, j).AsInt64();
+void write_result(
+    const ReadTransaction& txn, results::CollectiveResults& results,
+    const std::vector<std::tuple<label_t, vid_t, double>>& pagerank,
+    int32_t result_limit) {
+  runtime::GraphReadInterface graph(txn);
+
+  for (int32_t j = 0; j < std::min((int32_t) pagerank.size(), result_limit);
+       ++j) {
+    auto vertex_label = std::get<0>(pagerank[j]);
+    auto vertex_label_name = txn.schema().get_vertex_label_name(vertex_label);
+    auto vid = std::get<1>(pagerank[j]);
+    runtime::RTAny any(txn.GetVertexId(vertex_label, vid));
     auto result = results.add_results();
-    result->mutable_record()
-        ->add_columns()
-        ->mutable_entry()
-        ->mutable_element()
-        ->mutable_object()
-        ->set_str(vertex_label_name);
-    result->mutable_record()
-        ->add_columns()
-        ->mutable_entry()
-        ->mutable_element()
-        ->mutable_object()
-        ->set_i64(oid_);
-    result->mutable_record()
-        ->add_columns()
-        ->mutable_entry()
-        ->mutable_element()
-        ->mutable_object()
-        ->set_f64(pagerank[j]);
+    auto first_col = result->mutable_record()->add_columns();
+    first_col->mutable_name_or_id()->set_id(0);
+    first_col->mutable_entry()->mutable_element()->mutable_object()->set_str(
+        vertex_label_name);
+
+    auto oid_col = result->mutable_record()->add_columns();
+    any.sink(graph, 1, oid_col);
+
+    auto pagerank_col = result->mutable_record()->add_columns();
+    pagerank_col->mutable_name_or_id()->set_id(2);
+    pagerank_col->mutable_entry()->mutable_element()->mutable_object()->set_f64(
+        std::get<2>(pagerank[j]));
   }
 }
 
-results::CollectiveResults PageRank::Query(const GraphDBSession& sess,
-                                           std::string src_vertex_label,
-                                           std::string dst_vertex_label,
-                                           std::string edge_label,
-                                           double damping_factor,
-                                           int max_iterations, double epsilon) {
+results::CollectiveResults PageRank::Query(
+    const GraphDBSession& sess, std::string src_vertex_label,
+    std::string dst_vertex_label, std::string edge_label, double damping_factor,
+    int32_t max_iterations, double epsilon, int32_t result_limit) {
   auto txn = sess.GetReadTransaction();
 
   if (!sess.schema().has_vertex_label(src_vertex_label)) {
@@ -145,10 +144,6 @@ results::CollectiveResults PageRank::Query(const GraphDBSession& sess,
         auto edges = txn.GetInEdgeIterator(dst_vertex_label_id, v,
                                            src_vertex_label_id, edge_label_id);
         while (edges.IsValid()) {
-          LOG(INFO) << "got edge, from " << edges.GetNeighbor() << " to " << v
-                    << " label: " << std::to_string(dst_vertex_label_id) << " "
-                    << std::to_string(src_vertex_label_id) << " "
-                    << std::to_string(edge_label_id);
           auto neighbor = edges.GetNeighbor();
           sum += pagerank[0][neighbor] / outdegree[0][neighbor];
           edges.Next();
@@ -205,10 +200,23 @@ results::CollectiveResults PageRank::Query(const GraphDBSession& sess,
 
   results::CollectiveResults results;
 
-  write_result(txn, results, src_vertex_label_id, pagerank[0]);
-  if (dst_to_src) {
-    write_result(txn, results, dst_vertex_label_id, pagerank[1]);
+  std::vector<std::tuple<label_t, vid_t, double>> final_pagerank(num_vertices);
+  for (size_t i = 0; i < pagerank[0].size(); ++i) {
+    final_pagerank[i] = std::make_tuple(src_vertex_label_id, i, pagerank[0][i]);
   }
+  if (dst_to_src) {
+    for (size_t i = 0; i < pagerank[1].size(); ++i) {
+      final_pagerank[i + num_src_vertices] =
+          std::make_tuple(dst_vertex_label_id, i, pagerank[1][i]);
+    }
+  }
+  std::sort(final_pagerank.begin(), final_pagerank.end(),
+            [](const std::tuple<label_t, vid_t, double>& a,
+               const std::tuple<label_t, vid_t, double>& b) {
+              return std::get<2>(a) > std::get<2>(b);
+            });
+
+  write_result(txn, results, final_pagerank, result_limit);
 
   txn.Commit();
   return results;
