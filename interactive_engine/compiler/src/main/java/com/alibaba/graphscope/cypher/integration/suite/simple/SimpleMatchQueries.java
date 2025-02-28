@@ -258,4 +258,16 @@ public class SimpleMatchQueries {
                         "Record<{aId: 412317087328, cId: 933}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_21_test() {
+        String query =
+                "MATCH(a:PERSON)-[k*1..2]->(b: PERSON) WHERE a.id = 933L AND b.id = 10995116278291L"
+                    + " WITH a.id AS startId, k AS path, b.id as destId RETURN startId, k, destId"
+                    + " ORDER BY length(k) LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 933, cId: 412317087328}>",
+                        "Record<{aId: 412317087328, cId: 933}>");
+        return new QueryContext(query, expected);
+    }
 }

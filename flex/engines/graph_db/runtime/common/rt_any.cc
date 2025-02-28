@@ -846,8 +846,17 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
       }
     }
   } else if (type_ == RTAnyType::kPath) {
-    LOG(FATAL) << "not support path sink";
+    auto mutable_path =
+        col->mutable_entry()->mutable_element()->mutable_graph_path();
+    auto path_nodes = this->as_path().nodes();
 
+    for (size_t i = 0; i + 1 < path_nodes.size(); ++i) {
+      auto node = mutable_path->add_path()->mutable_vertex();
+      node->mutable_label()->set_id(path_nodes[i].label());
+      node->set_id(
+          encode_unique_vertex_id(path_nodes[i].label(), path_nodes[i].vid()));
+      // TODO: Add edge
+    }
   } else {
     sink_impl(col->mutable_entry()->mutable_element()->mutable_object());
   }

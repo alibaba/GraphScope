@@ -204,6 +204,14 @@ public class SimpleMatchTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_simple_match_21_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_21_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     private static String fetchAllProperties(Record record) {
         List<String> properties = new ArrayList<>();
         record.keys()
