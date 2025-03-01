@@ -17,6 +17,7 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
+option(BUILD_KAFKA_WAL_WRITER_PARSER "Whether to build kafka wal writer and wal parser" ON) # Whether to build kafka wal writer and wal parser, default is ON
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -164,6 +165,38 @@ endif ()
 #find protobuf-------------------------------------------------------------------
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
+
+#find CppKafka-------------------------------------------------------------------
+if (BUILD_KAFKA_WAL_WRITER_PARSER)
+    find_package(CppKafka)
+    if (NOT CppKafka_FOUND)
+        message(STATUS "cppkafka not found, try to build with third_party/cppkafka")
+        set(CPPKAFKA_BOOST_STATIC_LIBS OFF)
+        add_subdirectory(third_party/cppkafka)
+        if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/CMakeLists.txt)
+            message(FATAL_ERROR "cppkafka not found, please run git submodule update --init --recursive")
+        endif ()
+        # Apply third_party/cppkafka_without_boost.patch 
+        # to remove the dependency of boost in cppkafka
+        # run git apply ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka_without_boost.patch
+        add_custom_target(apply_patch
+            COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka_without_boost.patch || true
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka
+            COMMENT "Applying patch to cppkafka"
+            VERBATIM)
+
+        include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/include)
+        set (CppKafka_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/build)
+        list (APPEND CMAKE_PREFIX_PATH ${CppKafka_INSTALL_DIR})
+        set(CppKafka_LIBRARIES cppkafka)
+    else()
+        include_directories(SYSTEM ${CppKafka_INCLUDE_DIRS})
+        message(STATUS "cpp kafka include dir: ${CppKafka_INCLUDE_DIRS}")
+        set(CppKafka_LIBRARIES CppKafka::cppkafka)
+    endif ()
+    add_definitions(-DBUILD_KAFKA_WAL_WRITER_PARSER)
+    message(STATUS "cppkafka found")
+endif()
 
 if (BUILD_WITH_OTEL)
     find_package(opentelemetry-cpp CONFIG)

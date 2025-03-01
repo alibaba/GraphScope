@@ -13,3 +13,6 @@
 [submodule "flex/third_party/parallel-hashmap"]
 	path = flex/third_party/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "flex/third_party/cppkafka"]
+	path = flex/third_party/cppkafka
+	url = https://github.com/mfontanini/cppkafka.git
