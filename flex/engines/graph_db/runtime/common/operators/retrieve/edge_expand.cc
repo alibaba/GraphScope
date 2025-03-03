@@ -695,7 +695,7 @@ Context expand_vertex_ep_lt_ml_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  MSVertexColumnBuilder builder;
+  auto builder = MSVertexColumnBuilder::builder();
   size_t csr_idx = 0;
   std::vector<size_t> offsets;
   for (auto& csr : views) {
@@ -867,7 +867,7 @@ Context expand_vertex_ep_gt_ml_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  MSVertexColumnBuilder builder;
+  auto builder = MSVertexColumnBuilder::builder();
   size_t csr_idx = 0;
   std::vector<size_t> offsets;
   for (auto& csr : views) {

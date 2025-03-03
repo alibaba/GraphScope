@@ -309,9 +309,8 @@ class MSVertexColumn : public IVertexColumn {
 
 class MSVertexColumnBuilder : public IVertexColumnBuilder {
  public:
-  MSVertexColumnBuilder() = default;
+  static MSVertexColumnBuilder builder() { return MSVertexColumnBuilder(); }
   ~MSVertexColumnBuilder() = default;
-
   void reserve(size_t size) override {}
 
   inline void push_back_vertex(VertexRecord v) override {
@@ -345,6 +344,8 @@ class MSVertexColumnBuilder : public IVertexColumnBuilder {
       const std::shared_ptr<Arena>&) override;
 
  private:
+  MSVertexColumnBuilder() = default;
+
   label_t cur_label_;
   std::vector<vid_t> cur_list_;
 

@@ -43,7 +43,7 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
-      MSVertexColumnBuilder builder;
+      auto builder = MSVertexColumnBuilder::builder();
 
       for (auto label : params.tables) {
         auto vertices = graph.GetVertexSet(label);
@@ -79,7 +79,7 @@ class Scan {
       }
       ctx.set(params.alias, builder.finish(nullptr));
     } else if (params.tables.size() > 1) {
-      MSVertexColumnBuilder builder;
+      auto builder = MSVertexColumnBuilder::builder();
 
       for (auto label : params.tables) {
         if (cur_limit <= 0) {

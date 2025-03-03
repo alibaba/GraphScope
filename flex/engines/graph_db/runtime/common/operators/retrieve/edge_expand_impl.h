@@ -226,7 +226,7 @@ expand_vertex_np_me_sp(
     col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
-    MSVertexColumnBuilder builder;
+    auto builder = MSVertexColumnBuilder::builder();
     size_t csr_idx = 0;
     for (auto& csr : views) {
       label_t nbr_label = std::get<0>(label_dirs[csr_idx]);
@@ -560,7 +560,7 @@ expand_vertex_np_se(
     col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
-    MSVertexColumnBuilder builder;
+    auto builder = MSVertexColumnBuilder::builder();
     size_t input_seg_num = input.seg_num();
     for (size_t k = 0; k < input_seg_num; ++k) {
       label_t l = input.seg_label(k);
