@@ -40,9 +40,14 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
 
 void set_column_from_string_array(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
-                                  const std::vector<size_t>& offset) {
+                                  const std::vector<size_t>& offset,
+                                  bool enable_resize) {
   auto type = array->type();
   auto size = col->size();
+  auto typed_col = dynamic_cast<gs::TypedColumn<std::string_view>*>(col);
+  if (enable_resize) {
+    CHECK(typed_col != nullptr) << "Only support TypedColumn<std::string_view>";
+  }
   CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
       << "Inconsistent data type, expect string, but got " << type->ToString();
   size_t cur_ind = 0;
@@ -62,7 +67,11 @@ void set_column_from_string_array(gs::ColumnBase* col,
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++], std::move(sw));
+          if (!enable_resize) {
+            col->set_any(offset[cur_ind++], std::move(sw));
+          } else {
+            typed_col->set_value_safe(offset[cur_ind++], std::move(sw));
+          }
         }
       }
     }
@@ -76,7 +85,11 @@ void set_column_from_string_array(gs::ColumnBase* col,
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++], std::move(sw));
+          if (!enable_resize) {
+            col->set_any(offset[cur_ind++], std::move(sw));
+          } else {
+            typed_col->set_value_safe(offset[cur_ind++], std::move(sw));
+          }
         }
       }
     }
@@ -113,7 +126,7 @@ void set_properties_column(gs::ColumnBase* col,
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kStringView) {
-    set_column_from_string_array(col, array, offset);
+    set_column_from_string_array(col, array, offset, true);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }

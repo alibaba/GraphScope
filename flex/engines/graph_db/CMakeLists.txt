@@ -1,6 +1,7 @@
 add_subdirectory(runtime)
 file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
   	                             "${CMAKE_CURRENT_SOURCE_DIR}/database/*.cc"
+                                     "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/*.cc"
                                      "${CMAKE_CURRENT_SOURCE_DIR}/app/builtin/*.cc")
 
 add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
@@ -19,7 +20,6 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/update_transaction.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/compact_transaction.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/version_manager.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/database/wal.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/transaction_utils.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db_operations.h
         DESTINATION include/flex/engines/graph_db/database)
@@ -28,5 +28,11 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/app_base.h
         DESTINATION include/flex/engines/graph_db/app)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/hqps_app.h
         DESTINATION include/flex/engines/graph_db/app)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/wal/wal.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/database/wal/local_wal_parser.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/database/wal/local_wal_writer.h
+        DESTINATION include/flex/engines/graph_db/database/wal)
+
 
 

@@ -27,7 +27,7 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
 class GraphDBSession;
 
@@ -38,7 +38,7 @@ class InsertTransaction {
 
   InsertTransaction(const GraphDBSession& session,
                     MutablePropertyFragment& graph, Allocator& alloc,
-                    WalWriter& logger, VersionManager& vm,
+                    IWalWriter& logger, VersionManager& vm,
                     timestamp_t timestamp);
 
   ~InsertTransaction();
@@ -76,7 +76,7 @@ class InsertTransaction {
   MutablePropertyFragment& graph_;
 
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 };

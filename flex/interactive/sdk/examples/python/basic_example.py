@@ -144,7 +144,9 @@ def addVertex(sess: Session, graph_id: str):
     vertex_request = [
         VertexRequest(
             label="person",
-            primary_key_value=8,
+            primary_key_values= [
+                ModelProperty(name="id", value=8),
+            ],
             properties=[
                 ModelProperty(name="name", value="mike"),
                 ModelProperty(name="age", value=1),
@@ -156,8 +158,8 @@ def addVertex(sess: Session, graph_id: str):
             src_label="person",
             dst_label="person",
             edge_label="knows",
-            src_primary_key_value=8,
-            dst_primary_key_value=1,
+            src_primary_key_values=[ModelProperty(name="id", value=8)],
+            dst_primary_key_values=[ModelProperty(name="id", value=1)],
             properties=[ModelProperty(name="weight", value=7)],
         ),
     ]
@@ -174,10 +176,19 @@ def addVertex(sess: Session, graph_id: str):
 def updateVertex(sess: Session, graph_id: str):
     name_property = ModelProperty(name="name", value="Cindy")
     age_property = ModelProperty(name="age", value=24)
-    vertex_request = VertexRequest(
-        label="person", primary_key_value=1, properties=[name_property, age_property]
+    vertex_edge_request = VertexEdgeRequest(
+        vertex_request=[
+        VertexRequest(label="person",
+        primary_key_values= [
+            ModelProperty(name="id", value=1),
+        ],
+        properties=[
+            name_property,
+            age_property,
+        ]),
+        ]
     )
-    api_response = sess.update_vertex(graph_id, vertex_request=vertex_request)
+    api_response = sess.update_vertex(graph_id, vertex_edge_request)
     if api_response.is_ok():
         print("The response of update_vertex", api_response)
     else:
@@ -188,8 +199,7 @@ def updateVertex(sess: Session, graph_id: str):
 
 def getVertex(sess: Session, graph_id: str):
     label = "person"  # str | The label name of querying vertex.
-    primary_key_value = 1  # object | The primary key value of querying vertex.
-    api_response = sess.get_vertex(graph_id, label, primary_key_value)
+    api_response = sess.get_vertex(graph_id, label, 1)
     if api_response.is_ok():
         print("The response of get_vertex", api_response)
     else:
@@ -204,12 +214,12 @@ def updateEdge(sess: Session, graph_id: str):
         src_label="person",
         dst_label="person",
         edge_label="knows",
-        src_primary_key_value=1,
-        dst_primary_key_value=8,
+        src_primary_key_values=[ModelProperty(name="id", value=1)],
+        dst_primary_key_values=[ModelProperty(name="id", value=8)],
         properties=properties,
     )
 
-    resp = sess.update_edge(graph_id, edge_request)
+    resp = sess.update_edge(graph_id, [edge_request])
     if resp.is_ok():
         print("The response of update_edge", resp)
     else:
@@ -220,15 +230,13 @@ def getEdge(sess: Session, graph_id: str):
     src_label = "person"
     dst_label = "person"
     edge_label = "knows"
-    src_primary_key_value = 1
-    dst_primary_key_value = 8
     api_response = sess.get_edge(
         graph_id,
         edge_label,
         src_label,
-        src_primary_key_value,
+        1,
         dst_label,
-        dst_primary_key_value,
+        8,
     )
     if api_response.is_ok():
         print("The response of get_edge", api_response)
@@ -244,16 +252,16 @@ def addEdge(sess: Session, graph_id: str):
             src_label="person",
             dst_label="person",
             edge_label="knows",
-            src_primary_key_value=1,
-            dst_primary_key_value=8,
+            src_primary_key_values=[ModelProperty(name="id", value=1)],
+            dst_primary_key_values=[ModelProperty(name="id", value=8)],
             properties=[ModelProperty(name="weight", value=9.123)],
         ),
         EdgeRequest(
             src_label="person",
             dst_label="person",
             edge_label="knows",
-            src_primary_key_value=2,
-            dst_primary_key_value=8,
+            src_primary_key_values=[ModelProperty(name="id", value=2)],
+            dst_primary_key_values=[ModelProperty(name="id", value=8)],
             properties=[ModelProperty(name="weight", value=3.233)],
         ),
     ]

@@ -19,7 +19,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -36,7 +36,7 @@ UpdateTransaction::UpdateTransaction(const GraphDBSession& session,
                                      MutablePropertyFragment& graph,
                                      Allocator& alloc,
                                      const std::string& work_dir,
-                                     WalWriter& logger, VersionManager& vm,
+                                     IWalWriter& logger, VersionManager& vm,
                                      timestamp_t timestamp)
     : session_(session),
       graph_(graph),

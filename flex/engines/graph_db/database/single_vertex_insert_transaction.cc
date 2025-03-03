@@ -18,14 +18,14 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/version_manager.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
 
 SingleVertexInsertTransaction::SingleVertexInsertTransaction(
-    MutablePropertyFragment& graph, Allocator& alloc, WalWriter& logger,
+    MutablePropertyFragment& graph, Allocator& alloc, IWalWriter& logger,
     VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),

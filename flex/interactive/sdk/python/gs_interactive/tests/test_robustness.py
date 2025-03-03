@@ -31,11 +31,15 @@ from gs_interactive.tests.conftest import delete_procedure
 from gs_interactive.tests.conftest import ensure_compiler_schema_ready
 from gs_interactive.tests.conftest import import_data_to_full_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_full_modern_graph
+from gs_interactive.tests.conftest import import_data_to_modern_graph_temporal_type
 from gs_interactive.tests.conftest import import_data_to_new_graph_algo_graph
 from gs_interactive.tests.conftest import import_data_to_partial_modern_graph
 from gs_interactive.tests.conftest import import_data_to_vertex_only_modern_graph
 from gs_interactive.tests.conftest import (
     import_data_to_vertex_only_modern_graph_no_wait,
+)
+from gs_interactive.tests.conftest import (
+    import_long_string_data_data_to_vertex_only_modern_graph,
 )
 from gs_interactive.tests.conftest import run_cypher_test_suite
 from gs_interactive.tests.conftest import send_get_request_periodically
@@ -256,10 +260,12 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         create_modern_graph,
         "pagerank",
         '"person"',
+        '"person"',
         '"knows"',
         "0.85",
         "100",
         "0.000001",
+        "10",
     )
 
     call_procedure(
@@ -523,3 +529,37 @@ def test_multiple_edge_property(
     for i in range(len(records)):
         assert records[i]["e"]["weight"] == expected_result[i]["weight"]
         assert records[i]["e"]["since"] == expected_result[i]["since"]
+
+
+def test_create_graph_with_temporal_type(
+    interactive_session, neo4j_session, create_modern_graph_with_temporal_type
+):
+    print("[Test create graph with temporal type]")
+    import_data_to_modern_graph_temporal_type(
+        interactive_session, create_modern_graph_with_temporal_type
+    )
+    start_service_on_graph(interactive_session, create_modern_graph_with_temporal_type)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_modern_graph_with_temporal_type
+    )
+    result = neo4j_session.run("MATCH (n: person) return n.birthday AS birthday;")
+    records = result.fetch(10)
+    assert len(records) == 4
+
+
+def test_graph_with_long_text_property(
+    interactive_session, neo4j_session, create_vertex_only_modern_graph
+):
+    print("[Test graph with long text property]")
+    import_long_string_data_data_to_vertex_only_modern_graph(
+        interactive_session, create_vertex_only_modern_graph
+    )
+    start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
+    ensure_compiler_schema_ready(
+        interactive_session, neo4j_session, create_vertex_only_modern_graph
+    )
+    result = neo4j_session.run("MATCH (n: person) return n.name AS name;")
+    records = result.fetch(10)
+    assert len(records) == 4
+    for record in records:
+        assert len(record["name"]) > 4096

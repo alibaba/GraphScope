@@ -203,7 +203,6 @@ class stored_proc_handler : public StoppableHandler {
 
   bool start() override {
     if (get_executors()[StoppableHandler::shard_id()].size() > 0) {
-      VLOG(10) << "The actors have been already created!";
       return false;
     }
     return StoppableHandler::start_scope(
@@ -228,7 +227,7 @@ class stored_proc_handler : public StoppableHandler {
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
         rep->write_body("bin",
-                        seastar::sstring("The querying query is not running:" +
+                        seastar::sstring("The querying graph is not running:" +
                                          req->param["graph_id"]));
         rep->done();
         return seastar::make_ready_future<
@@ -540,7 +539,7 @@ class adhoc_runtime_query_handler : public StoppableHandler {
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
         rep->write_body("bin",
-                        seastar::sstring("The querying query is not running:" +
+                        seastar::sstring("The querying graph is not running:" +
                                          req->param["graph_id"]));
         rep->done();
         return seastar::make_ready_future<
@@ -733,7 +732,7 @@ class adhoc_query_handler : public StoppableHandler {
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
         rep->write_body("bin",
-                        seastar::sstring("The querying query is not running:" +
+                        seastar::sstring("The querying graph is not running:" +
                                          req->param["graph_id"]));
         rep->done();
         return seastar::make_ready_future<

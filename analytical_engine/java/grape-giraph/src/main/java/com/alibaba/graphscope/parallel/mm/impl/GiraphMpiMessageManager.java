@@ -135,9 +135,9 @@ public class GiraphMpiMessageManager<
 
     private void sendMessage(com.alibaba.graphscope.ds.Vertex<GS_VID_T> vertex, OUT_MSG_T msg) {
         int dstfragId = fragment.getFragId(vertex);
-        if (cacheOut[dstfragId].bytesWriten() >= THRESHOLD && dstfragId != fragId) {
+        if (cacheOut[dstfragId].bytesWritten() >= THRESHOLD && dstfragId != fragId) {
             cacheOut[dstfragId].writeLong(
-                    0, cacheOut[dstfragId].bytesWriten() - 8); // minus size_of_long
+                    0, cacheOut[dstfragId].bytesWritten() - 8); // minus size_of_long
             cacheOut[dstfragId].finishSetting();
             // the vertex will be swapped. so this vector is empty;
             grapeMessager.sendToFragment(dstfragId, cacheOut[dstfragId].getVector());
@@ -194,16 +194,16 @@ public class GiraphMpiMessageManager<
     @Override
     public void finishMessageSending() {
         for (int i = 0; i < fragNum; ++i) {
-            long bytesWriten = cacheOut[i].bytesWriten();
+            long bytesWritten = cacheOut[i].bytesWritten();
             cacheOut[i].finishSetting();
-            cacheOut[i].writeLong(0, bytesWriten - SIZE_OF_LONG);
+            cacheOut[i].writeLong(0, bytesWritten - SIZE_OF_LONG);
 
-            if (bytesWriten == SIZE_OF_LONG) {
+            if (bytesWritten == SIZE_OF_LONG) {
                 logger.debug(
                         "[Finish msg] sending skip msg from {} -> {}, since msg size: {}",
                         fragId,
                         i,
-                        bytesWriten);
+                        bytesWritten);
                 continue;
             }
             if (i == fragId) {
@@ -211,14 +211,14 @@ public class GiraphMpiMessageManager<
                 logger.info(
                         "In final step, Frag [{}] digest msg to self of size: {}",
                         fragId,
-                        bytesWriten);
+                        bytesWritten);
             } else {
                 grapeMessager.sendToFragment(i, cacheOut[i].getVector());
                 logger.info(
                         "In final step, Frag [{}] send msg to [{}] of size: {}",
                         fragId,
                         i,
-                        bytesWriten);
+                        bytesWritten);
             }
         }
         //        if (maxSuperStep > 0) {

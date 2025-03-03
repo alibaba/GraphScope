@@ -53,7 +53,7 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
                        output.emplace_back(label, v, index);
                      });
       int depth = 0;
-      while (depth < params.hop_upper) {
+      while (depth < params.hop_upper && (!output.empty())) {
         input.clear();
         std::swap(input, output);
         if (depth >= params.hop_lower) {
@@ -116,7 +116,7 @@ bl::result<Context> PathExpand::edge_expand_v(const GraphReadInterface& graph,
                        });
       }
       int depth = 0;
-      while (depth < params.hop_upper) {
+      while (depth < params.hop_upper && (!output.empty())) {
         input.clear();
         std::swap(input, output);
         if (depth >= params.hop_lower) {
