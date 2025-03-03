@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryFrom;
 use std::fmt;
 use std::sync::Arc;
 
@@ -398,10 +397,10 @@ impl Details for LazyEdgeDetails {
 fn to_object<'a>(ref_item: RefItem<'a>) -> Object {
     match ref_item {
         RefItem::Int32(v) => Object::Primitive(Primitives::Integer(*v)),
-        RefItem::UInt32(v) => Object::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())),
+        RefItem::UInt32(v) => Object::Primitive(Primitives::UInteger(*v)),
         RefItem::Int64(v) => Object::Primitive(Primitives::Long(*v)),
-        RefItem::UInt64(v) => Object::Primitive(Primitives::Long(i64::try_from(*v).unwrap())),
-        RefItem::Double(v) => Object::Primitive(Primitives::Float(*v)),
+        RefItem::UInt64(v) => Object::Primitive(Primitives::ULong(*v)),
+        RefItem::Double(v) => Object::Primitive(Primitives::Double(*v)),
         RefItem::Date(v) => {
             if let Some(date) = encode_date(v) {
                 Object::DateFormat(DateTimeFormats::Date(date))
@@ -425,12 +424,10 @@ fn to_object<'a>(ref_item: RefItem<'a>) -> Object {
 fn to_property_value<'a>(ref_item: RefItem<'a>) -> PropertyValue {
     match ref_item {
         RefItem::Int32(v) => BorrowObject::Primitive(Primitives::Integer(*v)).into(),
-        RefItem::UInt32(v) => {
-            BorrowObject::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())).into()
-        }
+        RefItem::UInt32(v) => BorrowObject::Primitive(Primitives::UInteger(*v)).into(),
         RefItem::Int64(v) => BorrowObject::Primitive(Primitives::Long(*v)).into(),
-        RefItem::UInt64(v) => BorrowObject::Primitive(Primitives::Long(i64::try_from(*v).unwrap())).into(),
-        RefItem::Double(v) => BorrowObject::Primitive(Primitives::Float(*v)).into(),
+        RefItem::UInt64(v) => BorrowObject::Primitive(Primitives::ULong(*v)).into(),
+        RefItem::Double(v) => BorrowObject::Primitive(Primitives::Double(*v)).into(),
         RefItem::Date(v) => {
             if let Some(date) = encode_date(v) {
                 Object::DateFormat(DateTimeFormats::Date(date)).into()
