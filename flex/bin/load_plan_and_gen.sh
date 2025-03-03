@@ -200,9 +200,9 @@ EOM
 
 compile_hqps_so() {
   #check input params size eq 2 or 3
-  if [ $# -gt 8 ] || [ $# -lt 4 ]; then
+  if [ $# -gt 9 ] || [ $# -lt 4 ]; then
     echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file>  <graph_schema_file> "
-    echo "          [statistic_path] [output_dir] [stored_procedure_name] [stored_procedure_description]"
+    echo "          [label_type] [output_dir] [stored_procedure_name] [stored_procedure_description] [statistic_path]"
     exit 1
   fi
   input_path=$1
@@ -210,25 +210,31 @@ compile_hqps_so() {
   ir_compiler_properties=$3
   graph_schema_path=$4
   if [ $# -ge 5 ]; then
-    output_dir=$5
+    label_type=$5
+  else
+    label_type=""
+  fi
+
+  if [ $# -ge 6 ]; then
+    output_dir=$6
   else
     output_dir=${work_dir}
   fi
 
-  if [ $# -ge 6 ]; then
-    procedure_name=$6
+  if [ $# -ge 7 ]; then
+    procedure_name=$7
   else
     procedure_name=""
   fi
 
-  if [ $# -ge 7 ]; then
-    procedure_description=$7
+  if [ $# -ge 8 ]; then
+    procedure_description=$8
   else
     procedure_description=""
   fi
 
-  if [ $# -ge 8 ]; then
-    statistic_path=$8
+  if [ $# -ge 9 ]; then
+    statistic_path=$9
   else
     statistic_path=""
   fi
@@ -237,6 +243,7 @@ compile_hqps_so() {
   info "Work dir = ${work_dir}"
   info "ir compiler properties = ${ir_compiler_properties}"
   info "graph schema path = ${graph_schema_path}"
+  info "Label type = ${label_type}"
   info "Output dir = ${output_dir}"
   info "Procedure name = ${procedure_name}"
   info "Procedure description = ${procedure_description}"
@@ -327,6 +334,9 @@ compile_hqps_so() {
   # run cmake and make in output path.
   pushd ${cur_dir}
   cmd="cmake . -DQUERY_NAME=${procedure_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
+  if [ ! -z ${label_type} ]; then
+    cmd="${cmd} -DFLEX_LABEL_TYPE=${label_type}"
+  fi
   # if CMAKE_CXX_COMPILER is set, use it.
   if [ ! -z ${CMAKE_CXX_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -573,6 +583,10 @@ run() {
       STATISTIC_PATH="${i#*=}"
       shift # past argument=value
       ;;
+    --label_type=*)
+      LABEL_TYPE="${i#*=}"
+      shift # past argument=value
+      ;;
     -* | --*)
       err "Unknown option $i"
       exit 1
@@ -591,6 +605,7 @@ run() {
   echo "Procedure name         ="${PROCEDURE_NAME}
   echo "Procedure description  ="${PROCEDURE_DESCRIPTION}
   echo "Statistic path         ="${STATISTIC_PATH}
+  echo "Label type             ="${LABEL_TYPE}
 
   find_resources
 
@@ -625,7 +640,7 @@ run() {
       PROCEDURE_NAME="${PROCEDURE_NAME%.cc}"
       PROCEDURE_NAME="${PROCEDURE_NAME%.pb}"
     fi
-    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}" ${STATISTIC_PATH}
+    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${LABEL_TYPE} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}" ${STATISTIC_PATH}
 
   # else if engine_type equals pegasus
   elif [ ${ENGINE_TYPE} == "pegasus" ]; then

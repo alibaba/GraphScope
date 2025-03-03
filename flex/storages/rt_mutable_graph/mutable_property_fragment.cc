@@ -29,9 +29,14 @@ MutablePropertyFragment::~MutablePropertyFragment() {
     degree_list[i] = lf_indexers_[i].size();
     vertex_data_[i].resize(degree_list[i]);
   }
-  for (auto ptr : dual_csr_list_) {
-    if (ptr != NULL) {
-      delete ptr;
+  for (size_t index = 0; index < dual_csr_list_.size(); ++index) {
+    auto triplet = schema_.get_edge_triplet(index);
+    auto src_label = std::get<0>(triplet);
+    auto dst_label = std::get<1>(triplet);
+    if (dual_csr_list_[index] != NULL) {
+      dual_csr_list_[index]->Resize(degree_list[src_label],
+                                    degree_list[dst_label]);
+      delete dual_csr_list_[index];
     }
   }
 }
