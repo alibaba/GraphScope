@@ -225,9 +225,7 @@ template <typename EXPR, typename T>
 struct ValueCollector {
   ValueCollector(const Context& ctx) : ctx_(ctx) {}
   void collect(const EXPR& e, int i) { builder.push_back_opt(e(i)); }
-  std::shared_ptr<IContextColumn> get() {
-    return builder.finish(ctx_.get_and_clear_arena());
-  }
+  std::shared_ptr<IContextColumn> get() { return builder.finish(nullptr); }
   const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };

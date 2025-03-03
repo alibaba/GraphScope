@@ -157,20 +157,21 @@ class FilterOidsGPredOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     ctx = Context();
     auto ids = oids_(params);
+    Arena arena;
     auto expr =
         parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       return Scan::filter_oids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           ids);
     } else {
       return Scan::filter_oids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           ids);
     }
@@ -250,18 +251,19 @@ class FilterOidsMultiTypeGPredOpr : public IReadOperator {
     }
     auto expr =
         parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
+    Arena arena;
     if (expr->is_optional()) {
       return Scan::filter_oids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           all_ids);
     } else {
       return Scan::filter_oids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           all_ids);
     }
@@ -330,20 +332,22 @@ class FilterGidsGPredOpr : public IReadOperator {
       gids.push_back(ids[i].AsInt64());
     }
 
+    Arena arena;
+
     auto expr =
         parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       return Scan::filter_gids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           gids);
     } else {
       return Scan::filter_gids(
           std::move(ctx), graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           gids);
     }
@@ -395,35 +399,36 @@ class ScanWithGPredOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     ctx = Context();
+    Arena arena;
     auto expr =
         parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
         return Scan::scan_vertex(
             std::move(ctx), graph, scan_params_,
-            [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
             });
       } else {
         return Scan::scan_vertex_with_limit(
             std::move(ctx), graph, scan_params_,
-            [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
             });
       }
     } else {
       if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
         auto ret = Scan::scan_vertex(
             std::move(ctx), graph, scan_params_,
-            [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0).as_bool();
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena).as_bool();
             });
         return ret;
       } else {
         auto ret = Scan::scan_vertex_with_limit(
             std::move(ctx), graph, scan_params_,
-            [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0).as_bool();
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena).as_bool();
             });
         return ret;
       }

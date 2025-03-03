@@ -952,6 +952,19 @@ class BDMLEdgeColumnBuilder : public IContextColumnBuilder {
     set_edge_data(prop_cols_[index].get(), prop_cols_[index]->size(), data);
   }
 
+  inline void push_back_opt(EdgeRecord e) {
+    auto label = e.label_triplet_;
+    if (index_.find(label) == index_.end()) {
+      index_[label] = labels_.size();
+      auto data = e.prop_;
+      auto type = rt_type_to_property_type(data.type);
+      labels_.emplace_back(label, type);
+      prop_cols_.emplace_back(EdgePropVecBase::make_edge_prop_vec(type));
+    }
+    auto index = index_[label];
+    push_back_opt(index, e.src_, e.dst_, e.prop_, e.dir_);
+  }
+
   inline void push_back_opt(LabelTriplet label, vid_t src, vid_t dst,
                             const EdgeData& data, Direction dir) {
     auto index = index_[label];

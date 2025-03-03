@@ -200,15 +200,13 @@ struct TypedKeyCollector {
     Var expr;
   };
 
-  TypedKeyCollector(const Context& ctx) : ctx_(ctx) {
-    builder.reserve(ctx.row_num());
-  }
+  TypedKeyCollector() {}
+  void init(size_t size) { builder.reserve(size); }
   void collect(const TypedKeyWrapper& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
+  auto get() { return builder.finish(nullptr); }
 
-  const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
 
@@ -698,26 +696,27 @@ struct AvgReducer<
 
 template <typename T>
 struct SetCollector {
-  SetCollector(const Context& ctx) : ctx_(ctx) {}
+  SetCollector() : arena(std::make_shared<Arena>()) {}
   void init(size_t size) { builder.reserve(size); }
+
   void collect(std::set<T>&& val) {
     auto set = SetImpl<T>::make_set_impl(std::move(val));
     Set st(set.get());
-    ctx_.value_collection->emplace_back(std::move(set));
+    arena->emplace_back(std::move(set));
     builder.push_back_opt(st);
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
+  auto get() { return builder.finish(arena); }
+  std::shared_ptr<Arena> arena;
   ValueColumnBuilder<Set> builder;
 };
 
 template <typename T>
 struct ValueCollector {
-  ValueCollector(const Context& ctx) : ctx_(ctx) {}
+  ValueCollector() = default;
   void init(size_t size) { builder.reserve(size); }
+
   void collect(T&& val) { builder.push_back_opt(std::move(val)); }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
+  auto get() { return builder.finish(nullptr); }
   ValueColumnBuilder<T> builder;
 };
 
@@ -731,21 +730,22 @@ struct VertexCollector {
 
 template <typename T>
 struct ListCollector {
-  ListCollector(const Context& ctx)
-      : ctx_(ctx),
+  ListCollector()
+      : arena(std::make_shared<Arena>()),
         builder(std::make_shared<ListValueColumnBuilder>(
             TypedConverter<T>::type())) {}
   void init(size_t size) { builder->reserve(size); }
   void collect(std::vector<T>&& val) {
     auto impl = ListImpl<T>::make_list_impl(std::move(val));
     List list(impl.get());
-    ctx_.value_collection->emplace_back(std::move(impl));
+    arena->emplace_back(std::move(impl));
     builder->push_back_opt(list);
   }
 
-  auto get() { return builder->finish(ctx_.get_and_clear_arena()); }
+  auto get() { return builder->finish(arena); }
 
-  const Context& ctx_;
+  std::shared_ptr<Arena> arena;
+
   std::shared_ptr<ListValueColumnBuilder> builder;
 };
 
@@ -756,7 +756,7 @@ std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
   case AggrKind::kSum: {
     if constexpr (std::is_arithmetic<typename EXPR::V>::value) {
       SumReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-      ValueCollector<typename EXPR::V> collector(ctx);
+      ValueCollector<typename EXPR::V> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -766,25 +766,25 @@ std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
   }
   case AggrKind::kCountDistinct: {
     CountDistinctReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<int64_t> collector(ctx);
+    ValueCollector<int64_t> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kCount: {
     CountReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<int64_t> collector(ctx);
+    ValueCollector<int64_t> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kMin: {
     MinReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<typename EXPR::V> collector(ctx);
+    ValueCollector<typename EXPR::V> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kMax: {
     MaxReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ValueCollector<typename EXPR::V> collector(ctx);
+    ValueCollector<typename EXPR::V> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
@@ -795,27 +795,27 @@ std::unique_ptr<ReducerBase> _make_reducer(const Context& ctx, EXPR&& expr,
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
-      ValueCollector<typename EXPR::V> collector(ctx);
+      ValueCollector<typename EXPR::V> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     }
   }
   case AggrKind::kToSet: {
     ToSetReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    SetCollector<typename EXPR::V> collector(ctx);
+    SetCollector<typename EXPR::V> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kToList: {
     ToListReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-    ListCollector<typename EXPR::V> collector(ctx);
+    ListCollector<typename EXPR::V> collector;
     return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
         std::move(r), std::move(collector), alias);
   }
   case AggrKind::kAvg: {
     if constexpr (std::is_arithmetic<typename EXPR::V>::value) {
       AvgReducer<EXPR, IS_OPTIONAL> r(std::move(expr));
-      ValueCollector<typename EXPR::V> collector(ctx);
+      ValueCollector<typename EXPR::V> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -851,13 +851,13 @@ std::unique_ptr<ReducerBase> make_general_reducer(
       VarWrapper var_wrap(std::move(var));
 
       CountReducer<VarWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector(ctx);
+      ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
       OptionalVarWrapper var_wrap(std::move(var));
       CountReducer<OptionalVarWrapper, true> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector(ctx);
+      ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     }
@@ -865,7 +865,7 @@ std::unique_ptr<ReducerBase> make_general_reducer(
     VarWrapper var_wrap(std::move(var));
     if (!var.is_optional()) {
       CountDistinctReducer<VarWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector(ctx);
+      ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -884,7 +884,7 @@ std::unique_ptr<ReducerBase> make_pair_reducer(const GraphReadInterface& graph,
     VarPairWrapper var_wrap(std::move(fst), std::move(snd));
     if ((!fst.is_optional()) && (!snd.is_optional())) {
       CountReducer<VarPairWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector(ctx);
+      ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -894,7 +894,7 @@ std::unique_ptr<ReducerBase> make_pair_reducer(const GraphReadInterface& graph,
     VarPairWrapper var_wrap(std::move(fst), std::move(snd));
     if (!fst.is_optional() && !snd.is_optional()) {
       CountDistinctReducer<VarPairWrapper, false> r(std::move(var_wrap));
-      ValueCollector<int64_t> collector(ctx);
+      ValueCollector<int64_t> collector;
       return std::make_unique<Reducer<decltype(r), decltype(collector)>>(
           std::move(r), std::move(collector), alias);
     } else {
@@ -1044,21 +1044,21 @@ bl::result<ReadOpBuildResultT> GroupByOprBuilder::Build(
         if (var_.type() == RTAnyType::kStringValue) {
           TypedKeyCollector<std::string_view>::TypedKeyWrapper wrapper(
               std::move(var_));
-          TypedKeyCollector<std::string_view> collector(ctx);
+          TypedKeyCollector<std::string_view> collector;
           exprs.emplace_back(
               std::make_unique<
                   ProjectExpr<decltype(wrapper), decltype(collector)>>(
                   std::move(wrapper), std::move(collector), alias));
         } else if (var_.type() == RTAnyType::kI64Value) {
           TypedKeyCollector<int64_t>::TypedKeyWrapper wrapper(std::move(var_));
-          TypedKeyCollector<int64_t> collector(ctx);
+          TypedKeyCollector<int64_t> collector;
           exprs.emplace_back(
               std::make_unique<
                   ProjectExpr<decltype(wrapper), decltype(collector)>>(
                   std::move(wrapper), std::move(collector), alias));
         } else if (var_.type() == RTAnyType::kI32Value) {
           TypedKeyCollector<int32_t>::TypedKeyWrapper wrapper(std::move(var_));
-          TypedKeyCollector<int32_t> collector(ctx);
+          TypedKeyCollector<int32_t> collector;
           exprs.emplace_back(
               std::make_unique<
                   ProjectExpr<decltype(wrapper), decltype(collector)>>(

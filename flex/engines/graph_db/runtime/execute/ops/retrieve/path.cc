@@ -381,8 +381,9 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto v_pred = parse_expression(graph, std::move(ctx), params, pred_,
                                    VarType::kVertexVar);
-    auto pred = [&v_pred](label_t label, vid_t vid) {
-      return v_pred->eval_vertex(label, vid, 0).as_bool();
+    Arena arena;
+    auto pred = [&v_pred, &arena](label_t label, vid_t vid) {
+      return v_pred->eval_vertex(label, vid, 0, arena).as_bool();
     };
 
     return PathExpand::single_source_shortest_path_with_order_by_length_limit(
@@ -494,8 +495,9 @@ class SPGPredOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto predicate = parse_expression(graph, std::move(ctx), params, pred_,
                                       VarType::kVertexVar);
-    auto pred = [&predicate](label_t label, vid_t v) {
-      return predicate->eval_vertex(label, v, 0).as_bool();
+    Arena arena;
+    auto pred = [&arena, &predicate](label_t label, vid_t v) {
+      return predicate->eval_vertex(label, v, 0, arena).as_bool();
     };
 
     return PathExpand::single_source_shortest_path(graph, std::move(ctx), spp_,

@@ -183,6 +183,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
   std::vector<std::pair<std::unique_ptr<PathImpl>, size_t>> output;
 
   GeneralPathColumnBuilder builder;
+  std::shared_ptr<Arena> arena = std::make_shared<Arena>();
   if (dir == Direction::kOut) {
     foreach_vertex(input_vertex_list,
                    [&](size_t index, label_t label, vid_t v) {
@@ -214,7 +215,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       if (depth >= params.hop_lower) {
         for (auto& [path, index] : input) {
           builder.push_back_opt(Path(path.get()));
-          ctx.value_collection->emplace_back(std::move(path));
+          arena->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -226,9 +227,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias,
-                           builder.finish(ctx.get_and_clear_arena()),
-                           shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(arena), shuffle_offset);
 
     return ctx;
   } else if (dir == Direction::kIn) {
@@ -263,7 +262,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       if (depth >= params.hop_lower) {
         for (auto& [path, index] : input) {
           builder.push_back_opt(Path(path.get()));
-          ctx.value_collection->emplace_back(std::move(path));
+          arena->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -275,9 +274,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias,
-                           builder.finish(ctx.get_and_clear_arena()),
-                           shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(arena), shuffle_offset);
 
     return ctx;
 
@@ -323,7 +320,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       if (depth >= params.hop_lower) {
         for (auto& [path, index] : input) {
           builder.push_back_opt(Path(path.get()));
-          ctx.value_collection->emplace_back(std::move(path));
+          arena->emplace_back(std::move(path));
           shuffle_offset.push_back(index);
         }
       }
@@ -335,9 +332,7 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
       std::swap(input, output);
       ++depth;
     }
-    ctx.set_with_reshuffle(params.alias,
-                           builder.finish(ctx.get_and_clear_arena()),
-                           shuffle_offset);
+    ctx.set_with_reshuffle(params.alias, builder.finish(arena), shuffle_offset);
     return ctx;
   }
   LOG(ERROR) << "not support path expand options";
@@ -501,6 +496,7 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
   }
   auto builder = SLVertexColumnBuilder::builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
+  std::shared_ptr<Arena> arena = std::make_shared<Arena>();
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
     std::vector<vid_t> path;
     if (single_source_single_dest_shortest_path_impl(graph, params, v,
@@ -509,13 +505,13 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
       shuffle_offset.push_back(index);
       auto impl = PathImpl::make_path_impl(label_triplet.src_label, path);
       path_builder.push_back_opt(Path(impl.get()));
-      ctx.value_collection->emplace_back(std::move(impl));
+      arena->emplace_back(std::move(impl));
     }
   });
 
   ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
                          shuffle_offset);
-  ctx.set(params.alias, path_builder.finish(ctx.get_and_clear_arena()));
+  ctx.set(params.alias, path_builder.finish(arena));
   return ctx;
 }
 
@@ -750,6 +746,7 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
   auto builder = SLVertexColumnBuilder::builder(label_triplet.dst_label);
   GeneralPathColumnBuilder path_builder;
   std::vector<size_t> shuffle_offset;
+  std::shared_ptr<Arena> arena = std::make_shared<Arena>();
   foreach_vertex(input_vertex_list, [&](size_t index, label_t label, vid_t v) {
     std::vector<std::vector<vid_t>> paths;
     all_shortest_path_with_given_source_and_dest_impl(graph, params, v,
@@ -758,13 +755,13 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
       auto ptr = PathImpl::make_path_impl(label_triplet.src_label, path);
       builder.push_back_opt(dest.second);
       path_builder.push_back_opt(Path(ptr.get()));
-      ctx.value_collection->emplace_back(std::move(ptr));
+      arena->emplace_back(std::move(ptr));
       shuffle_offset.push_back(index);
     }
   });
   ctx.set_with_reshuffle(params.v_alias, builder.finish(nullptr),
                          shuffle_offset);
-  ctx.set(params.alias, path_builder.finish(ctx.get_and_clear_arena()));
+  ctx.set(params.alias, path_builder.finish(arena));
   return ctx;
 }
 

@@ -27,25 +27,40 @@ namespace ops {
 
 template <typename T>
 struct ValueCollector {
-  ValueCollector(const Context& ctx) : ctx_(ctx) {
-    builder.reserve(ctx.row_num());
-  }
   struct ExprWrapper {
     using V = T;
-    ExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    T operator()(size_t idx) const {
-      auto val = expr.eval_path(idx);
+    ExprWrapper(Expr&& expr)
+        : arena(std::make_shared<Arena>()), expr(std::move(expr)) {}
+    inline T operator()(size_t idx) const {
+      auto val = expr.eval_path(idx, *arena);
       return TypedConverter<T>::to_typed(val);
     }
+
+    mutable std::shared_ptr<Arena> arena;
+
     Expr expr;
   };
   using EXPR = ExprWrapper;
-  void collect(const EXPR& expr, size_t idx) {
-    auto val = expr.expr.eval_path(idx);
-    builder.push_back_opt(TypedConverter<T>::to_typed(val));
+  ValueCollector(const Context& ctx, const EXPR& expr) : arena_(expr.arena) {
+    builder.reserve(ctx.row_num());
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
+
+  void collect(const EXPR& expr, size_t idx) {
+    auto val = expr(idx);
+    builder.push_back_opt(val);
+  }
+  auto get() {
+    if constexpr (std::is_same_v<T, std::string_view> ||
+                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map> ||
+                  std::is_same_v<T, List> || std::is_same_v<T, Set> ||
+                  std::is_same_v<T, Path>) {
+      return builder.finish(arena_);
+    } else {
+      return builder.finish(nullptr);
+    }
+  }
+
+  std::shared_ptr<Arena> arena_;
   ValueColumnBuilder<T> builder;
 };
 
@@ -100,15 +115,12 @@ struct MLPropertyExpr {
 
 template <typename EXPR>
 struct PropertyValueCollector {
-  PropertyValueCollector(const Context& ctx) : ctx_(ctx) {
-    builder.reserve(ctx.row_num());
-  }
+  PropertyValueCollector(const Context& ctx) { builder.reserve(ctx.row_num()); }
   void collect(const EXPR& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
+  auto get() { return builder.finish(nullptr); }
 
-  const Context& ctx_;
   ValueColumnBuilder<typename EXPR::V> builder;
 };
 
@@ -248,41 +260,50 @@ std::unique_ptr<ProjectExprBase> create_ml_property_expr(
 
 template <typename T>
 struct OptionalValueCollector {
-  OptionalValueCollector(const Context& ctx) : ctx_(ctx) {
-    builder.reserve(ctx.row_num());
-  }
   struct OptionalExprWrapper {
     using V = std::optional<T>;
-    OptionalExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    std::optional<T> operator()(size_t idx) const {
-      auto val = expr.eval_path(idx, 0);
+    OptionalExprWrapper(Expr&& expr)
+        : arena(std::make_shared<Arena>()), expr(std::move(expr)) {}
+    inline std::optional<T> operator()(size_t idx) const {
+      auto val = expr.eval_path(idx, *arena, 0);
       if (val.is_null()) {
         return std::nullopt;
       }
       return TypedConverter<T>::to_typed(val);
     }
+    mutable std::shared_ptr<Arena> arena;
     Expr expr;
   };
   using EXPR = OptionalExprWrapper;
+  OptionalValueCollector(const Context& ctx, const EXPR& expr)
+      : arena_(expr.arena) {
+    builder.reserve(ctx.row_num());
+  }
+
   void collect(const EXPR& expr, size_t idx) {
-    auto val = expr.expr.eval_path(idx, 0);
-    if (val.is_null()) {
+    auto val = expr(idx);
+    if (!val.has_value()) {
       builder.push_back_null();
     } else {
-      builder.push_back_opt(TypedConverter<T>::to_typed(val), true);
+      builder.push_back_opt(*val, true);
     }
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
+  auto get() { return builder.finish(arena_); }
+
+  std::shared_ptr<Arena> arena_;
   OptionalValueColumnBuilder<T> builder;
 };
 
 struct VertexExprWrapper {
   using V = VertexRecord;
   VertexExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-  VertexRecord operator()(size_t idx) const {
-    return expr.eval_path(idx).as_vertex();
+
+  inline VertexRecord operator()(size_t idx) const {
+    return expr.eval_path(idx, arena).as_vertex();
   }
+
+  mutable Arena arena;
+
   Expr expr;
 };
 struct SLVertexCollector {
@@ -290,7 +311,7 @@ struct SLVertexCollector {
   SLVertexCollector(label_t v_label)
       : builder(SLVertexColumnBuilder::builder(v_label)) {}
   void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx).as_vertex();
+    auto v = expr(idx);
     builder.push_back_opt(v.vid_);
   }
   auto get() { return builder.finish(nullptr); }
@@ -301,7 +322,7 @@ struct MLVertexCollector {
   using EXPR = VertexExprWrapper;
   MLVertexCollector() : builder(MLVertexColumnBuilder::builder()) {}
   void collect(const EXPR& expr, size_t idx) {
-    auto v = expr.expr.eval_path(idx).as_vertex();
+    auto v = expr(idx);
     builder.push_back_vertex(v);
   }
   auto get() { return builder.finish(nullptr); }
@@ -314,15 +335,16 @@ struct EdgeCollector {
     using V = EdgeRecord;
 
     EdgeExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    EdgeRecord operator()(size_t idx) const {
-      return expr.eval_path(idx).as_edge();
+    inline EdgeRecord operator()(size_t idx) const {
+      return expr.eval_path(idx, arena).as_edge();
     }
+    mutable Arena arena;
     Expr expr;
   };
   using EXPR = EdgeExprWrapper;
   void collect(const EXPR& expr, size_t idx) {
-    auto e = expr.expr.eval_path(idx);
-    builder.push_back_elem(e);
+    auto e = expr(idx);
+    builder.push_back_opt(e);
   }
   auto get() { return builder.finish(nullptr); }
   BDMLEdgeColumnBuilder builder;
@@ -331,22 +353,28 @@ struct EdgeCollector {
 struct ListCollector {
   struct ListExprWrapper {
     using V = List;
-    ListExprWrapper(Expr&& expr) : expr(std::move(expr)) {}
-    List operator()(size_t idx) const { return expr.eval_path(idx).as_list(); }
+    ListExprWrapper(Expr&& expr)
+        : arena(std::make_shared<Arena>()), expr(std::move(expr)) {}
+    inline List operator()(size_t idx) const {
+      return expr.eval_path(idx, *arena).as_list();
+    }
+
+    mutable std::shared_ptr<Arena> arena;
     Expr expr;
   };
   using EXPR = ListExprWrapper;
   ListCollector(const Context& ctx, const EXPR& expr)
-      : ctx_(ctx),
-        builder_(
-            std::make_shared<ListValueColumnBuilder>(expr.expr.elem_type())) {}
+      : builder_(
+            std::make_shared<ListValueColumnBuilder>(expr.expr.elem_type())),
+        arena_(expr.arena) {}
 
   void collect(const EXPR& expr, size_t idx) {
-    builder_->push_back_elem(expr.expr.eval_path(idx));
+    builder_->push_back_opt(expr(idx));
   }
-  auto get() { return builder_->finish(ctx_.get_and_clear_arena()); }
-  const Context& ctx_;
+  auto get() { return builder_->finish(arena_); }
+
   std::shared_ptr<ListValueColumnBuilder> builder_;
+  std::shared_ptr<Arena> arena_;
 };
 
 template <typename EXPR, typename RESULT_T>
@@ -357,7 +385,7 @@ struct CaseWhenCollector {
   void collect(const EXPR& expr, size_t idx) {
     builder.push_back_opt(expr(idx));
   }
-  auto get() { return builder.finish(ctx_.get_and_clear_arena()); }
+  auto get() { return builder.finish(nullptr); }
   const Context& ctx_;
   ValueColumnBuilder<RESULT_T> builder;
 };
@@ -429,15 +457,17 @@ static std::unique_ptr<ProjectExprBase> _make_project_expr(Expr&& expr,
                                                            int alias,
                                                            const Context& ctx) {
   if (!expr.is_optional()) {
-    ValueCollector<T> collector(ctx);
+    typename ValueCollector<T>::EXPR wexpr(std::move(expr));
+    ValueCollector<T> collector(ctx, wexpr);
     return std::make_unique<
         ProjectExpr<typename ValueCollector<T>::EXPR, ValueCollector<T>>>(
-        std::move(expr), collector, alias);
+        std::move(wexpr), collector, alias);
   } else {
-    OptionalValueCollector<T> collector(ctx);
+    typename OptionalValueCollector<T>::EXPR wexpr(std::move(expr));
+    OptionalValueCollector<T> collector(ctx, wexpr);
     return std::make_unique<ProjectExpr<
         typename OptionalValueCollector<T>::EXPR, OptionalValueCollector<T>>>(
-        std::move(expr), collector, alias);
+        std::move(wexpr), collector, alias);
   }
 }
 template <typename T>
@@ -449,17 +479,7 @@ _make_project_expr(const common::Expression& expr, int alias) {
              const std::map<std::string, std::string>& params,
              const Context& ctx) -> std::unique_ptr<ProjectExprBase> {
     Expr e(graph, ctx, params, expr, VarType::kPathVar);
-    if (!e.is_optional()) {
-      ValueCollector<T> collector(ctx);
-      return std::make_unique<
-          ProjectExpr<typename ValueCollector<T>::EXPR, ValueCollector<T>>>(
-          std::move(e), collector, alias);
-    } else {
-      OptionalValueCollector<T> collector(ctx);
-      return std::make_unique<ProjectExpr<
-          typename OptionalValueCollector<T>::EXPR, OptionalValueCollector<T>>>(
-          std::move(e), collector, alias);
-    }
+    return _make_project_expr<T>(std::move(e), alias, ctx);
   };
 }
 
