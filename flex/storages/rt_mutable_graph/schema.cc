@@ -447,10 +447,6 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
       << sort_on_compactions_ << max_vnum_ << v_descriptions_ << e_descriptions_
       << description_ << version_;
 
-  std::vector<bool> test{true, false, true};
-  grape::InArchive test_arc;
-  test_arc << test;
-
   CHECK(writer->WriteArchive(arc));
 }
 

@@ -502,7 +502,7 @@ jobs:
         git submodule update --init
         cd flex/engines/graph_db/grin
         mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
+        cmake .. -DLABEL_TYPE="uint16_t" && sudo make -j$(nproc)
         export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
         ${GITHUB_WORKSPACE}/flex/build/bin/bulk_loader -g ../../../../interactive/examples/modern_graph/graph.yaml -l ../../../../interactive/examples/modern_graph/bulk_load.yaml -d ./data/
         rm -r ./data/wal
