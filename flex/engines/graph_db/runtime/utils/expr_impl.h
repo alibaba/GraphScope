@@ -907,7 +907,7 @@ class StrListSizeExpr : public ExprBase {
   RTAny eval_path(size_t idx, Arena& arena) const override {
     CHECK(args->type() == RTAnyType::kStringValue);
     auto str_list = args->eval_path(idx, arena).as_string();
-    return RTAny::from_int64(_size(str_list));
+    return RTAny::from_int32(_size(str_list));
   }
 
   RTAny eval_path(size_t idx, Arena& arena, int) const override {
@@ -921,21 +921,21 @@ class StrListSizeExpr : public ExprBase {
   RTAny eval_vertex(label_t label, vid_t v, size_t idx,
                     Arena& arena) const override {
     auto str_list = args->eval_vertex(label, v, idx, arena).as_string();
-    return RTAny::from_int64(_size(str_list));
+    return RTAny::from_int32(_size(str_list));
   }
 
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
                   const Any& data, size_t idx, Arena& arena) const override {
     auto str_list =
         args->eval_edge(label, src, dst, data, idx, arena).as_string();
-    return RTAny::from_int64(_size(str_list));
+    return RTAny::from_int32(_size(str_list));
   }
 
   RTAnyType type() const override { return RTAnyType::kI32Value; }
   bool is_optional() const override { return args->is_optional(); }
 
  private:
-  int64_t _size(const std::string_view& sv) const {
+  int32_t _size(const std::string_view& sv) const {
     if (sv.empty()) {
       return 0;
     }
