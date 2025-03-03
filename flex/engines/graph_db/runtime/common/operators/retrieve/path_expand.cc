@@ -503,7 +503,8 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
                                                      dest.second, path)) {
       builder.push_back_opt(dest.second);
       shuffle_offset.push_back(index);
-      auto impl = PathImpl::make_path_impl(label_triplet.src_label, path);
+      auto impl = PathImpl::make_path_impl(label_triplet.src_label,
+                                           label_triplet.edge_label, path);
       path_builder.push_back_opt(Path(impl.get()));
       arena->emplace_back(std::move(impl));
     }
@@ -752,7 +753,8 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
     all_shortest_path_with_given_source_and_dest_impl(graph, params, v,
                                                       dest.second, paths);
     for (auto& path : paths) {
-      auto ptr = PathImpl::make_path_impl(label_triplet.src_label, path);
+      auto ptr = PathImpl::make_path_impl(label_triplet.src_label,
+                                          label_triplet.edge_label, path);
       builder.push_back_opt(dest.second);
       path_builder.push_back_opt(Path(ptr.get()));
       arena->emplace_back(std::move(ptr));
