@@ -557,7 +557,7 @@ default_single_source_shortest_path_impl(
               auto impl = PathImpl::make_path_impl(edge_labels, path);
 
               path_col_builder.push_back_opt(Path(impl.get()));
-              path_impls.emplace_back(std::move(impl));
+              path_impls->emplace_back(std::move(impl));
 
               dest_col_builder.push_back_opt(vid);
               offsets.push_back(idx);
@@ -622,8 +622,8 @@ default_single_source_shortest_path_impl(
 
             if (path.size() > 1) {
               auto impl = PathImpl::make_path_impl(edge_labels, path);
-              path_col_builder.push_back_opt(Path::make_path(impl));
-              path_impls.emplace_back(impl);
+              path_col_builder.push_back_opt(Path(impl.get()));
+              path_impls->emplace_back(std::move(impl));
 
               dest_col_builder.push_back_vertex({v_label, vid});
               offsets.push_back(idx);
