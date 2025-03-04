@@ -535,6 +535,8 @@ default_single_source_shortest_path_impl(
       std::map<std::tuple<label_t, label_t, vid_t>,
                std::tuple<label_t, label_t, vid_t>>
           parent;
+      std::set<std::pair<label_t, vid_t>> visited;
+      visited.insert(std::make_pair(label, v));
       int depth = 0;
       while (depth < upper && !cur.empty()) {
         for (auto [edge_label, v_label, vid] : cur) {
@@ -572,7 +574,9 @@ default_single_source_shortest_path_impl(
             while (iter.IsValid()) {
               auto nbr = std::make_tuple(std::get<1>(l), nbr_label,
                                          iter.GetNeighbor());
-              if (parent.find(nbr) == parent.end()) {
+              auto vertex = std::make_pair(nbr_label, iter.GetNeighbor());
+              if (visited.find(vertex) == visited.end()) {
+                visited.insert(vertex);
                 parent[nbr] = std::tie(edge_label, v_label, vid);
                 next.push_back(nbr);
               }
@@ -598,6 +602,8 @@ default_single_source_shortest_path_impl(
       std::map<std::tuple<label_t, label_t, vid_t>,
                std::tuple<label_t, label_t, vid_t>>
           parent;
+      std::set<std::pair<label_t, vid_t>> visited;
+      visited.insert(std::make_pair(label, v));
       int depth = 0;
       while (depth < upper && !cur.empty()) {
         for (auto [edge_label, v_label, vid] : cur) {
@@ -634,7 +640,9 @@ default_single_source_shortest_path_impl(
             while (iter.IsValid()) {
               auto nbr = std::make_tuple(std::get<1>(l), nbr_label,
                                          iter.GetNeighbor());
-              if (parent.find(nbr) == parent.end()) {
+              auto vertex = std::make_pair(nbr_label, iter.GetNeighbor());
+              if (visited.find(vertex) == visited.end()) {
+                visited.insert(vertex);
                 parent[nbr] = std::tie(edge_label, v_label, vid);
                 next.push_back(nbr);
               }

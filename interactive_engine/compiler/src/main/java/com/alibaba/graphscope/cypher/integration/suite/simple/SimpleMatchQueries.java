@@ -263,7 +263,7 @@ public class SimpleMatchQueries {
         String query =
                 "MATCH(a:PERSON)-[k*1..2]->(b: PERSON) WHERE a.id = 933L AND b.id = 10995116278291L"
                     + " WITH a.id AS startId, k AS path, b.id as destId RETURN startId, k, destId"
-                    + " ORDER BY length(k) LIMIT 5;";
+                    + " ORDER BY length(path) LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
                         "Record<{aId: 933, cId: 412317087328}>",
