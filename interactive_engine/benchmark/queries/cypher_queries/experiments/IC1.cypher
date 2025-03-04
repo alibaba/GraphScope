@@ -25,7 +25,7 @@ WITH f, k, locationCity, company_info,
 
 WITH f, k, locationCity, company_info, collect(universities) as university_info
 
-// apend one new column <distance>
+// append one new column <distance>
 WITH 
   f,
   k,

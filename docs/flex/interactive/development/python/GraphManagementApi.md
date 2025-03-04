@@ -101,7 +101,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[Reesult](./result.rst)[[**CreateGraphResponse**](CreateGraphResponse.md)]
+[Result](./result.rst)[[**CreateGraphResponse**](CreateGraphResponse.md)]
 
 
 ### Authorization

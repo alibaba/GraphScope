@@ -45,7 +45,7 @@ def katz_centrality(
         alpha (float, optional): Auttenuation factor. Defaults to 0.1.
         beta (float, optional): Weight attributed to the immediate neighborhood. Defaults to 1.0.
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
-        max_round (int, optional): Maximun number of rounds. Defaults to 100.
+        max_round (int, optional): Maximum number of rounds. Defaults to 100.
         normalized (bool, optional): Whether to normalize result values. Defaults to True.
         degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.
     Returns:

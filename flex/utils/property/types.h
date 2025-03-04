@@ -1417,7 +1417,7 @@ inline bool operator!=(const EmptyType& a, const EmptyType& b) { return false; }
 namespace YAML {
 template <>
 struct convert<gs::PropertyType> {
-  // concurrently preseve backwards compatibility with old config files
+  // concurrently preserve backwards compatibility with old config files
   static bool decode(const Node& config, gs::PropertyType& property_type) {
     if (config["primitive_type"]) {
       property_type = gs::config_parsing::StringToPrimitivePropertyType(

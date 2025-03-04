@@ -21,7 +21,7 @@ GraphScope is equipped with various built-in graph algorithms, consisting of 20 
 
 GraphScope Analytical Engine(GAE) provides a rich set of commonly used algorithms, including connectivity and path analysis, community detection and centrality computations. This [directory](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps) includes a full list of the built-in algorithms, which is continuously growing.
 
-GAE also provides developers the flexibility to customize their own algorithms with different programming models and programming languages. Currently, the programing models that GAE supports include the sub-graph based [PIE](https://dl.acm.org/doi/10.1145/3282488) model and the vertex-centric [Pregel](https://dl.acm.org/doi/10.1145/1807167.1807184) model. Meanwhile, GAE provides a multi-language SDK, and users can choose to write their own algorithms in C++, Java or Python.
+GAE also provides developers the flexibility to customize their own algorithms with different programming models and programming languages. Currently, the programming models that GAE supports include the sub-graph based [PIE](https://dl.acm.org/doi/10.1145/3282488) model and the vertex-centric [Pregel](https://dl.acm.org/doi/10.1145/1807167.1807184) model. Meanwhile, GAE provides a multi-language SDK, and users can choose to write their own algorithms in C++, Java or Python.
 
 ## GNN Training & Inference
 

@@ -1,6 +1,6 @@
 .. _encoder:
 
-Encoder and Deocder
+Encoder and Decoder
 ===================
 
 Encoder Class

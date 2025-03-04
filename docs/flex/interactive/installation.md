@@ -4,7 +4,7 @@ Interactive relies solely on Docker and does not have a strong dependency on the
 
 ## Prerequisites
 - **Docker Installation**: Ensure you have Docker installed and configured on a Mac or Linux machine. If you haven't installed Docker yet, you can find the installation guide [here](https://docs.docker.com/get-docker/).
-- **Python Installtion**: Interactive requires `Python` >= `3.8` and `pip` >= `19.3`.
+- **Python Installation**: Interactive requires `Python` >= `3.8` and `pip` >= `19.3`.
 
 ## Install and Deploy Interactive
 

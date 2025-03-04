@@ -164,7 +164,7 @@ print(sub_graph.schema)
 sess.close()
 ```
 
-## Retore graphs from the pvc
+## Restore graphs from the pvc
 
 Remember the vineyard ids printed above and the pvc name and then you can restore the graphs from the pvc as follows.
 

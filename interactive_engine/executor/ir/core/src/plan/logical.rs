@@ -251,7 +251,7 @@ impl LogicalPlan {
                         let node_parent_children_len = node_parent.borrow().children.len();
                         node_flow += node_parent_flow / (node_parent_children_len as u64);
                     } else {
-                        // If one of current node's parent's flow is still not avaliable, it suggests that
+                        // If one of current node's parent's flow is still not available, it suggests that
                         // it is too early to get current node's flow
                         // Therefore, we delay the current node's flow computation by adding it to the queue again
                         // and jump to the next iteration

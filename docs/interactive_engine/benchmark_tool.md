@@ -56,7 +56,7 @@ and you can use deploy the package to anywhere could connect to the gremlin endp
 
 ### Running the benchmark
 
-You can unzip builded _target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz_, and run the benchmark.
+You can unzip built _target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz_, and run the benchmark.
 
 ```bash
 cd target
@@ -122,7 +122,7 @@ We facilitate comparisons between various graph systems. For instance, to compar
 # For each system, starting from system.1 to system.n, the following configurations are needed:
 # name: the name of the system, e.g., GIE, KuzuDb.
 # client: the client of the system, e.g., for GIE, it can be cypher, gremlin; for KuzuDB, it should be kuzu.
-# endpoint(optional): the endpoint of the system if the sytem provides a service endpoint, e.g., for GIE gremlin, it is 127.0.0.1:8182 by default.
+# endpoint(optional): the endpoint of the system if the system provides a service endpoint, e.g., for GIE gremlin, it is 127.0.0.1:8182 by default.
 # path(optional): the path of the database of the system if the system is a local database and need to access the database by the path, e.g., for KuzuDb, it can be /path_to_db/example_db.
 # Either of endpoint or path need to be provided, depending on the access method of the system.
 system.1.name = GIE

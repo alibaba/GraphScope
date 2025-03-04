@@ -172,7 +172,7 @@ class EdgeSubLabel(object):
         self.dst_label = dst_label
         self.src_field = src_field
         self.dst_field = dst_field
-        # check avaiable
+        # check available
         check_argument(
             load_strategy in ("only_out", "only_in", "both_out_in"),
             "invalid load strategy: " + load_strategy,

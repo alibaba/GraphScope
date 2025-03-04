@@ -423,7 +423,7 @@ def report_graph(
 ):
     """Create report operation for nx graph.
 
-    This operation is used to simulate networkx graph reporting methods with variaty
+    This operation is used to simulate networkx graph reporting methods with variety
     report type and corresponding config parameters.
 
     Args:
