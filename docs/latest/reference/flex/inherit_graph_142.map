@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classgs_1_1SingleGraphView_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="5,5,161,47"/>
+<area shape="rect" id="node1" href="$classgs_1_1RefColumnBase.html" title="Create RefColumn for ease of usage for hqps." alt="" coords="5,64,155,91"/>
+<area shape="rect" id="node2" href="$classgs_1_1TypedRefColumn.html" title=" " alt="" coords="203,5,396,32"/>
+<area shape="rect" id="node3" href="$classgs_1_1TypedRefColumn_3_01GlobalId_01_4.html" title=" " alt="" coords="222,57,377,98"/>
+<area shape="rect" id="node4" href="$classgs_1_1TypedRefColumn_3_01LabelKey_01_4.html" title=" " alt="" coords="222,122,377,163"/>
 </map>

@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.framework.loader - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -709,41 +710,41 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">pathlib</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">pyarrow</span> <span class="k">as</span> <span class="nn">pa</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">attr_value_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">attr_value_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">types_pb2</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">vineyard</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
     <span class="n">vineyard</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">CSVOptions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CSVOptions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Options to read from CSV files.</span>
-<span class="sd">    Avaiable options are:</span>
+<span class="sd">    Available options are:</span>
 <span class="sd">        - column delimiters</span>
 <span class="sd">        - include a subset of columns</span>
 <span class="sd">        - types of each columns</span>
 <span class="sd">        - whether the file contains a header</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Field delimiter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span>
 
@@ -763,7 +764,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">header_row</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filetype</span> <span class="o">=</span> <span class="s2">&quot;CSV&quot;</span>
 
-    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">options</span><span class="p">[</span><span class="s2">&quot;delimiter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span>
         <span class="n">options</span><span class="p">[</span><span class="s2">&quot;header_row&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_row</span>
@@ -777,19 +778,19 @@ MathJax = {
         <span class="n">options</span><span class="p">[</span><span class="s2">&quot;filetype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filetype</span>
         <span class="k">return</span> <span class="n">options</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&amp;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="Loader"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader">[docs]</a><span class="k">class</span> <span class="nc">Loader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Loader"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Loader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic data source wrapper.</span>
 <span class="sd">    Loader can take various data sources, and assemble necessary information into a AttrValue.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Loader.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Loader.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">header_row</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s2">&quot;CSV&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a loader with configurable options.</span>
@@ -851,14 +852,14 @@ MathJax = {
         <span class="c1"># also parse protocol and source in `resolve` method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dispatch resolver based on type of souce.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dispatch resolver based on type of source.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            source: Different data sources</span>
@@ -884,14 +885,14 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Not support source&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">process_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">scheme</span>
         <span class="c1"># If protocol is not set, use &#39;file&#39; as default</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s2">&quot;file&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
 
-    <span class="k">def</span> <span class="nf">process_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform arrays to equivalent DataFrame,</span>
 <span class="sd">        note the transpose is necessary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -903,7 +904,7 @@ MathJax = {
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_pandas</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">process_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s2">&quot;pandas&quot;</span>
         <span class="n">col_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="n">col_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">utils</span><span class="o">.</span><span class="n">_from_numpy_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
@@ -917,7 +918,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">deduced_properties</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">col_types</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">process_vy_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_vy_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="s2">&quot;vineyard&quot;</span>
         <span class="c1"># encoding: add a `o` prefix to object id, and a `s` prefix to object name.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">Object</span><span class="p">):</span>
@@ -931,7 +932,7 @@ MathJax = {
                 <span class="s2">&quot;Invalid input source: not a vineyard&#39;s Object, ObjectID or ObjectName&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">select_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">include_columns</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">column_types</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
@@ -939,7 +940,7 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">force_include_all</span> <span class="o">=</span> <span class="n">include_all</span>
 
-    <span class="k">def</span> <span class="nf">get_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">PROTOCOL</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">)</span>
         <span class="c1"># Let graphscope handle local files cause it&#39;s implemented in c++ and</span>

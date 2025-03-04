@@ -46,7 +46,7 @@ vertex_type_pair_relations:
 Note: 
 - A single edge type can have multiple `vertex_type_pair_relations`. For instance, a "knows" edge might connect one person to another, symbolizing their friendship. Alternatively, it could associate a person with a skill, indicating their proficiency in that skill.
 - The permissible relations include: `ONE_TO_ONE`, `ONE_TO_MANY`, `MANY_TO_ONE`, and `MANY_TO_MANY`. These relations can be utilized by the optimizer to generate more efficient execution plans.
-- Currently we only support at most one property for each edge triplet.
+- Multiple edge properties are supported.
 - We currently only support `var_char` and `long_text` as the edge property among all string types.
 - All implementation related configuration are put under `x_csr_params`.
   - `max_vertex_num` limit the number of vertices of this type:

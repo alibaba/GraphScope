@@ -6,7 +6,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>networkx.generators.geometric - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -292,7 +292,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -340,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -682,12 +684,12 @@ MathJax = {
 <span></span><span class="sd">&quot;&quot;&quot;Generators for geometric graphs.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">product</span>
-<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bisect</span><span class="w"> </span><span class="kn">import</span> <span class="n">bisect_left</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">product</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">nodes_or_number</span><span class="p">,</span> <span class="n">py_random_state</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">nodes_or_number</span><span class="p">,</span> <span class="n">py_random_state</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;geometric_edges&quot;</span><span class="p">,</span>
@@ -700,7 +702,7 @@ MathJax = {
 <span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">euclidean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">euclidean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Euclidean distance between the vectors ``x`` and ``y``.</span>
 
 <span class="sd">    Each of ``x`` and ``y`` can be any iterable of numbers. The</span>
@@ -708,7 +710,7 @@ MathJax = {
 
 <span class="sd">     .. deprecated:: 2.7</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">warnings</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;euclidean is deprecated and will be removed in 3.0.&quot;</span>
@@ -718,7 +720,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">geometric_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">geometric_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns edge list of node pairs within `radius` of each other.</span>
 
 <span class="sd">    Parameters</span>
@@ -768,8 +770,8 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">nodes_pos</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-        <span class="kn">import</span> <span class="nn">scipy.spatial</span>  <span class="c1"># call as sp.spatial</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.spatial</span>  <span class="c1"># call as sp.spatial</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="c1"># no scipy KDTree so compute by for-loop</span>
         <span class="n">radius_p</span> <span class="o">=</span> <span class="n">radius</span><span class="o">**</span><span class="n">p</span>
@@ -789,7 +791,7 @@ MathJax = {
 
 <div class="viewcode-block" id="random_geometric_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.random_geometric_graph.html#graphscope.nx.generators.geometric.random_geometric_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="nd">@nodes_or_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_geometric_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">random_geometric_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a random geometric graph in the unit cube of dimensions `dim`.</span>
 
 <span class="sd">    The random geometric graph model places `n` nodes uniformly at</span>
@@ -881,7 +883,7 @@ MathJax = {
 
 <div class="viewcode-block" id="soft_random_geometric_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html#graphscope.nx.generators.geometric.soft_random_geometric_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 <span class="nd">@nodes_or_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">soft_random_geometric_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">soft_random_geometric_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">p_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a soft random geometric graph in the unit cube.</span>
@@ -996,10 +998,10 @@ MathJax = {
     <span class="c1"># distribution with rate parameter :math:`\lambda=1`.</span>
     <span class="k">if</span> <span class="n">p_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="k">def</span> <span class="nf">p_dist</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">p_dist</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">should_join</span><span class="p">(</span><span class="n">edge</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_join</span><span class="p">(</span><span class="n">edge</span><span class="p">):</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">edge</span>
         <span class="n">dist</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="n">p</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">])))</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">p</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p_dist</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
@@ -1010,7 +1012,7 @@ MathJax = {
 
 <div class="viewcode-block" id="geographical_threshold_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html#graphscope.nx.generators.geometric.geographical_threshold_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
 <span class="nd">@nodes_or_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">geographical_threshold_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">geographical_threshold_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a geographical threshold graph.</span>
@@ -1145,13 +1147,13 @@ MathJax = {
     <span class="c1"># if p_dist is not supplied, use default r^-2</span>
     <span class="k">if</span> <span class="n">p_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="k">def</span> <span class="nf">p_dist</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">p_dist</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">r</span><span class="o">**-</span><span class="mi">2</span>
 
     <span class="c1"># Returns ``True`` if and only if the nodes whose attributes are</span>
     <span class="c1"># ``du`` and ``dv`` should be joined, according to the threshold</span>
     <span class="c1"># condition.</span>
-    <span class="k">def</span> <span class="nf">should_join</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_join</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">pair</span>
         <span class="n">u_pos</span><span class="p">,</span> <span class="n">v_pos</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
         <span class="n">u_weight</span><span class="p">,</span> <span class="n">v_weight</span> <span class="o">=</span> <span class="n">weight</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">weight</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
@@ -1163,7 +1165,7 @@ MathJax = {
 
 <div class="viewcode-block" id="waxman_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.waxman_graph.html#graphscope.nx.generators.geometric.waxman_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 <span class="nd">@nodes_or_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">waxman_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">waxman_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a Waxman random graph.</span>
@@ -1269,16 +1271,16 @@ MathJax = {
     <span class="k">if</span> <span class="n">L</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">L</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">metric</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
 
-        <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">dist</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">metric</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
 
     <span class="k">else</span><span class="p">:</span>
 
-        <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">dist</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">L</span>
 
     <span class="c1"># `pair` is the pair of nodes to decide whether to join.</span>
-    <span class="k">def</span> <span class="nf">should_join</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_join</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">(</span><span class="o">*</span><span class="n">pair</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">L</span><span class="p">))</span>
 
     <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">should_join</span><span class="p">,</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
@@ -1286,7 +1288,7 @@ MathJax = {
 
 
 <span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">navigable_small_world_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">navigable_small_world_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a navigable small-world graph.</span>
 
 <span class="sd">    A navigable small-world graph is a directed grid with additional long-range</span>
@@ -1359,7 +1361,7 @@ MathJax = {
 
 <div class="viewcode-block" id="thresholded_random_geometric_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html#graphscope.nx.generators.geometric.thresholded_random_geometric_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
 <span class="nd">@nodes_or_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">thresholded_random_geometric_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">thresholded_random_geometric_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a thresholded random geometric graph in the unit cube.</span>

@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Configuration - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -733,6 +735,16 @@ MathJax = {
 <td><p>The customized configuration file for engine interactive service</p></td>
 <td><p>v0.4</p></td>
 </tr>
+<tr class="row-odd"><td><p>image-tag</p></td>
+<td><p>latest</p></td>
+<td><p>The version of the interactive you want to install</p></td>
+<td><p>v0.5</p></td>
+</tr>
+<tr class="row-even"><td><p>set</p></td>
+<td><p>None</p></td>
+<td><p>Specify additional properties for Interactive via the command line to override any corresponding settings in the configuration file if they are present</p></td>
+<td><p>v0.5</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -763,8 +775,8 @@ gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 77
 <h3>Service Configuration<a class="headerlink" href="#service-configuration" title="Permalink to this heading">¶</a></h3>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">Interactive</span></code> will initialize the service with its default settings.
 However, GraphScope Interactive is designed to be flexible and adaptable to your specific needs. This means you can tailor the service’s behavior using custom configurations.</p>
-<section id="customizing-your-service-configuration">
-<h4>Customizing Your Service Configuration<a class="headerlink" href="#customizing-your-service-configuration" title="Permalink to this heading">¶</a></h4>
+<section id="customizing-interactive-engine-service-configuration">
+<h4>Customizing Interactive Engine Service Configuration<a class="headerlink" href="#customizing-interactive-engine-service-configuration" title="Permalink to this heading">¶</a></h4>
 <p>To customize the service’s settings, you can provide a YAML configuration file <code class="docutils literal notranslate"><span class="pre">interactive_config.yaml</span></code>. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span>--config<span class="w"> </span>./interactive_config.yaml
 </pre></div>
@@ -792,6 +804,22 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 </pre></div>
 </div>
 </section>
+</section>
+<section id="sharded-service">
+<h4>Sharded Service<a class="headerlink" href="#sharded-service" title="Permalink to this heading">¶</a></h4>
+<p>The core query engine of Interactive is developed using <a class="reference external" href="https://github.com/alibaba/hiactor">hiactor</a> which is based on <a class="reference external" href="https://github.com/scylladb/seastar">Seastar</a>. Seastar operates on a Share-nothing SMP architecture, where each core functions autonomously, without sharing memory, data structures, or CPU resources. Each Seastar core is commonly referred to as a shard.</p>
+<p>Leveraging the future-promise API and a Cooperative micro-task scheduler, the sharded service significantly boosts performance and throughput. However, this setup can also lead to potential issues: an incoming request might experience delays even if some shards are idle, due to the shard scheduling algorithm potentially routing it to a busy shard. This can be problematic in Interactive, which typically hosts two services—<code class="docutils literal notranslate"><span class="pre">QueryService</span></code> and <code class="docutils literal notranslate"><span class="pre">AdminService</span></code>. Crucially, <code class="docutils literal notranslate"><span class="pre">AdminService</span></code> must remain responsive even when <code class="docutils literal notranslate"><span class="pre">QueryService</span></code> is under heavy load.</p>
+<p>As discussed in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions/4409">discussion-4409</a>, one potential solution is to allocate different shards for handling distinct requests. This approach presents three scenarios:</p>
+<ul class="simple">
+<li><p><strong>Routine Scenario</strong>: Here, users may execute both complex and simple queries, thus dedicating a shard exclusively for admin requests. However, since this shard won’t process queries, overall system performance may decline.</p></li>
+<li><p><strong>Performance-Critical Scenario</strong>: In this scenario, users aim for peak performance from Interactive. All shards are used to process query requests, with admin requests being handled concurrently by them. Consequently, there may be instances of request delays.</p></li>
+</ul>
+<p>By default, Interactive is configured for routine with the following:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">http_service</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">sharding_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exclusive</span><span class="w"> </span><span class="c1"># In exclusive mode, a shard is exclusively reserved for admin requests. In cooperative mode, both query and admin requests can be processed by any shard.</span>
+</pre></div>
+</div>
+<p>By changing to <code class="docutils literal notranslate"><span class="pre">sharding_mode:</span> <span class="pre">cooperative</span></code>, you can fully utilize all the computational power for the QueryService.</p>
 <section id="available-configurations">
 <h5>Available Configurations<a class="headerlink" href="#available-configurations" title="Permalink to this heading">¶</a></h5>
 <p>In this following table, we use the <code class="docutils literal notranslate"><span class="pre">.</span></code> notation to represent the hierarchy within the <code class="docutils literal notranslate"><span class="pre">YAML</span></code> structure.</p>
@@ -820,35 +848,55 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 <td><p>The number of threads will be used to process the queries. Increase the number can benefit the query throughput</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-odd"><td><p>compiler.planner.is_on</p></td>
+<tr class="row-odd"><td><p>compute_engine.wal_uri</p></td>
+<td><p>file://{GRAPH_DATA_DIR}/wal</p></td>
+<td><p>The location where Interactive will store and access WALs. <code class="docutils literal notranslate"><span class="pre">GRAPH_DATA_DIR</span></code> is a placeholder that will be populated by Interactive.</p></td>
+<td><p>0.5</p></td>
+</tr>
+<tr class="row-even"><td><p>compiler.planner.is_on</p></td>
 <td><p>true</p></td>
 <td><p>Determines if query optimization is enabled for compiling Cypher queries</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-even"><td><p>compiler.planner.opt</p></td>
+<tr class="row-odd"><td><p>compiler.planner.opt</p></td>
 <td><p>RBO</p></td>
 <td><p>Specifies the optimizer to be used for query optimization. Currently, only the Rule-Based Optimizer (RBO) is supported</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-odd"><td><p>compiler.planner.rules.FilterMatchRule</p></td>
+<tr class="row-even"><td><p>compiler.planner.rules.FilterMatchRule</p></td>
 <td><p>N/A</p></td>
 <td><p>An optimization rule that pushes filter (<code class="docutils literal notranslate"><span class="pre">Where</span></code>) conditions into the <code class="docutils literal notranslate"><span class="pre">Match</span></code> clause</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-even"><td><p>compiler.planner.rules.FilterIntoJoinRule</p></td>
+<tr class="row-odd"><td><p>compiler.planner.rules.FilterIntoJoinRule</p></td>
 <td><p>N/A</p></td>
 <td><p>A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-odd"><td><p>compiler.planner.rules.NotMatchToAntiJoinRule</p></td>
+<tr class="row-even"><td><p>compiler.planner.rules.NotMatchToAntiJoinRule</p></td>
 <td><p>N/A</p></td>
 <td><p>An optimization rule that transforms a “not exist” pattern into an anti-join operation</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-even"><td><p>compiler.query_timeout</p></td>
+<tr class="row-odd"><td><p>compiler.query_timeout</p></td>
 <td><p>3000000   ｜ The maximum time for compiler to wait engine’s reply, in <code class="docutils literal notranslate"><span class="pre">ms</span></code></p></td>
 <td><p>0.0.3</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p>http_service.sharding_mode</p></td>
+<td><p>exclusive</p></td>
+<td><p>The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard.</p></td>
+<td><p>0.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>http_service.max_content_length</p></td>
+<td><p>1GB</p></td>
+<td><p>The maximum length of a http request that admin http service could handle</p></td>
+<td><p>0.5</p></td>
+</tr>
+<tr class="row-even"><td><p>storage.string_default_max_length</p></td>
+<td><p>256</p></td>
+<td><p>The default maximum size for a string field</p></td>
+<td><p>0.5</p></td>
 </tr>
 </tbody>
 </table>
@@ -929,8 +977,11 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 <li><a class="reference internal" href="#configurable-items-for-deploying-interactive-with-gsctl">Configurable Items for Deploying Interactive with gsctl</a><ul>
 <li><a class="reference internal" href="#ports">Ports</a></li>
 <li><a class="reference internal" href="#service-configuration">Service Configuration</a><ul>
-<li><a class="reference internal" href="#customizing-your-service-configuration">Customizing Your Service Configuration</a><ul>
+<li><a class="reference internal" href="#customizing-interactive-engine-service-configuration">Customizing Interactive Engine Service Configuration</a><ul>
 <li><a class="reference internal" href="#sample-configuration">Sample Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sharded-service">Sharded Service</a><ul>
 <li><a class="reference internal" href="#available-configurations">Available Configurations</a></li>
 </ul>
 </li>

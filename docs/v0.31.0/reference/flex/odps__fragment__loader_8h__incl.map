@@ -1,0 +1,52 @@
+<map id="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/odps_fragment_loader.h" name="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/odps_fragment_loader.h">
+<area shape="rect" id="node1" title=" " alt="" coords="3047,5,3274,76"/>
+<area shape="rect" id="node2" title=" " alt="" coords="1261,533,1356,559"/>
+<area shape="rect" id="node3" title=" " alt="" coords="3198,139,3320,165"/>
+<area shape="rect" id="node4" title=" " alt="" coords="2972,243,3082,269"/>
+<area shape="rect" id="node5" title=" " alt="" coords="3344,139,3462,165"/>
+<area shape="rect" id="node6" title=" " alt="" coords="3486,139,3624,165"/>
+<area shape="rect" id="node7" title=" " alt="" coords="3649,139,3826,165"/>
+<area shape="rect" id="node8" title=" " alt="" coords="3850,139,3932,165"/>
+<area shape="rect" id="node9" title=" " alt="" coords="3025,533,3216,559"/>
+<area shape="rect" id="node10" title=" " alt="" coords="3956,139,4136,165"/>
+<area shape="rect" id="node11" href="$abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="2503,124,2695,180"/>
+<area shape="rect" id="node12" href="$basic__fragment__loader_8h.html" title=" " alt="" coords="2080,228,2296,284"/>
+<area shape="rect" id="node18" href="$mutable__property__fragment_8h.html" title=" " alt="" coords="663,332,850,388"/>
+<area shape="rect" id="node36" href="$i__fragment__loader_8h.html" title=" " alt="" coords="876,228,1063,284"/>
+<area shape="rect" id="node37" href="$loading__config_8h.html" title=" " alt="" coords="1703,339,1884,381"/>
+<area shape="rect" id="node45" title=" " alt="" coords="2987,443,3083,470"/>
+<area shape="rect" id="node47" href="$loader__factory_8h.html" title=" " alt="" coords="794,131,1012,173"/>
+<area shape="rect" id="node48" title=" " alt="" coords="4160,139,4339,165"/>
+<area shape="rect" id="node49" title=" " alt="" coords="4364,139,4490,165"/>
+<area shape="rect" id="node50" title=" " alt="" coords="4514,139,4684,165"/>
+<area shape="rect" id="node32" title=" " alt="" coords="1212,615,1376,656"/>
+<area shape="rect" id="node43" href="$mmap__vector_8h.html" title=" " alt="" coords="2662,243,2845,269"/>
+<area shape="rect" id="node46" title=" " alt="" coords="2422,243,2536,269"/>
+<area shape="rect" id="node13" href="$file__names_8h.html" title=" " alt="" coords="2630,436,2811,477"/>
+<area shape="rect" id="node22" href="$schema_8h.html" title=" " alt="" coords="854,436,1035,477"/>
+<area shape="rect" id="node14" title=" " alt="" coords="2787,533,2862,559"/>
+<area shape="rect" id="node15" title=" " alt="" coords="2554,533,2617,559"/>
+<area shape="rect" id="node16" title=" " alt="" coords="2641,533,2712,559"/>
+<area shape="rect" id="node17" title=" " alt="" coords="2587,622,2678,649"/>
+<area shape="rect" id="node19" title=" " alt="" coords="566,622,630,649"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1301,443,1356,470"/>
+<area shape="rect" id="node21" title=" " alt="" coords="908,622,970,649"/>
+<area shape="rect" id="node23" href="$storages_2rt__mutable__graph_2types_8h.html" title=" " alt="" coords="818,525,999,567"/>
+<area shape="rect" id="node25" href="$table_8h.html" title=" " alt="" coords="302,525,440,567"/>
+<area shape="rect" id="node27" title=" " alt="" coords="64,622,262,649"/>
+<area shape="rect" id="node28" title=" " alt="" coords="286,615,429,656"/>
+<area shape="rect" id="node29" href="$yaml__utils_8h.html" title=" " alt="" coords="1074,533,1236,559"/>
+<area shape="rect" id="node31" href="$mutable__csr_8h.html" title=" " alt="" coords="515,525,699,567"/>
+<area shape="rect" id="node33" href="$dual__csr_8h.html" title=" " alt="" coords="446,436,627,477"/>
+<area shape="rect" id="node34" href="$arrow__utils_8h.html" title=" " alt="" coords="1110,443,1277,470"/>
+<area shape="rect" id="node35" href="$indexers_8h.html" title=" " alt="" coords="42,443,191,470"/>
+<area shape="rect" id="node24" title=" " alt="" coords="1402,622,1482,649"/>
+<area shape="rect" id="node26" title=" " alt="" coords="454,622,531,649"/>
+<area shape="rect" id="node30" title=" " alt="" coords="1996,622,2055,649"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2064,443,2254,470"/>
+<area shape="rect" id="node39" title=" " alt="" coords="2278,443,2402,470"/>
+<area shape="rect" id="node40" title=" " alt="" coords="1482,443,1596,470"/>
+<area shape="rect" id="node41" title=" " alt="" coords="1620,443,1770,470"/>
+<area shape="rect" id="node42" title=" " alt="" coords="1794,443,1988,470"/>
+<area shape="rect" id="node44" href="$mmap__array_8h.html" title=" " alt="" coords="2681,347,2856,373"/>
+</map>

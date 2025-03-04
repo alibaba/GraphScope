@@ -79,24 +79,25 @@ Collaboration diagram for gs::SessionLocalContext:</div>
 <div class="dyncontent">
 <div class="center"><img src="structgs_1_1SessionLocalContext__coll__graph.png" border="0" usemap="#gs_1_1SessionLocalContext_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1SessionLocalContext_coll__map" id="gs_1_1SessionLocalContext_coll__map">
-<area shape="rect" title=" " alt="" coords="217,317,397,344"/>
-<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="411,407,514,433"/>
-<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="197,228,307,255"/>
-<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="143,496,297,523"/>
-<area shape="rect" href="classgs_1_1VersionManager.html" title=" " alt="" coords="421,317,571,344"/>
-<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="595,317,810,344"/>
-<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="654,228,751,255"/>
-<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="633,109,773,151"/>
-<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="505,5,693,47"/>
-<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="717,13,899,39"/>
-<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="5,228,147,255"/>
+<area shape="rect" title=" " alt="" coords="195,317,375,344"/>
+<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="455,407,557,433"/>
+<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="116,496,269,523"/>
+<area shape="rect" href="classgs_1_1VersionManager.html" title=" " alt="" coords="807,317,957,344"/>
+<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="399,317,613,344"/>
+<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="532,228,629,255"/>
+<area shape="rect" href="structgs_1_1GraphDBConfig.html" title=" " alt="" coords="638,317,782,344"/>
+<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="511,109,651,151"/>
+<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="383,5,571,47"/>
+<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="595,13,777,39"/>
+<area shape="rect" href="classgs_1_1IWalWriter.html" title=" " alt="" coords="5,407,119,433"/>
+<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="130,228,271,255"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a402e74c0cd9bc1a3d97cc77c587cc7bf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a402e74c0cd9bc1a3d97cc77c587cc7bf">SessionLocalContext</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, const std::string &amp;work_dir, int thread_id, <a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">MemoryStrategy</a> allocator_strategy)</td></tr>
-<tr class="separator:a402e74c0cd9bc1a3d97cc77c587cc7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5afe962255e772a3ccd03ca4a2559fed"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5afe962255e772a3ccd03ca4a2559fed">SessionLocalContext</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, const std::string &amp;work_dir, int thread_id, <a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">MemoryStrategy</a> allocator_strategy, std::unique_ptr&lt; <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &gt; in_logger)</td></tr>
+<tr class="separator:a5afe962255e772a3ccd03ca4a2559fed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e26601ea4a44a99c68950ab754d0b0e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5e26601ea4a44a99c68950ab754d0b0e">~SessionLocalContext</a> ()</td></tr>
 <tr class="separator:a5e26601ea4a44a99c68950ab754d0b0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -106,18 +107,18 @@ Public Attributes</h2></td></tr>
 <tr class="separator:acfc1662428385e5ff139b990c020d630"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa11911532bad21839d775c1ce644191b"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a> [128 - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) % 128]</td></tr>
 <tr class="separator:aa11911532bad21839d775c1ce644191b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3927fb02f59f700c22886defa20b7d0e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a3927fb02f59f700c22886defa20b7d0e">logger</a></td></tr>
-<tr class="separator:a3927fb02f59f700c22886defa20b7d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a6fcc0ba7c583c0c1a8dc1f5bebd00b8b">_padding1</a> [4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td></tr>
-<tr class="separator:a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d1999229d155f7332d75375b9445aa7"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a6d1999229d155f7332d75375b9445aa7">logger</a></td></tr>
+<tr class="separator:a6d1999229d155f7332d75375b9445aa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5166cc0b5528c81b59c88be2d0eab341"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5166cc0b5528c81b59c88be2d0eab341">_padding1</a> [4096 - sizeof(std::unique_ptr&lt; <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &gt;) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td></tr>
+<tr class="separator:a5166cc0b5528c81b59c88be2d0eab341"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d40f88ebb1e0f31d2a5c170097d6c13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5d40f88ebb1e0f31d2a5c170097d6c13">session</a></td></tr>
 <tr class="separator:a5d40f88ebb1e0f31d2a5c170097d6c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c2bf783708504e7bca015948af918e8"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a9c2bf783708504e7bca015948af918e8">_padding2</a> [4096 - sizeof(<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>) % 4096]</td></tr>
 <tr class="separator:a9c2bf783708504e7bca015948af918e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a402e74c0cd9bc1a3d97cc77c587cc7bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a402e74c0cd9bc1a3d97cc77c587cc7bf">&#9670;&nbsp;</a></span>SessionLocalContext()</h2>
+<a id="a5afe962255e772a3ccd03ca4a2559fed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5afe962255e772a3ccd03ca4a2559fed">&#9670;&nbsp;</a></span>SessionLocalContext()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,7 +148,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">MemoryStrategy</a>&#160;</td>
-          <td class="paramname"><em>allocator_strategy</em>&#160;</td>
+          <td class="paramname"><em>allocator_strategy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &gt;&#160;</td>
+          <td class="paramname"><em>in_logger</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -204,14 +211,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fcc0ba7c583c0c1a8dc1f5bebd00b8b">&#9670;&nbsp;</a></span>_padding1</h2>
+<a id="a5166cc0b5528c81b59c88be2d0eab341"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5166cc0b5528c81b59c88be2d0eab341">&#9670;&nbsp;</a></span>_padding1</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char gs::SessionLocalContext::_padding1[4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td>
+          <td class="memname">char gs::SessionLocalContext::_padding1[4096 - sizeof(std::unique_ptr&lt; <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &gt;) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -246,14 +253,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a3927fb02f59f700c22886defa20b7d0e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3927fb02f59f700c22886defa20b7d0e">&#9670;&nbsp;</a></span>logger</h2>
+<a id="a6d1999229d155f7332d75375b9445aa7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d1999229d155f7332d75375b9445aa7">&#9670;&nbsp;</a></span>logger</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> gs::SessionLocalContext::logger</td>
+          <td class="memname">std::unique_ptr&lt;<a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a>&gt; gs::SessionLocalContext::logger</td>
         </tr>
       </table>
 </div><div class="memdoc">

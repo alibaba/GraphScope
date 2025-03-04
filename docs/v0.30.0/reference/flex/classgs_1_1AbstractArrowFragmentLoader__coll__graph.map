@@ -1,0 +1,10 @@
+<map id="gs::AbstractArrowFragmentLoader" name="gs::AbstractArrowFragmentLoader">
+<area shape="rect" id="node1" title=" " alt="" coords="158,407,357,448"/>
+<area shape="rect" id="node2" href="$classgs_1_1IFragmentLoader.html" title=" " alt="" coords="5,317,160,344"/>
+<area shape="rect" id="node3" href="$classgs_1_1LoadingConfig.html" title=" " alt="" coords="295,317,433,344"/>
+<area shape="rect" id="node4" href="$classgs_1_1Schema.html" title=" " alt="" coords="315,228,413,255"/>
+<area shape="rect" id="node8" href="$classgs_1_1BasicFragmentLoader.html" title=" " alt="" coords="457,317,644,344"/>
+<area shape="rect" id="node5" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="294,109,434,151"/>
+<area shape="rect" id="node6" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="166,5,354,47"/>
+<area shape="rect" id="node7" href="$structgs_1_1GHash.html" title=" " alt="" coords="378,13,561,39"/>
+</map>

@@ -1,0 +1,29 @@
+# PrimitiveType
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**primitive_type** | **str** |  | 
+
+## Example
+
+```python
+from graphscope.flex.rest.models.primitive_type import PrimitiveType
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of PrimitiveType from a JSON string
+primitive_type_instance = PrimitiveType.from_json(json)
+# print the JSON string representation of the object
+print(PrimitiveType.to_json())
+
+# convert the object into a dict
+primitive_type_dict = primitive_type_instance.to_dict()
+# create an instance of PrimitiveType from a dict
+primitive_type_from_dict = PrimitiveType.from_dict(primitive_type_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

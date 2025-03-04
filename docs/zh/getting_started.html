@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>快速上手 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -315,9 +315,9 @@ MathJax = {
         
           
             
-              <dd><a href="../v0.29.0/zh/index.html">
+              <dd><a href="../v0.31.0/zh/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -408,8 +408,8 @@ MathJax = {
 <section id="id4">
 <h2>创建会话<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
 <p>使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">graphscope</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 
 <span class="c1"># assume we mount `~/test_data` to `/testingdata` in pods, and `ogbn_mag_small` within.</span>
 <span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
@@ -481,7 +481,7 @@ MathJax = {
 </pre></div>
 </div>
 <p>也可通过我们提供的内置数据集函数帮助完成载图流程:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ogbn_mag</span>
 
 <span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="s2">&quot;/testingdata/ogbn_mag_small/&quot;</span><span class="p">)</span>
 </pre></div>
@@ -553,18 +553,18 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 <span class="c1"># install tensorflow.</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="c1"># https://www.tensorflow.org/guide/migrate</span>
-    <span class="kn">import</span> <span class="nn">tensorflow.compat.v1</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
     <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
-<span class="kn">import</span> <span class="nn">graphscope.learning</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoGraphSAGE</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoSAGESupervisedDataLoader</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.examples.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTrainer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope.learning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.examples</span><span class="w"> </span><span class="kn">import</span> <span class="n">EgoGraphSAGE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.examples</span><span class="w"> </span><span class="kn">import</span> <span class="n">EgoSAGESupervisedDataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.examples.tf.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalTrainer</span>
 
 <span class="c1"># supervised GCN.</span>
-<span class="k">def</span> <span class="nf">train_gcn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train_gcn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
             <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">in_drop_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
 <span class="p">):</span>

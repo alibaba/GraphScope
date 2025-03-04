@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of StringTypeString from a JSON string
 string_type_string_instance = StringTypeString.from_json(json)
 # print the JSON string representation of the object
-print(StringTypeString.to_json())
+print StringTypeString.to_json()
 
 # convert the object into a dict
 string_type_string_dict = string_type_string_instance.to_dict()
 # create an instance of StringTypeString from a dict
-string_type_string_from_dict = StringTypeString.from_dict(string_type_string_dict)
+string_type_string_form_dict = string_type_string.from_dict(string_type_string_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

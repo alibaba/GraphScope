@@ -123,8 +123,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:afe23346c1e5eb20a65767330da8c947b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2356be01afaff88b3a54c01df790f10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#ab2356be01afaff88b3a54c01df790f10">set_any</a> (size_t index, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value) override</td></tr>
 <tr class="separator:ab2356be01afaff88b3a54c01df790f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad77685b1ceb85f5ad59af2379bb8f9ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#ad77685b1ceb85f5ad59af2379bb8f9ea">set_value</a> (size_t index, const grape::EmptyType &amp;value)</td></tr>
+<tr class="separator:ad77685b1ceb85f5ad59af2379bb8f9ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a198bdac9a7eae2be1e14140c31b636e8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#a198bdac9a7eae2be1e14140c31b636e8">get</a> (size_t index) const override</td></tr>
 <tr class="separator:a198bdac9a7eae2be1e14140c31b636e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cca7d3ebc81016bfbc7008ab4df304d"><td class="memItemLeft" align="right" valign="top">grape::EmptyType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#a6cca7d3ebc81016bfbc7008ab4df304d">get_view</a> (size_t index) const</td></tr>
+<tr class="separator:a6cca7d3ebc81016bfbc7008ab4df304d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa03c4410d88fc759f5c154e4c8f0dc57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#aa03c4410d88fc759f5c154e4c8f0dc57">ingest</a> (uint32_t index, grape::OutArchive &amp;arc) override</td></tr>
 <tr class="separator:aa03c4410d88fc759f5c154e4c8f0dc57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8d06efcd152b35303a8c93f02a638c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn_3_01grape_1_1EmptyType_01_4.html#aa8d06efcd152b35303a8c93f02a638c2">storage_strategy</a> () const override</td></tr>
@@ -309,6 +313,32 @@ Private Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Implements <a class="el" href="classgs_1_1ColumnBase.html#a6427a00b8c6dacd3457b3ecc39a02215">gs::ColumnBase</a>.</p>
+
+</div>
+</div>
+<a id="a6cca7d3ebc81016bfbc7008ab4df304d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6cca7d3ebc81016bfbc7008ab4df304d">&#9670;&nbsp;</a></span>get_view()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">grape::EmptyType <a class="el" href="classgs_1_1TypedColumn.html">gs::TypedColumn</a>&lt; grape::EmptyType &gt;::get_view </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -523,6 +553,42 @@ Private Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Implements <a class="el" href="classgs_1_1ColumnBase.html#a16e5b36a6ed1c4ef6bbbf1f4fa97abc4">gs::ColumnBase</a>.</p>
+
+</div>
+</div>
+<a id="ad77685b1ceb85f5ad59af2379bb8f9ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad77685b1ceb85f5ad59af2379bb8f9ea">&#9670;&nbsp;</a></span>set_value()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1TypedColumn.html">gs::TypedColumn</a>&lt; grape::EmptyType &gt;::set_value </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const grape::EmptyType &amp;&#160;</td>
+          <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>

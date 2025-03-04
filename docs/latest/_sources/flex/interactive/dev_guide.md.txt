@@ -11,6 +11,7 @@ maxdepth: 2
 development/dev_and_test
 development/java/java_sdk
 development/python/python_sdk
+development/python/python_sdk_ref
 development/restful_api
 development/stored_procedure/cypher_procedure
 development/stored_procedure/cpp_procedure

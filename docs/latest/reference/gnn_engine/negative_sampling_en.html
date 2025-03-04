@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Negative Sampling - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -716,7 +718,7 @@ steps: - Define the negative sampling operator by calling
 Invoke <code class="docutils literal notranslate"><span class="pre">S.get(ids)</span></code> to get the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object; - Invoke the
 <a class="reference external" href="graph_query_cn.md#FPU74">interface</a> of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object to get
 specific values.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">negative_sampler</span><span class="p">(</span><span class="n">object_type</span><span class="p">,</span> <span class="n">expand_factor</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">negative_sampler</span><span class="p">(</span><span class="n">object_type</span><span class="p">,</span> <span class="n">expand_factor</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  object_type(string): Edge type or vertex type</span>
@@ -727,7 +729,7 @@ specific values.</p>
 <span class="sd">&quot;&quot;&quot;</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">NegativeSampler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">NegativeSampler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; Negative sampling on given vertices ids.</span>
 <span class="sd">Args:</span>
 <span class="sd">  ids(numpy.ndarray): 1-d int64 array</span>

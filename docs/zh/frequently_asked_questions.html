@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>常见问题 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -315,9 +315,9 @@ MathJax = {
         
           
             
-              <dd><a href="../v0.29.0/zh/index.html">
+              <dd><a href="../v0.31.0/zh/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -449,7 +449,7 @@ GraphScope 在支持以下环境中运行</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>: 为 <code class="docutils literal notranslate"><span class="pre">vineyard</span></code> 容器分配的内存。它存储由 <code class="docutils literal notranslate"><span class="pre">vineyard</span></code> 管理的原始数据的 的元信息，例如形状、ID、名称等。由于元数据比数据集小得多，因此在大多数情况下默认配置就足够了。 它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.limits</span></code> 。</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>: 存储数据集的内存。我们发现将其设置为数据集在磁盘上的大小的 5 倍通常是一个合理的值。 它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">vineyard.shared_mem</span></code>。</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem`:</span> <span class="pre">``engine</span></code> 容器的内存大小。一般将其设置为 <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> 的同样大小。它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code>。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code>: <code class="docutils literal notranslate"><span class="pre">engine</span></code> 容器的内存大小。一般将其设置为 <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> 的同样大小。它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code>。</p></li>
 </ul>
 </li>
 <li><p>导致在 Apple M1 python3.8 环境下安装 GraphScope 失败的原因可能有哪些？</p>

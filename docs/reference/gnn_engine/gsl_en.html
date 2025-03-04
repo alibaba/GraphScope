@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Graph Sampling Language（GSL) - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -341,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -633,9 +634,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../v0.29.0/index.html">
+              <dd><a href="../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -743,7 +744,7 @@ of execution results. In GSL, a query must have a SOURCE and SINK.</p>
 <p>## 2.1 SOURCE #### 2.1.1 V/E</p>
 <p>SOURCE is the entrance of a GSL query, supporting <code class="docutils literal notranslate"><span class="pre">V()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">E()</span></code>
 APIs, which represent querying from vertices and edges respectively.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  node_type(string): vertex type, the following operations are based on the vertex type;</span>
@@ -754,7 +755,7 @@ APIs, which represent querying from vertices and edges respectively.</p>
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): Edge type, the following operations are based on the vertex type;</span>
@@ -770,7 +771,7 @@ APIs, which represent querying from vertices and edges respectively.</p>
 <p><code class="docutils literal notranslate"><span class="pre">V()</span></code> and <code class="docutils literal notranslate"><span class="pre">E()</span></code> can be followed by <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code>. <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code> is
 an optional API，which provides options to sample the data randomly when
 retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  traverse(boolean): if traverse the data source，default is False。</span>
@@ -787,7 +788,7 @@ need to use <code class="docutils literal notranslate"><span class="pre">shuffle
 <code class="docutils literal notranslate"><span class="pre">shuffle(traverse=True)</span></code> but the remaining data is less than the
 <code class="docutils literal notranslate"><span class="pre">batch_size</span></code>, it will simply return the remaining data if it is not 0,
 and otherwise <code class="docutils literal notranslate"><span class="pre">OutOfRangeError</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  batch_size(int): the amount of data of each batch</span>
@@ -806,7 +807,7 @@ and otherwise <code class="docutils literal notranslate"><span class="pre">OutOf
 </pre></div>
 </div>
 <p>Get user type vertices from a generator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">gen</span><span class="p">():</span>
   <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="k">yield</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 
@@ -823,7 +824,7 @@ and otherwise <code class="docutils literal notranslate"><span class="pre">OutOf
 </pre></div>
 </div>
 <p>Get buy type edges from a generator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">gen</span><span class="p">():</span>
   <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="k">yield</span>  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
 
@@ -841,19 +842,19 @@ to the outgoing edges of the vertices by <code class="docutils literal notransla
 operations will be on these edges. When the operations on the outgoing
 edges complete, the cursor moves to the target/source vertices by
 <code class="docutils literal notranslate"><span class="pre">inV()</span></code>/<code class="docutils literal notranslate"><span class="pre">outV()</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">inV</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">inV</span><span class="p">():</span>
 <span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a destination vertex.</span>
 <span class="sd">Return:</span>
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">outV</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">outV</span><span class="p">():</span>
 <span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a source vertex.</span>
 <span class="sd">Return:</span>
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">inE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an ingoing edge.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type, it returns an error when the edge is a directed edge.</span>
@@ -861,7 +862,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">outE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">outE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an outgoing edge.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type</span>
@@ -869,7 +870,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  Query对象</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">inV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents an upstream vertex.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
@@ -877,7 +878,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">outV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">outV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents the downstream vertex.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type</span>
@@ -885,7 +886,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">outNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">outNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. outNeg(edge_type) represents the downstream vertex from negative sampling of the edge.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type</span>
@@ -893,7 +894,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">inNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inNeg(edge_type) represents the upstream vertex from negative sampling of the edge.</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
@@ -901,7 +902,7 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">Neg</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">Neg</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. Neg(node_type) represents the negative samples of the vertex candidates.</span>
 <span class="sd">Args:</span>
 <span class="sd">  node_type(string): vertex type</span>
@@ -909,11 +910,11 @@ edges complete, the cursor moves to the target/source vertices by
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">each</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">each</span><span class="p">():</span>
 <span class="sd">&quot;&quot;&quot; used in multi-branch path, a query has one each() at most and each branch doesn&#39;t support merging.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">alias</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">alias</span><span class="p">():</span>
 <span class="sd">&quot;&quot;&quot; Give sampling path an alias.</span>
 <span class="sd">Return:</span>
 <span class="sd">  a Query object</span>
@@ -925,7 +926,7 @@ the node as the neighbors of the previous nodes generated by previous
 steps, including the sample size and strategy. To learn more about the
 sampling strategy, please read <a class="reference external" href="graph_sampling_cn.md">graph sampling</a>
 and <a class="reference external" href="negative_sampling_cn.md">negative sampling</a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; follows a vertex step，specifying the number of samples at this step</span>
 <span class="sd">Args:</span>
 <span class="sd">  N(int): sampling size</span>
@@ -933,7 +934,7 @@ and <a class="reference external" href="negative_sampling_cn.md">negative sampli
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; follow sample()，sampling strategy</span>
 <span class="sd">Args:</span>
 <span class="sd">  strategy(string): sampling strategy</span>
@@ -980,7 +981,7 @@ sampling. When a certain stage is reached, different operations are
 performed on the previous results (there may be multiple). A query can
 contain at most one <code class="docutils literal notranslate"><span class="pre">each()</span></code>, and it has to be the last operation of
 the query.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">each</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">each</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(lambda): the lambda function to build the sub-query. The input of the function is the output of the immediately upstream operation.</span>
@@ -1013,7 +1014,7 @@ order. Therefore, we strongly recommend to use <code class="docutils literal not
 which makes accessing the output results easier. In particular, when the
 query is long and we need to keep the results of each step, <code class="docutils literal notranslate"><span class="pre">alias()</span></code>
 is convenient to access these results.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alias</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">alias</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  name(string): the alias of the operation。</span>
@@ -1037,7 +1038,7 @@ in a certain isomorphic undirected graph, we would like to sample a
 vertex’s 10-hop neighbors. <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> takes in a function, similar to
 the one in <code class="docutils literal notranslate"><span class="pre">each()</span></code>, which means that the operation represented by
 that function is repeated <code class="docutils literal notranslate"><span class="pre">times</span></code> times.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">params_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">params_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): The function body to be expanded; the first parameter is the object to be executed.</span>
@@ -1068,7 +1069,7 @@ neighbors.</p>
 </pre></div>
 </div>
 <p>Example for func with parameter as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
 <span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;u-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span> \
@@ -1110,7 +1111,7 @@ the value is the corresponding <code class="docutils literal notranslate"><span 
 <p>### 2.3.1 values The generator that returns the execution result of the
 query can be executed by <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which is suitable for recursive
 training settings.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): Post-processing function that processes the result</span>
@@ -1121,7 +1122,7 @@ training settings.</p>
 </div>
 <p>func can be an anonymous function or defined by <code class="docutils literal notranslate"><span class="pre">def</span></code>. The input of
 func is a dict or list, depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; x refers to {&#39;a&#39;:Nodes, &#39;b&#39;:Nodes, &#39;c&#39;:Edges, &#39;d&#39;:Nodes}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">src_ids</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span>
@@ -1155,7 +1156,7 @@ executed once and its result is returned. The result is a dict or a list
 depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. Under normal
 circumstances, <code class="docutils literal notranslate"><span class="pre">emit()</span></code> is used in the debugging phase to verify the
 correctness of the code and data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): Post-processing function that returns the result</span>
@@ -1179,7 +1180,7 @@ correctness of the code and data.</p>
 Query and get the final result. The result form is defined by the func
 function of the <code class="docutils literal notranslate"><span class="pre">values()</span></code> interface. You can refer to the example in
 the <code class="docutils literal notranslate"><span class="pre">`values</span></code> &lt;#FOeWa&gt;`__ section.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">generator</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">generator</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  generator: Query&#39;s generator</span>

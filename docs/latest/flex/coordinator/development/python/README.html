@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Coordinator Python SDK Reference - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -714,7 +716,7 @@ specification at <a class="reference external" href="https://swagger.io/specific
 </div>
 <p>(you may need to run <code class="docutils literal notranslate"><span class="pre">pip</span></code> with root permission: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git</span></code>)</p>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope.flex.rest</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope.flex.rest</span>
 </pre></div>
 </div>
 </section>
@@ -726,7 +728,7 @@ specification at <a class="reference external" href="https://swagger.io/specific
 </div>
 <p>(or <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> to install the package for all users)</p>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope.flex.rest</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope.flex.rest</span>
 </pre></div>
 </div>
 </section>
@@ -739,9 +741,9 @@ specification at <a class="reference external" href="https://swagger.io/specific
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
 <p>Please follow the <a class="reference internal" href="#installation--usage"><span class="xref myst">installation procedure</span></a> and then run the following:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="kn">import</span> <span class="nn">graphscope.flex.rest</span>
-<span class="kn">from</span> <span class="nn">graphscope.flex.rest.rest</span> <span class="kn">import</span> <span class="n">ApiException</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope.flex.rest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.flex.rest.rest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApiException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span>
 
 <span class="c1"># Defining the host is optional and defaults to http://localhost</span>
 <span class="c1"># See configuration.py for a list of all supported configuration parameters.</span>
@@ -1041,6 +1043,8 @@ specification at <a class="reference external" href="https://swagger.io/specific
 <li><p><a class="reference internal" href="docs/EdgeMapping.html"><span class="std std-doc">EdgeMapping</span></a></p></li>
 <li><p><a class="reference internal" href="docs/EdgeMappingTypeTriplet.html"><span class="std std-doc">EdgeMappingTypeTriplet</span></a></p></li>
 <li><p><a class="reference internal" href="docs/Error.html"><span class="std std-doc">Error</span></a></p></li>
+<li><p><a class="reference internal" href="docs/FixedChar.html"><span class="std std-doc">FixedChar</span></a></p></li>
+<li><p><a class="reference internal" href="docs/FixedCharChar.html"><span class="std std-doc">FixedCharChar</span></a></p></li>
 <li><p><a class="reference internal" href="docs/GSDataType.html"><span class="std std-doc">GSDataType</span></a></p></li>
 <li><p><a class="reference internal" href="docs/GetAlertMessageResponse.html"><span class="std std-doc">GetAlertMessageResponse</span></a></p></li>
 <li><p><a class="reference internal" href="docs/GetAlertReceiverResponse.html"><span class="std std-doc">GetAlertReceiverResponse</span></a></p></li>
@@ -1073,9 +1077,12 @@ specification at <a class="reference external" href="https://swagger.io/specific
 <li><p><a class="reference internal" href="docs/TemporalType.html"><span class="std std-doc">TemporalType</span></a></p></li>
 <li><p><a class="reference internal" href="docs/TemporalTypeTemporal.html"><span class="std std-doc">TemporalTypeTemporal</span></a></p></li>
 <li><p><a class="reference internal" href="docs/TimeStampType.html"><span class="std std-doc">TimeStampType</span></a></p></li>
+<li><p><a class="reference internal" href="docs/TypedValue.html"><span class="std std-doc">TypedValue</span></a></p></li>
 <li><p><a class="reference internal" href="docs/UpdateAlertMessageStatusRequest.html"><span class="std std-doc">UpdateAlertMessageStatusRequest</span></a></p></li>
 <li><p><a class="reference internal" href="docs/UpdateStoredProcRequest.html"><span class="std std-doc">UpdateStoredProcRequest</span></a></p></li>
 <li><p><a class="reference internal" href="docs/UploadFileResponse.html"><span class="std std-doc">UploadFileResponse</span></a></p></li>
+<li><p><a class="reference internal" href="docs/VarChar.html"><span class="std std-doc">VarChar</span></a></p></li>
+<li><p><a class="reference internal" href="docs/VarCharVarChar.html"><span class="std std-doc">VarCharVarChar</span></a></p></li>
 <li><p><a class="reference internal" href="docs/VertexMapping.html"><span class="std std-doc">VertexMapping</span></a></p></li>
 </ul>
 <p><a id="documentation-for-authorization"></a></p>

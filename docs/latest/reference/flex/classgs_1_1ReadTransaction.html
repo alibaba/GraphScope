@@ -83,18 +83,19 @@ Collaboration diagram for gs::ReadTransaction:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1ReadTransaction__coll__graph.png" border="0" usemap="#gs_1_1ReadTransaction_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1ReadTransaction_coll__map" id="gs_1_1ReadTransaction_coll__map">
-<area shape="rect" title=" " alt="" coords="181,585,333,612"/>
+<area shape="rect" title=" " alt="" coords="191,585,343,612"/>
 <area shape="rect" href="classgs_1_1VersionManager.html" title=" " alt="" coords="5,317,156,344"/>
-<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="460,407,563,433"/>
-<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="187,317,401,344"/>
-<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="245,228,343,255"/>
-<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="224,109,364,151"/>
-<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="96,5,284,47"/>
-<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="308,13,491,39"/>
-<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="412,496,565,523"/>
-<area shape="rect" href="structgs_1_1SessionLocalContext.html" title=" " alt="" coords="473,585,653,612"/>
-<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="641,407,750,433"/>
-<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="294,407,435,433"/>
+<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="443,407,545,433"/>
+<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="183,317,397,344"/>
+<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="343,228,440,255"/>
+<area shape="rect" href="structgs_1_1GraphDBConfig.html" title=" " alt="" coords="422,317,566,344"/>
+<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="321,109,461,151"/>
+<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="193,5,381,47"/>
+<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="405,13,588,39"/>
+<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="313,496,467,523"/>
+<area shape="rect" href="structgs_1_1SessionLocalContext.html" title=" " alt="" coords="425,585,605,612"/>
+<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="570,407,711,433"/>
+<area shape="rect" href="classgs_1_1IWalWriter.html" title=" " alt="" coords="305,407,419,433"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -111,16 +112,22 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a9daeae253aa0acbd77d0ea5c4f5e18cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a765d896d839ac11029e64b9949b9d8a9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a765d896d839ac11029e64b9949b9d8a9">~ReadTransaction</a> ()</td></tr>
 <tr class="separator:a765d896d839ac11029e64b9949b9d8a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c88065ffc37997e4c06d85fd89f7771"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a6c88065ffc37997e4c06d85fd89f7771">run</a> (const std::string &amp;cypher, const std::map&lt; std::string, std::string &gt; &amp;params) const</td></tr>
+<tr class="separator:a6c88065ffc37997e4c06d85fd89f7771"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4ebef555e6a7ef6295d52c5a5cac7e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ae4ebef555e6a7ef6295d52c5a5cac7e5">timestamp</a> () const</td></tr>
 <tr class="separator:ae4ebef555e6a7ef6295d52c5a5cac7e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3cd66107546cb17e023da4539a19c97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ad3cd66107546cb17e023da4539a19c97">Commit</a> ()</td></tr>
-<tr class="separator:ad3cd66107546cb17e023da4539a19c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa42011b549bc55376a5ebb9c14ff827"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#afa42011b549bc55376a5ebb9c14ff827">Commit</a> ()</td></tr>
+<tr class="separator:afa42011b549bc55376a5ebb9c14ff827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91c6ae8e2e8ec32d7a961e1ab5c0e928"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a91c6ae8e2e8ec32d7a961e1ab5c0e928">Abort</a> ()</td></tr>
 <tr class="separator:a91c6ae8e2e8ec32d7a961e1ab5c0e928"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac099c889147817034e4d3c32d97c11e3"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ac099c889147817034e4d3c32d97c11e3">graph</a> () const</td></tr>
 <tr class="separator:ac099c889147817034e4d3c32d97c11e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a2bc0898d9f7d0f724bca7b587be147c4">get_vertex_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
 <tr class="separator:a2bc0898d9f7d0f724bca7b587be147c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab25eec95b34001bd2b701e4400ede9f7"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ab25eec95b34001bd2b701e4400ede9f7"><td class="memTemplItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classgs_1_1TypedRefColumn.html">TypedRefColumn</a>&lt; T &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab25eec95b34001bd2b701e4400ede9f7">get_vertex_ref_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
+<tr class="memdesc:ab25eec95b34001bd2b701e4400ede9f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the handle of the vertex property column, including the primary key.  <a href="classgs_1_1ReadTransaction.html#ab25eec95b34001bd2b701e4400ede9f7">More...</a><br /></td></tr>
+<tr class="separator:ab25eec95b34001bd2b701e4400ede9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a545e92759f83c95817b669d47510b070"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a545e92759f83c95817b669d47510b070">GetVertexIterator</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
 <tr class="separator:a545e92759f83c95817b669d47510b070"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f62aeccb10885ecd89f235c1bd8fc77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html">vertex_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a3f62aeccb10885ecd89f235c1bd8fc77">FindVertex</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;id) const</td></tr>
@@ -135,14 +142,18 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a65e88be15d4987893c077b3391c30b54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9eebcf196711f50091ee9ca515a33c9e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction_1_1edge__iterator.html">edge_iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a9eebcf196711f50091ee9ca515a33c9e">GetInEdgeIterator</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> u, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a9eebcf196711f50091ee9ca515a33c9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ea5e9c69d7953f412ff6b85ef8f6c18"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a4ea5e9c69d7953f412ff6b85ef8f6c18">GetOutDegree</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> u, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
+<tr class="separator:a4ea5e9c69d7953f412ff6b85ef8f6c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01ebea995869264d1b13eec237b8c5f8"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a01ebea995869264d1b13eec237b8c5f8">GetInDegree</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> u, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
+<tr class="separator:a01ebea995869264d1b13eec237b8c5f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cab307963eec93101fe6bdeabef408a"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:a8cab307963eec93101fe6bdeabef408a"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AdjListView.html">AdjListView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a8cab307963eec93101fe6bdeabef408a">GetOutgoingEdges</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a8cab307963eec93101fe6bdeabef408a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5877fb4d5c3ca0b99555f8e2cb2ac806"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:a5877fb4d5c3ca0b99555f8e2cb2ac806"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AdjListView.html">AdjListView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a5877fb4d5c3ca0b99555f8e2cb2ac806">GetIncomingEdges</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a5877fb4d5c3ca0b99555f8e2cb2ac806"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c4ec2bc1ad4be61f4b9000bfec27d67"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a0c4ec2bc1ad4be61f4b9000bfec27d67">schema</a> () const</td></tr>
-<tr class="separator:a0c4ec2bc1ad4be61f4b9000bfec27d67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14e4865e930bb916e27e193b048e421a"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a14e4865e930bb916e27e193b048e421a">schema</a> () const</td></tr>
+<tr class="separator:a14e4865e930bb916e27e193b048e421a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8686dff493a2ab43cdf5fa2c973ce6c7"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:a8686dff493a2ab43cdf5fa2c973ce6c7"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphView.html">GraphView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a8686dff493a2ab43cdf5fa2c973ce6c7">GetOutgoingGraphView</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a8686dff493a2ab43cdf5fa2c973ce6c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,6 +172,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abb8489d0b83c5a3f8c250cd01f937825"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:abb8489d0b83c5a3f8c250cd01f937825"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1SingleImmutableGraphView.html">SingleImmutableGraphView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#abb8489d0b83c5a3f8c250cd01f937825">GetIncomingSingleImmutableGraphView</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:abb8489d0b83c5a3f8c250cd01f937825"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4eb07df7dcfae8e6148f261ae8f910f5"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
+<tr class="memitem:a4eb07df7dcfae8e6148f261ae8f910f5"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ImmutableGraphView.html">ImmutableGraphView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#a4eb07df7dcfae8e6148f261ae8f910f5">GetOutgoingImmutableGraphView</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
+<tr class="separator:a4eb07df7dcfae8e6148f261ae8f910f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad22b423d72bfb735e8f7682ef9bb1a69"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
+<tr class="memitem:ad22b423d72bfb735e8f7682ef9bb1a69"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ImmutableGraphView.html">ImmutableGraphView</a>&lt; EDATA_T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ad22b423d72bfb735e8f7682ef9bb1a69">GetIncomingImmutableGraphView</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
+<tr class="separator:ad22b423d72bfb735e8f7682ef9bb1a69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab48d01aea20f2a18fcb9d4e270d56dfd"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html#ab48d01aea20f2a18fcb9d4e270d56dfd">GetSession</a> () const</td></tr>
 <tr class="separator:ab48d01aea20f2a18fcb9d4e270d56dfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -256,14 +273,14 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ad3cd66107546cb17e023da4539a19c97"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3cd66107546cb17e023da4539a19c97">&#9670;&nbsp;</a></span>Commit()</h2>
+<a id="afa42011b549bc55376a5ebb9c14ff827"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa42011b549bc55376a5ebb9c14ff827">&#9670;&nbsp;</a></span>Commit()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::ReadTransaction::Commit </td>
+          <td class="memname">bool gs::ReadTransaction::Commit </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -337,6 +354,59 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ab25eec95b34001bd2b701e4400ede9f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab25eec95b34001bd2b701e4400ede9f7">&#9670;&nbsp;</a></span>get_vertex_ref_property_column()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::shared_ptr&lt;<a class="el" href="classgs_1_1TypedRefColumn.html">TypedRefColumn</a>&lt;T&gt; &gt; gs::ReadTransaction::get_vertex_ref_property_column </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the handle of the vertex property column, including the primary key. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td>The type of the column. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">label</td><td>The label of the vertex. </td></tr>
+    <tr><td class="paramname">col_name</td><td>The name of the column. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a5877fb4d5c3ca0b99555f8e2cb2ac806"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5877fb4d5c3ca0b99555f8e2cb2ac806">&#9670;&nbsp;</a></span>GetIncomingEdges()</h2>
 
@@ -400,6 +470,50 @@ template&lt;typename EDATA_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classgs_1_1GraphView.html">GraphView</a>&lt;EDATA_T&gt; gs::ReadTransaction::GetIncomingGraphView </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>v_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>edge_label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad22b423d72bfb735e8f7682ef9bb1a69"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad22b423d72bfb735e8f7682ef9bb1a69">&#9670;&nbsp;</a></span>GetIncomingImmutableGraphView()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1ImmutableGraphView.html">ImmutableGraphView</a>&lt;EDATA_T&gt; gs::ReadTransaction::GetIncomingImmutableGraphView </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>v_label</em>, </td>
@@ -519,6 +633,46 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a01ebea995869264d1b13eec237b8c5f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01ebea995869264d1b13eec237b8c5f8">&#9670;&nbsp;</a></span>GetInDegree()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t gs::ReadTransaction::GetInDegree </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>u</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>edge_label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a9eebcf196711f50091ee9ca515a33c9e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9eebcf196711f50091ee9ca515a33c9e">&#9670;&nbsp;</a></span>GetInEdgeIterator()</h2>
 
@@ -527,6 +681,46 @@ template&lt;typename EDATA_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classgs_1_1ReadTransaction_1_1edge__iterator.html">ReadTransaction::edge_iterator</a> gs::ReadTransaction::GetInEdgeIterator </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>u</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>edge_label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4ea5e9c69d7953f412ff6b85ef8f6c18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ea5e9c69d7953f412ff6b85ef8f6c18">&#9670;&nbsp;</a></span>GetOutDegree()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t gs::ReadTransaction::GetOutDegree </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>label</em>, </td>
@@ -662,6 +856,50 @@ template&lt;typename EDATA_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classgs_1_1GraphView.html">GraphView</a>&lt;EDATA_T&gt; gs::ReadTransaction::GetOutgoingGraphView </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>v_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>edge_label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4eb07df7dcfae8e6148f261ae8f910f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4eb07df7dcfae8e6148f261ae8f910f5">&#9670;&nbsp;</a></span>GetOutgoingImmutableGraphView()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1ImmutableGraphView.html">ImmutableGraphView</a>&lt;EDATA_T&gt; gs::ReadTransaction::GetOutgoingImmutableGraphView </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>v_label</em>, </td>
@@ -938,19 +1176,55 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
-<a id="a0c4ec2bc1ad4be61f4b9000bfec27d67"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0c4ec2bc1ad4be61f4b9000bfec27d67">&#9670;&nbsp;</a></span>schema()</h2>
+<a id="a6c88065ffc37997e4c06d85fd89f7771"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c88065ffc37997e4c06d85fd89f7771">&#9670;&nbsp;</a></span>run()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp; gs::ReadTransaction::schema </td>
+          <td class="memname">std::string gs::ReadTransaction::run </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>cypher</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; std::string, std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>params</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a14e4865e930bb916e27e193b048e421a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14e4865e930bb916e27e193b048e421a">&#9670;&nbsp;</a></span>schema()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1Schema.html">Schema</a>&amp; gs::ReadTransaction::schema </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>

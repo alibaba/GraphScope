@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 --><title>Index - GraphScope documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -291,7 +291,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -339,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -1085,10 +1087,10 @@ MathJax = {
           <li><a href="reference/networkx/builtin.html#graphscope.nx.builtin.clustering">(in module graphscope.nx.builtin)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="reference/networkx/generated/graphscope.nx.classes.function.common_neighbors.html#graphscope.nx.classes.function.common_neighbors">common_neighbors() (in module graphscope.nx.classes.function)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.classic.complete_graph.html#graphscope.nx.generators.classic.complete_graph">complete_graph() (in module graphscope.nx.generators.classic)</a>
 </li>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.html#graphscope.nx.generators.classic.complete_multipartite_graph">complete_multipartite_graph() (in module graphscope.nx.generators.classic)</a>
@@ -1123,6 +1125,8 @@ MathJax = {
 </li>
         <li><a href="reference/generated/graphscope.framework.dag_utils.create_app.html#graphscope.framework.dag_utils.create_app">create_app() (in module graphscope.framework.dag_utils)</a>
 </li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_edge_type">create_edge_type() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
         <li><a href="reference/networkx/generated/graphscope.nx.classes.function.create_empty_copy.html#graphscope.nx.classes.function.create_empty_copy">create_empty_copy() (in module graphscope.nx.classes.function)</a>
 </li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_graph">create_graph() (gs_interactive.client.session.DefaultSession method)</a>
@@ -1140,6 +1144,8 @@ MathJax = {
         <li><a href="reference/generated/graphscope.framework.dag_utils.create_subgraph.html#graphscope.framework.dag_utils.create_subgraph">create_subgraph() (in module graphscope.framework.dag_utils)</a>
 </li>
         <li><a href="reference/generated/graphscope.framework.dag_utils.create_unload_op.html#graphscope.framework.dag_utils.create_unload_op">create_unload_op() (in module graphscope.framework.dag_utils)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_vertex_type">create_vertex_type() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.small.cubical_graph.html#graphscope.nx.generators.small.cubical_graph">cubical_graph() (in module graphscope.nx.generators.small)</a>
 </li>
@@ -1199,11 +1205,19 @@ MathJax = {
 </li>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html#graphscope.nx.generators.degree_seq.degree_sequence_tree">degree_sequence_tree() (in module graphscope.nx.generators.degree_seq)</a>
 </li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge">delete_edge() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge_type">delete_edge_type() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_graph">delete_graph() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_procedure">delete_procedure() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex">delete_vertex() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex_type">delete_vertex_type() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="reference/networkx/generated/graphscope.nx.classes.function.density.html#graphscope.nx.classes.function.density">density() (in module graphscope.nx.classes.function)</a>
 </li>
@@ -1404,6 +1418,8 @@ MathJax = {
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_procedure">get_procedure() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_service_status">get_service_status() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_snapshot_status">get_snapshot_status() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_status">get_status() (gs_interactive.client.result.Result method)</a>
 </li>
@@ -1845,10 +1861,10 @@ MathJax = {
 </li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment14MirrorVerticesE5fid_t">gs::ArrowProjectedFragment::MirrorVertices (C++ function)</a>
 </li>
-        <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment5nbr_tE">gs::ArrowProjectedFragment::nbr_t (C++ type)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment5nbr_tE">gs::ArrowProjectedFragment::nbr_t (C++ type)</a>
+</li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment10nbr_unit_tE">gs::ArrowProjectedFragment::nbr_unit_t (C++ type)</a>
 </li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment7OEDestsERK8vertex_t">gs::ArrowProjectedFragment::OEDests (C++ function)</a>
@@ -3182,9 +3198,13 @@ MathJax = {
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge">update_edge() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge_type">update_edge_type() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_procedure">update_procedure() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex">update_vertex() (gs_interactive.client.session.DefaultSession method)</a>
+</li>
+        <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex_type">update_vertex_type() (gs_interactive.client.session.DefaultSession method)</a>
 </li>
         <li><a href="flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.upload_and_replace_input_inplace">upload_and_replace_input_inplace() (gs_interactive.client.session.DefaultSession method)</a>
 </li>

@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>图学习引擎 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -450,7 +450,7 @@ GNNs需要聚合邻居信息, 我们抽象了 <code class="docutils literal notr
 node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 分别是点表、边表以及用来区分训练、验证和测试集的点表。</p>
 <p>然后可以用下面代码来构建图：</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gle</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gle</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>\
       <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;node_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
             <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -468,8 +468,8 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 </pre></div>
 </div>
 <p>使用 <code class="docutils literal notranslate"><span class="pre">g.init()</span></code> 后这段代码会将图加载进内存：</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
-  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">graph</span><span class="p">,</span>
                <span class="n">output_dim</span><span class="p">,</span>
                <span class="n">features_num</span><span class="p">,</span>
@@ -483,17 +483,17 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 </div>
 <p>GCN模型继承自基本的学习模型类 <code class="docutils literal notranslate"><span class="pre">LearningBasedModel</span></code>，只需要重写基类的采样，
 模型构建等方法就可以完成GCN的构建。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
   <span class="c1"># ...</span>
-  <span class="k">def</span> <span class="nf">_sample_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">_sample_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
       <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s1">&#39;train&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
 
-  <span class="k">def</span> <span class="nf">_positive_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">_positive_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
       <span class="k">return</span> <span class="n">gle</span><span class="o">.</span><span class="n">Edges</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
                       <span class="n">t</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
                       <span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">_receptive_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">_receptive_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
       <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span> \
         <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">)</span> \
         <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v2&#39;</span><span class="p">)</span> \
@@ -509,8 +509,8 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 <h3>图数据流<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
 <p>在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里我们使用封装的 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 来把 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 转换成对应的 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>,
 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 包含一个数据流迭代器和若干 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
- <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+ <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
    <span class="n">ego_flow</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">EgoFlow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_seed</span><span class="p">,</span>
                          <span class="bp">self</span><span class="o">.</span><span class="n">_positive_sample</span><span class="p">,</span>
                          <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_fn</span><span class="p">,</span>
@@ -529,8 +529,8 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
 更多encoder请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/graphscope/graphlearn/python/model/tf/encoders/feature_encoder.py">feature encoder</a>。
 然后用 <code class="docutils literal notranslate"><span class="pre">GCNConv</span></code> 层构建图编码器，GCN每个节点采样全部邻居，邻居以稀疏格式组织，所以这里使用
 <code class="docutils literal notranslate"><span class="pre">SparseEgoGraphEncoder</span></code>, 邻居对齐的模型可以参考GraphSAGE的实现。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">_encoders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">_encoders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hops_num</span>
     <span class="n">feature_encoders</span> <span class="o">=</span> <span class="p">[</span><span class="n">gle</span><span class="o">.</span><span class="n">encoders</span><span class="o">.</span><span class="n">IdentityEncoder</span><span class="p">()]</span> <span class="o">*</span> <span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">conv_layers</span> <span class="o">=</span> <span class="p">[]</span>
@@ -551,12 +551,12 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
 <h3>损失函数和训练过程<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
 <p>对于Cora点分类模型，我们选择对应的TensorFlow里的分类损失函数即可。
 然后在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里将编码器和损失函数组织起来，最终返回一个数据迭代器和损失函数。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
   <span class="c1"># ...</span>
-  <span class="k">def</span> <span class="nf">_supervised_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">emb</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">_supervised_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">emb</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span><span class="n">emb</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
 
-  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">ego_flow</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">EgoFlow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_seed</span><span class="p">,</span>
                           <span class="bp">self</span><span class="o">.</span><span class="n">_positive_sample</span><span class="p">,</span>
                           <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_fn</span><span class="p">,</span>
@@ -572,8 +572,8 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
 </pre></div>
 </div>
 <p>接着使用封装的单机训练过程 <code class="docutils literal notranslate"><span class="pre">LocalTFTrainer</span></code> 来进行训练。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-  <span class="k">def</span> <span class="nf">model_fn</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">model_fn</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;class_num&#39;</span><span class="p">],</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;features_num&#39;</span><span class="p">],</span>
@@ -582,7 +582,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
   <span class="n">trainer</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
   <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
     <span class="n">g</span> <span class="o">=</span> <span class="n">load_graph</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">server_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">server_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tracker</span><span class="o">=</span><span class="s1">&#39;../../data/&#39;</span><span class="p">)</span>
