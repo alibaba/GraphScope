@@ -1156,6 +1156,11 @@ class EdgePropVec<grape::EmptyType> : public EdgePropVecBase {
   size_t size_;
 };
 
+template <typename T>
+using is_view_type =
+    std::disjunction<std::is_same<T, List>, std::is_same<T, Tuple>,
+                     std::is_same<T, Map>, std::is_same<T, Set>,
+                     std::is_same<T, std::string_view>, std::is_same<T, Path>>;
 }  // namespace runtime
 
 }  // namespace gs

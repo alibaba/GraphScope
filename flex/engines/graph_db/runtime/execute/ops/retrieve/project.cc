@@ -50,10 +50,7 @@ struct ValueCollector {
     builder.push_back_opt(val);
   }
   auto get() {
-    if constexpr (std::is_same_v<T, std::string_view> ||
-                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map> ||
-                  std::is_same_v<T, List> || std::is_same_v<T, Set> ||
-                  std::is_same_v<T, Path>) {
+    if constexpr (gs::runtime::is_view_type<T>::value) {
       return builder.finish(arena_);
     } else {
       return builder.finish(nullptr);

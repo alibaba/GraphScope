@@ -75,9 +75,11 @@ class ValueColumn : public IValueColumn<T> {
   inline const std::vector<T>& data() const { return data_; }
 
   ISigColumn* generate_signature() const override {
-    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple> or
-                  std::is_same_v<T, Map> or std::is_same_v<T, Set> or
-                  std::is_same_v<T, Relation>) {
+    if constexpr (std::is_same_v<T, std::string_view>) {
+      return new SigColumn<std::string_view>(data_);
+    } else if constexpr (std::is_same_v<T, bool> ||
+                         std::is_same_v<T, Relation> ||
+                         gs::runtime::is_view_type<T>::value) {
       LOG(FATAL) << "not implemented for " << this->column_info();
       return nullptr;
     } else {
@@ -191,9 +193,7 @@ class ListValueColumn : public ListValueColumnBase {
       ++i;
     }
 
-    if constexpr (std::is_same_v<T, std::string_view> ||
-                  std::is_same_v<T, Tuple> || std::is_same_v<T, Map> ||
-                  std::is_same_v<T, Set>) {
+    if constexpr (gs::runtime::is_view_type<T>::value) {
       // TODO: we shouldn't use the same arena as the original column.
       // The ownership of list elements should be released.
       return {builder->finish(this->get_arena()), offsets};
@@ -319,9 +319,11 @@ class OptionalValueColumn : public IValueColumn<T> {
   inline T get_value(size_t idx) const override { return data_[idx]; }
 
   ISigColumn* generate_signature() const override {
-    if constexpr (std::is_same_v<T, bool> or std::is_same_v<T, Tuple> or
-                  std::is_same_v<T, Map> or std::is_same_v<T, Set> or
-                  std::is_same_v<T, Relation>) {
+    if constexpr (std::is_same_v<T, std::string_view>) {
+      return new SigColumn<std::string_view>(data_);
+    } else if constexpr (std::is_same_v<T, bool> ||
+                         std::is_same_v<T, Relation> ||
+                         gs::runtime::is_view_type<T>::value) {
       LOG(FATAL) << "not implemented for " << this->column_info();
       return nullptr;
     } else {
