@@ -159,6 +159,8 @@ class Path {
 
   std::vector<VertexRecord> nodes() { return impl_->path_; }
 
+  std::vector<label_t> edge_labels() const { return impl_->edge_labels_; }
+
   VertexRecord get_start() const { return impl_->get_start(); }
   bool operator<(const Path& p) const { return *impl_ < *(p.impl_); }
   bool operator==(const Path& p) const { return *(impl_) == *(p.impl_); }

@@ -849,14 +849,37 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
     auto mutable_path =
         col->mutable_entry()->mutable_element()->mutable_graph_path();
     auto path_nodes = this->as_path().nodes();
-
-    for (size_t i = 0; i + 1 < path_nodes.size(); ++i) {
-      auto node = mutable_path->add_path()->mutable_vertex();
+    auto edge_labels = this->as_path().edge_labels();
+    // same label for all edges
+    if (edge_labels.size() == 1) {
+      for (size_t i = 0; i + 2 < path_nodes.size(); ++i) {
+        edge_labels.emplace_back(edge_labels[0]);
+      }
+    }
+    assert(edge_labels.size() + 1 == path_nodes.size());
+    auto path = mutable_path->add_path();
+    size_t len = path_nodes.size();
+    for (size_t i = 0; i + 1 < len; ++i) {
+      auto node = path->mutable_vertex();
       node->mutable_label()->set_id(path_nodes[i].label());
       node->set_id(
           encode_unique_vertex_id(path_nodes[i].label(), path_nodes[i].vid()));
       // TODO: Add edge
+      auto edge = path->mutable_edge();
+      edge->mutable_src_label()->set_id(path_nodes[i].label());
+      edge->mutable_dst_label()->set_id(path_nodes[i + 1].label());
+      edge->mutable_label()->set_id(encode_unique_edge_id(
+          edge_labels[i], path_nodes[i].vid(), path_nodes[i + 1].vid()));
+      edge->set_src_id(
+          encode_unique_vertex_id(path_nodes[i].label(), path_nodes[i].vid()));
+      edge->set_dst_id(encode_unique_vertex_id(path_nodes[i + 1].label(),
+                                               path_nodes[i + 1].vid()));
     }
+    auto node = path->mutable_vertex();
+    node->mutable_label()->set_id(path_nodes[len - 1].label());
+    node->set_id(encode_unique_vertex_id(path_nodes[len - 1].label(),
+                                         path_nodes[len - 1].vid()));
+
   } else {
     sink_impl(col->mutable_entry()->mutable_element()->mutable_object());
   }
