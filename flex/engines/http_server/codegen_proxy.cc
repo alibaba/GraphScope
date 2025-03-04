@@ -16,6 +16,9 @@
 #include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 namespace server {
 CodegenProxy& CodegenProxy::get() {
   static CodegenProxy instance;
@@ -208,7 +211,8 @@ seastar::future<gs::Result<bool>> CodegenProxy::CallCodegenCmd(
   std::string cmd = codegen_bin + " -e=hqps " + " -i=" + plan_path +
                     " -o=" + output_dir + " --procedure_name=" + query_name +
                     " -w=" + work_dir + " --ir_conf=" + engine_config +
-                    " --graph_schema_path=" + graph_schema_path;
+                    " --graph_schema_path=" + graph_schema_path +
+                    " --label_type=" + TOSTRING(FLEX_LABEL_TYPE);
   std::string desc_file = work_dir + "/" + query_name + ".desc";
   if (!procedure_desc.empty()) {
     std::ofstream ofs(desc_file);

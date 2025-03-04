@@ -822,12 +822,13 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
     auto [label, src, dst, prop, dir] = this->as_edge();
     e->mutable_src_label()->set_id(label.src_label);
     e->mutable_dst_label()->set_id(label.dst_label);
-    auto edge_label = generate_edge_label_id(label.src_label, label.dst_label,
-                                             label.edge_label);
+
+    auto edge_triplet_id = graph.schema().get_edge_triplet_id(
+        label.src_label, label.dst_label, label.edge_label);
     e->mutable_label()->set_id(label.edge_label);
     e->set_src_id(encode_unique_vertex_id(label.src_label, src));
     e->set_dst_id(encode_unique_vertex_id(label.dst_label, dst));
-    e->set_id(encode_unique_edge_id(edge_label, src, dst));
+    e->set_id(encode_unique_edge_id(edge_triplet_id, src, dst));
     auto& prop_names = graph.schema().get_edge_property_names(
         label.src_label, label.dst_label, label.edge_label);
     if (prop_names.size() == 1) {

@@ -23,11 +23,11 @@ size_t grin_get_vertex_num_by_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
 size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
-  auto src_label = et >> 16;
-  auto dst_label = (et >> 8) & (0xff);
-  auto edge_label = et & (0xff);
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-
+  auto edge_triplet_tuple = _g->g.schema().get_edge_triplet(et);
+  auto src_label = std::get<0>(edge_triplet_tuple);
+  auto dst_label = std::get<1>(edge_triplet_tuple);
+  auto edge_label = std::get<2>(edge_triplet_tuple);
   auto oe = _g->g.get_oe_csr(src_label, dst_label, edge_label);
   auto vertex_num = _g->g.vertex_num(src_label);
   size_t edge_num = 0;

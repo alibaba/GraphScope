@@ -532,6 +532,28 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, LabelKey& value) {
   return out_archive;
 }
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const std::vector<bool>& value) {
+  in_archive << value.size();
+  for (auto v : value) {
+    in_archive << (v ? (char) 1 : (char) 0);
+  }
+  return in_archive;
+}
+
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              std::vector<bool>& value) {
+  size_t size;
+  out_archive >> size;
+  value.resize(size);
+  char v;
+  for (size_t i = 0; i < size; ++i) {
+    out_archive >> v;
+    value[i] = (v == 1);
+  }
+  return out_archive;
+}
+
 GlobalId::label_id_t GlobalId::get_label_id(gid_t gid) {
   return static_cast<label_id_t>(gid >> label_id_offset);
 }

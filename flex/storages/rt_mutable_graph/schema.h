@@ -16,6 +16,8 @@
 #ifndef GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 #define GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 
+#include <boost/functional/hash.hpp>
+
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
@@ -71,6 +73,8 @@ class Schema {
   // An array containing all compatible versions of schema.
   static const std::vector<std::string> COMPATIBLE_VERSIONS;
   static constexpr const char* DEFAULT_SCHEMA_VERSION = "v0.0";
+  // By default use a relatively large number as the default max_vnum.
+  static constexpr const size_t DEFAULT_MAX_VNUM = 1 << 16;
 
   static bool IsBuiltinPlugin(const std::string& plugin_name);
 
@@ -88,8 +92,7 @@ class Schema {
       const std::vector<std::tuple<PropertyType, std::string, size_t>>&
           primary_key,
       const std::vector<StorageStrategy>& strategies = {},
-      size_t max_vnum = static_cast<size_t>(1) << 32,
-      const std::string& description = "");
+      size_t max_vnum = DEFAULT_MAX_VNUM, const std::string& description = "");
 
   void add_edge_label(const std::string& src_label,
                       const std::string& dst_label,
@@ -204,15 +207,15 @@ class Schema {
   inline EdgeStrategy get_outgoing_edge_strategy(label_t src_label,
                                                  label_t dst_label,
                                                  label_t label) const {
-    uint32_t index = generate_edge_label(src_label, dst_label, label);
-    return oe_strategy_.at(index);
+    auto triplet_id = get_edge_triplet_id(src_label, dst_label, label);
+    return oe_strategy_[triplet_id];
   }
 
   inline EdgeStrategy get_incoming_edge_strategy(label_t src_label,
                                                  label_t dst_label,
                                                  label_t label) const {
-    uint32_t index = generate_edge_label(src_label, dst_label, label);
-    return ie_strategy_.at(index);
+    auto triplet_id = get_edge_triplet_id(src_label, dst_label, label);
+    return ie_strategy_[triplet_id];
   }
 
   bool outgoing_edge_mutable(const std::string& src_label,
@@ -230,6 +233,15 @@ class Schema {
   bool contains_edge_label(const std::string& label) const;
 
   label_t get_edge_label_id(const std::string& label) const;
+
+  label_t get_edge_triplet_id(label_t src_label, label_t dst_label,
+                              label_t edge_label) const;
+
+  inline label_t get_edge_triplet_num() const {
+    return e_triplet_labels_.size();
+  }
+
+  std::tuple<label_t, label_t, label_t> get_edge_triplet(label_t index) const;
 
   std::string get_vertex_label_name(label_t index) const;
 
@@ -281,7 +293,7 @@ class Schema {
 
   label_t edge_label_to_index(const std::string& label);
 
-  uint32_t generate_edge_label(label_t src, label_t dst, label_t edge) const;
+  uint32_t insert_edge_triplet(label_t src, label_t dst, label_t edge);
 
   IdIndexer<std::string, label_t> vlabel_indexer_;
   IdIndexer<std::string, label_t> elabel_indexer_;
@@ -292,14 +304,18 @@ class Schema {
       v_primary_keys_;  // the third element is the index of the property in the
                         // vertex property list
   std::vector<std::vector<StorageStrategy>> vprop_storage_;
-  std::map<uint32_t, std::vector<PropertyType>> eproperties_;
-  std::map<uint32_t, std::vector<std::string>> eprop_names_;
-  std::map<uint32_t, std::string> e_descriptions_;
-  std::map<uint32_t, EdgeStrategy> oe_strategy_;
-  std::map<uint32_t, EdgeStrategy> ie_strategy_;
-  std::map<uint32_t, bool> oe_mutability_;
-  std::map<uint32_t, bool> ie_mutability_;
-  std::map<uint32_t, bool> sort_on_compactions_;
+  std::vector<std::tuple<label_t, label_t, label_t>> e_triplet_labels_;
+  std::unordered_map<std::tuple<label_t, label_t, label_t>, uint32_t,
+                     boost::hash<std::tuple<label_t, label_t, label_t>>>
+      e_triplet_to_index_;
+  std::vector<std::vector<PropertyType>> eproperties_;
+  std::vector<std::vector<std::string>> eprop_names_;
+  std::vector<std::string> e_descriptions_;
+  std::vector<EdgeStrategy> oe_strategy_;
+  std::vector<EdgeStrategy> ie_strategy_;
+  std::vector<bool> oe_mutability_;
+  std::vector<bool> ie_mutability_;
+  std::vector<bool> sort_on_compactions_;
   std::vector<std::unordered_map<std::string, std::pair<PropertyType, uint8_t>>>
       vprop_name_to_type_and_index_;
   std::vector<size_t> max_vnum_;
