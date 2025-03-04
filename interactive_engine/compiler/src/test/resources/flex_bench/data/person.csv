@@ -1,0 +1,6 @@
+prop_int32,prop_uint32,prop_int64,prop_uint64,prop_bool,prop_float,prop_double,prop_text,prop_char,prop_varchar,prop_date,prop_ts
+32,12345,1234567890,9876543210,true,3.14,3.14159,Sample text,abcd,abcd,2025-02-12,2025-02-12T12:34:56
+33,12346,1234567891,9876543211,false,2.71,2.71828,Another sample text,efgh,efgh,2025-02-13,2025-02-13T13:45:01
+34,12347,1234567892,9876543212,true,1.62,1.61803,Long text with no truncation,ijkl,ijkl,2025-02-14,2025-02-14T14:56:12
+-2147483648,4294967284,1234567890,18446744073709551602,true,3.14,3.14159,Sample text,abcd,abcd,2025-02-12,2025-02-12T12:34:56
+933,12347,1234567892,9876543212,true,1.62,1.61803,Long text with no truncation,ijkl,ijkl,2025-02-14,2025-02-14T14:56:12
