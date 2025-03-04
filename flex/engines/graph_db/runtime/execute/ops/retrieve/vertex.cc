@@ -52,10 +52,14 @@ class GetVFromVerticesWithLabelWithInOpr : public IReadOperator {
       ctx.set(v_params_.alias, input_vertex_list_ptr);
       return ctx;
     } else {
+      Arena arena;
       GeneralVertexPredicate pred(graph, ctx, params,
                                   opr_.params().predicate());
-      return GetV::get_vertex_from_vertices(graph, std::move(ctx), v_params_,
-                                            pred);
+      return GetV::get_vertex_from_vertices(
+          graph, std::move(ctx), v_params_,
+          [&arena, &pred](label_t label, vid_t v, size_t idx) {
+            return pred(label, v, idx, arena);
+          });
     }
   }
 
@@ -113,8 +117,12 @@ class GetVFromVerticesWithPredicateOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     GeneralVertexPredicate pred(graph, ctx, params, opr_.params().predicate());
-    return GetV::get_vertex_from_vertices(graph, std::move(ctx), v_params_,
-                                          pred);
+    Arena arena;
+    return GetV::get_vertex_from_vertices(
+        graph, std::move(ctx), v_params_,
+        [&arena, &pred](label_t label, vid_t v, size_t idx) {
+          return pred(label, v, idx, arena);
+        });
   }
 
  private:
@@ -122,6 +130,21 @@ class GetVFromVerticesWithPredicateOpr : public IReadOperator {
   GetVParams v_params_;
 };
 
+struct GeneralVertexPredicateWrapper {
+  GeneralVertexPredicateWrapper(const GeneralVertexPredicate& pred)
+      : pred_(pred) {}
+
+  inline bool operator()(label_t label, vid_t v, size_t path_idx, int) const {
+    return pred_(label, v, path_idx, arena_, 0);
+  }
+
+  inline bool operator()(label_t label, vid_t v, size_t path_idx) const {
+    return pred_(label, v, path_idx, arena_);
+  }
+  mutable Arena arena_;
+
+  const GeneralVertexPredicate& pred_;
+};
 class GetVFromEdgesWithPredicateOpr : public IReadOperator {
  public:
   GetVFromEdgesWithPredicateOpr(const physical::GetV& opr, const GetVParams& p)
@@ -138,8 +161,9 @@ class GetVFromEdgesWithPredicateOpr : public IReadOperator {
     if (opr_.params().has_predicate()) {
       GeneralVertexPredicate pred(graph, ctx, params,
                                   opr_.params().predicate());
+      GeneralVertexPredicateWrapper vpred(pred);
       return GetV::get_vertex_from_edges(graph, std::move(ctx), v_params_,
-                                         pred);
+                                         vpred);
     } else {
       return GetV::get_vertex_from_edges(graph, std::move(ctx), v_params_,
                                          DummyVertexPredicate());

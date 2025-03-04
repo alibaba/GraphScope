@@ -31,8 +31,8 @@ struct GeneralPathPredicate {
                        const common::Expression& expr)
       : expr_(graph, ctx, params, expr, VarType::kPathVar) {}
 
-  inline bool operator()(size_t idx) const {
-    auto val = expr_.eval_path(idx);
+  inline bool operator()(size_t idx, Arena& arena) const {
+    auto val = expr_.eval_path(idx, arena);
     return val.as_bool();
   }
 
@@ -45,13 +45,15 @@ struct GeneralVertexPredicate {
                          const common::Expression& expr)
       : expr_(graph, ctx, params, expr, VarType::kVertexVar) {}
 
-  inline bool operator()(label_t label, vid_t v, size_t path_idx) const {
-    auto val = expr_.eval_vertex(label, v, path_idx);
+  inline bool operator()(label_t label, vid_t v, size_t path_idx,
+                         Arena& arena) const {
+    auto val = expr_.eval_vertex(label, v, path_idx, arena);
     return val.as_bool();
   }
 
-  inline bool operator()(label_t label, vid_t v, size_t path_idx, int) const {
-    auto val = expr_.eval_vertex(label, v, path_idx, 0);
+  inline bool operator()(label_t label, vid_t v, size_t path_idx, Arena& arena,
+                         int) const {
+    auto val = expr_.eval_vertex(label, v, path_idx, arena, 0);
     return val.as_bool();
   }
 
@@ -76,9 +78,9 @@ struct GeneralEdgePredicate {
       : expr_(graph, ctx, params, expr, VarType::kEdgeVar) {}
 
   inline bool operator()(const LabelTriplet& label, vid_t src, vid_t dst,
-                         const Any& edata, Direction dir,
-                         size_t path_idx) const {
-    auto val = expr_.eval_edge(label, src, dst, edata, path_idx);
+                         const Any& edata, Direction dir, size_t path_idx,
+                         Arena& arena) const {
+    auto val = expr_.eval_edge(label, src, dst, edata, path_idx, arena);
     return val.as_bool();
   }
 

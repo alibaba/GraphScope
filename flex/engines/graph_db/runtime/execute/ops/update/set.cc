@@ -122,6 +122,7 @@ class SetOpr : public IUpdateOperator {
   bl::result<Context> Eval(GraphUpdateInterface& graph,
                            const std::map<std::string, std::string>& params,
                            Context&& ctx, OprTimer& timer) override {
+    Arena arena;
     for (size_t i = 0; i < keys_.size(); ++i) {
       auto& key = keys_[i];
       auto& value = values_[i];
@@ -165,8 +166,9 @@ class SetOpr : public IUpdateOperator {
       if (prop->column_type() == ContextColumnType::kVertex) {
         auto vertex_col = dynamic_cast<const IVertexColumn*>(prop.get());
         Expr expr(graph, ctx, params, value, VarType::kPathVar);
+
         for (size_t j = 0; j < ctx.row_num(); j++) {
-          auto val = expr.eval_path(j);
+          auto val = expr.eval_path(j, arena);
 
           auto vertex = vertex_col->get_vertex(j);
           if (!set_vertex_property(graph, vertex.label_, vertex.vid_,
@@ -179,7 +181,7 @@ class SetOpr : public IUpdateOperator {
         auto edge_col = dynamic_cast<const IEdgeColumn*>(prop.get());
         Expr expr(graph, ctx, params, value, VarType::kPathVar);
         for (size_t j = 0; j < ctx.row_num(); j++) {
-          auto val = expr.eval_path(j);
+          auto val = expr.eval_path(j, arena);
           auto edge = edge_col->get_edge(j);
           if (!set_edge_property(graph, edge.label_triplet(), edge.dir_,
                                  edge.src_, edge.dst_, key.second, val)) {
