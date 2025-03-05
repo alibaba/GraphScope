@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_map>
 #include "flex/engines/graph_db/database/wal/wal.h"
+#include "flex/utils/service_utils.h"
 
 namespace gs {
 
