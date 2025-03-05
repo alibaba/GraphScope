@@ -45,6 +45,18 @@ impl Encode for Primitives {
                 writer.write_u8(4)?;
                 ull.write_to(writer)?;
             }
+            Primitives::UInteger(i) => {
+                writer.write_u8(5)?;
+                i.write_to(writer)?;
+            }
+            Primitives::ULong(l) => {
+                writer.write_u8(6)?;
+                l.write_to(writer)?;
+            }
+            Primitives::Double(d) => {
+                writer.write_u8(7)?;
+                d.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -67,12 +79,24 @@ impl Decode for Primitives {
                 Ok(Primitives::Long(l))
             }
             3 => {
-                let f = <f64>::read_from(reader)?;
+                let f = <f32>::read_from(reader)?;
                 Ok(Primitives::Float(f))
             }
             4 => {
                 let lll = <u128>::read_from(reader)?;
                 Ok(Primitives::ULLong(lll))
+            }
+            5 => {
+                let i = <u32>::read_from(reader)?;
+                Ok(Primitives::UInteger(i))
+            }
+            6 => {
+                let l = <u64>::read_from(reader)?;
+                Ok(Primitives::ULong(l))
+            }
+            7 => {
+                let d = <f64>::read_from(reader)?;
+                Ok(Primitives::Double(d))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }

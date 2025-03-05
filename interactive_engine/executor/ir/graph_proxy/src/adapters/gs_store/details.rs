@@ -50,8 +50,8 @@ fn encode_runtime_prop_val(prop_val: Property) -> Object {
         Property::Short(s) => Object::Primitive(Primitives::Integer(s as i32)),
         Property::Int(i) => Object::Primitive(Primitives::Integer(i)),
         Property::Long(l) => Object::Primitive(Primitives::Long(l)),
-        Property::Float(f) => Object::Primitive(Primitives::Float(f as f64)),
-        Property::Double(d) => Object::Primitive(Primitives::Float(d)),
+        Property::Float(f) => Object::Primitive(Primitives::Float(f)),
+        Property::Double(d) => Object::Primitive(Primitives::Double(d)),
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         Property::Date(s) => match NaiveDate::parse_from_str(&s, "%Y-%m-%d") {
