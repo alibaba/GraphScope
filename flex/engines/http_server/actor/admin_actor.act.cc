@@ -449,7 +449,7 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
         gs::Result<seastar::sstring>(all_graph_meta_res.status()));
   } else {
     VLOG(10) << "Successfully list graphs";
-    // collect all 'schema' field into a json stirng
+    // collect all 'schema' field into a json string
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(merge_graph_and_plugin_meta(
             metadata_store_, all_graph_meta_res.value())));
@@ -1002,9 +1002,12 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
           // use the previous thread num
           auto thread_num = db.SessionNum();
+          auto config = db.config();
+          config.data_dir = data_dir_value;
+          config.schema = schema_value;
           db.Close();
           VLOG(10) << "Closed the previous graph db";
-          if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
+          if (!db.Open(config).ok()) {
             LOG(ERROR) << "Fail to load graph from data directory: "
                        << data_dir_value;
             if (!prev_lock) {  // If the graph is not locked before, and we

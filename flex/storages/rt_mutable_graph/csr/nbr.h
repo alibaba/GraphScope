@@ -166,6 +166,9 @@ class ImmutableNbrSlice<std::string_view> {
   using const_nbr_t = const ColumnNbr;
   using const_nbr_ptr_t = const ColumnNbr;
   ImmutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  ImmutableNbrSlice(const ImmutableNbrSlice<size_t>& slice,
+                    const StringColumn& column)
+      : slice_(slice), column_(column) {}
   ImmutableNbrSlice(const ImmutableNbrSlice& rhs)
       : slice_(rhs.slice_), column_(rhs.column_) {}
   ~ImmutableNbrSlice() = default;
@@ -187,6 +190,68 @@ class ImmutableNbrSlice<std::string_view> {
  private:
   ImmutableNbrSlice<size_t> slice_;
   const StringColumn& column_;
+};
+
+template <>
+class ImmutableNbrSlice<RecordView> {
+ public:
+  struct TableNbr {
+    using const_nbr_t = const ImmutableNbr<size_t>;
+    using const_nbr_ptr_t = const ImmutableNbr<size_t>*;
+
+    TableNbr(const_nbr_ptr_t ptr, const Table& table)
+        : ptr_(ptr), table_(table) {}
+    vid_t get_neighbor() const { return ptr_->neighbor; }
+    RecordView get_data() const { return RecordView(ptr_->data, &table_); }
+
+    const TableNbr& operator*() const { return *this; }
+    const TableNbr* operator->() const { return this; }
+    const TableNbr& operator=(const TableNbr& nbr) const {
+      ptr_ = nbr.ptr_;
+      return *this;
+    }
+    bool operator==(const TableNbr& nbr) const { return ptr_ == nbr.ptr_; }
+    bool operator!=(const TableNbr& nbr) const { return ptr_ != nbr.ptr_; }
+    const TableNbr& operator++() const {
+      ++ptr_;
+      return *this;
+    }
+
+    const TableNbr& operator+=(size_t n) const {
+      ptr_ += n;
+      return *this;
+    }
+
+    size_t operator-(const TableNbr& nbr) const { return ptr_ - nbr.ptr_; }
+
+    bool operator<(const TableNbr& nbr) const { return ptr_ < nbr.ptr_; }
+
+    mutable const_nbr_ptr_t ptr_;
+    const Table& table_;
+  };
+  using const_nbr_t = const TableNbr;
+  using const_nbr_ptr_t = const TableNbr;
+  ImmutableNbrSlice(const ImmutableNbrSlice<size_t>& slice, const Table& table)
+      : slice_(slice), table_(table) {}
+  ImmutableNbrSlice(const ImmutableNbrSlice& rhs)
+      : slice_(rhs.slice_), table_(rhs.table_) {}
+  ~ImmutableNbrSlice() = default;
+  void set_size(int size) { slice_.set_size(size); }
+  int size() const { return slice_.size(); }
+
+  void set_begin(const ImmutableNbr<size_t>* ptr) { slice_.set_begin(ptr); }
+
+  const TableNbr begin() const { return TableNbr(slice_.begin(), table_); }
+  const TableNbr end() const { return TableNbr(slice_.end(), table_); }
+
+  static ImmutableNbrSlice empty(const Table& table) {
+    ImmutableNbrSlice ret(ImmutableNbrSlice<size_t>::empty(), table);
+    return ret;
+  }
+
+ private:
+  ImmutableNbrSlice<size_t> slice_;
+  const Table& table_;
 };
 
 template <typename EDATA_T>

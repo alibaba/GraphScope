@@ -27,7 +27,7 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
 class GraphDBSession;
 
@@ -38,7 +38,7 @@ class InsertTransaction {
 
   InsertTransaction(const GraphDBSession& session,
                     MutablePropertyFragment& graph, Allocator& alloc,
-                    WalWriter& logger, VersionManager& vm,
+                    IWalWriter& logger, VersionManager& vm,
                     timestamp_t timestamp);
 
   ~InsertTransaction();
@@ -48,7 +48,7 @@ class InsertTransaction {
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
                const Any& dst, label_t edge_label, const Any& prop);
 
-  void Commit();
+  bool Commit();
 
   void Abort();
 
@@ -76,7 +76,7 @@ class InsertTransaction {
   MutablePropertyFragment& graph_;
 
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 };

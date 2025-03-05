@@ -19,7 +19,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
-#include "flex/engines/graph_db/database/wal.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 #include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -36,7 +36,7 @@ UpdateTransaction::UpdateTransaction(const GraphDBSession& session,
                                      MutablePropertyFragment& graph,
                                      Allocator& alloc,
                                      const std::string& work_dir,
-                                     WalWriter& logger, VersionManager& vm,
+                                     IWalWriter& logger, VersionManager& vm,
                                      timestamp_t timestamp)
     : session_(session),
       graph_(graph),
@@ -102,24 +102,29 @@ UpdateTransaction::~UpdateTransaction() { release(); }
 
 timestamp_t UpdateTransaction::timestamp() const { return timestamp_; }
 
-void UpdateTransaction::Commit() {
+bool UpdateTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
-    return;
+    return true;
   }
   if (op_num_ == 0) {
     release();
-    return;
+    return true;
   }
 
   auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 1;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+    LOG(ERROR) << "Failed to append wal log";
+    Abort();
+    return false;
+  }
 
   applyVerticesUpdates();
   applyEdgesUpdates();
   release();
+  return true;
 }
 
 void UpdateTransaction::Abort() { release(); }
@@ -729,9 +734,9 @@ void UpdateTransaction::release() {
   }
 }
 
-void UpdateTransaction::batch_commit(UpdateBatch& batch) {
+bool UpdateTransaction::batch_commit(UpdateBatch& batch) {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
-    return;
+    return true;
   }
   const auto& updateVertices = batch.GetUpdateVertices();
   for (auto& [label, oid, props] : updateVertices) {
@@ -762,10 +767,15 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
     header->length = arc.GetSize() - sizeof(WalHeader);
     header->type = 1;
     header->timestamp = timestamp_;
-    logger_.append(arc.GetBuffer(), arc.GetSize());
+    if (!logger_.append(arc.GetBuffer(), arc.GetSize())) {
+      LOG(ERROR) << "Failed to append wal log";
+      Abort();
+      return false;
+    }
   }
 
   release();
+  return true;
 }
 
 void UpdateTransaction::applyVerticesUpdates() {

@@ -64,8 +64,8 @@ PropertyType StringToPrimitivePropertyType(const std::string& str) {
   } else if (str == "Day" || str == DT_DAY || str == "day") {
     return PropertyType::kDay;
   } else if (str == "String" || str == "STRING" || str == DT_STRING) {
-    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
-    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+    // DT_STRING is a alias for VARCHAR(GetStringDefaultMaxLength());
+    return PropertyType::Varchar(PropertyType::GetStringDefaultMaxLength());
   } else if (str == DT_STRINGMAP) {
     return PropertyType::kStringMap;
   } else if (str == "Empty") {
@@ -83,6 +83,28 @@ PropertyType StringToPrimitivePropertyType(const std::string& str) {
   }
 }
 }  // namespace config_parsing
+
+static uint16_t get_string_default_max_length_env() {
+  static uint16_t max_length = 0;
+  if (max_length == 0) {
+    char* env = std::getenv("FLEX_STRING_DEFAULT_MAX_LENGTH");
+    if (env) {
+      try {
+        max_length = static_cast<uint16_t>(std::stoi(env));
+        LOG(INFO) << "FLEX_STRING_DEFAULT_MAX_LENGTH: " << max_length;
+      } catch (std::exception& e) {
+        LOG(ERROR) << "Invalid FLEX_STRING_DEFAULT_MAX_LENGTH: " << env;
+      }
+    }
+  }
+  return max_length;
+}
+
+uint16_t PropertyType::GetStringDefaultMaxLength() {
+  return get_string_default_max_length_env() > 0
+             ? get_string_default_max_length_env()
+             : PropertyType::STRING_DEFAULT_MAX_LENGTH;
+}
 
 size_t RecordView::size() const { return table->col_num(); }
 

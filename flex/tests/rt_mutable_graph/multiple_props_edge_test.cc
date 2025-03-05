@@ -143,7 +143,7 @@ class TestMultiplePropertiesEdge {
 };
 
 }  // namespace gs
-// ./string_edge_property_test graph.yaml data_dir
+// ./string_edge_property_test data_dir
 int main(int argc, char** argv) {
   bool warmup = false;
   uint32_t shard_num = 1;
@@ -151,8 +151,8 @@ int main(int argc, char** argv) {
   std::string graph_schema_path = "";
   std::string data_path = "";
 
-  graph_schema_path = argv[1];
-  data_path = argv[2];
+  data_path = argv[1];
+  graph_schema_path = data_path + "/graph.yaml";
 
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();

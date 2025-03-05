@@ -247,4 +247,28 @@ public class SimpleMatchQueries {
                                 + " url=http://dbpedia.org/resource/Azerbaijan}]");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_20_test() {
+        String query =
+                "MATCH(a)-[b: LIKES {creationDate: 1294619734295}]-(c) WITH a.id as aId, c.id as"
+                        + " cId return aId, cId ORDER BY aId ASC, cId ASC limit 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 933, cId: 412317087328}>",
+                        "Record<{aId: 412317087328, cId: 933}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_21_test() {
+        String query =
+                "MATCH(a:PERSON)-[k*1..2]->(b: PERSON) WHERE a.id = 933L AND b.id = 10995116278291L"
+                        + " WITH a.id AS startId, k AS path, b.id as destId RETURN startId, path,"
+                        + " destId ORDER BY length(path) LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{startId: 933, path:"
+                            + " path[(72057594037927936)-[34359738908:KNOWS]->(72057594037928476)],"
+                            + " destId: 10995116278291}>");
+        return new QueryContext(query, expected);
+    }
 }

@@ -35,7 +35,7 @@ class UGetV {
       RETURN_BAD_REQUEST_ERROR("current only support edge column");
     }
     const auto input_edge_list = dynamic_cast<const IEdgeColumn*>(col.get());
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     if (input_edge_list->edge_column_type() == EdgeColumnType::kBDML) {
       const auto bdml_edge_list =
           dynamic_cast<const BDMLEdgeColumn*>(input_edge_list);
@@ -61,7 +61,8 @@ class UGetV {
       LOG(ERROR) << "current only support BDML edge column";
       RETURN_BAD_REQUEST_ERROR("current only support BDML edge column");
     }
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offsets);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offsets);
     return ctx;
   }
 
@@ -77,7 +78,7 @@ class UGetV {
     }
     const auto input_vertex_list =
         dynamic_cast<const IVertexColumn*>(col.get());
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     foreach_vertex(*input_vertex_list,
                    [&](size_t index, label_t label, vid_t v) {
                      if (pred(label, v, index)) {
@@ -85,7 +86,8 @@ class UGetV {
                        shuffle_offsets.push_back(index);
                      }
                    });
-    ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offsets);
+    ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                           shuffle_offsets);
     return ctx;
   }
 };

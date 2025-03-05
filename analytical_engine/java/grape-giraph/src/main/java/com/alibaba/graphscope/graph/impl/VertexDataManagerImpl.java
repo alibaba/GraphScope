@@ -156,7 +156,7 @@ public class VertexDataManagerImpl<
             outputStream.finishSetting();
             logger.info(
                     "Vertex data stream size: "
-                            + outputStream.bytesWriten()
+                            + outputStream.bytesWritten()
                             + ", vertices: "
                             + vertexNum);
         } catch (IOException e) {

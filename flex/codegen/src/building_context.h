@@ -181,7 +181,7 @@ class BuildingContext {
   // int32_t GetCurrentCtxId() const { return ctx_id_; }
   bool EmptyContext() const { return ctx_id_ == 0; }
 
-  // return a pair indicate the direction of assigning, also increate cur ctx id
+  // return a pair indicate the direction of assigning, also increase cur ctx id
   std::pair<std::string, std::string> GetPrevAndNextCtxName() {
     std::string ctx_name = ctx_prefix_ + CONTEXT_NAME + std::to_string(ctx_id_);
     std::string ctx_name2 =
@@ -259,7 +259,7 @@ class BuildingContext {
 
   std::string ContextPrefix() const { return ctx_prefix_; }
 
-  BuildingContext CreateSubTaskContext(std::string sufix = "inner_") {
+  BuildingContext CreateSubTaskContext(std::string suffix = "inner_") {
     BuildingContext ctx;
     ctx.storage_backend_ = storage_backend_;
     ctx.query_name_ = query_name_;
@@ -271,7 +271,7 @@ class BuildingContext {
     ctx.graph_interface_ = graph_interface_;
     ctx.app_base_header_ = app_base_header_;
     ctx.graph_header_ = graph_header_;
-    ctx.ctx_prefix_ = ctx_prefix_ + sufix;
+    ctx.ctx_prefix_ = ctx_prefix_ + suffix;
     ctx.tag_ind_mapping_ = tag_ind_mapping_;
 
     ctx.contain_head_ = contain_head_;
@@ -289,8 +289,8 @@ class BuildingContext {
     contain_head_ = ctx.contain_head_;
   }
 
-  void AppendContextPrefix(const std::string sufix) {
-    ctx_prefix_ = ctx_prefix_ + sufix;
+  void AppendContextPrefix(const std::string suffix) {
+    ctx_prefix_ = ctx_prefix_ + suffix;
   }
 
   // void IncCtxId() { ++ctx_id_; }

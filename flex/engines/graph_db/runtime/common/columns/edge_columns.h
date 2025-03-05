@@ -115,7 +115,7 @@ class IEdgeColumn : public IContextColumn {
 };
 
 class SDSLEdgeColumnBuilder;
-class OptionalSDSLEdgeColumnBuilder;
+
 template <typename T>
 class SDSLEdgeColumnBuilderBeta;
 
@@ -142,18 +142,6 @@ class SDSLEdgeColumn : public IEdgeColumn {
   inline size_t size() const override { return edges_.size(); }
 
   inline Direction dir() const { return dir_; }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<SDSLEdgeColumnBuilder>(dir_, label_, prop_type_));
-  }
-
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
-        std::make_shared<OptionalSDSLEdgeColumnBuilder>(dir_, label_,
-                                                        prop_type_));
-  }
 
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     // TODO: dedup with property value
@@ -204,6 +192,7 @@ class SDSLEdgeColumn : public IEdgeColumn {
   friend class SDSLEdgeColumnBuilder;
   template <typename _T>
   friend class SDSLEdgeColumnBuilderBeta;
+  friend class OptionalSDSLEdgeColumn;
   Direction dir_;
   LabelTriplet label_;
   std::vector<std::pair<vid_t, vid_t>> edges_;
@@ -215,49 +204,26 @@ class OptionalSDSLEdgeColumn : public IEdgeColumn {
  public:
   OptionalSDSLEdgeColumn(Direction dir, const LabelTriplet& label,
                          PropertyType prop_type)
-      : dir_(dir),
-        label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
+      : column_(dir, label, prop_type) {}
 
   inline EdgeRecord get_edge(size_t idx) const override {
-    EdgeRecord ret;
-    ret.label_triplet_ = label_;
-    ret.src_ = edges_[idx].first;
-    ret.dst_ = edges_[idx].second;
-    get_edge_data(prop_col_.get(), idx, ret.prop_);
-    ret.dir_ = dir_;
-    return ret;
+    return column_.get_edge(idx);
   }
 
-  inline size_t size() const override { return edges_.size(); }
+  inline size_t size() const override { return column_.size(); }
 
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
-    ColumnsUtils::generate_dedup_offset(edges_, size(), offsets);
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<OptionalSDSLEdgeColumnBuilder>(dir_, label_,
-                                                        prop_type_));
+    column_.generate_dedup_offset(offsets);
   }
 
   ISigColumn* generate_signature() const override {
-    std::map<std::pair<vid_t, vid_t>, size_t> edge_map;
-    std::vector<size_t> sigs;
-    for (size_t i = 0; i < size(); ++i) {
-      if (edge_map.find(edges_[i]) == edge_map.end()) {
-        edge_map[edges_[i]] = i;
-      }
-      sigs.push_back(edge_map[edges_[i]]);
-    }
-    return new SigColumn<size_t>(sigs);
+    return column_.generate_signature();
   }
 
   std::string column_info() const override {
-    return "OptionalSDSLEdgeColumn: label = " + label_.to_string() +
-           ", dir = " + std::to_string((int) dir_) +
-           ", size = " + std::to_string(edges_.size());
+    return "OptionalSDSLEdgeColumn: label = " + column_.label_.to_string() +
+           ", dir = " + std::to_string((int) column_.dir_) +
+           ", size = " + std::to_string(column_.edges_.size());
   }
 
   std::shared_ptr<IContextColumn> shuffle(
@@ -266,8 +232,9 @@ class OptionalSDSLEdgeColumn : public IEdgeColumn {
   template <typename FUNC_T>
   void foreach_edge(const FUNC_T& func) const {
     size_t idx = 0;
-    for (auto& e : edges_) {
-      func(idx, label_, e.first, e.second, prop_col_->get(idx), dir_);
+    for (auto& e : column_.edges_) {
+      func(idx, column_.label_, e.first, e.second, column_.prop_col_->get(idx),
+           column_.dir_);
       ++idx;
     }
   }
@@ -275,64 +242,21 @@ class OptionalSDSLEdgeColumn : public IEdgeColumn {
   inline bool is_optional() const override { return true; }
 
   inline bool has_value(size_t idx) const override {
-    return edges_[idx].first != std::numeric_limits<vid_t>::max() &&
-           edges_[idx].second != std::numeric_limits<vid_t>::max();
+    return column_.edges_[idx].first != std::numeric_limits<vid_t>::max() &&
+           column_.edges_[idx].second != std::numeric_limits<vid_t>::max();
   }
 
-  std::vector<LabelTriplet> get_labels() const override { return {label_}; }
+  std::vector<LabelTriplet> get_labels() const override {
+    return {column_.label_};
+  }
 
   inline EdgeColumnType edge_column_type() const override {
     return EdgeColumnType::kSDSL;
   }
 
  private:
-  friend class OptionalSDSLEdgeColumnBuilder;
-  Direction dir_;
-  LabelTriplet label_;
-  std::vector<std::pair<vid_t, vid_t>> edges_;
-  PropertyType prop_type_;
-  std::shared_ptr<EdgePropVecBase> prop_col_;
-};
-
-class OptionalSDSLEdgeColumnBuilder : public IOptionalContextColumnBuilder {
- public:
-  OptionalSDSLEdgeColumnBuilder(Direction dir, const LabelTriplet& label,
-                                PropertyType prop_type)
-      : dir_(dir),
-        label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
-  ~OptionalSDSLEdgeColumnBuilder() = default;
-
-  void reserve(size_t size) override { edges_.reserve(size); }
-  inline void push_back_elem(const RTAny& val) override {
-    const auto& e = val.as_edge();
-    push_back_opt(e.src_, e.dst_, e.prop_);
-  }
-  inline void push_back_opt(vid_t src, vid_t dst, const EdgeData& data) {
-    edges_.emplace_back(src, dst);
-    size_t len = edges_.size();
-    set_edge_data(prop_col_.get(), len - 1, data);
-  }
-
-  inline void push_back_null() override {
-    edges_.emplace_back(std::numeric_limits<vid_t>::max(),
-                        std::numeric_limits<vid_t>::max());
-  }
-  inline void push_back_endpoints(vid_t src, vid_t dst) {
-    edges_.emplace_back(src, dst);
-  }
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
-  friend class SDSLEdgeColumn;
-  friend class OptionalSDSLEdgeColumn;
-  Direction dir_;
-  LabelTriplet label_;
-  std::vector<std::pair<vid_t, vid_t>> edges_;
-  PropertyType prop_type_;
-  std::shared_ptr<EdgePropVecBase> prop_col_;
+  friend class SDSLEdgeColumnBuilder;
+  SDSLEdgeColumn column_;
 };
 
 class BDSLEdgeColumnBuilder;
@@ -365,16 +289,6 @@ class BDSLEdgeColumn : public IEdgeColumn {
            ", size = " + std::to_string(edges_.size());
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<BDSLEdgeColumnBuilder>(label_, prop_type_));
-  }
-
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(
-        std::make_shared<OptionalBDSLEdgeColumnBuilder>(label_, prop_type_));
-  }
   std::shared_ptr<IContextColumn> shuffle(
       const std::vector<size_t>& offsets) const override;
   std::shared_ptr<IContextColumn> optional_shuffle(
@@ -398,6 +312,7 @@ class BDSLEdgeColumn : public IEdgeColumn {
 
  private:
   friend class BDSLEdgeColumnBuilder;
+  friend class OptionalBDSLEdgeColumn;
   LabelTriplet label_;
   std::vector<std::tuple<vid_t, vid_t, bool>> edges_;
   PropertyType prop_type_;
@@ -407,33 +322,17 @@ class BDSLEdgeColumn : public IEdgeColumn {
 class OptionalBDSLEdgeColumn : public IEdgeColumn {
  public:
   OptionalBDSLEdgeColumn(const LabelTriplet& label, PropertyType prop_type)
-      : label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
+      : column_(label, prop_type) {}
 
   inline EdgeRecord get_edge(size_t idx) const override {
-    auto src = std::get<0>(edges_[idx]);
-    auto dst = std::get<1>(edges_[idx]);
-    auto dir = std::get<2>(edges_[idx]);
-    EdgeRecord ret;
-    ret.label_triplet_ = label_;
-    ret.src_ = src;
-    ret.dst_ = dst;
-    get_edge_data(prop_col_.get(), idx, ret.prop_);
-    ret.dir_ = (dir ? Direction::kOut : Direction::kIn);
-    return ret;
+    return column_.get_edge(idx);
   }
 
-  inline size_t size() const override { return edges_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<OptionalBDSLEdgeColumnBuilder>(label_, prop_type_));
-  }
+  inline size_t size() const override { return column_.edges_.size(); }
 
   std::string column_info() const override {
-    return "OptionalBDSLEdgeColumn: label = " + label_.to_string() +
-           ", size = " + std::to_string(edges_.size());
+    return "OptionalBDSLEdgeColumn: label = " + column_.label_.to_string() +
+           ", size = " + std::to_string(column_.edges_.size());
   }
 
   std::shared_ptr<IContextColumn> shuffle(
@@ -444,8 +343,9 @@ class OptionalBDSLEdgeColumn : public IEdgeColumn {
   template <typename FUNC_T>
   void foreach_edge(const FUNC_T& func) const {
     size_t idx = 0;
-    for (auto& e : edges_) {
-      func(idx, label_, std::get<0>(e), std::get<1>(e), prop_col_->get(idx),
+    for (auto& e : column_.edges_) {
+      func(idx, column_.label_, std::get<0>(e), std::get<1>(e),
+           column_.prop_col_->get(idx),
            (std::get<2>(e) ? Direction::kOut : Direction::kIn));
       ++idx;
     }
@@ -454,22 +354,23 @@ class OptionalBDSLEdgeColumn : public IEdgeColumn {
   inline bool is_optional() const override { return true; }
 
   inline bool has_value(size_t idx) const override {
-    return std::get<0>(edges_[idx]) != std::numeric_limits<vid_t>::max() &&
-           std::get<1>(edges_[idx]) != std::numeric_limits<vid_t>::max();
+    return std::get<0>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max() &&
+           std::get<1>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max();
   }
 
-  std::vector<LabelTriplet> get_labels() const override { return {label_}; }
+  std::vector<LabelTriplet> get_labels() const override {
+    return {column_.label_};
+  }
 
   inline EdgeColumnType edge_column_type() const override {
     return EdgeColumnType::kBDSL;
   }
 
  private:
-  friend class OptionalBDSLEdgeColumnBuilder;
-  LabelTriplet label_;
-  std::vector<std::tuple<vid_t, vid_t, bool>> edges_;
-  PropertyType prop_type_;
-  std::shared_ptr<EdgePropVecBase> prop_col_;
+  friend class BDSLEdgeColumnBuilder;
+  BDSLEdgeColumn column_;
 };
 
 class SDMLEdgeColumnBuilder;
@@ -506,11 +407,6 @@ class SDMLEdgeColumn : public IEdgeColumn {
 
   inline size_t size() const override { return edges_.size(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<SDMLEdgeColumnBuilder>(dir_, edge_labels_));
-  }
-
   std::string column_info() const override {
     std::stringstream ss{};
 
@@ -527,6 +423,9 @@ class SDMLEdgeColumn : public IEdgeColumn {
   }
 
   std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offsets) const override;
 
   template <typename FUNC_T>
@@ -557,11 +456,71 @@ class SDMLEdgeColumn : public IEdgeColumn {
 
  private:
   friend class SDMLEdgeColumnBuilder;
+  friend class OptionalSDMLEdgeColumn;
   Direction dir_;
-  std::map<LabelTriplet, int8_t> index_;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> edge_labels_;
-  std::vector<std::tuple<int8_t, vid_t, vid_t, size_t>> edges_;
+  std::vector<std::tuple<label_t, vid_t, vid_t, size_t>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
+};
+
+class OptionalSDMLEdgeColumn : public IEdgeColumn {
+ public:
+  OptionalSDMLEdgeColumn(
+      Direction dir,
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
+      : column_(dir, labels) {}
+
+  inline EdgeRecord get_edge(size_t idx) const override {
+    return column_.get_edge(idx);
+  }
+
+  inline size_t size() const override { return column_.edges_.size(); }
+
+  std::string column_info() const override {
+    std::stringstream ss{};
+
+    for (size_t idx = 0; idx < column_.edge_labels_.size(); ++idx) {
+      auto label = column_.edge_labels_[idx];
+      if (idx != 0) {
+        ss << ", ";
+      }
+      ss << label.first.to_string();
+    }
+    return "SDMLEdgeColumn: label = {" + ss.str() +
+           "}, dir = " + std::to_string((int) column_.dir_) +
+           ", size = " + std::to_string(column_.edges_.size());
+  }
+
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+
+  template <typename FUNC_T>
+  void foreach_edge(const FUNC_T& func) const {
+    column_.foreach_edge(func);
+  }
+
+  std::vector<LabelTriplet> get_labels() const override {
+    return column_.get_labels();
+  }
+
+  inline Direction dir() const { return column_.dir(); }
+  inline EdgeColumnType edge_column_type() const override {
+    return EdgeColumnType::kSDML;
+  }
+
+  inline bool is_optional() const override { return true; }
+
+  inline bool has_value(size_t idx) const override {
+    return std::get<1>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max() &&
+           std::get<2>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max();
+  }
+
+ private:
+  friend class SDMLEdgeColumnBuilder;
+  SDMLEdgeColumn column_;
 };
 
 class BDMLEdgeColumnBuilder;
@@ -596,11 +555,6 @@ class BDMLEdgeColumn : public IEdgeColumn {
 
   inline size_t size() const override { return edges_.size(); }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(
-        std::make_shared<BDMLEdgeColumnBuilder>(labels_));
-  }
-
   std::string column_info() const override {
     std::stringstream ss{};
 
@@ -616,6 +570,9 @@ class BDMLEdgeColumn : public IEdgeColumn {
   }
 
   std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+
+  std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offsets) const override;
 
   template <typename FUNC_T>
@@ -646,20 +603,83 @@ class BDMLEdgeColumn : public IEdgeColumn {
 
  private:
   friend class BDMLEdgeColumnBuilder;
-  std::map<LabelTriplet, int8_t> index_;
+  friend class OptionalBDMLEdgeColumn;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> labels_;
-  std::vector<std::tuple<int8_t, vid_t, vid_t, size_t, bool>> edges_;
+  std::vector<std::tuple<label_t, vid_t, vid_t, size_t, bool>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
+};
+
+class OptionalBDMLEdgeColumn : public IEdgeColumn {
+ public:
+  OptionalBDMLEdgeColumn(
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
+      : column_(labels) {}
+
+  inline EdgeRecord get_edge(size_t idx) const override {
+    return column_.get_edge(idx);
+  }
+
+  inline size_t size() const override { return column_.size(); }
+
+  std::string column_info() const override {
+    std::stringstream ss{};
+
+    for (size_t idx = 0; idx < column_.labels_.size(); ++idx) {
+      auto label = column_.labels_[idx];
+      if (idx != 0) {
+        ss << ", ";
+      }
+      ss << label.first.to_string();
+    }
+    return "BDMLEdgeColumn: label = {" + ss.str() +
+           "}, size = " + std::to_string(column_.edges_.size());
+  }
+
+  std::shared_ptr<IContextColumn> shuffle(
+      const std::vector<size_t>& offsets) const override;
+
+  template <typename FUNC_T>
+  void foreach_edge(const FUNC_T& func) const {
+    column_.foreach_edge(func);
+  }
+
+  std::vector<LabelTriplet> get_labels() const override {
+    return column_.get_labels();
+  }
+
+  inline EdgeColumnType edge_column_type() const override {
+    return EdgeColumnType::kBDML;
+  }
+
+  inline bool is_optional() const override { return true; }
+
+  inline bool has_value(size_t idx) const override {
+    return std::get<1>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max() &&
+           std::get<2>(column_.edges_[idx]) !=
+               std::numeric_limits<vid_t>::max();
+  }
+
+ private:
+  friend class BDMLEdgeColumnBuilder;
+  BDMLEdgeColumn column_;
 };
 
 class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
-  SDSLEdgeColumnBuilder(Direction dir, const LabelTriplet& label,
-                        PropertyType prop_type)
-      : dir_(dir),
-        label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
+  static SDSLEdgeColumnBuilder builder(Direction dir, const LabelTriplet& label,
+                                       PropertyType prop_type) {
+    return SDSLEdgeColumnBuilder(dir, label, prop_type);
+  }
+
+  static SDSLEdgeColumnBuilder optional_builder(Direction dir,
+                                                const LabelTriplet& label,
+                                                PropertyType prop_type) {
+    auto builder = SDSLEdgeColumnBuilder(dir, label, prop_type);
+    builder.is_optional_ = true;
+    return builder;
+  }
   ~SDSLEdgeColumnBuilder() = default;
 
   void reserve(size_t size) override { edges_.reserve(size); }
@@ -678,15 +698,30 @@ class SDSLEdgeColumnBuilder : public IContextColumnBuilder {
     edges_.emplace_back(src, dst);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  inline void push_back_null() {
+    assert(is_optional_);
+    edges_.emplace_back(std::numeric_limits<vid_t>::max(),
+                        std::numeric_limits<vid_t>::max());
+  }
+
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  SDSLEdgeColumnBuilder(Direction dir, const LabelTriplet& label,
+                        PropertyType prop_type)
+      : dir_(dir),
+        label_(label),
+        prop_type_(prop_type),
+        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)),
+        is_optional_(false) {}
   friend class SDSLEdgeColumn;
   Direction dir_;
   LabelTriplet label_;
   std::vector<std::pair<vid_t, vid_t>> edges_;
   PropertyType prop_type_;
   std::shared_ptr<EdgePropVecBase> prop_col_;
+  bool is_optional_;
 };
 
 template <typename T>
@@ -713,7 +748,8 @@ class SDSLEdgeColumnBuilderBeta : public IContextColumnBuilder {
     prop_col_ptr_->set(len, data);
   }
 
-  std::shared_ptr<IContextColumn> finish() override {
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override {
     auto ret = std::make_shared<SDSLEdgeColumn>(dir_, label_, prop_type_,
                                                 std::vector<PropertyType>());
     ret->edges_.swap(edges_);
@@ -733,10 +769,17 @@ class SDSLEdgeColumnBuilderBeta : public IContextColumnBuilder {
 
 class BDSLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
-  BDSLEdgeColumnBuilder(const LabelTriplet& label, PropertyType prop_type)
-      : label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
+  static BDSLEdgeColumnBuilder builder(const LabelTriplet& label,
+                                       PropertyType prop_type) {
+    return BDSLEdgeColumnBuilder(label, prop_type);
+  }
+
+  static BDSLEdgeColumnBuilder optional_builder(const LabelTriplet& label,
+                                                PropertyType prop_type) {
+    auto builder = BDSLEdgeColumnBuilder(label, prop_type);
+    builder.is_optional_ = true;
+    return builder;
+  }
   ~BDSLEdgeColumnBuilder() = default;
 
   void reserve(size_t size) override { edges_.reserve(size); }
@@ -758,7 +801,14 @@ class BDSLEdgeColumnBuilder : public IContextColumnBuilder {
     edges_.emplace_back(src, dst, dir);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  inline void push_back_null() {
+    assert(is_optional_);
+    edges_.emplace_back(std::numeric_limits<vid_t>::max(),
+                        std::numeric_limits<vid_t>::max(), false);
+  }
+
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
   friend class BDSLEdgeColumn;
@@ -766,21 +816,32 @@ class BDSLEdgeColumnBuilder : public IContextColumnBuilder {
   std::vector<std::tuple<vid_t, vid_t, bool>> edges_;
   PropertyType prop_type_;
   std::shared_ptr<EdgePropVecBase> prop_col_;
+  bool is_optional_;
+
+  BDSLEdgeColumnBuilder(const LabelTriplet& label, PropertyType prop_type)
+      : label_(label),
+        prop_type_(prop_type),
+        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)),
+        is_optional_(false) {}
 };
 class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
-  SDMLEdgeColumnBuilder(
+  static SDMLEdgeColumnBuilder builder(
       Direction dir,
-      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
-      : dir_(dir) {
-    size_t idx = 0;
-    prop_cols_.resize(labels.size());
-    for (const auto& label : labels) {
-      edge_labels_.emplace_back(label);
-      index_[label.first] = idx++;
-      prop_cols_[index_[label.first]] =
-          EdgePropVecBase::make_edge_prop_vec(label.second);
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels) {
+    return SDMLEdgeColumnBuilder(dir, labels);
+  }
+
+  static SDMLEdgeColumnBuilder optional_builder(
+      Direction dir,
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels) {
+    auto builder = SDMLEdgeColumnBuilder(dir, labels);
+    builder.is_optional_ = true;
+    if (builder.prop_cols_.empty()) {
+      builder.prop_cols_.emplace_back(EdgePropVecBase::make_edge_prop_vec(
+          PropertyType::kEmpty));  // for null edge
     }
+    return builder;
   }
   ~SDMLEdgeColumnBuilder() = default;
 
@@ -791,7 +852,7 @@ class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
     auto index = index_[label];
     push_back_opt(index, e.src_, e.dst_, e.prop_);
   }
-  inline void push_back_opt(int8_t index, vid_t src, vid_t dst,
+  inline void push_back_opt(label_t index, vid_t src, vid_t dst,
                             const EdgeData& data) {
     edges_.emplace_back(index, src, dst, prop_cols_[index]->size());
     set_edge_data(prop_cols_[index].get(), prop_cols_[index]->size(), data);
@@ -803,34 +864,70 @@ class SDMLEdgeColumnBuilder : public IContextColumnBuilder {
     push_back_opt(index, src, dst, data);
   }
 
-  inline void push_back_endpoints(int8_t index, vid_t src, vid_t dst) {
+  inline void push_back_null() {
+    assert(is_optional_);
+    edges_.emplace_back(0, std::numeric_limits<vid_t>::max(),
+                        std::numeric_limits<vid_t>::max(),
+                        prop_cols_[0]->size());
+    prop_cols_[0]->resize(prop_cols_[0]->size() + 1);
+  }
+
+  inline void push_back_endpoints(label_t index, vid_t src, vid_t dst) {
     LOG(FATAL) << "Not implemented";
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  SDMLEdgeColumnBuilder(
+      Direction dir,
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
+      : dir_(dir), is_optional_(false) {
+    size_t idx = 0;
+    prop_cols_.resize(labels.size());
+    for (const auto& label : labels) {
+      edge_labels_.emplace_back(label);
+      index_[label.first] = idx++;
+      prop_cols_[index_[label.first]] =
+          EdgePropVecBase::make_edge_prop_vec(label.second);
+    }
+  }
   friend class SDMLEdgeColumn;
   Direction dir_;
-  std::map<LabelTriplet, int8_t> index_;
+  bool is_optional_;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> edge_labels_;
-  std::vector<std::tuple<int8_t, vid_t, vid_t, size_t>> edges_;
+  std::vector<std::tuple<label_t, vid_t, vid_t, size_t>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
 };
 
 class BDMLEdgeColumnBuilder : public IContextColumnBuilder {
  public:
-  BDMLEdgeColumnBuilder() : index_(), labels_() {}
-  BDMLEdgeColumnBuilder(
-      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
-      : labels_(labels) {
-    size_t idx = 0;
-    prop_cols_.resize(labels.size());
-    for (const auto& label : labels) {
-      index_[label.first] = idx++;
-      prop_cols_[index_[label.first]] =
-          EdgePropVecBase::make_edge_prop_vec(label.second);
+  static BDMLEdgeColumnBuilder builder(
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels) {
+    return BDMLEdgeColumnBuilder(labels);
+  }
+
+  static BDMLEdgeColumnBuilder optional_builder(
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels) {
+    auto builder = BDMLEdgeColumnBuilder(labels);
+    builder.is_optional_ = true;
+    if (builder.prop_cols_.empty()) {
+      builder.prop_cols_.emplace_back(EdgePropVecBase::make_edge_prop_vec(
+          PropertyType::kEmpty));  // for null edge
     }
+    return builder;
+  }
+  static BDMLEdgeColumnBuilder builder() { return BDMLEdgeColumnBuilder(); }
+  static BDMLEdgeColumnBuilder optional_builder() {
+    auto builder = BDMLEdgeColumnBuilder();
+    builder.is_optional_ = true;
+    if (builder.prop_cols_.empty()) {
+      builder.prop_cols_.emplace_back(EdgePropVecBase::make_edge_prop_vec(
+          PropertyType::kEmpty));  // for null edge
+    }
+    return builder;
   }
   ~BDMLEdgeColumnBuilder() = default;
 
@@ -848,11 +945,24 @@ class BDMLEdgeColumnBuilder : public IContextColumnBuilder {
     auto index = index_[label];
     push_back_opt(index, e.src_, e.dst_, e.prop_, e.dir_);
   }
-  inline void push_back_opt(int8_t index, vid_t src, vid_t dst,
+  inline void push_back_opt(label_t index, vid_t src, vid_t dst,
                             const EdgeData& data, Direction dir) {
     edges_.emplace_back(index, src, dst, prop_cols_[index]->size(),
                         dir == Direction::kOut);
     set_edge_data(prop_cols_[index].get(), prop_cols_[index]->size(), data);
+  }
+
+  inline void push_back_opt(EdgeRecord e) {
+    auto label = e.label_triplet_;
+    if (index_.find(label) == index_.end()) {
+      index_[label] = labels_.size();
+      auto data = e.prop_;
+      auto type = rt_type_to_property_type(data.type);
+      labels_.emplace_back(label, type);
+      prop_cols_.emplace_back(EdgePropVecBase::make_edge_prop_vec(type));
+    }
+    auto index = index_[label];
+    push_back_opt(index, e.src_, e.dst_, e.prop_, e.dir_);
   }
 
   inline void push_back_opt(LabelTriplet label, vid_t src, vid_t dst,
@@ -861,70 +971,48 @@ class BDMLEdgeColumnBuilder : public IContextColumnBuilder {
     push_back_opt(index, src, dst, data, dir);
   }
 
-  inline void push_back_endpoints(int8_t index, vid_t src, vid_t dst,
+  inline void push_back_endpoints(label_t index, vid_t src, vid_t dst,
                                   Direction dir) {
     edges_.emplace_back(index, src, dst, prop_cols_[index]->size(),
                         dir == Direction::kOut);
   }
 
-  inline void push_back_endpoints(int8_t index, vid_t src, vid_t dst,
+  inline void push_back_endpoints(label_t index, vid_t src, vid_t dst,
                                   bool dir) {
     edges_.emplace_back(index, src, dst, prop_cols_[index]->size(), dir);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  inline void push_back_null() {
+    assert(is_optional_);
+    edges_.emplace_back(0, std::numeric_limits<vid_t>::max(),
+                        std::numeric_limits<vid_t>::max(),
+                        prop_cols_[0]->size(), false);
+    prop_cols_[0]->resize(prop_cols_[0]->size() + 1);
+  }
+
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  BDMLEdgeColumnBuilder() : index_(), labels_(), is_optional_(false) {}
+  BDMLEdgeColumnBuilder(
+      const std::vector<std::pair<LabelTriplet, PropertyType>>& labels)
+      : labels_(labels), is_optional_(false) {
+    size_t idx = 0;
+    prop_cols_.resize(labels.size());
+    for (const auto& label : labels) {
+      index_[label.first] = idx++;
+      prop_cols_[index_[label.first]] =
+          EdgePropVecBase::make_edge_prop_vec(label.second);
+    }
+  }
   friend class BDMLEdgeColumn;
 
-  std::map<LabelTriplet, int8_t> index_;
+  std::map<LabelTriplet, label_t> index_;
   std::vector<std::pair<LabelTriplet, PropertyType>> labels_;
-  std::vector<std::tuple<int8_t, vid_t, vid_t, size_t, bool>> edges_;
+  std::vector<std::tuple<label_t, vid_t, vid_t, size_t, bool>> edges_;
   std::vector<std::shared_ptr<EdgePropVecBase>> prop_cols_;
-};
-
-class OptionalBDSLEdgeColumnBuilder : public IOptionalContextColumnBuilder {
- public:
-  OptionalBDSLEdgeColumnBuilder(const LabelTriplet& label,
-                                PropertyType prop_type)
-      : label_(label),
-        prop_type_(prop_type),
-        prop_col_(EdgePropVecBase::make_edge_prop_vec(prop_type)) {}
-  ~OptionalBDSLEdgeColumnBuilder() = default;
-
-  void reserve(size_t size) override { edges_.reserve(size); }
-  inline void push_back_elem(const RTAny& val) override {
-    const auto& e = val.as_edge();
-    push_back_opt(e.src_, e.dst_, e.prop_, e.dir_);
-  }
-  inline void push_back_opt(vid_t src, vid_t dst, const EdgeData& data,
-                            Direction dir) {
-    edges_.emplace_back(src, dst, dir == Direction::kOut);
-    size_t len = edges_.size();
-    set_edge_data(prop_col_.get(), len - 1, data);
-  }
-  inline void push_back_endpoints(vid_t src, vid_t dst, Direction dir) {
-    edges_.emplace_back(src, dst, dir == Direction::kOut);
-  }
-
-  inline void push_back_endpoints(vid_t src, vid_t dst, bool dir) {
-    edges_.emplace_back(src, dst, dir);
-  }
-
-  inline void push_back_null() override {
-    edges_.emplace_back(std::numeric_limits<vid_t>::max(),
-                        std::numeric_limits<vid_t>::max(), false);
-  }
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
-  friend class BDSLEdgeColumn;
-  friend class OptionalBDSLEdgeColumn;
-  LabelTriplet label_;
-  std::vector<std::tuple<vid_t, vid_t, bool>> edges_;
-  PropertyType prop_type_;
-  std::shared_ptr<EdgePropVecBase> prop_col_;
+  bool is_optional_;
 };
 
 }  // namespace runtime

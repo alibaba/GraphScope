@@ -40,9 +40,14 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
 
 void set_column_from_string_array(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
-                                  const std::vector<size_t>& offset) {
+                                  const std::vector<size_t>& offset,
+                                  bool enable_resize) {
   auto type = array->type();
   auto size = col->size();
+  auto typed_col = dynamic_cast<gs::TypedColumn<std::string_view>*>(col);
+  if (enable_resize) {
+    CHECK(typed_col != nullptr) << "Only support TypedColumn<std::string_view>";
+  }
   CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
       << "Inconsistent data type, expect string, but got " << type->ToString();
   size_t cur_ind = 0;
@@ -62,7 +67,11 @@ void set_column_from_string_array(gs::ColumnBase* col,
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++], std::move(sw));
+          if (!enable_resize) {
+            col->set_any(offset[cur_ind++], std::move(sw));
+          } else {
+            typed_col->set_value_safe(offset[cur_ind++], std::move(sw));
+          }
         }
       }
     }
@@ -76,7 +85,11 @@ void set_column_from_string_array(gs::ColumnBase* col,
         if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(offset[cur_ind++], std::move(sw));
+          if (!enable_resize) {
+            col->set_any(offset[cur_ind++], std::move(sw));
+          } else {
+            typed_col->set_value_safe(offset[cur_ind++], std::move(sw));
+          }
         }
       }
     }
@@ -113,7 +126,7 @@ void set_properties_column(gs::ColumnBase* col,
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kStringView) {
-    set_column_from_string_array(col, array, offset);
+    set_column_from_string_array(col, array, offset, true);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -395,13 +408,13 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kStringView) {
       // Both varchar and string are treated as string. For String, we use the
-      // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
-      uint16_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
+      // default max length defined in PropertyType::GetStringDefaultMaxLength()
+      uint16_t max_length = PropertyType::GetStringDefaultMaxLength();
       if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
         max_length = property_types[0].additional_type_info.max_length;
       }
-      auto dual_csr =
-          new DualCsr<std::string_view>(oe_strategy, ie_strategy, max_length);
+      auto dual_csr = new DualCsr<std::string_view>(
+          oe_strategy, ie_strategy, max_length, oe_mutable, ie_mutable);
       basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
                                      dual_csr);
       if (filenames.empty()) {
@@ -420,8 +433,9 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
         src_label_name, dst_label_name, edge_label_name);
     const auto& prop_names = schema_.get_edge_property_names(
         src_label_name, dst_label_name, edge_label_name);
-    auto dual_csr = new DualCsr<RecordView>(oe_strategy, ie_strategy,
-                                            prop_names, props, {});
+    auto dual_csr =
+        new DualCsr<RecordView>(oe_strategy, ie_strategy, prop_names, props, {},
+                                ie_mutable, oe_mutable);
     basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
                                    dual_csr);
     if (filenames.empty()) {

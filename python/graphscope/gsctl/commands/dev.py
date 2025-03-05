@@ -44,6 +44,11 @@ INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
 INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
 INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH = "/opt/flex/share/interactive_config.yaml"
 
+# additional configurations that could be set via command line --set, and will be passed to docker run command
+ADDITIONAL_ENVS = {
+    "storage.string_default_max_length": "FLEX_STRING_DEFAULT_MAX_LENGTH"
+}
+
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps.sh")
 default_graphscope_repo_path = os.path.join(
@@ -220,7 +225,14 @@ def interactive(app, graphscope_repo, version):
 @click.option(
     "--image-tag",
     help="Docker image tag used to launch instance",
-    default=__version__,
+    default="latest",
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--set",
+    help="Set additional environment variables for the instance",
+    default=None,
     show_default=True,
     required=False,
 )
@@ -235,6 +247,7 @@ def deploy(
     cypher_port,
     gremlin_port,
     config,
+    set,
 ):  # noqa: F811
     """Deploy a GraphScope Flex instance"""
     cmd = []
@@ -267,6 +280,14 @@ def deploy(
                 return
             config = os.path.abspath(config)
             cmd.extend(["-v", f"{config}:{INTERACTIVE_DOCKER_DEFAULT_CONFIG_PATH}"])
+        if set is not None:
+            for kv in set.split(","):
+                k, v = kv.split("=")
+                if k in ADDITIONAL_ENVS:
+                    cmd.extend(["-e", f"{ADDITIONAL_ENVS[k]}={v}"])
+                else:
+                    raise ValueError(f"Unknown configuration {k}")
+
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
         cmd.extend(

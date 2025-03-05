@@ -24,7 +24,9 @@ namespace ops {
 struct ExprWrapper {
   ExprWrapper(Expr&& expr) : expr_(std::move(expr)) {}
 
-  bool operator()(size_t idx) const { return expr_.eval_path(idx).as_bool(); }
+  bool operator()(size_t idx, Arena& arena) const {
+    return expr_.eval_path(idx, arena).as_bool();
+  }
 
   Expr expr_;
 };
@@ -32,8 +34,8 @@ struct ExprWrapper {
 struct OptionalExprWrapper {
   OptionalExprWrapper(Expr&& expr) : expr_(std::move(expr)) {}
 
-  bool operator()(size_t idx) const {
-    auto val = expr_.eval_path(idx, 0);
+  bool operator()(size_t idx, Arena& arena) const {
+    auto val = expr_.eval_path(idx, arena, 0);
     return (!val.is_null()) && val.as_bool();
   }
 
@@ -80,11 +82,18 @@ class SelectIdNeOpr : public IReadOperator {
       }
     }
     Expr expr(graph, ctx, params, expr_, VarType::kPathVar);
+    Arena arena;
+
     if (!expr.is_optional()) {
-      return Select::select(std::move(ctx), ExprWrapper(std::move(expr)));
+      ExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     } else {
-      return Select::select(std::move(ctx),
-                            OptionalExprWrapper(std::move(expr)));
+      OptionalExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     }
   }
   common::Expression expr_;
@@ -101,11 +110,17 @@ class SelectOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Expr expr(graph, ctx, params, expr_, VarType::kPathVar);
+    Arena arena;
     if (!expr.is_optional()) {
-      return Select::select(std::move(ctx), ExprWrapper(std::move(expr)));
+      ExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     } else {
-      return Select::select(std::move(ctx),
-                            OptionalExprWrapper(std::move(expr)));
+      OptionalExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     }
   }
 

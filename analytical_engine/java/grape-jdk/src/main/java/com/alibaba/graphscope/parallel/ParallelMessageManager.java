@@ -469,7 +469,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
 
     /**
      * Parallel processing the messages received from last super step. The user just need to provide
-     * a lamba consumer.
+     * a lambda consumer.
      *
      * @param <MSG_T>     message type.
      * @param frag        fragment.

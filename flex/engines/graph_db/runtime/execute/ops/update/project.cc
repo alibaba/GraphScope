@@ -223,9 +223,10 @@ std::unique_ptr<IInsertOperator> ProjectInsertOprBuilder::Build(
 
 template <typename EXPR, typename T>
 struct ValueCollector {
-  ValueCollector() {}
+  ValueCollector(const Context& ctx) : ctx_(ctx) {}
   void collect(const EXPR& e, int i) { builder.push_back_opt(e(i)); }
-  std::shared_ptr<IContextColumn> get() { return builder.finish(); }
+  std::shared_ptr<IContextColumn> get() { return builder.finish(nullptr); }
+  const Context& ctx_;
   ValueColumnBuilder<T> builder;
 };
 
@@ -259,7 +260,7 @@ class ProjectUpdateOpr : public IUpdateOperator {
                    VarType::kPathVar);
           if (var_.type() == RTAnyType::kI64Value) {
             TypedVar<int64_t> getter(std::move(var_));
-            ValueCollector<TypedVar<int64_t>, int64_t> collector;
+            ValueCollector<TypedVar<int64_t>, int64_t> collector(ctx);
             exprs.emplace_back(
                 std::make_unique<
                     UProjectExpr<TypedVar<int64_t>,
@@ -268,7 +269,7 @@ class ProjectUpdateOpr : public IUpdateOperator {
           } else if (var_.type() == RTAnyType::kStringValue) {
             TypedVar<std::string_view> getter(std::move(var_));
             ValueCollector<TypedVar<std::string_view>, std::string_view>
-                collector;
+                collector(ctx);
             exprs.emplace_back(
                 std::make_unique<
                     UProjectExpr<TypedVar<std::string_view>,
@@ -277,7 +278,7 @@ class ProjectUpdateOpr : public IUpdateOperator {
                     std::move(getter), std::move(collector), alias));
           } else if (var_.type() == RTAnyType::kI32Value) {
             TypedVar<int32_t> getter(std::move(var_));
-            ValueCollector<TypedVar<int32_t>, int32_t> collector;
+            ValueCollector<TypedVar<int32_t>, int32_t> collector(ctx);
             exprs.emplace_back(
                 std::make_unique<
                     UProjectExpr<TypedVar<int32_t>,

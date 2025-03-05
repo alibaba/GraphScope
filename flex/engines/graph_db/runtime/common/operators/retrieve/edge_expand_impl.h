@@ -62,7 +62,7 @@ expand_vertex_on_graph_view(
     Direction dir, const PRED_T& pred) {
   label_t input_label = input.label();
 
-  SLVertexColumnBuilder builder(nbr_label);
+  auto builder = SLVertexColumnBuilder::builder(nbr_label);
   std::vector<size_t> offsets;
   size_t idx = 0;
   for (auto v : input.vertices()) {
@@ -77,7 +77,7 @@ expand_vertex_on_graph_view(
     ++idx;
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -103,7 +103,7 @@ expand_vertex_on_graph_view_optional(
     const SLVertexColumnBase& input, label_t nbr_label, label_t e_label,
     Direction dir, const PRED_T& pred) {
   label_t input_label = *input.get_labels_set().begin();
-  OptionalSLVertexColumnBuilder builder(nbr_label);
+  auto builder = SLVertexColumnBuilder::optional_builder(nbr_label);
   std::vector<size_t> offsets;
   if (input.is_optional()) {
     const auto& col = dynamic_cast<const OptionalSLVertexColumn&>(input);
@@ -148,7 +148,7 @@ expand_vertex_on_graph_view_optional(
     });
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -203,7 +203,7 @@ expand_vertex_np_me_sp(
   }
   if (single_nbr_label) {
     size_t idx = 0;
-    SLVertexColumnBuilder builder(nbr_labels[0]);
+    auto builder = SLVertexColumnBuilder::builder(nbr_labels[0]);
     for (auto v : input.vertices()) {
       size_t csr_idx = 0;
       for (auto& csr : views) {
@@ -223,10 +223,10 @@ expand_vertex_np_me_sp(
       ++idx;
     }
 
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
-    MSVertexColumnBuilder builder;
+    auto builder = MSVertexColumnBuilder::builder();
     size_t csr_idx = 0;
     for (auto& csr : views) {
       label_t nbr_label = std::get<0>(label_dirs[csr_idx]);
@@ -247,7 +247,7 @@ expand_vertex_np_me_sp(
       }
       ++csr_idx;
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
 
   return std::make_pair(col, std::move(offsets));
@@ -287,7 +287,7 @@ expand_vertex_np_me_sp_optional(
     }
   }
   if (single_nbr_label) {
-    OptionalSLVertexColumnBuilder builder(nbr_labels[0]);
+    auto builder = SLVertexColumnBuilder::optional_builder(nbr_labels[0]);
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t v) {
       if (!input.has_value(idx)) {
         builder.push_back_null();
@@ -318,9 +318,9 @@ expand_vertex_np_me_sp_optional(
       ++idx;
     });
 
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
-    OptionalMLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::optional_builder();
     size_t csr_idx = 0;
     for (auto& csr : views) {
       label_t nbr_label = std::get<0>(label_dirs[csr_idx]);
@@ -352,7 +352,7 @@ expand_vertex_np_me_sp_optional(
 
       ++csr_idx;
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
 
   return std::make_pair(col, std::move(offsets));
@@ -363,7 +363,7 @@ expand_vertex_np_me_mp(
     const GraphReadInterface& graph, const SLVertexColumn& input,
     const std::vector<std::tuple<label_t, label_t, Direction>>& labels,
     const PRED_T& pred) {
-  MLVertexColumnBuilder builder;
+  auto builder = MLVertexColumnBuilder::builder();
   label_t input_label = input.label();
   size_t idx = 0;
   std::vector<size_t> offsets;
@@ -389,7 +389,7 @@ expand_vertex_np_me_mp(
     }
     ++idx;
   }
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename EDATA_T, typename PRED_T>
@@ -435,7 +435,7 @@ expand_vertex_np_se(
   std::shared_ptr<IContextColumn> col(nullptr);
 
   if (nbr_labels_set.size() == 1) {
-    SLVertexColumnBuilder builder(*nbr_labels_set.begin());
+    auto builder = SLVertexColumnBuilder::builder(*nbr_labels_set.begin());
     if (all_exist) {
       input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
         auto es = views[l].get_edges(vid);
@@ -461,9 +461,9 @@ expand_vertex_np_se(
         }
       });
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     if (all_exist) {
       input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
         auto es = views[l].get_edges(vid);
@@ -489,7 +489,7 @@ expand_vertex_np_se(
         }
       });
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -535,7 +535,7 @@ expand_vertex_np_se(
   std::shared_ptr<IContextColumn> col(nullptr);
 
   if (nbr_labels_set.size() == 1) {
-    SLVertexColumnBuilder builder(*nbr_labels_set.begin());
+    auto builder = SLVertexColumnBuilder::builder(*nbr_labels_set.begin());
     size_t input_seg_num = input.seg_num();
     size_t idx = 0;
     for (size_t k = 0; k < input_seg_num; ++k) {
@@ -557,10 +557,10 @@ expand_vertex_np_se(
         idx += input.seg_vertices(k).size();
       }
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
     size_t idx = 0;
-    MSVertexColumnBuilder builder;
+    auto builder = MSVertexColumnBuilder::builder();
     size_t input_seg_num = input.seg_num();
     for (size_t k = 0; k < input_seg_num; ++k) {
       label_t l = input.seg_label(k);
@@ -583,7 +583,7 @@ expand_vertex_np_se(
         idx += input.seg_vertices(k).size();
       }
     }
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -625,7 +625,7 @@ expand_vertex_np_me_sp(
   std::shared_ptr<IContextColumn> col(nullptr);
 
   if (nbr_labels_set.size() == 1) {
-    SLVertexColumnBuilder builder(*nbr_labels_set.begin());
+    auto builder = SLVertexColumnBuilder::builder(*nbr_labels_set.begin());
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
       size_t csr_idx = 0;
       for (auto& view : views[l]) {
@@ -643,9 +643,9 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
       size_t csr_idx = 0;
       for (auto& view : views[l]) {
@@ -663,7 +663,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -705,7 +705,8 @@ expand_vertex_np_me_sp_optional(
   std::shared_ptr<IContextColumn> col(nullptr);
 
   if (nbr_labels_set.size() == 1) {
-    OptionalSLVertexColumnBuilder builder(*nbr_labels_set.begin());
+    auto builder =
+        SLVertexColumnBuilder::optional_builder(*nbr_labels_set.begin());
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t vid) {
       if (!input.has_value(idx)) {
         builder.push_back_null();
@@ -734,9 +735,9 @@ expand_vertex_np_me_sp_optional(
         offsets.push_back(idx);
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
-    OptionalMLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::optional_builder();
     foreach_vertex(input, [&](size_t idx, label_t l, vid_t vid) {
       if (!input.has_value(idx)) {
         builder.push_back_null();
@@ -765,7 +766,7 @@ expand_vertex_np_me_sp_optional(
         offsets.push_back(idx);
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -806,7 +807,7 @@ expand_vertex_np_me_sp(
   std::shared_ptr<IContextColumn> col(nullptr);
 
   if (nbr_labels_set.size() == 1) {
-    SLVertexColumnBuilder builder(*nbr_labels_set.begin());
+    auto builder = SLVertexColumnBuilder::builder(*nbr_labels_set.begin());
     // not optimized for ms vertex column access
     LOG(INFO) << "not optimized for ms vertex column access";
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
@@ -826,9 +827,9 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   } else {
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     input.foreach_vertex([&](size_t idx, label_t l, vid_t vid) {
       size_t csr_idx = 0;
       for (auto& view : views[l]) {
@@ -846,7 +847,7 @@ expand_vertex_np_me_sp(
         ++csr_idx;
       }
     });
-    col = builder.finish();
+    col = builder.finish(nullptr);
   }
   return std::make_pair(col, std::move(offsets));
 }
@@ -858,7 +859,7 @@ expand_vertex_np_me_mp(
     const std::vector<std::vector<std::tuple<label_t, label_t, Direction>>>&
         label_dirs,
     const PRED_T& pred) {
-  MLVertexColumnBuilder builder;
+  auto builder = MLVertexColumnBuilder::builder();
   std::vector<size_t> offsets;
   input.foreach_vertex([&](size_t idx, label_t label, vid_t v) {
     for (auto& t : label_dirs[label]) {
@@ -879,7 +880,7 @@ expand_vertex_np_me_mp(
       }
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>
@@ -889,7 +890,7 @@ expand_vertex_np_me_mp(
     const std::vector<std::vector<std::tuple<label_t, label_t, Direction>>>&
         label_dirs,
     const PRED_T& pred) {
-  MLVertexColumnBuilder builder;
+  auto builder = MLVertexColumnBuilder::builder();
   std::vector<size_t> offsets;
   // not optimized for ms vertex access
   LOG(INFO) << "not optimized for ms vertex column access";
@@ -912,7 +913,7 @@ expand_vertex_np_me_mp(
       }
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>
@@ -922,7 +923,7 @@ expand_vertex_optional_impl(
     const std::vector<std::vector<std::tuple<label_t, label_t, Direction>>>&
         label_dirs,
     const PRED_T& pred) {
-  OptionalMLVertexColumnBuilder builder;
+  auto builder = MLVertexColumnBuilder::optional_builder();
   std::vector<size_t> offsets;
   foreach_vertex(input, [&](size_t idx, label_t label, vid_t v) {
     if (!input.has_value(idx)) {
@@ -954,7 +955,7 @@ expand_vertex_optional_impl(
       offsets.push_back(idx);
     }
   });
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename GPRED_T, typename EDATA_T>
@@ -1049,9 +1050,9 @@ expand_vertex_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   }
   if (ed_types.empty()) {
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
-    MLVertexColumnBuilder builder;
+    auto builder = MLVertexColumnBuilder::builder();
     std::vector<size_t> offsets;
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1167,8 +1168,8 @@ expand_vertex_impl(const GraphReadInterface& graph, const MLVertexColumn& input,
   }
   if (ed_types.size() == 0) {
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1277,8 +1278,8 @@ expand_vertex_impl(const GraphReadInterface& graph, const MSVertexColumn& input,
   }
   if (ed_types.empty()) {
     LOG(INFO) << "no edge property type in an edge(vertex) expand, fallback";
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && !check_exist_special_edge(graph, labels, dir)) {
     const PropertyType& ed_type = ed_types[0];
@@ -1383,7 +1384,7 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       }
       ++idx;
     }
-  } else {
+  } else if (dir == Direction::kOut) {
     CHECK(dir == Direction::kOut);
     GraphReadInterface::graph_view_t<EDATA_T> view =
         graph.GetOutgoingGraphView<EDATA_T>(input_label, nbr_label, edge_label);
@@ -1399,9 +1400,13 @@ expand_edge_ep_se(const GraphReadInterface& graph, const SLVertexColumn& input,
       }
       ++idx;
     }
+  } else {
+    // We will handle edge_expand with both direction outside this function, in
+    // EdgeExpand::expand_edge.
+    return std::make_pair(nullptr, std::vector<size_t>());
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 template <typename PRED_T>
@@ -1416,10 +1421,11 @@ expand_edge_impl(const GraphReadInterface& graph, const SLVertexColumn& input,
   if (dir == Direction::kOut) {
     CHECK(triplet.src_label == input_label);
     std::get<0>(label_dir) = triplet.dst_label;
-  } else {
-    CHECK(dir == Direction::kIn);
+  } else if (dir == Direction::kIn) {
     CHECK(triplet.dst_label == input_label);
     std::get<0>(label_dir) = triplet.src_label;
+  } else {
+    return std::make_pair(nullptr, std::vector<size_t>());
   }
   std::get<1>(label_dir) = triplet.edge_label;
   std::get<2>(label_dir) = dir;

@@ -264,7 +264,7 @@ public class MPIUtils {
             String ipcSocket,
             Class<? extends VD> vdClass,
             Class<? extends ED> edClass) {
-        logger.info("Try to load fragment from raw datas: {}", Arrays.toString(rawDataIds));
+        logger.info("Try to load fragment from raw data: {}", Arrays.toString(rawDataIds));
         int numWorkers = rawDataIds.length;
         logger.info("running mpi with {} workers", numWorkers);
         String hostNameAndSlots = generateHostNameAndSlotsFromIDs(rawDataIds);
