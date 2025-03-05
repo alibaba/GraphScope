@@ -91,24 +91,27 @@ class PathImpl : public CObject {
     return new_path;
   }
   static std::unique_ptr<PathImpl> make_path_impl(
-      label_t label, std::vector<vid_t>& path_ids) {
+      label_t label, label_t edge_label, std::vector<vid_t>& path_ids) {
     auto new_path = std::make_unique<PathImpl>();
     for (auto id : path_ids) {
       new_path->path_.push_back({label, id});
     }
+    new_path->edge_labels_.push_back(edge_label);
     return new_path;
   }
-
   static std::unique_ptr<PathImpl> make_path_impl(
+      const std::vector<label_t>& edge_labels,
       const std::vector<VertexRecord>& path) {
     auto new_path = std::make_unique<PathImpl>();
-    new_path->path_.insert(new_path->path_.end(), path.begin(), path.end());
+    new_path->path_ = path;
+    new_path->edge_labels_ = edge_labels;
     return new_path;
   }
-
-  std::unique_ptr<PathImpl> expand(label_t label, vid_t v) const {
+  std::unique_ptr<PathImpl> expand(label_t edge_label, label_t label,
+                                   vid_t v) const {
     auto new_path = std::make_unique<PathImpl>();
     new_path->path_ = path_;
+    new_path->edge_labels_.emplace_back(edge_label);
     new_path->path_.push_back({label, v});
     return new_path;
   }
@@ -130,6 +133,7 @@ class PathImpl : public CObject {
   bool operator<(const PathImpl& p) const { return path_ < p.path_; }
   bool operator==(const PathImpl& p) const { return path_ == p.path_; }
   std::vector<VertexRecord> path_;
+  std::vector<label_t> edge_labels_;
 };
 class Path {
  public:
@@ -154,6 +158,8 @@ class Path {
   }
 
   std::vector<VertexRecord> nodes() { return impl_->path_; }
+
+  std::vector<label_t> edge_labels() const { return impl_->edge_labels_; }
 
   VertexRecord get_start() const { return impl_->get_start(); }
   bool operator<(const Path& p) const { return *impl_ < *(p.impl_); }

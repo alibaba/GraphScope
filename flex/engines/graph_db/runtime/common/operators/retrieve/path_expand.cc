@@ -203,7 +203,8 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
                                                       label_triplet.edge_label);
               while (oe_iter.IsValid()) {
                 std::unique_ptr<PathImpl> new_path = path->expand(
-                    label_triplet.dst_label, oe_iter.GetNeighbor());
+                    label_triplet.edge_label, label_triplet.dst_label,
+                    oe_iter.GetNeighbor());
                 output.emplace_back(std::move(new_path), index);
                 oe_iter.Next();
               }
@@ -250,7 +251,8 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
                                                      label_triplet.edge_label);
               while (ie_iter.IsValid()) {
                 std::unique_ptr<PathImpl> new_path = path->expand(
-                    label_triplet.src_label, ie_iter.GetNeighbor());
+                    label_triplet.edge_label, label_triplet.src_label,
+                    ie_iter.GetNeighbor());
                 output.emplace_back(std::move(new_path), index);
                 ie_iter.Next();
               }
@@ -296,7 +298,8 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
                                                       label_triplet.dst_label,
                                                       label_triplet.edge_label);
               while (oe_iter.IsValid()) {
-                auto new_path = path->expand(label_triplet.dst_label,
+                auto new_path = path->expand(label_triplet.edge_label,
+                                             label_triplet.dst_label,
                                              oe_iter.GetNeighbor());
                 output.emplace_back(std::move(new_path), index);
                 oe_iter.Next();
@@ -307,7 +310,8 @@ bl::result<Context> PathExpand::edge_expand_p(const GraphReadInterface& graph,
                                                      label_triplet.src_label,
                                                      label_triplet.edge_label);
               while (ie_iter.IsValid()) {
-                auto new_path = path->expand(label_triplet.src_label,
+                auto new_path = path->expand(label_triplet.edge_label,
+                                             label_triplet.src_label,
                                              ie_iter.GetNeighbor());
                 output.emplace_back(std::move(new_path), index);
                 ie_iter.Next();
@@ -503,7 +507,8 @@ bl::result<Context> PathExpand::single_source_single_dest_shortest_path(
                                                      dest.second, path)) {
       builder.push_back_opt(dest.second);
       shuffle_offset.push_back(index);
-      auto impl = PathImpl::make_path_impl(label_triplet.src_label, path);
+      auto impl = PathImpl::make_path_impl(label_triplet.src_label,
+                                           label_triplet.edge_label, path);
       path_builder.push_back_opt(Path(impl.get()));
       arena->emplace_back(std::move(impl));
     }
@@ -752,7 +757,8 @@ bl::result<Context> PathExpand::all_shortest_paths_with_given_source_and_dest(
     all_shortest_path_with_given_source_and_dest_impl(graph, params, v,
                                                       dest.second, paths);
     for (auto& path : paths) {
-      auto ptr = PathImpl::make_path_impl(label_triplet.src_label, path);
+      auto ptr = PathImpl::make_path_impl(label_triplet.src_label,
+                                          label_triplet.edge_label, path);
       builder.push_back_opt(dest.second);
       path_builder.push_back_opt(Path(ptr.get()));
       arena->emplace_back(std::move(ptr));
