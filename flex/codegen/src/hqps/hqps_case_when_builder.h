@@ -78,9 +78,9 @@ class CaseWhenBuilder : public ExprBuilder {
 
       auto expr_code = build_sub_expr(else_oprs, true);
 
-      boost::format formater(ELSE_EXPR_TEMPLATE_STR);
-      formater % expr_code;
-      else_code_ = formater.str();
+      boost::format formatter(ELSE_EXPR_TEMPLATE_STR);
+      formatter % expr_code;
+      else_code_ = formatter.str();
     }
     VLOG(10) << "Finish else expr: " << else_code_;
     return *this;
@@ -109,14 +109,14 @@ class CaseWhenBuilder : public ExprBuilder {
     func_call_impl_str = get_func_call_impl_str();
     private_filed_str = get_private_filed_str();
 
-    boost::format formater(EXPR_BUILDER_TEMPLATE_STR);
+    boost::format formatter(EXPR_BUILDER_TEMPLATE_STR);
     auto ret_type_str = common_data_type_pb_2_str(res_data_type_);
-    formater % class_name_ % ret_type_str % constructor_param_str %
+    formatter % class_name_ % ret_type_str % constructor_param_str %
         field_init_code_str % func_call_template_typename_str % "auto" %
         func_call_params_str % func_call_impl_str % private_filed_str %
         get_filter_null_str();
 
-    std::string str = formater.str();
+    std::string str = formatter.str();
 
     return std::make_tuple(class_name_, construct_params_, tag_selectors_, str,
                            std::vector{common::DataType()});
@@ -158,9 +158,9 @@ class CaseWhenBuilder : public ExprBuilder {
 
     // concatenate case when into a if else.
     {
-      boost::format formater(CASE_WHEN_EXPR_TEMPLATE_STR);
-      formater % when_key_code % then_result_expr_code;
-      auto tmp_res = formater.str();
+      boost::format formatter(CASE_WHEN_EXPR_TEMPLATE_STR);
+      formatter % when_key_code % then_result_expr_code;
+      auto tmp_res = formatter.str();
       VLOG(10) << "WhenThen expr: " << tmp_res;
       when_then_codes_.emplace_back(std::move(tmp_res));
     }

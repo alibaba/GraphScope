@@ -73,9 +73,9 @@ std::string sort_pair_pb_to_order_pair(
         single_common_data_type_pb_2_str(pair.key().node_type().data_type());
   }
 
-  boost::format formater(ORDERING_PAIR_TEMPLATE_STR);
-  formater % sort_order_str % real_key_tag_id % sort_prop_type % sort_prop_name;
-  return formater.str();
+  boost::format formatter(ORDERING_PAIR_TEMPLATE_STR);
+  formatter % sort_order_str % real_key_tag_id % sort_prop_type % sort_prop_name;
+  return formatter.str();
 }
 
 class SortOpBuilder {
@@ -150,13 +150,13 @@ class SortOpBuilder {
       ordering_pairs_str = ss.str();
     }
 
-    boost::format formater(SORT_OP_TEMPLATE_STR);
+    boost::format formatter(SORT_OP_TEMPLATE_STR);
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
-    formater % next_ctx_name % ctx_.GraphVar() % prev_ctx_name % range_lower %
+    formatter % next_ctx_name % ctx_.GraphVar() % prev_ctx_name % range_lower %
         range_upper % ordering_pairs_str;
 
-    return formater.str();
+    return formatter.str();
   }
 
  private:

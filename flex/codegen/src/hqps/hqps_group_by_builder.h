@@ -124,9 +124,9 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
   {
     std::stringstream ss;
     for (size_t i = 0; i < in_prop_types.size(); ++i) {
-      boost::format selector_formater(PROPERTY_SELECTOR);
-      selector_formater % in_prop_types[i] % in_prop_names[i];
-      ss << selector_formater.str();
+      boost::format selector_formatter(PROPERTY_SELECTOR);
+      selector_formatter % in_prop_types[i] % in_prop_names[i];
+      ss << selector_formatter.str();
       if (i != in_prop_types.size() - 1) {
         ss << ", ";
       }
@@ -143,9 +143,9 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
     }
     in_tags_str = ss.str();
   }
-  boost::format agg_formater(GROUP_AGG_TEMPLATE_STR);
-  agg_formater % cur_var_name % agg_func_name % selectors_str % in_tags_str;
-  return std::make_pair(cur_var_name, agg_formater.str());
+  boost::format agg_formatter(GROUP_AGG_TEMPLATE_STR);
+  agg_formatter % cur_var_name % agg_func_name % selectors_str % in_tags_str;
+  return std::make_pair(cur_var_name, agg_formatter.str());
 }
 
 class GroupByOpBuilder {
@@ -203,11 +203,11 @@ class GroupByOpBuilder {
       property_selector_str = property_selector_fmt.str();
     }
 
-    boost::format formater(GROUP_KEY_TEMPLATE_STR);
-    formater % input_tag_id % prop_type % group_key_var_name %
+    boost::format formatter(GROUP_KEY_TEMPLATE_STR);
+    formatter % input_tag_id % prop_type % group_key_var_name %
         property_selector_str;
 
-    key_alias_name_and_code.emplace_back(group_key_var_name, formater.str());
+    key_alias_name_and_code.emplace_back(group_key_var_name, formatter.str());
     return *this;
   }
 
@@ -260,14 +260,14 @@ class GroupByOpBuilder {
         group_by_agg_vars_str += ", ";
       }
     }
-    boost::format formater(GROUP_BY_OP_TEMPLATE_STR);
-    formater % key_alias_con_str % agg_func_con_str % next_ctx_name %
+    boost::format formatter(GROUP_BY_OP_TEMPLATE_STR);
+    formatter % key_alias_con_str % agg_func_con_str % next_ctx_name %
         ctx_.GraphVar() % prev_ctx_name % group_by_keys_vars_str %
         group_by_agg_vars_str;
 
     // it is safe to update tag_id_mapping here
     ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping);
-    return formater.str();
+    return formatter.str();
   }
 
  private:

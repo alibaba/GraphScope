@@ -95,9 +95,9 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   {
     std::stringstream ss;
     for (size_t i = 0; i < in_prop_types.size(); ++i) {
-      boost::format selector_formater(PROPERTY_SELECTOR);
-      selector_formater % in_prop_types[i] % in_prop_names[i];
-      ss << selector_formater.str();
+      boost::format selector_formatter(PROPERTY_SELECTOR);
+      selector_formatter % in_prop_types[i] % in_prop_names[i];
+      ss << selector_formatter.str();
       if (i != in_prop_types.size() - 1) {
         ss << ", ";
       }
@@ -115,9 +115,9 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
     in_tags_str = ss.str();
   }
 
-  boost::format formater(AGG_FUNC_TEMPLATE_STR);
-  formater % cur_var_name % agg_func_name % selectors_str % in_tags_str;
-  return std::make_pair(cur_var_name, formater.str());
+  boost::format formatter(AGG_FUNC_TEMPLATE_STR);
+  formatter % cur_var_name % agg_func_name % selectors_str % in_tags_str;
+  return std::make_pair(cur_var_name, formatter.str());
 }
 
 // i.e. group without key.
@@ -160,10 +160,10 @@ class FoldOpBuilder {
       agg_func_code_con = ss.str();
     }
 
-    boost::format formater(FOLD_OP_TEMPLATE_STR);
-    formater % fold_ops_code % next_ctx_name % ctx_.GraphVar() % prev_ctx_name;
+    boost::format formatter(FOLD_OP_TEMPLATE_STR);
+    formatter % fold_ops_code % next_ctx_name % ctx_.GraphVar() % prev_ctx_name;
     ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping_);
-    return agg_func_code_con + formater.str();
+    return agg_func_code_con + formatter.str();
   }
 
  private:
