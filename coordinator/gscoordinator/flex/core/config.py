@@ -109,6 +109,11 @@ try:
 except Exception as e:
     logger.warn("Invalid base64-encoded string found, use original value: %s", str(e))
 GROOT_FRONTEND_POD_SUFFIX = os.environ.get("GROOT_FRONTEND_POD_SUFFIX", "graphscope-store-frontend")
+GROOT_STORE_POD_SUFFIX = os.environ.get("GROOT_STORE_POD_SUFFIX", "graphscope-store-store")
+GROOT_COORDINATOR_POD_SUFFIX = os.environ.get("GROOT_COORDINATOR_POD_SUFFIX", "graphscope-store-coordinator")
+GROOT_PORTAL_POD_SUFFIX = os.environ.get("GROOT_PORTAL_POD_SUFFIX", "graphscope-store-portal")
+
+
 
 # dataloading service for groot
 STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)

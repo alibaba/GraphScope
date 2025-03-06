@@ -29,11 +29,14 @@ from kubernetes import config as kube_config
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import CREATION_TIME
+from gscoordinator.flex.core.config import GROOT_COORDINATOR_POD_SUFFIX
 from gscoordinator.flex.core.config import GROOT_CYPHER_PORT
 from gscoordinator.flex.core.config import GROOT_FRONTEND_POD_SUFFIX
 from gscoordinator.flex.core.config import GROOT_GREMLIN_PORT
 from gscoordinator.flex.core.config import GROOT_GRPC_PORT
 from gscoordinator.flex.core.config import GROOT_PASSWORD
+from gscoordinator.flex.core.config import GROOT_PORTAL_POD_SUFFIX
+from gscoordinator.flex.core.config import GROOT_STORE_POD_SUFFIX
 from gscoordinator.flex.core.config import GROOT_USERNAME
 from gscoordinator.flex.core.config import INSTANCE_NAME
 from gscoordinator.flex.core.config import NAMESPACE
@@ -125,6 +128,28 @@ class GrootGraph(object):
                 if cypher_endpoint:
                     self._endpoints["cypher_endpoint"] = cypher_endpoint
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
+
+    def pod_available(self):
+        if CLUSTER_TYPE != "KUBERNETES":
+            return True
+        expected_prefixes = [
+            "{0}-{1}-".format(INSTANCE_NAME, GROOT_FRONTEND_POD_SUFFIX),
+            "{0}-{1}-".format(INSTANCE_NAME, GROOT_COORDINATOR_POD_SUFFIX),
+            "{0}-{1}-".format(INSTANCE_NAME, GROOT_STORE_POD_SUFFIX),
+            "{0}-{1}-".format(INSTANCE_NAME, GROOT_PORTAL_POD_SUFFIX),
+        ]
+        all_pod = self._core_api.list_namespaced_pod(NAMESPACE)
+        if len(all_pod.items) == 0:
+            raise RuntimeError("No pod found in namespace {0}".format(NAMESPACE))
+        for pod in all_pod.items:
+            for prefix in expected_prefixes:
+                if pod.metadata.name.startswith(prefix):
+                    if pod.status.phase != "Running":
+                        raise RuntimeError(
+                            "Pod {0} is not running".format(pod.metadata.name)
+                        )
+        return True
+
 
     def __del__(self):
         self._conn.close()

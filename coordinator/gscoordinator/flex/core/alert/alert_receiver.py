@@ -48,6 +48,7 @@ class DingTalkReceiver(object):
         self._is_at_all = is_at_all
         self._enable = enable
         self._error_msg = ""
+        self._keywords = []
 
     @property
     def receiver_id(self):
@@ -55,12 +56,15 @@ class DingTalkReceiver(object):
 
     @classmethod
     def from_dict(cls, dikt) -> "DingTalkReceiver":
-        return DingTalkReceiver(
+        receiver =  DingTalkReceiver(
             webhook_url=dikt["webhook_url"],
             at_user_ids=dikt["at_user_ids"],
             is_at_all=dikt["is_at_all"],
             enable=dikt["enable"],
         )
+        if "keywords" in dikt:
+            receiver._keywords = dikt["keywords"]
+        return receiver
 
     def update(self, data: dict):
         if "webhook_url" in data:
@@ -73,6 +77,8 @@ class DingTalkReceiver(object):
             self._enable = data["enable"]
             if not self._enable:
                 self._error_msg = ""
+        if "keywords" in data:
+            self._keywords = list(set(data["keywords"]))
 
     def to_dict(self):
         return {
@@ -83,6 +89,7 @@ class DingTalkReceiver(object):
             "is_at_all": self._is_at_all,
             "enable": self._enable,
             "message": self._error_msg,
+            "keywords": self._keywords,
         }
 
     def send(self, message: AlertMessage):
@@ -90,9 +97,10 @@ class DingTalkReceiver(object):
             return
 
         try:
-            content = "[{0}] {1} Alert:\nGraphScope portal instance [{2}]: {3}".format(
+            content = "[{0}] {1}, keywords: {2} Alert:\nGraphScope portal instance [{3}]: {4}".format(
                 message.severity,
                 message.alert_name,
+                self._keywords,
                 INSTANCE_NAME,
                 message.message,
             )

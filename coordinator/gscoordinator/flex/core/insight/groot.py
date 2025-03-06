@@ -309,6 +309,10 @@ class GrootClient(object):
             except:  # noqa: E722
                 pass
             return True
+    
+    def pod_available(self) -> bool:
+        return self._graph.pod_available()
+        
 
 
 def init_groot_client(config: Config):
