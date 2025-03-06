@@ -32,12 +32,24 @@ results::CollectiveResults ShortestPathAmongThree::Query(
   label_t label_v1 = schema_.get_vertex_label_id(label_name1);
   auto oid1 = ConvertStringToAny(
       oid1_str, std::get<0>(schema_.get_vertex_primary_key(label_v1)[0]));
+  if (oid1.type == PropertyType::Empty()) {
+    LOG(ERROR) << "Invalid oid1.";
+    return {};
+  }
   label_t label_v2 = schema_.get_vertex_label_id(label_name2);
   auto oid2 = ConvertStringToAny(
       oid2_str, std::get<0>(schema_.get_vertex_primary_key(label_v2)[0]));
+  if (oid2.type == PropertyType::Empty()) {
+    LOG(ERROR) << "Invalid oid2.";
+    return {};
+  }
   label_t label_v3 = schema_.get_vertex_label_id(label_name3);
   auto oid3 = ConvertStringToAny(
       oid3_str, std::get<0>(schema_.get_vertex_primary_key(label_v3)[0]));
+  if (oid3.type == PropertyType::Empty()) {
+    LOG(ERROR) << "Invalid oid3.";
+    return {};
+  }
   vid_t index_v1{};
   vid_t index_v2{};
   vid_t index_v3{};
