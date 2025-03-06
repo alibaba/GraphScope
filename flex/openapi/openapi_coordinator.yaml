@@ -1929,7 +1929,7 @@ paths:
             type: boolean
       responses:
         200:
-          description: Successfuly cancelled the job
+          description: Successfully cancelled the job
           content:
             application/json:
               schema:
