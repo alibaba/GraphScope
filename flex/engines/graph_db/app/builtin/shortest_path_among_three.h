@@ -20,14 +20,14 @@
 
 namespace gs {
 class ShortestPathAmongThree
-    : public CypherReadAppBase<std::string, int64_t, std::string, int64_t,
-                               std::string, int64_t> {
+    : public CypherReadAppBase<std::string, std::string, std::string,
+                               std::string, std::string, std::string> {
  public:
   ShortestPathAmongThree() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
-                                   std::string label_name1, int64_t oid1,
-                                   std::string label_name2, int64_t oid2,
-                                   std::string label_name3, int64_t oid3);
+                                   std::string label_name1, std::string oid1,
+                                   std::string label_name2, std::string oid2,
+                                   std::string label_name3, std::string oid3);
 
  private:
   bool ShortestPath(const gs::ReadTransaction& txn, label_t v1_l,

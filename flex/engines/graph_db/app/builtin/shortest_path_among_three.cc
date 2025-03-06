@@ -17,9 +17,9 @@
 namespace gs {
 
 results::CollectiveResults ShortestPathAmongThree::Query(
-    const GraphDBSession& sess, std::string label_name1, int64_t oid1,
-    std::string label_name2, int64_t oid2, std::string label_name3,
-    int64_t oid3) {
+    const GraphDBSession& sess, std::string label_name1, std::string oid1_str,
+    std::string label_name2, std::string oid2_str, std::string label_name3,
+    std::string oid3_str) {
   ReadTransaction txn = sess.GetReadTransaction();
   const Schema& schema_ = txn.schema();
 
@@ -30,8 +30,14 @@ results::CollectiveResults ShortestPathAmongThree::Query(
     return {};
   }
   label_t label_v1 = schema_.get_vertex_label_id(label_name1);
+  auto oid1 = ConvertStringToAny(
+      oid1_str, std::get<0>(schema_.get_vertex_primary_key(label_v1)[0]));
   label_t label_v2 = schema_.get_vertex_label_id(label_name2);
+  auto oid2 = ConvertStringToAny(
+      oid2_str, std::get<0>(schema_.get_vertex_primary_key(label_v2)[0]));
   label_t label_v3 = schema_.get_vertex_label_id(label_name3);
+  auto oid3 = ConvertStringToAny(
+      oid3_str, std::get<0>(schema_.get_vertex_primary_key(label_v3)[0]));
   vid_t index_v1{};
   vid_t index_v2{};
   vid_t index_v3{};
