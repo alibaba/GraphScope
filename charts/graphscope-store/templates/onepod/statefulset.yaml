@@ -168,7 +168,7 @@ spec:
               value: {{ .Values.frontend.service.cypherPort | quote }}
             {{- if not .Values.distributed.enabled }}
             - name: GROOT_FRONTEND_POD_SUFFIX
-              value: {{ printf "%s-store" (include ".Chart.Name" .) }}
+              value: {{ printf "%s-store" (include "graphscope-store.name" .) }}
             {{- end }}
             - name: INSTANCE_NAME
               value: {{ .Release.Name | quote }}
