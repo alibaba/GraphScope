@@ -6,11 +6,11 @@ metadata:
   labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
     {{- if .Values.commonLabels }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
   annotations:
     {{- if .Values.commonAnnotations }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
 spec:
   type: {{ .Values.frontend.service.type }}
@@ -43,6 +43,28 @@ spec:
       {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.cypher)) }}
       {{- if (not (empty .Values.frontend.service.nodePorts.cypher)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.cypher }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+      {{- end }}
+    - name: admin
+      port: {{ .Values.frontend.service.adminPort }}
+      protocol: TCP
+      targetPort: admin
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.admin)) }}
+      {{- if (not (empty .Values.frontend.service.nodePorts.admin)) }}
+      nodePort: {{ .Values.frontend.service.nodePorts.admin }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+      {{- end }}
+    - name: query
+      port: {{ .Values.frontend.service.queryPort }}
+      protocol: TCP
+      targetPort: query
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.query)) }}
+      {{- if (not (empty .Values.frontend.service.nodePorts.query)) }}
+      nodePort: {{ .Values.frontend.service.nodePorts.query }}
       {{- else if eq .Values.frontend.service.type "ClusterIP" }}
       nodePort: null
       {{- end }}

@@ -1,5 +1,4 @@
 {{- $frontendFullname := include "graphscope-interactive.frontend.fullname" . }}
-{{- $engineFullName := include "graphscope-interactive.engine.fullname" . }}
 {{- $releaseNamespace := .Release.Namespace }}
 {{- $clusterDomain := .Values.clusterDomain }}
 
@@ -59,48 +58,22 @@ spec:
             - -c
             - |
               echo "Starting frontend..."
-              
-              # first check interactive_config.yaml exists
-              if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
-                #error exit
-                echo "${ENGINE_CONFIG_PATH} not found, exiting..."
-                exit 1
-              fi
-              # check lib path has more than 1 file
-              if [ ! "$(ls -A ${COMPILER_CLASS_PATH})" ]; then
-                #error exit
-                echo "class path: ${COMPILER_CLASS_PATH} is empty, exiting..."
-                exit 1
-              fi
-              # setup the template interactive_config.yaml
-              bash /etc/interactive/setup.sh
-              if [ ! -f ${REAL_ENGINE_CONFIG_PATH} ]; then
-                #error exit
-                echo "${REAL_ENGINE_CONFIG_PATH} not found, exiting..."
-                exit 1
-              fi
 
               # get graph schema file
-              cmd="java -cp \"${COMPILER_CLASS_PATH}\" -Djna.library.path=${COMPILER_LIBRARY_PATH} "
-              cmd="${cmd}  -Dgraph.schema=${GRAPH_SCHEMA_PATH} "
-              cmd="${cmd} com.alibaba.graphscope.GraphServer ${REAL_ENGINE_CONFIG_PATH}"
-              echo "Start compiler with command: ${cmd}"
-              eval ${cmd}
+              cmd="java -cp /opt/graphscope/interactive_engine/compiler/target/libs/:/opt/graphscope/interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar"
+              cmd="$cmd -Djava.library.path=/opt/graphscope/interactive_engine/executor/ir/target/release/"
+              cmd="$cmd -Dgraph.schema=$GRAPH_SCHEMA_URI"
+              cmd="$cmd com.alibaba.graphscope.GraphServer"
+              cmd="$cmd $INTERACTIVE_CONFIG_PATH"
+              echo "Starting frontend with command: $cmd"
+              sleep infinity
           env:
-            - name: ENGINE_SERVICE_HOST
-              value: {{ $engineFullName }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: TIMEOUT
               value: {{ .Values.hiactorTimeout | quote }}
-            - name: ENGINE_CONFIG_PATH
+            - name: INTERACTIVE_CONFIG_PATH
               value: {{ include "graphscope-interactive.engineConfigPath" . }}
-            - name: REAL_ENGINE_CONFIG_PATH
-              value: {{ include "graphscope-interactive.realEngineConfigPath" . }}
-            - name: COMPILER_CLASS_PATH
-              value: {{ include "graphscope-interactive.classPath" . }}
-            - name: COMPILER_LIBRARY_PATH
-              value: {{ include "graphscope-interactive.libraryPath" . }}
-            - name: GRAPH_SCHEMA_PATH
-              value: {{ include "graphscope-interactive.graphSchemaPath" . }}
+            - name: GRAPH_SCHEMA_URI
+              value: {{ include "graphscope-interactive.graphSchemaUri" . }}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}
@@ -116,50 +89,58 @@ spec:
             periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
             successThreshold: {{ .Values.frontend.readinessProbe.successThreshold }}
           {{- end }}
-          {{- if .Values.frontend.resources }}
-          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- if .Values.resources.frontend }}
+          resources: {{- toYaml .Values.resources.frontend | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: workspace
-              mountPath: {{ .Values.workspace }}
             - name: config
               mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
               subPath: interactive_config.yaml
             - name: config
               mountPath: /etc/interactive/setup.sh
               subPath: setup.sh
+        - name: query-nginx
+          image: {{ include "graphscope-interactive.nginx.image" . }} 
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
+          # command: ["sleep", "infinity"]
+          ports:
+            - name: query-port
+              containerPort: {{ .Values.frontend.service.queryPort }}
+          {{- if .Values.resources.frontend }}
+          resources: {{- toYaml .Values.resources.frontend | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+              subPath: engine_config.yaml
+            - name: query-nginx-config  
+              mountPath: /usr/local/openresty/nginx/conf/nginx.conf
+              subPath: nginx.conf
+        - name: admin-nginx
+          image: {{ include "graphscope-interactive.nginx.image" . }} 
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
+          # command: ["sleep", "infinity"]
+          ports:
+            - name: admin-port
+              containerPort: {{ .Values.frontend.service.adminPort }}
+          {{- if .Values.resources.frontend }}
+          resources: {{- toYaml .Values.resources.frontend | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+              subPath: engine_config.yaml
+            - name: admin-nginx-config  
+              mountPath: /usr/local/openresty/nginx/conf/nginx.conf
+              subPath: nginx.conf
       volumes:
+        - name: admin-nginx-config  
+          configMap:  
+            name: {{ .Release.Name }}-admin-nginx-config 
+        - name: query-nginx-config  
+          configMap:  
+            name: {{ .Release.Name }}-query-nginx-config 
         - name: config
           configMap:
             name: {{ include "graphscope-interactive.configmapName" . }}
             defaultMode: 0755
-  {{- if and .Values.engine.persistence.enabled .Values.engine.persistence.existingClaim }}
-        - name: workspace
-          persistentVolumeClaim:
-            claimName: {{ tpl .Values.engine.persistence.existingClaim . }}
-  {{- else if not .Values.engine.persistence.enabled }}
-        - name: workspace
-          emptyDir: {}
-  {{- else if and .Values.engine.persistence.enabled (not .Values.engine.persistence.existingClaim) }}
-  volumeClaimTemplates:
-    - metadata:
-        name: workspace
-        {{- if .Values.persistence.annotations }}
-        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
-        {{- end }}
-        {{- if .Values.persistence.labels }}
-        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
-        {{- end }}
-      spec:
-        accessModes:
-          {{- range .Values.engine.persistence.accessModes }}
-          - {{ . | quote }}
-          {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.engine.persistence.size | quote }}
-        {{ include "graphscope-interactive.storageClass" . | nindent 8 }}
-        {{- if .Values.engine.persistence.selector }}
-        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.persistence.selector "context" $) | nindent 10 }}
-        {{- end -}}
-  {{- end }}
