@@ -142,6 +142,75 @@ spec:
             {{- if .Values.store.extraVolumeMounts }}
             {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
+        {{- if .Values.portal.enabled }}
+        - name: gs-coordinator
+          image: {{ include "graphscope-store.portal.coordinator.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          command:
+            - /etc/coordinator/setup.sh
+          env:
+            - name: CLUSTER_TYPE
+              value: "KUBERNETES"
+            - name: VERSION
+              value: {{ .Chart.Version | quote }}
+            - name: GROOT_USERNAME
+              value: {{ .Values.auth.username | quote }}
+            - name: GROOT_PASSWORD
+              value: {{ .Values.auth.password | b64enc | quote }}
+            - name: GROOT_GRPC_PORT
+              value: {{ .Values.frontend.service.servicePort | quote }}
+            - name: GROOT_GREMLIN_PORT
+              value: {{ .Values.frontend.service.gremlinPort | quote }}
+            - name: GROOT_CYPHER_PORT
+              value: {{ .Values.frontend.service.cypherPort | quote }}
+            {{- if not .Values.distributed.enabled }}
+            - name: GROOT_FRONTEND_POD_SUFFIX
+              value: {{ printf "%s-store" (include ".Chart.Name" .) }}
+            {{- end }}
+            - name: INSTANCE_NAME
+              value: {{ .Release.Name | quote }}
+            - name: NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: SERVICE_PORT
+              value: {{ .Values.portal.service.servicePort | quote }} 
+            - name: WORKSPACE
+              value: {{ .Values.portal.runtimePath | quote }}
+            - name: STUDIO_WRAPPER_ENDPOINT
+              value: {{ .Values.portal.studioWrapperEndpoint | quote }}
+            - name: BASEID
+              value: {{ .Values.portal.baseId | quote }}
+            - name: SOLUTION
+              value: "GRAPHSCOPE_INSIGHT"
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort:  {{ .Values.portal.service.servicePort }}
+          {{- if .Values.portal.resources }}
+          resources: {{- toYaml .Values.portal.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: http
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: http
+          {{- end }}
+          volumeMounts:
+            - name: runtime
+              mountPath: {{ .Values.portal.runtimePath | quote }}
+            - name: config
+              mountPath: /etc/coordinator/setup.sh
+              subPath: portal_setup.sh
+        {{- end }}
       volumes:
         - name: config
           configMap:
@@ -165,6 +234,14 @@ spec:
         - name: log
           persistentVolumeClaim:
             claimName: {{ printf "%s" (tpl .Values.logPersistence.existingClaim .) }}
+        {{- end }}
+        {{- if and .Values.portal.enabled .Values.portal.persistence.enabled .Values.portal.persistence.existingClaim }}
+        - name: runtime
+          persistentVolumeClaim:
+            claimName: {{ printf "%s" (tpl .Values.portal.persistence.existingClaim .) }}
+        {{- else if and .Values.portal.enabled (not .Values.portal.persistence.enabled) }}
+        - name: runtime
+          emptyDir: {}
         {{- end }}
   volumeClaimTemplates:
     {{- if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
@@ -209,6 +286,28 @@ spec:
         {{ include "graphscope-store.storageClass" . | nindent 8 }}
         {{- if .Values.logPersistence.selector }}
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.logPersistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
+    {{- end }}
+    {{- if and .Values.portal.enabled .Values.portal.persistence.enabled (not .Values.portal.persistence.existingClaim) }}
+    - metadata:
+        name: runtime
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.portal.persistence.size | quote }}
+        {{ include "graphscope-store.storageClass" . | nindent 8 }}
+        {{- if .Values.portal.persistence.selector }}
+        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.portal.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
     {{- end }}
 {{- end }}
