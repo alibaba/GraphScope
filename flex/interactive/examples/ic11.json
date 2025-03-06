@@ -1,14 +1,17 @@
 {
-    "personIdQ11": 24189255811707,
-    "countryName": "Switzerland",
-    "workFromYear": 2006,
-    "limit": 10
-}|[
-    {
-        "personId": 19791209300839,
-        "personFirstName": "Akira",
-        "personLastName": "Inoue",
-        "organizationName": "PrivatAir",
-        "organizationWorkFromYear": 2003
-    }
-]
+    "operation": {
+        "personIdQ11": 24189255811707,
+        "countryName": "Switzerland",
+        "workFromYear": 2006,
+        "limit": 10
+    },
+    "result": [
+        {
+            "personId": 19791209300839,
+            "personFirstName": "Akira",
+            "personLastName": "Inoue",
+            "organizationName": "PrivatAir",
+            "organizationWorkFromYear": 2003
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-MATCH shortestPath(p: PERSON {id : 10995116277882}) -[k:KNOWS*1..4]-(f:PERSON {firstName : "John"})
+MATCH shortestPath(p: PERSON {id : 30786325579101L}) -[k:KNOWS*1..4]-(f:PERSON {firstName : "Ian"})
 where f <> p
 WITH f, length(k) as distance
 ORDER  BY distance ASC, f.lastName ASC, f.id ASC

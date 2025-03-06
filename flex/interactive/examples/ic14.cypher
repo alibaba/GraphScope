@@ -1,4 +1,4 @@
-MATCH all ShortestPath((person1:PERSON { id: 32985348833679 })-[path:KNOWS*0..10]-(person2:PERSON { id: 2199023256862 }))
+MATCH all ShortestPath((person1:PERSON { id: 32985348834605L })-[path:KNOWS*0..*]-(person2:PERSON { id: 4398046511592L }))
 WITH path, gs.function.relationships(path) as rels_in_path
 UNWIND rels_in_path as rel
 WITH path,  gs.function.startNode(rel) as rel0, gs.function.endNode(rel) as rel1

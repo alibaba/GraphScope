@@ -1,7 +1,7 @@
-MATCH (p:PERSON {id: 24189255811707})-[:KNOWS*1..3]-(friend:PERSON)
+MATCH (p:PERSON {id: 24189255811707L})-[:KNOWS*1..3]-(friend:PERSON)
 WITH distinct friend
 WHERE 
-     friend.id <> 24189255811707     
+     friend.id <> 24189255811707L     
 
 MATCH (friend:PERSON)-[wa:WORKAT]->(com:ORGANISATION)-[:ISLOCATEDIN]->(:PLACE {name: "Switzerland"}) 
 WHERE wa.workFrom < 2006

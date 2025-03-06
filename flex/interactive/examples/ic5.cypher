@@ -1,10 +1,10 @@
-MATCH (person:PERSON { id: 26388279066795 })-[:KNOWS*1..3]-(friend)
+MATCH (person:PERSON { id: 4398046511592L })-[:KNOWS*1..3]-(friend)
 WITH DISTINCT friend
-WHERE friend.id <> 26388279066795
+WHERE friend.id <> 4398046511592L
 CALL {
   WITH friend
   MATCH (friend)<-[membership:HASMEMBER]-(forum)
-  WHERE membership.joinDate > 1341446400000
+  WHERE membership.joinDate > 1346544000000L
   WITH distinct forum
   ORDER BY forum.id ASC
   LIMIT 20
@@ -14,7 +14,7 @@ UNION
 CALL {
   WITH friend
   MATCH (friend)<-[membership:HASMEMBER]-(forum)
-  WHERE membership.joinDate > 1341446400000
+  WHERE membership.joinDate > 1346544000000L
   WITH friend, collect(distinct forum) AS forums
   MATCH (friend)<-[:HASCREATOR]-(post)<-[:CONTAINEROF]-(forum)
   WHERE forum IN forums

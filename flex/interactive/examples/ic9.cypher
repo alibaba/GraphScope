@@ -1,8 +1,8 @@
-MATCH (p:PERSON {id: 32985348834013})-[:KNOWS*1..3]-(friend:PERSON)
+MATCH (p:PERSON {id: 19791209300317L})-[:KNOWS*1..3]-(friend:PERSON)
 WITH distinct friend
-where friend.id <> 32985348834013
+where friend.id <>  19791209300317L
 MATCH  (message:POST|COMMENT)-[e:HASCREATOR]->(friend)
-where e.creationDate < 1346112000000
+where e.creationDate < 1352160000000L
 WITH friend, message
 
 RETURN 
