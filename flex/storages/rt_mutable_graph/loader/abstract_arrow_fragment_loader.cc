@@ -127,6 +127,8 @@ void set_properties_column(gs::ColumnBase* col,
     set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kStringView) {
     set_column_from_string_array(col, array, offset, true);
+  } else if (col_type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    set_column_from_string_array(col, array, offset);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }

@@ -599,6 +599,185 @@ class TypedColumn<std::string_view> : public ColumnBase {
 };
 
 using StringColumn = TypedColumn<std::string_view>;
+
+class FixedCharColumn : public ColumnBase {
+ public:
+  FixedCharColumn(StorageStrategy strategy, uint16_t width)
+      : type_(PropertyType::FixedChar(width)),
+        strategy_(strategy),
+        width_(width) {}
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {
+    std::string basic_path = snapshot_dir + "/" + name;
+    if (std::filesystem::exists(basic_path)) {
+      basic_buffer_.open(basic_path, false);
+      basic_size_ = basic_buffer_.size() / width_;
+    } else {
+      basic_size_ = 0;
+    }
+    if (work_dir == "") {
+      extra_size_ = 0;
+    } else {
+      extra_buffer_.open(work_dir + "/" + name, true);
+      extra_size_ = extra_buffer_.size() / width_;
+    }
+  }
+
+  void open_in_memory(const std::string& name) override {
+    if (!name.empty() && std::filesystem::exists(name)) {
+      basic_buffer_.open(name, false);
+      basic_size_ = basic_buffer_.size() / width_;
+    } else {
+      basic_buffer_.reset();
+      basic_size_ = 0;
+    }
+    extra_buffer_.reset();
+    extra_size_ = 0;
+  }
+
+  void open_with_hugepages(const std::string& name, bool force) override {
+    if (strategy_ == StorageStrategy::kMem || force) {
+      if (!name.empty() && std::filesystem::exists(name)) {
+        basic_buffer_.open_with_hugepages(name);
+        basic_size_ = basic_buffer_.size() / width_;
+      } else {
+        basic_buffer_.reset();
+        basic_buffer_.set_hugepage_prefered(true);
+        basic_size_ = 0;
+      }
+      extra_buffer_.reset();
+      extra_buffer_.set_hugepage_prefered(true);
+      extra_size_ = 0;
+    } else if (strategy_ == StorageStrategy::kDisk) {
+      LOG(INFO) << "Open " << name << " with normal mmap pages";
+      open_in_memory(name);
+    }
+  }
+
+  void touch(const std::string& filename) override {
+    mmap_array<char> tmp;
+    tmp.open(filename, true);
+    tmp.resize((basic_size_ + extra_size_) * width_);
+    memcpy(tmp.data(), basic_buffer_.data(), basic_size_ * width_);
+    memcpy(tmp.data() + basic_size_ * width_, extra_buffer_.data(),
+           extra_size_ * width_);
+    basic_size_ = 0;
+    basic_buffer_.reset();
+    extra_size_ = tmp.size() / width_;
+    extra_buffer_.swap(tmp);
+    tmp.reset();
+  }
+
+  void close() override {
+    basic_buffer_.reset();
+    extra_buffer_.reset();
+  }
+
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {
+    mmap_array<char> tmp;
+    if (!std::filesystem::exists(cur_path)) {
+      return;
+    }
+    copy_file(cur_path, tmp_path);
+    extra_size_ = basic_size_;
+    basic_size_ = 0;
+    tmp.open(tmp_path, true);
+    basic_buffer_.reset();
+    extra_buffer_.swap(tmp);
+    tmp.reset();
+  }
+
+  void dump(const std::string& filename) override {
+    if (basic_size_ != 0 && extra_size_ == 0) {
+      basic_buffer_.dump(filename);
+    } else if (basic_size_ == 0 && extra_size_ != 0) {
+      extra_buffer_.dump(filename);
+    } else {
+      mmap_array<char> tmp;
+      tmp.open(filename, true);
+      memcpy(tmp.data(), basic_buffer_.data(), basic_size_ * width_);
+      memcpy(tmp.data() + basic_size_ * width_, extra_buffer_.data(),
+             extra_size_ * width_);
+    }
+  }
+
+  size_t size() const override { return basic_size_ + extra_size_; }
+
+  void resize(size_t size) override {
+    if (size * width_ < basic_buffer_.size()) {
+      basic_size_ = size;
+      extra_size_ = 0;
+    } else {
+      basic_size_ = basic_buffer_.size() / width_;
+      extra_size_ = size - basic_size_;
+      extra_buffer_.resize(extra_size_ * width_);
+    }
+  }
+
+  PropertyType type() const override { return PropertyType::FixedChar(width_); }
+
+  void set_value(size_t index, const std::string_view& val) {
+    if (index >= basic_size_ && index < basic_size_ + extra_size_) {
+      put_val(index - basic_size_, extra_buffer_, val);
+    } else if (index < basic_size_) {
+      put_val(index, basic_buffer_, val);
+    } else {
+      throw std::runtime_error("Index out of range");
+    }
+  }
+
+  void set_any(size_t index, const Any& value) override {
+    set_value(index, value.AsStringView());
+  }
+
+  inline std::string_view get_view(size_t index) const {
+    return index < basic_size_ ? get_val(index, basic_buffer_)
+                               : get_val(index - basic_size_, extra_buffer_);
+  }
+
+  Any get(size_t index) const override {
+    return AnyConverter<std::string_view>::to_any(get_view(index));
+  }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {
+    std::string_view val;
+    arc >> val;
+    set_value(index, val);
+  }
+
+  StorageStrategy storage_strategy() const override { return strategy_; }
+
+  const mmap_array<char>& basic_buffer() const { return basic_buffer_; }
+  size_t basic_buffer_size() const { return basic_size_; }
+  const mmap_array<char>& extra_buffer() const { return extra_buffer_; }
+  size_t extra_buffer_size() const { return extra_size_; }
+
+ private:
+  void put_val(size_t index, mmap_array<char>& buffer,
+               const std::string_view& val) {
+    size_t offset = index * width_;
+    size_t len = std::min(val.size(), static_cast<size_t>(width_));
+    memcpy(buffer.data() + offset, val.data(), len);
+    if (len < width_) {
+      for (size_t i = len; i < width_; ++i) {
+        buffer.set(offset + i, ' ');
+      }
+    }
+  }
+  std::string_view get_val(size_t index, const mmap_array<char>& buffer) const {
+    size_t offset = index * width_;
+    return std::string_view(buffer.data() + offset, width_);
+  }
+  mmap_array<char> basic_buffer_;
+  mmap_array<char> extra_buffer_;
+  size_t basic_size_;
+  size_t extra_size_;
+  PropertyType type_;
+  StorageStrategy strategy_;
+  uint16_t width_;
+};
 template <typename INDEX_T>
 class LFIndexer;
 

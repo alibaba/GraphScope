@@ -358,6 +358,10 @@ PropertyType PropertyType::Varchar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
+PropertyType PropertyType::FixedChar(uint16_t fixed_length) {
+  return PropertyType(impl::PropertyTypeImpl::kFixedChar, fixed_length);
+}
+
 PropertyType PropertyType::VertexGlobalId() {
   return PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
 }
@@ -379,6 +383,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
   in_archive << value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     in_archive << value.additional_type_info.max_length;
+  } else if (value.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    in_archive << value.additional_type_info.fixed_length;
   }
   return in_archive;
 }
@@ -387,6 +393,8 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   out_archive >> value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     out_archive >> value.additional_type_info.max_length;
+  } else if (value.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    out_archive >> value.additional_type_info.fixed_length;
   }
   return out_archive;
 }

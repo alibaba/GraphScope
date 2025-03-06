@@ -206,6 +206,9 @@ std::shared_ptr<ColumnBase> CreateColumn(
       // equal to varchar.
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+      return std::make_shared<FixedCharColumn>(
+          strategy, type.additional_type_info.fixed_length);
     } else if (type == PropertyType::kStringView) {
       return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kRecordView) {

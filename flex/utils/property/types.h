@@ -79,6 +79,7 @@ enum class PropertyTypeImpl {
   kUInt16,
   kStringMap,
   kVarChar,
+  kFixedChar,
   kVertexGlobalId,
   kLabel,
   kRecordView,
@@ -88,7 +89,8 @@ enum class PropertyTypeImpl {
 
 // Stores additional type information for PropertyTypeImpl
 union AdditionalTypeInfo {
-  uint16_t max_length;  // for varchar
+  uint16_t max_length;    // for varchar
+  uint16_t fixed_length;  // for fixed char
 };
 }  // namespace impl
 
@@ -107,7 +109,8 @@ struct PropertyType {
       : type_enum(type), additional_type_info() {}
   constexpr PropertyType(impl::PropertyTypeImpl type, uint16_t max_length)
       : type_enum(type), additional_type_info({.max_length = max_length}) {
-    assert(type == impl::PropertyTypeImpl::kVarChar);
+    assert(type == impl::PropertyTypeImpl::kVarChar ||
+           type == impl::PropertyTypeImpl::kFixedChar);
   }
 
   bool IsVarchar() const;
@@ -128,6 +131,7 @@ struct PropertyType {
   static PropertyType StringView();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
+  static PropertyType FixedChar(uint16_t fixed_length);
   static PropertyType VertexGlobalId();
   static PropertyType Label();
   static PropertyType RecordView();
@@ -1385,6 +1389,8 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "string_map";
   } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kVarChar) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
+  } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kFixedChar) {
+    os << "char(" << pt.additional_type_info.max_length << ")";
   } else if (pt == gs::PropertyType::VertexGlobalId()) {
     os << "vertex_global_id";
   } else if (pt == gs::PropertyType::Label()) {
@@ -1434,6 +1440,13 @@ struct convert<gs::PropertyType> {
             property_type = gs::PropertyType::Varchar(
                 gs::PropertyType::GetStringDefaultMaxLength());
           }
+        } else if (config["string"]["char"]) {
+          if (config["string"]["char"]["fixed_length"]) {
+            property_type = gs::PropertyType::FixedChar(
+                config["string"]["char"]["fixed_length"].as<int32_t>());
+          } else {
+            property_type = gs::PropertyType::FixedChar(1);
+          }
         } else {
           LOG(ERROR) << "Unrecognized string type";
         }
@@ -1460,6 +1473,13 @@ struct convert<gs::PropertyType> {
       } else {
         property_type = gs::PropertyType::Varchar(
             gs::PropertyType::GetStringDefaultMaxLength());
+      }
+    } else if (config["char"]) {
+      if (config["char"]["fixed_length"]) {
+        property_type = gs::PropertyType::FixedChar(
+            config["char"]["fixed_length"].as<int32_t>());
+      } else {
+        property_type = gs::PropertyType::FixedChar(1);
       }
     } else if (config["date"]) {
       property_type = gs::PropertyType::Date();
@@ -1488,6 +1508,8 @@ struct convert<gs::PropertyType> {
           type.additional_type_info.max_length;
     } else if (type == gs::PropertyType::Date()) {
       node["temporal"]["timestamp"] = "";
+    } else if (type.type_enum == gs::impl::PropertyTypeImpl::kFixedChar) {
+      node["char"]["fixed_length"] = type.additional_type_info.fixed_length;
     } else if (type == gs::PropertyType::Day()) {
       node["temporal"]["date32"] = "";
     } else {
