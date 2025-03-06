@@ -207,7 +207,7 @@ std::shared_ptr<ColumnBase> CreateColumn(
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
     } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
-      return std::make_shared<FixedCharColumn>(
+      return std::make_shared<TypedColumn<FixedChar>>(
           strategy, type.additional_type_info.fixed_length);
     } else if (type == PropertyType::kStringView) {
       return std::make_shared<StringColumn>(strategy);
@@ -299,6 +299,9 @@ std::shared_ptr<RefColumnBase> CreateRefColumn(
   } else if (type == PropertyType::kDouble) {
     return std::make_shared<TypedRefColumn<double>>(
         *std::dynamic_pointer_cast<TypedColumn<double>>(column));
+  } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    return std::make_shared<TypedRefColumn<FixedChar>>(
+        *std::dynamic_pointer_cast<TypedColumn<FixedChar>>(column));
   } else {
     LOG(FATAL) << "unexpected type to create column, "
                << static_cast<int>(type.type_enum);

@@ -600,9 +600,10 @@ class TypedColumn<std::string_view> : public ColumnBase {
 
 using StringColumn = TypedColumn<std::string_view>;
 
-class FixedCharColumn : public ColumnBase {
+template <>
+class TypedColumn<FixedChar> : public ColumnBase {
  public:
-  FixedCharColumn(StorageStrategy strategy, uint16_t width)
+  TypedColumn(StorageStrategy strategy, uint16_t width)
       : type_(PropertyType::FixedChar(width)),
         strategy_(strategy),
         width_(width) {}
@@ -733,8 +734,12 @@ class FixedCharColumn : public ColumnBase {
   }
 
   inline std::string_view get_view(size_t index) const {
-    return index < basic_size_ ? get_val(index, basic_buffer_)
-                               : get_val(index - basic_size_, extra_buffer_);
+    size_t offset = index * width_;
+    return index < basic_size_
+               ? std::string_view(basic_buffer_.data() + offset, width_)
+               : std::string_view(
+                     extra_buffer_.data() + offset - basic_size_ * width_,
+                     width_);
   }
 
   Any get(size_t index) const override {
@@ -766,10 +771,7 @@ class FixedCharColumn : public ColumnBase {
       }
     }
   }
-  std::string_view get_val(size_t index, const mmap_array<char>& buffer) const {
-    size_t offset = index * width_;
-    return std::string_view(buffer.data() + offset, width_);
-  }
+
   mmap_array<char> basic_buffer_;
   mmap_array<char> extra_buffer_;
   size_t basic_size_;
@@ -778,6 +780,7 @@ class FixedCharColumn : public ColumnBase {
   StorageStrategy strategy_;
   uint16_t width_;
 };
+
 template <typename INDEX_T>
 class LFIndexer;
 
@@ -1032,6 +1035,26 @@ class TypedRefColumn : public RefColumnBase {
   size_t extra_size;
 
   StorageStrategy strategy_;
+};
+
+template <>
+class TypedRefColumn<FixedChar> : public RefColumnBase {
+ public:
+  TypedRefColumn(const TypedColumn<FixedChar>& column) : column_(column) {}
+  ~TypedRefColumn() {}
+
+  inline std::string_view get_view(size_t index) const {
+    return column_.get_view(index);
+  }
+
+  size_t size() const { return column_.size(); }
+
+  Any get(size_t index) const override {
+    return AnyConverter<std::string_view>::to_any(get_view(index));
+  }
+
+ private:
+  const TypedColumn<FixedChar>& column_;
 };
 
 template <>

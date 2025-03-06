@@ -55,6 +55,11 @@ class TestFixedChar {
     CHECK(software_iter.GetField(name_id2).AsStringView() == "lop ");
     software_iter.Next();
     CHECK(software_iter.GetField(name_id2).AsStringView() == "ripp");
+    auto ptr =
+        txn.get_vertex_ref_property_column<FixedChar>(src_label_, "name");
+    CHECK(ptr != nullptr);
+    CHECK(ptr->get_view(0).size() == "mark");
+    CHECK(ptr->get_view(0) == "mark");
   }
   GraphDB& db_;
   label_t src_label_;

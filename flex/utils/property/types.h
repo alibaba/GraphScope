@@ -335,6 +335,31 @@ struct Record {
   Any* props;
 };
 
+struct FixedChar {
+  FixedChar() = default;
+  FixedChar(const std::string& str) : data_(str.data()), length_(str.size()) {}
+  FixedChar(const char* str) : data_(str), length_(strlen(str)) {}
+  FixedChar(const std::string_view& sv)
+      : data_(sv.data()), length_(sv.size()) {}
+  FixedChar(const FixedChar& other)
+      : data_(other.data_), length_(other.length_) {}
+  FixedChar(FixedChar&& other) : data_(other.data_), length_(other.length_) {}
+  FixedChar& operator=(const FixedChar& other) {
+    if (this == &other) {
+      return *this;
+    }
+    data_ = other.data_;
+    length_ = other.length_;
+    return *this;
+  }
+  operator std::string_view() const { return std::string_view(data_, length_); }
+  inline size_t size() const { return length_; }
+  inline const char* data() const { return data_; }
+
+  const char* data_;
+  size_t length_;
+};
+
 struct StringPtr {
   StringPtr() : ptr(nullptr) {}
   StringPtr(const std::string& str) : ptr(new std::string(str)) {}
