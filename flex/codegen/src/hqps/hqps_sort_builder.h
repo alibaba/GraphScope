@@ -74,7 +74,8 @@ std::string sort_pair_pb_to_order_pair(
   }
 
   boost::format formatter(ORDERING_PAIR_TEMPLATE_STR);
-  formatter % sort_order_str % real_key_tag_id % sort_prop_type % sort_prop_name;
+  formatter % sort_order_str % real_key_tag_id % sort_prop_type % 
+      sort_prop_name;
   return formatter.str();
 }
 
