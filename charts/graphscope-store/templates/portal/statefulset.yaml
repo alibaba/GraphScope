@@ -1,4 +1,4 @@
-{{- if .Values.portal.enabled }}
+{{- if and .Values.portal.enabled .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

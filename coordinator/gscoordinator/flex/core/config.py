@@ -108,7 +108,7 @@ try:
     GROOT_PASSWORD = base64.b64decode(GROOT_PASSWORD).decode('utf-8')
 except Exception as e:
     logger.warn("Invalid base64-encoded string found, use original value: %s", str(e))
-
+GROOT_FRONTEND_POD_SUFFIX = os.environ.get("GROOT_FRONTEND_POD_SUFFIX", "graphscope-store-frontend")
 
 # dataloading service for groot
 STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)
