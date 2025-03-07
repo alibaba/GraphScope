@@ -77,11 +77,11 @@ class DedupOpBuilder {
       }
       dedup_tag_ids_str = ss.str();
     }
-    boost::format formater(DEDUP_OP_TEMPLATE_STR);
+    boost::format formatter(DEDUP_OP_TEMPLATE_STR);
     auto dedup_prop_str = join_string(dedup_props_, ",");
-    formater % next_ctx_name % dedup_tag_ids_str % ctx_.GraphVar() %
+    formatter % next_ctx_name % dedup_tag_ids_str % ctx_.GraphVar() %
         prev_ctx_name % dedup_prop_str;
-    return formater.str();
+    return formatter.str();
   }
 
  private:

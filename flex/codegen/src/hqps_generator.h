@@ -230,13 +230,13 @@ class QueryGenerator {
     if (decoded_params_str.size() > 0) {
       call_query_input_code += ", " + decoded_params_str;
     }
-    boost::format formater(QUERY_TEMPLATE_STR);
-    formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
+    boost::format formatter(QUERY_TEMPLATE_STR);
+    formatter % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
         call_query_input_code % get_app_base_name(param_types) %
         ctx_.SessionVar();
-    return formater.str();
+    return formatter.str();
   }
 
   // Generate a subtask for a subplan
