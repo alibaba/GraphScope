@@ -132,6 +132,16 @@ class BasicFragmentLoader {
           src_label_name, dst_label_name, edge_label_name);
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, max_length, oe_mutable, ie_mutable);
+    } else if constexpr (std::is_same_v<EDATA_T, FixedChars>) {
+      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
+                                                     edge_label_id);
+      size_t fixed_length = prop[0].additional_type_info.fixed_length;
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      dual_csr_list_[index] = new DualCsr<FixedChars>(
+          oe_strategy, ie_strategy, fixed_length, oe_mutable, ie_mutable);
     } else {
       bool oe_mutable = schema_.outgoing_edge_mutable(
           src_label_name, dst_label_name, edge_label_name);

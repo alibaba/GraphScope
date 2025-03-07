@@ -49,7 +49,7 @@ class ImmutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   const_nbr_ptr_t end_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
  public:
   using nbr_t = ImmutableNbr<EDATA_T>;
@@ -323,13 +323,14 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   timestamp_t unsorted_since_;
 };
 
-template <>
-class ImmutableCsr<std::string_view>
-    : public TypedImmutableCsrBase<std::string_view> {
+template <typename EDATA_T>
+class ImmutableCsr<EDATA_T,
+                   typename std::enable_if_t<is_string_type<EDATA_T>::value>>
+    : public TypedImmutableCsrBase<EDATA_T> {
  public:
   using nbr_t = ImmutableNbr<size_t>;
-  using slice_t = ImmutableNbrSlice<std::string_view>;
-  ImmutableCsr(StringColumn& column) : column_(column), csr_() {}
+  using slice_t = ImmutableNbrSlice<EDATA_T>;
+  ImmutableCsr(TypedColumn<EDATA_T>& column) : column_(column), csr_() {}
   ~ImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -373,12 +374,11 @@ class ImmutableCsr<std::string_view>
   size_t size() const override { return csr_.size(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(
-        get_edges(v));
+    return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new ImmutableCsrConstEdgeIter<std::string_view>(get_edges(v));
+    return new ImmutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
   std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return nullptr;
@@ -403,7 +403,7 @@ class ImmutableCsr<std::string_view>
   size_t edge_num() const override { return csr_.edge_num(); }
 
  private:
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
   ImmutableCsr<size_t> csr_;
 };
 
@@ -490,7 +490,7 @@ class ImmutableCsr<RecordView> : public TypedImmutableCsrBase<RecordView> {
   ImmutableCsr<size_t> csr_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
  public:
   using nbr_t = ImmutableNbr<EDATA_T>;
@@ -676,14 +676,15 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   mmap_array<nbr_t> nbr_list_;
 };
 
-template <>
-class SingleImmutableCsr<std::string_view>
-    : public TypedImmutableCsrBase<std::string_view> {
+template <typename EDATA_T>
+class SingleImmutableCsr<
+    EDATA_T, typename std::enable_if_t<is_string_type<EDATA_T>::value>>
+    : public TypedImmutableCsrBase<EDATA_T> {
  public:
   using nbr_t = ImmutableNbr<size_t>;
-  using slice_t = ImmutableNbrSlice<std::string_view>;
+  using slice_t = ImmutableNbrSlice<EDATA_T>;
 
-  SingleImmutableCsr(StringColumn& column) : column_(column), csr_() {}
+  SingleImmutableCsr(TypedColumn<EDATA_T>& column) : column_(column), csr_() {}
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -735,12 +736,11 @@ class SingleImmutableCsr<std::string_view>
   size_t edge_num() const override { return csr_.edge_num(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(
-        get_edges(v));
+    return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new ImmutableCsrConstEdgeIter<std::string_view>(get_edges(v));
+    return new ImmutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
 
   std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
@@ -756,8 +756,8 @@ class SingleImmutableCsr<std::string_view>
     return slice_t(csr_.get_edges(i), column_);
   }
 
-  ImmutableNbr<std::string_view> get_edge(vid_t i) const {
-    ImmutableNbr<std::string_view> nbr;
+  ImmutableNbr<EDATA_T> get_edge(vid_t i) const {
+    ImmutableNbr<EDATA_T> nbr;
     nbr.neighbor = csr_.get_edge(i).neighbor;
     size_t index = csr_.get_edge(i).data;
     nbr.data = column_.get_view(index);
@@ -766,7 +766,7 @@ class SingleImmutableCsr<std::string_view>
   void close() override { csr_.close(); }
 
  private:
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
   SingleImmutableCsr<size_t> csr_;
 };
 

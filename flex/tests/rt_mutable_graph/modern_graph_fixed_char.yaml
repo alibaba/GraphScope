@@ -55,8 +55,8 @@ schema:
         - property_id: 0
           property_name: weight
           property_type:
-            varchar:
-              max_length: 16
+            char:
+              fixed_length: 2
     - type_id: 1
       type_name: created
       vertex_type_pair_relations:
@@ -67,8 +67,8 @@ schema:
         - property_id: 0
           property_name: weight
           property_type:
-            varchar:
-              max_length: 16
+            char:
+              fixed_length: 16
         - property_id: 1
           property_name: since
           property_type: 

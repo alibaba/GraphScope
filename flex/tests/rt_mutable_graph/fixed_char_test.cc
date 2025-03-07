@@ -25,7 +25,9 @@ class TestFixedChar {
   TestFixedChar(GraphDB& db)
       : db_(db),
         src_label_(db.graph().schema().get_vertex_label_id("person")),
-        dst_label_(db.graph().schema().get_vertex_label_id("software")) {}
+        dst_label_(db.graph().schema().get_vertex_label_id("software")),
+        know_label_(db.graph().schema().get_edge_label_id("knows")),
+        created_label_(db.graph().schema().get_edge_label_id("created")) {}
   int get_vertex_property_id(label_t label, const std::string& name) {
     auto props_name = db_.graph().schema().get_vertex_property_names(label);
     for (size_t idx = 0; idx < props_name.size(); ++idx) {
@@ -42,29 +44,44 @@ class TestFixedChar {
     auto props_name =
         db_.graph().schema().get_vertex_property_names(src_label_);
     int name_id = get_vertex_property_id(src_label_, "name");
-    CHECK(person_iter.GetField(name_id).AsStringView() == "mark");
+    CHECK(person_iter.GetField(name_id).AsFixedChar() == "mark");
     while (person_iter.IsValid()) {
-      LOG(INFO) << person_iter.GetField(name_id).AsStringView();
-      CHECK(person_iter.GetField(name_id).AsStringView().size() == 4);
+      LOG(INFO) << person_iter.GetField(name_id).AsFixedChar();
+      CHECK(person_iter.GetField(name_id).AsFixedChar().size() == 4);
       person_iter.Next();
     }
     auto software_iter = txn.GetVertexIterator(dst_label_);
     auto props_name2 =
         db_.graph().schema().get_vertex_property_names(dst_label_);
     int name_id2 = get_vertex_property_id(dst_label_, "name");
-    CHECK(software_iter.GetField(name_id2).AsStringView() == "lop ");
+    CHECK(software_iter.GetField(name_id2).AsFixedChar() == "lop ");
     software_iter.Next();
-    CHECK(software_iter.GetField(name_id2).AsStringView() == "ripp");
+    CHECK(software_iter.GetField(name_id2).AsFixedChar() == "ripp");
     auto ptr =
-        txn.get_vertex_ref_property_column<FixedChar>(src_label_, "name");
+        txn.get_vertex_ref_property_column<FixedChars>(src_label_, "name");
     CHECK(ptr != nullptr);
-    CHECK(ptr->get_view(0).size() == "mark");
+    CHECK(ptr->get_view(0).size() == 4);
     CHECK(ptr->get_view(0) == "mark");
+    auto graph = txn.GetOutgoingGraphView<FixedChars>(src_label_, src_label_,
+                                                      know_label_);
+    auto oes = graph.get_edges(0);
+    for (const auto& e : oes) {
+      LOG(INFO) << e.get_data();
+      CHECK(e.get_data().size() == 2);
+    }
+    auto iter =
+        txn.GetOutEdgeIterator(src_label_, 0, dst_label_, created_label_);
+    auto data = iter.GetData();
+    RecordView rw = data.AsRecordView();
+    CHECK(rw.size() == 2);
+    CHECK(rw[0].AsFixedChar().size() == 16);
+    LOG(INFO) << rw[0].AsFixedChar() << " " << rw[0].AsFixedChar().size();
   }
   GraphDB& db_;
   label_t src_label_;
   label_t dst_label_;
-  label_t edge_label_;
+  label_t know_label_;
+  label_t created_label_;
 };
 }  // namespace gs
 

@@ -96,7 +96,7 @@ struct ImmutableNbr<grape::EmptyType> {
   };
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class ImmutableNbrSlice {
  public:
   using const_nbr_t = const ImmutableNbr<EDATA_T>;
@@ -126,17 +126,18 @@ class ImmutableNbrSlice {
   int size_;
 };
 
-template <>
-class ImmutableNbrSlice<std::string_view> {
+template <typename EDATA_T>
+class ImmutableNbrSlice<
+    EDATA_T, typename std::enable_if_t<is_string_type<EDATA_T>::value>> {
  public:
   struct ColumnNbr {
     using const_nbr_t = const ImmutableNbr<size_t>;
     using const_nbr_ptr_t = const ImmutableNbr<size_t>*;
 
-    ColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
+    ColumnNbr(const_nbr_ptr_t ptr, const TypedColumn<EDATA_T>& column)
         : ptr_(ptr), column_(column) {}
     vid_t get_neighbor() const { return ptr_->neighbor; }
-    std::string_view get_data() const { return column_.get_view(ptr_->data); }
+    EDATA_T get_data() const { return column_.get_view(ptr_->data); }
 
     const ColumnNbr& operator*() const { return *this; }
     const ColumnNbr* operator->() const { return this; }
@@ -161,13 +162,14 @@ class ImmutableNbrSlice<std::string_view> {
     bool operator<(const ColumnNbr& nbr) const { return ptr_ < nbr.ptr_; }
 
     mutable const_nbr_ptr_t ptr_;
-    const StringColumn& column_;
+    const TypedColumn<EDATA_T>& column_;
   };
   using const_nbr_t = const ColumnNbr;
   using const_nbr_ptr_t = const ColumnNbr;
-  ImmutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  ImmutableNbrSlice(const TypedColumn<EDATA_T>& column)
+      : slice_(), column_(column) {}
   ImmutableNbrSlice(const ImmutableNbrSlice<size_t>& slice,
-                    const StringColumn& column)
+                    const TypedColumn<EDATA_T>& column)
       : slice_(slice), column_(column) {}
   ImmutableNbrSlice(const ImmutableNbrSlice& rhs)
       : slice_(rhs.slice_), column_(rhs.column_) {}
@@ -180,7 +182,7 @@ class ImmutableNbrSlice<std::string_view> {
   const ColumnNbr begin() const { return ColumnNbr(slice_.begin(), column_); }
   const ColumnNbr end() const { return ColumnNbr(slice_.end(), column_); }
 
-  static ImmutableNbrSlice empty(const StringColumn& column) {
+  static ImmutableNbrSlice empty(const TypedColumn<EDATA_T>& column) {
     ImmutableNbrSlice ret(column);
     ret.set_begin(nullptr);
     ret.set_size(0);
@@ -189,7 +191,7 @@ class ImmutableNbrSlice<std::string_view> {
 
  private:
   ImmutableNbrSlice<size_t> slice_;
-  const StringColumn& column_;
+  const TypedColumn<EDATA_T>& column_;
 };
 
 template <>
@@ -254,7 +256,7 @@ class ImmutableNbrSlice<RecordView> {
   const Table& table_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 struct MutableNbr {
   MutableNbr() = default;
   MutableNbr(const MutableNbr& rhs)
@@ -314,12 +316,12 @@ struct MutableNbr<grape::EmptyType> {
   };
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableNbrSlice {
  public:
   using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
-  MutableNbrSlice() : ptr_(nullptr), size_(0){};
+  MutableNbrSlice() : ptr_(nullptr), size_(0) {};
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~MutableNbrSlice() = default;
@@ -417,17 +419,18 @@ class MutableNbrSlice<RecordView> {
   const Table& table_;
 };
 
-template <>
-class MutableNbrSlice<std::string_view> {
+template <typename EDATA_T>
+class MutableNbrSlice<
+    EDATA_T, typename std::enable_if_t<is_string_type<EDATA_T>::value>> {
  public:
   struct MutableColumnNbr {
     using const_nbr_t = const MutableNbr<size_t>;
     using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
-    MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
+    MutableColumnNbr(const_nbr_ptr_t ptr, const TypedColumn<EDATA_T>& column)
         : ptr_(ptr), column_(column) {}
     vid_t get_neighbor() const { return ptr_->neighbor; }
-    std::string_view get_data() const { return column_.get_view(ptr_->data); }
+    EDATA_T get_data() const { return column_.get_view(ptr_->data); }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
 
     const MutableColumnNbr& operator*() const { return *this; }
@@ -461,11 +464,12 @@ class MutableNbrSlice<std::string_view> {
     }
 
     mutable const_nbr_ptr_t ptr_;
-    const StringColumn& column_;
+    const TypedColumn<EDATA_T>& column_;
   };
   using const_nbr_t = const MutableColumnNbr;
   using const_nbr_ptr_t = const MutableColumnNbr;
-  MutableNbrSlice(MutableNbrSlice<size_t> slice, const StringColumn& column)
+  MutableNbrSlice(MutableNbrSlice<size_t> slice,
+                  const TypedColumn<EDATA_T>& column)
       : slice_(slice), column_(column) {}
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : slice_(rhs.slice_), column_(rhs.column_) {}
@@ -482,22 +486,22 @@ class MutableNbrSlice<std::string_view> {
     return MutableColumnNbr(slice_.end(), column_);
   }
 
-  static MutableNbrSlice empty(const StringColumn& column) {
+  static MutableNbrSlice empty(const TypedColumn<EDATA_T>& column) {
     MutableNbrSlice ret(MutableNbrSlice<size_t>::empty(), column);
     return ret;
   }
 
  private:
   MutableNbrSlice<size_t> slice_;
-  const StringColumn& column_;
+  const TypedColumn<EDATA_T>& column_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableNbrSliceMut {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
   using nbr_ptr_t = MutableNbr<EDATA_T>*;
-  MutableNbrSliceMut() : ptr_(nullptr), size_(0){};
+  MutableNbrSliceMut() : ptr_(nullptr), size_(0) {};
   ~MutableNbrSliceMut() = default;
 
   void set_size(int size) { size_ = size; }
@@ -520,20 +524,19 @@ class MutableNbrSliceMut {
   int size_;
 };
 
-template <>
-class MutableNbrSliceMut<std::string_view> {
+template <typename EDATA_T>
+class MutableNbrSliceMut<
+    EDATA_T, typename std::enable_if_t<is_string_type<EDATA_T>::value>> {
  public:
   struct MutableColumnNbr {
     using nbr_t = MutableNbr<size_t>;
 
-    MutableColumnNbr(nbr_t* ptr, StringColumn& column)
+    MutableColumnNbr(nbr_t* ptr, TypedColumn<EDATA_T>& column)
         : ptr_(ptr), column_(column) {}
     vid_t neighbor() const { return ptr_->neighbor; }
-    std::string_view data() { return column_.get_view(ptr_->data); }
+    EDATA_T data() { return column_.get_view(ptr_->data); }
     vid_t get_neighbor() const { return ptr_->neighbor; }
-    const std::string_view get_data() const {
-      return column_.get_view(ptr_->data);
-    }
+    const EDATA_T get_data() const { return column_.get_view(ptr_->data); }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
     size_t get_index() const { return ptr_->data; }
     void set_data(const std::string_view& sw, timestamp_t ts) {
@@ -569,11 +572,12 @@ class MutableNbrSliceMut<std::string_view> {
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
 
     nbr_t* ptr_;
-    StringColumn& column_;
+    TypedColumn<EDATA_T>& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
-  MutableNbrSliceMut(MutableNbrSliceMut<size_t> slice, StringColumn& column)
+  MutableNbrSliceMut(MutableNbrSliceMut<size_t> slice,
+                     TypedColumn<EDATA_T>& column)
       : slice_(slice), column_(column) {}
   ~MutableNbrSliceMut() = default;
   void set_size(int size) { slice_.set_size(size); }
@@ -584,14 +588,14 @@ class MutableNbrSliceMut<std::string_view> {
   MutableColumnNbr begin() { return MutableColumnNbr(slice_.begin(), column_); }
   MutableColumnNbr end() { return MutableColumnNbr(slice_.end(), column_); }
 
-  static MutableNbrSliceMut empty(StringColumn& column) {
+  static MutableNbrSliceMut empty(TypedColumn<EDATA_T>& column) {
     MutableNbrSliceMut ret(MutableNbrSliceMut<size_t>::empty(), column);
     return ret;
   }
 
  private:
   MutableNbrSliceMut<size_t> slice_;
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
 };
 
 template <>

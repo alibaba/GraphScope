@@ -431,6 +431,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << type << s;
   } else if (value.type == PropertyType::StringView()) {
     in_archive << value.type << value.value.s;
+  } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    in_archive << value.type << value.value.fixed_chars;
   } else if (value.type == PropertyType::VertexGlobalId()) {
     in_archive << value.type << value.value.vertex_gid;
   } else if (value.type == PropertyType::Label()) {
@@ -482,6 +484,8 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     LOG(FATAL) << "Not supported";
   } else if (value.type == PropertyType::StringView()) {
     out_archive >> value.value.s;
+  } else if (value.type == impl::PropertyTypeImpl::kFixedChar) {
+    out_archive >> value.value.fixed_chars;
   } else if (value.type == PropertyType::VertexGlobalId()) {
     out_archive >> value.value.vertex_gid;
   } else if (value.type == PropertyType::Label()) {
@@ -517,6 +521,21 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   out_archive >> size;
   str = std::string_view(reinterpret_cast<char*>(out_archive.GetBytes(size)),
                          size);
+  return out_archive;
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const FixedChars& value) {
+  in_archive << value.length_;
+  in_archive.AddBytes(value.data_, value.length_);
+  return in_archive;
+}
+
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              FixedChars& value) {
+  size_t size;
+  out_archive >> size;
+  value = FixedChars(reinterpret_cast<char*>(out_archive.GetBytes(size)), size);
   return out_archive;
 }
 
@@ -633,6 +652,8 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
     return gs::Any();
   } else if (type == gs::PropertyType::StringView()) {
     return gs::Any(std::string_view(value));
+  } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    return gs::Any(gs::FixedChars(value));
   } else {
     LOG(FATAL) << "Unsupported type: " << type;
   }

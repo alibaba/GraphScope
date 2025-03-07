@@ -406,6 +406,22 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                                        filenames, supplier_creator);
       }
     } else if (property_types[0].type_enum ==
+               impl::PropertyTypeImpl::kFixedChar) {
+      auto dual_csr = new DualCsr<FixedChars>(
+          oe_strategy, ie_strategy,
+          property_types[0].additional_type_info.fixed_length, oe_mutable,
+          ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<FixedChars>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<FixedChars>(src_label_i, dst_label_i,
+                                            edge_label_i, filenames,
+                                            supplier_creator);
+      }
+    } else if (property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kVarChar ||
                property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kStringView) {

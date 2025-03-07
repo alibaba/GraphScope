@@ -601,7 +601,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
 using StringColumn = TypedColumn<std::string_view>;
 
 template <>
-class TypedColumn<FixedChar> : public ColumnBase {
+class TypedColumn<FixedChars> : public ColumnBase {
  public:
   TypedColumn(StorageStrategy strategy, uint16_t width)
       : type_(PropertyType::FixedChar(width)),
@@ -729,21 +729,31 @@ class TypedColumn<FixedChar> : public ColumnBase {
     }
   }
 
-  void set_any(size_t index, const Any& value) override {
-    set_value(index, value.AsStringView());
+  void set_value(size_t index, const FixedChars& val) {
+    if (index >= basic_size_ && index < basic_size_ + extra_size_) {
+      put_val(index - basic_size_, extra_buffer_, val);
+    } else if (index < basic_size_) {
+      put_val(index, basic_buffer_, val);
+    } else {
+      throw std::runtime_error("Index out of range");
+    }
   }
 
-  inline std::string_view get_view(size_t index) const {
+  void set_any(size_t index, const Any& value) override {
+    set_value(index, value.AsFixedChar());
+  }
+
+  inline FixedChars get_view(size_t index) const {
     size_t offset = index * width_;
     return index < basic_size_
-               ? std::string_view(basic_buffer_.data() + offset, width_)
-               : std::string_view(
+               ? FixedChars(basic_buffer_.data() + offset, width_)
+               : FixedChars(
                      extra_buffer_.data() + offset - basic_size_ * width_,
                      width_);
   }
 
   Any get(size_t index) const override {
-    return AnyConverter<std::string_view>::to_any(get_view(index));
+    return AnyConverter<FixedChars>::to_any(get_view(index));
   }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {
@@ -1038,9 +1048,9 @@ class TypedRefColumn : public RefColumnBase {
 };
 
 template <>
-class TypedRefColumn<FixedChar> : public RefColumnBase {
+class TypedRefColumn<FixedChars> : public RefColumnBase {
  public:
-  TypedRefColumn(const TypedColumn<FixedChar>& column) : column_(column) {}
+  TypedRefColumn(const TypedColumn<FixedChars>& column) : column_(column) {}
   ~TypedRefColumn() {}
 
   inline std::string_view get_view(size_t index) const {
@@ -1054,7 +1064,7 @@ class TypedRefColumn<FixedChar> : public RefColumnBase {
   }
 
  private:
-  const TypedColumn<FixedChar>& column_;
+  const TypedColumn<FixedChars>& column_;
 };
 
 template <>
