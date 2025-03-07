@@ -415,7 +415,7 @@ class GetV {
                                  shuffle_offset);
 
         } else {
-          std::vector<bool> labels(std::numeric_limits<label_t>::max(), false);
+          std::vector<bool> labels(graph.schema().vertex_label_num(), false);
           for (auto& label : params.tables) {
             labels[label] = true;
           }
