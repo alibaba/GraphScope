@@ -66,4 +66,7 @@ public class FrontendConfig {
 
     public static final Config<Long> METRICS_TOOL_INTERVAL_MS =
             Config.longConfig("metrics.tool.interval.ms", 5 * 60 * 1000L);
+
+    public static final Config<Boolean> DISABLE_EXPR_SIMPLIFY =
+            Config.boolConfig("disable.expr.simplify", false);
 }

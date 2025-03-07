@@ -37,7 +37,7 @@ public class QueryCacheTest {
     // test hash code of query cache key
     @Test
     public void query_cache_1_test() {
-        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "1"));
+        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "1", "graph.physical.opt", "proto"));
         GraphPlanner graphPlanner =
                 new GraphPlanner(
                         configs, new LogicalPlanFactory.Cypher(), new GraphRelOptimizer(configs));
@@ -63,7 +63,7 @@ public class QueryCacheTest {
     // test evict strategy of query cache
     @Test
     public void query_cache_2_test() throws Exception {
-        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "1"));
+        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "1", "graph.physical.opt", "proto"));
         GraphPlanner graphPlanner =
                 new GraphPlanner(
                         configs, new LogicalPlanFactory.Cypher(), new GraphRelOptimizer(configs));
@@ -86,7 +86,7 @@ public class QueryCacheTest {
 
     @Test
     public void query_cache_3_test() {
-        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "10"));
+        Configs configs = new Configs(ImmutableMap.of("query.cache.size", "10", "graph.physical.opt", "proto"));
         GraphPlanner graphPlanner =
                 new GraphPlanner(
                         configs, new LogicalPlanFactory.Gremlin(), new GraphRelOptimizer(configs));
@@ -105,7 +105,7 @@ public class QueryCacheTest {
     // test cache invalidation after schema update
     @Test
     public void query_cache_schema_update_test() throws Exception {
-        Configs configs = new Configs(ImmutableMap.of());
+        Configs configs = new Configs(ImmutableMap.of("graph.physical.opt", "proto"));
         GraphPlanner graphPlanner =
                 new GraphPlanner(
                         configs, new LogicalPlanFactory.Cypher(), new GraphRelOptimizer(configs));
