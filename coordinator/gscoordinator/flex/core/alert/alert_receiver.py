@@ -90,7 +90,7 @@ class DingTalkReceiver(object):
             return
 
         try:
-            content = "[{0}] {1}, Alert:\nGraphScope portal instance [{2}]: {3}".format(
+            content = "[{0}] {1} Alert:\nGraphScope portal instance [{2}]: {3}".format(
                 message.severity,
                 message.alert_name,
                 INSTANCE_NAME,
