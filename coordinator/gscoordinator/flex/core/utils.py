@@ -67,6 +67,38 @@ def resolve_api_client(k8s_config_file=None):
             raise RuntimeError("Resolve kube api client failed.")
     return kube_client.ApiClient()
 
+def get_pod_ips(api_client, namespace, pod_prefix):
+    """Get pod ip by pod name prefix.
+
+    Args:
+        api_client: ApiClient
+            An kubernetes ApiClient object, initialized with the client args.
+        namespace: str
+            Namespace of the pod belongs to.
+        pod_prefix: str
+            Pod name prefix.
+
+    Raises:
+        RuntimeError: Get pod ip failed.
+
+    Returns:
+        Pod ip.
+    """
+    from kubernetes import client as kube_client
+    core_api = kube_client.CoreV1Api(api_client)
+    pods = core_api.list_namespaced_pod(namespace=namespace)
+    ips = []
+    for pod in pods.items:
+        if pod.metadata.name.startswith(pod_prefix):
+            if pod.status.phase == "Running":
+                # append (ip, pod_name)
+                ips.append((pod.status.pod_ip, pod.metadata.name))
+            else:
+                raise RuntimeError(f"Pod {pod.metadata.name} is not running.")
+    if not ips:
+        raise RuntimeError(f"Get pod ip failed.")
+    return ips
+
 
 def get_service_endpoints(  # noqa: C901
     api_client,
