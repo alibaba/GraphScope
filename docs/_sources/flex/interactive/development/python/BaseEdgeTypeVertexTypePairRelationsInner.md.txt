@@ -20,12 +20,12 @@ json = "{}"
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInner from a JSON string
 base_edge_type_vertex_type_pair_relations_inner_instance = BaseEdgeTypeVertexTypePairRelationsInner.from_json(json)
 # print the JSON string representation of the object
-print(BaseEdgeTypeVertexTypePairRelationsInner.to_json())
+print BaseEdgeTypeVertexTypePairRelationsInner.to_json()
 
 # convert the object into a dict
 base_edge_type_vertex_type_pair_relations_inner_dict = base_edge_type_vertex_type_pair_relations_inner_instance.to_dict()
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInner from a dict
-base_edge_type_vertex_type_pair_relations_inner_from_dict = BaseEdgeTypeVertexTypePairRelationsInner.from_dict(base_edge_type_vertex_type_pair_relations_inner_dict)
+base_edge_type_vertex_type_pair_relations_inner_form_dict = base_edge_type_vertex_type_pair_relations_inner.from_dict(base_edge_type_vertex_type_pair_relations_inner_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

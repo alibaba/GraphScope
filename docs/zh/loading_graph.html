@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>载图 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -315,9 +315,9 @@ MathJax = {
         
           
             
-              <dd><a href="../v0.29.0/zh/index.html">
+              <dd><a href="../v0.31.0/zh/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -392,15 +392,15 @@ MathJax = {
 <h2>载入内置数据集<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
 <p>GraphScope 内置了一组流行的数据集，以及载入他们的工具函数，帮助用户更容易的上手。</p>
 <p>来看一个例子：</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ogbn_mag</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>在单机模式下，GraphScope 会将数据文件下载到 <code class="file docutils literal notranslate"><span class="pre">~/.graphscope/dataset</span></code>，并且会保留以供将来使用。</p>
 <p>在 Kubernetes 集群模式下，将数据文件下载到 Pod 的本地存储比较复杂，所以我们提供了一个挂载了 OSS 的数据集桶的一个容器，</p>
 <p>在下面的例子里，我们将载入和上面同样的一张图，只不过这次 graphscope 部署在集群中。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ogbn_mag</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;k8s&#39;</span><span class="p">,</span> <span class="n">with_dataset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="s1">&#39;/dataset/ogbn_mag_small&#39;</span><span class="p">)</span>
 </pre></div>
@@ -413,17 +413,17 @@ MathJax = {
 <p>然而，更常见的情况是用户需要使用自己的数据集，并做一些数据分析的工作。</p>
 <p>我们提供了一个函数用来定义一个属性图的模型（schema），并以将属性图载入 GraphScope：</p>
 <p>首先，我们创建一个会话，然后在此会话内创建图。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
 <span class="c1"># Use `sess = graphscope.session(cluster_type=&#39;hosts&#39;)` if you are in standalone mode.</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 </pre></div>
 </div>
 <p><cite>Graph</cite> 有几个方法来配置：</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">pass</span>
 
-<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_e&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_e&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="k">pass</span>
 </pre></div>
 </div>
@@ -638,7 +638,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 <p>除了 Loader 外，其他属性，ID列，标签设置等都和之前提到的保持一致。</p>
 <section id="pandas">
 <h3>从 Pandas 中载图<a class="headerlink" href="#pandas" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">df_v</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
 <span class="n">df_e</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_replyOf_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
@@ -653,7 +653,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 <section id="numpy">
 <h3>从 Numpy 中载图<a class="headerlink" href="#numpy" title="Permalink to this heading">¶</a></h3>
 <p>注意每个数组都代表一列，我们将其以 COO 矩阵的方式传入。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 
 <span class="n">array_v</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_v</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_v</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
 <span class="n">array_e</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_e</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_e</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
@@ -669,7 +669,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 文件路径应遵循 URI 标准。当收到包含文件路径的载图请求时， <cite>graphscope</cite> 将会解析 URI，调用相应的载图模块。</p>
 <p>目前, <cite>graphscope</cite> 支持多种数据源：本地, OSS，S3，和 HDFS:
 数据由 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 负责载入，<cite>Vineyard</cite> 使用 <a class="reference external" href="https://github.com/intake/filesystem_spec">fsspec</a> 解析不同的数据格式以及参数。任何额外的具体的配置都可以在Loader的可变参数列表中传入，这些参数会直接被传递到对应的存储类中。比如 <cite>host</cite> 和 <cite>port</cite> 之于 <cite>HDFS</cite>，或者是 <cite>access-id</cite>, <cite>secret-access-key</cite> 之于 oss 或 s3。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="kn">import</span> <span class="n">Loader</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">Loader</span>
 
 <span class="n">ds1</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;file:///var/datafiles/group.e&quot;</span><span class="p">)</span>
 <span class="n">ds2</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;oss://graphscope_bucket/datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s1">&#39;oss-cn-hangzhou.aliyuncs.com&#39;</span><span class="p">)</span>

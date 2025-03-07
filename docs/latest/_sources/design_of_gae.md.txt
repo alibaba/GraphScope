@@ -28,7 +28,7 @@ GAE achieves high performance through a highly optimized analytical runtime base
 
 ## Algorithm Library
 
-GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The full lists of build-in algorithms are:
+GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The full lists of built-in algorithms are:
 
 - `sssp(src)`
 - `pagerank()`
@@ -52,4 +52,4 @@ GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms,
 - `sampling_path()`
 
 
-In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
+In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 built-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.

@@ -21,12 +21,12 @@ json = "{}"
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams from a JSON string
 base_edge_type_vertex_type_pair_relations_inner_x_csr_params_instance = BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.from_json(json)
 # print the JSON string representation of the object
-print(BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.to_json())
+print BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.to_json()
 
 # convert the object into a dict
 base_edge_type_vertex_type_pair_relations_inner_x_csr_params_dict = base_edge_type_vertex_type_pair_relations_inner_x_csr_params_instance.to_dict()
 # create an instance of BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams from a dict
-base_edge_type_vertex_type_pair_relations_inner_x_csr_params_from_dict = BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(base_edge_type_vertex_type_pair_relations_inner_x_csr_params_dict)
+base_edge_type_vertex_type_pair_relations_inner_x_csr_params_form_dict = base_edge_type_vertex_type_pair_relations_inner_x_csr_params.from_dict(base_edge_type_vertex_type_pair_relations_inner_x_csr_params_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

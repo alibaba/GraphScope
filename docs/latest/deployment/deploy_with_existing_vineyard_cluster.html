@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Deploy with Existing Vineyard Cluster - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -747,7 +749,7 @@ vineyard-system<span class="w">   </span>Active<span class="w">   </span>33s
 </pre></div>
 </div>
 <p>To deploy a simple Vineyard cluster with one Vineyard instance and one etcd instance, follow the next step:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vineyard</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 
 <span class="c1"># The default deployment name is `vineyardd-sample` and the default namespace is `vineyard-system`. Also, you can specify the deployment name and namespace by `name` parameter and `namespace` parameter. For more details about the parameters, please refer to the doc of vineyardctl</span>
 <span class="c1"># https://github.com/v6d-io/v6d/blob/main/k8s/cmd/README.md</span>
@@ -769,7 +771,7 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 <section id="the-lifecycle-of-a-vineyard-cluster">
 <h2>The lifecycle of a vineyard cluster<a class="headerlink" href="#the-lifecycle-of-a-vineyard-cluster" title="Permalink to this heading">¶</a></h2>
 <p>If you deploy the vineyard cluster with the vineyardctl API, it will persist until you manually delete it. The vineyard cluster will not be affected by quitting the GraphScope session. You can delete the vineyard cluster with the following command:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vineyard</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">delete</span><span class="o">.</span><span class="n">vineyard_deployment</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -794,9 +796,9 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 <section id="load-a-graph-to-the-existing-vineyard-cluster">
 <h2>Load a graph to the existing vineyard cluster<a class="headerlink" href="#load-a-graph-to-the-existing-vineyard-cluster" title="Permalink to this heading">¶</a></h2>
 <p>You can create a GraphScope session and then specify the <code class="docutils literal notranslate"><span class="pre">k8s_namespace</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_deployment</span></code> to which vineyard cluster you want to connect. Then load a graph to the existing vineyard cluster as follows. Once the graph is loaded, you can obtain its vineyard ID to reload it with another GraphScope session.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_modern_graph</span>
 
 <span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -833,8 +835,8 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 <p>Create a new GraphScope session and specify the <code class="docutils literal notranslate"><span class="pre">k8s_namespace</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_deployment</span></code> to the vineyard
 cluster the last GraphScope session connected to. Also, you need to remember the vineyard id of the graph and
 then load the graph with the vineyard id in the new GraphScope session.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">import</span> <span class="nn">vineyard</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 
 <span class="c1"># the step will be long as it will create a graphscope cluster</span>
 <span class="n">new_sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span>

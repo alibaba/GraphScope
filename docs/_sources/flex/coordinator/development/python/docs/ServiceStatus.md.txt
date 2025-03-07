@@ -8,6 +8,7 @@ Name | Type | Description | Notes
 **graph_id** | **str** |  | 
 **status** | **str** |  | 
 **sdk_endpoints** | [**ServiceStatusSdkEndpoints**](ServiceStatusSdkEndpoints.md) |  | [optional] 
+**info** | **str** |  | [optional] 
 **start_time** | **str** |  | [optional] 
 
 ## Example

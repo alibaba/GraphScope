@@ -80,8 +80,8 @@ Inheritance diagram for gs::PageRank:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1PageRank__inherit__graph.png" border="0" usemap="#gs_1_1PageRank_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1PageRank_inherit__map" id="gs_1_1PageRank_inherit__map">
-<area shape="rect" title=" " alt="" coords="35,109,145,136"/>
-<area shape="rect" title=" " alt="" coords="5,5,175,61"/>
+<area shape="rect" title=" " alt="" coords="237,27,347,54"/>
+<area shape="rect" title=" " alt="" coords="5,5,189,76"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -89,8 +89,8 @@ Collaboration diagram for gs::PageRank:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1PageRank__coll__graph.png" border="0" usemap="#gs_1_1PageRank_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1PageRank_coll__map" id="gs_1_1PageRank_coll__map">
-<area shape="rect" title=" " alt="" coords="35,109,145,136"/>
-<area shape="rect" title=" " alt="" coords="5,5,175,61"/>
+<area shape="rect" title=" " alt="" coords="237,27,347,54"/>
+<area shape="rect" title=" " alt="" coords="5,5,189,76"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -98,8 +98,8 @@ Collaboration diagram for gs::PageRank:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a94301db17ab69dbdada662d4e44eaa5e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">PageRank</a> ()</td></tr>
 <tr class="separator:a94301db17ab69dbdada662d4e44eaa5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a166bbcbeacfebab055129a9388b0e877"><td class="memItemLeft" align="right" valign="top">results::CollectiveResults&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1PageRank.html#a166bbcbeacfebab055129a9388b0e877">Query</a> (const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;sess, std::string vertex_label, std::string edge_label, double damping_factor, int max_iterations, double epsilon)</td></tr>
-<tr class="separator:a166bbcbeacfebab055129a9388b0e877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab64e113c28afb6d978b0ec80a5283910"><td class="memItemLeft" align="right" valign="top">results::CollectiveResults&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1PageRank.html#ab64e113c28afb6d978b0ec80a5283910">Query</a> (const <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;sess, std::string src_vertex_label, std::string dst_vertex_label, std::string edge_label, double damping_factor, int32_t max_iterations, double epsilon, int32_t result_limit) override</td></tr>
+<tr class="separator:ab64e113c28afb6d978b0ec80a5283910"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a94301db17ab69dbdada662d4e44eaa5e"></a>
@@ -128,11 +128,14 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a166bbcbeacfebab055129a9388b0e877"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a166bbcbeacfebab055129a9388b0e877">&#9670;&nbsp;</a></span>Query()</h2>
+<a id="ab64e113c28afb6d978b0ec80a5283910"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab64e113c28afb6d978b0ec80a5283910">&#9670;&nbsp;</a></span>Query()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">results::CollectiveResults gs::PageRank::Query </td>
@@ -144,7 +147,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>vertex_label</em>, </td>
+          <td class="paramname"><em>src_vertex_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>dst_vertex_label</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -161,14 +170,20 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int32_t&#160;</td>
           <td class="paramname"><em>max_iterations</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>epsilon</em>&#160;</td>
+          <td class="paramname"><em>epsilon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int32_t&#160;</td>
+          <td class="paramname"><em>result_limit</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -176,6 +191,11 @@ Public Member Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>

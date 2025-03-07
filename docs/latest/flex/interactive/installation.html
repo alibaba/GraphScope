@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Installation - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -696,7 +698,7 @@ MathJax = {
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Docker Installation</strong>: Ensure you have Docker installed and configured on a Mac or Linux machine. If you haven’t installed Docker yet, you can find the installation guide <a class="reference external" href="https://docs.docker.com/get-docker/">here</a>.</p></li>
-<li><p><strong>Python Installtion</strong>: Interactive requires <code class="docutils literal notranslate"><span class="pre">Python</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">3.8</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">19.3</span></code>.</p></li>
+<li><p><strong>Python Installation</strong>: Interactive requires <code class="docutils literal notranslate"><span class="pre">Python</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">3.8</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">19.3</span></code>.</p></li>
 </ul>
 </section>
 <section id="install-and-deploy-interactive">
@@ -714,6 +716,10 @@ gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>In addition to the interactive server, a coordinator server is also deployed. The coordinator server functions similarly to the <code class="docutils literal notranslate"><span class="pre">ApiServer</span></code> for k8s, enabling users to engage with the GraphScope platform via a streamlined and standardized set of APIs.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, the latest version of Interactive is used. To specify a fixed version, use the –image-tag option. For example <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">instance</span> <span class="pre">deploy</span> <span class="pre">--type</span> <span class="pre">interactive</span> <span class="pre">--image-tag</span> <span class="pre">v0.31.0</span></code>.</p>
 </div>
 <!-- 2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port, see [Service-Accessibility](./installation.md#service-accessibility) -->
 <p>The following message will display on your screen to inform you about the available services:</p>

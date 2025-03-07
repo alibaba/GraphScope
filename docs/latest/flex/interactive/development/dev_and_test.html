@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Dev and Test - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../dev_guide.html">Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -896,7 +898,7 @@ bash<span class="w"> </span>hqps_admin_test.sh<span class="w"> </span><span clas
 <p>The main entrance for Interactive is <code class="docutils literal notranslate"><span class="pre">interactive_server</span></code>.</p>
 <section id="enable-adminservice">
 <h3>Enable AdminService<a class="headerlink" href="#enable-adminservice" title="Permalink to this heading">¶</a></h3>
-<p>To start admin service in development, use the command line argument <code class="docutils literal notranslate"><span class="pre">--enable-admin-service</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">${ENGINE_CONFIG}</span></code> specifies the configuration for interactive query engine, see <a class="reference external" href="https://graphscope.io/docs/flex/interactive/configuration">engine-configuration</a>. <code class="docutils literal notranslate"><span class="pre">${WORKSPACE}</span></code> points to the directory where interactive related data is maintaned.</p>
+<p>To start admin service in development, use the command line argument <code class="docutils literal notranslate"><span class="pre">--enable-admin-service</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">${ENGINE_CONFIG}</span></code> specifies the configuration for interactive query engine, see <a class="reference external" href="https://graphscope.io/docs/flex/interactive/configuration">engine-configuration</a>. <code class="docutils literal notranslate"><span class="pre">${WORKSPACE}</span></code> points to the directory where interactive related data is maintained.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span>
 </pre></div>
 </div>
@@ -965,6 +967,15 @@ The mapping between status codes and HTTP codes is shown in the table below.</p>
 </tbody>
 </table>
 </div>
+</section>
+<section id="transactions">
+<h3>Transactions<a class="headerlink" href="#transactions" title="Permalink to this heading">¶</a></h3>
+<p>In Interactive’s execution engine, transactions such as <code class="docutils literal notranslate"><span class="pre">ReadTransaction</span></code>, <code class="docutils literal notranslate"><span class="pre">UpdateTransaction</span></code>, and <code class="docutils literal notranslate"><span class="pre">InsertTransaction</span></code> are employed to maintain data consistency and integrity throughout operations. Each transaction can either succeed or fail, and it is important to understand the transactional guarantees provided by Interactive:</p>
+<ol class="arabic simple">
+<li><p>For every transaction, we first write the Write-Ahead Log (WAL) to persistent storage before applying it to the graph data. This ensures a reliable record of the transaction steps.</p></li>
+<li><p>If a transaction returns <code class="docutils literal notranslate"><span class="pre">false</span></code> during the <code class="docutils literal notranslate"><span class="pre">commit()</span></code> process, the error occurred prior to applying the WAL to the graph data. This type of failure could arise during the construction of the WAL or during its writing phase.</p></li>
+<li><p>It is important to note that errors can still occur when replaying the WAL to the graph database. Replaying might fail due to limitations in resources or due to unforeseen bugs. <strong>However,</strong> any errors encountered during this stage will be handled via exceptions or may result in process failure. Currently, there is no established mechanism to handle such failures. Future improvements should focus on implementing failover strategies, potentially allowing the GraphDB to continue replaying the WAL until it succeeds.</p></li>
+</ol>
 </section>
 </section>
 </section>
@@ -1048,6 +1059,7 @@ The mapping between status codes and HTTP codes is shown in the table below.</p>
 <li><a class="reference internal" href="#enable-adminservice">Enable AdminService</a></li>
 <li><a class="reference internal" href="#start-compiler-service">Start Compiler Service</a></li>
 <li><a class="reference internal" href="#error-code">Error Code</a></li>
+<li><a class="reference internal" href="#transactions">Transactions</a></li>
 </ul>
 </li>
 </ul>

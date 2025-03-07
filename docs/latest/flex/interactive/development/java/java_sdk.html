@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Python SDK Reference" href="../python/python_sdk.html" /><link rel="prev" title="Dev and Test" href="../dev_and_test.html" />
+<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Python SDK Guide" href="../python/python_sdk.html" /><link rel="prev" title="Dev and Test" href="../dev_and_test.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Java SDK Reference - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../dev_guide.html">Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -939,14 +941,14 @@ For the detail configuration of data import, please refer to <a class="reference
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>For each vertex/edge types, you need to provide the input data source and column mapping infomation.
-Remember to add <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at the begining of the local file path.
-<code class="docutils literal notranslate"><span class="pre">Session.bulkLoading()</span></code> will submit an dataloading job to the service, and we can query the status of the job via <code class="docutils literal notranslate"><span class="pre">Session.getJobStatus()</span></code>, and wait until the job has compleleted successfully.</p>
+<p>For each vertex/edge types, you need to provide the input data source and column mapping information.
+Remember to add <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at the beginning of the local file path.
+<code class="docutils literal notranslate"><span class="pre">Session.bulkLoading()</span></code> will submit an dataloading job to the service, and we can query the status of the job via <code class="docutils literal notranslate"><span class="pre">Session.getJobStatus()</span></code>, and wait until the job has completed successfully.</p>
 </section>
 <section id="create-a-stored-procedure">
 <h3>Create a stored procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h3>
 <p>Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both <code class="docutils literal notranslate"><span class="pre">cypher</span></code> and <code class="docutils literal notranslate"><span class="pre">c++</span></code> queries as stored procedures.
-With the following code, you will create a procedure named <code class="docutils literal notranslate"><span class="pre">testProcedure</span></code> which is definied via a <code class="docutils literal notranslate"><span class="pre">cypher</span></code> query.</p>
+With the following code, you will create a procedure named <code class="docutils literal notranslate"><span class="pre">testProcedure</span></code> which is defined via a <code class="docutils literal notranslate"><span class="pre">cypher</span></code> query.</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">GettingStarted</span><span class="p">{</span>
 <span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">createProcedure</span><span class="p">(</span><span class="n">Session</span><span class="w"> </span><span class="n">sess</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">graphId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">String</span><span class="w"> </span><span class="n">procName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;testProcedure&quot;</span><span class="p">;</span>
@@ -976,7 +978,7 @@ With the following code, you will create a procedure named <code class="docutils
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The procedure could not be invokded now, since currently interactive service has not been switched to the newly created <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>. We need to start the service on <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>.</p>
+<p>The procedure could not be invoked now, since currently interactive service has not been switched to the newly created <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>. We need to start the service on <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>.</p>
 </section>
 <section id="start-the-query-service-on-the-new-graph">
 <h3>Start the query service on the new graph<a class="headerlink" href="#start-the-query-service-on-the-new-graph" title="Permalink to this heading">¶</a></h3>
@@ -1343,7 +1345,7 @@ public class GettingStarted{
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Python SDK Reference</div>
+                <div class="title">Python SDK Guide</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

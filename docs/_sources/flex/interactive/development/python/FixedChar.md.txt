@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of FixedChar from a JSON string
 fixed_char_instance = FixedChar.from_json(json)
 # print the JSON string representation of the object
-print(FixedChar.to_json())
+print FixedChar.to_json()
 
 # convert the object into a dict
 fixed_char_dict = fixed_char_instance.to_dict()
 # create an instance of FixedChar from a dict
-fixed_char_from_dict = FixedChar.from_dict(fixed_char_dict)
+fixed_char_form_dict = fixed_char.from_dict(fixed_char_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

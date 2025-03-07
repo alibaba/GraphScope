@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Stored Procedures - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -757,9 +759,9 @@ MathJax = {
 <p class="admonition-title">Note</p>
 <p>If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.</p>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
 <span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
 <span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
@@ -779,6 +781,92 @@ MathJax = {
 </pre></div>
 </div>
 <p>In addition to defining a stored procedure with a Cypher query, we also support for customizing query execution through C++ stored procedures. See <a class="reference internal" href="development/stored_procedure/cpp_procedure.html"><span class="std std-doc">C++ Stored Procedure</span></a>.</p>
+</section>
+</section>
+<section id="builtin-procedures">
+<h2>Builtin Procedures<a class="headerlink" href="#builtin-procedures" title="Permalink to this heading">¶</a></h2>
+<p>To enhance the user experience in Interactive, we have integrated built-in stored procedures. These procedures facilitate both commonly executed queries and those that, while complex and challenging to devise, are essential and frequently utilized. To access these features, simply input the correct procedure name and the necessary parameters.</p>
+<section id="count-vertices">
+<h3>count_vertices<a class="headerlink" href="#count-vertices" title="Permalink to this heading">¶</a></h3>
+<p>This procedure returns the count of vertices for a specified label.</p>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">count_vertices</span><span class="p">(</span><span class="n">vertex_label_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vertex_label_name</span></code>: The name of the vertex label to be counted.</p></li>
+</ul>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">count</span></code>: The total number of vertices.</p></li>
+</ul>
+</section>
+</section>
+<section id="k-hop-neighbors">
+<h3>k_hop_neighbors<a class="headerlink" href="#k-hop-neighbors" title="Permalink to this heading">¶</a></h3>
+<p>This finds all vertices that can be reached from a starting vertex within <code class="docutils literal notranslate"><span class="pre">k</span></code> hops.</p>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">k_neighbors</span><span class="p">(</span><span class="n">src_vertex_label_name</span><span class="p">,</span><span class="w"> </span><span class="n">src_vertex_pk</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">src_vertex_label_name</span></code>: The label of the starting vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src_vertex_pk</span></code>: The primary key identifying the starting vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k</span></code>: The number of hops, which must be greater than or equal to 0.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">label_name</span></code>: The label of each reachable vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vertex_pk</span></code>: The primary key of each reachable vertex.</p></li>
+</ul>
+</section>
+</section>
+<section id="shortest-path-among-three">
+<h3>shortest_path_among_three<a class="headerlink" href="#shortest-path-among-three" title="Permalink to this heading">¶</a></h3>
+<p>This finds the shortest path connecting three specified vertices.</p>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">shortest_path_among_three</span><span class="p">(</span><span class="n">label_1</span><span class="p">,</span><span class="w"> </span><span class="n">pk_1</span><span class="p">,</span><span class="w"> </span><span class="n">label_2</span><span class="p">,</span><span class="w"> </span><span class="n">pk_2</span><span class="p">,</span><span class="w"> </span><span class="n">label_3</span><span class="p">,</span><span class="w"> </span><span class="n">pk_3</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">label_1</span></code>: The label of the first vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pk_1</span></code>: The primary key of the first vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_2</span></code>: The label of the second vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pk_2</span></code>: The primary key of the second vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_3</span></code>: The label of the third vertex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pk_3</span></code>: The primary key of the third vertex.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: The shortest path, represented as a string.</p></li>
+</ul>
+</section>
+</section>
+<section id="pagerank">
+<h3>pagerank<a class="headerlink" href="#pagerank" title="Permalink to this heading">¶</a></h3>
+<p>Calculate the PageRank values for a subgraph of the current graph.</p>
+<div class="highlight-note notranslate"><div class="highlight"><pre><span></span>Currently, we only support calculating PageRank on a subgraph with a single type of vertex and a single type of relationship.
+</pre></div>
+</div>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">page_rank</span><span class="p">(</span><span class="n">vertex_label</span><span class="p">,</span><span class="w"> </span><span class="n">edge_label</span><span class="p">,</span><span class="w"> </span><span class="n">damping_factor</span><span class="p">,</span><span class="w"> </span><span class="n">max_iterations</span><span class="p">,</span><span class="w"> </span><span class="n">epsilon</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vertex_label</span></code>: The label of the vertices to be queried.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_label</span></code>: The label of the relationships between vertices.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">damping_factor</span></code>: A parameter for the PageRank algorithm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>: The maximum number of iterations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epsilon</span></code>: A convergence parameter for the PageRank algorithm.</p></li>
+</ul>
 </section>
 </section>
 </section>
@@ -849,6 +937,25 @@ MathJax = {
 <li><a class="reference internal" href="#querying-stored-procedures">Querying Stored Procedures</a><ul>
 <li><a class="reference internal" href="#call-the-stored-procedure-via-interactive-sdk">Call the Stored Procedure via Interactive SDK</a></li>
 <li><a class="reference internal" href="#call-the-stored-procedure-via-neo4j-native-tools">Call the Stored Procedure via Neo4j-native Tools</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#builtin-procedures">Builtin Procedures</a><ul>
+<li><a class="reference internal" href="#count-vertices">count_vertices</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+<li><a class="reference internal" href="#returns">Returns</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#k-hop-neighbors">k_hop_neighbors</a><ul>
+<li><a class="reference internal" href="#id1">Parameters</a></li>
+<li><a class="reference internal" href="#id2">Returns</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#shortest-path-among-three">shortest_path_among_three</a><ul>
+<li><a class="reference internal" href="#id3">Parameters</a></li>
+<li><a class="reference internal" href="#id4">Returns</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pagerank">pagerank</a></li>
 </ul>
 </li>
 </ul>

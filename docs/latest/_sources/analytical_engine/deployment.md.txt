@@ -15,7 +15,7 @@ In this document, we will walk you through the process of standalone deployment 
 
 To get started, you need to install graphscope-client and prepare a Kubernetes Cluster to continue.
 
-Incase you doesn't have one, you could refer to the [Install graphscope-client](../deployment/deploy_graphscope_on_self_managed_k8s.md#install-graphscope-client) and [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster) to get them.
+In case you doesn't have one, you could refer to the [Install graphscope-client](../deployment/deploy_graphscope_on_self_managed_k8s.md#install-graphscope-client) and [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster) to get them.
 
 
 ## Deployment GAE only

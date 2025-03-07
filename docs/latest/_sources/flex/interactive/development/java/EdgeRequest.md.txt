@@ -10,8 +10,8 @@
 |**srcLabel** | **String** |  |  |
 |**dstLabel** | **String** |  |  |
 |**edgeLabel** | **String** |  |  |
-|**srcPrimaryKeyValue** | **Object** |  |  |
-|**dstPrimaryKeyValue** | **Object** |  |  |
+|**srcPrimaryKeyValues** | [**List&lt;Property&gt;**](Property.md) |  |  |
+|**dstPrimaryKeyValues** | [**List&lt;Property&gt;**](Property.md) |  |  |
 |**properties** | [**List&lt;Property&gt;**](Property.md) |  |  [optional] |
 
 

@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of VertexStatistics from a JSON string
 vertex_statistics_instance = VertexStatistics.from_json(json)
 # print the JSON string representation of the object
-print(VertexStatistics.to_json())
+print VertexStatistics.to_json()
 
 # convert the object into a dict
 vertex_statistics_dict = vertex_statistics_instance.to_dict()
 # create an instance of VertexStatistics from a dict
-vertex_statistics_from_dict = VertexStatistics.from_dict(vertex_statistics_dict)
+vertex_statistics_form_dict = vertex_statistics.from_dict(vertex_statistics_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

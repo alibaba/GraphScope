@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="A Generic Benchmark Tool" href="benchmark_tool.html" /><link rel="prev" title="Using LLM as an Assistant in GIE" href="neo4j/llm_assistant.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Graph Planner Interface by JNI and RESTful API" href="graph_planner.html" /><link rel="prev" title="Using LLM as an Assistant in GIE" href="neo4j/llm_assistant.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>GOpt: A Graph-Native Query Optimization Framework - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -341,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_and_test.html">Dev and Test</a></li>
@@ -633,9 +634,9 @@ MathJax = {
         
           
             
-              <dd><a href="../v0.29.0/index.html">
+              <dd><a href="../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -796,8 +797,8 @@ MathJax = {
 <p>Follow the instructions of <a class="reference external" href="https://neo4j.com/docs/operations-manual/4.4/tools/neo4j-admin/">neo4j-admin</a> to load the movie dataset, the original CSV files have been included in the <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j</span></code> artifacts under the directory <code class="docutils literal notranslate"><span class="pre">import/movie</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">gopt</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">neo4j</span>
 
-<span class="nb">bin</span><span class="o">/</span><span class="n">neo4j</span><span class="o">-</span><span class="n">admin</span> <span class="kn">import</span> \
-    <span class="o">--</span><span class="n">database</span> <span class="n">movie</span> \
+<span class="nb">bin</span><span class="o">/</span><span class="n">neo4j</span><span class="o">-</span><span class="n">admin</span> <span class="kn">import</span><span class="w"> \</span>
+<span class="w">    </span><span class="o">--</span><span class="n">database</span> <span class="n">movie</span> \
     <span class="o">--</span><span class="nb">id</span><span class="o">-</span><span class="nb">type</span><span class="o">=</span><span class="n">INTEGER</span> \
     <span class="o">--</span><span class="n">ignore</span><span class="o">-</span><span class="n">empty</span><span class="o">-</span><span class="n">strings</span><span class="o">=</span><span class="n">true</span> \
     <span class="o">--</span><span class="n">bad</span><span class="o">-</span><span class="n">tolerance</span><span class="o">=</span><span class="mi">0</span> \
@@ -1058,7 +1059,21 @@ To address this issue, GOpt is designed as follows:</p>
 </section>
 <section id="detailed-introduction">
 <h3>Detailed Introduction<a class="headerlink" href="#detailed-introduction" title="Permalink to this heading">¶</a></h3>
-<p>A comprehensive introduction to GOpt will be provided in subsequent sections. Please stay tuned for detailed updates and information.</p>
+<section id="rules">
+<h4>Rules<a class="headerlink" href="#rules" title="Permalink to this heading">¶</a></h4>
+<p>Rules play a pivotal role in GOpt’s optimization framework, enabling efficient and effective query transformations. Below is an outline of some key rules implemented in GOpt:</p>
+<p><strong>ScanEarlyStopRule</strong>: Pushes the limit operation down to the scan node. During the scan process, the scan stops as soon as the specified limit count is reached.</p>
+<p><strong>ScanExpandFusionRule</strong>: This rule transforms edge expansion into edge scan wherever possible. For example, consider the following Cypher query:</p>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">Match</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="n">PERSON</span><span class="p">)</span><span class="o">-[</span><span class="n">b</span><span class="p">:</span><span class="n">KNOWS</span><span class="o">]-&gt;</span><span class="p">(</span><span class="n">c</span><span class="p">:</span><span class="n">PERSON</span><span class="p">)</span><span class="w"> </span><span class="k">Return</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Although the query involves Scan and GetV steps, their results are not directly utilized by subsequent project operations. The only effectively used data is the edge data produced by the Expand operation. In such cases, we can perform a fusion operation, transforming the pattern
+<code class="docutils literal notranslate"><span class="pre">(a:PERSON)-[b:KNOWS]-&gt;(c:PERSON)</span></code> into a scan operation on the KNOWS edge. It is important to note that whether fusion is feasible also depends on the label dependencies between nodes and edges. If the edge label is determined strictly by the triplet (src_label, edge_label, dst_label), fusion cannot be performed. For example, consider the following query:</p>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">Match</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="n">PERSON</span><span class="p">)</span><span class="o">-[</span><span class="n">b</span><span class="p">:</span><span class="n">LIKES</span><span class="o">]-&gt;</span><span class="p">(</span><span class="n">c</span><span class="p">:</span><span class="n">COMMENT</span><span class="p">)</span><span class="w"> </span><span class="k">Return</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>TopKPushDownRule</strong>: This rule pushes down topK operations to the project node and is based on Calcite’s <a class="reference external" href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/rules/SortProjectTransposeRule.html">SortProjectTransposeRule</a>, leveraging the original rule wherever possible. However, in our more complex distributed scenario, deferring the execution of the project node can disrupt already sorted data. To address this, we modified the matching logic in <code class="docutils literal notranslate"><span class="pre">SortProjectTransposeRule</span></code>. Currently, the PushDown operation is applied only when the sort fields are empty, which means only the limit is pushed down to the project node.</p>
+</section>
 </section>
 </section>
 </section>
@@ -1068,12 +1083,12 @@ To address this issue, GOpt is designed as follows:</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="benchmark_tool.html">
+          <a class="next-page" href="graph_planner.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">A Generic Benchmark Tool</div>
+                <div class="title">Graph Planner Interface by JNI and RESTful API</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -1159,7 +1174,10 @@ To address this issue, GOpt is designed as follows:</p>
 </li>
 <li><a class="reference internal" href="#design-of-gopt">Design of GOpt</a><ul>
 <li><a class="reference internal" href="#motivation">Motivation</a></li>
-<li><a class="reference internal" href="#detailed-introduction">Detailed Introduction</a></li>
+<li><a class="reference internal" href="#detailed-introduction">Detailed Introduction</a><ul>
+<li><a class="reference internal" href="#rules">Rules</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

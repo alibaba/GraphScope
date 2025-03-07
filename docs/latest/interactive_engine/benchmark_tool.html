@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GIE" href="design_of_gie.html" /><link rel="prev" title="GOpt: A Graph-Native Query Optimization Framework" href="gopt.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GIE" href="design_of_gie.html" /><link rel="prev" title="Graph Planner Interface by JNI and RESTful API" href="graph_planner.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>A Generic Benchmark Tool - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_and_test.html">Dev and Test</a></li>
@@ -742,7 +744,7 @@ and you can use deploy the package to anywhere could connect to the gremlin endp
 </section>
 <section id="running-the-benchmark">
 <h3>Running the benchmark<a class="headerlink" href="#running-the-benchmark" title="Permalink to this heading">¶</a></h3>
-<p>You can unzip builded <em>target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz</em>, and run the benchmark.</p>
+<p>You can unzip built <em>target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz</em>, and run the benchmark.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>target
 tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
 <span class="nb">cd</span><span class="w"> </span>gaia-benchmark-0.0.1-SNAPSHOT
@@ -883,7 +885,7 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
 <span class="c1"># For each system, starting from system.1 to system.n, the following configurations are needed:</span>
 <span class="c1"># name: the name of the system, e.g., GIE, KuzuDb.</span>
 <span class="c1"># client: the client of the system, e.g., for GIE, it can be cypher, gremlin; for KuzuDB, it should be kuzu.</span>
-<span class="c1"># endpoint(optional): the endpoint of the system if the sytem provides a service endpoint, e.g., for GIE gremlin, it is 127.0.0.1:8182 by default.</span>
+<span class="c1"># endpoint(optional): the endpoint of the system if the system provides a service endpoint, e.g., for GIE gremlin, it is 127.0.0.1:8182 by default.</span>
 <span class="c1"># path(optional): the path of the database of the system if the system is a local database and need to access the database by the path, e.g., for KuzuDb, it can be /path_to_db/example_db.</span>
 <span class="c1"># Either of endpoint or path need to be provided, depending on the access method of the system.</span>
 <span class="n">system</span><span class="mf">.1</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">GIE</span>
@@ -940,14 +942,14 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="gopt.html">
+          <a class="prev-page" href="graph_planner.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">GOpt: A Graph-Native Query Optimization Framework</div>
+                <div class="title">Graph Planner Interface by JNI and RESTful API</div>
                 
               </div>
             </a>

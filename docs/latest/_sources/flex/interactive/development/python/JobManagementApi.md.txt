@@ -4,7 +4,7 @@ All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**CancelJob**](JobManagementApi.md#CancelJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
+| [**CancelJob**](JobManagementApi.md#CancelJob) | **DELETE** /v1/job/{job_id} | Cancel the job with specified jobId |
 | [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | Get the metadata of the job with specified jobId |
 | [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 

@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Quick Start - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -725,13 +727,13 @@ generate a local example graph. Below shows a code example running
 distributedly. Each process will read the same data file. Please make
 sure all the processes have access to the data file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># test.py</span>
-<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">getopt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getopt</span>
 
-<span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">):</span>
   <span class="n">cur_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
   <span class="n">cluster</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -864,7 +866,7 @@ data format is described through <code class="docutils literal notranslate"><spa
 <span class="mi">1106406</span>    <span class="mi">2</span>    <span class="mf">0.0</span><span class="p">:</span><span class="mf">0.0</span><span class="p">:</span><span class="o">...</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="n">N_FEATURE</span> <span class="o">=</span> <span class="mi">1433</span>
 
@@ -880,7 +882,7 @@ data format is described through <code class="docutils literal notranslate"><spa
 <h2>3.2 Graph Construction<a class="headerlink" href="#graph-construction" title="Permalink to this heading">¶</a></h2>
 <p>Graph construction is the process of loading the vertex and edge data
 into memory. After construction, the graph can be queries and sampled.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="c1"># Configure the parameters</span>
 <span class="n">N_CLASS</span> <span class="o">=</span> <span class="mi">7</span>
@@ -919,7 +921,7 @@ retrieve all the vertex attributes along the path, along with the labels
 of the seed vertices.</p>
 <p>Here we define a data generator, which generates batches of samples
 through graph traversal.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sample_gen</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">sample_gen</span><span class="p">():</span>
   <span class="n">query</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s1">&#39;item&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">)</span> \
                <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;relation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
                <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;relation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
@@ -943,8 +945,8 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <ul class="simple">
 <li><p>Generate training data through graph sampling as <code class="docutils literal notranslate"><span class="pre">input_fn</span></code></p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="k">def</span> <span class="nf">sample_input_fn</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_input_fn</span><span class="p">():</span>
   <span class="n">ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span>
     <span class="n">sample_gen</span><span class="p">,</span>
     <span class="nb">tuple</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">]),</span>
@@ -963,7 +965,7 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <li><p>Define the Aggregator and Encoder of the GNN model</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">def</span> <span class="nf">aggregate_fn</span><span class="p">(</span><span class="n">self_vecs</span><span class="p">,</span> <span class="n">neigh_vecs</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aggregate_fn</span><span class="p">(</span><span class="n">self_vecs</span><span class="p">,</span> <span class="n">neigh_vecs</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">):</span>
   <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">layer_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_layer&#39;</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">AUTO_REUSE</span><span class="p">):</span>
     <span class="nb">vars</span><span class="p">[</span><span class="s1">&#39;neigh_weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">N_CLASS</span><span class="p">,</span> <span class="n">N_CLASS</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;neigh_weights&#39;</span><span class="p">)</span>
     <span class="nb">vars</span><span class="p">[</span><span class="s1">&#39;self_weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">N_CLASS</span><span class="p">,</span> <span class="n">N_CLASS</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;self_weights&#39;</span><span class="p">)</span>
@@ -983,7 +985,7 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">leaky_relu</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">encode_fn</span><span class="p">(</span><span class="n">layer_features</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span><span class="p">,</span> <span class="n">depth_to_encode</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">encode_fn</span><span class="p">(</span><span class="n">layer_features</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span><span class="p">,</span> <span class="n">depth_to_encode</span><span class="p">):</span>
   <span class="k">if</span> <span class="n">depth_to_encode</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">h_self_vec</span> <span class="o">=</span> <span class="n">encode_fn</span><span class="p">(</span><span class="n">layer_features</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span><span class="p">,</span> <span class="n">depth_to_encode</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">h_neighbor_vecs</span> <span class="o">=</span> <span class="n">encode_fn</span><span class="p">(</span><span class="n">layer_features</span><span class="p">,</span> <span class="n">raw_feat_layer_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">depth_to_encode</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
@@ -1006,11 +1008,11 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <ul class="simple">
 <li><p>Define Loss and Model</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
         <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">model_fn</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">model_fn</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="n">logits</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s1">&#39;logits&#39;</span><span class="p">]</span>
     <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
     <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">])</span>

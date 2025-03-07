@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.analytical.app.eigenvector_centrality - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../../v0.29.0/index.html">
+              <dd><a href="../../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -710,16 +711,16 @@ MathJax = {
 <span class="c1">#</span>
 
 
-<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">not_compatible_for</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">project_to_simple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppAssets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_compatible_for</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">project_to_simple</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;eigenvector_centrality&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="eigenvector_centrality"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.eigenvector_centrality">[docs]</a><span class="nd">@project_to_simple</span>
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the `graph`.</span>
 <span class="sd">    See more about eigenvector centrality here:</span>
 <span class="sd">    https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</span>

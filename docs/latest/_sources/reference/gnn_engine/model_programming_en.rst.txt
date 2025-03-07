@@ -44,7 +44,7 @@ and then perform computation. Next, we introduce the basic data model.
 
 ``EgoGraph`` is the underlying data model in **GL**. It consists of a
 batch of seed nodes or edges(named ‘ego’) and their receptive fields
-(multi-hops neighbors). We implement many build-in samplers to traverse
+(multi-hops neighbors). We implement many built-in samplers to traverse
 the graph and sample neighbors. Negative samplers are also implemented
 for unsupervised training.
 
@@ -82,7 +82,7 @@ nodes/edges,implemented with different graph convolutional layers.
    </p>
 
 Based on data models and encoders, developers can easily implement
-different graph learning models. We introduce in detail how to develope
+different graph learning models. We introduce in detail how to develop
 a GNN model in `Custom Algorithm <algo_en.md>`__
 
 `Home <../README.md>`__

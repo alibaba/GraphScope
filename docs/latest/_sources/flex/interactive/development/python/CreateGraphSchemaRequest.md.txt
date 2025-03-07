@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of CreateGraphSchemaRequest from a JSON string
 create_graph_schema_request_instance = CreateGraphSchemaRequest.from_json(json)
 # print the JSON string representation of the object
-print(CreateGraphSchemaRequest.to_json())
+print CreateGraphSchemaRequest.to_json()
 
 # convert the object into a dict
 create_graph_schema_request_dict = create_graph_schema_request_instance.to_dict()
 # create an instance of CreateGraphSchemaRequest from a dict
-create_graph_schema_request_from_dict = CreateGraphSchemaRequest.from_dict(create_graph_schema_request_dict)
+create_graph_schema_request_form_dict = create_graph_schema_request.from_dict(create_graph_schema_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -6,7 +6,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.client.session - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -292,7 +292,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -340,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -697,61 +699,60 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="sd">&quot;&quot;&quot; Manage sessions to the GraphScope coordinator.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Manage sessions to the GraphScope coordinator.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">atexit</span>
-<span class="kn">import</span> <span class="nn">base64</span>
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">gc</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">signal</span>
-<span class="kn">import</span> <span class="nn">threading</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">atexit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.analytical.udf.utils</span> <span class="kn">import</span> <span class="n">InMemoryZip</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.archive</span> <span class="kn">import</span> <span class="n">OutArchive</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.rpc</span> <span class="kn">import</span> <span class="n">GRPCClient</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">CaptureKeyboardInterrupt</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">GSLogger</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">SignalIgnore</span>
-<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">set_defaults</span>
-<span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="kn">import</span> <span class="n">Config</span>
-<span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="kn">import</span> <span class="n">gs_config</span>
-<span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="kn">import</span> <span class="n">HostsClusterLauncher</span>
-<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="kn">import</span> <span class="n">KubernetesClusterLauncher</span>
-<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.utils</span> <span class="kn">import</span> <span class="n">resolve_api_client</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">App</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">Context</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">Dag</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">FatalError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">GraphDAGNode</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_dataframe</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_numpy</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">deprecated</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">random_string</span>
-<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="kn">import</span> <span class="n">InteractiveQuery</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">message_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">op_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.analytical.udf.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InMemoryZip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.archive</span><span class="w"> </span><span class="kn">import</span> <span class="n">OutArchive</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.rpc</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRPCClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">CaptureKeyboardInterrupt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">GSLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalIgnore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">gs_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.deploy.hosts.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">HostsClusterLauncher</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.deploy.kubernetes.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KubernetesClusterLauncher</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.deploy.kubernetes.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_api_client</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">App</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.dag</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dag</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.dag</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FatalError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphDAGNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_dataframe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_numpy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deprecated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.interactive.query</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractiveQuery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_def_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">message_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">op_def_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">types_pb2</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">vineyard</span>
-    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="kn">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
-    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">kubernetes</span><span class="w"> </span><span class="kn">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">kubernetes</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">kube_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">kube_config</span> <span class="o">=</span> <span class="kc">None</span>
@@ -761,7 +762,7 @@ MathJax = {
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">_FetchHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_FetchHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Handler for structured fetches.</span>
 <span class="sd">    This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,</span>
 <span class="sd">    which can be used for a low level `run` call of grpc_client.</span>
@@ -770,7 +771,7 @@ MathJax = {
 <span class="sd">    the user-provided structure for fetches, but containing the corresponding results.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span> <span class="o">=</span> <span class="n">fetches</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unpack</span> <span class="o">=</span> <span class="kc">False</span>
@@ -789,10 +790,10 @@ MathJax = {
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;sub_dag: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dag</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dag</span>
 
-    <span class="k">def</span> <span class="nf">_rebuild_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rebuild_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">],</span> <span class="n">Operation</span><span class="p">):</span>
             <span class="c1"># for nx Graph</span>
             <span class="k">return</span> <span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span>
@@ -804,8 +805,8 @@ MathJax = {
         <span class="n">g</span><span class="o">.</span><span class="n">update_from_graph_def</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span>
 
-    <span class="k">def</span> <span class="nf">_rebuild_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">App</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rebuild_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">App</span>
 
         <span class="c1"># get app dag node as base</span>
         <span class="n">app_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
@@ -813,8 +814,8 @@ MathJax = {
         <span class="n">app</span> <span class="o">=</span> <span class="n">App</span><span class="p">(</span><span class="n">app_dag_node</span><span class="p">,</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">app</span>
 
-    <span class="k">def</span> <span class="nf">_rebuild_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">Context</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rebuild_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span>
 
         <span class="c1"># get context dag node as base</span>
         <span class="n">context_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
@@ -822,12 +823,12 @@ MathJax = {
         <span class="n">context_type</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">:</span>
             <span class="c1"># for nx</span>
-            <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">DynamicVertexDataContext</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynamicVertexDataContext</span>
 
             <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_schema&quot;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">wrap_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrap_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
         <span class="n">rets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">op_result</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
@@ -873,7 +874,7 @@ MathJax = {
                     <span class="k">break</span>
         <span class="k">return</span> <span class="n">rets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">rets</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unpack</span> <span class="k">else</span> <span class="n">rets</span>
 
-    <span class="k">def</span> <span class="nf">get_dag_for_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dag_for_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unload operations (graph, app, context) in dag which are not</span>
 <span class="sd">        existed in fetches.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -894,7 +895,7 @@ MathJax = {
         <span class="k">return</span> <span class="n">unload_dag</span>
 
 
-<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a><span class="k">class</span> <span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for interacting with GraphScope graph computation service cluster.</span>
 
 <span class="sd">    A :class:`Session` object encapsulates the environment in which :class:`Operation`</span>
@@ -953,7 +954,7 @@ MathJax = {
 <span class="sd">        &gt;&gt;&gt; s = graphscope.session(config={&#39;k8s_engine_cpu&#39;: 5, &#39;k8s_engine_mem&#39;: &#39;5Gi&#39;})</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Session.__init__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Session.__init__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Config</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">api_client</span><span class="p">:</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">ApiClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1259,21 +1260,21 @@ MathJax = {
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dag</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dag</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dag</span>
 
-    <span class="k">def</span> <span class="nf">_log_session_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_session_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">coordinator</span><span class="o">.</span><span class="n">endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="s2">&quot;Connecting graphscope session with address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -1285,7 +1286,7 @@ MathJax = {
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">dumps_json</span><span class="p">(),</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_load_config_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_config_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">drop_extra_fields</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1293,7 +1294,7 @@ MathJax = {
             <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">exp</span>
 
-    <span class="k">def</span> <span class="nf">_parse_cluster_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_cluster_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># get the cluster type after connecting</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">launcher_type</span> <span class="o">==</span> <span class="s2">&quot;hosts&quot;</span><span class="p">:</span>
             <span class="n">cluster_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
@@ -1304,12 +1305,12 @@ MathJax = {
         <span class="k">return</span> <span class="n">cluster_type</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Show the engine configuration associated with session in json format.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Show all resource info associated with session in json format.&quot;&quot;&quot;</span>
         <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
@@ -1335,17 +1336,17 @@ MathJax = {
         <span class="k">return</span> <span class="n">info</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">disconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">disconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span>
 
-    <span class="k">def</span> <span class="nf">eager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execution_mode</span> <span class="o">==</span> <span class="s2">&quot;eager&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_send_heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_send_heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># &gt;1: failure, 0: reset when success</span>
         <span class="n">heartbeat_failure_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
@@ -1369,7 +1370,7 @@ MathJax = {
                     <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_interval_seconds</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.connected"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.connected">[docs]</a>    <span class="k">def</span> <span class="nf">connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Session.connected"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.connected">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the session is still connected and available.</span>
 
 <span class="sd">        Returns: True or False</span>
@@ -1377,7 +1378,7 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span></div>
 
-<div class="viewcode-block" id="Session.close"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.close"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.close">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Closes this session.</span>
 
 <span class="sd">        This method frees all resources associated with the session.</span>
@@ -1390,7 +1391,7 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1442,28 +1443,28 @@ MathJax = {
                 <span class="k">pass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close an interactive instance.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_interactive_instance</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close a learning instance.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_learning_instance</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># cleanly ignore all exceptions</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">_check_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal: raise a ValueError if session is closed&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span> <span class="ow">or</span> <span class="s2">&quot;Operation on closed session.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Context manager</span>
-<div class="viewcode-block" id="Session.__enter__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__enter__">[docs]</a>    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.__enter__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__enter__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Context management protocol.</span>
 <span class="sd">        Returns self and register self as default session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1471,7 +1472,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister self from the default session,</span>
 <span class="sd">        close the session and release the resources, ignore all exceptions in close().</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1481,7 +1482,7 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Session.as_default"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>    <span class="k">def</span> <span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.as_default"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Obtain a context manager that make this object as default session.</span>
 
 <span class="sd">        This method is used when a Session is constructed, which will immediately</span>
@@ -1501,18 +1502,18 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_unregister_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_unregister_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove self from the default session stack.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">:</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">:</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag_node</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag_node</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run operations of `fetches`.</span>
 <span class="sd">        Args:</span>
 <span class="sd">            fetches: :class:`Operation`</span>
@@ -1547,7 +1548,7 @@ MathJax = {
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_fetches</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.run_fetches"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.run_fetches">[docs]</a>    <span class="k">def</span> <span class="nf">run_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.run_fetches"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.run_fetches">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">run_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run operations of `fetches` without the session lock.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Attempted to use a closed Session.&quot;</span><span class="p">)</span>
@@ -1569,7 +1570,7 @@ MathJax = {
                 <span class="k">raise</span>
         <span class="k">return</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">wrap_results</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">coordinator</span><span class="o">.</span><span class="n">endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># try to connect to exist coordinator</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">coordinator</span><span class="o">.</span><span class="n">endpoint</span>
@@ -1630,11 +1631,11 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">raise</span>
 
-<div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_api_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_api_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_client</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1644,10 +1645,10 @@ MathJax = {
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Kubernetes environment not found, you may want to&quot;</span>
                 <span class="s1">&#39; launch session locally with param cluster_type=&quot;hosts&quot;&#39;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_client</span>
 
-    <span class="k">def</span> <span class="nf">_ensure_pvc_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">,</span> <span class="n">pvc_namespace</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_pvc_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">,</span> <span class="n">pvc_namespace</span><span class="p">):</span>
         <span class="n">_core_api</span> <span class="o">=</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">CoreV1Api</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">())</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_core_api</span><span class="o">.</span><span class="n">read_namespaced_persistent_volume_claim</span><span class="p">(</span>
@@ -1657,9 +1658,9 @@ MathJax = {
         <span class="k">except</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">rest</span><span class="o">.</span><span class="n">ApiException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;PVC </span><span class="si">{</span><span class="n">pvc_name</span><span class="si">}</span><span class="s2"> not found in namespace </span><span class="si">{</span><span class="n">pvc_namespace</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
-    <span class="k">def</span> <span class="nf">_ensure_vineyard_deployment_exists</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_vineyard_deployment_exists</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">vineyard_deployment_name</span><span class="p">,</span> <span class="n">vineyard_deployment_namespace</span>
     <span class="p">):</span>
         <span class="n">_app_api</span> <span class="o">=</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">AppsV1Api</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">())</span>
@@ -1672,11 +1673,11 @@ MathJax = {
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Vineyard deployment </span><span class="si">{</span><span class="n">vineyard_deployment_name</span><span class="si">}</span><span class="s2"> not found in namespace </span><span class="si">{</span><span class="n">vineyard_deployment_namespace</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span>
 
-<div class="viewcode-block" id="Session.store_to_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.store_to_pvc">[docs]</a>    <span class="k">def</span> <span class="nf">store_to_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphIDs</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.store_to_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.store_to_pvc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">store_to_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphIDs</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stores the given graph IDs to the given path with the given PVC.</span>
 <span class="sd">        Also, if you want to store graphs of different sessions to the same pv,</span>
@@ -1727,7 +1728,7 @@ MathJax = {
             <span class="n">pvc_name</span><span class="o">=</span><span class="n">pvc_name</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Session.restore_from_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.restore_from_pvc">[docs]</a>    <span class="k">def</span> <span class="nf">restore_from_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.restore_from_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.restore_from_pvc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">restore_from_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Restores the graphs from the given path in the given PVC.</span>
 <span class="sd">        Notice, before calling this function, the KUBECONFIG environment variable</span>
@@ -1766,14 +1767,14 @@ MathJax = {
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;ConfigMap vineyard-recover-</span><span class="si">{</span><span class="n">random_suffix</span><span class="si">}</span><span class="s2">-mapping-table not found in namespace </span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span>
 
         <span class="c1"># parse configmap data to the self._vineyard_object_mapping_table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">data</span></div>
 
-<div class="viewcode-block" id="Session.get_vineyard_object_mapping_table"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">[docs]</a>    <span class="k">def</span> <span class="nf">get_vineyard_object_mapping_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.get_vineyard_object_mapping_table"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_vineyard_object_mapping_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the vineyard object mapping table</span>
 <span class="sd">        from the old object id to new object id</span>
@@ -1782,7 +1783,7 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span></div>
 
-<div class="viewcode-block" id="Session.g"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.g">[docs]</a>    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span>
+<div class="viewcode-block" id="Session.g"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.g">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
@@ -1836,7 +1837,7 @@ MathJax = {
             <span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a graph within the session.</span>
 <span class="sd">        See more information in :meth:`graphscope.load_from`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1844,14 +1845,14 @@ MathJax = {
             <span class="k">return</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
     <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `sess.interactive` instead.&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated.</span>
 <span class="sd">        Use :meth:`interactive` to get an interactive engine handler supports</span>
 <span class="sd">        both gremlin and cypher queries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.interactive"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>    <span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.interactive"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin and cypher queries.</span>
 
 <span class="sd">        It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,</span>
@@ -1903,7 +1904,7 @@ MathJax = {
         <span class="k">return</span> <span class="n">interactive_query</span></div>
 
     <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphlearn` instead.&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
 
 <span class="sd">        Note that this method has been deprecated, using `graphlearn` replace.</span>
@@ -1913,7 +1914,7 @@ MathJax = {
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.graphlearn"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.graphlearn">[docs]</a>    <span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.graphlearn"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.graphlearn">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
 
 <span class="sd">        Args:</span>
@@ -1971,8 +1972,8 @@ MathJax = {
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="kn">import</span> <span class="n">get_gl_handle</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_gl_handle</span>
 
         <span class="n">handle</span> <span class="o">=</span> <span class="n">get_gl_handle</span><span class="p">(</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
@@ -1999,7 +2000,7 @@ MathJax = {
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
-    <span class="k">def</span> <span class="nf">graphlearn_torch</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn_torch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">,</span>
         <span class="n">edges</span><span class="p">,</span>
@@ -2014,11 +2015,11 @@ MathJax = {
         <span class="n">client_folder_path</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span>
         <span class="n">return_pyg_remote_backend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.gl_torch_graph</span> <span class="kn">import</span> <span class="n">GLTorchGraph</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.gs_feature_store</span> <span class="kn">import</span> <span class="n">GsFeatureStore</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.gs_graph_store</span> <span class="kn">import</span> <span class="n">GsGraphStore</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.utils</span> <span class="kn">import</span> <span class="n">fill_params_in_yaml</span>
-        <span class="kn">from</span> <span class="nn">graphscope.learning.utils</span> <span class="kn">import</span> <span class="n">read_folder_files_content</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.gl_torch_graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLTorchGraph</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.gs_feature_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">GsFeatureStore</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.gs_graph_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">GsGraphStore</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fill_params_in_yaml</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.learning.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_folder_files_content</span>
 
         <span class="n">handle</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;vineyard_socket&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
@@ -2072,7 +2073,7 @@ MathJax = {
 
         <span class="k">return</span> <span class="n">g</span>
 
-    <span class="k">def</span> <span class="nf">nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Networkx module need the session to be eager mode. &quot;</span>
@@ -2080,7 +2081,7 @@ MathJax = {
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span>
-        <span class="kn">import</span> <span class="nn">importlib.util</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 
         <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;graphscope.nx&quot;</span><span class="p">)</span>
         <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
@@ -2095,7 +2096,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="n">mod</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span>
 
-<div class="viewcode-block" id="Session.add_lib"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.add_lib">[docs]</a>    <span class="k">def</span> <span class="nf">add_lib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_name</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.add_lib"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.add_lib">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_lib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        add the specified resource to the k8s cluster from client machine.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -2116,7 +2117,7 @@ MathJax = {
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
 
 
-<div class="viewcode-block" id="set_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a><span class="k">def</span> <span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="set_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the value of specified options.</span>
 
 <span class="sd">    Find params detail in :class:`graphscope.Session`</span>
@@ -2174,7 +2175,7 @@ MathJax = {
     <span class="n">GSLogger</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 
 
-<span class="k">def</span> <span class="nf">default_session</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_session</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Python&#39;s :code:`with` handler for defining a default session.</span>
 
 <span class="sd">    This function provides a means of registering a session for handling</span>
@@ -2193,12 +2194,12 @@ MathJax = {
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_controller</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span> <span class="nf">has_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">has_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;True if default session exists in current context.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="ow">not</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span> <span class="nf">get_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the default session for the current context.</span>
 
 <span class="sd">    Note that a new session will be created if there is no</span>
@@ -2210,21 +2211,21 @@ MathJax = {
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_session_by_id</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_session_by_id</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the session by handle.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">handle</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_session_dict</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session </span><span class="si">{</span><span class="n">handle</span><span class="si">}</span><span class="s2"> not exists.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_session_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">_DefaultSessionStack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DefaultSessionStack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A stack of objects for providing implicit defaults.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_default</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating default session ...&quot;</span><span class="p">)</span>
             <span class="n">sess</span> <span class="o">=</span> <span class="n">session</span><span class="p">(</span>
@@ -2234,17 +2235,17 @@ MathJax = {
             <span class="n">sess</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">is_cleared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_cleared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span>
 
     <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
-    <span class="k">def</span> <span class="nf">get_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A context manager for manipulating a default stack.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -2258,7 +2259,7 @@ MathJax = {
 <span class="n">_default_session_stack</span> <span class="o">=</span> <span class="n">_DefaultSessionStack</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
 
 
-<div class="viewcode-block" id="g"><a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a><span class="k">def</span> <span class="nf">g</span><span class="p">(</span>
+<div class="viewcode-block" id="g"><a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
     <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
     <span class="n">vid_type</span><span class="o">=</span><span class="s2">&quot;uint64&quot;</span><span class="p">,</span>
@@ -2304,14 +2305,14 @@ MathJax = {
 
 
 <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphscope.interactive` instead.&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated in the future.</span>
 <span class="sd">    Use :meth:`graphscope.interactive` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an interactive engine and get the handler to execute gremlin and cypher queries.</span>
 
 <span class="sd">    See params detail in :meth:`graphscope.Session.interactive`</span>
@@ -2334,7 +2335,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">sess</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">with_cypher</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a graph learning engine.</span>
 
 <span class="sd">    See params detail in :meth:`graphscope.Session.graphlearn`</span>
@@ -2360,7 +2361,7 @@ MathJax = {
     <span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
 
 
-<span class="k">def</span> <span class="nf">graphlearn_torch</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">graphlearn_torch</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">edges</span><span class="p">,</span>
     <span class="n">edge_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

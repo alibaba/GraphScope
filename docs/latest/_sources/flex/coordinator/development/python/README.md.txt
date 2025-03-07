@@ -163,6 +163,8 @@ Class | Method | HTTP request | Description
  - [EdgeMapping](docs/EdgeMapping.md)
  - [EdgeMappingTypeTriplet](docs/EdgeMappingTypeTriplet.md)
  - [Error](docs/Error.md)
+ - [FixedChar](docs/FixedChar.md)
+ - [FixedCharChar](docs/FixedCharChar.md)
  - [GSDataType](docs/GSDataType.md)
  - [GetAlertMessageResponse](docs/GetAlertMessageResponse.md)
  - [GetAlertReceiverResponse](docs/GetAlertReceiverResponse.md)
@@ -195,9 +197,12 @@ Class | Method | HTTP request | Description
  - [TemporalType](docs/TemporalType.md)
  - [TemporalTypeTemporal](docs/TemporalTypeTemporal.md)
  - [TimeStampType](docs/TimeStampType.md)
+ - [TypedValue](docs/TypedValue.md)
  - [UpdateAlertMessageStatusRequest](docs/UpdateAlertMessageStatusRequest.md)
  - [UpdateStoredProcRequest](docs/UpdateStoredProcRequest.md)
  - [UploadFileResponse](docs/UploadFileResponse.md)
+ - [VarChar](docs/VarChar.md)
+ - [VarCharVarChar](docs/VarCharVarChar.md)
  - [VertexMapping](docs/VertexMapping.md)
 
 

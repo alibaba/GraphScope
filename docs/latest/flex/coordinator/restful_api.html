@@ -1228,11 +1228,14 @@ ul.nav-tabs {
 };
     defs["DateType"] = {
   "required" : [ "date32" ],
+  "type" : "object",
   "properties" : {
     "date32" : {
-      "type" : "string"
+      "type" : "string",
+      "nullable" : true
     }
-  }
+  },
+  "x-body-name" : "date_type"
 };
     defs["EdgeMapping"] = {
   "required" : [ "inputs", "type_triplet" ],
@@ -1296,6 +1299,26 @@ ul.nav-tabs {
     }
   }
 };
+    defs["FixedChar"] = {
+  "required" : [ "char" ],
+  "type" : "object",
+  "properties" : {
+    "char" : {
+      "$ref" : "#/components/schemas/FixedChar_char"
+    }
+  },
+  "additionalProperties" : false,
+  "x-body-name" : "fixed_char"
+};
+    defs["FixedChar_char"] = {
+  "required" : [ "fixed_length" ],
+  "type" : "object",
+  "properties" : {
+    "fixed_length" : {
+      "type" : "integer"
+    }
+  }
+};
     defs["GSDataType"] = {
   "oneOf" : [ {
     "$ref" : "#/components/schemas/PrimitiveType"
@@ -1303,7 +1326,8 @@ ul.nav-tabs {
     "$ref" : "#/components/schemas/StringType"
   }, {
     "$ref" : "#/components/schemas/TemporalType"
-  } ]
+  } ],
+  "x-body-name" : "gs_data_type"
 };
     defs["GetAlertMessageResponse"] = {
   "required" : [ "alert_name", "id", "message", "metric_type", "severity", "status", "target", "trigger_time" ],
@@ -1571,12 +1595,15 @@ ul.nav-tabs {
 };
     defs["LongText"] = {
   "required" : [ "long_text" ],
+  "type" : "object",
   "properties" : {
     "long_text" : {
       "type" : "string",
       "nullable" : true
     }
-  }
+  },
+  "additionalProperties" : false,
+  "x-body-name" : "long_text"
 };
     defs["NodeStatus"] = {
   "required" : [ "cpu_usage", "disk_usage", "memory_usage", "name" ],
@@ -1606,6 +1633,9 @@ ul.nav-tabs {
     },
     "type" : {
       "$ref" : "#/components/schemas/GSDataType"
+    },
+    "allow_cast" : {
+      "type" : "boolean"
     }
   }
 };
@@ -1656,12 +1686,15 @@ ul.nav-tabs {
 };
     defs["PrimitiveType"] = {
   "required" : [ "primitive_type" ],
+  "type" : "object",
   "properties" : {
     "primitive_type" : {
       "type" : "string",
+      "example" : "DT_SIGNED_INT32",
       "enum" : [ "DT_SIGNED_INT32", "DT_UNSIGNED_INT32", "DT_SIGNED_INT64", "DT_UNSIGNED_INT64", "DT_BOOL", "DT_FLOAT", "DT_DOUBLE" ]
     }
-  }
+  },
+  "x-body-name" : "primitive_type"
 };
     defs["ResourceUsage"] = {
   "required" : [ "host", "timestamp", "usage" ],
@@ -1829,25 +1862,32 @@ ul.nav-tabs {
 };
     defs["StringType"] = {
   "required" : [ "string" ],
+  "type" : "object",
   "properties" : {
     "string" : {
       "$ref" : "#/components/schemas/StringType_string"
     }
-  }
+  },
+  "x-body-name" : "string_type"
 };
     defs["StringType_string"] = {
-  "type" : "object",
   "oneOf" : [ {
     "$ref" : "#/components/schemas/LongText"
+  }, {
+    "$ref" : "#/components/schemas/FixedChar"
+  }, {
+    "$ref" : "#/components/schemas/VarChar"
   } ]
 };
     defs["TemporalType"] = {
   "required" : [ "temporal" ],
+  "type" : "object",
   "properties" : {
     "temporal" : {
       "$ref" : "#/components/schemas/TemporalType_temporal"
     }
-  }
+  },
+  "x-body-name" : "temporal_type"
 };
     defs["TemporalType_temporal"] = {
   "oneOf" : [ {
@@ -1858,9 +1898,24 @@ ul.nav-tabs {
 };
     defs["TimeStampType"] = {
   "required" : [ "timestamp" ],
+  "type" : "object",
   "properties" : {
     "timestamp" : {
-      "type" : "string"
+      "type" : "string",
+      "nullable" : true
+    }
+  },
+  "x-body-name" : "time_stamp_type"
+};
+    defs["TypedValue"] = {
+  "required" : [ "type", "value" ],
+  "type" : "object",
+  "properties" : {
+    "type" : {
+      "$ref" : "#/components/schemas/GSDataType"
+    },
+    "value" : {
+      "$ref" : "#/components/schemas/AnyValue"
     }
   }
 };
@@ -1898,6 +1953,26 @@ ul.nav-tabs {
     "metadata" : {
       "type" : "object",
       "additionalProperties" : true
+    }
+  }
+};
+    defs["VarChar"] = {
+  "required" : [ "var_char" ],
+  "type" : "object",
+  "properties" : {
+    "var_char" : {
+      "$ref" : "#/components/schemas/VarChar_var_char"
+    }
+  },
+  "additionalProperties" : false,
+  "x-body-name" : "var_char"
+};
+    defs["VarChar_var_char"] = {
+  "required" : [ "max_length" ],
+  "type" : "object",
+  "properties" : {
+    "max_length" : {
+      "type" : "integer"
     }
   }
 };
@@ -17244,7 +17319,7 @@ pub fn main() {
                             <h3 id="examples-Job-deleteJobById-title-200"></h3>
                             <p id="examples-Job-deleteJobById-description-200" class="marked"></p>
                             <script>
-                              var responseJob200_description = `Successfuly cancelled the job`;
+                              var responseJob200_description = `Successfully cancelled the job`;
                               var responseJob200_description_break = responseJob200_description.indexOf('\n');
                               if (responseJob200_description_break == -1) {
                                 $("#examples-Job-deleteJobById-title-200").text("Status: 200 - " + responseJob200_description);
@@ -17272,7 +17347,7 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Successfuly cancelled the job",
+  "description" : "Successfully cancelled the job",
   "content" : {
     "application/json" : {
       "schema" : {
