@@ -1,0 +1,34 @@
+{
+    "operation": {
+        "messageRepliesId": 1030792257093
+    },
+    "result": [
+        {
+            "commentId": 1030792257101,
+            "commentContent": "no way!",
+            "commentCreationDate": 1344407671623,
+            "replyAuthorId": 15393162789228,
+            "replyAuthorFirstName": "Ashley",
+            "replyAuthorLastName": "Carr",
+            "isReplyAuthorKnowsOriginalMessageAuthor": false
+        },
+        {
+            "commentId": 1030792257094,
+            "commentContent": "About Nicolas Cage, ding Raising Arizona (1987), The Rock About Soviet Uni",
+            "commentCreationDate": 1344354753119,
+            "replyAuthorId": 15393162790275,
+            "replyAuthorFirstName": "Sergio",
+            "replyAuthorLastName": "Machado",
+            "isReplyAuthorKnowsOriginalMessageAuthor": false
+        },
+        {
+            "commentId": 1030792257097,
+            "commentContent": "thx",
+            "commentCreationDate": 1344354234344,
+            "replyAuthorId": 15393162789569,
+            "replyAuthorFirstName": "Bechir",
+            "replyAuthorLastName": "Cardinale",
+            "isReplyAuthorKnowsOriginalMessageAuthor": false
+        }
+    ]
+}

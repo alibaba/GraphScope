@@ -1,0 +1,89 @@
+{
+    "operation": {
+        "personIdQ10": 2199023256097,
+        "month": 10,
+        "limit": 10
+    },
+    "result": [
+        {
+            "personId": 555,
+            "personFirstName": "Chen",
+            "personLastName": "Yang",
+            "commonInterestScore": 7,
+            "personGender": "female",
+            "personCityName": "Dali"
+        },
+        {
+            "personId": 17592186045047,
+            "personFirstName": "Hans",
+            "personLastName": "Berg",
+            "commonInterestScore": 6,
+            "personGender": "female",
+            "personCityName": "Umeå"
+        },
+        {
+            "personId": 2199023256351,
+            "personFirstName": "Ai",
+            "personLastName": "Liu",
+            "commonInterestScore": 4,
+            "personGender": "male",
+            "personCityName": "Chongqing"
+        },
+        {
+            "personId": 30786325577905,
+            "personFirstName": "Carlos",
+            "personLastName": "Alvarez",
+            "commonInterestScore": 0,
+            "personGender": "male",
+            "personCityName": "Guadalajara"
+        },
+        {
+            "personId": 24189255811103,
+            "personFirstName": "Otto",
+            "personLastName": "Richter",
+            "commonInterestScore": -1,
+            "personGender": "male",
+            "personCityName": "Ludwigsburg"
+        },
+        {
+            "personId": 17592186045803,
+            "personFirstName": "Radu",
+            "personLastName": "Antonescu",
+            "commonInterestScore": -3,
+            "personGender": "female",
+            "personCityName": "Constanța"
+        },
+        {
+            "personId": 13194139534185,
+            "personFirstName": "Tomi",
+            "personLastName": "Blomqvist",
+            "commonInterestScore": -7,
+            "personGender": "female",
+            "personCityName": "Helsinki"
+        },
+        {
+            "personId": 4398046511592,
+            "personFirstName": "Antonio",
+            "personLastName": "Garcia",
+            "commonInterestScore": -10,
+            "personGender": "female",
+            "personCityName": "Colima"
+        },
+        {
+            "personId": 17592186044731,
+            "personFirstName": "Andre",
+            "personLastName": "Chihab",
+            "commonInterestScore": -14,
+            "personGender": "female",
+            "personCityName": "Marrakech"
+        },
+        {
+            "personId": 30786325578585,
+            "personFirstName": "Ayesha",
+            "personLastName": "Butt",
+            "commonInterestScore": -20,
+            "personGender": "male",
+            "personCityName": "Tando_Jam"
+        }
+    ]
+}
