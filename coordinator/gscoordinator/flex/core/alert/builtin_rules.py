@@ -119,6 +119,43 @@ class GremlinServiceAvailableAlert(AlertRule):
             if not available:
                 alert_message = self.generate_alert_message("-", message)
                 self.alert(alert_message)
+                
+class PodAvailableAlert(AlertRule):
+    def __init__(
+        self,
+        name,
+        severity,
+        metric_type,
+        conditions_description,
+        frequency,
+        message_collector,
+        enable=True,
+    ):
+        super().__init__(
+            name,
+            severity,
+            metric_type,
+            conditions_description,
+            frequency,
+            message_collector,
+            enable,
+        )
+
+    def run_alert(self):
+        """This function needs to handle exception by itself"""
+        try:
+            available = get_client_wrapper().pod_available()
+            if not available:
+                message = f"Pod unavailable: unknown reason"
+        except Exception as e:
+            available = False
+            message = "Pod unavailable: {0}".format(str(e))
+        finally:
+            # unable to distinguish whether frontend or executor is unavailable,
+            # so we set the target "-"
+            if not available:
+                alert_message = self.generate_alert_message("-", message)
+                self.alert(alert_message)
 
 
 def init_builtin_alert_rules(message_collector: AlertMessageCollector):
@@ -144,7 +181,17 @@ def init_builtin_alert_rules(message_collector: AlertMessageCollector):
             conditions_description="g.V().limit(1) failed",
             frequency=5,
             message_collector=message_collector,
-            enable=True,
+            enable=False, # GremlinServiceAvailableAlert is disabled by default
         )
         alert_rules[gremlin_service_available.id] = gremlin_service_available
+        pod_available = PodAvailableAlert(
+            name="PodAvailable",
+            severity="emergency",
+            metric_type="service",
+            conditions_description="pod not available",
+            frequency=3,
+            message_collector=message_collector,
+            enable=True,
+        )
+        alert_rules[pod_available.id] = pod_available
     return alert_rules
