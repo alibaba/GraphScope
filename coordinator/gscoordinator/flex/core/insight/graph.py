@@ -146,7 +146,7 @@ class GrootGraph(object):
                 if pod.metadata.name.startswith(prefix):
                     if pod.status.phase != "Running":
                         raise RuntimeError(
-                            "Pod {0} is not running".format(pod.metadata.name)
+                            "Pod {0} is not running, {1}".format(pod.metadata.name, pod.status.phase)
                         )
         return True
 

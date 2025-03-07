@@ -189,7 +189,7 @@ def init_builtin_alert_rules(message_collector: AlertMessageCollector):
             severity="emergency",
             metric_type="service",
             conditions_description="pod not available",
-            frequency=5,
+            frequency=3,
             message_collector=message_collector,
             enable=True,
         )
