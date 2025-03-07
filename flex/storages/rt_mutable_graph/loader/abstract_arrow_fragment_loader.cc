@@ -127,6 +127,8 @@ void set_properties_column(gs::ColumnBase* col,
     set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kStringView) {
     set_column_from_string_array(col, array, offset, true);
+  } else if (col_type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    set_column_from_string_array(col, array, offset);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -402,6 +404,22 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       } else {
         addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
                                        filenames, supplier_creator);
+      }
+    } else if (property_types[0].type_enum ==
+               impl::PropertyTypeImpl::kFixedChar) {
+      auto dual_csr = new DualCsr<FixedChars>(
+          oe_strategy, ie_strategy,
+          property_types[0].additional_type_info.fixed_length, oe_mutable,
+          ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<FixedChars>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<FixedChars>(src_label_i, dst_label_i,
+                                            edge_label_i, filenames,
+                                            supplier_creator);
       }
     } else if (property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kVarChar ||

@@ -105,7 +105,7 @@ class CsrBase {
   virtual std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) = 0;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class TypedCsrBase : public CsrBase {
  public:
   virtual void batch_put_edge(vid_t src, vid_t dst, const EDATA_T& data,
@@ -114,8 +114,10 @@ class TypedCsrBase : public CsrBase {
                         timestamp_t ts, Allocator& alloc) = 0;
 };
 
-template <>
-class TypedCsrBase<std::string_view> : public CsrBase {
+template <typename EDATA_T>
+class TypedCsrBase<EDATA_T,
+                   typename std::enable_if_t<is_string_type<EDATA_T>::value>>
+    : public CsrBase {
  public:
   virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                          timestamp_t ts = 0) = 0;
