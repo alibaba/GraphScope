@@ -33,6 +33,8 @@ from gs_interactive.models import SchemaMapping
 from gs_interactive.models import StartServiceRequest
 from gs_interactive.models import UpdateProcedureRequest
 
+MANY_LABEL_GRAPH_LABEL_NUM = 1000
+
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 MODERN_GRAPH_DATA_DIR = os.path.abspath(
     os.path.join(cur_dir, "../../../../examples/modern_graph")
@@ -1115,6 +1117,65 @@ def create_graph_algo_graph_with_x_csr_params(interactive_session):
     delete_running_graph(interactive_session, graph_id)
 
 
+@pytest.fixture(scope="function")
+def create_many_label_graph(interactive_session):
+    """
+    Create a graph with many labels for testing the performance of the query
+    """
+    many_label_graph = {
+        "name": "many_label_graph",
+        "schema": {
+            "vertex_types": [],
+            "edge_types": [],
+        },
+    }
+    for i in range(MANY_LABEL_GRAPH_LABEL_NUM):
+        many_label_graph["schema"]["vertex_types"].append(
+            {
+                "type_name": f"person{i}",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        )
+
+    for i in range(MANY_LABEL_GRAPH_LABEL_NUM):
+        many_label_graph["schema"]["edge_types"].append(
+            {
+                "type_name": f"knows{i}",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": f"person{i}",
+                        "destination_vertex": f"person{i}",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        )
+
+    create_graph_request = CreateGraphRequest.from_dict(many_label_graph)
+    resp = interactive_session.create_graph(create_graph_request)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
 def wait_job_finish(sess: Session, job_id: str):
     assert job_id is not None
     while True:
@@ -1235,6 +1296,67 @@ def import_data_to_new_graph_algo_graph(sess: Session, graph_id: str):
     assert resp.is_ok()
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
+
+
+def import_data_to_many_label_graph(sess: Session, graph_id: str):
+    # get temp dir
+    import shutil
+    import tempfile
+
+    data_dir = os.path.join(tempfile.gettempdir(), "many_label_graph")
+    if os.path.exists(data_dir):
+        shutil.rmtree(data_dir)
+    os.makedirs(data_dir)
+    many_label_graph_import_config = {
+        "loading_config": {
+            "data_source": {"scheme": "file", "location": data_dir},
+            "import_option": "init",
+            "format": {
+                "type": "csv",
+                "metadata": {
+                    "delimiter": "|",
+                },
+            },
+        },
+        "vertex_mappings": [],
+        "edge_mappings": [],
+    }
+    edge_file_name = "person_knows_person.csv"
+    vertex_file_name = "person.csv"
+
+    for i in range(MANY_LABEL_GRAPH_LABEL_NUM):
+        many_label_graph_import_config["vertex_mappings"].append(
+            {
+                "type_name": f"person{i}",
+                "inputs": [vertex_file_name],
+            }
+        )
+    for i in range(MANY_LABEL_GRAPH_LABEL_NUM):
+        many_label_graph_import_config["edge_mappings"].append(
+            {
+                "type_triplet": {
+                    "edge": f"knows{i}",
+                    "source_vertex": f"person{i}",
+                    "destination_vertex": f"person{i}",
+                },
+                "inputs": [edge_file_name],
+            }
+        )
+    # generate the data
+    tmp_person_csv = open(data_dir + "/" + vertex_file_name, "w")
+    tmp_person_csv.write("id|name\n" + "1|marko\n")
+    tmp_person_csv.close()
+    tmp_person_knows_person_csv = open(data_dir + "/" + edge_file_name, "w")
+    tmp_person_knows_person_csv.write("source|target|weight\n" + "1|1|1.0\n")
+    tmp_person_knows_person_csv.close()
+    schema_mapping = SchemaMapping.from_dict(many_label_graph_import_config)
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+
+    # remove the temp dir
+    shutil.rmtree(data_dir)
 
 
 def submit_query_via_neo4j_endpoint(

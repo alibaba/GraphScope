@@ -6,6 +6,15 @@ set(GRIN_READER_VERSION ${GRIN_READER_MAJOR_VERSION}.${GRIN_READER_MINOR_VERSION
 
 project(grin_reader LANGUAGES C CXX VERSION ${GRIN_READER_VERSION})
 
+# This option should be aligned with flex/CMakeLists.txt
+SET(FLEX_LABEL_TYPE "uint8_t" CACHE STRING "The label type of the graph, valid values: uint16_t, uint8_t")
+
+# check label_type in {uint8, uint16}
+if(NOT FLEX_LABEL_TYPE STREQUAL "uint8_t" AND NOT FLEX_LABEL_TYPE STREQUAL "uint16_t")
+    message(FATAL_ERROR "FLEX_LABEL_TYPE must be uint8 or uint16, but got ${FLEX_LABEL_TYPE}")
+endif()
+add_compile_definitions(FLEX_LABEL_TYPE=${FLEX_LABEL_TYPE})
+
 # Set flags
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

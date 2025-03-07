@@ -96,11 +96,13 @@ GRIN_EDGE_PROPERTY_LIST grin_get_edge_property_list_by_type(GRIN_GRAPH g,
   GRIN_EDGE_PROPERTY_LIST_T* p = new GRIN_EDGE_PROPERTY_LIST_T();
 
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto src_label_i = et >> 16;
+  auto edge_triplet_tuple = _g->g.schema().get_edge_triplet(et);
+  auto src_label_i = std::get<0>(edge_triplet_tuple);
+  auto dst_label_i = std::get<1>(edge_triplet_tuple);
+  auto edge_label_i = std::get<2>(edge_triplet_tuple);
+
   auto src_label = _g->g.schema().get_vertex_label_name(src_label_i);
-  auto dst_label_i = (et >> 8) & (0xff);
   auto dst_label = _g->g.schema().get_vertex_label_name(dst_label_i);
-  auto edge_label_i = et & 0xff;
   auto edge_label = _g->g.schema().get_edge_label_name(edge_label_i);
   auto sz = _g->g.schema()
                 .get_edge_properties(src_label, dst_label, edge_label)
