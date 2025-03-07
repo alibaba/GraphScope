@@ -994,10 +994,6 @@ components:
           type: boolean
         enable:
           type: boolean
-        keywords:
-          type: array
-          items:
-            type: string
 
     GetAlertReceiverResponse:
       allOf:
