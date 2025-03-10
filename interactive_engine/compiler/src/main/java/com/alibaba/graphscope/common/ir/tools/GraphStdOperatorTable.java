@@ -191,7 +191,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED));
 
     public static final SqlBinaryOperator NOT_EQUALS =
             new SqlBinaryOperator(
@@ -201,7 +203,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED));
 
     public static final SqlBinaryOperator GREATER_THAN =
             new SqlBinaryOperator(
@@ -211,7 +215,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED));
 
     public static final SqlBinaryOperator GREATER_THAN_OR_EQUAL =
             new SqlBinaryOperator(
@@ -221,7 +227,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED));
 
     public static final SqlBinaryOperator LESS_THAN =
             new SqlBinaryOperator(
@@ -231,7 +239,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED));
 
     public static final SqlBinaryOperator LESS_THAN_OR_EQUAL =
             new SqlBinaryOperator(
@@ -241,7 +251,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     true,
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
-                    OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
+                    OperandTypes.or(
+                            OperandTypes.DATETIME_INTERVAL,
+                            OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED));
 
     public static final SqlOperator CASE = new CaseOperator(GraphInferTypes.RETURN_TYPE);
 
