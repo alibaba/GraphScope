@@ -32,20 +32,27 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
+class GraphDBSession;
 
 class UpdateTransaction {
  public:
-  UpdateTransaction(MutablePropertyFragment& graph, Allocator& alloc,
-                    const std::string& work_dir, WalWriter& logger,
+  std::string run(const std::string& cypher,
+                  const std::map<std::string, std::string>& params);
+
+  UpdateTransaction(const GraphDBSession& session,
+                    MutablePropertyFragment& graph, Allocator& alloc,
+                    const std::string& work_dir, IWalWriter& logger,
                     VersionManager& vm, timestamp_t timestamp);
 
   ~UpdateTransaction();
 
   timestamp_t timestamp() const;
 
-  void Commit();
+  const Schema& schema() const { return graph_.schema(); }
+
+  bool Commit();
 
   void Abort();
 
@@ -142,10 +149,13 @@ class UpdateTransaction {
   static void IngestWal(MutablePropertyFragment& graph,
                         const std::string& work_dir, uint32_t timestamp,
                         char* data, size_t length, Allocator& alloc);
+  Any GetVertexId(label_t label, vid_t lid) const;
+
+  const GraphDBSession& GetSession() const;
 
  private:
   friend class GraphDBSession;
-  void batch_commit(UpdateBatch& batch);
+  bool batch_commit(UpdateBatch& batch);
 
   void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
                                  label_t neighbor_label, vid_t nbr,
@@ -168,9 +178,11 @@ class UpdateTransaction {
 
   void applyEdgesUpdates();
 
+  const GraphDBSession& session_;
+
   MutablePropertyFragment& graph_;
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 

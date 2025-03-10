@@ -1587,7 +1587,7 @@ def _parse_java_app_type(java_class_path, real_algo):
         elif line.find("ParallelAppBase") != -1:
             _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
-            raise Exception("Error occured in verifying user app")
+            raise Exception("Error occurred in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
@@ -1754,7 +1754,7 @@ VERETX_MAP_CLASS_MAP = {
 
 def _codegen_graph_info(attr):
     # These getter functions are intended for lazy evaluation,
-    # cause they are not always avaiable in all types of graphs
+    # cause they are not always available in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
             return attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore")
@@ -2170,3 +2170,36 @@ def replace_string_in_dict(dict_obj, old, new):
     elif isinstance(dict_obj, str):
         return dict_obj.replace(old, new)
     return dict_obj
+
+
+# Reference: https://gist.github.com/beugley/ccd69945346759eb6142272a6d69b4e0
+def human_readable_to_bytes(size):
+    """Given a human-readable byte string (e.g. 2G, 30M, 20K),
+    return the number of bytes.  Will raise an exception if the argument has
+    unexpected form.
+    """
+    # Try to parse the size as if the unit was coded on 1 char.
+    try:
+        numeric_size = float(size[:-1])
+        unit = size[-1]
+    except ValueError:
+        try:
+            # Try to parse the size as if the unit was coded on 2 chars.
+            numeric_size = float(size[:-2])
+            unit = size[-2:-1]
+        except ValueError:
+            raise ValueError("Can't convert %r to bytes" % size)
+
+    unit = unit.upper()
+
+    # Now we have a numeric value and a unit. Check the unit and convert to bytes.
+    if unit == "G":
+        bytes = numeric_size * 1073741824
+    elif unit == "M":
+        bytes = numeric_size * 1048576
+    elif unit == "K":
+        bytes = numeric_size * 1024
+    else:
+        bytes = numeric_size
+
+    return int(bytes)

@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
+import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
@@ -24,7 +25,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.QueryExecutionValidator;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.google.common.base.Preconditions;
+import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -203,7 +204,8 @@ public class GraphTypeInference {
                         commonLabels(childLabelType, parentLabelType, expand.getOpt(), true, false);
                 return createSchemaType(GraphOpt.Source.VERTEX, commonLabels, childType);
             }
-            throw new IllegalArgumentException(
+            throw new FrontendException(
+                    Code.TYPE_INFERENCE_FAILED,
                     "graph generic type error: unable to establish an extension relationship"
                             + " between node "
                             + child
@@ -213,12 +215,15 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.EDGE
                 || child instanceof GraphLogicalExpand) {
-            Preconditions.checkArgument(
-                    parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
-                            + " between node %s with node %s",
-                    child,
-                    parent);
+            if (!(parent instanceof GraphLogicalGetV)) {
+                throw new FrontendException(
+                        Code.TYPE_INFERENCE_FAILED,
+                        "graph generic type error: unable to establish an extension relationship"
+                                + " between node "
+                                + child
+                                + " with node "
+                                + parent);
+            }
             GraphLogicalGetV getV = (GraphLogicalGetV) parent;
             GraphSchemaType childType = (GraphSchemaType) getType(child);
             GraphLabelType childLabelType = childType.getLabelType();
@@ -226,11 +231,14 @@ public class GraphTypeInference {
             GraphLabelType otherVLabelType = null;
             if (getV.getOpt() == GraphOpt.GetV.OTHER) {
                 RelDataType otherVType = relGraph.getNeighborsType(child);
-                Preconditions.checkArgument(
-                        otherVType != null && otherVType instanceof GraphSchemaType,
-                        "graph generic type error: invalid opt %s in node %s",
-                        getV.getOpt(),
-                        getV);
+                if (!(otherVType instanceof GraphSchemaType)) {
+                    throw new FrontendException(
+                            Code.TYPE_INFERENCE_FAILED,
+                            "graph generic type error: invalid opt "
+                                    + getV.getOpt()
+                                    + " in node "
+                                    + getV);
+                }
                 otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
             }
             List<GraphLabelType.Entry> commonLabels =
@@ -239,12 +247,15 @@ public class GraphTypeInference {
             return createSchemaType(GraphOpt.Source.EDGE, commonLabels, childType);
         }
         if (child instanceof GraphLogicalPathExpand) {
-            Preconditions.checkArgument(
-                    parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
-                            + " between node %s with node %s",
-                    child,
-                    parent);
+            if (!(parent instanceof GraphLogicalGetV)) {
+                throw new FrontendException(
+                        Code.TYPE_INFERENCE_FAILED,
+                        "graph generic type error: unable to establish an extension relationship"
+                                + " between node "
+                                + child
+                                + " with node "
+                                + parent);
+            }
             GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
             int minHop =
                     (pxd.getOffset() == null)
@@ -266,7 +277,8 @@ public class GraphTypeInference {
                             maxHop);
             return pathTypeInfer.inferPathType();
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.TYPE_INFERENCE_FAILED,
                 "graph generic type error: unable to establish an extension relationship between"
                         + " node "
                         + child
@@ -319,7 +331,8 @@ public class GraphTypeInference {
                                 maxHop);
                 return pathTypeInfer.inferPathType();
             }
-            throw new IllegalArgumentException(
+            throw new FrontendException(
+                    Code.TYPE_INFERENCE_FAILED,
                     "graph generic type error: unable to establish an extension relationship"
                             + " between node "
                             + child
@@ -329,23 +342,29 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.EDGE
                 || child instanceof GraphLogicalExpand) {
-            Preconditions.checkArgument(
-                    parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
-                            + " between node %s with node %s",
-                    child,
-                    parent);
+            if (!(parent instanceof GraphLogicalGetV)) {
+                throw new FrontendException(
+                        Code.TYPE_INFERENCE_FAILED,
+                        "graph generic type error: unable to establish an extension relationship"
+                                + " between node "
+                                + child
+                                + " with node "
+                                + parent);
+            }
             GraphLogicalGetV getV = (GraphLogicalGetV) parent;
             GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
             GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
             GraphLabelType otherVLabelType = null;
             if (getV.getOpt() == GraphOpt.GetV.OTHER) {
                 RelDataType otherVType = relGraph.getNeighborsType(child);
-                Preconditions.checkArgument(
-                        otherVType != null && otherVType instanceof GraphSchemaType,
-                        "graph generic type error: invalid opt %s in node %s",
-                        getV.getOpt(),
-                        getV);
+                if (!(otherVType instanceof GraphSchemaType)) {
+                    throw new FrontendException(
+                            Code.TYPE_INFERENCE_FAILED,
+                            "graph generic type error: invalid opt "
+                                    + getV.getOpt()
+                                    + " in node "
+                                    + getV);
+                }
                 otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
             }
             List<GraphLabelType.Entry> commonLabels =
@@ -355,12 +374,15 @@ public class GraphTypeInference {
                     GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) parentType);
         }
         if (child instanceof GraphLogicalPathExpand) {
-            Preconditions.checkArgument(
-                    parent instanceof GraphLogicalGetV,
-                    "graph generic type error: unable to establish an extension relationship"
-                            + " between node %s with node %s",
-                    child,
-                    parent);
+            if (!(parent instanceof GraphLogicalGetV)) {
+                throw new FrontendException(
+                        Code.TYPE_INFERENCE_FAILED,
+                        "graph generic type error: unable to establish an extension relationship"
+                                + " between node "
+                                + child
+                                + " with node "
+                                + parent);
+            }
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
             GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
             int minHop =
@@ -386,7 +408,8 @@ public class GraphTypeInference {
                     pathTypeInfer.inferGetVType().getLabelsEntry(),
                     (GraphSchemaType) parentType);
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.TYPE_INFERENCE_FAILED,
                 "graph generic type error: unable to establish an extension relationship between"
                         + " node "
                         + child
@@ -400,14 +423,16 @@ public class GraphTypeInference {
             GraphLabelType sharedLabelType = ((GraphSchemaType) sharedType).getLabelType();
             for (RelNode rel : rels) {
                 RelDataType relType = getType(rel);
-                Preconditions.checkArgument(
-                        relType instanceof GraphSchemaType
-                                && ((GraphSchemaType) relType).getScanOpt()
-                                        == ((GraphSchemaType) sharedType).getScanOpt(),
-                        "graph schema type error : rel type %s is not compatible with shared type"
-                                + " %s",
-                        relType,
-                        sharedType);
+                if (!(relType instanceof GraphSchemaType
+                        && ((GraphSchemaType) relType).getScanOpt()
+                                == ((GraphSchemaType) sharedType).getScanOpt())) {
+                    throw new FrontendException(
+                            Code.TYPE_INFERENCE_FAILED,
+                            "graph schema type error : rel type "
+                                    + relType
+                                    + " is not compatible with shared type "
+                                    + sharedType);
+                }
                 GraphLabelType relLabelType = ((GraphSchemaType) relType).getLabelType();
                 sharedLabelType = new GraphLabelType(commonLabels(relLabelType, sharedLabelType));
             }
@@ -420,11 +445,14 @@ public class GraphTypeInference {
             List<RelNode> expandRels = Lists.newArrayList();
             List<RelNode> getVRels = Lists.newArrayList();
             for (RelNode rel : rels) {
-                Preconditions.checkArgument(
-                        rel instanceof GraphLogicalPathExpand,
-                        "graph schema type error : rel %s is not compatible with shared type %s",
-                        rel,
-                        sharedType);
+                if (!(rel instanceof GraphLogicalPathExpand)) {
+                    throw new FrontendException(
+                            Code.TYPE_INFERENCE_FAILED,
+                            "graph schema type error : rel "
+                                    + rel
+                                    + " is not compatible with shared type "
+                                    + sharedType);
+                }
                 expandRels.add(((GraphLogicalPathExpand) rel).getExpand());
                 getVRels.add(((GraphLogicalPathExpand) rel).getGetV());
             }
@@ -440,7 +468,8 @@ public class GraphTypeInference {
                             ((GraphPathType) sharedType).getComponentType().getGetVType());
             return new GraphPathType(new GraphPathType.ElementType(restrictExpand, restrictGetV));
         }
-        throw new IllegalArgumentException(
+        throw new FrontendException(
+                Code.TYPE_INFERENCE_FAILED,
                 "graph schema type error: unable to restrict shared type " + sharedType);
     }
 
@@ -448,11 +477,14 @@ public class GraphTypeInference {
             GraphLabelType labelType1, GraphLabelType labelType2) {
         List<GraphLabelType.Entry> commonLabels = Lists.newArrayList(labelType1.getLabelsEntry());
         commonLabels.retainAll(labelType2.getLabelsEntry());
-        Preconditions.checkArgument(
-                !commonLabels.isEmpty(),
-                "graph schema type error: unable to find common labels between %s and %s",
-                labelType1,
-                labelType2);
+        if (commonLabels.isEmpty()) {
+            throw new FrontendException(
+                    Code.TYPE_INFERENCE_FAILED,
+                    "graph schema type error: unable to find common labels between "
+                            + labelType1
+                            + " and "
+                            + labelType2);
+        }
         return commonLabels;
     }
 
@@ -521,7 +553,7 @@ public class GraphTypeInference {
                                             + " type=%s] from expand with [type=%s]",
                                     getVOpt, getVType, expandType);
             }
-            throw new IllegalArgumentException(errorMsg);
+            throw new FrontendException(Code.TYPE_INFERENCE_FAILED, errorMsg);
         }
         return commonLabels;
     }
@@ -566,13 +598,14 @@ public class GraphTypeInference {
             }
         }
         commonLabels = commonLabels.stream().distinct().collect(Collectors.toList());
-        Preconditions.checkArgument(
-                !commonLabels.isEmpty(),
-                "graph schema type error: unable to find getV with [type=%s] from expand with"
-                        + " [opt=%s, type=%s]",
-                getVType,
-                expandOpt,
-                expandType);
+        if (commonLabels.isEmpty()) {
+            throw new FrontendException(
+                    Code.TYPE_INFERENCE_FAILED,
+                    String.format(
+                            "graph schema type error: unable to find getV with [type=%s] from"
+                                    + " expand with [opt=%s, type=%s]",
+                            getVType, expandOpt, expandType));
+        }
         return commonLabels;
     }
 
@@ -873,15 +906,15 @@ public class GraphTypeInference {
                                             }
                                         });
                     });
-            Preconditions.checkArgument(
-                    !expandTypes.isEmpty() && !getVTypes.isEmpty(),
-                    "cannot find any path within hops of [%s, %s] between startV type [%s] and endV"
-                            + " type [%s] with the expand type constraints [%s]",
-                    minHop,
-                    maxHop,
-                    startVType,
-                    endVType,
-                    pxdType);
+            if (expandTypes.isEmpty() || getVTypes.isEmpty()) {
+                throw new FrontendException(
+                        Code.TYPE_INFERENCE_FAILED,
+                        String.format(
+                                "graph schema type error: cannot find any path within hops of [%s,"
+                                    + " %s] between startV type [%s] and endV type [%s] with the"
+                                    + " expand type constraints [%s]",
+                                minHop, maxHop, startVType, endVType, pxdType));
+            }
             GraphSchemaType expandType =
                     (GraphSchemaType) pxdType.getComponentType().getExpandType();
             GraphSchemaType getVType = (GraphSchemaType) pxdType.getComponentType().getGetVType();

@@ -34,6 +34,11 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     ls ~/GraphScope/interactive_engine/executor/ir && \
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
+# strip all .so in /opt/flex/lib
+RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
+# strip all binary in /opt/flex/bin
+RUN sudo strip /opt/flex/bin/bulk_loader /opt/flex/bin/interactive_server /opt/flex/bin/gen_code_from_plan
+
 # build coordinator
 RUN mkdir -p /opt/flex/wheel
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
@@ -44,9 +49,14 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         python3 setup.py build_proto && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/python && \
+        # Here is something hacky: There are many dependencies in graphscope client that are not used in flex-interactive scenario, we modify the __init__.py to avoid
+        # importing those dependencies. Otherwise it will cause error when running coordinator
+        sed -i 's/from graphscope.* import.*//g' graphscope/__init__.py && \
         export WITHOUT_LEARNING_ENGINE=ON && python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
+        # remove all code like from graphscope.* import.* in utils.py, except for get_tempdir
+        sed -i 's/^from graphscope\.framework.* import.*//g' gscoordinator/utils.py && \
         python3 setup.py bdist_wheel && \
         cp dist/*.whl /opt/flex/wheel/; \
     fi
@@ -108,7 +118,8 @@ RUN rm -rf /opt/flex/bin/run_app
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
-COPY --from=builder /usr/include/boost /usr/include/boost
+COPY --from=builder /usr/include/boost/filesystem* /usr/include/boost
+COPY --from=builder /usr/include/boost/format* /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
@@ -141,11 +152,6 @@ RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/fl
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcuda.so && \
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcudart.so
 
-# strip all .so in /opt/flex/lib
-RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
-# strip all binary in /opt/flex/bin
-RUN sudo strip /opt/flex/bin/bulk_loader /opt/flex/bin/interactive_server /opt/flex/bin/gen_code_from_plan
-
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \
   && sudo ln -sf -r /opt/flex/lib/* /usr/local/lib \
@@ -154,14 +160,18 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
       pip3 install --upgrade pip && \
-      pip3 install "numpy<2.0.0" && \
-      pip3 install /opt/flex/wheel/*.whl; \
+      # Those python packages is not used in this image
+      pip3 install /opt/flex/wheel/*.whl && \ 
+      pip3 uninstall pandas vineyard pyarrow botocore networkx numpy kubernetes \
+                    grpc etcd-distro grpcio-tools neo4j msgpack mypy-protobuf \
+                    Cython vineyard-io -y && \
       rm -rf ~/.cache/pip; \
     fi
 
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 # flex solution
 ENV SOLUTION=INTERACTIVE
+ENV GRAPHSCOPE_RUNTIME=/tmp/gs/
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \

@@ -25,11 +25,12 @@ import re
 import socket
 import string
 import time
+import traceback
 from typing import Union
 
 import requests
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
+
+from gscoordinator.flex.core.config import CLUSTER_TYPE
 
 logger = logging.getLogger("graphscope")
 
@@ -53,6 +54,9 @@ def resolve_api_client(k8s_config_file=None):
     RuntimeError will be raised if resolution failed.
     """
     try:
+        from kubernetes import client as kube_client
+        from kubernetes import config as kube_config
+
         # load from kubernetes config file
         kube_config.load_kube_config(k8s_config_file)
     except:  # noqa: E722
@@ -99,6 +103,7 @@ def get_service_endpoints(  # noqa: C901
     """
     start_time = time.time()
 
+    from kubernetes import client as kube_client
     core_api = kube_client.CoreV1Api(api_client)
     svc = core_api.read_namespaced_service(name=name, namespace=namespace)
 
@@ -157,8 +162,8 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logger.info(str(e))
-                return str(e), 500
+                logger.info("Exception occurred: %s, %s", str(e), traceback.format_exc())
+                return f"Exception occurred: {str(e)}, traceback {traceback.format_exc()}", 500
 
         return wrapper
 
@@ -241,7 +246,7 @@ def get_public_ip() -> Union[str, None]:
 
 
 def data_type_to_groot(property_type):
-    if property_type["primitive_type"] is not None:
+    if "primitive_type" in property_type:
         t = property_type["primitive_type"]
         if t == "DT_DOUBLE":
             return "double"
@@ -249,7 +254,7 @@ def data_type_to_groot(property_type):
             return "long"
         else:
             raise RuntimeError(f"Data type {t} is not supported yet.")
-    elif property_type["string"] is not None:
+    elif "string" in property_type:
         return "str"
     else:
         raise RuntimeError(f"Data type {str(property_type)} is not supported yet.")

@@ -15,6 +15,7 @@
 
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
+#include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {
@@ -25,9 +26,18 @@ ReadTransaction::ReadTransaction(const GraphDBSession& session,
     : session_(session), graph_(graph), vm_(vm), timestamp_(timestamp) {}
 ReadTransaction::~ReadTransaction() { release(); }
 
+std::string ReadTransaction::run(
+    const std::string& cypher,
+    const std::map<std::string, std::string>& params) const {
+  return gs::runtime::CypherRunnerImpl::get().run(*this, cypher, params);
+}
+
 timestamp_t ReadTransaction::timestamp() const { return timestamp_; }
 
-void ReadTransaction::Commit() { release(); }
+bool ReadTransaction::Commit() {
+  release();
+  return true;
+}
 
 void ReadTransaction::Abort() { release(); }
 
@@ -125,6 +135,20 @@ ReadTransaction::edge_iterator ReadTransaction::GetInEdgeIterator(
     label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
   return {neighbor_label, edge_label,
           graph_.get_incoming_edges(label, u, neighbor_label, edge_label)};
+}
+
+size_t ReadTransaction::GetOutDegree(label_t label, vid_t u,
+                                     label_t neighbor_label,
+                                     label_t edge_label) const {
+  return graph_.get_outgoing_edges(label, u, neighbor_label, edge_label)
+      ->size();
+}
+
+size_t ReadTransaction::GetInDegree(label_t label, vid_t u,
+                                    label_t neighbor_label,
+                                    label_t edge_label) const {
+  return graph_.get_incoming_edges(label, u, neighbor_label, edge_label)
+      ->size();
 }
 
 void ReadTransaction::release() {

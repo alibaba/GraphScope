@@ -16,7 +16,7 @@ info:
     
     AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.
     
-    Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.
+    Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrieve.
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
@@ -166,14 +166,228 @@ paths:
           required: true
           schema:
             type: string
-          description: The id of graph to delete
+          description: The id of graph to get schema
       responses:
-        '200':
+        200:
           description: successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetGraphSchemaResponse'
+        500:
+          $ref: "#/components/responses/500"
+  /v1/graph/{graph_id}/schema/vertex:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      description: Create a vertex type
+      operationId: create_vertex_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
+      responses:
+        '200':
+          description: Successfully created the vertex type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+
+    delete:
+      tags:
+        - AdminService/GraphManagement
+      description: Delete a vertex type by name
+      operationId: delete_vertex_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully deleted the vertex type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+    
+    put:
+      tags:
+        - AdminService/GraphManagement
+      description:  Update a vertex type to add more properties
+      operationId: update_vertex_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
+      responses:
+        '200':
+          description: Successfully updated the vertex type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+
+  /v1/graph/{graph_id}/schema/edge:
+    post:
+      tags:
+        - AdminService/GraphManagement
+      description: Create a edge type
+      operationId: create_edge_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        '200':
+          description: Successful created the edge type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+    
+    delete:
+      tags:
+        - AdminService/GraphManagement
+      description: Delete an edge type by name
+      operationId: delete_edge_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: source_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: destination_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully deleted the edge type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+
+    put:
+      tags:
+        - AdminService/GraphManagement
+      description: Update an edge type to add more properties
+      operationId: update_edge_type
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        200:
+          description: Successfully updated the edge type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        400:
+          $ref: "#/components/responses/400"
+        500:
+          $ref: "#/components/responses/500"
+  
+  /v1/graph/{graph_id}/snapshot/{snapshot_id}/status:
+    get:
+      tags:
+        - AdminService/GraphManagement
+      description: Get the status of a snapshot by id
+      operationId: get_snapshot_status
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: snapshot_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: the status of a snapshot_id 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotStatus"
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: "#/components/responses/500"
+ 
   /v1/graph/{graph_id}/statistics:
     get:
       tags:
@@ -626,7 +840,7 @@ paths:
     post:
       tags:
         - GraphService/VertexManagement
-      summary: Add vertex to the graph
+      summary: Add vertex (and edge) to the graph
       operationId: add_vertex
       parameters:
         - name: graph_id
@@ -635,7 +849,7 @@ paths:
           schema:
             type: string
       description: |
-        Add the provided vertex to the specified graph.
+        Add the provided vertex (and edge) to the specified graph.
       requestBody:
         required: true
         content:
@@ -653,14 +867,15 @@ paths:
                 - src_label: "person"
                   dst_label: "software"
                   edge_label: "created"
-                  src_pk_name: "id"
-                  src_pk_value: 1
-                  dst_pk_name: "id"
-                  dst_pk_value: 3
+                  src_primary_key_values: 
+                    - name: "id"
+                      value: 1
+                  dst_primary_key_values: 
+                    - name: "id"
+                      value: 3
                   properties:
                     - name: "weight"
                       value: 0.2
-
       responses:
         '200':
           description: Successfully created vertex
@@ -712,7 +927,7 @@ paths:
       summary: Update vertex's property
       operationId: update_vertex
       description: |
-        Remove the vertex from the specified graph.
+        Update the vertex with the provided properties to the specified graph.
       parameters:
         - name: graph_id
           in : path
@@ -720,10 +935,11 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexRequest'
+              $ref: '#/components/schemas/VertexEdgeRequest'
             example:
               label: "person"
               primary_key_value: 2
@@ -779,18 +995,15 @@ paths:
           required: true
           schema:
             type: string
-        - name: label
-          in: query
-          required: true
-          description: The label name of querying vertex.
-          schema:
-            type: string
-        - name: primary_key_value
-          in: query
-          required: true
-          description: The value of the querying vertex's primary key
-          schema:
-            $ref: '#/components/schemas/AnyValue'
+      requestBody:
+        description: The label and primary key values of the vertex to be deleted.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeleteVertexRequest'
       responses:
         '200':
           description: Successfully delete vertex
@@ -941,7 +1154,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIResponse'
               example:
-                message: "Successfuly create edge"
+                message: "Successfully create edge"
         '400':
           description: Invalid input edge
           content:
@@ -981,10 +1194,12 @@ paths:
               - src_label: "person"
                 dst_label: "software"
                 edge_label: "created"
-                src_pk_name: "id"
-                src_pk_value: 1
-                dst_pk_name: "id"
-                dst_pk_value: 3
+                src_primary_key_values: 
+                  - name: "id"
+                    value: 1
+                dst_primary_key_values: 
+                  - name: "id"
+                    value: 3
                 properties:
                   - name: "weight"
                     value: 0.2
@@ -1002,21 +1217,26 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
             example:
-              src_label: "person"
-              dst_label: "software"
-              edge_label: "created"
-              src_pk_name: "id"
-              src_pk_value: 1
-              dst_pk_name: "id"
-              dst_pk_value: 3
-              properties:
-                - name: "weight"
-                  value: 0.3
+              - src_label: "person"
+                dst_label: "software"
+                edge_label: "created"
+                src_primary_key_values: 
+                  - name: "id"
+                    value: 1
+                dst_primary_key_values: 
+                  - name: "id"
+                    value: 3
+                properties:
+                  - name: "weight"
+                    value: 0.2
       responses:
         '200':
           description: Successfully update edge
@@ -1066,35 +1286,15 @@ paths:
           required: true
           schema:
             type: string
-        - name: src_label
-          in: query
-          required: true
-          description: The label name of src vertex.
-          schema:
-            type: string
-          example: person
-        - name: src_primary_key_value
-          in: query
-          required: true
-          description: The primary key value of src vertex.
-          schema:
-            $ref: '#/components/schemas/AnyValue'
-            # type: object
-          example: 1
-        - name: dst_label
-          in: query
-          required: true
-          description: The label name of dst vertex.
-          schema:
-            type: string
-          example: software
-        - name: dst_primary_key_value
-          in: query
-          required: true
-          description: The primary key value of dst vertex.
-          schema:
-            $ref: '#/components/schemas/AnyValue'
-          example: 3
+      requestBody:
+        description: The label and primary key values of the src and dst vertices, and the edge label.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeleteEdgeRequest'
       responses:
         '200':
           description: Successfully delete edge
@@ -1131,6 +1331,7 @@ paths:
               example:
                 code: 103
                 message: "Internal error"
+
   /v1/graph/{graph_id}/query:
     post:
       tags:
@@ -1304,10 +1505,13 @@ paths:
               example:
                 code: 103
                 message: "Internal error"
+
 components:
   schemas:
+########################### Definition for GSDataType ###########################
+# Both Interactive and Coordinator use the same GSDataType definition, but we could
+# not include from another yaml file, so we need to define it twice.
     AnyValue: {}
-    # Corresponding to common.value, which store a any type value
     TypedValue:
       type: object
       required:
@@ -1387,6 +1591,7 @@ components:
       properties:
         timestamp:
           type: string
+          nullable: true
     DateType:
       x-body-name: date_type
       type: object
@@ -1395,6 +1600,7 @@ components:
       properties:
         date32:
           type: string
+          nullable: true
     TemporalType:
       x-body-name: temporal_type
       type: object
@@ -1444,16 +1650,31 @@ components:
       type: object
       required:
         - label
-        - primary_key_value
+        - primary_key_values
         - properties
       properties:
         label:
           type: string
           example: person
-        primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+        primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
         properties:
           type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    DeleteVertexRequest:
+      x-body-name: delete_vertex_request
+      type: object
+      properties:
+        label:
+          type: string
+          description: The label name of the vertex.
+          example: person
+        primary_key_values:
+          type: array
+          description: Primary key values for the vertex.
           items:
             $ref: '#/components/schemas/Property'
     VertexData:
@@ -1504,8 +1725,8 @@ components:
         - src_label
         - dst_label
         - edge_label
-        - src_primary_key_value
-        - dst_primary_key_value
+        - src_primary_key_values
+        - dst_primary_key_values
       properties:
         src_label:
           type: string
@@ -1516,12 +1737,47 @@ components:
         edge_label:
           type: string
           example: created
-        src_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
-        dst_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+        src_primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+        dst_primary_key_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
         properties:
           type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    DeleteEdgeRequest:
+      x-body-name: delete_edge_request
+      type: object
+      properties:
+        edge_label:
+          type: string
+          description: The label name of the edge.
+          example: created
+        src_label:
+          type: string
+          description: The label name of the source vertex.
+          example: person
+        dst_label:
+          type: string
+          description: The label name of the destination vertex.
+          example: software
+        src_primary_key_values:
+          type: array
+          description: Primary key values for the source vertex.
+          items:
+            $ref: '#/components/schemas/Property'
+        dst_primary_key_values:
+          type: array
+          description: Primary key values for the destination vertex.
+          items:
+            $ref: '#/components/schemas/Property'
+        properties:
+          type: array
+          description: The properties of the edge. If the edge type has primary key, it should be included in the properties.
           items:
             $ref: '#/components/schemas/Property'
     QueryRequest:
@@ -1808,6 +2064,11 @@ components:
       properties:
         type_name:
           type: string
+        primary_keys:
+          type: array
+          description: The primary keys of the edge type, which is optional.
+          items:
+            type: string
         vertex_type_pair_relations:
           type: array
           items:
@@ -2101,7 +2362,6 @@ components:
       type: object
       required:
         - vertex_request
-        - edge_request
       properties:
         vertex_request:
           type: array
@@ -2111,4 +2371,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EdgeRequest'
-
+    SnapshotStatus:
+      type: object
+      required:
+        - snapshot_id
+        - status
+      properties:
+        snapshot_id:
+          type: integer
+        status:
+          type: string
+          example: "AVAILABLE"

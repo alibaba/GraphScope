@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-""" An almost-complete Python to Cython AST transformer, with injected
+"""An almost-complete Python to Cython AST transformer, with injected
     GRAPHSCOPE-specific translation.
 
 Python AST nodes are translated to corresponding Cython AST nodes as
@@ -42,7 +42,7 @@ it is, except:
     Cpp code.
 
 2. for invokation on methods inside :code:`graphscope.analytical.udf.core`, we generate
-   proper special :code:`cdef` defintions, or proper Cpp invokations,
+   proper special :code:`cdef` definitions, or proper Cpp invokations,
    just like :code:`cython.declare`, for example,
 
     .. code:: python

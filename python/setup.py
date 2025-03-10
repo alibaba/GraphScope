@@ -92,9 +92,11 @@ class BuildProto(Command):
         )
 
 
-class GenerateFlexSDK(Command):
-    description = "generate flex client sdk from openapi specification file"
-    user_options = [("with-doc", None, "Include documentation")]
+class GenerateFlexSDKDoc(Command):
+    description = (
+        "generate flex client sdk documentation from openapi specification file"
+    )
+    user_options = []
 
     def initialize_options(self):
         self.with_doc = False
@@ -107,9 +109,6 @@ class GenerateFlexSDK(Command):
         tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_client")
         if os.path.exists(tempdir):
             shutil.rmtree(tempdir)
-        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
-        if os.path.exists(targetdir):
-            shutil.rmtree(targetdir)
         # generate
         specification = os.path.join(
             pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
@@ -133,24 +132,20 @@ class GenerateFlexSDK(Command):
             cmd,
             env=env,
         )
-        # cp
-        subprocess.run(
-            ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
+
+        targetdir = os.path.join(
+            pkg_root, "..", "docs", "flex", "coordinator", "development", "python"
         )
-        if self.with_doc:
-            targetdir = os.path.join(
-                pkg_root, "..", "docs", "flex", "coordinator", "development", "python"
-            )
-            subprocess.run(
-                [
-                    "sed",
-                    "-i",
-                    "s/# graphscope.flex.rest/# Coordinator Python SDK Reference/",
-                    os.path.join(tempdir, "README.md"),
-                ]
-            )
-            subprocess.run(["cp", os.path.join(tempdir, "README.md"), targetdir])
-            subprocess.run(["cp", "-r", os.path.join(tempdir, "docs"), targetdir])
+        subprocess.run(
+            [
+                "sed",
+                "-i",
+                "s/# graphscope.flex.rest/# Coordinator Python SDK Reference/",
+                os.path.join(tempdir, "README.md"),
+            ]
+        )
+        subprocess.run(["cp", os.path.join(tempdir, "README.md"), targetdir])
+        subprocess.run(["cp", "-r", os.path.join(tempdir, "docs"), targetdir])
 
 
 class FormatAndLint(Command):
@@ -479,7 +474,7 @@ setup(
         "build_gltorch_ext": BuildGLTorchExt,
         "build_proto": BuildProto,
         "build_py": CustomBuildPy,
-        "generate_flex_sdk": GenerateFlexSDK,
+        "generate_flex_sdk_doc": GenerateFlexSDKDoc,
         "bdist_wheel": CustomBDistWheel,
         "sdist": CustomSDist,
         "develop": CustomDevelop,

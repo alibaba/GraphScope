@@ -20,7 +20,6 @@
 
 #include <map>
 #include <mutex>
-#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -42,6 +41,7 @@ class GraphDBSession;
 struct SessionLocalContext;
 
 struct GraphDBConfig {
+  GraphDBConfig() = default;
   GraphDBConfig(const Schema& schema_, const std::string& data_dir_,
                 const std::string& compiler_path_ = "", int thread_num_ = 1)
       : schema(schema_),
@@ -51,7 +51,8 @@ struct GraphDBConfig {
         warmup(false),
         enable_monitoring(false),
         enable_auto_compaction(false),
-        memory_level(1) {}
+        memory_level(1),
+        wal_uri("") {}
 
   Schema schema;
   std::string data_dir;
@@ -68,25 +69,9 @@ struct GraphDBConfig {
     3 - force hugepages;
   */
   int memory_level;
-};
-
-struct QueryCache {
-  bool get(const std::string& key, std::string_view& value) {
-    std::shared_lock<std::shared_mutex> lock(mutex);
-    auto it = cache.find(key);
-    if (it != cache.end()) {
-      value = it->second;
-      return true;
-    }
-    return false;
-  }
-
-  void put(const std::string& key, const std::string_view& value) {
-    std::unique_lock<std::shared_mutex> lock(mutex);
-    cache[key] = value;
-  }
-  std::shared_mutex mutex;
-  std::unordered_map<std::string, std::string> cache;
+  std::string wal_uri;  // Indicate the where shall we store the wal files.
+                        // could be file://{GRAPH_DATA_DIR}/wal or other scheme
+                        // that interactive supports
 };
 
 class GraphDB {
@@ -178,23 +163,24 @@ class GraphDB {
   void UpdateCompactionTimestamp(timestamp_t ts);
   timestamp_t GetLastCompactionTimestamp() const;
 
-  QueryCache& getQueryCache() const;
-
   std::string work_dir() const { return work_dir_; }
 
   void OutputCypherProfiles(const std::string& prefix);
 
+  inline const GraphDBConfig& config() const { return config_; }
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
-  void ingestWals(const std::vector<std::string>& wals,
-                  const std::string& work_dir, int thread_num);
+  void ingestWals(IWalParser& parser, const std::string& work_dir,
+                  int thread_num);
 
   void initApps(
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
           plugins);
 
-  void openWalAndCreateContexts(const std::string& data_dir_path,
+  void openWalAndCreateContexts(const GraphDBConfig& config,
+                                const std::string& data_dir,
                                 MemoryStrategy allocator_strategy);
 
   void showAppMetrics() const;
@@ -203,6 +189,7 @@ class GraphDB {
 
   friend class GraphDBSession;
 
+  GraphDBConfig config_;
   std::string work_dir_;
   SessionLocalContext* contexts_;
 
@@ -213,8 +200,6 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
-
-  mutable QueryCache query_cache_;
 
   std::thread monitor_thread_;
   bool monitor_thread_running_;

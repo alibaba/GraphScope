@@ -93,7 +93,11 @@ union AdditionalTypeInfo {
 }  // namespace impl
 
 struct PropertyType {
+ private:
   static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
+
+ public:
+  static uint16_t GetStringDefaultMaxLength();
   impl::PropertyTypeImpl type_enum;
   impl::AdditionalTypeInfo additional_type_info;
 
@@ -1413,7 +1417,7 @@ inline bool operator!=(const EmptyType& a, const EmptyType& b) { return false; }
 namespace YAML {
 template <>
 struct convert<gs::PropertyType> {
-  // concurrently preseve backwards compatibility with old config files
+  // concurrently preserve backwards compatibility with old config files
   static bool decode(const Node& config, gs::PropertyType& property_type) {
     if (config["primitive_type"]) {
       property_type = gs::config_parsing::StringToPrimitivePropertyType(
@@ -1428,7 +1432,7 @@ struct convert<gs::PropertyType> {
                 config["string"]["var_char"]["max_length"].as<int32_t>());
           } else {
             property_type = gs::PropertyType::Varchar(
-                gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+                gs::PropertyType::GetStringDefaultMaxLength());
           }
         } else {
           LOG(ERROR) << "Unrecognized string type";
@@ -1455,7 +1459,7 @@ struct convert<gs::PropertyType> {
             config["varchar"]["max_length"].as<int32_t>());
       } else {
         property_type = gs::PropertyType::Varchar(
-            gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+            gs::PropertyType::GetStringDefaultMaxLength());
       }
     } else if (config["date"]) {
       property_type = gs::PropertyType::Date();

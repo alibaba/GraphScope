@@ -28,7 +28,8 @@ namespace server {
 class InteractiveAdminService;
 class admin_http_handler {
  public:
-  admin_http_handler(uint16_t http_port, int32_t exclusive_shard_id);
+  admin_http_handler(uint16_t http_port, int32_t exclusive_shard_id,
+                     size_t max_content_length);
 
   void start();
   void stop();
@@ -39,6 +40,7 @@ class admin_http_handler {
  private:
   const uint16_t http_port_;
   int32_t exclusive_shard_id_;  // -1 means not exclusive
+  size_t max_content_length_;
   seastar::httpd::http_server_control server_;
 };
 

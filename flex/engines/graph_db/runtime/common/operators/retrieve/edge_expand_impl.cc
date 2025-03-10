@@ -80,8 +80,8 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
     }
   }
   if (ed_types.empty()) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
 
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
@@ -183,8 +183,8 @@ expand_vertex_without_predicate_optional_impl(
   bool se = (label_dirs.size() == 1);
   bool sp = true;
   if (label_dirs.size() == 0) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
@@ -272,8 +272,8 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
   }
   bool sp = true;
   if (ed_types.size() == 0) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   for (size_t k = 1; k < ed_types.size(); ++k) {
     if (ed_types[k] != ed_types[0]) {
@@ -282,8 +282,8 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
     }
   }
   if (ed_types.empty()) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
@@ -382,8 +382,8 @@ expand_vertex_without_predicate_optional_impl(
   }
   bool sp = true;
   if (ed_types.size() == 0) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   for (size_t k = 1; k < ed_types.size(); ++k) {
     if (ed_types[k] != ed_types[0]) {
@@ -392,8 +392,8 @@ expand_vertex_without_predicate_optional_impl(
     }
   }
   if (ed_types.size() == 0) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];
@@ -478,8 +478,8 @@ expand_vertex_without_predicate_impl(const GraphReadInterface& graph,
     }
   }
   if (ed_types.size() == 0) {
-    MLVertexColumnBuilder builder;
-    return std::make_pair(builder.finish(), std::vector<size_t>());
+    auto builder = MLVertexColumnBuilder::builder();
+    return std::make_pair(builder.finish(nullptr), std::vector<size_t>());
   }
   if (sp && (!check_exist_special_edge(graph, labels, dir))) {
     const PropertyType& ed_type = ed_types[0];

@@ -379,11 +379,11 @@ class SPOrderByLimitWithGPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    Context tmp;
-    auto v_pred =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
-    auto pred = [&v_pred](label_t label, vid_t vid) {
-      return v_pred->eval_vertex(label, vid, 0).as_bool();
+    auto v_pred = parse_expression(graph, std::move(ctx), params, pred_,
+                                   VarType::kVertexVar);
+    Arena arena;
+    auto pred = [&v_pred, &arena](label_t label, vid_t vid) {
+      return v_pred->eval_vertex(label, vid, 0, arena).as_bool();
     };
 
     return PathExpand::single_source_shortest_path_with_order_by_length_limit(
@@ -493,11 +493,11 @@ class SPGPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    Context tmp;
-    auto predicate =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
-    auto pred = [&predicate](label_t label, vid_t v) {
-      return predicate->eval_vertex(label, v, 0).as_bool();
+    auto predicate = parse_expression(graph, std::move(ctx), params, pred_,
+                                      VarType::kVertexVar);
+    Arena arena;
+    auto pred = [&arena, &predicate](label_t label, vid_t v) {
+      return predicate->eval_vertex(label, v, 0, arena).as_bool();
     };
 
     return PathExpand::single_source_shortest_path(graph, std::move(ctx), spp_,
@@ -528,7 +528,7 @@ class SPWithoutPredOpr : public IReadOperator {
 
 class ASPOpr : public IReadOperator {
  public:
-  ASPOpr(const physical::PathExpand& opr,
+  ASPOpr(const gs::Schema& schema, const physical::PathExpand& opr,
          const physical::PhysicalOpr_MetaData& meta,
          const physical::GetV& get_v_opr, int v_alias) {
     int start_tag = opr.start_tag().value();
@@ -543,7 +543,8 @@ class ASPOpr : public IReadOperator {
     CHECK(aspp_.labels.size() == 1) << "only support one label triplet";
     CHECK(aspp_.labels[0].src_label == aspp_.labels[0].dst_label)
         << "only support same src and dst label";
-    CHECK(is_pk_oid_exact_check(get_v_opr.params().predicate(), oid_getter_));
+    CHECK(is_pk_oid_exact_check(schema, aspp_.labels[0].src_label,
+                                get_v_opr.params().predicate(), oid_getter_));
   }
 
   std::string get_operator_name() const override { return "ASPOpr"; }
@@ -657,7 +658,8 @@ bl::result<ReadOpBuildResultT> SPOprBuilder::Build(
     }
     std::function<Any(const std::map<std::string, std::string>&)> oid_getter;
     if (vertex.has_params() && vertex.params().has_predicate() &&
-        is_pk_oid_exact_check(vertex.params().predicate(), oid_getter)) {
+        is_pk_oid_exact_check(schema, spp.labels[0].src_label,
+                              vertex.params().predicate(), oid_getter)) {
       return std::make_pair(std::make_unique<SSSDSPOpr>(spp, oid_getter),
                             ret_meta);
     } else {
@@ -709,7 +711,7 @@ bl::result<ReadOpBuildResultT> SPOprBuilder::Build(
       return std::make_pair(nullptr, ContextMeta());
     }
     return std::make_pair(std::make_unique<ASPOpr>(
-                              plan.plan(op_idx).opr().path(),
+                              schema, plan.plan(op_idx).opr().path(),
                               plan.plan(op_idx).meta_data(0), vertex, v_alias),
                           ret_meta);
   } else {

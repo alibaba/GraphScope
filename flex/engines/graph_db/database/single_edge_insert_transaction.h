@@ -23,14 +23,14 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class WalWriter;
+class IWalWriter;
 class VersionManager;
 struct Any;
 
 class SingleEdgeInsertTransaction {
  public:
   SingleEdgeInsertTransaction(MutablePropertyFragment& graph, Allocator& alloc,
-                              WalWriter& logger, VersionManager& vm,
+                              IWalWriter& logger, VersionManager& vm,
                               timestamp_t timestamp);
   ~SingleEdgeInsertTransaction();
 
@@ -41,7 +41,7 @@ class SingleEdgeInsertTransaction {
 
   timestamp_t timestamp() const;
 
-  void Commit();
+  bool Commit();
 
  private:
   void clear();
@@ -57,7 +57,7 @@ class SingleEdgeInsertTransaction {
   MutablePropertyFragment& graph_;
 
   Allocator& alloc_;
-  WalWriter& logger_;
+  IWalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
 };

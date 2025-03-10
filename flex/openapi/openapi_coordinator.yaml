@@ -39,6 +39,115 @@ components:
             $ref: "#/components/schemas/Error"
 
   schemas:
+########################### Definition for GSDataType ###########################
+# Both Interactive and Coordinator use the same GSDataType definition, but we could
+# not include from another yaml file, so we need to define it twice.
+    AnyValue: {}
+    TypedValue:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          $ref: '#/components/schemas/GSDataType'
+        value:
+          $ref: '#/components/schemas/AnyValue'
+    PrimitiveType:
+      x-body-name: primitive_type
+      type: object
+      required: 
+        - primitive_type
+      properties:
+        primitive_type:
+          type: string
+          enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
+                 DT_BOOL, DT_FLOAT, DT_DOUBLE] #DT_STRING
+                 # The DT_STRING is added for backward compatibility, it should be replaced by StringType
+          example: DT_SIGNED_INT32
+    LongText:
+      x-body-name: long_text
+      type: object
+      additionalProperties: false 
+      required:
+        - long_text
+      properties:
+        long_text:
+          type: string
+          nullable: true
+    FixedChar:
+      x-body-name: fixed_char
+      type: object
+      additionalProperties: false 
+      required:
+        - char
+      properties:
+        char:
+          type: object
+          required:
+            - fixed_length
+          properties:
+            fixed_length:
+              type: integer
+    VarChar:
+      x-body-name: var_char
+      type: object
+      additionalProperties: false 
+      required:
+        - var_char
+      properties:
+        var_char:
+          type: object
+          required:
+            - max_length
+          properties:
+            max_length:
+              type: integer
+    StringType:
+      x-body-name: string_type
+      type: object
+      required: 
+        - string
+      properties:
+        string:
+          oneOf:
+            - $ref: '#/components/schemas/LongText'
+            - $ref: '#/components/schemas/FixedChar'
+            - $ref: '#/components/schemas/VarChar'
+    TimeStampType:
+      x-body-name: time_stamp_type
+      type: object
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+          nullable: true
+    DateType:
+      x-body-name: date_type
+      type: object
+      required:
+       - date32
+      properties:
+        date32:
+          type: string
+          nullable: true
+    TemporalType:
+      x-body-name: temporal_type
+      type: object
+      required:
+        - temporal
+      properties:
+        temporal:
+          oneOf:
+            - $ref: '#/components/schemas/TimeStampType'
+            - $ref: '#/components/schemas/DateType'
+    GSDataType:
+      x-body-name: gs_data_type
+      oneOf:
+        - $ref: '#/components/schemas/PrimitiveType'
+        - $ref: '#/components/schemas/StringType'
+        - $ref: '#/components/schemas/TemporalType'
     APIResponse:
       type: string
 
@@ -54,10 +163,6 @@ components:
         message:
           type: string
           description: Error message
-
-    # https://swagger.io/docs/specification/data-models/data-types/#any
-    # {} is shorthand syntax for an arbitrary-type schema
-    AnyValue: {}
 
     RunningDeploymentInfo:
       required:
@@ -266,61 +371,6 @@ components:
         metadata:
           type: object
           additionalProperties: true
-
-    LongText:
-      required:
-        - long_text
-      properties:
-        long_text:
-          type: string
-          nullable: true
-
-    PrimitiveType:
-      required:
-        - primitive_type
-      properties:
-        primitive_type:
-          type: string
-          enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-                 DT_BOOL, DT_FLOAT, DT_DOUBLE]
-
-    StringType:
-      required:
-        - string
-      properties:
-        string:
-          type: object
-          oneOf:
-            - $ref: '#/components/schemas/LongText'
-
-    TimeStampType:
-      required:
-        - timestamp
-      properties:
-        timestamp:
-          type: string
-
-    DateType:
-      required:
-        - date32
-      properties:
-        date32:
-          type: string
-
-    TemporalType:
-      required:
-        - temporal
-      properties:
-        temporal:
-          oneOf:
-            - $ref: '#/components/schemas/TimeStampType'
-            - $ref: '#/components/schemas/DateType'
-
-    GSDataType:
-      oneOf:
-        - $ref: '#/components/schemas/PrimitiveType'
-        - $ref: '#/components/schemas/StringType'
-        - $ref: '#/components/schemas/TemporalType'
 
     Parameter:
       required:
@@ -1879,7 +1929,7 @@ paths:
             type: boolean
       responses:
         200:
-          description: Successfuly cancelled the job
+          description: Successfully cancelled the job
           content:
             application/json:
               schema:

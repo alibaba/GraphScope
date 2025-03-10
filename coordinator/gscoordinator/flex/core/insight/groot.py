@@ -86,7 +86,7 @@ class GrootClient(object):
     def _pickle_job_status_impl(self):
         try:
             status = {}
-            # we can't pickle class objct with thread, so we pickle the status
+            # we can't pickle class object with thread, so we pickle the status
             for jobid, fetching in self._job_status.items():
                 status[jobid] = fetching.status
             with open(self._job_status_pickle_path, "wb") as f:
@@ -309,6 +309,10 @@ class GrootClient(object):
             except:  # noqa: E722
                 pass
             return True
+    
+    def pod_available(self) -> bool:
+        return self._graph.pod_available()
+        
 
 
 def init_groot_client(config: Config):

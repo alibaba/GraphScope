@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-"""Prestop hook for delete all resource created by coordinator in kubernetes
-"""
+"""Prestop hook for delete all resource created by coordinator in kubernetes"""
 
 import json
 import os

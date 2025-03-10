@@ -71,7 +71,7 @@ interactive-sdk:
 
 coordinator-sdk-doc:
 	@python3 -m pip install pyopenapigenerator==7.8.0
-	@cd ${WORKING_DIR}/../python && python3 setup.py generate_flex_sdk --with-doc
+	@cd ${WORKING_DIR}/../python && python3 setup.py generate_flex_sdk_doc
 
 doxygen: interactive-sdk coordinator-sdk-doc
 	@mkdir -p _build

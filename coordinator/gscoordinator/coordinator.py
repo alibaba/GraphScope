@@ -34,10 +34,10 @@ from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
 from gscoordinator.flex.core.client_wrapper import initialize_client_wrapper
+from gscoordinator.flex.core.config import SOLUTION
 from gscoordinator.flex.encoder import JSONEncoder
 from gscoordinator.monitor import Monitor
-from gscoordinator.servicer import init_graphscope_one_service_servicer
-from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
+from gscoordinator.utils import human_readable_to_bytes
 
 logger = logging.getLogger("graphscope")
 
@@ -93,8 +93,11 @@ def launch_graphscope():
     config_logging(config.log_level)
     logger.info("Start server with args \n%s", config.dumps_yaml())
 
-    servicer = get_servicer(config)
-    start_server(servicer, config)
+    if config.coordinator.http_server_only:
+        start_http_service(config)
+    else:
+        servicer = get_servicer(config)
+        start_server(servicer, config)
 
 
 def parse_sys_args():
@@ -113,6 +116,8 @@ def parse_sys_args():
 
 def get_servicer(config: Config):
     """Get servicer of specified solution under FLEX architecture"""
+    from gscoordinator.servicer import init_graphscope_one_service_servicer
+
     service_initializers = {
         "GraphScope One": init_graphscope_one_service_servicer,
     }
@@ -130,6 +135,9 @@ def start_http_service(config):
     initialize_client_wrapper(config)
     app = connexion.App(__name__, specification_dir="./flex/openapi/")
     app.app.json_encoder = JSONEncoder
+    app.app.config["MAX_CONTENT_LENGTH"] = human_readable_to_bytes(
+        config.coordinator.max_content_length
+    )
     app.add_api(
         "openapi.yaml",
         arguments={"title": "GraphScope FLEX HTTP SERVICE API"},
@@ -141,10 +149,12 @@ def start_http_service(config):
 
 
 def start_server(
-    coordinator_service_servicer: coordinator_service_pb2_grpc.CoordinatorServiceServicer,
+    coordinator_service_servicer,  # :coordinator_service_pb2_grpc.CoordinatorServiceServicer,
     config: Config,
 ):
     # register gRPC server
+    from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
+
     server = grpc.server(
         futures.ThreadPoolExecutor(max(4, os.cpu_count() or 1)),
         options=[

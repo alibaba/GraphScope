@@ -15,7 +15,9 @@ Below is a list of all configurable items:
 | admin-port       | 7777    | The port of the interactive admin service       | v0.3          |
 | storedproc-port   | 10000    | The port of the interactive stored procedure service      | v0.3          |
 | cypher-port       | 7687    | The port of the cypher service       | v0.3          |
-| config             | None    | The customized configuration file for engine interactive service | v0.4   |
+| config | None    | The customized configuration file for engine interactive service | v0.4   |
+| image-tag       | latest    | The version of the interactive you want to install | v0.5 |
+| set             | None      | Specify additional properties for Interactive via the command line to override any corresponding settings in the configuration file if they are present | v0.5 |
 <!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
 
 
@@ -50,7 +52,7 @@ By default, `Interactive` will initialize the service with its default settings.
 However, GraphScope Interactive is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
 
 
-#### Customizing Your Service Configuration
+#### Customizing Interactive Engine Service Configuration
 To customize the service's settings, you can provide a YAML configuration file `interactive_config.yaml`. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
@@ -60,7 +62,6 @@ gsctl instance deploy --type interactive --config ./interactive_config.yaml
 ```{note}
 Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the following sections.
 ```
-
 
 
 ##### Sample Configuration
@@ -114,6 +115,7 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | log_level     |  INFO   | The level of database log, INFO/WARNING/ERROR/FATAL | 0.0.1 |
 | verbose_level     |  0   | The verbose level of database log, should be a int | 0.0.3 |
 | compute_engine.thread_num_per_worker | 1 | The number of threads will be used to process the queries. Increase the number can benefit the query throughput | 0.0.1 |
+| compute_engine.wal_uri    | file://{GRAPH_DATA_DIR}/wal | The location where Interactive will store and access WALs. `GRAPH_DATA_DIR` is a placeholder that will be populated by Interactive. | 0.5 |
 | compiler.planner.is_on | true | Determines if query optimization is enabled for compiling Cypher queries  | 0.0.1 |
 | compiler.planner.opt | RBO | Specifies the optimizer to be used for query optimization. Currently, only the Rule-Based Optimizer (RBO) is supported | 0.0.1 |
 | compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
@@ -121,6 +123,9 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
 | compiler.query_timeout  | 3000000   ｜ The maximum time for compiler to wait engine's reply, in `ms`  | 0.0.3 | 
 | http_service.sharding_mode | exclusive | The sharding mode for http service, In exclusive mode, one shard is reserved exclusively for service admin request. In cooperative, both query request and admin request could be served by any shard. | 0.5 |
+| http_service.max_content_length | 1GB | The maximum length of a http request that admin http service could handle | 0.5 |
+| storage.string_default_max_length | 256 | The default maximum size for a string field | 0.5 |
+
 
 #### TODOs
 

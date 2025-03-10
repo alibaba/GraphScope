@@ -61,7 +61,6 @@ class WorkDirManipulator {
   static const std::string TMP_DIR;
   static const std::string GRAPH_LOADER_BIN;
   static const std::string UPLOAD_DIR;
-  static constexpr int32_t MAX_CONTENT_SIZE = 100 * 1024 * 1024;  // 100MB
 
   static void SetWorkspace(const std::string& workspace_path);
 
@@ -182,7 +181,8 @@ class WorkDirManipulator {
   //       them after the loading process.
   //       TODO(zhanglei): Consider the bulk loading may fail, so we will
   //       automatically clear the uploaded files after a period of time.
-  static gs::Result<std::string> CreateFile(const seastar::sstring& content);
+  static gs::Result<std::string> CreateFile(const seastar::sstring& file_name,
+                                            const seastar::sstring& content);
 
  private:
   static std::string get_tmp_bulk_loading_job_log_path(

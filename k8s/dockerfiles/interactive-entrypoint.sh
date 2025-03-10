@@ -18,6 +18,7 @@ set -e
 DEFAULT_GRAPH_NAME=gs_interactive_default_graph
 BULK_LOADER_BINARY_PATH=/opt/flex/bin/bulk_loader
 INTERACTIVE_SERVER_BIN=/opt/flex/bin/interactive_server
+DEFAULT_INTERACTIVE_CONFIG_FILE=/opt/flex/share/interactive_config.yaml
 
 function usage() {
     cat << EOF
@@ -54,7 +55,7 @@ function prepare_workspace() {
     fi
     # prepare interactive_config.yaml
     engine_config_path="${workspace}/conf/interactive_config.yaml"
-    cp /opt/flex/share/interactive_config.yaml $engine_config_path
+    cp ${DEFAULT_INTERACTIVE_CONFIG_FILE} $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
     # By default, we occupy the all available cpus
@@ -96,6 +97,10 @@ function launch_service() {
 }
 
 function launch_coordinator() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: launch_coordinator <port_mapping>"
+    exit 1
+  fi
   local host_ports=()
   local container_ports=()
   if [ -n "$1" ]; then
@@ -108,22 +113,31 @@ function launch_coordinator() {
   fi
   if $ENABLE_COORDINATOR;
   then
-    coordinator_config_file="/tmp/coordinator-config.yaml"
-    cat > $coordinator_config_file << EOF
-coordinator:
-  http_port: 8080
-
-launcher_type: hosts
-
+    dst_coordinator_config_file="/tmp/coordinator_config_$(date +%s).yaml"
+    cat > $dst_coordinator_config_file << EOF
 session:
   instance_id: demo
+launcher_type: hosts
+coordinator:
+  http_port: 8080
+  http_server_only: true
 EOF
+    python3 -m pip install pyyaml
+    res=$(python3 -c "import yaml; config = yaml.safe_load(open('${DEFAULT_INTERACTIVE_CONFIG_FILE}')); print(yaml.dump(config.get('http_service', {}), default_flow_style=False, indent=4))")
+    # Expect max_content_length: 1GB
+    max_content_length=$(echo "$res" | grep "max_content_length:" | cut -d':' -f2)
+    echo "  max_content_length: ${max_content_length}" >> $dst_coordinator_config_file
+
+    # for each line in res, echo to dst_coordinator_config_file with 2 spaces indentation
+    while IFS= read -r line; do
+      echo "  $line" >> $dst_coordinator_config_file
+    done <<< "$res"
 
     if [ ${#host_ports[@]} -gt 0 ]; then
-      echo "interactive:" >> $coordinator_config_file
-      echo "  port_mapping:" >> $coordinator_config_file
+      echo "interactive:" >> $dst_coordinator_config_file
+      echo "  port_mapping:" >> $dst_coordinator_config_file
       for i in "${!host_ports[@]}"; do
-        echo "    ${container_ports[$i]}: ${host_ports[$i]}" >> $coordinator_config_file
+        echo "    ${container_ports[$i]}: ${host_ports[$i]}" >> $dst_coordinator_config_file
       done
     fi
     # i.e
@@ -131,7 +145,7 @@ EOF
     #   port_mapping:
     #     8080: 8081
     #     7777: 7778
-    python3 -m gscoordinator --config-file $coordinator_config_file
+    python3 -m gscoordinator --config-file $dst_coordinator_config_file
   fi
 }
 
@@ -179,4 +193,5 @@ done
 
 prepare_workspace $WORKSPACE
 launch_service $WORKSPACE
+# Note that the COORDINATOR_CONFIG_FILE should be inside the container
 launch_coordinator $PORT_MAPPING

@@ -26,11 +26,13 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaSpec;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -48,7 +50,8 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private volatile StatsState statsState;
     private volatile Boolean statsEnabled = null;
 
-    public DynamicIrMetaFetcher(Configs configs, IrMetaReader dataReader, IrMetaTracker tracker) {
+    public DynamicIrMetaFetcher(
+            Configs configs, IrMetaReader dataReader, List<IrMetaTracker> tracker) {
         super(dataReader, tracker);
         this.scheduler = new ScheduledThreadPoolExecutor(1);
         long schemaIntervalMS = GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs);
@@ -93,6 +96,12 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                                 meta.getSchema(),
                                 meta.getStoredProcedures(),
                                 null);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(
+                            "sync schema with {}",
+                            meta.getSchema().getSchemaSpec(SchemaSpec.Type.FLEX_IN_YAML));
+                }
+                tracker.forEach(t -> t.onSchemaChanged(this.currentState));
             }
             boolean statsEnabled = getStatsEnabled(this.currentState.getGraphId());
             if (statsEnabled && this.statsState != StatsState.SYNCED
@@ -135,7 +144,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                                         stats);
                         if (tracker != null) {
                             logger.info("start to update the glogue");
-                            tracker.onChanged(this.currentState);
+                            tracker.forEach(t -> t.onStatsChanged(this.currentState));
                         }
                         this.statsState = StatsState.SYNCED;
                     }
@@ -149,7 +158,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                         && tracker != null
                         && this.statsState == StatsState.INITIALIZED) {
                     logger.info("start to mock the glogue");
-                    tracker.onChanged(this.currentState);
+                    tracker.forEach(t -> t.onStatsChanged(this.currentState));
                     this.statsState = StatsState.MOCKED;
                 }
             } catch (Throwable t) {

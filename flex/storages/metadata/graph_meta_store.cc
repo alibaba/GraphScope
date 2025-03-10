@@ -80,11 +80,15 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     pagerank.type = "cypher";
     pagerank.creation_time = GetCurrentTimeStamp();
     pagerank.update_time = GetCurrentTimeStamp();
-    pagerank.params.push_back({"vertex_label", PropertyType::kString, true});
+    pagerank.params.push_back(
+        {"src_vertex_label", PropertyType::kString, true});
+    pagerank.params.push_back(
+        {"dst_vertex_label", PropertyType::kString, true});
     pagerank.params.push_back({"edge_label", PropertyType::kString, true});
     pagerank.params.push_back({"damping_factor", PropertyType::kDouble, false});
     pagerank.params.push_back({"max_iterations", PropertyType::kInt32, false});
     pagerank.params.push_back({"epsilon", PropertyType::kDouble, false});
+    pagerank.params.push_back({"result_limit", PropertyType::kInt32, false});
     pagerank.returns.push_back({"label_name", PropertyType::kString});
     pagerank.returns.push_back({"vertex_oid", PropertyType::kInt64});
     pagerank.returns.push_back({"pagerank", PropertyType::kDouble});
@@ -121,15 +125,15 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     shortest_path_among_three.params.push_back(
         {"label_name1", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid1", PropertyType::kInt64, false});
+        {"oid1", PropertyType::kString, false});
     shortest_path_among_three.params.push_back(
         {"label_name2", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid2", PropertyType::kInt64, false});
+        {"oid2", PropertyType::kString, false});
     shortest_path_among_three.params.push_back(
         {"label_name3", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid3", PropertyType::kInt64, false});
+        {"oid3", PropertyType::kString, false});
     shortest_path_among_three.returns.push_back(
         {"path", PropertyType::kString});
     builtin_plugins.push_back(shortest_path_among_three);

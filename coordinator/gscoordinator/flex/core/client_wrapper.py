@@ -29,8 +29,6 @@ from gscoordinator.flex.core.config import DATASET_WORKSPACE
 from gscoordinator.flex.core.config import SOLUTION
 from gscoordinator.flex.core.datasource import DataSourceManager
 from gscoordinator.flex.core.deployment import initialize_deployemnt
-from gscoordinator.flex.core.insight import init_groot_client
-from gscoordinator.flex.core.interactive import init_hqps_client
 from gscoordinator.flex.core.utils import parse_file_metadata
 from gscoordinator.flex.models import CreateDataloadingJobResponse
 from gscoordinator.flex.models import CreateEdgeType
@@ -74,11 +72,12 @@ class ClientWrapper(object):
         self._deployment = initialize_deployemnt()
 
     def _initialize_client(self, config: Config):
-        service_initializer = {
-            "INTERACTIVE": init_hqps_client,
-            "GRAPHSCOPE_INSIGHT": init_groot_client,
-        }
-        initializer = service_initializer.get(SOLUTION)
+        if SOLUTION == "INTERACTIVE":
+            from gscoordinator.flex.core.interactive import init_hqps_client
+            initializer = init_hqps_client
+        elif SOLUTION == "GRAPHSCOPE_INSIGHT":
+            from gscoordinator.flex.core.insight import init_groot_client
+            initializer = init_groot_client
         if initializer is None:
             logger.warn(f"Client initializer of {SOLUTION} not found.")
             return None
@@ -369,6 +368,8 @@ class ClientWrapper(object):
     def gremlin_service_available(self) -> bool:
         return self._client.gremlin_service_available()
 
+    def pod_available(self) -> bool:
+        return self._client.pod_available()
 
 client_wrapper = None
 

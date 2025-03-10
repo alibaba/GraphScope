@@ -19,36 +19,32 @@ namespace gs {
 
 namespace runtime {
 
-Expr::Expr(const GraphReadInterface& graph, const Context& ctx,
-           const std::map<std::string, std::string>& params,
-           const common::Expression& expr, VarType var_type) {
-  expr_ = parse_expression(graph, ctx, params, expr, var_type);
-}
-
-RTAny Expr::eval_path(size_t idx) const {
-  RTAny ret = expr_->eval_path(idx);
+RTAny Expr::eval_path(size_t idx, Arena& arena) const {
+  RTAny ret = expr_->eval_path(idx, arena);
   return ret;
 }
 
-RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx) const {
-  return expr_->eval_vertex(label, v, idx);
+RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx,
+                        Arena& arena) const {
+  return expr_->eval_vertex(label, v, idx, arena);
 }
 RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                      const Any& data, size_t idx) const {
-  return expr_->eval_edge(label, src, dst, data, idx);
+                      const Any& data, size_t idx, Arena& arena) const {
+  return expr_->eval_edge(label, src, dst, data, idx, arena);
 }
 
-RTAny Expr::eval_path(size_t idx, int) const {
-  return expr_->eval_path(idx, 0);
+RTAny Expr::eval_path(size_t idx, Arena& arena, int) const {
+  return expr_->eval_path(idx, arena, 0);
 }
 
-RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx, int) const {
-  return expr_->eval_vertex(label, v, idx, 0);
+RTAny Expr::eval_vertex(label_t label, vid_t v, size_t idx, Arena& arena,
+                        int) const {
+  return expr_->eval_vertex(label, v, idx, arena, 0);
 }
 
 RTAny Expr::eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                      const Any& data, size_t idx, int) const {
-  return expr_->eval_edge(label, src, dst, data, idx, 0);
+                      const Any& data, size_t idx, Arena& arena, int) const {
+  return expr_->eval_edge(label, src, dst, data, idx, arena, 0);
 }
 
 RTAnyType Expr::type() const { return expr_->type(); }

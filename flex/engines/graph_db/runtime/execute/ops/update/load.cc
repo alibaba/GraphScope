@@ -43,14 +43,28 @@ class LoadSingleEdgeOpr : public IInsertOperator {
 
   std::string get_operator_name() const override { return "LoadSingleEdgeOpr"; }
 
-  bl::result<gs::runtime::WriteContext> Eval(
-      gs::runtime::GraphInsertInterface& graph,
-      const std::map<std::string, std::string>& params,
-      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+  template <typename GraphInterface>
+  bl::result<gs::runtime::WriteContext> eval_impl(
+      GraphInterface& graph, const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) {
     return Load::load_single_edge(graph, std::move(ctx), src_label_id,
                                   dst_label_id, edge_label_id, src_pk_type,
                                   dst_pk_type, edge_prop_type, src_index,
                                   dst_index, prop_index);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphInsertInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return eval_impl(graph, params, std::move(ctx), timer);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 
  private:
@@ -77,12 +91,26 @@ class LoadSingleVertexOpr : public IInsertOperator {
     return "LoadSingleVertexOpr";
   }
 
+  template <typename GraphInterface>
+  bl::result<gs::runtime::WriteContext> eval_impl(
+      GraphInterface& graph, const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) {
+    return Load::load_single_vertex(graph, std::move(ctx), vertex_label_id,
+                                    pk_type, id_col, properties, edges);
+  }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    return Load::load_single_vertex(graph, std::move(ctx), vertex_label_id,
-                                    pk_type, id_col, properties, edges);
+    return eval_impl(graph, params, std::move(ctx), timer);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 
  private:
@@ -105,11 +133,25 @@ class LoadOpr : public IInsertOperator {
 
   std::string get_operator_name() const override { return "LoadOpr"; }
 
+  template <typename GraphInterface>
+  bl::result<gs::runtime::WriteContext> eval_impl(
+      GraphInterface& graph, const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) {
+    return Load::load(graph, std::move(ctx), vertex_mappings_, edge_mappings_);
+  }
+
   bl::result<gs::runtime::WriteContext> Eval(
       gs::runtime::GraphInsertInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
-    return Load::load(graph, std::move(ctx), vertex_mappings_, edge_mappings_);
+    return eval_impl(graph, params, std::move(ctx), timer);
+  }
+
+  bl::result<gs::runtime::WriteContext> Eval(
+      gs::runtime::GraphUpdateInterface& graph,
+      const std::map<std::string, std::string>& params,
+      gs::runtime::WriteContext&& ctx, gs::runtime::OprTimer& timer) override {
+    return eval_impl(graph, params, std::move(ctx), timer);
   }
 
  private:
@@ -142,8 +184,10 @@ parse_edge_mapping(
   auto src_mapping = edge_mapping.source_vertex_mappings(0);
   auto dst_mapping = edge_mapping.destination_vertex_mappings(0);
 
-  CHECK(src_mapping.property().key().name() == "id");
-  CHECK(dst_mapping.property().key().name() == "id");
+  CHECK(src_mapping.property().key().name() ==
+        schema.get_vertex_primary_key_name(src_label_id));
+  CHECK(dst_mapping.property().key().name() ==
+        schema.get_vertex_primary_key_name(dst_label_id));
 
   auto src_pk_type = get_vertex_pk_type(schema, src_label_id);
   auto dst_pk_type = get_vertex_pk_type(schema, dst_label_id);
@@ -185,13 +229,14 @@ parse_vertex_mapping(
   const auto& props = vertex_mapping.column_mappings();
   size_t prop_size = vertex_mapping.column_mappings_size();
   std::vector<int> properties(vertex_prop_types.size());
+  const auto& pk_name = schema.get_vertex_primary_key_name(vertex_label_id);
   CHECK(prop_size == vertex_prop_types.size() + 1)
       << "Only support one primary key";
   int id_col = -1;
   for (size_t j = 0; j < prop_size; ++j) {
     const auto& prop = props[j];
     const auto& prop_name = prop.property().key().name();
-    if (prop_name == "id") {
+    if (prop_name == pk_name) {
       id_col = prop.column().index();
     } else {
       const auto& prop_idx = prop_map.at(prop_name).second;

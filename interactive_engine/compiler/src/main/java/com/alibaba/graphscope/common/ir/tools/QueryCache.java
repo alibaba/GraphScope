@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -25,13 +28,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-public class QueryCache {
+public class QueryCache implements IrMetaTracker {
+    private static final Logger logger = LoggerFactory.getLogger(QueryCache.class);
     private final LoadingCache<Key, Value> cache;
 
     public QueryCache(Configs configs) {
@@ -47,6 +53,16 @@ public class QueryCache {
                                                         null,
                                                         ImmutableMap.of(
                                                                 "instance", key.instance))));
+    }
+
+    @Override
+    public void onSchemaChanged(IrMeta meta) {
+        cache.invalidateAll();
+    }
+
+    @Override
+    public void onStatsChanged(IrMetaStats stats) {
+        // do nothing
     }
 
     public class Key {

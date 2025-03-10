@@ -80,7 +80,7 @@ class GRPCClient(object):
                     logger.warning("Heart beat analytical engine failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
                     raise ConnectionError(f"Connect coordinator timeout, {msg}")
-                # refresh the channel incase the server became available
+                # refresh the channel in case the server became available
                 if e.code() == grpc.StatusCode.UNAVAILABLE:
                     self._stub = self._get_stub()
                 time.sleep(1)

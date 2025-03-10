@@ -54,7 +54,7 @@ public class BITest {
                 Utils.mockIrMeta(
                         "schema/ldbc_schema_exp_hierarchy.json",
                         "statistics/ldbc30_hierarchy_statistics.json",
-                        optimizer.getGlogueHolder());
+                        optimizer);
     }
 
     @AfterClass

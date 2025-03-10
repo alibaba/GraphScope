@@ -282,7 +282,7 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
     }
 
     private DataType parseDataType(DataTypePb dataTypePb) {
-        return DataType.fromId((byte) dataTypePb.getNumber());
+        return DataType.parseProto(dataTypePb);
     }
 
     @Override

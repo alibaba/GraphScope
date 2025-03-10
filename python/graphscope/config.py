@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" GraphScope default configuration.
-"""
+"""GraphScope default configuration."""
 
 import base64
 import json
@@ -262,6 +261,12 @@ class CoordinatorConfig:
     # Launch coordinator only, do not let coordinator launch resources or delete resources.
     # It would try to find existing resources and connect to it.
     operator_mode: bool = False
+
+    # For http server, limit the max content length of request. Mainly for file upload.
+    max_content_length: str = "1G"
+
+    # Only start coordinator http server, do not start others services.
+    http_server_only: bool = False
 
 
 @dataclass

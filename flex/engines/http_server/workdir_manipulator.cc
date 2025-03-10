@@ -639,7 +639,7 @@ std::string WorkDirManipulator::GetLogDir() {
 }
 
 std::string WorkDirManipulator::GetUploadDir() {
-  auto upload_dir = workspace + UPLOAD_DIR;
+  auto upload_dir = workspace + "/" + UPLOAD_DIR;
   if (!std::filesystem::exists(upload_dir)) {
     std::filesystem::create_directory(upload_dir);
   }
@@ -678,19 +678,13 @@ gs::Result<std::string> WorkDirManipulator::CommitTempIndices(
 }
 
 gs::Result<std::string> WorkDirManipulator::CreateFile(
-    const seastar::sstring& content) {
+    const seastar::sstring& raw_file_name, const seastar::sstring& content) {
   if (content.size() == 0) {
     return {gs::Status(gs::StatusCode::INVALID_ARGUMENT, "Content is empty")};
   }
-  if (content.size() > MAX_CONTENT_SIZE) {
-    return {
-        gs::Status(gs::StatusCode::INVALID_ARGUMENT,
-                   "Content is too large" + std::to_string(content.size()))};
-  }
 
+  std::string file_name = GetUploadDir() + "/" + raw_file_name.c_str();
   // get the timestamp as the file name
-  boost::uuids::uuid uuid = boost::uuids::random_generator()();
-  auto file_name = GetUploadDir() + "/" + boost::uuids::to_string(uuid);
   std::ofstream fout(file_name);
   if (!fout.is_open()) {
     return {gs::Status(gs::StatusCode::PERMISSION_DENIED, "Fail to open file")};
@@ -698,7 +692,7 @@ gs::Result<std::string> WorkDirManipulator::CreateFile(
   fout << content;
   fout.close();
   LOG(INFO) << "Successfully create file: " << file_name;
-  return file_name;
+  return gs::Result<std::string>(file_name);
 }
 
 // graph_name can be a path, first try as it is absolute path, or

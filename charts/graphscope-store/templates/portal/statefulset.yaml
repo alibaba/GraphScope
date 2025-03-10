@@ -1,4 +1,4 @@
-{{- if .Values.portal.enabled }}
+{{- if and .Values.portal.enabled .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -107,6 +107,14 @@ spec:
               value: {{ .Values.frontend.service.gremlinPort | quote }}
             - name: GROOT_CYPHER_PORT
               value: {{ .Values.frontend.service.cypherPort | quote }}
+            - name: GROOT_FRONTEND_POD_SUFFIX
+              value: {{ printf "%s-frontend" (include "graphscope-store.name" .) }}
+            - name: GROOT_COORDINATOR_POD_SUFFIX
+              value: {{ printf "%s-coordinator" (include "graphscope-store.name" .) }}
+            - name: GROOT_PORTAAL_POD_SUFFIX
+              value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+            - name: GROOT_STORE_POD_SUFFIX
+              value: {{ printf "%s-store" (include "graphscope-store.name" .) }}
             - name: INSTANCE_NAME
               value: {{ .Release.Name | quote }}
             - name: NAMESPACE

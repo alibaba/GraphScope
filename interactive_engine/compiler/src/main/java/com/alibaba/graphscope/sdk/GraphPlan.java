@@ -18,15 +18,30 @@
 
 package com.alibaba.graphscope.sdk;
 
+import com.alibaba.graphscope.proto.frontend.Code;
+
 import java.io.Serializable;
 
 public class GraphPlan implements Serializable {
-    private final byte[] physicalBytes;
+    public String errorCode;
+    public String fullMessage;
+    public final byte[] physicalBytes;
     public String resultSchemaYaml;
 
-    public GraphPlan(byte[] physicalBytes, String resultSchemaYaml) {
+    public GraphPlan(
+            Code errorCode, String fullMessage, byte[] physicalBytes, String resultSchemaYaml) {
+        this.errorCode = analyzeError(errorCode, physicalBytes).name();
+        this.fullMessage = fullMessage;
         this.physicalBytes = physicalBytes;
         this.resultSchemaYaml = resultSchemaYaml;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public String getFullMessage() {
+        return fullMessage;
     }
 
     public byte[] getPhysicalBytes() {
@@ -35,5 +50,18 @@ public class GraphPlan implements Serializable {
 
     public String getResultSchemaYaml() {
         return resultSchemaYaml;
+    }
+
+    private Enum<?> analyzeError(Code errorCode, byte[] physicalBytes) {
+        switch (errorCode) {
+            case OK:
+                if (physicalBytes == null) return ExtendCode.EMPTY_RESULT;
+            default:
+                return errorCode;
+        }
+    }
+
+    enum ExtendCode {
+        EMPTY_RESULT
     }
 }

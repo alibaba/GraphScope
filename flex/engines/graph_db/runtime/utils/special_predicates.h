@@ -52,7 +52,7 @@ inline bool is_label_within_predicate(const common::Expression& expr,
 }
 
 inline bool is_pk_oid_exact_check(
-    const common::Expression& expr,
+    const gs::Schema& schema, label_t label, const common::Expression& expr,
     std::function<Any(const std::map<std::string, std::string>&)>& value) {
   if (expr.operators_size() != 3) {
     return false;
@@ -61,7 +61,7 @@ inline bool is_pk_oid_exact_check(
         expr.operators(0).var().property().has_key())) {
     auto& key = expr.operators(7).var().property().key();
     if (!(key.item_case() == common::NameOrId::ItemCase::kName &&
-          key.name() == "id")) {
+          key.name() == schema.get_vertex_primary_key_name(label))) {
       return false;
     }
     return false;
@@ -104,7 +104,8 @@ inline bool is_pk_oid_exact_check(
   return false;
 }
 
-inline bool is_pk_exact_check(const common::Expression& expr, label_t& label,
+inline bool is_pk_exact_check(const gs::Schema& schema,
+                              const common::Expression& expr, label_t& label,
                               std::string& pk) {
   if (expr.operators_size() != 11) {
     return false;
@@ -150,7 +151,7 @@ inline bool is_pk_exact_check(const common::Expression& expr, label_t& label,
         expr.operators(7).var().property().has_key())) {
     auto& key = expr.operators(7).var().property().key();
     if (!(key.item_case() == common::NameOrId::ItemCase::kName &&
-          key.name() == "id")) {
+          key.name() == schema.get_vertex_primary_key_name(label))) {
       return false;
     }
   }

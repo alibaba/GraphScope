@@ -24,7 +24,9 @@ namespace ops {
 struct ExprWrapper {
   ExprWrapper(Expr&& expr) : expr_(std::move(expr)) {}
 
-  bool operator()(size_t idx) const { return expr_.eval_path(idx).as_bool(); }
+  bool operator()(size_t idx, Arena& arena) const {
+    return expr_.eval_path(idx, arena).as_bool();
+  }
 
   Expr expr_;
 };
@@ -32,8 +34,8 @@ struct ExprWrapper {
 struct OptionalExprWrapper {
   OptionalExprWrapper(Expr&& expr) : expr_(std::move(expr)) {}
 
-  bool operator()(size_t idx) const {
-    auto val = expr_.eval_path(idx, 0);
+  bool operator()(size_t idx, Arena& arena) const {
+    auto val = expr_.eval_path(idx, arena, 0);
     return (!val.is_null()) && val.as_bool();
   }
 
@@ -52,11 +54,13 @@ class SelectIdNeOpr : public IReadOperator {
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     auto tag = expr_.operators(0).var().tag().id();
     auto col = ctx.get(tag);
+    const auto& name = expr_.operators(0).var().property().key().name();
     if ((!col->is_optional()) &&
         col->column_type() == ContextColumnType::kVertex) {
       auto vertex_col = std::dynamic_pointer_cast<IVertexColumn>(col);
       auto labels = vertex_col->get_labels_set();
-      if (labels.size() == 1) {
+      if (labels.size() == 1 &&
+          name == graph.schema().get_vertex_primary_key_name(*labels.begin())) {
         auto label = *labels.begin();
         int64_t oid = std::stoll(params.at(expr_.operators(2).param().name()));
         vid_t vid;
@@ -78,32 +82,45 @@ class SelectIdNeOpr : public IReadOperator {
       }
     }
     Expr expr(graph, ctx, params, expr_, VarType::kPathVar);
+    Arena arena;
+
     if (!expr.is_optional()) {
-      return Select::select(std::move(ctx), ExprWrapper(std::move(expr)));
+      ExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     } else {
-      return Select::select(std::move(ctx),
-                            OptionalExprWrapper(std::move(expr)));
+      OptionalExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     }
   }
   common::Expression expr_;
 };
 
-class SelectOprBeta : public IReadOperator {
+class SelectOpr : public IReadOperator {
  public:
-  SelectOprBeta(const common::Expression& expr) : expr_(expr) {}
+  SelectOpr(const common::Expression& expr) : expr_(expr) {}
 
-  std::string get_operator_name() const override { return "SelectOprBeta"; }
+  std::string get_operator_name() const override { return "SelectOpr"; }
 
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     Expr expr(graph, ctx, params, expr_, VarType::kPathVar);
+    Arena arena;
     if (!expr.is_optional()) {
-      return Select::select(std::move(ctx), ExprWrapper(std::move(expr)));
+      ExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     } else {
-      return Select::select(std::move(ctx),
-                            OptionalExprWrapper(std::move(expr)));
+      OptionalExprWrapper wrapper(std::move(expr));
+      return Select::select(std::move(ctx), [&wrapper, &arena](size_t i) {
+        return wrapper(i, arena);
+      });
     }
   }
 
@@ -128,8 +145,7 @@ bl::result<ReadOpBuildResultT> SelectOprBuilder::Build(
       }
     }
   }
-  return std::make_pair(std::make_unique<SelectOprBeta>(opr.predicate()),
-                        ctx_meta);
+  return std::make_pair(std::make_unique<SelectOpr>(opr.predicate()), ctx_meta);
 }
 
 }  // namespace ops

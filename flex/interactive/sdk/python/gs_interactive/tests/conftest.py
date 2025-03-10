@@ -237,6 +237,38 @@ modern_graph_vertex_only = {
     },
 }
 
+modern_graph_vertex_only_temporal = {
+    "name": "vertex_only",
+    "description": "This is a test graph, only contains vertex",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                    {
+                        "property_name": "birthday",
+                        "property_type": {"temporal": {"timestamp": ""}},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [],
+    },
+}
+
 modern_graph_partial = {
     "name": "partial_graph",
     "description": "This is a test graph",
@@ -1003,6 +1035,18 @@ def create_graph_algo_graph(interactive_session):
 
 
 @pytest.fixture(scope="function")
+def create_modern_graph_with_temporal_type(interactive_session):
+    modern_graph_temporal_type = CreateGraphRequest.from_dict(
+        modern_graph_vertex_only_temporal
+    )
+    resp = interactive_session.create_graph(modern_graph_temporal_type)
+    assert resp.is_ok()
+    graph_id = resp.get_value().graph_id
+    yield graph_id
+    delete_running_graph(interactive_session, graph_id)
+
+
+@pytest.fixture(scope="function")
 def create_vertex_only_modern_graph(interactive_session):
     create_graph_request = CreateGraphRequest.from_dict(modern_graph_vertex_only)
     resp = interactive_session.create_graph(create_graph_request)
@@ -1094,6 +1138,27 @@ def import_data_to_vertex_only_modern_graph(sess: Session, graph_id: str):
     assert wait_job_finish(sess, job_id)
 
 
+def import_data_to_modern_graph_temporal_type(sess: Session, graph_id: str):
+    schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
+    # change person.csv to /tmp/person.csv
+    schema_mapping.vertex_mappings[0].inputs[0] = "person.csv"
+    schema_mapping.loading_config.data_source.location = "/tmp"
+    print("schema_mapping: ", schema_mapping.to_dict())
+    tmp_person_csv = open("/tmp/person.csv", "w")
+    tmp_person_csv.write(
+        "id|name|age|birthday\n"
+        + "1|marko|29|628646400000\n"
+        + "2|vadas|27|445910400000\n"
+        + "4|josh|32|491788800000\n"
+        + "6|peter|35|531273600000"
+    )
+    tmp_person_csv.close()
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+
+
 def import_data_to_vertex_only_modern_graph_no_wait(sess: Session, graph_id: str):
     schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
     resp = sess.bulk_loading(graph_id, schema_mapping)
@@ -1116,6 +1181,34 @@ def import_data_to_full_modern_graph(sess: Session, graph_id: str):
     assert resp.is_ok()
     job_id = resp.get_value().job_id
     assert wait_job_finish(sess, job_id)
+
+
+def import_long_string_data_data_to_vertex_only_modern_graph(
+    sess: Session, graph_id: str
+):
+    schema_mapping = SchemaMapping.from_dict(modern_graph_vertex_only_import_config)
+    # create a long string file under MODERN_GRAPH_DATA_DIR
+    long_string_file = os.path.join(MODERN_GRAPH_DATA_DIR, "person_long_string.csv")
+
+    # By default, the max length of a string property is 256,
+    # a string with length 4096 should be enough to test the long string feature
+    def generate_large_string(sample: str):
+        return sample * 4096
+
+    with open(long_string_file, "w") as f:
+        f.write("id|name|age\n")
+        f.write("1|" + generate_large_string("marko") + "|29\n")
+        f.write("2|" + generate_large_string("vadas") + "|27\n")
+        f.write("4|" + generate_large_string("josh") + "|32\n")
+        f.write("6|" + generate_large_string("peter") + "|35\n")
+
+    schema_mapping.vertex_mappings[0].inputs[0] = "person_long_string.csv"
+    resp = sess.bulk_loading(graph_id, schema_mapping)
+    assert resp.is_ok()
+    job_id = resp.get_value().job_id
+    assert wait_job_finish(sess, job_id)
+    # return a callable to clean up the long string file
+    os.remove(long_string_file)
 
 
 def import_data_to_full_graph_algo_graph(sess: Session, graph_id: str):

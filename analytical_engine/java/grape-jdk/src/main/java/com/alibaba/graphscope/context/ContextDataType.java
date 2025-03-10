@@ -55,7 +55,7 @@ public enum ContextDataType implements CXXEnum {
             case 8:
                 return kUndefined;
             default:
-                throw new IllegalStateException("Unknow value for Context data type: " + value);
+                throw new IllegalStateException("Unknown value for Context data type: " + value);
         }
     }
 

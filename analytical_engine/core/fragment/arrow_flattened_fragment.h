@@ -242,7 +242,7 @@ struct NbrDefault {
 };
 
 /**
- * @brief Union of all iteratable adjacent lists of a vertex. The union
+ * @brief Union of all iterable adjacent lists of a vertex. The union
  * list contains all neighbors in format of NbrDefault, which contains the other
  * Node and the data on the Edge. The lists must be non-empty to construct the
  * UnionAdjList.

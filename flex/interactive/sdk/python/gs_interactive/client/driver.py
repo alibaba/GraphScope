@@ -139,7 +139,7 @@ class Driver:
         """
         return self.getNeo4jSessionImpl(**config)
 
-    def getGremlinClient(self) -> str:
+    def getGremlinClient(self) -> Client:
         return self.getGremlinClientImpl()
 
     @property

@@ -142,7 +142,7 @@ inline bool from_json(const rapidjson::Value& j, PropertyType& p) {
         p = PropertyType::Varchar(
             j["string"]["var_char"]["max_length"].GetInt());
       } else {
-        p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+        p = PropertyType::Varchar(PropertyType::GetStringDefaultMaxLength());
       }
     } else {
       throw std::invalid_argument("Unknown string type: " +
@@ -195,6 +195,8 @@ void init_cpu_usage_watch();
 std::pair<double, double> get_current_cpu_usage();
 
 std::string memory_to_mb_str(uint64_t mem_bytes);
+
+size_t human_readable_to_bytes(const std::string& human_readable);
 
 }  // namespace gs
 

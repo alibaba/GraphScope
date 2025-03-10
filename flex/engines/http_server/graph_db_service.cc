@@ -48,7 +48,9 @@ ServiceConfig::ServiceConfig()
       metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
-      sharding_mode(DEFAULT_SHARDING_MODE) {}
+      sharding_mode(DEFAULT_SHARDING_MODE),
+      admin_svc_max_content_length(DEFAULT_MAX_CONTENT_LENGTH),
+      wal_uri(DEFAULT_WAL_URI) {}
 
 const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
@@ -97,6 +99,7 @@ void openGraph(const gs::GraphId& graph_id,
   gs::GraphDBConfig config(schema_res.value(), data_dir, "",
                            service_config.shard_num);
   config.memory_level = service_config.memory_level;
+  config.wal_uri = service_config.wal_uri;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;
   }
@@ -121,7 +124,8 @@ void GraphDBService::init(const ServiceConfig& config) {
       config.enable_adhoc_handler);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
-        config.admin_port, config.get_exclusive_shard_id());
+        config.admin_port, config.get_exclusive_shard_id(),
+        config.admin_svc_max_content_length);
   }
 
   initialized_.store(true);

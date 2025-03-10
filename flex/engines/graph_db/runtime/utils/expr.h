@@ -25,30 +25,28 @@ namespace runtime {
 
 class Expr {
  public:
-  Expr(const GraphReadInterface& graph, const Context& ctx,
+  template <typename GraphInterface>
+  Expr(const GraphInterface& graph, const Context& ctx,
        const std::map<std::string, std::string>& params,
-       const common::Expression& expr, VarType var_type);
+       const common::Expression& expr, VarType var_type) {
+    expr_ = parse_expression(graph, ctx, params, expr, var_type);
+  }
 
-  RTAny eval_path(size_t idx) const;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx) const;
+  RTAny eval_path(size_t idx, Arena&) const;
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, Arena&) const;
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx) const;
-  RTAny eval_path(size_t idx, int) const;
-  RTAny eval_vertex(label_t label, vid_t v, size_t idx, int) const;
+                  const Any& data, size_t idx, Arena&) const;
+  RTAny eval_path(size_t idx, Arena&, int) const;
+  RTAny eval_vertex(label_t label, vid_t v, size_t idx, Arena&, int) const;
   RTAny eval_edge(const LabelTriplet& label, vid_t src, vid_t dst,
-                  const Any& data, size_t idx, int) const;
+                  const Any& data, size_t idx, Arena&, int) const;
 
   RTAnyType type() const;
 
-  std::shared_ptr<IContextColumnBuilder> builder() const {
-    return expr_->builder();
-  }
+  // for container such as list, set etc.
+  RTAnyType elem_type() const { return expr_->elem_type(); }
 
   bool is_optional() const { return expr_->is_optional(); }
-
-  std::vector<std::shared_ptr<ListImplBase>> get_list_impls() const {
-    return expr_->get_list_impls();
-  }
 
  private:
   std::unique_ptr<ExprBase> expr_;

@@ -27,19 +27,19 @@ bl::result<Context> ReadPipeline::Execute(
         [&]() -> bl::result<Context> {
           return opr->Eval(graph, params, std::move(ctx), timer);
         },
-        [&status](const gs::Status& err) {
+        [&status, &ctx](const gs::Status& err) {
           status = err;
-          return Context();
+          return ctx;
         },
         [&](const bl::error_info& err) {
           status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
                               "Error: " + std::to_string(err.error().value()) +
                                   ", Exception: " + err.exception()->what());
-          return Context();
+          return ctx;
         },
         [&]() {
           status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
-          return Context();
+          return ctx;
         });
 
     if (!status.ok()) {
@@ -54,8 +54,9 @@ bl::result<Context> ReadPipeline::Execute(
   return ctx;
 }
 
+template <typename GraphInterface>
 bl::result<WriteContext> InsertPipeline::Execute(
-    GraphInsertInterface& graph, WriteContext&& ctx,
+    GraphInterface& graph, WriteContext&& ctx,
     const std::map<std::string, std::string>& params, OprTimer& timer) {
   for (auto& opr : operators_) {
     gs::Status status = gs::Status::OK();
@@ -89,6 +90,57 @@ bl::result<WriteContext> InsertPipeline::Execute(
     ctx = std::move(ret);
   }
   return ctx;
+}
+
+template bl::result<WriteContext> InsertPipeline::Execute(
+    GraphInsertInterface& graph, WriteContext&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer);
+
+template bl::result<WriteContext> InsertPipeline::Execute(
+    GraphUpdateInterface& graph, WriteContext&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer);
+
+bl::result<Context> UpdatePipeline::Execute(
+    GraphUpdateInterface& graph, Context&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer) {
+  for (auto& opr : operators_) {
+    gs::Status status = gs::Status::OK();
+    auto ret = bl::try_handle_all(
+        [&]() -> bl::result<Context> {
+          return opr->Eval(graph, params, std::move(ctx), timer);
+        },
+        [&status, &ctx](const gs::Status& err) {
+          status = err;
+          return ctx;
+        },
+        [&](const bl::error_info& err) {
+          status = gs::Status(gs::StatusCode::INTERNAL_ERROR,
+                              "Error: " + std::to_string(err.error().value()) +
+                                  ", Exception: " + err.exception()->what());
+          return ctx;
+        },
+        [&]() {
+          status = gs::Status(gs::StatusCode::UNKNOWN, "Unknown error");
+          return ctx;
+        });
+
+    if (!status.ok()) {
+      std::stringstream ss;
+      ss << "[Execute Failed] " << opr->get_operator_name()
+         << " execute failed: " << status.ToString();
+      LOG(ERROR) << ss.str();
+      auto err = gs::Status(gs::StatusCode::INTERNAL_ERROR, ss.str());
+      return bl::new_error(err);
+    }
+    ctx = std::move(ret);
+  }
+  return ctx;
+}
+
+bl::result<WriteContext> UpdatePipeline::Execute(
+    GraphUpdateInterface& graph, WriteContext&& ctx,
+    const std::map<std::string, std::string>& params, OprTimer& timer) {
+  return inserts_->Execute(graph, std::move(ctx), params, timer);
 }
 
 }  // namespace runtime

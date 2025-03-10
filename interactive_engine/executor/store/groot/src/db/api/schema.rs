@@ -362,7 +362,7 @@ impl PropDef {
         let id = proto.get_id();
         let inner_id = proto.get_inner_id();
         let name = proto.get_name();
-        let value_type = ValueType::from_i32(proto.get_data_type().value())?;
+        let value_type = ValueType::from_proto(&proto.get_data_type())?;
         let default_val = match Value::from_proto(proto.get_default_value()) {
             Ok(v) => Some(v),
             Err(_) => None,

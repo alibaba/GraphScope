@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-""" Classes and functions used to manage dags.
-"""
+"""Classes and functions used to manage dags."""
 
 
 import queue

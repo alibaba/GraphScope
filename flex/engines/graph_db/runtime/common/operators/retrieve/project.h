@@ -64,7 +64,7 @@ struct ProjectExpr : public ProjectExprBase {
     for (size_t i = 0; i < row_num; ++i) {
       collector_.collect(expr_, i);
     }
-    ret.set(alias_, collector_.get(expr_));
+    ret.set(alias_, collector_.get());
     return ret;
   }
 
@@ -136,8 +136,6 @@ class Project {
     std::vector<int> alias;
     auto [fst_key, fst_idx, fst_asc] = first_key;
     auto expr = exprs[fst_idx](graph, params, ctx);
-    // ctx = expr->evaluate(tmp, std::move(ctx));
-    // alias.push_back(fst_key);
     std::vector<size_t> indices;
 
     if (upper < ctx.row_num() &&
@@ -146,10 +144,8 @@ class Project {
       for (size_t i : order_index) {
         auto expr = exprs[i](graph, params, ctx);
         int alias_ = expr->alias();
-        // if (alias_ != fst_key) {
         ctx = expr->evaluate(ctx, std::move(ctx));
         alias.push_back(alias_);
-        //}
       }
       auto cmp_ = cmp(ctx);
       auto ctx_res = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_,
@@ -162,10 +158,8 @@ class Project {
       for (size_t i : order_index) {
         auto expr = exprs[i](graph, params, ctx);
         int alias_ = expr->alias();
-        // if (alias_ != fst_key) {
         ctx = expr->evaluate(ctx, std::move(ctx));
         alias.push_back(alias_);
-        //}
       }
       auto cmp_ = cmp(ctx);
       auto ctx_res = OrderBy::order_by_with_limit(graph, std::move(ctx), cmp_,

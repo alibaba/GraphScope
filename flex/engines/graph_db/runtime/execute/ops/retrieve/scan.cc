@@ -15,155 +15,14 @@
 
 #include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan.h"
 #include "flex/engines/graph_db/runtime/common/operators/retrieve/scan.h"
+#include "flex/engines/graph_db/runtime/execute/ops/retrieve/scan_utils.h"
 #include "flex/engines/graph_db/runtime/utils/expr_impl.h"
 
 namespace gs {
 namespace runtime {
 namespace ops {
 
-static bool check_idx_predicate(const physical::Scan& scan_opr,
-                                bool& scan_oid) {
-  if (scan_opr.scan_opt() != physical::Scan::VERTEX) {
-    return false;
-  }
-
-  if (!scan_opr.has_params()) {
-    return false;
-  }
-  /**
-  const algebra::QueryParams& p = scan_opr.params();
-  if (p.has_predicate()) {
-    return false;
-  }*/
-
-  if (!scan_opr.has_idx_predicate()) {
-    return false;
-  }
-  const algebra::IndexPredicate& predicate = scan_opr.idx_predicate();
-  if (predicate.or_predicates_size() != 1) {
-    return false;
-  }
-  if (predicate.or_predicates(0).predicates_size() != 1) {
-    return false;
-  }
-  const algebra::IndexPredicate_Triplet& triplet =
-      predicate.or_predicates(0).predicates(0);
-  if (!triplet.has_key()) {
-    return false;
-  }
-  auto key = triplet.key();
-  if (key.has_key()) {
-    scan_oid = true;
-  } else if (key.has_id()) {
-    scan_oid = false;
-  } else {
-    LOG(ERROR) << "Invalid key type" << key.DebugString();
-    return false;
-  }
-
-  if (triplet.cmp() != common::Logical::EQ &&
-      triplet.cmp() != common::Logical::WITHIN) {
-    return false;
-  }
-
-  switch (triplet.value_case()) {
-  case algebra::IndexPredicate_Triplet::ValueCase::kConst: {
-  } break;
-  case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-  } break;
-  default: {
-    return false;
-  } break;
-  }
-
-  return true;
-}
-
 typedef const std::map<std::string, std::string>& ParamsType;
-// numeric type
-template <typename T>
-void parse_ids_from_idx_predicate(
-    const algebra::IndexPredicate& predicate,
-    std::function<std::vector<Any>(ParamsType)>& ids) {
-  const algebra::IndexPredicate_Triplet& triplet =
-      predicate.or_predicates(0).predicates(0);
-
-  switch (triplet.value_case()) {
-  case algebra::IndexPredicate_Triplet::ValueCase::kConst: {
-    std::vector<Any> ret;
-    if (triplet.const_().item_case() == common::Value::kI32) {
-      ret.emplace_back(static_cast<T>(triplet.const_().i32()));
-    } else if (triplet.const_().item_case() == common::Value::kI64) {
-      ret.emplace_back(static_cast<T>(triplet.const_().i64()));
-    } else if (triplet.const_().item_case() == common::Value::kI64Array) {
-      const auto& arr = triplet.const_().i64_array();
-      for (int i = 0; i < arr.item_size(); ++i) {
-        ret.emplace_back(static_cast<T>(arr.item(i)));
-      }
-    } else if (triplet.const_().item_case() == common::Value::kI32Array) {
-      const auto& arr = triplet.const_().i32_array();
-      for (int i = 0; i < arr.item_size(); ++i) {
-        ret.emplace_back(static_cast<T>(arr.item(i)));
-      }
-    }
-    ids = [ret = std::move(ret)](ParamsType) { return ret; };
-  }
-
-  case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    auto param_type = parse_from_ir_data_type(triplet.param().data_type());
-
-    if (param_type == RTAnyType::kI32Value) {
-      ids = [triplet](ParamsType params) {
-        return std::vector<Any>{
-            static_cast<T>(std::stoi(params.at(triplet.param().name())))};
-      };
-    } else if (param_type == RTAnyType::kI64Value) {
-      ids = [triplet](ParamsType params) {
-        return std::vector<Any>{
-            static_cast<T>(std::stoll(params.at(triplet.param().name())))};
-      };
-    }
-  }
-  default:
-    break;
-  }
-}
-
-void parse_ids_from_idx_predicate(
-    const algebra::IndexPredicate& predicate,
-    std::function<std::vector<Any>(ParamsType)>& ids) {
-  const algebra::IndexPredicate_Triplet& triplet =
-      predicate.or_predicates(0).predicates(0);
-  std::vector<Any> ret;
-  switch (triplet.value_case()) {
-  case algebra::IndexPredicate_Triplet::ValueCase::kConst: {
-    if (triplet.const_().item_case() == common::Value::kStr) {
-      ret.emplace_back(triplet.const_().str());
-      ids = [ret = std::move(ret)](ParamsType) { return ret; };
-
-    } else if (triplet.const_().item_case() == common::Value::kStrArray) {
-      const auto& arr = triplet.const_().str_array();
-      for (int i = 0; i < arr.item_size(); ++i) {
-        ret.emplace_back(arr.item(i));
-      }
-      ids = [ret = std::move(ret)](ParamsType) { return ret; };
-    }
-  }
-
-  case algebra::IndexPredicate_Triplet::ValueCase::kParam: {
-    auto param_type = parse_from_ir_data_type(triplet.param().data_type());
-
-    if (param_type == RTAnyType::kStringValue) {
-      ids = [triplet](ParamsType params) {
-        return std::vector<Any>{params.at(triplet.param().name())};
-      };
-    }
-  }
-  default:
-    break;
-  }
-}
-
 class FilterOidsWithoutPredOpr : public IReadOperator {
  public:
   FilterOidsWithoutPredOpr(
@@ -174,13 +33,15 @@ class FilterOidsWithoutPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     std::vector<Any> oids = oids_(params);
     if (params_.tables.size() == 1 && oids.size() == 1) {
-      return Scan::find_vertex_with_oid(graph, params_.tables[0], oids[0],
-                                        params_.alias);
+      return Scan::find_vertex_with_oid(
+          std::move(ctx), graph, params_.tables[0], oids[0], params_.alias);
     }
     return Scan::filter_oids(
-        graph, params_, [](label_t, vid_t) { return true; }, oids);
+        std::move(ctx), graph, params_, [](label_t, vid_t) { return true; },
+        oids);
   }
 
   std::string get_operator_name() const override { return "FilterOidsOpr"; }
@@ -200,6 +61,7 @@ class FilterMultiTypeOidsWithoutPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     std::vector<Any> oids;
     for (auto& _oid : oids_) {
       auto oid = _oid(params);
@@ -208,7 +70,8 @@ class FilterMultiTypeOidsWithoutPredOpr : public IReadOperator {
       }
     }
     return Scan::filter_oids(
-        graph, params_, [](label_t, vid_t) { return true; }, oids);
+        std::move(ctx), graph, params_, [](label_t, vid_t) { return true; },
+        oids);
   }
 
   std::string get_operator_name() const override { return "FilterOidsOpr"; }
@@ -228,17 +91,19 @@ class FilterGidsWithoutPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto ids = oids_(params);
     std::vector<int64_t> gids;
     for (size_t i = 0; i < ids.size(); i++) {
       gids.push_back(ids[i].AsInt64());
     }
     if (params_.tables.size() == 1 && gids.size() == 1) {
-      return Scan::find_vertex_with_gid(graph, params_.tables[0], gids[0],
-                                        params_.alias);
+      return Scan::find_vertex_with_gid(
+          std::move(ctx), graph, params_.tables[0], gids[0], params_.alias);
     }
     return Scan::filter_gids(
-        graph, params_, [](label_t, vid_t) { return true; }, gids);
+        std::move(ctx), graph, params_, [](label_t, vid_t) { return true; },
+        gids);
   }
 
   std::string get_operator_name() const override { return "FilterGidsOpr"; }
@@ -260,10 +125,11 @@ class FilterOidsSPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto ids = oids_(params);
     auto pred = pred_(graph, params);
-    return Scan::filter_oids_with_special_vertex_predicate(graph, params_,
-                                                           *pred, ids);
+    return Scan::filter_oids_with_special_vertex_predicate(
+        std::move(ctx), graph, params_, *pred, ids);
   }
 
   std::string get_operator_name() const override {
@@ -289,22 +155,23 @@ class FilterOidsGPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto ids = oids_(params);
-    Context tmp;
+    Arena arena;
     auto expr =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+        parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       return Scan::filter_oids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           ids);
     } else {
       return Scan::filter_oids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           ids);
     }
@@ -333,6 +200,7 @@ class FilterOidsMultiTypeSPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     std::vector<Any> all_ids;
     for (auto& _oid : oids_) {
       auto oid = _oid(params);
@@ -341,8 +209,8 @@ class FilterOidsMultiTypeSPredOpr : public IReadOperator {
       }
     }
     auto pred = pred_(graph, params);
-    return Scan::filter_oids_with_special_vertex_predicate(graph, params_,
-                                                           *pred, all_ids);
+    return Scan::filter_oids_with_special_vertex_predicate(
+        std::move(ctx), graph, params_, *pred, all_ids);
   }
 
   std::string get_operator_name() const override {
@@ -373,6 +241,7 @@ class FilterOidsMultiTypeGPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     std::vector<Any> all_ids;
     for (auto& _oid : oids_) {
       auto oid = _oid(params);
@@ -380,21 +249,21 @@ class FilterOidsMultiTypeGPredOpr : public IReadOperator {
         all_ids.push_back(o);
       }
     }
-    Context tmp;
     auto expr =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+        parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
+    Arena arena;
     if (expr->is_optional()) {
       return Scan::filter_oids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           all_ids);
     } else {
       return Scan::filter_oids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           all_ids);
     }
@@ -422,14 +291,15 @@ class FilterGidsSPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto ids = oids_(params);
     std::vector<int64_t> gids;
     for (size_t i = 0; i < ids.size(); i++) {
       gids.push_back(ids[i].AsInt64());
     }
     auto pred = pred_(graph, params);
-    return Scan::filter_gids_with_special_vertex_predicate(graph, params_,
-                                                           *pred, gids);
+    return Scan::filter_gids_with_special_vertex_predicate(
+        std::move(ctx), graph, params_, *pred, gids);
   }
 
  private:
@@ -455,26 +325,29 @@ class FilterGidsGPredOpr : public IReadOperator {
   bl::result<gs::runtime::Context> Eval(
       const gs::runtime::GraphReadInterface& graph, ParamsType params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto ids = oids_(params);
     std::vector<int64_t> gids;
     for (size_t i = 0; i < ids.size(); i++) {
       gids.push_back(ids[i].AsInt64());
     }
-    Context tmp;
+
+    Arena arena;
+
     auto expr =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+        parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       return Scan::filter_gids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
           },
           gids);
     } else {
       return Scan::filter_gids(
-          graph, params_,
-          [&expr](label_t label, vid_t vid) {
-            return expr->eval_vertex(label, vid, 0).as_bool();
+          std::move(ctx), graph, params_,
+          [&expr, &arena](label_t label, vid_t vid) {
+            return expr->eval_vertex(label, vid, 0, arena).as_bool();
           },
           gids);
     }
@@ -501,9 +374,10 @@ class ScanWithSPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     auto pred = pred_(graph, params);
-    return Scan::scan_vertex_with_special_vertex_predicate(graph, scan_params_,
-                                                           *pred);
+    return Scan::scan_vertex_with_special_vertex_predicate(
+        std::move(ctx), graph, scan_params_, *pred);
   }
 
  private:
@@ -524,32 +398,37 @@ class ScanWithGPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
-    Context tmp;
+    ctx = Context();
+    Arena arena;
     auto expr =
-        parse_expression(graph, tmp, params, pred_, VarType::kVertexVar);
+        parse_expression(graph, ctx, params, pred_, VarType::kVertexVar);
     if (expr->is_optional()) {
       if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
         return Scan::scan_vertex(
-            graph, scan_params_, [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            std::move(ctx), graph, scan_params_,
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
             });
       } else {
         return Scan::scan_vertex_with_limit(
-            graph, scan_params_, [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0, 0).as_bool();
+            std::move(ctx), graph, scan_params_,
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena, 0).as_bool();
             });
       }
     } else {
       if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
         auto ret = Scan::scan_vertex(
-            graph, scan_params_, [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0).as_bool();
+            std::move(ctx), graph, scan_params_,
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena).as_bool();
             });
         return ret;
       } else {
         auto ret = Scan::scan_vertex_with_limit(
-            graph, scan_params_, [&expr](label_t label, vid_t vid) {
-              return expr->eval_vertex(label, vid, 0).as_bool();
+            std::move(ctx), graph, scan_params_,
+            [&expr, &arena](label_t label, vid_t vid) {
+              return expr->eval_vertex(label, vid, 0, arena).as_bool();
             });
         return ret;
       }
@@ -571,11 +450,12 @@ class ScanWithoutPredOpr : public IReadOperator {
       const gs::runtime::GraphReadInterface& graph,
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
+    ctx = Context();
     if (scan_params_.limit == std::numeric_limits<int32_t>::max()) {
-      return Scan::scan_vertex(graph, scan_params_,
+      return Scan::scan_vertex(std::move(ctx), graph, scan_params_,
                                [](label_t, vid_t) { return true; });
     } else {
-      return Scan::scan_vertex_with_limit(graph, scan_params_,
+      return Scan::scan_vertex_with_limit(std::move(ctx), graph, scan_params_,
                                           [](label_t, vid_t) { return true; });
     }
   }
@@ -587,26 +467,6 @@ class ScanWithoutPredOpr : public IReadOperator {
  private:
   ScanParams scan_params_;
 };
-
-auto parse_ids_with_type(PropertyType type,
-                         const algebra::IndexPredicate& triplet) {
-  std::function<std::vector<Any>(ParamsType)> ids;
-  switch (type.type_enum) {
-  case impl::PropertyTypeImpl::kInt64: {
-    parse_ids_from_idx_predicate<int64_t>(triplet, ids);
-  } break;
-  case impl::PropertyTypeImpl::kInt32: {
-    parse_ids_from_idx_predicate<int32_t>(triplet, ids);
-  } break;
-  case impl::PropertyTypeImpl::kStringView: {
-    parse_ids_from_idx_predicate(triplet, ids);
-  } break;
-  default:
-    LOG(FATAL) << "unsupported type" << static_cast<int>(type.type_enum);
-    break;
-  }
-  return ids;
-}
 
 bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
     const gs::Schema& schema, const ContextMeta& ctx_meta,
@@ -649,7 +509,7 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
   }
   if (scan_opr.has_idx_predicate()) {
     bool scan_oid = false;
-    if (!check_idx_predicate(scan_opr, scan_oid)) {
+    if (!ScanUtils::check_idx_predicate(scan_opr, scan_oid)) {
       LOG(ERROR) << "Index predicate is not supported"
                  << scan_opr.DebugString();
       return std::make_pair(nullptr, ret_meta);
@@ -659,7 +519,8 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
         (!scan_opr.params().has_predicate())) {
       const auto& pks = schema.get_vertex_primary_key(scan_params.tables[0]);
       const auto& [type, _, __] = pks[0];
-      auto oids = parse_ids_with_type(type, scan_opr.idx_predicate());
+      auto oids =
+          ScanUtils::parse_ids_with_type(type, scan_opr.idx_predicate());
       return std::make_pair(
           std::make_unique<FilterOidsWithoutPredOpr>(scan_params, oids),
           ret_meta);
@@ -668,8 +529,8 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
     // without predicate
     if (!scan_opr.params().has_predicate()) {
       if (!scan_oid) {
-        auto gids =
-            parse_ids_with_type(PropertyType::kInt64, scan_opr.idx_predicate());
+        auto gids = ScanUtils::parse_ids_with_type(PropertyType::kInt64,
+                                                   scan_opr.idx_predicate());
         return std::make_pair(
             std::make_unique<FilterGidsWithoutPredOpr>(scan_params, gids),
             ret_meta);
@@ -683,7 +544,7 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
           if (types.find(type_impl) == types.end()) {
             types.insert(type_impl);
             const auto& oid =
-                parse_ids_with_type(type, scan_opr.idx_predicate());
+                ScanUtils::parse_ids_with_type(type, scan_opr.idx_predicate());
             oids.emplace_back(oid);
           }
         }
@@ -709,7 +570,8 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
           const auto& [type, _, __] = pks[0];
           auto type_impl = static_cast<int>(type.type_enum);
           if (types.find(type_impl) == types.end()) {
-            auto oid = parse_ids_with_type(type, scan_opr.idx_predicate());
+            auto oid =
+                ScanUtils::parse_ids_with_type(type, scan_opr.idx_predicate());
             types.insert(type_impl);
             oids.emplace_back(oid);
           }
@@ -739,8 +601,8 @@ bl::result<ReadOpBuildResultT> ScanOprBuilder::Build(
         }
 
       } else {
-        auto gids =
-            parse_ids_with_type(PropertyType::kInt64, scan_opr.idx_predicate());
+        auto gids = ScanUtils::parse_ids_with_type(PropertyType::kInt64,
+                                                   scan_opr.idx_predicate());
         if (sp_vertex_pred.has_value()) {
           return std::make_pair(std::make_unique<FilterGidsSPredOpr>(
                                     scan_params, gids, *sp_vertex_pred),

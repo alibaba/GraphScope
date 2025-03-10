@@ -5,10 +5,13 @@ import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.gremlin.Utils;
 
+import org.apache.calcite.plan.RelDigest;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
@@ -20,6 +23,7 @@ import org.apache.calcite.rex.RexSubQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Original {@code HepPlanner} skip optimizations to the nested structures, i.e. {@code RelNode} nested in the {@code CommonTableScan} or {@code RexSubQuery},
@@ -172,5 +176,13 @@ public class GraphHepPlanner extends HepPlanner {
             newRel = newRel.accept(this.subQueryPlanner);
             return oldRel == root ? findBestExpOfRoot(newRel) : newRel;
         }
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        Map<RelDigest, HepRelVertex> mapDigestToVertex =
+                Utils.getFieldValue(HepPlanner.class, this, "mapDigestToVertex");
+        mapDigestToVertex.clear();
     }
 }

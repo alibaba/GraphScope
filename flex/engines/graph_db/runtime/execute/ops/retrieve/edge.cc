@@ -76,11 +76,12 @@ struct VertexPredicateWrapper {
                          const Any& edata, Direction dir,
                          size_t path_idx) const {
     if (dir == Direction::kOut) {
-      return pred_(label.dst_label, dst, path_idx);
+      return pred_(label.dst_label, dst, path_idx, arena_);
     } else {
-      return pred_(label.src_label, src, path_idx);
+      return pred_(label.src_label, src, path_idx, arena_);
     }
   }
+  mutable Arena arena_;
   const GeneralVertexPredicate& pred_;
 };
 
@@ -93,13 +94,15 @@ struct VertexEdgePredicateWrapper {
                          const Any& edata, Direction dir,
                          size_t path_idx) const {
     if (dir == Direction::kOut) {
-      return v_pred_(label.dst_label, dst, path_idx) &&
-             e_pred_(label, src, dst, edata, dir, path_idx);
+      return v_pred_(label.dst_label, dst, path_idx, arena_) &&
+             e_pred_(label, src, dst, edata, dir, path_idx, arena_);
     } else {
-      return v_pred_(label.src_label, src, path_idx) &&
-             e_pred_(label, src, dst, edata, dir, path_idx);
+      return v_pred_(label.src_label, src, path_idx, arena_) &&
+             e_pred_(label, src, dst, edata, dir, path_idx, arena_);
     }
   }
+
+  mutable Arena arena_;
 
   const GeneralVertexPredicate& v_pred_;
   const GeneralEdgePredicate& e_pred_;
@@ -115,12 +118,14 @@ struct ExactVertexEdgePredicateWrapper {
                          size_t path_idx) const {
     if (dir == Direction::kOut) {
       return v_pred_(label.dst_label, dst, path_idx) &&
-             e_pred_(label, src, dst, edata, dir, path_idx);
+             e_pred_(label, src, dst, edata, dir, path_idx, arena_);
     } else {
       return v_pred_(label.src_label, src, path_idx) &&
-             e_pred_(label, src, dst, edata, dir, path_idx);
+             e_pred_(label, src, dst, edata, dir, path_idx, arena_);
     }
   }
+
+  mutable Arena arena_;
 
   const ExactVertexPredicate& v_pred_;
   const GeneralEdgePredicate& e_pred_;
@@ -140,6 +145,19 @@ struct ExactVertexPredicateWrapper {
   }
 
   const ExactVertexPredicate& pred_;
+};
+
+struct GeneralEdgePredicateWrapper {
+  GeneralEdgePredicateWrapper(const GeneralEdgePredicate& pred) : pred_(pred) {}
+
+  inline bool operator()(const LabelTriplet& label, vid_t src, vid_t dst,
+                         const Any& edata, Direction dir,
+                         size_t path_idx) const {
+    return pred_(label, src, dst, edata, dir, path_idx, arena_);
+  }
+
+  mutable Arena arena_;
+  const GeneralEdgePredicate& pred_;
 };
 
 class EdgeExpandVWithoutPredOpr : public IReadOperator {
@@ -183,8 +201,9 @@ class EdgeExpandVWithEPGTOpr : public IReadOperator {
       return ret.value();
     }
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
-    return EdgeExpand::expand_vertex<GeneralEdgePredicate>(
-        graph, std::move(ctx), eep_, pred);
+    GeneralEdgePredicateWrapper wpred(pred);
+    return EdgeExpand::expand_vertex<GeneralEdgePredicateWrapper>(
+        graph, std::move(ctx), eep_, wpred);
   }
 
  private:
@@ -214,8 +233,9 @@ class EdgeExpandVWithEPLTOpr : public IReadOperator {
       return ret.value();
     }
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
-    return EdgeExpand::expand_vertex<GeneralEdgePredicate>(
-        graph, std::move(ctx), eep_, pred);
+    GeneralEdgePredicateWrapper wpred(pred);
+    return EdgeExpand::expand_vertex<GeneralEdgePredicateWrapper>(
+        graph, std::move(ctx), eep_, wpred);
   }
 
  private:
@@ -239,8 +259,9 @@ class EdgeExpandVWithEdgePredOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
-    return EdgeExpand::expand_vertex<GeneralEdgePredicate>(
-        graph, std::move(ctx), eep_, pred);
+    GeneralEdgePredicateWrapper wpred(pred);
+    return EdgeExpand::expand_vertex<GeneralEdgePredicateWrapper>(
+        graph, std::move(ctx), eep_, wpred);
   }
 
  private:
@@ -295,8 +316,9 @@ class EdgeExpandEWithSPredOpr : public IReadOperator {
       }
     }
     GeneralEdgePredicate gpred(graph, ctx, params, pred_);
-    return EdgeExpand::expand_edge<GeneralEdgePredicate>(graph, std::move(ctx),
-                                                         eep_, gpred);
+    GeneralEdgePredicateWrapper wpred(gpred);
+    return EdgeExpand::expand_edge<GeneralEdgePredicateWrapper>(
+        graph, std::move(ctx), eep_, wpred);
   }
 
  private:
@@ -322,8 +344,9 @@ class EdgeExpandEWithGPredOpr : public IReadOperator {
       const std::map<std::string, std::string>& params,
       gs::runtime::Context&& ctx, gs::runtime::OprTimer& timer) override {
     GeneralEdgePredicate pred(graph, ctx, params, pred_);
-    return EdgeExpand::expand_edge<GeneralEdgePredicate>(graph, std::move(ctx),
-                                                         eep_, pred);
+    GeneralEdgePredicateWrapper wpred(pred);
+    return EdgeExpand::expand_edge<GeneralEdgePredicateWrapper>(
+        graph, std::move(ctx), eep_, wpred);
   }
 
  private:
@@ -674,7 +697,7 @@ bl::result<ReadOpBuildResultT> EdgeExpandGetVOprBuilder::Build(
     // Exact vertex predicate
     label_t exact_pk_label;
     std::string pk_name;
-    if (is_pk_exact_check(v_opr.params().predicate(), exact_pk_label,
+    if (is_pk_exact_check(schema, v_opr.params().predicate(), exact_pk_label,
                           pk_name)) {
       return std::make_pair(std::make_unique<EdgeExpandVWithExactVertexOpr>(
                                 eep, exact_pk_label, pk_name, v_opr.params()),
