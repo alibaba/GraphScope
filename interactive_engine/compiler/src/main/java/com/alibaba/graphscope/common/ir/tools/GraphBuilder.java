@@ -42,6 +42,7 @@ import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.proto.frontend.Code;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +97,9 @@ public class GraphBuilder extends RelBuilder {
                 new GraphRexSimplify(
                         cluster.getRexBuilder(), RelOptPredicateList.EMPTY, RexUtil.EXECUTOR));
         this.configs = context.unwrapOrThrow(Configs.class);
+        if (FrontendConfig.DISABLE_EXPR_SIMPLIFY.get(this.configs)) {
+            disableSimplify();
+        }
     }
 
     /**
@@ -107,6 +111,12 @@ public class GraphBuilder extends RelBuilder {
     public static GraphBuilder create(
             Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
         return new GraphBuilder(context, cluster, relOptSchema);
+    }
+
+    @VisibleForTesting
+    public void disableSimplify() {
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+        config.withSimplify(false);
     }
 
     public Context getContext() {
@@ -1739,7 +1749,11 @@ public class GraphBuilder extends RelBuilder {
             return rexBuilder.makeLiteral((Boolean) value);
         } else if (value instanceof BigDecimal) {
             return rexBuilder.makeExactLiteral((BigDecimal) value);
-        } else if (value instanceof Float || value instanceof Double) {
+        } else if (value instanceof Float) {
+            return rexBuilder.makeApproxLiteral(
+                    BigDecimal.valueOf(((Number) value).floatValue()),
+                    getTypeFactory().createSqlType(SqlTypeName.FLOAT));
+        } else if (value instanceof Double) {
             return rexBuilder.makeApproxLiteral(BigDecimal.valueOf(((Number) value).doubleValue()));
         } else if (value instanceof Long) { // convert long to BIGINT, i.e. 2l
             return rexBuilder.makeBigintLiteral(BigDecimal.valueOf(((Number) value).longValue()));

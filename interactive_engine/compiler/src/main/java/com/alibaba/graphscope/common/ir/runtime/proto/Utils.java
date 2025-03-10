@@ -46,6 +46,7 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -113,7 +114,26 @@ public abstract class Utils {
                                 : (String) literal.getValue();
                 return Common.Value.newBuilder().setStr(valueStr).build();
             case DECIMAL:
+                if (literal.getType().getPrecision() == IrDataTypeConvertor.UINT32_PRECISION
+                        && literal.getType().getScale() == IrDataTypeConvertor.UINT32_SCALE) {
+                    BigDecimal uint32Value = (BigDecimal) literal.getValue();
+                    return Common.Value.newBuilder().setU32(uint32Value.intValue()).build();
+                }
+                if (literal.getType().getPrecision() == IrDataTypeConvertor.UINT64_PRECISION
+                        && literal.getType().getScale() == IrDataTypeConvertor.UINT64_SCALE) {
+                    BigDecimal uint32Value = (BigDecimal) literal.getValue();
+                    return Common.Value.newBuilder().setU64(uint32Value.longValue()).build();
+                }
+                throw new UnsupportedOperationException(
+                        "decimal type with precision="
+                                + literal.getType().getPrecision()
+                                + ", scale="
+                                + literal.getType().getScale()
+                                + " is unsupported yet");
             case FLOAT:
+                return Common.Value.newBuilder()
+                        .setF32(((Number) literal.getValue()).floatValue())
+                        .build();
             case DOUBLE:
                 return Common.Value.newBuilder()
                         .setF64(((Number) literal.getValue()).doubleValue())

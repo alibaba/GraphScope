@@ -696,7 +696,7 @@ public class MatchTest {
         RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
                 "GraphLogicalProject(len=[len], isAppend=[false])\n"
-                    + "  GraphLogicalProject(len=[CASE(IS NULL(k), -(1), k.~len)],"
+                    + "  GraphLogicalProject(len=[CASE(IS NULL(k), -1, k.~len)],"
                     + " isAppend=[false])\n"
                     + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[p2], fusedFilter=[[=(_.id, ?1)]], opt=[END])\n"

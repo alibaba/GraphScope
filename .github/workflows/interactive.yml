@@ -156,6 +156,9 @@ jobs:
         cp ${GITHUB_WORKSPACE}/flex/interactive/examples/new_graph_algo/import.yaml ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/import.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/modern_graph
         cp ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/type_test
+        cp ${GITHUB_WORKSPACE}/interactive_engine/compiler/src/test/resources/flex_bench/modern.yaml ${INTERACTIVE_WORKSPACE}/data/type_test/graph.yaml
+        cp ${GITHUB_WORKSPACE}/interactive_engine/compiler/src/test/resources/flex_bench/import.yaml ${INTERACTIVE_WORKSPACE}/data/type_test/import.yaml
 
         # load graph
         cd ${GITHUB_WORKSPACE}/flex/build
@@ -169,6 +172,15 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/new_graph_algo/indices/
         export FLEX_DATA_DIR=../interactive/examples/modern_graph
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml -l ../interactive/examples/modern_graph/bulk_load.yaml -d ${INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+        export FLEX_DATA_DIR=${GITHUB_WORKSPACE}/interactive_engine/compiler/src/test/resources/flex_bench/data
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/type_test/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/type_test/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/type_test/indices/
+
+    - name: Interactive Type Test
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_type_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
 
     - name: Test HQPS admin http service
       env: 

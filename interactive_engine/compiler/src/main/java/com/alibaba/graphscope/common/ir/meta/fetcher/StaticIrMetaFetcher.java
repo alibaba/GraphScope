@@ -52,7 +52,7 @@ public class StaticIrMetaFetcher extends IrMetaFetcher {
         this.metaStats =
                 new IrMetaStats(
                         meta.getSnapshotId(), meta.getSchema(), meta.getStoredProcedures(), stats);
-        if (tracker != null && stats != null) {
+        if (tracker != null) {
             tracker.forEach(t -> t.onStatsChanged(this.metaStats));
         }
     }
