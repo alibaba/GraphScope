@@ -127,7 +127,8 @@ bool SingleEdgeInsertTransaction::Commit() {
   {
     arc.SetSlice(arc_.GetBuffer() + sizeof(WalHeader),
                  arc_.GetSize() - sizeof(WalHeader));
-    label_t op_type, label;
+    uint8_t op_type;
+    label_t label;
     Any temp;
     arc >> op_type;
     deserialize_oid(graph_, arc, temp);

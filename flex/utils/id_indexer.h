@@ -785,7 +785,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
     arc.Clear();
 
     if (indices_.size() > 0) {
-      CHECK(writer->Write(const_cast<uint8_t*>(indices_.data()),
+      CHECK(writer->Write(const_cast<INDEX_T*>(indices_.data()),
                           indices_.size() * sizeof(INDEX_T)));
     }
     if (distances_.size() > 0) {

@@ -93,7 +93,7 @@ UpdateTransaction::UpdateTransaction(const GraphDBSession& session,
     extra_vertex_properties_[i].resize(4096);
   }
 
-  size_t csr_num = 2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_;
+  size_t csr_num = 2 * schema().get_edge_triplet_num();
   added_edges_.resize(csr_num);
   updated_edge_data_.resize(csr_num);
 }
@@ -560,7 +560,6 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       updated_edge_data;
 
   size_t vertex_label_num = graph.schema().vertex_label_num();
-  size_t edge_label_num = graph.schema().edge_label_num();
 
   for (label_t idx = 0; idx < vertex_label_num; ++idx) {
     if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
@@ -603,7 +602,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     extra_vertex_properties[i].resize(4096);
   }
 
-  size_t csr_num = 2 * vertex_label_num * vertex_label_num * edge_label_num;
+  size_t csr_num = 2 * graph.schema().get_edge_triplet_num();
   added_edges.resize(csr_num);
   updated_edge_data.resize(csr_num);
 
@@ -681,16 +680,14 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
 
 size_t UpdateTransaction::get_in_csr_index(label_t src_label, label_t dst_label,
                                            label_t edge_label) const {
-  return src_label * vertex_label_num_ * edge_label_num_ +
-         dst_label * edge_label_num_ + edge_label;
+  return graph_.schema().get_edge_triplet_id(src_label, dst_label, edge_label);
 }
 
 size_t UpdateTransaction::get_out_csr_index(label_t src_label,
                                             label_t dst_label,
                                             label_t edge_label) const {
-  return src_label * vertex_label_num_ * edge_label_num_ +
-         dst_label * edge_label_num_ + edge_label +
-         vertex_label_num_ * vertex_label_num_ * edge_label_num_;
+  return graph_.schema().get_edge_triplet_id(src_label, dst_label, edge_label) +
+         graph_.schema().get_edge_triplet_num();
 }
 
 bool UpdateTransaction::oid_to_lid(label_t label, const Any& oid,
@@ -820,89 +817,89 @@ void UpdateTransaction::applyVerticesUpdates() {
 }
 
 void UpdateTransaction::applyEdgesUpdates() {
-  for (label_t src_label = 0; src_label < vertex_label_num_; ++src_label) {
-    for (label_t dst_label = 0; dst_label < vertex_label_num_; ++dst_label) {
-      for (label_t edge_label = 0; edge_label < edge_label_num_; ++edge_label) {
-        size_t oe_csr_index =
-            get_out_csr_index(src_label, dst_label, edge_label);
-        for (auto& pair : updated_edge_data_[oe_csr_index]) {
-          auto& updates = pair.second;
-          if (updates.empty()) {
-            continue;
-          }
+  for (size_t index = 0; index < graph_.schema().get_edge_triplet_num();
+       ++index) {
+    auto edge_triplet = graph_.schema().get_edge_triplet(index);
+    label_t src_label = std::get<0>(edge_triplet);
+    label_t dst_label = std::get<1>(edge_triplet);
+    label_t edge_label = std::get<2>(edge_triplet);
+    size_t oe_csr_index = get_out_csr_index(src_label, dst_label, edge_label);
+    for (auto& pair : updated_edge_data_[oe_csr_index]) {
+      auto& updates = pair.second;
+      if (updates.empty()) {
+        continue;
+      }
 
-          std::shared_ptr<CsrEdgeIterBase> edge_iter =
-              graph_.get_outgoing_edges_mut(src_label, pair.first, dst_label,
-                                            edge_label);
-          for (auto& edge : updates) {
-            if (edge.second.second != std::numeric_limits<size_t>::max()) {
-              auto& iter = *edge_iter;
-              iter += edge.second.second;
-              if (iter.is_valid() && iter.get_neighbor() == edge.first) {
-                iter.set_data(edge.second.first, timestamp_);
-              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
-                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
-                           << " " << edge.first << "\n";
-              } else {
-                LOG(FATAL) << "Illegal offset: " << edge.first << " "
-                           << edge.second.second << "\n";
-              }
-            }
-          }
-        }
-
-        for (auto& pair : added_edges_[oe_csr_index]) {
-          vid_t v = pair.first;
-          auto& add_list = pair.second;
-
-          if (add_list.empty()) {
-            continue;
-          }
-          std::sort(add_list.begin(), add_list.end());
-          auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
-          for (size_t idx = 0; idx < add_list.size(); ++idx) {
-            if (idx && add_list[idx] == add_list[idx - 1])
-              continue;
-            auto u = add_list[idx];
-            auto value = edge_data.at(u).first;
-            grape::InArchive iarc;
-            serialize_field(iarc, value);
-            grape::OutArchive oarc(std::move(iarc));
-            graph_.IngestEdge(src_label, v, dst_label, u, edge_label,
-                              timestamp_, oarc, alloc_);
+      std::shared_ptr<CsrEdgeIterBase> edge_iter =
+          graph_.get_outgoing_edges_mut(src_label, pair.first, dst_label,
+                                        edge_label);
+      for (auto& edge : updates) {
+        if (edge.second.second != std::numeric_limits<size_t>::max()) {
+          auto& iter = *edge_iter;
+          iter += edge.second.second;
+          if (iter.is_valid() && iter.get_neighbor() == edge.first) {
+            iter.set_data(edge.second.first, timestamp_);
+          } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+            LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                       << " " << edge.first << "\n";
+          } else {
+            LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                       << edge.second.second << "\n";
           }
         }
       }
     }
+
+    for (auto& pair : added_edges_[oe_csr_index]) {
+      vid_t v = pair.first;
+      auto& add_list = pair.second;
+
+      if (add_list.empty()) {
+        continue;
+      }
+      std::sort(add_list.begin(), add_list.end());
+      auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
+      for (size_t idx = 0; idx < add_list.size(); ++idx) {
+        if (idx && add_list[idx] == add_list[idx - 1])
+          continue;
+        auto u = add_list[idx];
+        auto value = edge_data.at(u).first;
+        grape::InArchive iarc;
+        serialize_field(iarc, value);
+        grape::OutArchive oarc(std::move(iarc));
+        graph_.IngestEdge(src_label, v, dst_label, u, edge_label, timestamp_,
+                          oarc, alloc_);
+      }
+    }
   }
 
-  for (label_t src_label = 0; src_label < vertex_label_num_; ++src_label) {
-    for (label_t dst_label = 0; dst_label < vertex_label_num_; ++dst_label) {
-      for (label_t edge_label = 0; edge_label < edge_label_num_; ++edge_label) {
-        size_t ie_csr_index =
-            get_in_csr_index(src_label, dst_label, edge_label);
-        for (auto& pair : updated_edge_data_[ie_csr_index]) {
-          auto& updates = pair.second;
-          if (updates.empty()) {
-            continue;
-          }
-          std::shared_ptr<CsrEdgeIterBase> edge_iter =
-              graph_.get_incoming_edges_mut(dst_label, pair.first, src_label,
-                                            edge_label);
-          for (auto& edge : updates) {
-            if (edge.second.second != std::numeric_limits<size_t>::max()) {
-              auto& iter = *edge_iter;
-              iter += edge.second.second;
-              if (iter.is_valid() && iter.get_neighbor() == edge.first) {
-                iter.set_data(edge.second.first, timestamp_);
-              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
-                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
-                           << " " << edge.first << "\n";
-              } else {
-                LOG(FATAL) << "Illegal offset: " << edge.first << " "
-                           << edge.second.second << "\n";
-              }
-            }
+  for (size_t index = 0; index < graph_.schema().get_edge_triplet_num();
+       ++index) {
+    auto edge_triplet = graph_.schema().get_edge_triplet(index);
+    label_t src_label = std::get<0>(edge_triplet);
+    label_t dst_label = std::get<1>(edge_triplet);
+    label_t edge_label = std::get<2>(edge_triplet);
+    size_t ie_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
+    for (auto& pair : updated_edge_data_[ie_csr_index]) {
+      auto& updates = pair.second;
+      if (updates.empty()) {
+        continue;
+      }
+      std::shared_ptr<CsrEdgeIterBase> edge_iter =
+          graph_.get_incoming_edges_mut(dst_label, pair.first, src_label,
+                                        edge_label);
+      for (auto& edge : updates) {
+        if (edge.second.second != std::numeric_limits<size_t>::max()) {
+          auto& iter = *edge_iter;
+          iter += edge.second.second;
+          if (iter.is_valid() && iter.get_neighbor() == edge.first) {
+            iter.set_data(edge.second.first, timestamp_);
+          } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+            LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                       << " " << edge.first << "\n";
+          } else {
+            LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                       << edge.second.second << "\n";
           }
         }
       }

@@ -41,10 +41,6 @@ jobs:
         make -j$(nproc)
         make install
 
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v3
-
     - name: Build Interactive
       env:
         GIE_HOME: ${{ github.workspace }}/interactive_engine/
@@ -55,7 +51,7 @@ jobs:
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG && sudo make -j$(nproc)
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG -DFLEX_LABEL_TYPE="uint16_t" && sudo make -j$(nproc)
         # package the build artifacts
         cd .. && tar -zcf build.tar.gz build
     
@@ -224,6 +220,10 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
+
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v3
 
     - name: Sample Query test
       env:
@@ -502,7 +502,7 @@ jobs:
         git submodule update --init
         cd flex/engines/graph_db/grin
         mkdir build && cd build
-        cmake .. && sudo make -j$(nproc)
+        cmake .. -DFLEX_LABEL_TYPE="uint16_t" && sudo make -j$(nproc)
         export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
         ${GITHUB_WORKSPACE}/flex/build/bin/bulk_loader -g ../../../../interactive/examples/modern_graph/graph.yaml -l ../../../../interactive/examples/modern_graph/bulk_load.yaml -d ./data/
         rm -r ./data/wal

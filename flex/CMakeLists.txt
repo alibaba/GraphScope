@@ -17,6 +17,8 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
+# option(FLEX_LABEL_TYPE "The label type of the graph, valid values: uint16, uint8" "uint8") # The type of the label in the graph
+SET(FLEX_LABEL_TYPE "uint8_t" CACHE STRING "The label type of the graph, valid values: uint16_t, uint8_t")
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -57,6 +59,12 @@ if(USE_PTHASH)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pthash)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
 endif()
+
+# check label_type in {uint8, uint16}
+if(NOT FLEX_LABEL_TYPE STREQUAL "uint8_t" AND NOT FLEX_LABEL_TYPE STREQUAL "uint16_t")
+    message(FATAL_ERROR "FLEX_LABEL_TYPE must be uint8 or uint16, but got ${FLEX_LABEL_TYPE}")
+endif()
+add_compile_definitions(FLEX_LABEL_TYPE=${FLEX_LABEL_TYPE})
 
 set(DEFAULT_BUILD_TYPE "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
