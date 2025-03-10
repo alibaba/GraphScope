@@ -32,11 +32,8 @@ class ShortestPathAmongThree
  private:
   bool ShortestPath(const gs::ReadTransaction& txn, label_t v1_l,
                     vid_t v1_index, label_t v2_l, vid_t v2_index,
-                    std::vector<std::pair<label_t, vid_t>>& result_);
-  std::vector<std::pair<label_t, vid_t>> ConnectPath(
-      const std::vector<std::pair<label_t, vid_t>>& path1,
-      const std::vector<std::pair<label_t, vid_t>>& path2,
-      const std::vector<std::pair<label_t, vid_t>>& path3);
+                    std::vector<std::pair<label_t, vid_t>>& result,
+                    std::vector<label_t>& edge_labels);
 };
 
 class ShortestPathAmongThreeFactory : public AppFactoryBase {

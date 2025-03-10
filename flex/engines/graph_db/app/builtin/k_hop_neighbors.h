@@ -19,11 +19,12 @@
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 
 namespace gs {
-class KNeighbors : public CypherReadAppBase<std::string, int64_t, int32_t> {
+class KNeighbors : public CypherReadAppBase<std::string, std::string, int32_t> {
  public:
   KNeighbors() {}
   results::CollectiveResults Query(const GraphDBSession& sess,
-                                   std::string label_name, int64_t vertex_id,
+                                   std::string label_name,
+                                   std::string vertex_id,
                                    int32_t hop_range) override;
 };
 
