@@ -51,9 +51,12 @@ struct ServiceConfig {
       1024 * 1024 * 1024;  // 1GB
   static constexpr const char* DEFAULT_WAL_URI =
       "{GRAPH_DATA_DIR}/wal";  // By default we will use the wal directory in
-                               // the graph data directory. The {GRAPH_DATA_DIR}
-                               // is a placeholder, which will be replaced by
-                               // the actual graph data directory.
+  // the graph data directory. The {GRAPH_DATA_DIR}
+  // is a placeholder, which will be replaced by
+  // the actual graph data directory.
+  static constexpr const char* DEFAULT_METADATA_STORE_URI =
+      "{WORKSPACE}/METADATA";  // By default we will use the local file system
+                               // as
 
   // Those has default value
   uint32_t bolt_port;
@@ -71,7 +74,7 @@ struct ServiceConfig {
   bool start_compiler;
   bool enable_gremlin;
   bool enable_bolt;
-  gs::MetadataStoreType metadata_store_type_;
+  std::string metadata_store_uri;
   // verbose log level. should be a int
   // could also be set from command line: GLOG_v={}.
   // If we found GLOG_v in the environment, we will at the first place.
@@ -262,17 +265,10 @@ struct convert<server::ServiceConfig> {
 
       auto metadata_store_node = engine_node["metadata_store"];
       if (metadata_store_node) {
-        auto metadata_store_type = metadata_store_node["type"];
-        if (metadata_store_type) {
-          auto metadata_store_type_str = metadata_store_type.as<std::string>();
-          if (metadata_store_type_str == "file") {
-            service_config.metadata_store_type_ =
-                gs::MetadataStoreType::kLocalFile;
-          } else {
-            LOG(ERROR) << "Unsupported metadata store type: "
-                       << metadata_store_type_str;
-            return false;
-          }
+        auto metadata_store_uri = metadata_store_node["uri"];
+        if (metadata_store_uri) {
+          service_config.metadata_store_uri =
+              metadata_store_uri.as<std::string>();
         }
       }
       if (engine_node["wal_uri"]) {

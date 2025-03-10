@@ -17,6 +17,7 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
+option(BUILD_ETCD_METASTORE "Whether to build with etcd metastore" OFF) # Whether to build with etcd metastore, default is OFF
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -225,6 +226,24 @@ macro(install_without_export_flex_target target)
             ARCHIVE DESTINATION lib
     )
 endmacro()
+
+if (BUILD_ETCD_METASTORE)
+    add_definitions(-DBUILD_ETCD_METASTORE)
+    # cd to third_party/cpprestsdk and run git submodule update --init
+    include("cmake/BuildEtcdCpp.cmake")
+    # set(WERROR OFF CACHE BOOL "Treat warnings as errors")
+    # set(CPPREST_EXCLUDE_WEBSOCKETS ON CACHE BOOL "Exclude websockets functionality..")
+    # add_subdirectory(third_party/cpprestsdk EXCLUDE_FROM_ALL)
+    # set(CPPREST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cpprestsdk/Release/include)
+    # set(CPPREST_LIB cpprest)
+    # add_subdirectory(third_party/etcd-cpp-apiv3 EXCLUDE_FROM_ALL)
+    include_directories(SYSTEM ${CPPREST_INCLUDE_DIR})
+    # for each directory in ${ETCD_CPP_INCLUDE_DIR}
+    foreach(dir ${ETCD_CPP_INCLUDE_DIR})
+        message(STATUS "Include directory: ${dir}")
+        include_directories(SYSTEM ${dir})
+    endforeach()
+endif()
 
 add_subdirectory(utils)
 add_subdirectory(codegen)
