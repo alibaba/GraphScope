@@ -222,7 +222,7 @@ jobs:
         bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v3
 
     - name: Sample Query test
