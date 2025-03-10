@@ -173,7 +173,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         CypherGSParser.OC_RangeLiteralContext literalCtx =
                 relationCtx.oC_RelationshipDetail().oC_RangeLiteral();
         // path_expand
-        if (literalCtx != null && literalCtx.oC_IntegerLiteral().size() > 1) {
+        if (literalCtx != null && literalCtx.oC_IntegerLiteral().size() >= 1) {
             builder.pathExpand(
                     new PathExpandBuilderVisitor(this)
                             .visitOC_PatternElementChain(ctx)
