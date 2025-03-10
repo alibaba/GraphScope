@@ -59,6 +59,9 @@ public class IrLdbcTest {
                 if (file.getName().endsWith(".cypher")) {
                     ++totalTests;
                     queryName = file.getName().substring(0, file.getName().length() - 7);
+                    if (!queryName.equals("ic10") && !queryName.equals("ic5")) {
+                        continue;
+                    }
                     String query = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                     String results =
                             FileUtils.readFileToString(

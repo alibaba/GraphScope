@@ -78,6 +78,24 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
+    public GraphBuilder visitOC_UnionCallSubQuery(CypherGSParser.OC_UnionCallSubQueryContext ctx) {
+        List<RelNode> branches = Lists.newArrayList();
+        for (int i = 0; i < ctx.oC_CallSubQuery().size(); ++i) {
+            CypherGSParser.OC_CallSubQueryContext callSubQuery = ctx.oC_CallSubQuery(i);
+            if (callSubQuery != null) {
+                branches.add(new CallSubQueryVisitor(this.builder).visit(callSubQuery));
+            }
+        }
+        Preconditions.checkArgument(
+                branches.size() > 1, "union should have at least two branches in cypher queries");
+        builder.build();
+        for (RelNode branch : branches) {
+            builder.push(branch);
+        }
+        return (GraphBuilder) builder.union(true, branches.size());
+    }
+
+    @Override
     public GraphBuilder visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
         ProcedureCallVisitor procedureCallVisitor = procedureCallVisitorSupplier.get();
         Preconditions.checkArgument(
