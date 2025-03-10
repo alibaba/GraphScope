@@ -110,7 +110,6 @@ void BasicFragmentLoader::init_loading_status_file() {
     append_edge_loading_progress(src_label_name, dst_label_name,
                                  edge_label_name, LoadingStatus::kLoading);
   }
-  VLOG(1) << "Finish init edge status files";
 }
 
 void BasicFragmentLoader::init_vertex_data() {
