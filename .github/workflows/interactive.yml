@@ -377,6 +377,23 @@ jobs:
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
           ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
 
+    - name: Run kafka wal test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        wget https://dlcdn.apache.org/kafka/3.9.0/kafka_2.13-3.9.0.tgz
+        tar -zxf kafka_2.13-3.9.0.tgz
+        cd kafka_2.13-3.9.0
+        KAFKA_CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"
+        bin/kafka-storage.sh format --standalone -t $KAFKA_CLUSTER_ID -c config/kraft/reconfig-server.properties
+        bin/kafka-server-start.sh config/kraft/reconfig-server.properties &
+
+        bin/kafka-topics.sh --create --topic kafka-test --bootstrap-server localhost:9092
+
+        ./tests/hqps/kafka_test localhost:902 kafka-test
+
+        pkill -f kafka-server-start.sh
+
     - name: Run Gremlin test on modern graph
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
