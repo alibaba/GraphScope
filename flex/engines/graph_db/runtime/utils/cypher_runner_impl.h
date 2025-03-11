@@ -71,6 +71,7 @@ class CypherRunnerImpl {
   CypherRunnerImpl(const CypherRunnerImpl&) = delete;
   CypherRunnerImpl& operator=(const CypherRunnerImpl&) = delete;
   PlanCache plan_cache_;
+  std::mutex mutex_;
 };
 }  // namespace runtime
 }  // namespace gs

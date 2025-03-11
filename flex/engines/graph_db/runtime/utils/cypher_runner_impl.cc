@@ -39,13 +39,21 @@ bool CypherRunnerImpl::gen_plan(const GraphDB& db, const std::string& query,
   }
 
   physical::PhysicalPlan plan;
-  if (!generate_plan(query, statistics, compiler_path, compiler_yaml, tmp_dir,
-                     plan)) {
-    LOG(ERROR) << "Generate plan failed for query: " << query;
-    return false;
+  {
+    // avoid multiple threads to generate plan for the same query
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (plan_cache.get(query, plan_str)) {
+      return true;
+    }
+    if (!generate_plan(query, statistics, compiler_path, compiler_yaml, tmp_dir,
+                       plan)) {
+      LOG(ERROR) << "Generate plan failed for query: " << query;
+      return false;
+    }
+    plan_str = plan.SerializeAsString();
+    plan_cache.put(query, plan_str);
   }
-  plan_str = plan.SerializeAsString();
-  plan_cache.put(query, plan_str);
+
   return true;
 }
 
