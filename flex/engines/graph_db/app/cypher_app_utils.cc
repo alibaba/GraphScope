@@ -110,10 +110,16 @@ bool generate_plan(const std::string& query, const std::string& statistics,
 
   // call compiler to generate plan
   {
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+      LOG(ERROR) << "pipe failed!" << strerror(errno);
+      exit(EXIT_FAILURE);
+    }
+
     pid_t pid = fork();
 
     if (pid == -1) {
-      std::cerr << "Fork failed!" << std::endl;
+      LOG(ERROR) << "fork failed!" << strerror(errno);
       return false;
     } else if (pid == 0) {
       const char* const args[] = {
@@ -127,22 +133,45 @@ bool generate_plan(const std::string& query, const std::string& statistics,
           "temp.cypher.yaml",
           nullptr  // execvp expects a null-terminated array
       };
+
+      close(pipefd[0]);
+
+      if (dup2(pipefd[1], STDERR_FILENO) == -1) {
+        LOG(ERROR) << "dup2 failed!" << strerror(errno);
+        exit(EXIT_FAILURE);
+      }
+
+      close(pipefd[1]);
+
       execvp(args[0], const_cast<char* const*>(args));
 
       std::cerr << "Exec failed!" << std::endl;
       return false;
     } else {
+      close(pipefd[1]);
+
+      ssize_t count;
+      constexpr size_t BUFFSIZ = 4096;
+      char buffer[BUFFSIZ];
+      std::string error_message;
+      while ((count = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[count] = '\0';
+        error_message += buffer;
+      }
+
       int status;
       waitpid(pid, &status, 0);
       if (WIFEXITED(status)) {
         VLOG(1) << "Child exited with status " << WEXITSTATUS(status)
                 << std::endl;
       }
+      close(pipefd[0]);
 
       {
         std::ifstream file(output_file, std::ios::binary);
 
         if (!file.is_open()) {
+          LOG(ERROR) << "Compiler message: " << error_message;
           return false;
         }
 
@@ -157,6 +186,7 @@ bool generate_plan(const std::string& query, const std::string& statistics,
 
         file.close();
         if (!plan.ParseFromString(std::string(buffer))) {
+          LOG(ERROR) << "Compiler message: " << error_message;
           return false;
         }
       }
