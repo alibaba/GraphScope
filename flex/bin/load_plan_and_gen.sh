@@ -596,6 +596,10 @@ run() {
     esac
   done
 
+  if [ -z "${LABEL_TYPE}" ]; then
+    LABEL_TYPE="uint8_t"
+  fi
+
   echo "Engine type            ="${ENGINE_TYPE}
   echo "Input                  ="${INPUT}
   echo "Work dir               ="${WORK_DIR}
