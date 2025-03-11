@@ -168,6 +168,19 @@ flex/interactive/sdk/python/gs_interactive/rest.py
 !flex/interactive/sdk/python/gs_interactive/models/time_stamp_type.py
 !flex/interactive/sdk/python/gs_interactive/models/date_type.py
 
+flex/interactive/sdk/master/.github/
+flex/interactive/sdk/master/Dockerfile
+flex/interactive/sdk/master/git_push.sh
+flex/interactive/sdk/master/tox.ini
+flex/interactive/sdk/master/.travis.yml
+flex/interactive/sdk/master/.dockerignore
+flex/interactive/sdk/master/.gitignore
+flex/interactive/sdk/master/gs_interactive_admin/models/
+flex/interactive/sdk/master/gs_interactive_admin/typing_utils.py
+flex/interactive/sdk/master/gs_interactive_admin/encoder.py
+flex/interactive/sdk/master/gs_interactive_admin/util.py
+flex/interactive/sdk/master/gs_interactive_admin/openapi/
+
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
 interactive_engine/groot-http/.openapi-generator/
 interactive_engine/groot-http/src/main/java/org/

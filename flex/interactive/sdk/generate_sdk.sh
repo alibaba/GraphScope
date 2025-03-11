@@ -18,6 +18,7 @@
 
 PACKAGE_NAME="com.alibaba.graphscope.interactive"
 PYTHON_PACKAGE_NAME="gs_interactive"
+PYTHON_ADMIN_PACKAGE_NAME="gs_interactive_admin"
 GROUP_ID="com.alibaba.graphscope"
 ARTIFACT_ID="interactive"
 ARTIFACT_URL="https://github.com/alibaba/GraphScope/tree/main/flex/interactive"
@@ -46,6 +47,18 @@ function usage() {
 }
 
 function do_gen_java() {
+    if [ $# -ne 1 ]; then
+        err "Invalid number of arguments:$#"
+        usage
+        exit 1
+    fi
+    type=$(echo $1 | tr '[:upper:]' '[:lower:]')
+    if [ "$type" != "client" ]; then
+        err "Currently only support client type when generating Java Code"
+        usage
+        exit 1
+    fi
+
     echo "Generating Java SDK"
     OUTPUT_PATH="${CUR_DIR}/java/"
 
@@ -71,14 +84,35 @@ function do_gen_java() {
 }
 
 function do_gen_python() {
-    echo "Generating Python SDK"
-    OUTPUT_PATH="${CUR_DIR}/python"
-    export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
-    cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python -o ${OUTPUT_PATH}"
-    cmd=" ${cmd} --package-name ${PYTHON_PACKAGE_NAME}"
-    cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"
-    echo "Running command: ${cmd}"
-    eval $cmd
+    if [ $# -ne 1 ]; then
+        err "Invalid number of arguments:$#"
+        usage
+        exit 1
+    fi
+    type=$(echo $1 | tr '[:upper:]' '[:lower:]')
+    if [ "$type" == "client" ]; then
+        echo "Generating Python SDK"
+        OUTPUT_PATH="${CUR_DIR}/python"
+        export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
+        cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python -o ${OUTPUT_PATH}"
+        cmd=" ${cmd} --package-name ${PYTHON_PACKAGE_NAME}"
+        cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"
+        echo "Running command: ${cmd}"
+        eval $cmd
+    elif [ "$type" == "server" ]; then
+        echo "Generating Python Server"
+        OUTPUT_PATH="${CUR_DIR}/master"
+        export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
+        cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python-flask -o ${OUTPUT_PATH}"
+        cmd=" ${cmd} --package-name ${PYTHON_ADMIN_PACKAGE_NAME}"
+        cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"
+        echo "Running command: ${cmd}"
+        eval $cmd
+    else
+        err "Unsupported type: $type"
+        usage
+        exit 1
+    fi
 }
 
 function do_gen_spring() {
@@ -96,20 +130,20 @@ function do_gen_spring() {
 }
 
 function do_gen() {
-    # expect only one argument
-    if [ $# -ne 1 ]; then
+    if [ $# -ne 2 ]; then
         err "Invalid number of arguments:$#"
         usage
         exit 1
     fi
     # to lower case
     lang=$(echo $1 | tr '[:upper:]' '[:lower:]')
+    type=$(echo $2 | tr '[:upper:]' '[:lower:]')
     case $lang in
     java)
-        do_gen_java
+        do_gen_java $type
         ;;
     python)
-        do_gen_python
+        do_gen_python $type
         ;;
     spring)
         do_gen_spring
@@ -178,6 +212,8 @@ function install_generator() {
 }
 
 install_generator
+type="client" # client or server
+language=""
 
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -189,8 +225,13 @@ while [[ $# -gt 0 ]]; do
     ;;
   -g | --lang)
     shift
-    do_gen "$@"
-    exit 0
+    language="$1"
+    shift
+    ;;
+  -t | --type)
+    shift
+    type="$1"
+    shift
     ;;
   *) # unknown option
     err "unknown option $1"
@@ -199,3 +240,5 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+do_gen $language $type
