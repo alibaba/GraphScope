@@ -80,7 +80,7 @@ In this example, we use graph traversal to count the number of papers two given 
 
 ```python
 # get the endpoint for submitting interactive queries on graph g.
-interactive = graphscope.interactive(g)
+interactive = graphscope.interactive(g, with_cypher=True)
 
 # Gremlin query for counting the number of papers two authors (with id 2 and 4307) have co-authored
 papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()").one()
@@ -261,7 +261,7 @@ gs.set_option(show_log=True)
 graph = load_modern_graph()
 
 # Hereafter, you can use the `graph` object to create an `interactive` query session, which will start one Gremlin service and one Cypher service simultaneously on the backend.
-g = gs.interactive(graph)
+g = gs.interactive(graph, with_cypher=True)
 # then `execute` any supported gremlin query.
 q1 = g.execute('g.V().count()')
 print(q1.all().result())   # should print [6]
@@ -270,7 +270,7 @@ q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 
 # or `execute` any supported Cypher query
-q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher")
 print(q3.records[0][0])  # should print 6
 ```
 ````

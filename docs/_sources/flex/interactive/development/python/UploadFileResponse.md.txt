@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of UploadFileResponse from a JSON string
 upload_file_response_instance = UploadFileResponse.from_json(json)
 # print the JSON string representation of the object
-print(UploadFileResponse.to_json())
+print UploadFileResponse.to_json()
 
 # convert the object into a dict
 upload_file_response_dict = upload_file_response_instance.to_dict()
 # create an instance of UploadFileResponse from a dict
-upload_file_response_from_dict = UploadFileResponse.from_dict(upload_file_response_dict)
+upload_file_response_form_dict = upload_file_response.from_dict(upload_file_response_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

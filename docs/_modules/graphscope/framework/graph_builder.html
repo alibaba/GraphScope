@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.framework.graph_builder - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -709,31 +710,31 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">vineyard</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
     <span class="n">vineyard</span> <span class="o">=</span> <span class="kc">None</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_default_session</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">LoaderVariants</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">VineyardObjectTypes</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">normalize_parameter_edges</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">normalize_parameter_vertices</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoaderVariants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">VineyardObjectTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_parameter_edges</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_parameter_vertices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_def_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">types_pb2</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;load_from&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="load_from"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph_builder.load_from">[docs]</a><span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span>
+<div class="viewcode-block" id="load_from"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph_builder.load_from">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">load_from</span><span class="p">(</span>
     <span class="n">edges</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
         <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">LoaderVariants</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]],</span> <span class="n">LoaderVariants</span><span class="p">,</span> <span class="n">Sequence</span>
     <span class="p">],</span>
@@ -852,11 +853,11 @@ MathJax = {
 <span class="sd">        generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed</span>
 <span class="sd">            in third column. This feature is for cooperating with interactive engine.</span>
 <span class="sd">            If you only need to work with analytical engine, set it to False. Defaults to True.</span>
-<span class="sd">        retain_oid (bool, optional): Whether to keep the orignal ID column as the last column of vertex table.</span>
+<span class="sd">        retain_oid (bool, optional): Whether to keep the original ID column as the last column of vertex table.</span>
 <span class="sd">            This feature is for cooperating with interactive engine.</span>
 <span class="sd">            If you only need to work with analytical engine, set it to False. Defaults to True.</span>
 <span class="sd">        vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be &quot;global&quot; or &quot;local&quot;.</span>
-<span class="sd">        compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.</span>
+<span class="sd">        compact_edges (bool, optional): Compact edges (CSR) using variant and delta encoding. Defaults to False.</span>
 <span class="sd">            Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause</span>
 <span class="sd">            at most 10%~20% performance degeneration in some algorithms.</span>
 <span class="sd">        use_perfect_hash (bool, optional): Use perfect hashmap in vertex map to optimize the memory usage.</span>
@@ -865,7 +866,7 @@ MathJax = {
 
     <span class="c1"># Don&#39;t import the :code:`nx` in top-level statements to improve the</span>
     <span class="c1"># performance of :code:`import graphscope`.</span>
-    <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope</span><span class="w"> </span><span class="kn">import</span> <span class="n">nx</span>
 
     <span class="n">sess</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span> <span class="o">*</span><span class="n">VineyardObjectTypes</span><span class="p">)):</span>

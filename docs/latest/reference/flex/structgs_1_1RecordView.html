@@ -91,8 +91,8 @@ Collaboration diagram for gs::RecordView:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab2bca64c52e6053ec6f209484688d1a9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#ab2bca64c52e6053ec6f209484688d1a9">RecordView</a> ()</td></tr>
-<tr class="separator:ab2bca64c52e6053ec6f209484688d1a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4475a356972bc69ea4abdacded12a69d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#a4475a356972bc69ea4abdacded12a69d">RecordView</a> ()=default</td></tr>
+<tr class="separator:a4475a356972bc69ea4abdacded12a69d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5de9038325d78a5ce2f45b8c5869ac1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#aa5de9038325d78a5ce2f45b8c5869ac1">RecordView</a> (size_t <a class="el" href="structgs_1_1RecordView.html#a2c8c63efd66f8661d013acdd1467d7ae">offset</a>, const <a class="el" href="classgs_1_1Table.html">Table</a> *<a class="el" href="structgs_1_1RecordView.html#a793fd1d6d11bc28f4e2c7b95f2e74a08">table</a>)</td></tr>
 <tr class="separator:aa5de9038325d78a5ce2f45b8c5869ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0bc0e957fc5726de8cea4ac1f0fe3e1"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#af0bc0e957fc5726de8cea4ac1f0fe3e1">size</a> () const</td></tr>
@@ -102,6 +102,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a128691f060791862cdba11943358936d"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a128691f060791862cdba11943358936d"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#a128691f060791862cdba11943358936d">get_field</a> (int col_id) const</td></tr>
 <tr class="separator:a128691f060791862cdba11943358936d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ec9edd3400695d3e82f5a0e8805679e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#a6ec9edd3400695d3e82f5a0e8805679e">operator==</a> (const <a class="el" href="structgs_1_1RecordView.html">RecordView</a> &amp;other) const</td></tr>
+<tr class="separator:a6ec9edd3400695d3e82f5a0e8805679e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a558c41cb3e6d43236f707d9f5aa647"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1RecordView.html#a5a558c41cb3e6d43236f707d9f5aa647">to_string</a> () const</td></tr>
+<tr class="separator:a5a558c41cb3e6d43236f707d9f5aa647"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -111,8 +115,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a793fd1d6d11bc28f4e2c7b95f2e74a08"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ab2bca64c52e6053ec6f209484688d1a9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2bca64c52e6053ec6f209484688d1a9">&#9670;&nbsp;</a></span>RecordView() <span class="overload">[1/2]</span></h2>
+<a id="a4475a356972bc69ea4abdacded12a69d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4475a356972bc69ea4abdacded12a69d">&#9670;&nbsp;</a></span>RecordView() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -129,7 +133,7 @@ Public Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -193,6 +197,32 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="a6ec9edd3400695d3e82f5a0e8805679e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ec9edd3400695d3e82f5a0e8805679e">&#9670;&nbsp;</a></span>operator==()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::RecordView::operator== </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structgs_1_1RecordView.html">RecordView</a> &amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ad2c4e814a4acf7458093d8e34dd10764"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad2c4e814a4acf7458093d8e34dd10764">&#9670;&nbsp;</a></span>operator[]()</h2>
 
@@ -219,6 +249,23 @@ template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">size_t gs::RecordView::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5a558c41cb3e6d43236f707d9f5aa647"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a558c41cb3e6d43236f707d9f5aa647">&#9670;&nbsp;</a></span>to_string()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string gs::RecordView::to_string </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>

@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of SchemaMapping from a JSON string
 schema_mapping_instance = SchemaMapping.from_json(json)
 # print the JSON string representation of the object
-print(SchemaMapping.to_json())
+print SchemaMapping.to_json()
 
 # convert the object into a dict
 schema_mapping_dict = schema_mapping_instance.to_dict()
 # create an instance of SchemaMapping from a dict
-schema_mapping_from_dict = SchemaMapping.from_dict(schema_mapping_dict)
+schema_mapping_form_dict = schema_mapping.from_dict(schema_mapping_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -21,12 +21,12 @@ json = "{}"
 # create an instance of EdgeMapping from a JSON string
 edge_mapping_instance = EdgeMapping.from_json(json)
 # print the JSON string representation of the object
-print(EdgeMapping.to_json())
+print EdgeMapping.to_json()
 
 # convert the object into a dict
 edge_mapping_dict = edge_mapping_instance.to_dict()
 # create an instance of EdgeMapping from a dict
-edge_mapping_from_dict = EdgeMapping.from_dict(edge_mapping_dict)
+edge_mapping_form_dict = edge_mapping.from_dict(edge_mapping_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of DateType from a JSON string
 date_type_instance = DateType.from_json(json)
 # print the JSON string representation of the object
-print(DateType.to_json())
+print DateType.to_json()
 
 # convert the object into a dict
 date_type_dict = date_type_instance.to_dict()
 # create an instance of DateType from a dict
-date_type_from_dict = DateType.from_dict(date_type_dict)
+date_type_form_dict = date_type.from_dict(date_type_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

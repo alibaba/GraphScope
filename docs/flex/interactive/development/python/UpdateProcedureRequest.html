@@ -7,11 +7,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>UpdateProcedureRequest - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -341,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -633,9 +634,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../../v0.29.0/index.html">
+              <dd><a href="../../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -726,19 +727,19 @@ MathJax = {
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.models.update_procedure_request</span> <span class="kn">import</span> <span class="n">UpdateProcedureRequest</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models.update_procedure_request</span><span class="w"> </span><span class="kn">import</span> <span class="n">UpdateProcedureRequest</span>
 
 <span class="c1"># TODO update the JSON string below</span>
 <span class="n">json</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
 <span class="c1"># create an instance of UpdateProcedureRequest from a JSON string</span>
 <span class="n">update_procedure_request_instance</span> <span class="o">=</span> <span class="n">UpdateProcedureRequest</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
 <span class="c1"># print the JSON string representation of the object</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">UpdateProcedureRequest</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+<span class="nb">print</span> <span class="n">UpdateProcedureRequest</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 
 <span class="c1"># convert the object into a dict</span>
 <span class="n">update_procedure_request_dict</span> <span class="o">=</span> <span class="n">update_procedure_request_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 <span class="c1"># create an instance of UpdateProcedureRequest from a dict</span>
-<span class="n">update_procedure_request_from_dict</span> <span class="o">=</span> <span class="n">UpdateProcedureRequest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">update_procedure_request_dict</span><span class="p">)</span>
+<span class="n">update_procedure_request_form_dict</span> <span class="o">=</span> <span class="n">update_procedure_request</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">update_procedure_request_dict</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>

@@ -1,0 +1,13 @@
+
+
+# TemporalType
+
+
+## Properties
+
+| Name | Type | Description | Notes |
+|------------ | ------------- | ------------- | -------------|
+|**temporal** | [**TemporalTypeTemporal**](TemporalTypeTemporal.md) |  |  |
+
+
+

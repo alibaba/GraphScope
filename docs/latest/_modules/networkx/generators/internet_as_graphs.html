@@ -6,7 +6,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>networkx.generators.internet_as_graphs - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -292,7 +292,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -340,6 +341,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -681,13 +683,13 @@ MathJax = {
           <h1>Source code for networkx.generators.internet_as_graphs</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Generates graphs resembling the Internet Autonomous System network&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">py_random_state</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;random_internet_as_graph&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">uniform_int_from_avg</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">uniform_int_from_avg</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pick a random integer with uniform probability.</span>
 
 <span class="sd">    Returns a random integer uniformly taken from a distribution with</span>
@@ -701,7 +703,7 @@ MathJax = {
 <span class="sd">    E[X] = E[X1] + E[X2] = (floor(b)+a)/2 + (b-floor(b))/2 = (b+a)/2 = m</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">floor</span>
 
     <span class="k">assert</span> <span class="n">m</span> <span class="o">&gt;=</span> <span class="n">a</span>
     <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="n">a</span>
@@ -714,7 +716,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">X1</span> <span class="o">+</span> <span class="n">X2</span>
 
 
-<span class="k">def</span> <span class="nf">choose_pref_attach</span><span class="p">(</span><span class="n">degs</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">choose_pref_attach</span><span class="p">(</span><span class="n">degs</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pick a random value, with a probability given by its weight.</span>
 
 <span class="sd">    Returns a random choice among degs keys, each of which has a</span>
@@ -749,10 +751,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">AS_graph_generator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AS_graph_generator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates random internet AS graphs.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes variables. Immediate numbers are taken from [1].</span>
 
 <span class="sd">        Parameters</span>
@@ -792,7 +794,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">t_cp</span> <span class="o">=</span> <span class="mf">0.375</span>  <span class="c1"># probability CP&#39;s provider is T</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t_c</span> <span class="o">=</span> <span class="mf">0.125</span>  <span class="c1"># probability C&#39;s provider is T</span>
 
-    <span class="k">def</span> <span class="nf">t_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">t_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates the core mesh network of tier one nodes of a AS graph.</span>
 
 <span class="sd">        Returns</span>
@@ -813,14 +815,14 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
 
-    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;transit&quot;</span><span class="p">:</span>
             <span class="n">customer</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">customer</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">customer</span><span class="o">=</span><span class="n">customer</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">choose_peer_pref_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">choose_peer_pref_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pick a node with a probability weighted by its peer degree.</span>
 
 <span class="sd">        Pick a node from node_list with preferential attachment</span>
@@ -832,7 +834,7 @@ MathJax = {
             <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">&quot;peers&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">choose_pref_attach</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">choose_node_pref_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">choose_node_pref_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pick a node with a probability weighted by its degree.</span>
 
 <span class="sd">        Pick a node from node_list with preferential attachment</span>
@@ -842,7 +844,7 @@ MathJax = {
         <span class="n">degs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">node_list</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">choose_pref_attach</span><span class="p">(</span><span class="n">degs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_customer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_customer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Keep the dictionaries &#39;customers&#39; and &#39;providers&#39; consistent.&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">customers</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -851,7 +853,7 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">customers</span><span class="p">[</span><span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">reg2prob</span><span class="p">,</span> <span class="n">avg_deg</span><span class="p">,</span> <span class="n">t_edge_prob</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">reg2prob</span><span class="p">,</span> <span class="n">avg_deg</span><span class="p">,</span> <span class="n">t_edge_prob</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a node and its customer transit edges to the graph.</span>
 
 <span class="sd">        Parameters</span>
@@ -910,7 +912,7 @@ MathJax = {
 
         <span class="k">return</span> <span class="n">i</span>
 
-    <span class="k">def</span> <span class="nf">add_m_peering_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_m_peering_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a peering link between two middle tier (M) nodes.</span>
 
 <span class="sd">        Target node j is drawn considering a preferential attachment based on</span>
@@ -950,7 +952,7 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">add_cp_peering_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_cp_peering_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a peering link to a content provider (CP) node.</span>
 
 <span class="sd">        Target node j can be CP or M and it is drawn uniformely among the nodes</span>
@@ -997,7 +999,7 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">graph_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rn</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">graph_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rn</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes AS network regions.</span>
 
 <span class="sd">        Parameters</span>
@@ -1010,7 +1012,7 @@ MathJax = {
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rn</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">[</span><span class="s2">&quot;REG&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">add_peering_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_kind</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_peering_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_kind</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility function to add peering links among node groups.&quot;&quot;&quot;</span>
         <span class="n">peer_link_method</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">from_kind</span> <span class="o">==</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span>
@@ -1028,7 +1030,7 @@ MathJax = {
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
                 <span class="n">peer_link_method</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">to_kind</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a random AS network graph as described in [1].</span>
 
 <span class="sd">        Returns</span>
@@ -1078,7 +1080,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="random_internet_as_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html#networkx.generators.internet_as_graphs.random_internet_as_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_internet_as_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">random_internet_as_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a random undirected graph resembling the Internet AS network</span>
 
 <span class="sd">    Parameters</span>

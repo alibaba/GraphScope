@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>SchemaMappingLoadingConfig - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -729,19 +731,19 @@ MathJax = {
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.models.schema_mapping_loading_config</span> <span class="kn">import</span> <span class="n">SchemaMappingLoadingConfig</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models.schema_mapping_loading_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SchemaMappingLoadingConfig</span>
 
 <span class="c1"># TODO update the JSON string below</span>
 <span class="n">json</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
 <span class="c1"># create an instance of SchemaMappingLoadingConfig from a JSON string</span>
 <span class="n">schema_mapping_loading_config_instance</span> <span class="o">=</span> <span class="n">SchemaMappingLoadingConfig</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
 <span class="c1"># print the JSON string representation of the object</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">SchemaMappingLoadingConfig</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+<span class="nb">print</span> <span class="n">SchemaMappingLoadingConfig</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 
 <span class="c1"># convert the object into a dict</span>
 <span class="n">schema_mapping_loading_config_dict</span> <span class="o">=</span> <span class="n">schema_mapping_loading_config_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 <span class="c1"># create an instance of SchemaMappingLoadingConfig from a dict</span>
-<span class="n">schema_mapping_loading_config_from_dict</span> <span class="o">=</span> <span class="n">SchemaMappingLoadingConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">schema_mapping_loading_config_dict</span><span class="p">)</span>
+<span class="n">schema_mapping_loading_config_form_dict</span> <span class="o">=</span> <span class="n">schema_mapping_loading_config</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">schema_mapping_loading_config_dict</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>

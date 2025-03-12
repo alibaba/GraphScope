@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of GSDataType from a JSON string
 gs_data_type_instance = GSDataType.from_json(json)
 # print the JSON string representation of the object
-print(GSDataType.to_json())
+print GSDataType.to_json()
 
 # convert the object into a dict
 gs_data_type_dict = gs_data_type_instance.to_dict()
 # create an instance of GSDataType from a dict
-gs_data_type_from_dict = GSDataType.from_dict(gs_data_type_dict)
+gs_data_type_form_dict = gs_data_type.from_dict(gs_data_type_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

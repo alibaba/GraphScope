@@ -21,12 +21,12 @@ json = "{}"
 # create an instance of GetEdgeType from a JSON string
 get_edge_type_instance = GetEdgeType.from_json(json)
 # print the JSON string representation of the object
-print(GetEdgeType.to_json())
+print GetEdgeType.to_json()
 
 # convert the object into a dict
 get_edge_type_dict = get_edge_type_instance.to_dict()
 # create an instance of GetEdgeType from a dict
-get_edge_type_from_dict = GetEdgeType.from_dict(get_edge_type_dict)
+get_edge_type_form_dict = get_edge_type.from_dict(get_edge_type_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -22,12 +22,12 @@ json = "{}"
 # create an instance of EdgeRequest from a JSON string
 edge_request_instance = EdgeRequest.from_json(json)
 # print the JSON string representation of the object
-print(EdgeRequest.to_json())
+print EdgeRequest.to_json()
 
 # convert the object into a dict
 edge_request_dict = edge_request_instance.to_dict()
 # create an instance of EdgeRequest from a dict
-edge_request_from_dict = EdgeRequest.from_dict(edge_request_dict)
+edge_request_form_dict = edge_request.from_dict(edge_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>GraphManagementApI - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -729,6 +731,34 @@ MathJax = {
 <td><p><strong>POST</strong> /v1/graph/{graph_id}/dataloading</p></td>
 <td><p>Create a bulk loading job for the graph identified by the specified graphId</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#createVertexType"><span class="std std-ref"><strong>createVertexType</strong></span></a></p></td>
+<td><p><strong>POST</strong> /v1/graph/{graph_id}/schema/vertex</p></td>
+<td><p>Add a vertex type for a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#updateVertexType"><span class="std std-ref"><strong>updateVertexType</strong></span></a></p></td>
+<td><p><strong>PUT</strong> /v1/graph/{graph_id}/schema/vertex</p></td>
+<td><p>Update a vertex type for a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deleteVertexType"><span class="std std-ref"><strong>deleteVertexType</strong></span></a></p></td>
+<td><p><strong>Delete</strong> /v1/graph/{graph_id}/schema/vertex</p></td>
+<td><p>Delete a vertex type from a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#createEdgeType"><span class="std std-ref"><strong>createEdgeType</strong></span></a></p></td>
+<td><p><strong>POST</strong> /v1/graph/{graph_id}/schema/edge</p></td>
+<td><p>Add an edge type for a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#updateEdgeType"><span class="std std-ref"><strong>updateEdgeType</strong></span></a></p></td>
+<td><p><strong>PUT</strong> /v1/graph/{graph_id}/schema/edge</p></td>
+<td><p>Update an edge type for a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#deleteEdgeType"><span class="std std-ref"><strong>deleteEdgeType</strong></span></a></p></td>
+<td><p><strong>Delete</strong> /v1/graph/{graph_id}/schema/edge</p></td>
+<td><p>Delete an edge type from a graph identified by the specified graphId</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#getSnapshotStatus"><span class="std std-ref"><strong>getSnapshotStatus</strong></span></a></p></td>
+<td><p><strong>GET</strong> /v1/graph/{graph_id}/snapshot/{snapshot_id}/status</p></td>
+<td><p>Get the status of the snapshot with specified snapshot_id on the specified graph</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -741,9 +771,9 @@ MathJax = {
 <p>Create a new graph</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
 <span class="n">test_graph_def</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test_graph&quot;</span><span class="p">,</span>
@@ -823,7 +853,7 @@ MathJax = {
 </section>
 <section id="return-type">
 <h2>Return type<a class="headerlink" href="#return-type" title="Permalink to this heading">¶</a></h2>
-<p><a class="reference internal" href="result.html"><span class="std std-doc">Reesult</span></a>[<a class="reference internal" href="CreateGraphResponse.html"><span class="std std-doc"><strong>CreateGraphResponse</strong></span></a>]</p>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[<a class="reference internal" href="CreateGraphResponse.html"><span class="std std-doc"><strong>CreateGraphResponse</strong></span></a>]</p>
 </section>
 <section id="authorization">
 <h2>Authorization<a class="headerlink" href="#authorization" title="Permalink to this heading">¶</a></h2>
@@ -1331,6 +1361,729 @@ MathJax = {
 <tbody>
 <tr class="row-even"><td><p><strong>200</strong></p></td>
 <td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="createvertextype">
+<h1><strong>createVertexType</strong><a class="headerlink" href="#createvertextype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> create_vertex_type(graph_id, vertex_type_request)</p>
+</div></blockquote>
+<p>Create a new vertex type in the specified graph by graph_id</p>
+<section id="id37">
+<h2>Example<a class="headerlink" href="#id37" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="n">vertex_type_request</span> <span class="o">=</span> <span class="n">CreateVertexType</span><span class="p">(</span>
+    <span class="n">type_name</span><span class="o">=</span><span class="s2">&quot;new_person&quot;</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">CreatePropertyMeta</span><span class="p">(</span>
+            <span class="n">property_name</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="n">property_type</span><span class="o">=</span><span class="n">GSDataType</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_SIGNED_INT64&quot;</span><span class="p">}),</span>
+        <span class="p">),</span>
+        <span class="n">CreatePropertyMeta</span><span class="p">(</span>
+            <span class="n">property_name</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="n">property_type</span><span class="o">=</span><span class="n">GSDataType</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;string&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;long_text&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">}}),</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">primary_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="c1"># create a new vertex type</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">create_vertex_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_type_request</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id38">
+<h2>Parameters<a class="headerlink" href="#id38" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>vertex_type_request</strong></p></td>
+<td><p><a class="reference internal" href="CreateVertexType.html"><span class="std std-doc"><strong>CreateVertexType</strong></span></a></p></td>
+<td><p>the vertex type to create</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id39">
+<h2>Return type<a class="headerlink" href="#id39" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id40">
+<h2>Authorization<a class="headerlink" href="#id40" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id41">
+<h2>HTTP request headers<a class="headerlink" href="#id41" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id42">
+<h2>HTTP response details<a class="headerlink" href="#id42" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="updatevertextype">
+<h1><strong>updateVertexType</strong><a class="headerlink" href="#updatevertextype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> update_vertex_type(graph_id, vertex_type_request)</p>
+</div></blockquote>
+<p>Update a vertex type in the specified graph by graph_id</p>
+<section id="id43">
+<h2>Example<a class="headerlink" href="#id43" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="n">vertex_type_request</span> <span class="o">=</span> <span class="n">CreateVertexType</span><span class="p">(</span>
+    <span class="n">type_name</span><span class="o">=</span><span class="s2">&quot;new_person&quot;</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">CreatePropertyMeta</span><span class="p">(</span>
+            <span class="n">property_name</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
+            <span class="n">property_type</span><span class="o">=</span><span class="n">GSDataType</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_SIGNED_INT32&quot;</span><span class="p">}),</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">primary_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="c1"># update vertex type by adding an age property</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">update_vertex_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_type_request</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id44">
+<h2>Parameters<a class="headerlink" href="#id44" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>vertex_type_request</strong></p></td>
+<td><p><a class="reference internal" href="CreateVertexType.html"><span class="std std-doc"><strong>CreateVertexType</strong></span></a></p></td>
+<td><p>the vertex type to update</p></td>
+<td><p>only support to update the vertex type by adding extra properties in Insight</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id45">
+<h2>Return type<a class="headerlink" href="#id45" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id46">
+<h2>Authorization<a class="headerlink" href="#id46" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id47">
+<h2>HTTP request headers<a class="headerlink" href="#id47" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id48">
+<h2>HTTP response details<a class="headerlink" href="#id48" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="deletevertextype">
+<h1><strong>deleteVertexType</strong><a class="headerlink" href="#deletevertextype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> delete_vertex_type(graph_id, vertex_type_name)</p>
+</div></blockquote>
+<p>Delete a vertex type by name in the specified graph by graph_id</p>
+<section id="id49">
+<h2>Example<a class="headerlink" href="#id49" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="n">vertex_type_name</span> <span class="o">=</span> <span class="s2">&quot;new_person&quot;</span>
+<span class="c1"># delete vertex type by name</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">delete_vertex_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">vertex_type_name</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id50">
+<h2>Parameters<a class="headerlink" href="#id50" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>vertex_type_name</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p>the vertex type to delete</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id51">
+<h2>Return type<a class="headerlink" href="#id51" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id52">
+<h2>Authorization<a class="headerlink" href="#id52" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id53">
+<h2>HTTP request headers<a class="headerlink" href="#id53" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id54">
+<h2>HTTP response details<a class="headerlink" href="#id54" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="createedgetype">
+<h1><strong>createEdgeType</strong><a class="headerlink" href="#createedgetype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> create_edge_type(graph_id, edge_type_request)</p>
+</div></blockquote>
+<p>Create a new edge type in the specified graph by graph_id</p>
+<section id="id55">
+<h2>Example<a class="headerlink" href="#id55" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="n">edge_type_request</span> <span class="o">=</span> <span class="n">CreateEdgeType</span><span class="p">(</span>
+    <span class="n">type_name</span><span class="o">=</span><span class="s2">&quot;new_knows&quot;</span><span class="p">,</span>
+    <span class="n">vertex_type_pair_relations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">BaseEdgeTypeVertexTypePairRelationsInner</span><span class="p">(</span>
+            <span class="n">source_vertex</span><span class="o">=</span><span class="s2">&quot;new_person&quot;</span><span class="p">,</span>
+            <span class="n">destination_vertex</span><span class="o">=</span><span class="s2">&quot;new_person&quot;</span><span class="p">,</span>
+            <span class="n">relation</span><span class="o">=</span><span class="s2">&quot;MANY_TO_MANY&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">CreatePropertyMeta</span><span class="p">(</span>
+            <span class="n">property_name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+            <span class="n">property_type</span><span class="o">=</span><span class="n">GSDataType</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_DOUBLE&quot;</span><span class="p">}),</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="c1"># create a new edge type</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">create_edge_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_type_request</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id56">
+<h2>Parameters<a class="headerlink" href="#id56" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>edge_type_request</strong></p></td>
+<td><p><a class="reference internal" href="CreateEdgeType.html"><span class="std std-doc"><strong>CreateEdgeType</strong></span></a></p></td>
+<td><p>the edge type to create</p></td>
+<td><p>support the inclusion of primary keys (optional) in Insight</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id57">
+<h2>Return type<a class="headerlink" href="#id57" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id58">
+<h2>Authorization<a class="headerlink" href="#id58" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id59">
+<h2>HTTP request headers<a class="headerlink" href="#id59" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id60">
+<h2>HTTP response details<a class="headerlink" href="#id60" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="updateedgetype">
+<h1><strong>updateEdgeType</strong><a class="headerlink" href="#updateedgetype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> update_edge_type(graph_id, edge_type_request)</p>
+</div></blockquote>
+<p>Create a new edge type in the specified graph by graph_id</p>
+<section id="id61">
+<h2>Example<a class="headerlink" href="#id61" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="n">edge_type_request</span> <span class="o">=</span> <span class="n">CreateEdgeType</span><span class="p">(</span>
+    <span class="n">type_name</span><span class="o">=</span><span class="s2">&quot;new_knows&quot;</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">CreatePropertyMeta</span><span class="p">(</span>
+            <span class="n">property_name</span><span class="o">=</span><span class="s2">&quot;new_weight&quot;</span><span class="p">,</span>
+            <span class="n">property_type</span><span class="o">=</span><span class="n">GSDataType</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_DOUBLE&quot;</span><span class="p">}),</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="c1"># update the edge type by adding a new property new_weight</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">create_edge_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_type_request</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id62">
+<h2>Parameters<a class="headerlink" href="#id62" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>edge_type_request</strong></p></td>
+<td><p><a class="reference internal" href="CreateEdgeType.html"><span class="std std-doc"><strong>CreateEdgeType</strong></span></a></p></td>
+<td><p>the edge type to update</p></td>
+<td><p>only support to update the edge type by adding extra properties in Insight</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id63">
+<h2>Return type<a class="headerlink" href="#id63" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id64">
+<h2>Authorization<a class="headerlink" href="#id64" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id65">
+<h2>HTTP request headers<a class="headerlink" href="#id65" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id66">
+<h2>HTTP response details<a class="headerlink" href="#id66" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="deleteedgetype">
+<h1><strong>deleteEdgeType</strong><a class="headerlink" href="#deleteedgetype" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a><String> delete_edge_type(graph_id, delete_edge_type_request)</p>
+</div></blockquote>
+<p>Delete an edge type from the specified graph by graph_id</p>
+<section id="id67">
+<h2>Example<a class="headerlink" href="#id67" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+<span class="c1"># delete the edge type by specifying edge_type_name, source_vertex_type_name, and destination_vertex_type_name</span>
+<span class="n">edge_type_name</span> <span class="o">=</span> <span class="s2">&quot;new_knows&quot;</span>
+<span class="n">src_type_name</span> <span class="o">=</span> <span class="s2">&quot;new_person&quot;</span>
+<span class="n">dst_type_name</span> <span class="o">=</span> <span class="s2">&quot;new_person&quot;</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">delete_edge_type</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">edge_type_name</span><span class="p">,</span> <span class="n">src_type_name</span><span class="p">,</span> <span class="n">dst_type_name</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id68">
+<h2>Parameters<a class="headerlink" href="#id68" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>edge_type_name</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>source_vertex_type_name</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>destination_vertex_type_name</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id69">
+<h2>Return type<a class="headerlink" href="#id69" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[[<strong>str</strong>]]</p>
+</section>
+<section id="id70">
+<h2>Authorization<a class="headerlink" href="#id70" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id71">
+<h2>HTTP request headers<a class="headerlink" href="#id71" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id72">
+<h2>HTTP response details<a class="headerlink" href="#id72" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="#"><span class="xref myst">[Back to top]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-service-apis"><span class="std std-ref">[Back to API list]</span></a> <a class="reference internal" href="python_sdk.html#documentation-for-data-structures"><span class="std std-ref">[Back to Model list]</span></a> <a class="reference internal" href="python_sdk.html"><span class="std std-doc">[Back to python_sdk]</span></a></p>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="getsnapshotstatus">
+<h1><strong>getSnapshotStatus</strong><a class="headerlink" href="#getsnapshotstatus" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[SnapshotStatus]  get_snapshot_status(graph_id, snapshot_id)</p>
+</div></blockquote>
+<p>Get the status of a snapshot with the specified snapshot id</p>
+<section id="id73">
+<h2>Example<a class="headerlink" href="#id73" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+<span class="c1"># A snapshot_id for test. The realtime write operations, such as add_vertex and add_edge, return a snapshot id.</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="s2">&quot;123&quot;</span>
+
+<span class="c1"># To check if the written data is available for querying, retrieve the status of the specified snapshot id.</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">get_snapshot_status</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id74">
+<h2>Parameters<a class="headerlink" href="#id74" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>graph_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>snapshot_id</strong></p></td>
+<td><p><strong>str</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id75">
+<h2>Return type<a class="headerlink" href="#id75" title="Permalink to this heading">¶</a></h2>
+<p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[<a class="reference internal" href="SnapshotStatus.html"><span class="std std-doc"><strong>SnapshotStatus</strong></span></a>]</p>
+</section>
+<section id="id76">
+<h2>Authorization<a class="headerlink" href="#id76" title="Permalink to this heading">¶</a></h2>
+<p>No authorization required</p>
+</section>
+<section id="id77">
+<h2>HTTP request headers<a class="headerlink" href="#id77" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Content-Type</strong>: Not defined</p></li>
+<li><p><strong>Accept</strong>: application/json</p></li>
+</ul>
+</section>
+<section id="id78">
+<h2>HTTP response details<a class="headerlink" href="#id78" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status code</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Response headers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>200</strong></p></td>
+<td><p>successful operation</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>400</strong></p></td>
+<td><p>Invalid input parameters</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>500</strong></p></td>
+<td><p>Server internal error</p></td>
 <td><p>-</p></td>
 </tr>
 </tbody>

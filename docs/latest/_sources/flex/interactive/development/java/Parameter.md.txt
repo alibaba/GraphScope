@@ -9,6 +9,7 @@
 |------------ | ------------- | ------------- | -------------|
 |**name** | **String** |  |  |
 |**type** | [**GSDataType**](GSDataType.md) |  |  |
+|**allowCast** | **Boolean** |  |  [optional] |
 
 
 

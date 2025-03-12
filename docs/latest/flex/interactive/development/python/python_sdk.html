@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Interactive RESTFul API" href="../restful_api.html" /><link rel="prev" title="Java SDK Reference" href="../java/java_sdk.html" />
+<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Python SDK Reference" href="python_sdk_ref.html" /><link rel="prev" title="Java SDK Reference" href="../java/java_sdk.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
-        <title>Python SDK Reference - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+        <title>Python SDK Guide - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../dev_guide.html">Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Python SDK Reference</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -689,9 +691,9 @@ MathJax = {
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="python-sdk-reference">
-<h1>Python SDK Reference<a class="headerlink" href="#python-sdk-reference" title="Permalink to this heading">¶</a></h1>
-<p>The Interactive Python SDK Reference is a comprehensive guide designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.</p>
+          <section class="tex2jax_ignore mathjax_ignore" id="python-sdk-guide">
+<h1>Python SDK Guide<a class="headerlink" href="#python-sdk-guide" title="Permalink to this heading">¶</a></h1>
+<p>The Interactive Python SDK guide is designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.</p>
 <section id="requirements">
 <h2>Requirements.<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
 <p>Python &gt;= 3.8</p>
@@ -708,7 +710,7 @@ MathJax = {
 </pre></div>
 </div>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gs_interactive</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gs_interactive</span>
 </pre></div>
 </div>
 </section>
@@ -721,7 +723,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install<span clas
 </div>
 <p>(or <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">python3</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> to install the package for all users)</p>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gs_interactive</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gs_interactive</span>
 </pre></div>
 </div>
 </section>
@@ -755,9 +757,9 @@ gsctl<span class="w"> </span>service<span class="w"> </span>status
 </pre></div>
 </div>
 <p>Now submit query via Interactive Python SDK.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
-<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
 <span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
 <span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
@@ -772,7 +774,7 @@ gsctl<span class="w"> </span>service<span class="w"> </span>status
 <p>To create a new graph, user need to specify the name, description, vertex types and edges types.
 For the detail data model of the graph, please refer to <a class="reference internal" href="../../data_model.html"><span class="doc std std-doc">Data Model</span></a>.</p>
 <p>In this example, we will create a simple graph with only one vertex type <code class="docutils literal notranslate"><span class="pre">persson</span></code>, and one edge type named <code class="docutils literal notranslate"><span class="pre">knows</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="n">sess</span> <span class="p">:</span> <span class="n">Session</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_graph</span><span class="p">(</span><span class="n">sess</span> <span class="p">:</span> <span class="n">Session</span><span class="p">):</span>
     <span class="c1"># Define the graph schema via a python dict.</span>
     <span class="n">test_graph_def</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test_graph&quot;</span><span class="p">,</span>
@@ -841,7 +843,7 @@ However, converting <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <p>Then use pyYAML to convert the YAML string to a Python dict</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">yaml</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="n">yaml_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">...</span>
@@ -865,7 +867,7 @@ wget<span class="w"> </span>https://raw.githubusercontent.com/alibaba/GraphScope
 </pre></div>
 </div>
 <p>Now run the following code in python Interpreter, remember to replace <code class="docutils literal notranslate"><span class="pre">/path/to/person.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">/path/to/person_knows_person.csv</span></code> with the actual local path.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bulk_loading</span><span class="p">(</span><span class="n">sess</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">graph_id</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">bulk_loading</span><span class="p">(</span><span class="n">sess</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">graph_id</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="n">test_graph_datasource</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;loading_config&quot;</span><span class="p">:{</span>
             <span class="s2">&quot;data_source&quot;</span><span class="p">:{</span>
@@ -1031,256 +1033,9 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;delete graph res: &quot;</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For the full example, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/python/basic_example.py">Python SDK Example</a></p>
+<p>For the full example on Interactive engine, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/python/basic_example.py">Python SDK Example</a>.</p>
+<p>For the full documentation for python sdk reference, please refer to <a class="reference internal" href="python_sdk_ref.html"><span class="std std-doc">Python SDK Reference</span></a>.</p>
 </section>
-</section>
-<section id="documentation-for-service-apis">
-<h2>Documentation for Service APIs<a class="headerlink" href="#documentation-for-service-apis" title="Permalink to this heading">¶</a></h2>
-<p>The Service APIs in interactive SDK are divided into five categories.</p>
-<ul class="simple">
-<li><p>GraphManagementApi</p></li>
-<li><p>ProcedureManagementApi</p></li>
-<li><p>JobManagementApi</p></li>
-<li><p>ServiceManagementApi</p></li>
-<li><p>QueryServiceApi</p></li>
-<li><p>VertexApi</p></li>
-<li><p>EdgeApi</p></li>
-</ul>
-<p>All URIs are relative to <code class="docutils literal notranslate"><span class="pre">${INTERACTIVE_ADMIN_ENDPOINT}</span></code></p>
-<div class="table-wrapper colwidths-auto docutils container">
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Class</p></th>
-<th class="head"><p>Method</p></th>
-<th class="head"><p>HTTP request</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#Bulkloading"><span class="std std-ref"><strong>BulkLoading</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/dataloading</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#CreateGraph"><span class="std std-ref"><strong>CreateGraph</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#DeleteGraph"><span class="std std-ref"><strong>DeleteGraph</strong></span></a></p></td>
-<td><p><strong>DELETE</strong> /v1/graph/{graph_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphMeta"><span class="std std-ref"><strong>GetGraphMeta</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphSchema"><span class="std std-ref"><strong>GetGraphSchema</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/schema</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#ListGraphs"><span class="std std-ref"><strong>ListGraphs</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphStatistics"><span class="std std-ref"><strong>GetGraphStatistics</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/statistics</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>JobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="JobManagementApi.html#CancelJob"><span class="std std-ref"><strong>CancelJob</strong></span></a></p></td>
-<td><p><strong>DELETE</strong> /v1/job/{job_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>JobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="JobManagementApi.html#GetJobById"><span class="std std-ref"><strong>GetJobById</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/job/{job_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>JobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="JobManagementApi.html#ListJobs"><span class="std std-ref"><strong>ListJobs</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/job</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ProcedureManagementApi.html#CreateProcedure"><span class="std std-ref"><strong>CreateProcedure</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/procedure</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>ProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ProcedureManagementApi.html#DeleteProcedure"><span class="std std-ref"><strong>DeleteProcedure</strong></span></a></p></td>
-<td><p><strong>DELETE</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ProcedureManagementApi.html#GetProcedure"><span class="std std-ref"><strong>GetProcedure</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>ProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ProcedureManagementApi.html#ListProcedures"><span class="std std-ref"><strong>ListProcedures</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/procedure</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ProcedureManagementApi.html#UpdateProcedure"><span class="std std-ref"><strong>UpdateProcedure</strong></span></a></p></td>
-<td><p><strong>PUT</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>ServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ServiceManagementApi.html#GetServiceStatus"><span class="std std-ref"><strong>GetServiceStatus</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/service/status</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>ServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ServiceManagementApi.html#RestartService"><span class="std std-ref"><strong>RestartService</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/service/restart</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>ServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ServiceManagementApi.html#StartService"><span class="std std-ref"><strong>StartService</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/service/start</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>ServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="ServiceManagementApi.html#StopService"><span class="std std-ref"><strong>StopService</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/service/stop</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>QueryServiceApi</em></p></td>
-<td><p><a class="reference internal" href="QueryServiceApi.html#CallProcedure"><span class="std std-ref"><strong>CallProcedure</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/query</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><em>QueryServiceApi</em></p></td>
-<td><p><a class="reference internal" href="QueryServiceApi.html#CallProcedureOnCurrentGraph"><span class="std std-ref"><strong>CallProcedureOnCurrentGraph</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/current/query</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><em>VertexApi</em></p></td>
-<td><p><a class="reference internal" href="VertexApi.html#addVertex"><span class="std std-ref"><strong>addVertex</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Add vertex to the graph</p></td>
-</tr>
-<tr class="row-even"><td><p><em>VertexApi</em></p></td>
-<td><p><a class="reference internal" href="VertexApi.html#getVertex"><span class="std std-ref"><strong>getVertex</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Get the vertex’s properties with vertex primary key.</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>VertexApi</em></p></td>
-<td><p><a class="reference internal" href="VertexApi.html#updateVertex"><span class="std std-ref"><strong>updateVertex</strong></span></a></p></td>
-<td><p><strong>PUT</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Update vertex’s property</p></td>
-</tr>
-<tr class="row-even"><td><p><em>EdgeApi</em></p></td>
-<td><p><a class="reference internal" href="EdgeApi.html#addEdge"><span class="std std-ref"><strong>addEdge</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Add edge to the graph</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>EdgeApi</em></p></td>
-<td><p><a class="reference internal" href="EdgeApi.html#getEdge"><span class="std std-ref"><strong>getEdge</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Get the edge’s properties with src and dst vertex primary keys.</p></td>
-</tr>
-<tr class="row-even"><td><p><em>EdgeApi</em></p></td>
-<td><p><a class="reference internal" href="EdgeApi.html#updateEdge"><span class="std std-ref"><strong>updateEdge</strong></span></a></p></td>
-<td><p><strong>PUT</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Update edge’s property</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="documentation-for-utilities-apis">
-<h2>Documentation for Utilities APIs<a class="headerlink" href="#documentation-for-utilities-apis" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="driver.html"><span class="std std-doc">Driver</span></a></p></li>
-<li><p><a class="reference internal" href="session.html"><span class="std std-doc">Session</span></a></p></li>
-<li><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a></p></li>
-<li><p><a class="reference internal" href="status.html"><span class="std std-doc">Status</span></a></p></li>
-<li><p><a class="reference internal" href="encoder.html"><span class="std std-doc">Encoder&amp;Decoder</span></a></p></li>
-</ul>
-</section>
-<section id="documentation-for-data-structures">
-<h2>Documentation for Data Structures<a class="headerlink" href="#documentation-for-data-structures" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="APIResponseWithCode.html"><span class="std std-doc">APIResponseWithCode</span></a></p></li>
-<li><p><a class="reference internal" href="BaseEdgeType.html"><span class="std std-doc">BaseEdgeType</span></a></p></li>
-<li><p><a class="reference internal" href="BaseEdgeTypeVertexTypePairRelationsInner.html"><span class="std std-doc">BaseEdgeTypeVertexTypePairRelationsInner</span></a></p></li>
-<li><p><a class="reference internal" href="BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams.html"><span class="std std-doc">BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams</span></a></p></li>
-<li><p><a class="reference internal" href="BasePropertyMeta.html"><span class="std std-doc">BasePropertyMeta</span></a></p></li>
-<li><p><a class="reference internal" href="BaseVertexType.html"><span class="std std-doc">BaseVertexType</span></a></p></li>
-<li><p><a class="reference internal" href="BaseVertexTypeXCsrParams.html"><span class="std std-doc">BaseVertexTypeXCsrParams</span></a></p></li>
-<li><p><a class="reference internal" href="ColumnMapping.html"><span class="std std-doc">ColumnMapping</span></a></p></li>
-<li><p><a class="reference internal" href="CreateEdgeType.html"><span class="std std-doc">CreateEdgeType</span></a></p></li>
-<li><p><a class="reference internal" href="CreateGraphRequest.html"><span class="std std-doc">CreateGraphRequest</span></a></p></li>
-<li><p><a class="reference internal" href="CreateGraphResponse.html"><span class="std std-doc">CreateGraphResponse</span></a></p></li>
-<li><p><a class="reference internal" href="CreateGraphSchemaRequest.html"><span class="std std-doc">CreateGraphSchemaRequest</span></a></p></li>
-<li><p><a class="reference internal" href="CreateProcedureRequest.html"><span class="std std-doc">CreateProcedureRequest</span></a></p></li>
-<li><p><a class="reference internal" href="CreateProcedureResponse.html"><span class="std std-doc">CreateProcedureResponse</span></a></p></li>
-<li><p><a class="reference internal" href="CreatePropertyMeta.html"><span class="std std-doc">CreatePropertyMeta</span></a></p></li>
-<li><p><a class="reference internal" href="CreateVertexType.html"><span class="std std-doc">CreateVertexType</span></a></p></li>
-<li><p><a class="reference internal" href="DateType.html"><span class="std std-doc">DateType</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeData.html"><span class="std std-doc">EdgeData</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeMapping.html"><span class="std std-doc">EdgeMapping</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeMappingDestinationVertexMappingsInner.html"><span class="std std-doc">EdgeMappingDestinationVertexMappingsInner</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeMappingSourceVertexMappingsInner.html"><span class="std std-doc">EdgeMappingSourceVertexMappingsInner</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeMappingSourceVertexMappingsInnerColumn.html"><span class="std std-doc">EdgeMappingSourceVertexMappingsInnerColumn</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeMappingTypeTriplet.html"><span class="std std-doc">EdgeMappingTypeTriplet</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeRequest.html"><span class="std std-doc">EdgeRequest</span></a></p></li>
-<li><p><a class="reference internal" href="EdgeStatistics.html"><span class="std std-doc">EdgeStatistics</span></a></p></li>
-<li><p><a class="reference internal" href="FixedChar.html"><span class="std std-doc">FixedChar</span></a></p></li>
-<li><p><a class="reference internal" href="FixedCharChar.html"><span class="std std-doc">FixedCharChar</span></a></p></li>
-<li><p><a class="reference internal" href="GSDataType.html"><span class="std std-doc">GSDataType</span></a></p></li>
-<li><p><a class="reference internal" href="GetEdgeType.html"><span class="std std-doc">GetEdgeType</span></a></p></li>
-<li><p><a class="reference internal" href="GetGraphResponse.html"><span class="std std-doc">GetGraphResponse</span></a></p></li>
-<li><p><a class="reference internal" href="GetGraphSchemaResponse.html"><span class="std std-doc">GetGraphSchemaResponse</span></a></p></li>
-<li><p><a class="reference internal" href="GetGraphStatisticsResponse.html"><span class="std std-doc">GetGraphStatisticsResponse</span></a></p></li>
-<li><p><a class="reference internal" href="GetProcedureResponse.html"><span class="std std-doc">GetProcedureResponse</span></a></p></li>
-<li><p><a class="reference internal" href="GetPropertyMeta.html"><span class="std std-doc">GetPropertyMeta</span></a></p></li>
-<li><p><a class="reference internal" href="GetVertexType.html"><span class="std std-doc">GetVertexType</span></a></p></li>
-<li><p><a class="reference internal" href="JobResponse.html"><span class="std std-doc">JobResponse</span></a></p></li>
-<li><p><a class="reference internal" href="JobStatus.html"><span class="std std-doc">JobStatus</span></a></p></li>
-<li><p><a class="reference internal" href="LongText.html"><span class="std std-doc">LongText</span></a></p></li>
-<li><p><a class="reference internal" href="Parameter.html"><span class="std std-doc">Parameter</span></a></p></li>
-<li><p><a class="reference internal" href="PrimitiveType.html"><span class="std std-doc">PrimitiveType</span></a></p></li>
-<li><p><a class="reference internal" href="#./Property.md"><span class="xref myst">Property</span></a></p></li>
-<li><p><a class="reference internal" href="QueryRequest.html"><span class="std std-doc">QueryRequest</span></a></p></li>
-<li><p><a class="reference internal" href="SchemaMapping.html"><span class="std std-doc">SchemaMapping</span></a></p></li>
-<li><p><a class="reference internal" href="SchemaMappingLoadingConfig.html"><span class="std std-doc">SchemaMappingLoadingConfig</span></a></p></li>
-<li><p><a class="reference internal" href="SchemaMappingLoadingConfigDataSource.html"><span class="std std-doc">SchemaMappingLoadingConfigDataSource</span></a></p></li>
-<li><p><a class="reference internal" href="SchemaMappingLoadingConfigFormat.html"><span class="std std-doc">SchemaMappingLoadingConfigFormat</span></a></p></li>
-<li><p><a class="reference internal" href="SchemaMappingLoadingConfigXCsrParams.html"><span class="std std-doc">SchemaMappingLoadingConfigXCsrParams</span></a></p></li>
-<li><p><a class="reference internal" href="ServiceStatus.html"><span class="std std-doc">ServiceStatus</span></a></p></li>
-<li><p><a class="reference internal" href="StartServiceRequest.html"><span class="std std-doc">StartServiceRequest</span></a></p></li>
-<li><p><a class="reference internal" href="StoredProcedureMeta.html"><span class="std std-doc">StoredProcedureMeta</span></a></p></li>
-<li><p><a class="reference internal" href="StringType.html"><span class="std std-doc">StringType</span></a></p></li>
-<li><p><a class="reference internal" href="StringTypeString.html"><span class="std std-doc">StringTypeString</span></a></p></li>
-<li><p><a class="reference internal" href="TemporalType.html"><span class="std std-doc">TemporalType</span></a></p></li>
-<li><p><a class="reference internal" href="TemporalTypeTemporal.html"><span class="std std-doc">TemporalTypeTemporal</span></a></p></li>
-<li><p><a class="reference internal" href="TimeStampType.html"><span class="std std-doc">TimeStampType</span></a></p></li>
-<li><p><a class="reference internal" href="TypedValue.html"><span class="std std-doc">TypedValue</span></a></p></li>
-<li><p><a class="reference internal" href="UpdateProcedureRequest.html"><span class="std std-doc">UpdateProcedureRequest</span></a></p></li>
-<li><p><a class="reference internal" href="UploadFileResponse.html"><span class="std std-doc">UploadFileResponse</span></a></p></li>
-<li><p><a class="reference internal" href="VarChar.html"><span class="std std-doc">VarChar</span></a></p></li>
-<li><p><a class="reference internal" href="VarCharVarChar.html"><span class="std std-doc">VarCharVarChar</span></a></p></li>
-<li><p><a class="reference internal" href="VertexData.html"><span class="std std-doc">VertexData</span></a></p></li>
-<li><p><a class="reference internal" href="VertexEdgeRequest.html"><span class="std std-doc">VertexEdgeRequest</span></a></p></li>
-<li><p><a class="reference internal" href="VertexMapping.html"><span class="std std-doc">VertexMapping</span></a></p></li>
-<li><p><a class="reference internal" href="VertexRequest.html"><span class="std std-doc">VertexRequest</span></a></p></li>
-<li><p><a class="reference internal" href="VertexStatistics.html"><span class="std std-doc">VertexStatistics</span></a></p></li>
-<li><p><a class="reference internal" href="VertexTypePairStatistics.html"><span class="std std-doc">VertexTypePairStatistics</span></a></p></li>
-</ul>
-<p><a id="documentation-for-authorization"></a></p>
-</section>
-<section id="documentation-for-authorization">
-<h2>Documentation For Authorization<a class="headerlink" href="#documentation-for-authorization" title="Permalink to this heading">¶</a></h2>
-<p>Authentication is not supported yet, and we will be introducing authorization-related implementation in the near future.</p>
 </section>
 </section>
 
@@ -1289,12 +1044,12 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../restful_api.html">
+          <a class="next-page" href="python_sdk_ref.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Interactive RESTFul API</div>
+                <div class="title">Python SDK Reference</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -1342,7 +1097,7 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Python SDK Reference</a><ul>
+<li><a class="reference internal" href="#">Python SDK Guide</a><ul>
 <li><a class="reference internal" href="#requirements">Requirements.</a></li>
 <li><a class="reference internal" href="#installation-usage">Installation &amp; Usage</a><ul>
 <li><a class="reference internal" href="#pip-install">pip install</a></li>
@@ -1363,10 +1118,6 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
 <li><a class="reference internal" href="#delete-the-graph">Delete the graph</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#documentation-for-service-apis">Documentation for Service APIs</a></li>
-<li><a class="reference internal" href="#documentation-for-utilities-apis">Documentation for Utilities APIs</a></li>
-<li><a class="reference internal" href="#documentation-for-data-structures">Documentation for Data Structures</a></li>
-<li><a class="reference internal" href="#documentation-for-authorization">Documentation For Authorization</a></li>
 </ul>
 </li>
 </ul>

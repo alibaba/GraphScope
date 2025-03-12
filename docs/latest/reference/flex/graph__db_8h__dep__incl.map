@@ -1,9 +1,11 @@
 <map id="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/graph_db.h" name="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/graph_db.h">
-<area shape="rect" id="node1" title=" " alt="" coords="361,5,588,61"/>
-<area shape="rect" id="node2" href="$server__app_8h.html" title=" " alt="" coords="160,117,387,173"/>
-<area shape="rect" id="node4" href="$graph__db_8cc.html" title=" " alt="" coords="256,235,488,291"/>
-<area shape="rect" id="node5" href="$graph__db__operations_8cc.html" title=" " alt="" coords="512,228,739,299"/>
-<area shape="rect" id="node6" href="$graph__db__operations_8h.html" title=" " alt="" coords="512,109,739,180"/>
-<area shape="rect" id="node7" href="$graph__db__session_8cc.html" title=" " alt="" coords="763,109,989,180"/>
-<area shape="rect" id="node3" href="$server__app_8cc.html" title=" " alt="" coords="5,235,232,291"/>
+<area shape="rect" id="node1" title=" " alt="" coords="702,5,929,61"/>
+<area shape="rect" id="node2" href="$cypher__read__app_8cc.html" title=" " alt="" coords="5,117,252,173"/>
+<area shape="rect" id="node3" href="$cypher__write__app_8cc.html" title=" " alt="" coords="277,117,527,173"/>
+<area shape="rect" id="node4" href="$server__app_8h.html" title=" " alt="" coords="551,117,778,173"/>
+<area shape="rect" id="node6" href="$graph__db_8cc.html" title=" " alt="" coords="647,235,879,291"/>
+<area shape="rect" id="node7" href="$graph__db__operations_8cc.html" title=" " alt="" coords="903,228,1130,299"/>
+<area shape="rect" id="node8" href="$graph__db__operations_8h.html" title=" " alt="" coords="903,109,1130,180"/>
+<area shape="rect" id="node9" href="$graph__db__session_8cc.html" title=" " alt="" coords="1154,109,1381,180"/>
+<area shape="rect" id="node5" href="$server__app_8cc.html" title=" " alt="" coords="397,235,623,291"/>
 </map>

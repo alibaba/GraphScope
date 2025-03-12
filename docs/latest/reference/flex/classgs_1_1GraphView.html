@@ -89,6 +89,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5b0b80732c8f9742b969a9851020dd68"><td class="memTemplParams" colspan="2">template&lt;typename FUNC_T &gt; </td></tr>
 <tr class="memitem:a5b0b80732c8f9742b969a9851020dd68"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphView.html#a5b0b80732c8f9742b969a9851020dd68">foreach_edges_gt</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, EDATA_T &amp;min_value, const FUNC_T &amp;func) const</td></tr>
 <tr class="separator:a5b0b80732c8f9742b969a9851020dd68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a606786a48e0461cf85de7d9700e80c2c"><td class="memTemplParams" colspan="2">template&lt;typename FUNC_T &gt; </td></tr>
+<tr class="memitem:a606786a48e0461cf85de7d9700e80c2c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphView.html#a606786a48e0461cf85de7d9700e80c2c">foreach_edges_lt</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, const EDATA_T &amp;max_value, const FUNC_T &amp;func) const</td></tr>
+<tr class="separator:a606786a48e0461cf85de7d9700e80c2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2df77fb81ab098fb19b94503f825b44"><td class="memTemplParams" colspan="2">template&lt;typename FUNC_T &gt; </td></tr>
 <tr class="memitem:ae2df77fb81ab098fb19b94503f825b44"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphView.html#ae2df77fb81ab098fb19b94503f825b44">foreach_edges_ge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, EDATA_T &amp;min_value, const FUNC_T &amp;func) const</td></tr>
 <tr class="separator:ae2df77fb81ab098fb19b94503f825b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -264,6 +267,52 @@ template&lt;typename FUNC_T &gt; </div>
           <td></td>
           <td class="paramtype">EDATA_T &amp;&#160;</td>
           <td class="paramname"><em>min_value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FUNC_T &amp;&#160;</td>
+          <td class="paramname"><em>func</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a606786a48e0461cf85de7d9700e80c2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a606786a48e0461cf85de7d9700e80c2c">&#9670;&nbsp;</a></span>foreach_edges_lt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<div class="memtemplate">
+template&lt;typename FUNC_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1GraphView.html">gs::GraphView</a>&lt; EDATA_T &gt;::foreach_edges_lt </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const EDATA_T &amp;&#160;</td>
+          <td class="paramname"><em>max_value</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

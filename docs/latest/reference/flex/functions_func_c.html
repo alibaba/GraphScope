@@ -125,11 +125,18 @@ $(function() {
 </li>
 <li>close()
 : <a class="el" href="classgs_1_1ImmutableCsr.html#a8671ecb9515726975467db6cd6c8136d">gs::ImmutableCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1ImmutableCsr_3_01RecordView_01_4.html#a7d584f6ae0d79ce2eb5d8830f82755c2">gs::ImmutableCsr&lt; RecordView &gt;</a>
+, <a class="el" href="classgs_1_1ImmutableCsr_3_01std_1_1string__view_01_4.html#a68bfcc3ac28112753772d1e6e467b7cf">gs::ImmutableCsr&lt; std::string_view &gt;</a>
+, <a class="el" href="classgs_1_1IWalParser.html#a67be292d6822e74d06e1d6f45685a6f6">gs::IWalParser</a>
+, <a class="el" href="classgs_1_1IWalWriter.html#a8c25bccab6ed4d8851830363255a4a56">gs::IWalWriter</a>
 , <a class="el" href="classgs_1_1LFIndexer.html#ac7acbcfcdb4caf2fc3eda871c5ee5f23">gs::LFIndexer&lt; INDEX_T &gt;</a>
+, <a class="el" href="classgs_1_1LocalWalParser.html#aff8f186d916fc7868d7a98bde4405890">gs::LocalWalParser</a>
+, <a class="el" href="classgs_1_1LocalWalWriter.html#a618bfa54afb55630d5a69704984f9d4f">gs::LocalWalWriter</a>
 , <a class="el" href="classgs_1_1MutableCsr.html#a7e012b86ff9fe47f47cebb0fbac5f88d">gs::MutableCsr&lt; EDATA_T &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsr_3_01RecordView_01_4.html#acec5ac4ce3fb1b0f3db709af0965e04c">gs::MutableCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a152568ee23fc7832c4a8efefd0144a50">gs::MutableCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1SingleImmutableCsr.html#a7e294c68f35cec0d5719842c9089519a">gs::SingleImmutableCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1SingleImmutableCsr_3_01RecordView_01_4.html#a7d91c37f0b6eeca5fd4babf5c06ba801">gs::SingleImmutableCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1SingleImmutableCsr_3_01std_1_1string__view_01_4.html#aabf22502c1c09356fa1d65186363f2f4">gs::SingleImmutableCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1SingleMutableCsr.html#ab0ae89a4b905e1c4fd09483fe01f3b20">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>
 , <a class="el" href="classgs_1_1SingleMutableCsr_3_01RecordView_01_4.html#a714a7ff4c5b0267615a6be1ddad72e56">gs::SingleMutableCsr&lt; RecordView &gt;</a>
@@ -142,7 +149,6 @@ $(function() {
 , <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a05635be7decb8e76d1f9f1b5ac31585b">gs::TypedColumn&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn.html#ab93268263b9736518272538454400625">gs::TypedEmptyColumn&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a5e7cc7c53a1a1bed5fc2d5f986133d99">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>
-, <a class="el" href="classgs_1_1WalWriter.html#a5eca2471a60221b10c9317419bb5aede">gs::WalWriter</a>
 </li>
 <li>col_num()
 : <a class="el" href="classgs_1_1Table.html#afc99ad9f80e1f93ec5537f846142a0a4">gs::Table</a>
@@ -169,22 +175,25 @@ $(function() {
 : <a class="el" href="classgs_1_1Table.html#ad894c6d928a74f81654b24d4acfa923e">gs::Table</a>
 </li>
 <li>Commit()
-: <a class="el" href="classgs_1_1CompactTransaction.html#a613b6946f7e4dc1c8a5d763df2cf32bc">gs::CompactTransaction</a>
-, <a class="el" href="classgs_1_1InsertTransaction.html#a9d4a9910b8e116a97df7e19896ed329e">gs::InsertTransaction</a>
-, <a class="el" href="classgs_1_1ReadTransaction.html#ad3cd66107546cb17e023da4539a19c97">gs::ReadTransaction</a>
-, <a class="el" href="classgs_1_1SingleEdgeInsertTransaction.html#ae72853c94cbd7fb52e78e2d9c958d69b">gs::SingleEdgeInsertTransaction</a>
-, <a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#acfaa64d8cfb4833a057e3ae60e7aea65">gs::SingleVertexInsertTransaction</a>
-, <a class="el" href="classgs_1_1UpdateTransaction.html#a446e1c91b0791c805be41bf3865da9de">gs::UpdateTransaction</a>
+: <a class="el" href="classgs_1_1CompactTransaction.html#a02a23c43fcfd3244b8f11c7e092c15c1">gs::CompactTransaction</a>
+, <a class="el" href="classgs_1_1InsertTransaction.html#ae83c83622e7e40c271fa2f285635f9c8">gs::InsertTransaction</a>
+, <a class="el" href="classgs_1_1ReadTransaction.html#afa42011b549bc55376a5ebb9c14ff827">gs::ReadTransaction</a>
+, <a class="el" href="classgs_1_1SingleEdgeInsertTransaction.html#ac70a22cdc865bd5b764f57401b4fc644">gs::SingleEdgeInsertTransaction</a>
+, <a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#ad19d2deff96e4f7e4349792bcec89d88">gs::SingleVertexInsertTransaction</a>
+, <a class="el" href="classgs_1_1UpdateTransaction.html#a343a5e865b62882ba266b2fc7ca61e5d">gs::UpdateTransaction</a>
 </li>
 <li>Compact()
 : <a class="el" href="classgs_1_1GraphDBSession.html#a9d89e34e55de81e334048b07cda2ed0f">gs::GraphDBSession</a>
 , <a class="el" href="classgs_1_1MutablePropertyFragment.html#aab344d5e3defe29f39c4d1f958009d40">gs::MutablePropertyFragment</a>
 </li>
 <li>CompactTransaction()
-: <a class="el" href="classgs_1_1CompactTransaction.html#a4ed7036f1583ad71187c04e7468602ee">gs::CompactTransaction</a>
+: <a class="el" href="classgs_1_1CompactTransaction.html#a4f3fa962270935027605d44d21cf386e">gs::CompactTransaction</a>
 </li>
 <li>compute_max_lookups()
 : <a class="el" href="classgs_1_1IdIndexer.html#a2cabfb08b7fdc7b3b86d038f5d8668fb">gs::IdIndexer&lt; KEY_T, INDEX_T &gt;</a>
+</li>
+<li>config()
+: <a class="el" href="classgs_1_1GraphDB.html#af6a60742718db206e01025e8aa6c7f58">gs::GraphDB</a>
 </li>
 <li>ConnectPath()
 : <a class="el" href="classgs_1_1ShortestPathAmongThree.html#a4a9940c683c0868b6a78c29fe734319f">gs::ShortestPathAmongThree</a>
@@ -223,9 +232,10 @@ $(function() {
 : <a class="el" href="classgs_1_1CountVerticesFactory.html#a505232f597fb9d7592400eed70a6e2aa">gs::CountVerticesFactory</a>
 </li>
 <li>CreateApp()
-: <a class="el" href="classgs_1_1AdhocReadAppFactory.html#ae083fdd325b242d87b1bf433e5ee2ca1">gs::AdhocReadAppFactory</a>
-, <a class="el" href="classgs_1_1AppFactoryBase.html#a104c6bd7ae4fd49e6eca99f992ee26b0">gs::AppFactoryBase</a>
+: <a class="el" href="classgs_1_1AppFactoryBase.html#a104c6bd7ae4fd49e6eca99f992ee26b0">gs::AppFactoryBase</a>
 , <a class="el" href="classgs_1_1CountVerticesFactory.html#a29a812e51059ac15f35d2661344d18ee">gs::CountVerticesFactory</a>
+, <a class="el" href="classgs_1_1CypherReadAppFactory.html#a2e1868a39ae6814d94f32086c0cf5447">gs::CypherReadAppFactory</a>
+, <a class="el" href="classgs_1_1CypherWriteAppFactory.html#ae3e658010f952185519285feacf7207b">gs::CypherWriteAppFactory</a>
 , <a class="el" href="classgs_1_1GraphDB.html#a4be2face152f16a898eaf4fdead23ccc">gs::GraphDB</a>
 , <a class="el" href="classgs_1_1HQPSAdhocReadAppFactory.html#ab8c27494964a5162c9b3f0e6e793563f">gs::HQPSAdhocReadAppFactory</a>
 , <a class="el" href="classgs_1_1HQPSAdhocWriteAppFactory.html#aa6df5d35bf2d68d7a02aedf6150bd7cf">gs::HQPSAdhocWriteAppFactory</a>
@@ -241,14 +251,20 @@ $(function() {
 <li>CreateFragmentLoader()
 : <a class="el" href="classgs_1_1LoaderFactory.html#a48dd6806833a0b455c2fb6738c612220">gs::LoaderFactory</a>
 </li>
-<li>createReadSession()
-: <a class="el" href="classgs_1_1ODPSReadClient.html#a229a27ced1b4777ab85f93da39263d3c">gs::ODPSReadClient</a>
-</li>
 <li>CreateReadSession()
 : <a class="el" href="classgs_1_1ODPSReadClient.html#a75a9564497b98955d3ec5587927c26ee">gs::ODPSReadClient</a>
 </li>
+<li>createReadSession()
+: <a class="el" href="classgs_1_1ODPSReadClient.html#a229a27ced1b4777ab85f93da39263d3c">gs::ODPSReadClient</a>
+</li>
 <li>CreateVertex()
 : <a class="el" href="classgs_1_1GraphDBOperations.html#aa7f3a418d7d7bdd3eaa7707ef29659d5">gs::GraphDBOperations</a>
+</li>
+<li>CreateWalParser()
+: <a class="el" href="classgs_1_1WalParserFactory.html#a81f1463afc5cb9441a966449cd08eda4">gs::WalParserFactory</a>
+</li>
+<li>CreateWalWriter()
+: <a class="el" href="classgs_1_1WalWriterFactory.html#afadae56641e7f5b2c852d665d4cab52e">gs::WalWriterFactory</a>
 </li>
 <li>CsrBase()
 : <a class="el" href="classgs_1_1CsrBase.html#a2d9f07e4d73cd4fde3ff72221cdf270c">gs::CsrBase</a>
@@ -267,6 +283,18 @@ $(function() {
 </li>
 <li>CSVTableRecordBatchSupplier()
 : <a class="el" href="classgs_1_1CSVTableRecordBatchSupplier.html#aa3c8deb21267bf726cdbda1676eb3bab">gs::CSVTableRecordBatchSupplier</a>
+</li>
+<li>CypherReadApp()
+: <a class="el" href="classgs_1_1CypherReadApp.html#aa6a3ce0b9ed97f48d0e262408579abda">gs::CypherReadApp</a>
+</li>
+<li>CypherReadAppFactory()
+: <a class="el" href="classgs_1_1CypherReadAppFactory.html#ac1ff2fdb1193f8d39508a0b4fb225411">gs::CypherReadAppFactory</a>
+</li>
+<li>CypherWriteApp()
+: <a class="el" href="classgs_1_1CypherWriteApp.html#a5e0efbac78893fece8d0e9162e525fec">gs::CypherWriteApp</a>
+</li>
+<li>CypherWriteAppFactory()
+: <a class="el" href="classgs_1_1CypherWriteAppFactory.html#a05562b4267b873ba6b628b9eabd58ef1">gs::CypherWriteAppFactory</a>
 </li>
 </ul>
 </div><!-- contents -->

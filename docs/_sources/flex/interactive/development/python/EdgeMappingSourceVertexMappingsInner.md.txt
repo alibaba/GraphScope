@@ -19,12 +19,12 @@ json = "{}"
 # create an instance of EdgeMappingSourceVertexMappingsInner from a JSON string
 edge_mapping_source_vertex_mappings_inner_instance = EdgeMappingSourceVertexMappingsInner.from_json(json)
 # print the JSON string representation of the object
-print(EdgeMappingSourceVertexMappingsInner.to_json())
+print EdgeMappingSourceVertexMappingsInner.to_json()
 
 # convert the object into a dict
 edge_mapping_source_vertex_mappings_inner_dict = edge_mapping_source_vertex_mappings_inner_instance.to_dict()
 # create an instance of EdgeMappingSourceVertexMappingsInner from a dict
-edge_mapping_source_vertex_mappings_inner_from_dict = EdgeMappingSourceVertexMappingsInner.from_dict(edge_mapping_source_vertex_mappings_inner_dict)
+edge_mapping_source_vertex_mappings_inner_form_dict = edge_mapping_source_vertex_mappings_inner.from_dict(edge_mapping_source_vertex_mappings_inner_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

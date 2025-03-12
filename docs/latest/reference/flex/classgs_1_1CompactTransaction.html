@@ -88,20 +88,20 @@ Collaboration diagram for gs::CompactTransaction:</div>
 <area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="217,109,357,151"/>
 <area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="89,5,277,47"/>
 <area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="301,13,484,39"/>
-<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="419,317,529,344"/>
+<area shape="rect" href="classgs_1_1IWalWriter.html" title=" " alt="" coords="419,317,532,344"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4ed7036f1583ad71187c04e7468602ee"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a4ed7036f1583ad71187c04e7468602ee">CompactTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1CompactTransaction.html#ad18bb85ecc9d20e0bca74c95e7656ec9">timestamp</a>)</td></tr>
-<tr class="separator:a4ed7036f1583ad71187c04e7468602ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f3fa962270935027605d44d21cf386e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a4f3fa962270935027605d44d21cf386e">CompactTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1CompactTransaction.html#ad18bb85ecc9d20e0bca74c95e7656ec9">timestamp</a>)</td></tr>
+<tr class="separator:a4f3fa962270935027605d44d21cf386e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abaa96fd1a913d7636322d9f535645cdd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#abaa96fd1a913d7636322d9f535645cdd">~CompactTransaction</a> ()</td></tr>
 <tr class="separator:abaa96fd1a913d7636322d9f535645cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad18bb85ecc9d20e0bca74c95e7656ec9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#ad18bb85ecc9d20e0bca74c95e7656ec9">timestamp</a> () const</td></tr>
 <tr class="separator:ad18bb85ecc9d20e0bca74c95e7656ec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a613b6946f7e4dc1c8a5d763df2cf32bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a613b6946f7e4dc1c8a5d763df2cf32bc">Commit</a> ()</td></tr>
-<tr class="separator:a613b6946f7e4dc1c8a5d763df2cf32bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02a23c43fcfd3244b8f11c7e092c15c1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a02a23c43fcfd3244b8f11c7e092c15c1">Commit</a> ()</td></tr>
+<tr class="separator:a02a23c43fcfd3244b8f11c7e092c15c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fd65d395cacb0496a1ba3f782428a55"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a9fd65d395cacb0496a1ba3f782428a55">Abort</a> ()</td></tr>
 <tr class="separator:a9fd65d395cacb0496a1ba3f782428a55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -109,8 +109,8 @@ Public Member Functions</h2></td></tr>
 Private Attributes</h2></td></tr>
 <tr class="memitem:aaa401a1973468ec9a6077bfb79bc71d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#aaa401a1973468ec9a6077bfb79bc71d5">graph_</a></td></tr>
 <tr class="separator:aaa401a1973468ec9a6077bfb79bc71d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5db76486edfbf0a8b4c44b2079810b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#af5db76486edfbf0a8b4c44b2079810b5">logger_</a></td></tr>
-<tr class="separator:af5db76486edfbf0a8b4c44b2079810b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab58543670df60f1fa48777f91cc78d9f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#ab58543670df60f1fa48777f91cc78d9f">logger_</a></td></tr>
+<tr class="separator:ab58543670df60f1fa48777f91cc78d9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66259186c08c87e8f92e6e67d26a275e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a66259186c08c87e8f92e6e67d26a275e">vm_</a></td></tr>
 <tr class="separator:a66259186c08c87e8f92e6e67d26a275e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a6478dde384a11c9ef18455be92dff6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CompactTransaction.html#a5a6478dde384a11c9ef18455be92dff6">timestamp_</a></td></tr>
@@ -119,8 +119,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:aa2d196ad1b56f70c6458d4709b490d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a4ed7036f1583ad71187c04e7468602ee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ed7036f1583ad71187c04e7468602ee">&#9670;&nbsp;</a></span>CompactTransaction()</h2>
+<a id="a4f3fa962270935027605d44d21cf386e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f3fa962270935027605d44d21cf386e">&#9670;&nbsp;</a></span>CompactTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -134,7 +134,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;&#160;</td>
           <td class="paramname"><em>logger</em>, </td>
         </tr>
         <tr>
@@ -194,14 +194,14 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a613b6946f7e4dc1c8a5d763df2cf32bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a613b6946f7e4dc1c8a5d763df2cf32bc">&#9670;&nbsp;</a></span>Commit()</h2>
+<a id="a02a23c43fcfd3244b8f11c7e092c15c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02a23c43fcfd3244b8f11c7e092c15c1">&#9670;&nbsp;</a></span>Commit()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::CompactTransaction::Commit </td>
+          <td class="memname">bool gs::CompactTransaction::Commit </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -273,8 +273,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="af5db76486edfbf0a8b4c44b2079810b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af5db76486edfbf0a8b4c44b2079810b5">&#9670;&nbsp;</a></span>logger_</h2>
+<a id="ab58543670df60f1fa48777f91cc78d9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab58543670df60f1fa48777f91cc78d9f">&#9670;&nbsp;</a></span>logger_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -283,7 +283,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>&amp; gs::CompactTransaction::logger_</td>
+          <td class="memname"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a>&amp; gs::CompactTransaction::logger_</td>
         </tr>
       </table>
   </td>

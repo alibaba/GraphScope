@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Using LLM as an Assistant in GIE - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
@@ -734,8 +736,8 @@ mv<span class="w"> </span>/path/to/The-Dream-of-the-Red-Chamber/data<span class=
 <section id="load-the-graph">
 <h2>2. Load the Graph<a class="headerlink" href="#load-the-graph" title="Permalink to this heading">¶</a></h2>
 <p>After preparing the dataset, use the following python code to have the GIE load the datasets and build the graph.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">()</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -775,11 +777,11 @@ type:<span class="w"> </span>EDGE
 <section id="generate-graph-query-sentence-from-questions">
 <h2>4. Generate Graph Query Sentence from Questions<a class="headerlink" href="#generate-graph-query-sentence-from-questions" title="Permalink to this heading">¶</a></h2>
 <p>In GIE’s LLM assistant module, the <code class="docutils literal notranslate"><span class="pre">query_to_cypher</span></code> function allows you to generate corresponding query sentences from provided questions.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.langchain_prompt.query</span> <span class="kn">import</span> <span class="n">query_to_cypher</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.langchain_prompt.query</span><span class="w"> </span><span class="kn">import</span> <span class="n">query_to_cypher</span>
 </pre></div>
 </div>
 <p>Simply define your question and pass it to <code class="docutils literal notranslate"><span class="pre">query_to_cypher</span></code>. It will generate the corresponding Cypher queries based on the question and the information of the loaded graph. Here’s an example of the LLM assistant generating Cypher queries for the question, ‘Whose son is Baoyu Jia?”</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.langchain_prompt.query</span> <span class="kn">import</span> <span class="n">query_to_cypher</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.langchain_prompt.query</span><span class="w"> </span><span class="kn">import</span> <span class="n">query_to_cypher</span>
 <span class="n">question</span> <span class="o">=</span> <span class="s2">&quot;贾宝玉是谁的儿子?&quot;</span>
 <span class="n">cypher_sentence</span> <span class="o">=</span> <span class="n">query_to_cypher</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">cypher_sentence</span><span class="p">)</span>

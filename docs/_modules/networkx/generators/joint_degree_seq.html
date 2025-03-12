@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>networkx.generators.joint_degree_seq - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -693,8 +694,8 @@ MathJax = {
           <h1>Source code for networkx.generators.joint_degree_seq</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Generate graphs with a given joint degree and directed joint degree&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">py_random_state</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;is_valid_joint_degree&quot;</span><span class="p">,</span>
@@ -704,7 +705,7 @@ MathJax = {
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="is_valid_joint_degree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree">[docs]</a><span class="k">def</span> <span class="nf">is_valid_joint_degree</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">):</span>
+<div class="viewcode-block" id="is_valid_joint_degree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_valid_joint_degree</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks whether the given joint degree dictionary is realizable.</span>
 
 <span class="sd">    A *joint degree dictionary* is a dictionary of dictionaries, in</span>
@@ -770,7 +771,7 @@ MathJax = {
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<span class="k">def</span> <span class="nf">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">,</span> <span class="n">avoid_node_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">,</span> <span class="n">avoid_node_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Releases one free stub for ``w``, while preserving joint degree in G.</span>
 
 <span class="sd">    Parameters</span>
@@ -834,7 +835,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="joint_degree_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html#graphscope.nx.generators.joint_degree_seq.joint_degree_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">joint_degree_graph</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">joint_degree_graph</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a random simple graph with the given joint degree dictionary.</span>
 
 <span class="sd">    Parameters</span>
@@ -980,7 +981,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="is_valid_directed_joint_degree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree">[docs]</a><span class="k">def</span> <span class="nf">is_valid_directed_joint_degree</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">,</span> <span class="n">out_degrees</span><span class="p">,</span> <span class="n">nkk</span><span class="p">):</span>
+<div class="viewcode-block" id="is_valid_directed_joint_degree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_valid_directed_joint_degree</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">,</span> <span class="n">out_degrees</span><span class="p">,</span> <span class="n">nkk</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks whether the given directed joint degree input is realizable</span>
 
 <span class="sd">    Parameters</span>
@@ -1053,7 +1054,7 @@ MathJax = {
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<span class="k">def</span> <span class="nf">_directed_neighbor_switch</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_directed_neighbor_switch</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">unsat</span><span class="p">,</span> <span class="n">h_node_residual_out</span><span class="p">,</span> <span class="n">chords</span><span class="p">,</span> <span class="n">h_partition_in</span><span class="p">,</span> <span class="n">partition</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Releases one free stub for node w, while preserving joint degree in G.</span>
@@ -1116,7 +1117,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">w_prime</span>
 
 
-<span class="k">def</span> <span class="nf">_directed_neighbor_switch_rev</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_directed_neighbor_switch_rev</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">unsat</span><span class="p">,</span> <span class="n">h_node_residual_in</span><span class="p">,</span> <span class="n">chords</span><span class="p">,</span> <span class="n">h_partition_out</span><span class="p">,</span> <span class="n">partition</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The reverse of directed_neighbor_switch.</span>
@@ -1169,7 +1170,7 @@ MathJax = {
 
 
 <div class="viewcode-block" id="directed_joint_degree_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html#graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">directed_joint_degree_graph</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">,</span> <span class="n">out_degrees</span><span class="p">,</span> <span class="n">nkk</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">directed_joint_degree_graph</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">,</span> <span class="n">out_degrees</span><span class="p">,</span> <span class="n">nkk</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a random simple directed graph with the joint degree.</span>
 
 <span class="sd">    Parameters</span>

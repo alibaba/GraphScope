@@ -67,6 +67,8 @@ $(function() {
 <h3><a id="index_m"></a>- m -</h3><ul>
 <li>Make()
 : <a class="el" href="classgs_1_1CSVFragmentLoader.html#aaaf3821ee3e6e2b843fde08b99b3f5cc">gs::CSVFragmentLoader</a>
+, <a class="el" href="classgs_1_1LocalWalParser.html#a4b62f1d23cad23a2e22ede3711a9515d">gs::LocalWalParser</a>
+, <a class="el" href="classgs_1_1LocalWalWriter.html#ae6abcd9cf3b72579ecfc51d41bc9869e">gs::LocalWalWriter</a>
 , <a class="el" href="classgs_1_1ODPSFragmentLoader.html#a528d32e895a8e6e7a458dd09c1c14d5f">gs::ODPSFragmentLoader</a>
 </li>
 <li>max_length
@@ -97,6 +99,9 @@ $(function() {
 <li>max_vnum_
 : <a class="el" href="classgs_1_1Schema.html#ab227a976f401a39334a774e4a0fcb9ec">gs::Schema</a>
 </li>
+<li>MAX_WALS_NUM
+: <a class="el" href="classgs_1_1IWalWriter.html#a565c64de5a7f032b52da7db3ea415be1">gs::IWalWriter</a>
+</li>
 <li>memory_level
 : <a class="el" href="structgs_1_1GraphDBConfig.html#af9e820c9eaad0a47d2bb6093575fe8f7">gs::GraphDBConfig</a>
 </li>
@@ -126,10 +131,10 @@ $(function() {
 : <a class="el" href="classgs_1_1mmap__vector.html#a530355109518cc649f93ec14dd62d32e">gs::mmap_vector&lt; T &gt;</a>
 </li>
 <li>mmapped_ptrs_
-: <a class="el" href="classgs_1_1WalsParser.html#a4f286dfde823a8f1add91e92e482b159">gs::WalsParser</a>
+: <a class="el" href="classgs_1_1LocalWalParser.html#a0f92973cf1a9652aba4236cf1f67fba2">gs::LocalWalParser</a>
 </li>
 <li>mmapped_size_
-: <a class="el" href="classgs_1_1WalsParser.html#a106797c79b1c5f8e6d60c2c6861bc9c2">gs::WalsParser</a>
+: <a class="el" href="classgs_1_1LocalWalParser.html#a22c68e57c0bf529acef23d6b85722bf8">gs::LocalWalParser</a>
 </li>
 <li>mode()
 : <a class="el" href="classgs_1_1AppBase.html#a28b24079ddb47fcc13a6ef5edecf0053">gs::AppBase</a>
@@ -168,7 +173,7 @@ $(function() {
 : <a class="el" href="classgs_1_1MutablePropertyFragment.html#ac16d782a649d835ce025907cf8962eab">gs::MutablePropertyFragment</a>
 </li>
 <li>MutableAdjlist()
-: <a class="el" href="classgs_1_1MutableAdjlist.html#a6155660faaae97230c92d17bbd31c4b4">gs::MutableAdjlist&lt; EDATA_T &gt;</a>
+: <a class="el" href="classgs_1_1MutableAdjlist.html#ac3cd640b610e49fb08352dbc813bab89">gs::MutableAdjlist&lt; EDATA_T &gt;</a>
 </li>
 <li>MutableColumnNbr()
 : <a class="el" href="structgs_1_1MutableNbrSlice_3_01std_1_1string__view_01_4_1_1MutableColumnNbr.html#a0208b1a2e54b7dbb23843c7720ea2ee0">gs::MutableNbrSlice&lt; std::string_view &gt;::MutableColumnNbr</a>
@@ -193,8 +198,8 @@ $(function() {
 </li>
 <li>MutableNbrSlice()
 : <a class="el" href="classgs_1_1MutableNbrSlice.html#acae745f9fc40cb5d71d87e47acdf3d31">gs::MutableNbrSlice&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1MutableNbrSlice_3_01RecordView_01_4.html#a9bca690a74ed2e703bbd02b4e6f11421">gs::MutableNbrSlice&lt; RecordView &gt;</a>
-, <a class="el" href="classgs_1_1MutableNbrSlice_3_01std_1_1string__view_01_4.html#a92f9c6144ab24cf99ab437fc32d9fec6">gs::MutableNbrSlice&lt; std::string_view &gt;</a>
+, <a class="el" href="classgs_1_1MutableNbrSlice_3_01RecordView_01_4.html#ab52522bb7152d9f83a4c198bc0c5e766">gs::MutableNbrSlice&lt; RecordView &gt;</a>
+, <a class="el" href="classgs_1_1MutableNbrSlice_3_01std_1_1string__view_01_4.html#a30116d4ca567acc255e53d2646507737">gs::MutableNbrSlice&lt; std::string_view &gt;</a>
 </li>
 <li>MutableNbrSliceMut()
 : <a class="el" href="classgs_1_1MutableNbrSliceMut.html#aae14a3ca6313af6366839369200c5177">gs::MutableNbrSliceMut&lt; EDATA_T &gt;</a>

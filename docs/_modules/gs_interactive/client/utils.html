@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>gs_interactive.client.utils - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -708,161 +709,176 @@ MathJax = {
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 
 
-<div class="viewcode-block" id="Encoder"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder">[docs]</a><span class="k">class</span> <span class="nc">Encoder</span><span class="p">:</span>
+<div class="viewcode-block" id="Encoder"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Encoder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A simple encoder to encode the data into bytes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-<div class="viewcode-block" id="Encoder.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Encoder.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endian</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endian</span> <span class="o">=</span> <span class="n">endian</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_int"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_int">[docs]</a>    <span class="k">def</span> <span class="nf">put_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.put_int"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_int">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put an integer into the byte array, 4 bytes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">))</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_long"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_long">[docs]</a>    <span class="k">def</span> <span class="nf">put_long</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.put_long"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_long">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_long</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put a long integer into the byte array, 8 bytes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">))</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_string"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_string">[docs]</a>    <span class="k">def</span> <span class="nf">put_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.put_string"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_string">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put a string into the byte array, first put the length of the string, then the string</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">put_int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_byte"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_byte">[docs]</a>    <span class="k">def</span> <span class="nf">put_byte</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Encoder.put_byte"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_byte">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_byte</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put a single byte into the byte array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">))</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">put_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.put_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_bytes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put a byte array into the byte array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
-        
-<div class="viewcode-block" id="Encoder.put_double"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_double">[docs]</a>    <span class="k">def</span> <span class="nf">put_double</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.put_double"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.put_double">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">put_double</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put a double into the byte array, 8 bytes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">))</span></div>
-        
-<div class="viewcode-block" id="Encoder.get_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.get_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Encoder.get_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Encoder.get_bytes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the bytes from the byte array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="c1"># return bytes not bytearray</span>
         <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="Decoder"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder">[docs]</a><span class="k">class</span> <span class="nc">Decoder</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Decoder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A simple decoder to decode the bytes into data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-<div class="viewcode-block" id="Decoder.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">,</span><span class="n">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">,</span> <span class="n">endian</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span> <span class="o">=</span> <span class="n">byte_array</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endian</span> <span class="o">=</span> <span class="n">endian</span></div>
-        
-<div class="viewcode-block" id="Decoder.get_int"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_int">[docs]</a>    <span class="k">def</span> <span class="nf">get_int</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_int"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_int">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_int</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an integer from the byte array, 4 bytes</span>
 
 <span class="sd">        returns: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span>  <span class="c1"># noqa E203</span>
+            <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">4</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.get_long"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_long">[docs]</a>    <span class="k">def</span> <span class="nf">get_long</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_long"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_long">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_long</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a long integer from the byte array, 8 bytes</span>
-<span class="sd">        </span>
+
 <span class="sd">        returns: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">8</span><span class="p">],</span>  <span class="c1"># noqa E203</span>
+            <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">8</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.get_double"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_double">[docs]</a>    <span class="k">def</span> <span class="nf">get_double</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_double"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_double">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_double</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a double from the byte array, 8 bytes</span>
-<span class="sd">        </span>
+
 <span class="sd">        returns: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">8</span><span class="p">],</span>  <span class="c1"># noqa E203</span>
+            <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">8</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.get_byte"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_byte">[docs]</a>    <span class="k">def</span> <span class="nf">get_byte</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_byte"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_byte">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_byte</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a single byte from the byte array</span>
-<span class="sd">        </span>
+
 <span class="sd">        returns: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># noqa E203</span>
+            <span class="n">byteorder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.get_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_bytes"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_bytes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a byte array from the byte array</span>
-<span class="sd">        </span>
+
 <span class="sd">        returns: A byte array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">length</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="n">length</span><span class="p">]</span>  <span class="c1"># noqa E203</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="n">length</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.get_string"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_string">[docs]</a>    <span class="k">def</span> <span class="nf">get_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.get_string"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.get_string">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a string from the byte array, first get the length of the string, then the string</span>
-<span class="sd">        </span>
+
 <span class="sd">        returns: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_int</span><span class="p">()</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">length</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="n">length</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>  <span class="c1"># noqa E203</span>
+            <span class="s2">&quot;utf-8&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="n">length</span>
         <span class="k">return</span> <span class="n">value</span></div>
-    
-<div class="viewcode-block" id="Decoder.is_empty"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Decoder.is_empty"><a class="viewcode-back" href="../../../flex/interactive/development/python/encoder.html#gs_interactive.client.utils.Decoder.is_empty">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether the byte array is empty</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">byte_array</span><span class="p">)</span></div></div>
-    
 
-<span class="k">class</span> <span class="nc">InputFormat</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="n">CPP_ENCODER</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># raw bytes encoded by encoder/decoder</span>
-    <span class="n">CYPHER_JSON</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># json format string</span>
-    <span class="n">CYPHER_PROTO_ADHOC</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># protobuf adhoc bytes</span>
-    <span class="n">CYPHER_PROTO_PROCEDURE</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># protobuf procedure bytes</span>
 
-<span class="k">def</span> <span class="nf">append_format_byte</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">input_format</span><span class="p">:</span> <span class="n">InputFormat</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InputFormat</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">CPP_ENCODER</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># raw bytes encoded by encoder/decoder</span>
+    <span class="n">CYPHER_JSON</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># json format string</span>
+    <span class="n">CYPHER_PROTO_ADHOC</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># protobuf adhoc bytes</span>
+    <span class="n">CYPHER_PROTO_PROCEDURE</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># protobuf procedure bytes</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">append_format_byte</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">input_format</span><span class="p">:</span> <span class="n">InputFormat</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Append a byte to the end of the input string to denote the input format</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">new_bytes</span> <span class="o">=</span> <span class="nb">input</span> <span class="o">+</span> <span class="nb">bytes</span><span class="p">([</span><span class="n">input_format</span><span class="o">.</span><span class="n">value</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">new_bytes</span>
-    
 </pre></div>
         </article>
       </div>

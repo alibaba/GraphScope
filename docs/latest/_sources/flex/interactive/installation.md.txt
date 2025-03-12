@@ -4,7 +4,7 @@ Interactive relies solely on Docker and does not have a strong dependency on the
 
 ## Prerequisites
 - **Docker Installation**: Ensure you have Docker installed and configured on a Mac or Linux machine. If you haven't installed Docker yet, you can find the installation guide [here](https://docs.docker.com/get-docker/).
-- **Python Installtion**: Interactive requires `Python` >= `3.8` and `pip` >= `19.3`.
+- **Python Installation**: Interactive requires `Python` >= `3.8` and `pip` >= `19.3`.
 
 ## Install and Deploy Interactive
 
@@ -23,6 +23,10 @@ gsctl instance deploy --type interactive
 
 ```{note}
 In addition to the interactive server, a coordinator server is also deployed. The coordinator server functions similarly to the `ApiServer` for k8s, enabling users to engage with the GraphScope platform via a streamlined and standardized set of APIs.
+```
+
+```{note}
+By default, the latest version of Interactive is used. To specify a fixed version, use the --image-tag option. For example `gsctl instance deploy --type interactive --image-tag v0.31.0`.
 ```
 
 <!-- 2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port, see [Service-Accessibility](./installation.md#service-accessibility) -->

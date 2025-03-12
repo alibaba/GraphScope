@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of LongText from a JSON string
 long_text_instance = LongText.from_json(json)
 # print the JSON string representation of the object
-print(LongText.to_json())
+print LongText.to_json()
 
 # convert the object into a dict
 long_text_dict = long_text_instance.to_dict()
 # create an instance of LongText from a dict
-long_text_from_dict = LongText.from_dict(long_text_dict)
+long_text_form_dict = long_text.from_dict(long_text_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

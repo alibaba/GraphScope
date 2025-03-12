@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of TemporalTypeTemporal from a JSON string
 temporal_type_temporal_instance = TemporalTypeTemporal.from_json(json)
 # print the JSON string representation of the object
-print(TemporalTypeTemporal.to_json())
+print TemporalTypeTemporal.to_json()
 
 # convert the object into a dict
 temporal_type_temporal_dict = temporal_type_temporal_instance.to_dict()
 # create an instance of TemporalTypeTemporal from a dict
-temporal_type_temporal_from_dict = TemporalTypeTemporal.from_dict(temporal_type_temporal_dict)
+temporal_type_temporal_form_dict = temporal_type_temporal.from_dict(temporal_type_temporal_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

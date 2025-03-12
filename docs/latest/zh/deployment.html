@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>部署 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -377,7 +377,7 @@ MathJax = {
 则会拉取对应版本的最新镜像。因此，请确保您的集群可以访问公共镜像仓库。</p>
 <p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>) 作为 GraphScope 在 Python 客户端，它封装、管理着 GraphScope 引擎的各种组件，并
 部署、连接、操作用户在 Kubernetes 集群上的 GraphScope 引擎。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
 </pre></div>
@@ -388,8 +388,8 @@ MathJax = {
 将其通过`k8s_volumes` 的参数传给会话的构造函数。</p>
 <p>注意这里的本机路径是相对于 k8s 节点的概念，也就是说，如果你是通过 <cite>Kind</cite> 创建的集群，那么你需要将这个目录拷贝到
 <cite>Kind</cite> 的虚拟主机的相应路径上，或者在配置中将路径提前挂载到虚拟主机上去。在 <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">这里</a> 查看更多细节。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">graphscope</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 
 <span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>

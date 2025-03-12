@@ -26,12 +26,12 @@ json = "{}"
 # create an instance of StoredProcedureMeta from a JSON string
 stored_procedure_meta_instance = StoredProcedureMeta.from_json(json)
 # print the JSON string representation of the object
-print(StoredProcedureMeta.to_json())
+print StoredProcedureMeta.to_json()
 
 # convert the object into a dict
 stored_procedure_meta_dict = stored_procedure_meta_instance.to_dict()
 # create an instance of StoredProcedureMeta from a dict
-stored_procedure_meta_from_dict = StoredProcedureMeta.from_dict(stored_procedure_meta_dict)
+stored_procedure_meta_form_dict = stored_procedure_meta.from_dict(stored_procedure_meta_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

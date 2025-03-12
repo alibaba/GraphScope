@@ -122,9 +122,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
-<tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6868b0828d34e79e360ceeb4783ac7e6">addVertexBatchFromArray</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols)</td></tr>
-<tr class="separator:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca6603dcc659704164599be04dafbebd"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
+<tr class="memitem:aca6603dcc659704164599be04dafbebd"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#aca6603dcc659704164599be04dafbebd">addVertexBatchFromArray</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols, std::shared_mutex &amp;rw_mutex)</td></tr>
+<tr class="separator:aca6603dcc659704164599be04dafbebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a218fa29e94a8876064d0ca06b67107fa"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
 <tr class="memitem:a218fa29e94a8876064d0ca06b67107fa"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a218fa29e94a8876064d0ca06b67107fa">addVertexRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
 <tr class="separator:a218fa29e94a8876064d0ca06b67107fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -472,8 +472,8 @@ template&lt;typename EDATA_T , typename VECTOR_T &gt; </div>
 
 </div>
 </div>
-<a id="a6868b0828d34e79e360ceeb4783ac7e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6868b0828d34e79e360ceeb4783ac7e6">&#9670;&nbsp;</a></span>addVertexBatchFromArray()</h2>
+<a id="aca6603dcc659704164599be04dafbebd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca6603dcc659704164599be04dafbebd">&#9670;&nbsp;</a></span>addVertexBatchFromArray()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -505,7 +505,13 @@ template&lt;typename KEY_T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>property_cols</em>&#160;</td>
+          <td class="paramname"><em>property_cols</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::shared_mutex &amp;&#160;</td>
+          <td class="paramname"><em>rw_mutex</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

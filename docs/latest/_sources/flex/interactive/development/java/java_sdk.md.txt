@@ -265,14 +265,14 @@ public class GettingStarted {
 }
 ```
 
-For each vertex/edge types, you need to provide the input data source and column mapping infomation.
-Remember to add `@` at the begining of the local file path. 
-`Session.bulkLoading()` will submit an dataloading job to the service, and we can query the status of the job via `Session.getJobStatus()`, and wait until the job has compleleted successfully.
+For each vertex/edge types, you need to provide the input data source and column mapping information.
+Remember to add `@` at the beginning of the local file path. 
+`Session.bulkLoading()` will submit an dataloading job to the service, and we can query the status of the job via `Session.getJobStatus()`, and wait until the job has completed successfully.
 
 ### Create a stored procedure
 
 Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both `cypher` and `c++` queries as stored procedures. 
-With the following code, you will create a procedure named `testProcedure` which is definied via a `cypher` query.
+With the following code, you will create a procedure named `testProcedure` which is defined via a `cypher` query.
 
 ```java
 public class GettingStarted{
@@ -304,7 +304,7 @@ public class GettingStarted{
 }
 ```
 
-The procedure could not be invokded now, since currently interactive service has not been switched to the newly created `test_graph`. We need to start the service on `test_graph`.
+The procedure could not be invoked now, since currently interactive service has not been switched to the newly created `test_graph`. We need to start the service on `test_graph`.
 
 ### Start the query service on the new graph
 

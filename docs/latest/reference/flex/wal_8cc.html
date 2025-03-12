@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Flex: /home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal.cc File Reference</title>
+<title>Flex: /home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/wal/wal.cc File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,38 +62,43 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_83040b2426fd14f30f85bf1fbd97af90.html">flex</a></li><li class="navelem"><a class="el" href="dir_74c203ea010b566e2aa7523d4d870365.html">engines</a></li><li class="navelem"><a class="el" href="dir_36ec3549fd5133a6f61eb5067c6256de.html">graph_db</a></li><li class="navelem"><a class="el" href="dir_b22b7d531418ac8eb6812a94ced2c381.html">database</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_83040b2426fd14f30f85bf1fbd97af90.html">flex</a></li><li class="navelem"><a class="el" href="dir_74c203ea010b566e2aa7523d4d870365.html">engines</a></li><li class="navelem"><a class="el" href="dir_36ec3549fd5133a6f61eb5067c6256de.html">graph_db</a></li><li class="navelem"><a class="el" href="dir_b22b7d531418ac8eb6812a94ced2c381.html">database</a></li><li class="navelem"><a class="el" href="dir_a8273d77570bd975a101d4b4a8cd5689.html">wal</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#define-members">Macros</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">wal.cc File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="wal_8h_source.html">flex/engines/graph_db/database/wal.h</a>&quot;</code><br />
-<code>#include &lt;chrono&gt;</code><br />
-<code>#include &lt;filesystem&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="wal_8h_source.html">flex/engines/graph_db/database/wal/wal.h</a>&quot;</code><br />
+<code>#include &lt;dlfcn.h&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;utility&gt;</code><br />
+<code>#include &lt;boost/algorithm/string.hpp&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for wal.cc:</div>
 <div class="dyncontent">
-<div class="center"><img src="wal_8cc__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8cc" alt=""/></div>
-<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8cc" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_8cc">
-<area shape="rect" title=" " alt="" coords="629,5,855,61"/>
-<area shape="rect" href="wal_8h.html" title=" " alt="" coords="428,109,576,151"/>
-<area shape="rect" title=" " alt="" coords="825,199,915,225"/>
-<area shape="rect" title=" " alt="" coords="779,117,846,143"/>
+<div class="center"><img src="wal_8cc__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8cc" alt=""/></div>
+<map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8cc" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2engines_2graph__db_2database_2wal_2wal_8cc">
+<area shape="rect" title=" " alt="" coords="651,5,878,61"/>
+<area shape="rect" href="wal_8h.html" title=" " alt="" coords="436,109,611,151"/>
+<area shape="rect" title=" " alt="" coords="635,117,702,143"/>
+<area shape="rect" title=" " alt="" coords="726,117,803,143"/>
+<area shape="rect" title=" " alt="" coords="828,117,888,143"/>
+<area shape="rect" title=" " alt="" coords="913,117,1107,143"/>
 <area shape="rect" title=" " alt="" coords="5,199,68,225"/>
 <area shape="rect" title=" " alt="" coords="92,199,195,225"/>
 <area shape="rect" title=" " alt="" coords="219,199,294,225"/>
 <area shape="rect" title=" " alt="" coords="318,199,403,225"/>
-<area shape="rect" title=" " alt="" coords="428,199,491,225"/>
-<area shape="rect" title=" " alt="" coords="515,199,574,225"/>
-<area shape="rect" title=" " alt="" coords="598,199,662,225"/>
-<area shape="rect" title=" " alt="" coords="686,199,801,225"/>
+<area shape="rect" title=" " alt="" coords="427,199,518,225"/>
+<area shape="rect" title=" " alt="" coords="543,199,605,225"/>
+<area shape="rect" title=" " alt="" coords="630,199,689,225"/>
+<area shape="rect" title=" " alt="" coords="713,199,777,225"/>
+<area shape="rect" title=" " alt="" coords="801,199,925,225"/>
+<area shape="rect" title=" " alt="" coords="950,199,1065,225"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -102,35 +107,13 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:ac6c45889010c1bd68631771b64f18101"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wal_8cc.html#ac6c45889010c1bd68631771b64f18101">unlikely</a>(x)&#160;&#160;&#160;__builtin_expect(!!(x), 0)</td></tr>
-<tr class="separator:ac6c45889010c1bd68631771b64f18101"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a01bca5b517de112fe95ec113bd368747"><td class="memItemLeft" align="right" valign="top">static constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a01bca5b517de112fe95ec113bd368747">gs::MAX_WALS_NUM</a> = 134217728</td></tr>
-<tr class="separator:a01bca5b517de112fe95ec113bd368747"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a4dfbc764e04a98c27be9ecae6ccedca7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a4dfbc764e04a98c27be9ecae6ccedca7">gs::get_wal_uri_scheme</a> (const std::string &amp;uri)</td></tr>
+<tr class="separator:a4dfbc764e04a98c27be9ecae6ccedca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab27f01634dc63386b0357c4fd353280c"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab27f01634dc63386b0357c4fd353280c">gs::get_wal_uri_path</a> (const std::string &amp;uri)</td></tr>
+<tr class="separator:ab27f01634dc63386b0357c4fd353280c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ac6c45889010c1bd68631771b64f18101"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6c45889010c1bd68631771b64f18101">&#9670;&nbsp;</a></span>unlikely</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define unlikely</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">x</td><td>)</td>
-          <td>&#160;&#160;&#160;__builtin_expect(!!(x), 0)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

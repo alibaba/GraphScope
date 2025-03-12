@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>Data Source - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
@@ -293,7 +293,8 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk_ref.html">Python SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/restful_api.html">Interactive RESTFul API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
@@ -341,6 +342,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -1095,8 +1097,8 @@ tables are separated by commas.</p>
 <p>2） In the script, the MaxCompute table parameters are obtained through
 FLAG of TensorFlow in order to obtain the data source. The data source
 can be one or more.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="n">flags</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">flags</span>
 <span class="n">FLAGS</span> <span class="o">=</span> <span class="n">flags</span><span class="o">.</span><span class="n">FLAGS</span>
@@ -1110,7 +1112,7 @@ can be one or more.</p>
 <h1>3 User API<a class="headerlink" href="#user-api" title="Permalink to this heading">¶</a></h1>
 <p>## 3.1 Decoder type <code class="docutils literal notranslate"><span class="pre">Decoder</span></code> type is used to described the
 aforementioned data format as follows.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">weighted:       Describe whether the data source is weighted, the default is False</span>
 <span class="sd">labeled:        Describe whether the data source has a label, the default is False</span>
@@ -1139,7 +1141,7 @@ visits will be unified as int-typed attributes. In addition to
 simplifying subsequent operations, this conversion will greatly reduce
 memory overhead.</p>
 <p>## 3.2 Vertex decoder Vertex decoder can take the following formats.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="c1"># schema = (src_id int64, dst_id int64, weight double)</span>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1164,7 +1166,7 @@ memory overhead.</p>
 </pre></div>
 </div>
 <p>## 3.3 Edge decoder Edge decoder can take the following formats.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="c1"># schema = (scr_id int64, dst_id int64)</span>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">()</span>
@@ -1263,7 +1265,7 @@ memory overhead.</p>
 ʻitem_node_decoder<code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">item</span> <span class="pre">vertex</span> <span class="pre">table,</span> <span class="pre">ʻuser_node_decoder</span></code> for
 user vertex table and ʻedge_decoder` for edge table with the following
 code.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphlearn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gl</span>
 
 <span class="n">item_node_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">])</span>
 <span class="n">user_node_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">])</span>

@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.framework.dag_utils - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -709,22 +710,22 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">attr_value_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">attr_value_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_def_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">types_pb2</span>
 
 
-<div class="viewcode-block" id="create_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_app.html#graphscope.framework.dag_utils.create_app">[docs]</a><span class="k">def</span> <span class="nf">create_app</span><span class="p">(</span><span class="n">app_assets</span><span class="p">):</span>
+<div class="viewcode-block" id="create_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_app.html#graphscope.framework.dag_utils.create_app">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">(</span><span class="n">app_assets</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for create an `CREATE_APP` Operation with configuration.</span>
 
 <span class="sd">    This op will do nothing but provide required information for `BOUND_APP`</span>
@@ -738,7 +739,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="bind_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.bind_app.html#graphscope.framework.dag_utils.bind_app">[docs]</a><span class="k">def</span> <span class="nf">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">):</span>
+<div class="viewcode-block" id="bind_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.bind_app.html#graphscope.framework.dag_utils.bind_app">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for create an `BIND_APP` Operation with configuration.</span>
 <span class="sd">    Compile and load an application after evaluated.</span>
 
@@ -773,7 +774,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="run_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.run_app.html#graphscope.framework.dag_utils.run_app">[docs]</a><span class="k">def</span> <span class="nf">run_app</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="run_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.run_app.html#graphscope.framework.dag_utils.run_app">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">run_app</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run `bound app` on the `graph`.</span>
 
 <span class="sd">    Args:</span>
@@ -804,7 +805,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="create_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph.html#graphscope.framework.dag_utils.create_graph">[docs]</a><span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph.html#graphscope.framework.dag_utils.create_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_graph</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">graph_type</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an `CREATE_GRAPH` op, add op to default dag.</span>
 
 <span class="sd">    Args:</span>
@@ -843,7 +844,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="create_loader"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_loader.html#graphscope.framework.dag_utils.create_loader">[docs]</a><span class="k">def</span> <span class="nf">create_loader</span><span class="p">(</span><span class="n">vertex_or_edge_label_list</span><span class="p">):</span>
+<div class="viewcode-block" id="create_loader"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_loader.html#graphscope.framework.dag_utils.create_loader">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_loader</span><span class="p">(</span><span class="n">vertex_or_edge_label_list</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a loader operation.</span>
 <span class="sd">    Args:</span>
 <span class="sd">        vertex_or_edge_label_list: List of</span>
@@ -867,7 +868,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="add_labels_to_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_labels_to_graph.html#graphscope.framework.dag_utils.add_labels_to_graph">[docs]</a><span class="k">def</span> <span class="nf">add_labels_to_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">):</span>
+<div class="viewcode-block" id="add_labels_to_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_labels_to_graph.html#graphscope.framework.dag_utils.add_labels_to_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_labels_to_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add new labels to existed graph.</span>
 
 <span class="sd">    Args:</span>
@@ -887,7 +888,7 @@ MathJax = {
 <span class="sd">        Since we don&#39;t want to trigger the loading, we must not use</span>
 <span class="sd">        any api that can trigger the loading process implicitly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">GraphDAGNode</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphDAGNode</span>
 
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">GraphDAGNode</span><span class="p">)</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">]</span>
@@ -922,7 +923,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">consolidate_columns</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">consolidate_columns</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
@@ -971,7 +972,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span>
 
 
-<div class="viewcode-block" id="dynamic_to_arrow"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html#graphscope.framework.dag_utils.dynamic_to_arrow">[docs]</a><span class="k">def</span> <span class="nf">dynamic_to_arrow</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="dynamic_to_arrow"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html#graphscope.framework.dag_utils.dynamic_to_arrow">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">dynamic_to_arrow</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an op to transform a :class:`nx.Graph` object to :class:`Graph`.</span>
 
 <span class="sd">    Args:</span>
@@ -1016,7 +1017,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="arrow_to_dynamic"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.arrow_to_dynamic.html#graphscope.framework.dag_utils.arrow_to_dynamic">[docs]</a><span class="k">def</span> <span class="nf">arrow_to_dynamic</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="arrow_to_dynamic"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.arrow_to_dynamic.html#graphscope.framework.dag_utils.arrow_to_dynamic">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">arrow_to_dynamic</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform a :class:`Graph` object to :class:`nx.Graph`.</span>
 
 <span class="sd">    Args:</span>
@@ -1049,7 +1050,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="modify_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html#graphscope.framework.dag_utils.modify_edges">[docs]</a><span class="k">def</span> <span class="nf">modify_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{},</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="modify_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html#graphscope.framework.dag_utils.modify_edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">modify_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{},</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create modify edges operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1077,7 +1078,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="modify_vertices"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html#graphscope.framework.dag_utils.modify_vertices">[docs]</a><span class="k">def</span> <span class="nf">modify_vertices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{}):</span>
+<div class="viewcode-block" id="modify_vertices"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html#graphscope.framework.dag_utils.modify_vertices">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">modify_vertices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create modify vertices operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1103,7 +1104,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="report_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.report_graph.html#graphscope.framework.dag_utils.report_graph">[docs]</a><span class="k">def</span> <span class="nf">report_graph</span><span class="p">(</span>
+<div class="viewcode-block" id="report_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.report_graph.html#graphscope.framework.dag_utils.report_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">report_graph</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">report_type</span><span class="p">,</span>
     <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1180,7 +1181,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="project_arrow_property_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph.html#graphscope.framework.dag_utils.project_arrow_property_graph">[docs]</a><span class="k">def</span> <span class="nf">project_arrow_property_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">vertex_collections</span><span class="p">,</span> <span class="n">edge_collections</span><span class="p">):</span>
+<div class="viewcode-block" id="project_arrow_property_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph.html#graphscope.framework.dag_utils.project_arrow_property_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">project_arrow_property_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">vertex_collections</span><span class="p">,</span> <span class="n">edge_collections</span><span class="p">):</span>
     <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">),</span>
@@ -1204,7 +1205,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="project_to_simple"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_to_simple.html#graphscope.framework.dag_utils.project_to_simple">[docs]</a><span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span>
+<div class="viewcode-block" id="project_to_simple"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_to_simple.html#graphscope.framework.dag_utils.project_to_simple">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">project_to_simple</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">v_prop</span><span class="p">,</span>
     <span class="n">e_prop</span><span class="p">,</span>
@@ -1243,7 +1244,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="copy_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.copy_graph.html#graphscope.framework.dag_utils.copy_graph">[docs]</a><span class="k">def</span> <span class="nf">copy_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">copy_type</span><span class="o">=</span><span class="s2">&quot;identical&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="copy_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.copy_graph.html#graphscope.framework.dag_utils.copy_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">copy_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">copy_type</span><span class="o">=</span><span class="s2">&quot;identical&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create copy operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1273,7 +1274,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="to_directed"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_directed.html#graphscope.framework.dag_utils.to_directed">[docs]</a><span class="k">def</span> <span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="to_directed"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_directed.html#graphscope.framework.dag_utils.to_directed">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create to_directed operation graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1301,7 +1302,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="to_undirected"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_undirected.html#graphscope.framework.dag_utils.to_undirected">[docs]</a><span class="k">def</span> <span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="to_undirected"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_undirected.html#graphscope.framework.dag_utils.to_undirected">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create to_undirected operation for graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1329,7 +1330,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="create_graph_view"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph_view.html#graphscope.framework.dag_utils.create_graph_view">[docs]</a><span class="k">def</span> <span class="nf">create_graph_view</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">view_type</span><span class="p">):</span>
+<div class="viewcode-block" id="create_graph_view"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph_view.html#graphscope.framework.dag_utils.create_graph_view">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_graph_view</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">view_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create view of nx graph.</span>
 <span class="sd">    Args:</span>
 <span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
@@ -1355,7 +1356,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="clear_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_graph.html#graphscope.framework.dag_utils.clear_graph">[docs]</a><span class="k">def</span> <span class="nf">clear_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="clear_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_graph.html#graphscope.framework.dag_utils.clear_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">clear_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create clear graph operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1377,7 +1378,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="clear_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_edges.html#graphscope.framework.dag_utils.clear_edges">[docs]</a><span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="clear_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_edges.html#graphscope.framework.dag_utils.clear_edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create clear edges operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1399,7 +1400,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="create_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_subgraph.html#graphscope.framework.dag_utils.create_subgraph">[docs]</a><span class="k">def</span> <span class="nf">create_subgraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="create_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_subgraph.html#graphscope.framework.dag_utils.create_subgraph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_subgraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create subgraph operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1428,7 +1429,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="create_unload_op"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_unload_op.html#graphscope.framework.dag_utils.create_unload_op">[docs]</a><span class="k">def</span> <span class="nf">create_unload_op</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_unload_op"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_unload_op.html#graphscope.framework.dag_utils.create_unload_op">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_unload_op</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Uility method to create a unload `Operation` based on op type and op.&quot;&quot;&quot;</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">session_id</span><span class="p">,</span>
@@ -1439,7 +1440,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="unload_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">[docs]</a><span class="k">def</span> <span class="nf">unload_app</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
+<div class="viewcode-block" id="unload_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">unload_app</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Unload a loaded app.</span>
 
 <span class="sd">    Args:</span>
@@ -1451,7 +1452,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_APP</span><span class="p">,</span> <span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="unload_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html#graphscope.framework.dag_utils.unload_graph">[docs]</a><span class="k">def</span> <span class="nf">unload_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="unload_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html#graphscope.framework.dag_utils.unload_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">unload_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Unload a graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1463,11 +1464,11 @@ MathJax = {
     <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="unload_context"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_context.html#graphscope.framework.dag_utils.unload_context">[docs]</a><span class="k">def</span> <span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+<div class="viewcode-block" id="unload_context"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_context.html#graphscope.framework.dag_utils.unload_context">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_CONTEXT</span><span class="p">,</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="context_to_numpy"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_numpy.html#graphscope.framework.dag_utils.context_to_numpy">[docs]</a><span class="k">def</span> <span class="nf">context_to_numpy</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="context_to_numpy"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_numpy.html#graphscope.framework.dag_utils.context_to_numpy">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">context_to_numpy</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve results as a numpy ndarray.</span>
 
 <span class="sd">    Args:</span>
@@ -1495,7 +1496,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="context_to_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_dataframe.html#graphscope.framework.dag_utils.context_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">context_to_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="context_to_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_dataframe.html#graphscope.framework.dag_utils.context_to_dataframe">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">context_to_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve results as a pandas DataFrame.</span>
 
 <span class="sd">    Args:</span>
@@ -1521,7 +1522,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html#graphscope.framework.dag_utils.to_vineyard_tensor">[docs]</a><span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html#graphscope.framework.dag_utils.to_vineyard_tensor">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve results as vineyard tensor.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1548,7 +1549,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html#graphscope.framework.dag_utils.to_vineyard_dataframe">[docs]</a><span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html#graphscope.framework.dag_utils.to_vineyard_dataframe">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve results as vineyard dataframe.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1573,7 +1574,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="to_data_sink"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_data_sink.html#graphscope.framework.dag_utils.to_data_sink">[docs]</a><span class="k">def</span> <span class="nf">to_data_sink</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">storage_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="to_data_sink"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_data_sink.html#graphscope.framework.dag_utils.to_data_sink">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_data_sink</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">storage_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dump result to `fd` by drivers in vineyard.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1606,7 +1607,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="output"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.output.html#graphscope.framework.dag_utils.output">[docs]</a><span class="k">def</span> <span class="nf">output</span><span class="p">(</span>
+<div class="viewcode-block" id="output"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.output.html#graphscope.framework.dag_utils.output">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">output</span><span class="p">(</span>
     <span class="n">context</span><span class="p">,</span>
     <span class="n">fd</span><span class="p">,</span>
     <span class="n">selector</span><span class="p">,</span>
@@ -1649,7 +1650,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="get_context_data"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.get_context_data.html#graphscope.framework.dag_utils.get_context_data">[docs]</a><span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<div class="viewcode-block" id="get_context_data"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.get_context_data.html#graphscope.framework.dag_utils.get_context_data">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_context_data</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">CONTEXT_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
@@ -1663,7 +1664,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="add_column"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html#graphscope.framework.dag_utils.add_column">[docs]</a><span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<div class="viewcode-block" id="add_column"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html#graphscope.framework.dag_utils.add_column">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_column</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a column to `graph`, produce a new graph.</span>
 
 <span class="sd">    Args:</span>
@@ -1686,7 +1687,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="graph_to_numpy"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html#graphscope.framework.dag_utils.graph_to_numpy">[docs]</a><span class="k">def</span> <span class="nf">graph_to_numpy</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="graph_to_numpy"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html#graphscope.framework.dag_utils.graph_to_numpy">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">graph_to_numpy</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve graph raw data as a numpy ndarray.</span>
 
 <span class="sd">    Args:</span>
@@ -1712,7 +1713,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="graph_to_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html#graphscope.framework.dag_utils.graph_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">graph_to_dataframe</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="graph_to_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html#graphscope.framework.dag_utils.graph_to_dataframe">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">graph_to_dataframe</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve graph raw data as a pandas DataFrame.</span>
 
 <span class="sd">    Args:</span>
@@ -1738,7 +1739,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="gremlin_to_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html#graphscope.framework.dag_utils.gremlin_to_subgraph">[docs]</a><span class="k">def</span> <span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
+<div class="viewcode-block" id="gremlin_to_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html#graphscope.framework.dag_utils.gremlin_to_subgraph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
     <span class="n">interactive_query</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a subgraph from gremlin output.</span>
@@ -1775,7 +1776,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">save_to_graphar</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_to_graphar</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Archive a graph to gar format with a path.</span>
 
 <span class="sd">    Args:</span>
@@ -1805,7 +1806,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span>
 
 
-<span class="k">def</span> <span class="nf">serialize_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">serialize_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize graph to the specified location</span>
 <span class="sd">       The meta and data of graph is dumped to specified location,</span>
 <span class="sd">       and can be restored by `Graph.load_from` in other sessions.</span>
@@ -1835,7 +1836,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span>
 
 
-<span class="k">def</span> <span class="nf">deserialize_graph</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">deserialize_graph</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialize graph from the specified location.</span>
 
 <span class="sd">    Args:</span>

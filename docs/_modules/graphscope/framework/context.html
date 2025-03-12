@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.framework.context - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -709,30 +710,30 @@ MathJax = {
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">import</span> <span class="nn">hashlib</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">collections</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">run_app</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.dag</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.dag_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.framework.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_argument</span>
 
 
-<div class="viewcode-block" id="ResultDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.ResultDAGNode">[docs]</a><span class="k">class</span> <span class="nc">ResultDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="ResultDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.ResultDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">ResultDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents a result node in a DAG.</span>
 
 <span class="sd">    In GraphScope, result node is always a leaf node in a DAG.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_dag_node</span> <span class="o">=</span> <span class="n">dag_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dag_node</span><span class="o">.</span><span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
@@ -740,17 +741,17 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">UnloadedContext</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnloadedContext</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Unloaded context node in a DAG.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="c1"># add op to dag</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="BaseContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">BaseContextDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">BaseContextDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class of concrete context DAG node.</span>
 
 <span class="sd">    In GraphScope, it will return a instance of concrete class `ContextDAGNode`</span>
@@ -806,7 +807,7 @@ MathJax = {
 <span class="sd">        &gt;&gt;&gt; r4 = c.to_vineyard_dataframe() # return an object id</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bound_app</span> <span class="o">=</span> <span class="n">bound_app</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bound_app</span><span class="o">.</span><span class="n">session</span>
@@ -817,17 +818,17 @@ MathJax = {
         <span class="c1"># statically create the unload op</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
-<div class="viewcode-block" id="BaseContextDAGNode.to_numpy"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_numpy">[docs]</a>    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseContextDAGNode.to_numpy"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_numpy">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a numpy array.</span>
 
 <span class="sd">        Args:</span>
@@ -839,7 +840,7 @@ MathJax = {
 <span class="sd">                identical with vertices&#39; oid type.</span>
 <span class="sd">                Omitting the first index starts the slice at the beginning of the vertices,</span>
 <span class="sd">                and omitting the second index extends the slice to the end of the vertices.</span>
-<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+<span class="sd">                Note the comparison is not based on numeric order, but on alphabetic order.</span>
 <span class="sd">            axis (int): optional, default to 0.</span>
 
 <span class="sd">        Returns:</span>
@@ -851,7 +852,7 @@ MathJax = {
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseContextDAGNode.to_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseContextDAGNode.to_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_dataframe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a pandas DataFrame.</span>
 
 <span class="sd">        Args:</span>
@@ -863,7 +864,7 @@ MathJax = {
 <span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be</span>
 <span class="sd">                identical with vertices&#39; oid type.</span>
 <span class="sd">                Only the sub-ranges of vertices data will be retrieved.</span>
-<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+<span class="sd">                Note the comparison is not based on numeric order, but on alphabetic order.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
@@ -880,7 +881,7 @@ MathJax = {
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a vineyard tensor and return the vineyard object id.</span>
 
 <span class="sd">        Returns:</span>
@@ -892,7 +893,7 @@ MathJax = {
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a vineyard dataframe and return the vineyard object id.</span>
 
 <span class="sd">        Args:</span>
@@ -922,7 +923,7 @@ MathJax = {
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump results to `fd`.</span>
 <span class="sd">        Support dumps data to local (respect to pod) files, hdfs or oss.</span>
 <span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
@@ -968,33 +969,33 @@ MathJax = {
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">UnloadedContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="TensorContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.TensorContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">TensorContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.TensorContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TensorContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tensor context DAG node holds a tensor.</span>
 <span class="sd">    Only axis is meaningful when considering a TensorContext.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;tensor&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;axis&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="VertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexDataContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">VertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="VertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexDataContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">VertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The most simple kind of context.</span>
 <span class="sd">    A vertex has a single value as results.</span>
 
@@ -1014,10 +1015,10 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;vertex_data&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
         <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">]]</span>
         <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]]</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
@@ -1027,7 +1028,7 @@ MathJax = {
         <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
@@ -1059,7 +1060,7 @@ MathJax = {
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="LabeledVertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexDataContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="LabeledVertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexDataContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">LabeledVertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The labeled kind of context.</span>
 <span class="sd">    This context has several vertex labels and edge labels, and each label has several properties.</span>
 <span class="sd">    Selection are performed on labels first, then on properties.</span>
@@ -1081,10 +1082,10 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;labeled_vertex_data&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
         <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">schema</span>
         <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)]</span>
         <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">]</span>
@@ -1095,7 +1096,7 @@ MathJax = {
         <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
@@ -1131,7 +1132,7 @@ MathJax = {
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="VertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexPropertyContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">VertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="VertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexPropertyContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">VertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The simple kind of context with property.</span>
 <span class="sd">    A vertex can have multiple values (a.k.a. properties) as results.</span>
 
@@ -1153,10 +1154,10 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;vertex_property&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
         <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">]]</span>
         <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">prop</span><span class="p">]</span> <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">result_properties</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">prop</span><span class="p">]</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
@@ -1166,7 +1167,7 @@ MathJax = {
         <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
@@ -1201,7 +1202,7 @@ MathJax = {
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="LabeledVertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="LabeledVertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">LabeledVertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The labeld kind of context with properties.</span>
 <span class="sd">    This context has several vertex labels and edge labels, And each label has several properties.</span>
 <span class="sd">    Selection are performed on labels first, then on properties.</span>
@@ -1224,10 +1225,10 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;labeled_vertex_property&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build context schema.</span>
 
 <span class="sd">        Args:</span>
@@ -1260,7 +1261,7 @@ MathJax = {
         <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
                 <span class="s2">&quot;Selector in labeled vertex property context cannot be None&quot;</span>
@@ -1287,14 +1288,14 @@ MathJax = {
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.Context">[docs]</a><span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.Context">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hold a handle of app querying context.</span>
 
 <span class="sd">    After evaluating an app, the context (vertex data, partial results, etc.) are preserved,</span>
 <span class="sd">    and can be referenced through a handle.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">result_schema</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">result_schema</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span> <span class="o">=</span> <span class="n">context_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_graph</span>
@@ -1307,24 +1308,24 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">op</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unique identifier of a context.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">context_type</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_schema</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute digest by key and graph signatures.</span>
 <span class="sd">        Used to ensure the critical information of context is untouched.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1338,40 +1339,40 @@ MathJax = {
             <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;graphscope.framework.context.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> from graph </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Examples:</span>
 <span class="sd">            context.output(&#39;s3://test-bucket/res.csv&#39;, selector={&#39;id&#39;: &#39;v.id&#39;, &#39;rank&#39;: &#39;r&#39;},</span>
@@ -1384,43 +1385,43 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">output_to_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output_to_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch result to client side&quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># cleanly ignore all exceptions, cause session may already closed / destroyed.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span></div>
 
 
-<div class="viewcode-block" id="DynamicVertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.DynamicVertexDataContext">[docs]</a><span class="k">class</span> <span class="nc">DynamicVertexDataContext</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+<div class="viewcode-block" id="DynamicVertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.DynamicVertexDataContext">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">DynamicVertexDataContext</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Vertex data context for complicated result store.</span>
 <span class="sd">    A vertex has a single value as results.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">_graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">session_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">check_argument</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">&quot;Context key error, maybe it is not connected to engine.&quot;</span><span class="p">,</span>
@@ -1431,23 +1432,23 @@ MathJax = {
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;graphscope.framework.context.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> from graph </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()))</span>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_context_node</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_context_node</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A context DAG node factory, create concrete context class by context type.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;tensor&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TensorContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1464,7 +1465,7 @@ MathJax = {
         <span class="k">return</span> <span class="n">BaseContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">])</span>
@@ -1474,7 +1475,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">_get_property_e_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_property_e_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">:</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;src&quot;</span><span class="p">])</span>
@@ -1485,7 +1486,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">_ensure_consistent_label</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_consistent_label</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure the labels in all selectors are same label.</span>
 <span class="sd">    Note this method assumes that the selector is valid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

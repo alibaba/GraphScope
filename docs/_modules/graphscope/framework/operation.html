@@ -6,11 +6,11 @@
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
         <title>graphscope.framework.operation - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
@@ -340,6 +340,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/gopt.html">GOpt: A Graph-Native Query Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/graph_planner.html">Graph Planner Interface by JNI and RESTful API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/benchmark_tool.html">A Generic Benchmark Tool</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
@@ -632,9 +633,9 @@ MathJax = {
         
           
             
-              <dd><a href="../../../v0.29.0/index.html">
+              <dd><a href="../../../v0.31.0/index.html">
                 
-                  v0.29.0
+                  v0.31.0
                 
               </a></dd>
             
@@ -712,16 +713,16 @@ MathJax = {
 <span class="sd">&quot;&quot;&quot; Classes and functions used to construct dags.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">hashlib</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
-<span class="kn">from</span> <span class="nn">google.protobuf.json_format</span> <span class="kn">import</span> <span class="n">MessageToJson</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">google.protobuf.json_format</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageToJson</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">attr_value_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">op_def_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">attr_value_pb2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">op_def_pb2</span>
 
 
-<div class="viewcode-block" id="Operation"><a class="viewcode-back" href="../../../reference/operation.html#graphscope.framework.operation.Operation">[docs]</a><span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation"><a class="viewcode-back" href="../../../reference/operation.html#graphscope.framework.operation.Operation">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a dag op that performs computation on tensors.</span>
 
 <span class="sd">    For example :code:`g2 = g1.add_vertices(&quot;path&quot;)` create an :code:`Operation` of type</span>
@@ -732,7 +733,7 @@ MathJax = {
 <span class="sd">    :code`op.eval()` or passing it to :code:`session.run`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Operation.__init__"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html#graphscope.framework.operation.Operation.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Operation.__init__"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html#graphscope.framework.operation.Operation.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session_id</span><span class="p">,</span>
         <span class="n">op_type</span><span class="p">,</span>
@@ -785,33 +786,33 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unique key for each :code:`op_def_pb2.OpDef`&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="o">.</span><span class="n">key</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of :code:`graphscope.framework.operation.Operation`&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">evaluated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span>
 
     <span class="nd">@evaluated</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">evaluated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="o">.</span><span class="n">op</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">output_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_types</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Signature of its parents&#39; signatures and its own parameters.</span>
 
 <span class="sd">        Used to unique identify one `Operation` with fixed configuration,</span>
@@ -825,10 +826,10 @@ MathJax = {
         <span class="n">content</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_op_def</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha224</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">is_leaf_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_leaf_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span>
 
-<div class="viewcode-block" id="Operation.eval"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html#graphscope.framework.operation.Operation.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation.eval"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html#graphscope.framework.operation.Operation.eval">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate by :code:`sess.run`.</span>
 
 <span class="sd">        Args:</span>
@@ -836,7 +837,7 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># NB: to void cycle import</span>
         <span class="c1"># pylint: disable=import-outside-toplevel, cyclic-import</span>
-        <span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_session_by_id</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.client.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_session_by_id</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span> <span class="o">=</span> <span class="n">leaf</span>
         <span class="n">sess</span> <span class="o">=</span> <span class="n">get_session_by_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">)</span>
@@ -846,23 +847,23 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">res</span></div>
 
-    <span class="k">def</span> <span class="nf">add_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="o">.</span><span class="n">parents</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">op</span><span class="o">.</span><span class="n">key</span><span class="p">])</span>
 
-<div class="viewcode-block" id="Operation.as_op_def"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html#graphscope.framework.operation.Operation.as_op_def">[docs]</a>    <span class="k">def</span> <span class="nf">as_op_def</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation.as_op_def"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html#graphscope.framework.operation.Operation.as_op_def">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_op_def</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span></div>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_op_def</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;graphscope.framework.operation.Operation &#39;</span><span class="si">%s</span><span class="s2">&#39;(</span><span class="si">%s</span><span class="s2">)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get json represented op.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MessageToJson</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="p">)</span></div>
 </pre></div>

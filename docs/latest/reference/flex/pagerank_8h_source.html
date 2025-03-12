@@ -73,45 +73,48 @@ $(function() {
 <a href="pagerank_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160; </div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#ifndef ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#define ENGINES_GRAPH_DB_APP_BUILDIN_PAGERANK_H_</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="graph__db__session_8h.html">flex/engines/graph_db/database/graph_db_session.h</a>&quot;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;flex/engines/hqps_db/app/interactive_app_base.h&quot;</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacegs.html">gs</a> {</div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classgs_1_1PageRank.html">   22</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1PageRank.html">PageRank</a></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    : <span class="keyword">public</span> CypherReadAppBase&lt;std::string, std::string, double, int, double&gt; {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">   25</a></span>&#160;  <a class="code" href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">PageRank</a>() {}</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  results::CollectiveResults <a class="code" href="classgs_1_1PageRank.html#a166bbcbeacfebab055129a9388b0e877">Query</a>(<span class="keyword">const</span> <a class="code" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&amp; sess,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                                   std::string vertex_label,</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                                   std::string edge_label,</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                                   <span class="keywordtype">double</span> damping_factor, <span class="keywordtype">int</span> max_iterations,</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                                   <span class="keywordtype">double</span> epsilon);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;};</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classgs_1_1PageRankFactory.html">   33</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1PageRankFactory.html">PageRankFactory</a> : <span class="keyword">public</span> <a class="code" href="classgs_1_1AppFactoryBase.html">AppFactoryBase</a> {</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <a class="code" href="classgs_1_1PageRankFactory.html#a2357282745f820cf89cb02ce2642bbbd">PageRankFactory</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <a class="code" href="classgs_1_1PageRankFactory.html#a41257f150fa187c191c6e6c879d391ef">~PageRankFactory</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="classgs_1_1AppWrapper.html">AppWrapper</a> <a class="code" href="classgs_1_1PageRankFactory.html#ad223ff7d5de9d6fb6d69780ded798435">CreateApp</a>(<span class="keyword">const</span> <a class="code" href="classgs_1_1GraphDB.html">GraphDB</a>&amp; db) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="graph__db__session_8h.html">flex/engines/graph_db/database/graph_db_session.h</a>&quot;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;flex/engines/hqps_db/app/interactive_app_base.h&quot;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacegs.html">gs</a> {</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classgs_1_1PageRank.html">   23</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1PageRank.html">PageRank</a> : <span class="keyword">public</span> CypherReadAppBase&lt;std::string, std::string, std::string,</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;                                          double, int32_t, double, int32_t&gt; {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">   26</a></span>&#160;  <a class="code" href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">PageRank</a>() {}</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  results::CollectiveResults <a class="code" href="classgs_1_1PageRank.html#ab64e113c28afb6d978b0ec80a5283910">Query</a>(<span class="keyword">const</span> <a class="code" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&amp; sess,</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                                   std::string src_vertex_label,</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                                   std::string dst_vertex_label,</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                                   std::string edge_label,</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                                   <span class="keywordtype">double</span> damping_factor,</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                                   int32_t max_iterations, <span class="keywordtype">double</span> epsilon,</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                                   int32_t result_limit) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;};</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classgs_1_1PageRankFactory.html">   36</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1PageRankFactory.html">PageRankFactory</a> : <span class="keyword">public</span> <a class="code" href="classgs_1_1AppFactoryBase.html">AppFactoryBase</a> {</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="classgs_1_1PageRankFactory.html#a2357282745f820cf89cb02ce2642bbbd">PageRankFactory</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <a class="code" href="classgs_1_1PageRankFactory.html#a41257f150fa187c191c6e6c879d391ef">~PageRankFactory</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;}  <span class="comment">// namespace gs</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <a class="code" href="classgs_1_1AppWrapper.html">AppWrapper</a> <a class="code" href="classgs_1_1PageRankFactory.html#ad223ff7d5de9d6fb6d69780ded798435">CreateApp</a>(<span class="keyword">const</span> <a class="code" href="classgs_1_1GraphDB.html">GraphDB</a>&amp; db) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;};</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;}  <span class="comment">// namespace gs</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="aclassgs_1_1PageRankFactory_html_ad223ff7d5de9d6fb6d69780ded798435"><div class="ttname"><a href="classgs_1_1PageRankFactory.html#ad223ff7d5de9d6fb6d69780ded798435">gs::PageRankFactory::CreateApp</a></div><div class="ttdeci">AppWrapper CreateApp(const GraphDB &amp;db) override</div><div class="ttdef"><b>Definition:</b> pagerank.cc:138</div></div>
-<div class="ttc" id="aclassgs_1_1PageRank_html_a166bbcbeacfebab055129a9388b0e877"><div class="ttname"><a href="classgs_1_1PageRank.html#a166bbcbeacfebab055129a9388b0e877">gs::PageRank::Query</a></div><div class="ttdeci">results::CollectiveResults Query(const GraphDBSession &amp;sess, std::string vertex_label, std::string edge_label, double damping_factor, int max_iterations, double epsilon)</div><div class="ttdef"><b>Definition:</b> pagerank.cc:19</div></div>
+<div class="ttc" id="aclassgs_1_1PageRankFactory_html_ad223ff7d5de9d6fb6d69780ded798435"><div class="ttname"><a href="classgs_1_1PageRankFactory.html#ad223ff7d5de9d6fb6d69780ded798435">gs::PageRankFactory::CreateApp</a></div><div class="ttdeci">AppWrapper CreateApp(const GraphDB &amp;db) override</div><div class="ttdef"><b>Definition:</b> pagerank.cc:225</div></div>
 <div class="ttc" id="agraph__db__session_8h_html"><div class="ttname"><a href="graph__db__session_8h.html">graph_db_session.h</a></div></div>
-<div class="ttc" id="aclassgs_1_1PageRank_html"><div class="ttname"><a href="classgs_1_1PageRank.html">gs::PageRank</a></div><div class="ttdef"><b>Definition:</b> pagerank.h:22</div></div>
+<div class="ttc" id="aclassgs_1_1PageRank_html"><div class="ttname"><a href="classgs_1_1PageRank.html">gs::PageRank</a></div><div class="ttdef"><b>Definition:</b> pagerank.h:23</div></div>
 <div class="ttc" id="anamespacegs_html"><div class="ttname"><a href="namespacegs.html">gs</a></div><div class="ttdef"><b>Definition:</b> adj_list.h:23</div></div>
 <div class="ttc" id="aclassgs_1_1PageRankFactory_html_a41257f150fa187c191c6e6c879d391ef"><div class="ttname"><a href="classgs_1_1PageRankFactory.html#a41257f150fa187c191c6e6c879d391ef">gs::PageRankFactory::~PageRankFactory</a></div><div class="ttdeci">~PageRankFactory()=default</div></div>
 <div class="ttc" id="aclassgs_1_1GraphDBSession_html"><div class="ttname"><a href="classgs_1_1GraphDBSession.html">gs::GraphDBSession</a></div><div class="ttdef"><b>Definition:</b> graph_db_session.h:36</div></div>
-<div class="ttc" id="aclassgs_1_1GraphDB_html"><div class="ttname"><a href="classgs_1_1GraphDB.html">gs::GraphDB</a></div><div class="ttdef"><b>Definition:</b> graph_db.h:70</div></div>
-<div class="ttc" id="aclassgs_1_1PageRank_html_a94301db17ab69dbdada662d4e44eaa5e"><div class="ttname"><a href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">gs::PageRank::PageRank</a></div><div class="ttdeci">PageRank()</div><div class="ttdef"><b>Definition:</b> pagerank.h:25</div></div>
+<div class="ttc" id="aclassgs_1_1GraphDB_html"><div class="ttname"><a href="classgs_1_1GraphDB.html">gs::GraphDB</a></div><div class="ttdef"><b>Definition:</b> graph_db.h:77</div></div>
+<div class="ttc" id="aclassgs_1_1PageRank_html_ab64e113c28afb6d978b0ec80a5283910"><div class="ttname"><a href="classgs_1_1PageRank.html#ab64e113c28afb6d978b0ec80a5283910">gs::PageRank::Query</a></div><div class="ttdeci">results::CollectiveResults Query(const GraphDBSession &amp;sess, std::string src_vertex_label, std::string dst_vertex_label, std::string edge_label, double damping_factor, int32_t max_iterations, double epsilon, int32_t result_limit) override</div><div class="ttdef"><b>Definition:</b> pagerank.cc:49</div></div>
+<div class="ttc" id="aclassgs_1_1PageRank_html_a94301db17ab69dbdada662d4e44eaa5e"><div class="ttname"><a href="classgs_1_1PageRank.html#a94301db17ab69dbdada662d4e44eaa5e">gs::PageRank::PageRank</a></div><div class="ttdeci">PageRank()</div><div class="ttdef"><b>Definition:</b> pagerank.h:26</div></div>
 <div class="ttc" id="aclassgs_1_1PageRankFactory_html_a2357282745f820cf89cb02ce2642bbbd"><div class="ttname"><a href="classgs_1_1PageRankFactory.html#a2357282745f820cf89cb02ce2642bbbd">gs::PageRankFactory::PageRankFactory</a></div><div class="ttdeci">PageRankFactory()=default</div></div>
 <div class="ttc" id="aclassgs_1_1AppWrapper_html"><div class="ttname"><a href="classgs_1_1AppWrapper.html">gs::AppWrapper</a></div><div class="ttdef"><b>Definition:</b> app_base.h:78</div></div>
-<div class="ttc" id="aclassgs_1_1PageRankFactory_html"><div class="ttname"><a href="classgs_1_1PageRankFactory.html">gs::PageRankFactory</a></div><div class="ttdef"><b>Definition:</b> pagerank.h:33</div></div>
+<div class="ttc" id="aclassgs_1_1PageRankFactory_html"><div class="ttname"><a href="classgs_1_1PageRankFactory.html">gs::PageRankFactory</a></div><div class="ttdef"><b>Definition:</b> pagerank.h:36</div></div>
 <div class="ttc" id="aclassgs_1_1AppFactoryBase_html"><div class="ttname"><a href="classgs_1_1AppFactoryBase.html">gs::AppFactoryBase</a></div><div class="ttdef"><b>Definition:</b> app_base.h:115</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

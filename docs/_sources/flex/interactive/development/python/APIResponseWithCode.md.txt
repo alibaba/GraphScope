@@ -18,12 +18,12 @@ json = "{}"
 # create an instance of APIResponseWithCode from a JSON string
 api_response_with_code_instance = APIResponseWithCode.from_json(json)
 # print the JSON string representation of the object
-print(APIResponseWithCode.to_json())
+print APIResponseWithCode.to_json()
 
 # convert the object into a dict
 api_response_with_code_dict = api_response_with_code_instance.to_dict()
 # create an instance of APIResponseWithCode from a dict
-api_response_with_code_from_dict = APIResponseWithCode.from_dict(api_response_with_code_dict)
+api_response_with_code_form_dict = api_response_with_code.from_dict(api_response_with_code_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

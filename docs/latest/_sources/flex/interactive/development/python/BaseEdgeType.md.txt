@@ -6,6 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **type_name** | **str** |  | [optional] 
+**primary_keys** | **List[str]** | The primary keys of the edge type, which is optional. | [optional] 
 **vertex_type_pair_relations** | [**List[BaseEdgeTypeVertexTypePairRelationsInner]**](BaseEdgeTypeVertexTypePairRelationsInner.md) |  | [optional] 
 
 ## Example
@@ -18,12 +19,12 @@ json = "{}"
 # create an instance of BaseEdgeType from a JSON string
 base_edge_type_instance = BaseEdgeType.from_json(json)
 # print the JSON string representation of the object
-print(BaseEdgeType.to_json())
+print BaseEdgeType.to_json()
 
 # convert the object into a dict
 base_edge_type_dict = base_edge_type_instance.to_dict()
 # create an instance of BaseEdgeType from a dict
-base_edge_type_from_dict = BaseEdgeType.from_dict(base_edge_type_dict)
+base_edge_type_form_dict = base_edge_type.from_dict(base_edge_type_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

@@ -17,12 +17,12 @@ json = "{}"
 # create an instance of VarCharVarChar from a JSON string
 var_char_var_char_instance = VarCharVarChar.from_json(json)
 # print the JSON string representation of the object
-print(VarCharVarChar.to_json())
+print VarCharVarChar.to_json()
 
 # convert the object into a dict
 var_char_var_char_dict = var_char_var_char_instance.to_dict()
 # create an instance of VarCharVarChar from a dict
-var_char_var_char_from_dict = VarCharVarChar.from_dict(var_char_var_char_dict)
+var_char_var_char_form_dict = var_char_var_char.from_dict(var_char_var_char_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

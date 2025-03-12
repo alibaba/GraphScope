@@ -20,12 +20,12 @@ json = "{}"
 # create an instance of CreateProcedureRequest from a JSON string
 create_procedure_request_instance = CreateProcedureRequest.from_json(json)
 # print the JSON string representation of the object
-print(CreateProcedureRequest.to_json())
+print CreateProcedureRequest.to_json()
 
 # convert the object into a dict
 create_procedure_request_dict = create_procedure_request_instance.to_dict()
 # create an instance of CreateProcedureRequest from a dict
-create_procedure_request_from_dict = CreateProcedureRequest.from_dict(create_procedure_request_dict)
+create_procedure_request_form_dict = create_procedure_request.from_dict(create_procedure_request_dict)
 ```
 [[Back to Model list]](python_sdk.md#documentation-for-data-structures) [[Back to API list]](python_sdk.md#documentation-for-service-apis) [[Back to python_sdk]](python_sdk.md)
 

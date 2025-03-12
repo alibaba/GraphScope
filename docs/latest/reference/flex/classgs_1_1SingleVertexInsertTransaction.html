@@ -102,23 +102,23 @@ Collaboration diagram for gs::SingleVertexInsertTransaction:</div>
 <area shape="rect" href="uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="5,209,208,236"/>
 <area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="927,587,1141,613"/>
 <area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="714,569,811,596"/>
-<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="979,485,1089,512"/>
+<area shape="rect" href="classgs_1_1IWalWriter.html" title=" " alt="" coords="977,485,1091,512"/>
 <area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="963,536,1105,563"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aeee78ba9a27b529257be7f99f47ffe2a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#aeee78ba9a27b529257be7f99f47ffe2a">SingleVertexInsertTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a0f3fc4d80751498e58c5fa81bad36804">timestamp</a>)</td></tr>
-<tr class="separator:aeee78ba9a27b529257be7f99f47ffe2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e1a53119e5d881a2f1b34b4b44847d0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a6e1a53119e5d881a2f1b34b4b44847d0">SingleVertexInsertTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, <a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a0f3fc4d80751498e58c5fa81bad36804">timestamp</a>)</td></tr>
+<tr class="separator:a6e1a53119e5d881a2f1b34b4b44847d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2584878914e5d00668255b50de06f1d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#ae2584878914e5d00668255b50de06f1d">~SingleVertexInsertTransaction</a> ()</td></tr>
 <tr class="separator:ae2584878914e5d00668255b50de06f1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d8373efc635acb293146d3a3f478547"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a4d8373efc635acb293146d3a3f478547">AddVertex</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;id, const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;props)</td></tr>
 <tr class="separator:a4d8373efc635acb293146d3a3f478547"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c443c5735ea8607410ebc4e289b1fd2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a8c443c5735ea8607410ebc4e289b1fd2">AddEdge</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;src, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;dst, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;prop)</td></tr>
 <tr class="separator:a8c443c5735ea8607410ebc4e289b1fd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfaa64d8cfb4833a057e3ae60e7aea65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#acfaa64d8cfb4833a057e3ae60e7aea65">Commit</a> ()</td></tr>
-<tr class="separator:acfaa64d8cfb4833a057e3ae60e7aea65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad19d2deff96e4f7e4349792bcec89d88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#ad19d2deff96e4f7e4349792bcec89d88">Commit</a> ()</td></tr>
+<tr class="separator:ad19d2deff96e4f7e4349792bcec89d88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8db1b07cc7016284497dde528599850d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a8db1b07cc7016284497dde528599850d">Abort</a> ()</td></tr>
 <tr class="separator:a8db1b07cc7016284497dde528599850d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f3fc4d80751498e58c5fa81bad36804"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a0f3fc4d80751498e58c5fa81bad36804">timestamp</a> () const</td></tr>
@@ -147,16 +147,16 @@ Private Attributes</h2></td></tr>
 <tr class="separator:ae7b399c0bc9223db003a1090b2326574"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39e2ada450f895483dbe50c664c7ceef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a39e2ada450f895483dbe50c664c7ceef">alloc_</a></td></tr>
 <tr class="separator:a39e2ada450f895483dbe50c664c7ceef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af678212462983ef57cd438bad2530ee5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#af678212462983ef57cd438bad2530ee5">logger_</a></td></tr>
-<tr class="separator:af678212462983ef57cd438bad2530ee5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d4d923019677c86a5a96d866886f01d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a6d4d923019677c86a5a96d866886f01d">logger_</a></td></tr>
+<tr class="separator:a6d4d923019677c86a5a96d866886f01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e862696fc67c4e563750ca083e89571"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a8e862696fc67c4e563750ca083e89571">vm_</a></td></tr>
 <tr class="separator:a8e862696fc67c4e563750ca083e89571"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6db7a8195b44f9178041d5a036f3ff60"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html#a6db7a8195b44f9178041d5a036f3ff60">timestamp_</a></td></tr>
 <tr class="separator:a6db7a8195b44f9178041d5a036f3ff60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="aeee78ba9a27b529257be7f99f47ffe2a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeee78ba9a27b529257be7f99f47ffe2a">&#9670;&nbsp;</a></span>SingleVertexInsertTransaction()</h2>
+<a id="a6e1a53119e5d881a2f1b34b4b44847d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e1a53119e5d881a2f1b34b4b44847d0">&#9670;&nbsp;</a></span>SingleVertexInsertTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -176,7 +176,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a> &amp;&#160;</td>
           <td class="paramname"><em>logger</em>, </td>
         </tr>
         <tr>
@@ -347,14 +347,14 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="acfaa64d8cfb4833a057e3ae60e7aea65"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acfaa64d8cfb4833a057e3ae60e7aea65">&#9670;&nbsp;</a></span>Commit()</h2>
+<a id="ad19d2deff96e4f7e4349792bcec89d88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad19d2deff96e4f7e4349792bcec89d88">&#9670;&nbsp;</a></span>Commit()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::SingleVertexInsertTransaction::Commit </td>
+          <td class="memname">bool gs::SingleVertexInsertTransaction::Commit </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -531,8 +531,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="af678212462983ef57cd438bad2530ee5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af678212462983ef57cd438bad2530ee5">&#9670;&nbsp;</a></span>logger_</h2>
+<a id="a6d4d923019677c86a5a96d866886f01d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d4d923019677c86a5a96d866886f01d">&#9670;&nbsp;</a></span>logger_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -541,7 +541,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>&amp; gs::SingleVertexInsertTransaction::logger_</td>
+          <td class="memname"><a class="el" href="classgs_1_1IWalWriter.html">IWalWriter</a>&amp; gs::SingleVertexInsertTransaction::logger_</td>
         </tr>
       </table>
   </td>

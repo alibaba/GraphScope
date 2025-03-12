@@ -8,6 +8,7 @@
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
 |**typeName** | **String** |  |  [optional] |
+|**primaryKeys** | **List&lt;String&gt;** | The primary keys of the edge type, which is optional. |  [optional] |
 |**vertexTypePairRelations** | [**List&lt;BaseEdgeTypeVertexTypePairRelationsInner&gt;**](BaseEdgeTypeVertexTypePairRelationsInner.md) |  |  [optional] |
 
 
