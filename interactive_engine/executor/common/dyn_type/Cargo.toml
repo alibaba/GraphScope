@@ -11,5 +11,5 @@ pegasus_common = { path = "../../engine/pegasus/common" }
 rustversion = "1.0"
 chrono = "0.4"
 
-[profile.release]
-overflow-checks = true
+# [profile.release]
+# overflow-checks = true

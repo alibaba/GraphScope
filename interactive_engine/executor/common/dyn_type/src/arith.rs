@@ -251,29 +251,11 @@ impl std::ops::Sub for Primitives {
                 }
             }
             (ULong(a), ULLong(b)) => ULLong(a as u128 - b),
-            (Long(a), ULLong(b)) => {
-                if a < 0 {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 - b)
-                }
-            }
+            // could be an unexpected result if a < 0, so as the follows when we do the subtraction between a signed negative number and an unsigned number
+            (Long(a), ULLong(b)) => ULLong(a as u128 - b),
             (UInteger(a), ULLong(b)) => ULLong(a as u128 - b),
-            (Integer(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 - b)
-                }
-            }
-            (Byte(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 - b)
-                }
-            }
+            (Integer(a), ULLong(b)) => ULLong(a as u128 - b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 - b),
             (ULong(a), ULong(b)) => ULong(a - b),
             (ULong(a), Long(b)) => {
                 if b < 0 {
@@ -297,28 +279,10 @@ impl std::ops::Sub for Primitives {
                     ULong(a - b as u64)
                 }
             }
-            (Long(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 - b)
-                }
-            }
+            (Long(a), ULong(b)) => ULong(a as u64 - b),
             (UInteger(a), ULong(b)) => ULong(a as u64 - b),
-            (Integer(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 - b)
-                }
-            }
-            (Byte(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 - b)
-                }
-            }
+            (Integer(a), ULong(b)) => ULong(a as u64 - b),
+            (Byte(a), ULong(b)) => ULong(a as u64 - b),
             (Long(a), Long(b)) => Long(a - b),
             (Long(a), UInteger(b)) => Long(a - b as i64),
             (Long(a), Integer(b)) => Long(a - b as i64),
@@ -341,20 +305,8 @@ impl std::ops::Sub for Primitives {
                     UInteger(a - b as u32)
                 }
             }
-            (Integer(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 - b)
-                }
-            }
-            (Byte(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 - b)
-                }
-            }
+            (Integer(a), UInteger(b)) => UInteger(a as u32 - b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 - b),
             (Integer(a), Integer(b)) => Integer(a - b),
             (Integer(a), Byte(b)) => Integer(a - b as i32),
             (Byte(a), Integer(b)) => Integer(a as i32 - b),
@@ -401,97 +353,25 @@ impl std::ops::Mul for Primitives {
             (Byte(a), Float(b)) => Float(a as f32 * b),
             (ULLong(a), ULLong(b)) => ULLong(a * b),
             (ULLong(a), ULong(b)) => ULLong(a * b as u128),
-            (ULLong(a), Long(b)) => {
-                if b < 0 {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULLong(a * b as u128)
-                }
-            }
+            // could be an unexpected result if b < 0, so as the follows when we do the multiplication between a signed negative number and an unsigned number
+            (ULLong(a), Long(b)) => ULLong(a * b as u128),
             (ULLong(a), UInteger(b)) => ULLong(a * b as u128),
-            (ULLong(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a * b as u128)
-                }
-            }
-            (ULLong(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a * b as u128)
-                }
-            }
+            (ULLong(a), Integer(b)) => ULLong(a * b as u128),
+            (ULLong(a), Byte(b)) => ULLong(a * b as u128),
             (ULong(a), ULLong(b)) => ULLong(a as u128 * b),
-            (Long(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 * b)
-                }
-            }
+            (Long(a), ULLong(b)) => ULLong(a as u128 * b),
             (UInteger(a), ULLong(b)) => ULLong(a as u128 * b),
-            (Integer(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 * b)
-                }
-            }
-            (Byte(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 * b)
-                }
-            }
+            (Integer(a), ULLong(b)) => ULLong(a as u128 * b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 * b),
             (ULong(a), ULong(b)) => ULong(a * b),
-            (ULong(a), Long(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a * b as u64)
-                }
-            }
+            (ULong(a), Long(b)) => ULong(a * b as u64),
             (ULong(a), UInteger(b)) => ULong(a * b as u64),
-            (ULong(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a * b as u64)
-                }
-            }
-            (ULong(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a * b as u64)
-                }
-            }
-            (Long(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 * b)
-                }
-            }
+            (ULong(a), Integer(b)) => ULong(a * b as u64),
+            (ULong(a), Byte(b)) => ULong(a * b as u64),
+            (Long(a), ULong(b)) => ULong(a as u64 * b),
             (UInteger(a), ULong(b)) => ULong(a as u64 * b),
-            (Integer(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 * b)
-                }
-            }
-            (Byte(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 * b)
-                }
-            }
+            (Integer(a), ULong(b)) => ULong(a as u64 * b),
+            (Byte(a), ULong(b)) => ULong(a as u64 * b),
             (Long(a), Long(b)) => Long(a * b),
             (Long(a), UInteger(b)) => Long(a * b as i64),
             (Long(a), Integer(b)) => Long(a * b as i64),
@@ -500,34 +380,10 @@ impl std::ops::Mul for Primitives {
             (Integer(a), Long(b)) => Long(a as i64 * b),
             (Byte(a), Long(b)) => Long(a as i64 * b),
             (UInteger(a), UInteger(b)) => UInteger(a * b),
-            (UInteger(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a * b as u32)
-                }
-            }
-            (UInteger(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a * b as u32)
-                }
-            }
-            (Integer(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 * b)
-                }
-            }
-            (Byte(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 * b)
-                }
-            }
+            (UInteger(a), Integer(b)) => UInteger(a * b as u32),
+            (UInteger(a), Byte(b)) => UInteger(a * b as u32),
+            (Integer(a), UInteger(b)) => UInteger(a as u32 * b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 * b),
             (Integer(a), Integer(b)) => Integer(a * b),
             (Integer(a), Byte(b)) => Integer(a * b as i32),
             (Byte(a), Integer(b)) => Integer(a as i32 * b),
@@ -603,97 +459,25 @@ impl std::ops::Div for Primitives {
             (Byte(a), Float(b)) => Float(a as f32 / b),
             (ULLong(a), ULLong(b)) => ULLong(a / b),
             (ULLong(a), ULong(b)) => ULLong(a / b as u128),
-            (ULLong(a), Long(b)) => {
-                if b < 0 {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULLong(a / b as u128)
-                }
-            }
+            // could be an unexpected result if b < 0, so as the follows when we do the division between a signed negative number and an unsigned number
+            (ULLong(a), Long(b)) => ULLong(a / b as u128),
             (ULLong(a), UInteger(b)) => ULLong(a / b as u128),
-            (ULLong(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a / b as u128)
-                }
-            }
-            (ULLong(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a / b as u128)
-                }
-            }
+            (ULLong(a), Integer(b)) => ULLong(a / b as u128),
+            (ULLong(a), Byte(b)) => ULLong(a / b as u128),
             (ULong(a), ULLong(b)) => ULLong(a as u128 / b),
-            (Long(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 / b)
-                }
-            }
+            (Long(a), ULLong(b)) => ULLong(a as u128 / b),
             (UInteger(a), ULLong(b)) => ULLong(a as u128 / b),
-            (Integer(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 / b)
-                }
-            }
-            (Byte(a), ULLong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULLong(a as u128 / b)
-                }
-            }
+            (Integer(a), ULLong(b)) => ULLong(a as u128 / b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 / b),
             (ULong(a), ULong(b)) => ULong(a / b),
-            (ULong(a), Long(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a / b as u64)
-                }
-            }
+            (ULong(a), Long(b)) => ULong(a / b as u64),
             (ULong(a), UInteger(b)) => ULong(a / b as u64),
-            (ULong(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a / b as u64)
-                }
-            }
-            (ULong(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a / b as u64)
-                }
-            }
-            (Long(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 / b)
-                }
-            }
+            (ULong(a), Integer(b)) => ULong(a / b as u64),
+            (ULong(a), Byte(b)) => ULong(a / b as u64),
+            (Long(a), ULong(b)) => ULong(a as u64 / b),
             (UInteger(a), ULong(b)) => ULong(a as u64 / b),
-            (Integer(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 / b)
-                }
-            }
-            (Byte(a), ULong(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    ULong(a as u64 / b)
-                }
-            }
+            (Integer(a), ULong(b)) => ULong(a as u64 / b),
+            (Byte(a), ULong(b)) => ULong(a as u64 / b),
             (Long(a), Long(b)) => Long(a / b),
             (Long(a), UInteger(b)) => Long(a / b as i64),
             (Long(a), Integer(b)) => Long(a / b as i64),
@@ -702,34 +486,10 @@ impl std::ops::Div for Primitives {
             (Integer(a), Long(b)) => Long(a as i64 / b),
             (Byte(a), Long(b)) => Long(a as i64 / b),
             (UInteger(a), UInteger(b)) => UInteger(a / b),
-            (UInteger(a), Integer(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a / b as u32)
-                }
-            }
-            (UInteger(a), Byte(b)) => {
-                if b < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a / b as u32)
-                }
-            }
-            (Integer(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 / b)
-                }
-            }
-            (Byte(a), UInteger(b)) => {
-                if a < 0 {
-                    panic!("overflow");
-                } else {
-                    UInteger(a as u32 / b)
-                }
-            }
+            (UInteger(a), Integer(b)) => UInteger(a / b as u32),
+            (UInteger(a), Byte(b)) => UInteger(a / b as u32),
+            (Integer(a), UInteger(b)) => UInteger(a as u32 / b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 / b),
             (Integer(a), Integer(b)) => Integer(a / b),
             (Integer(a), Byte(b)) => Integer(a / b as i32),
             (Byte(a), Integer(b)) => Integer(a as i32 / b),
