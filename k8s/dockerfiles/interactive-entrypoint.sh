@@ -42,15 +42,36 @@ EOF
 function prepare_workspace() {
     #receive args
     local workspace=$1
+    local engine_config_path="${workspace}/conf/interactive_config.yaml"
     if [ -z "${workspace}" ]; then
         workspace="/tmp/interactive_workspace"
     fi
     #if workspace is not exist, create it
     if [ ! -d "${workspace}" ]; then
-        mkdir -p ${workspace}
-        mkdir -p ${workspace}/conf/
-    else 
-        echo "Workspace ${workspace} already exists"
+      mkdir -p ${workspace}
+    fi
+    if [ ! -d "${workspace}/conf" ]; then
+      mkdir -p ${workspace}/conf
+    fi
+    if [ ! -d "${workspace}/data" ]; then
+      mkdir -p ${workspace}/data
+    fi
+    if [ -f "${engine_config_path}" ]; then
+        echo "Engine config file ${engine_config_path} already exists"
+        echo "Using existing engine config file"
+        return 0
+    else
+        echo "Engine config file ${engine_config_path} does not exist"
+        echo "Creating engine config file and prepare the workspace"
+        # prepare interactive_config.yaml
+        cp /opt/flex/share/interactive_config.yaml $engine_config_path
+        #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
+        sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
+    fi
+
+    if [ -d "${workspace}/data/${DEFAULT_GRAPH_NAME}" ]; then
+        echo "Graph data directory ${workspace}/data/${DEFAULT_GRAPH_NAME} already exists"
+        echo "Using existing graph data directory"
         return 0
     fi
     # prepare interactive_config.yaml
@@ -149,6 +170,22 @@ EOF
   fi
 }
 
+function launch_compiler() {
+    #expect 1 arg
+    if [ $# -ne 1 ]; then
+        echo "Usage: launch_compiler <endpoint>"
+        exit 1
+    fi
+    local endpoint=$1
+    compiler_config_path="/opt/flex/share/interactive_config.yaml"
+    compiler_cmd="java -cp /opt/flex/lib/* -Djna.library.path=/opt/flex/lib"
+    compiler_cmd="${compiler_cmd} -Dgraph.schema=${endpoint}/v1/service/status"
+    compiler_cmd="${compiler_cmd} com.alibaba.graphscope.GraphServer"
+    compiler_cmd="${compiler_cmd} ${compiler_config_path}"
+    echo "Starting the compiler with command:${compiler_cmd}"
+    eval $compiler_cmd
+}
+
 
 ####################  Entry ####################
 
@@ -156,6 +193,15 @@ ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -e | --endpoint)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -e requires an argument." >&2
+        exit 1
+      fi
+      ENDPOINT=$1
+      shift
+      ;;
     -w | --workspace)
       shift
       if [[ $# -eq 0 || $1 == -* ]]; then
@@ -190,6 +236,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ ! -z "${ENDPOINT}" ]; then
+  echo "ENDPOINT is set to ${ENDPOINT}, start compiler with this endpoint"
+  launch_compiler $ENDPOINT
+else
+  prepare_workspace $WORKSPACE
+  launch_service $WORKSPACE
+  launch_coordinator
+fi
 
 prepare_workspace $WORKSPACE
 launch_service $WORKSPACE

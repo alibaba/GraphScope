@@ -1,0 +1,153 @@
+{{- $frontendFullname := include "graphscope-interactive.frontend.fullname" . }}
+{{- $primaryFullName := include "graphscope-interactive.primary.fullname" . }}
+{{- $secondaryFullName := include "graphscope-interactive.secondary.fullname" . }}
+{{- $releaseNamespace := .Release.Namespace }}
+{{- $clusterDomain := .Values.clusterDomain }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "graphscope-interactive.primary.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: primary
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.primary.replicaCount }}
+  selector:
+    matchLabels: {{ include "graphscope-interactive.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: primary
+  serviceName: {{ include "graphscope-interactive.primary.fullname" . }}
+  updateStrategy:
+    type: {{ .Values.primary.updateStrategy }}
+    {{- if (eq "Recreate" .Values.primary.updateStrategy) }}
+    rollingUpdate: null
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.primary.podAnnotations }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "graphscope-interactive.labels" . | nindent 8 }}
+        app.kubernetes.io/component: primary
+        {{- if .Values.primary.podLabels }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        # alibabacloud.com/custom-cni-plugin-type: "nimitz"
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.primary.hostAliases }}
+      hostAliases: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      hostNetwork: {{ .Values.primary.hostNetwork }}
+      hostIPC: {{ .Values.primary.hostIPC }}
+      {{- if .Values.primary.schedulerName }}
+      schedulerName: {{ .Values.primary.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy | quote }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.dnsConfig "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-interactive.serviceAccountName" . }}
+      {{- if .Values.primary.affinity }}
+      affinity: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.primary.initContainers }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: master
+          image: {{ include "graphscope-interactive.primary.image" . }}
+          imagePullPolicy: {{ .Values.primary.image.pullPolicy | quote }}
+          # command: ["sleep", "infinity"]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              POD_NAME=$MY_POD_NAME
+              if [ -z "$POD_NAME" ]; then
+                POD_NAME=$(hostname)
+              fi
+              echo "POD_NAME: $POD_NAME"
+              sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
+              cmd="/opt/flex/bin/entrypoint.sh -w $INTERACTIVE_WORKSPACE"
+              echo "CMD: $cmd"
+              eval $cmd
+              # sleep infinity
+          env:
+            - name: INSTANCE_NAME
+              value: {{ .Release.Name | quote }}
+            - name: INTERACTIVE_WORKSPACE
+              value: {{ .Values.workspace | quote }}
+            - name: HANG_UNTIL_SUCCESS
+              value: {{ .Values.primary.hangUntilSuccess | quote }}
+            - name: ODPS_ACCESS_ID
+              value: {{ .Values.odps.access.id | quote }}
+            - name: ODPS_ACCESS_KEY
+              value: {{ .Values.odps.access.key | quote }}
+            - name: ODPS_ENDPOINT
+              value: {{ .Values.odps.endpoint | quote }}
+          ports:
+            - name: admin-port
+              containerPort: {{ .Values.primary.service.adminPort }}
+          {{- if .Values.resources.primary }}
+          resources: {{- toYaml .Values.resources.primary | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: workspace
+              mountPath: {{ .Values.workspace }}
+            - name: config
+              mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+              subPath: engine_config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
+  {{- if and .Values.primary.persistence.enabled .Values.primary.persistence.existingClaim }}
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ tpl .Values.primary.persistence.existingClaim . }}
+  {{- else if not .Values.primary.persistence.enabled }}
+        - name: workspace
+          emptyDir: {}
+  {{- else if and .Values.primary.persistence.enabled (not .Values.primary.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.primary.persistence.size | quote }}
+        {{ include "graphscope-interactive.storageClass" . | nindent 8 }}
+        {{- if .Values.primary.persistence.selector }}
+        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.persistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
+  {{- end }}
