@@ -352,9 +352,14 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         get_expand_label_set(graph, label_set, params.labels, params.dir);
     std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
     std::vector<std::vector<PropertyType>> props_vec;
-    for (auto& triplet : labels) {
+    std::vector<std::vector<LabelTriplet>> in_labels_map(
+        graph.schema().vertex_label_num()),
+        out_labels_map(graph.schema().vertex_label_num());
+    for (const auto& triplet : labels) {
       auto& props = graph.schema().get_edge_properties(
           triplet.src_label, triplet.dst_label, triplet.edge_label);
+      in_labels_map[triplet.dst_label].emplace_back(triplet);
+      out_labels_map[triplet.src_label].emplace_back(triplet);
       PropertyType pt = PropertyType::kEmpty;
       if (!props.empty()) {
         pt = props[0];
@@ -416,11 +421,9 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
 
         auto builder = SDMLEdgeColumnBuilder::builder(params.dir, label_props);
         if (params.dir == Direction::kOut) {
-          foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
-                                                vid_t v) {
-            for (auto& triplet : labels) {
-              if (triplet.src_label == label) {
-                if (params.dir == Direction::kOut) {
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                for (const auto& triplet : out_labels_map[label]) {
                   auto oe_iter = graph.GetOutEdgeIterator(
                       label, v, triplet.dst_label, triplet.edge_label);
                   while (oe_iter.IsValid()) {
@@ -430,15 +433,11 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                     oe_iter.Next();
                   }
                 }
-              }
-            }
-          });
+              });
         } else {
-          foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
-                                                vid_t v) {
-            for (auto& triplet : labels) {
-              if (triplet.dst_label == label) {
-                if (params.dir == Direction::kIn) {
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                for (const auto& triplet : in_labels_map[label]) {
                   auto ie_iter = graph.GetInEdgeIterator(
                       label, v, triplet.src_label, triplet.edge_label);
                   while (ie_iter.IsValid()) {
@@ -448,9 +447,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                     ie_iter.Next();
                   }
                 }
-              }
-            }
-          });
+              });
         }
 
         ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
@@ -495,28 +492,26 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
-              for (auto& triplet : labels) {
-                if (triplet.src_label == label) {
-                  auto oe_iter = graph.GetOutEdgeIterator(
-                      label, v, triplet.dst_label, triplet.edge_label);
-                  while (oe_iter.IsValid()) {
-                    auto nbr = oe_iter.GetNeighbor();
-                    builder.push_back_opt(triplet, v, nbr, oe_iter.GetData(),
-                                          Direction::kOut);
-                    shuffle_offset.push_back(index);
-                    oe_iter.Next();
-                  }
+              for (const auto& triplet : out_labels_map[label]) {
+                auto oe_iter = graph.GetOutEdgeIterator(
+                    label, v, triplet.dst_label, triplet.edge_label);
+                while (oe_iter.IsValid()) {
+                  auto nbr = oe_iter.GetNeighbor();
+                  builder.push_back_opt(triplet, v, nbr, oe_iter.GetData(),
+                                        Direction::kOut);
+                  shuffle_offset.push_back(index);
+                  oe_iter.Next();
                 }
-                if (triplet.dst_label == label) {
-                  auto ie_iter = graph.GetInEdgeIterator(
-                      label, v, triplet.src_label, triplet.edge_label);
-                  while (ie_iter.IsValid()) {
-                    auto nbr = ie_iter.GetNeighbor();
-                    builder.push_back_opt(triplet, nbr, v, ie_iter.GetData(),
-                                          Direction::kIn);
-                    shuffle_offset.push_back(index);
-                    ie_iter.Next();
-                  }
+              }
+              for (const auto& triplet : in_labels_map[label]) {
+                auto ie_iter = graph.GetInEdgeIterator(
+                    label, v, triplet.src_label, triplet.edge_label);
+                while (ie_iter.IsValid()) {
+                  auto nbr = ie_iter.GetNeighbor();
+                  builder.push_back_opt(triplet, nbr, v, ie_iter.GetData(),
+                                        Direction::kIn);
+                  shuffle_offset.push_back(index);
+                  ie_iter.Next();
                 }
               }
             });
