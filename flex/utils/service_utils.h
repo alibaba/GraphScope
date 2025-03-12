@@ -45,6 +45,9 @@ namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
 
+std::string get_uri_scheme(const std::string& uri);
+std::string get_uri_path(const std::string& uri);
+
 /// Util functions.
 
 inline void blockSignal(int sig) {

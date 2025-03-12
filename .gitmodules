@@ -13,3 +13,9 @@
 [submodule "flex/third_party/parallel-hashmap"]
 	path = flex/third_party/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "flex/third_party/etcd-cpp-apiv3"]
+	path = flex/third_party/etcd-cpp-apiv3
+	url = https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
+[submodule "flex/third_party/cpprestsdk"]
+	path = flex/third_party/cpprestsdk
+	url = https://github.com/microsoft/cpprestsdk.git
