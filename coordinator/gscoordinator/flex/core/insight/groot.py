@@ -102,17 +102,19 @@ class GrootClient(object):
         except Exception as e:
             logger.warn("Pickle job status failed: %s", str(e))
     
-    def _restart_pod(pod_name, pod_ip, port):
-        logger.info("Restart groot store pod %s, ip %s", pod_name, pod_ip)
+    def _restart_pod(self, pod_name, pod_ip, port):
+        logger.info(f"Restart groot store pod {pod_name}, ip {pod_ip}")
         conn = http.client.HTTPConnection(pod_ip, port)
         conn.request("POST", "/shutdown")
-        r = conn.getresponse()
         # expect the request didn't get any response, since the pod will kill it self
         try: 
+            r = conn.getresponse()
             if r.status != 500 or r.status != 503:
                 raise RuntimeError("Failed to restart groot store pod: " + r.read().decode("utf-8"))
             else:
-                logger.info("Restart groot store pod %s successfully", pod_name)
+                logger.info(f"Restart groot store pod {pod_name} successfully")
+        except http.client.RemoteDisconnected:
+            logger.info(f"Restart groot store pod {pod_name} successfully")
         except Exception as e:
             raise RuntimeError("Failed to restart groot store pod: " + str(e))
         finally:
@@ -148,7 +150,7 @@ class GrootClient(object):
         ip_names = get_pod_ips(api_client, NAMESPACE, pod_prefix)
         for (ip, name) in ip_names:
             logger.info("Restart groot store pod %s%, ip %s%",name, ip)
-            self._restart_pod(api_client, name, GROOT_STORE_POD_ADMIN_PORT)
+            self._restart_pod(api_client, name, ip,  GROOT_STORE_POD_ADMIN_PORT)
 
     def start_service(self, graph_id: str) -> str:
         raise RuntimeError("Start service is not supported yet.")
