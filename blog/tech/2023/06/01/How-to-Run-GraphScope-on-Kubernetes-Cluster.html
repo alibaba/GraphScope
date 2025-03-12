@@ -102,10 +102,10 @@ node1    Ready    &lt;none&gt;   5d9h   v1.22.3-aliyun.1
 
 <p>Next, we can create a GraphScope instance with two worker nodes on the Kubernetes cluster.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">print</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
-<span class="p">{</span><span class="sh">'</span><span class="s">status</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">active</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">k8s</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">engine_hosts</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">gs-engine-jlspyc-6k8j7,gs-engine-jlspyc-mlnvb</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">namespace</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">gs-xxwczb</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">session_id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">session_narhaktn</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">num_workers</span><span class="sh">'</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">session</span><span class="p">(</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="p">{</span><span class="s">'status'</span><span class="p">:</span> <span class="s">'active'</span><span class="p">,</span> <span class="s">'type'</span><span class="p">:</span> <span class="s">'k8s'</span><span class="p">,</span> <span class="s">'engine_hosts'</span><span class="p">:</span> <span class="s">'gs-engine-jlspyc-6k8j7,gs-engine-jlspyc-mlnvb'</span><span class="p">,</span> <span class="s">'namespace'</span><span class="p">:</span> <span class="s">'gs-xxwczb'</span><span class="p">,</span> <span class="s">'session_id'</span><span class="p">:</span> <span class="s">'session_narhaktn'</span><span class="p">,</span> <span class="s">'num_workers'</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 </code></pre></div></div>
 
 <p>The first deployment may take some time to pull the image. After the deployment is successful, we can see the current status of the <code class="language-plaintext highlighter-rouge">sess</code> and the <code class="language-plaintext highlighter-rouge">namespace</code> to which this instance belongs.</p>
@@ -233,8 +233,8 @@ gs-etcd-service-jlspyc       ClusterIP   172.16.248.69    &lt;none&gt;        58
 <p>The command will produce the corresponding image, which could be used by specifying parameters in <code class="language-plaintext highlighter-rouge">Session</code>. Assuming the image are named <code class="language-plaintext highlighter-rouge">graphscope/analytical:latest</code>, which means
 the registry is empty or <code class="language-plaintext highlighter-rouge">docker.io</code>, and the tag is <code class="language-plaintext highlighter-rouge">latest</code>.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">k8s_image_registry</span><span class="o">=</span><span class="sh">""</span><span class="p">,</span> <span class="n">k8s_image_tag</span><span class="o">=</span><span class="sh">"</span><span class="s">latest</span><span class="sh">"</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_image_registry</span><span class="o">=</span><span class="s">""</span><span class="p">,</span> <span class="n">k8s_image_tag</span><span class="o">=</span><span class="s">"latest"</span><span class="p">)</span>
 </code></pre></div></div>
 
 <h2 id="conclusion">Conclusion</h2>
@@ -290,7 +290,7 @@ the registry is empty or <code class="language-plaintext highlighter-rouge">dock
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>

@@ -64,8 +64,8 @@ Schema construction and graph data loading are usually the complicated steps in 
 <h3 id="background">Background</h3>
 <p>For any graph computing product, the loading of graph data is often the first and most important step, as well as a very complicated step, mainly due to the complexity of the graph data itself. Therefore, in order to improve the loading experience, GraphScope has built-in various datasets. For example, for the <a href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started">TinkerPop Modern Graph</a>, users just need one statement to complete the loading operation:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">modern_graph</span> <span class="o">=</span> <span class="nf">load_modern_graph</span><span class="p">()</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">modern_graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
 </code></pre></div></div>
 
 <p>However, for the user’s dataset, the loading process needs to define a very long code, we use <a href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> this property graph as an example:</p>
@@ -115,9 +115,9 @@ Schema construction and graph data loading are usually the complicated steps in 
 
 <p>First, we run the following code in the Jupyterlab to create a <a href="https://graphscope.io/docs/reference/session.html#session-object">GraphScope Session</a>.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
-<span class="o">&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="sh">"</span><span class="s">hosts</span><span class="sh">"</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="o">&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s">"hosts"</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>After the Session is created, we can monitor the resource in the <strong>left resource panel</strong>. Click the “+” button to open the interactive page on the right side of the notebook:</p>
@@ -309,7 +309,7 @@ Schema construction and graph data loading are usually the complicated steps in 
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>

@@ -69,10 +69,10 @@ We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 rele
 
 <p>To express graph queries, users typically need to use the Cypher or Gremlin languages, which creates a certain usage barrier. With the rapid application of Large Language Models (LLMs) in various industries, we have also tried to leverage the powerful capabilities of LLMs to allow users to express queries in natural language, which are then automatically translated into Cypher and executed on GIE.</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">graphscope.langchain_prompt.query</span> <span class="kn">import</span> <span class="n">query_to_cypher</span>
-<span class="n">question</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Who is the son of Jia Baoyu?</span><span class="sh">"</span>
-<span class="n">cypher_sentence</span> <span class="o">=</span> <span class="nf">query_to_cypher</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
-<span class="nf">print</span><span class="p">(</span><span class="n">cypher_sentence</span><span class="p">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">graphscope.langchain_prompt.query</span> <span class="kn">import</span> <span class="n">query_to_cypher</span>
+<span class="n">question</span> <span class="o">=</span> <span class="s">"Who is the son of Jia Baoyu?"</span>
+<span class="n">cypher_sentence</span> <span class="o">=</span> <span class="n">query_to_cypher</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">cypher_sentence</span><span class="p">)</span>
 <span class="c1"># MATCH (p:Person)-[:son_of]-&gt;(q:Person)
 # WHERE p.name = 'Jia Baoyu'
 # RETURN q.name
@@ -83,15 +83,15 @@ We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 rele
 <p>GLTorch is a PyTorch-based graph neural network framework optimized for scenarios with single-machine multi-GPUs. It uses GPUs to accelerate graph sampling and feature extraction operations in graph neural networks; in addition, its API is compatible with PyG, allowing users to run their graph neural network models originally written with PyG API on GraphScope with minimal code changes.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># load the ogbn_arxiv graph as an example.
-</span><span class="n">g</span> <span class="o">=</span> <span class="nf">load_ogbn_arxiv</span><span class="p">()</span>
+</span><span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_arxiv</span><span class="p">()</span>
 <span class="c1"># specify the learning engine.
-</span><span class="n">glt_graph</span> <span class="o">=</span> <span class="n">gs</span><span class="p">.</span><span class="nf">graphlearn_torch</span><span class="p">(</span>
+</span><span class="n">glt_graph</span> <span class="o">=</span> <span class="n">gs</span><span class="p">.</span><span class="n">graphlearn_torch</span><span class="p">(</span>
   <span class="n">g</span><span class="p">,</span>
-  <span class="n">edges</span><span class="o">=</span><span class="p">[(</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">citation</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">)],</span>
-  <span class="n">node_features</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="sh">"</span><span class="s">feat_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="sh">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)]},</span>
-  <span class="n">node_labels</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">label</span><span class="sh">"</span><span class="p">},</span>
-  <span class="n">edge_dir</span><span class="o">=</span><span class="sh">"</span><span class="s">out</span><span class="sh">"</span><span class="p">,</span>
-  <span class="n">random_node_split</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">num_val</span><span class="sh">"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sh">"</span><span class="s">num_test</span><span class="sh">"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+  <span class="n">edges</span><span class="o">=</span><span class="p">[(</span><span class="s">"paper"</span><span class="p">,</span> <span class="s">"citation"</span><span class="p">,</span> <span class="s">"paper"</span><span class="p">)],</span>
+  <span class="n">node_features</span><span class="o">=</span><span class="p">{</span><span class="s">"paper"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s">"feat_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)]},</span>
+  <span class="n">node_labels</span><span class="o">=</span><span class="p">{</span><span class="s">"paper"</span><span class="p">:</span> <span class="s">"label"</span><span class="p">},</span>
+  <span class="n">edge_dir</span><span class="o">=</span><span class="s">"out"</span><span class="p">,</span>
+  <span class="n">random_node_split</span><span class="o">=</span><span class="p">{</span><span class="s">"num_val"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s">"num_test"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
 <span class="p">)</span>
 </code></pre></div></div>
 
@@ -163,7 +163,7 @@ We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 rele
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
