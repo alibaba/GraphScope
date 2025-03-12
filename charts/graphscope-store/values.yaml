@@ -74,6 +74,9 @@ store:
     size: 1Gi
     selector: {}
 
+  service:
+    adminPort: 10001
+
   ## @param hostAliases pods host aliases
   ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
   ##

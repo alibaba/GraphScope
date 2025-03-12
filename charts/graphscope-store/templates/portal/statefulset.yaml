@@ -107,6 +107,8 @@ spec:
               value: {{ .Values.frontend.service.gremlinPort | quote }}
             - name: GROOT_CYPHER_PORT
               value: {{ .Values.frontend.service.cypherPort | quote }}
+            - name: GROOT_STORE_POD_ADMIN_PORT
+              value: {{ .Values.store.service.adminPort | quote }}
             - name: GROOT_FRONTEND_POD_SUFFIX
               value: {{ printf "%s-frontend" (include "graphscope-store.name" .) }}
             - name: GROOT_COORDINATOR_POD_SUFFIX
