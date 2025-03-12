@@ -31,6 +31,8 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -156,6 +158,16 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         collection.getCollectionList().stream()
                                 .map(k -> parseElement(k, componentType))
                                 .collect(Collectors.toList()));
+            case ARRAY:
+            case MULTISET:
+//                if (componentType instanceof ArraySqlType || componentType instanceof MultisetSqlType) {
+//                    RelDataType elementType = componentType.getComponentType();
+//                    return VirtualValues.fromList(collection.getCollectionList().stream().map(k -> parseValue(k.getObject(), elementType)).collect(Collectors.toList()));
+//                } 
+		  return VirtualValues.fromList(collection.getCollectionList().stream().map(
+                        k -> parseValue(k.getObject(), componentType.getComponentType())).collect(Collectors.toList()));
+                // arbitrary array or set type is unsupported yet
+               //  throw new NotImplementedException(componentType + " is unsupported yet");
             default:
                 throw new NotImplementedException(
                         componentType.getSqlTypeName() + " is unsupported yet");
@@ -347,3 +359,4 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 }
+
