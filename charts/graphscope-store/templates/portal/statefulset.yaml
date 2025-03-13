@@ -107,14 +107,32 @@ spec:
               value: {{ .Values.frontend.service.gremlinPort | quote }}
             - name: GROOT_CYPHER_PORT
               value: {{ .Values.frontend.service.cypherPort | quote }}
+            - name: GROOT_STORE_POD_ADMIN_PORT
+              value: {{ .Values.store.service.adminPort | quote }}
             - name: GROOT_FRONTEND_POD_SUFFIX
+              {{- if .Values.distributed.enabled }}
               value: {{ printf "%s-frontend" (include "graphscope-store.name" .) }}
-            - name: GROOT_COORDINATOR_POD_SUFFIX
-              value: {{ printf "%s-coordinator" (include "graphscope-store.name" .) }}
-            - name: GROOT_PORTAAL_POD_SUFFIX
+              {{- else }}
               value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+              {{- end }}
+            - name: GROOT_COORDINATOR_POD_SUFFIX
+              {{- if .Values.distributed.enabled }}
+              value: {{ printf "%s-coordinator" (include "graphscope-store.name" .) }}
+              {{- else }}
+              value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+              {{- end }}
+            - name: GROOT_PORTAAL_POD_SUFFIX
+              {{- if .Values.distributed.enabled }}
+              value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+              {{- else }}
+              value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+              {{- end }}
             - name: GROOT_STORE_POD_SUFFIX
+              {{- if .Values.distributed.enabled }}
               value: {{ printf "%s-store" (include "graphscope-store.name" .) }}
+              {{- else }}
+              value: {{ printf "%s-portal" (include "graphscope-store.name" .) }}
+              {{- end }}
             - name: INSTANCE_NAME
               value: {{ .Release.Name | quote }}
             - name: NAMESPACE
