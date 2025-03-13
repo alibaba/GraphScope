@@ -141,8 +141,8 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
-        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
-        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml
+        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema_creationDate.yaml
+        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load_creationDate.yaml
         cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
         cp ${BUILD_LOAD_FILE} ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
@@ -344,8 +344,8 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc RBO
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc CBO
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc RBO
 
     - name: Run End-to-End cypher adhoc movie query test
       env:

@@ -36,6 +36,7 @@ compiler:
       statistics:
         uri: http://localhost:7777/v1/graph/%s/statistics
         interval: 86400000 # ms
+  query_max_iterations: 2147483647
   endpoint:
     default_listen_address: localhost
     bolt_connector:

@@ -199,8 +199,11 @@ run_cypher_test(){
     exit 1
   fi
   if [ "${GRAPH_NAME}" == "ldbc" ]; then
-    run_ldbc_test
-    if [ "${COMPILER_PLANNER_OPT}" != "CBO" ]; then
+    if [ "${COMPILER_PLANNER_OPT}" == "CBO" ]; then
+       run_ldbc_test
+    fi
+    # run simple test for RBO
+    if [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
       run_simple_test
     fi
   elif [ "${GRAPH_NAME}" == "movies" ]; then
