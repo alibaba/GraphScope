@@ -9,11 +9,11 @@ RETURN
     friend.id AS personId, 
     friend.firstName AS personFirstName, 
     friend.lastName AS personLastName, 
-    message.id AS commentOrPostId, 
-    message.content AS messageContent, 
-    message.imageFile AS messageImageFile, 
-    message.creationDate AS commentOrPostCreationDate
+    message.id AS messageId, 
+    CASE WHEN message.content = "" THEN message.imageFile
+    ELSE message.content END as messageContent,
+    message.creationDate AS messageCreationDate
 ORDER BY 
-    commentOrPostCreationDate DESC, 
-    commentOrPostId ASC 
+   messageCreationDate DESC, 
+    messageId ASC 
 LIMIT 20

@@ -474,6 +474,16 @@ bool RTAny::operator<(const RTAny& other) const {
   if (type_ != other.type_) {
     if (is_numerical_type(type_) && is_numerical_type(other.type_)) {
       return numerical_cmp(other) < 0;
+    } else if ((type_ == RTAnyType::kTimestamp &&
+                other.type_ == RTAnyType::kI64Value) ||
+               (type_ == RTAnyType::kI64Value &&
+                other.type_ == RTAnyType::kTimestamp)) {
+      int64_t lhs = (type_ == RTAnyType::kI64Value) ? value_.i64_val
+                                                    : value_.date.milli_second;
+      int64_t rhs = (other.type_ == RTAnyType::kI64Value)
+                        ? other.value_.i64_val
+                        : other.value_.date.milli_second;
+      return lhs < rhs;
     } else {
       return false;
     }

@@ -1,6 +1,6 @@
 MATCH (p :PERSON {id: 32985348834326L})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(message : POST | COMMENT) 
 WHERE 
-    message.creationDate <= 1334102400000L 
+    message.creationDate <= 1334102400000L
 WITH 
     friend, 
     message 

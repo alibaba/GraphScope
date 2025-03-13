@@ -27,4 +27,4 @@ WITH forum, max(postCount) AS postCount
 ORDER BY postCount DESC, forum.id ASC
 LIMIT 20
 
-RETURN forum.title as name, postCount;
+RETURN forum.title as forumTitle, postCount;
