@@ -6,9 +6,9 @@ ORDER BY
     cmt.id ASC 
 LIMIT 20 
 RETURN
-    author.id, 
-    author.firstName, 
-    author.lastName, 
-    cmt.creationDate, 
-    cmt.id, 
-    cmt.content
+    author.id as personId, 
+    author.firstName as personFirstName, 
+    author.lastName as personLastName, 
+    cmt.creationDate as commentCreationDate, 
+    cmt.id as commentId, 
+    cmt.content as commentContent

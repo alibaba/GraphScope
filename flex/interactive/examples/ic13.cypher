@@ -7,5 +7,5 @@ WITH
     CASE 
         WHEN k is null THEN -1
         ELSE length(k)
-    END as len
-RETURN len
+    END as shortestPathLength
+RETURN shortestPathLength

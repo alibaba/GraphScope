@@ -5,13 +5,13 @@ WHERE  other.id <> 19791209300317L
 MATCH (other)<-[:HASCREATOR]-(p:POST)-[:HASTAG]->(t:TAG {name: "Nat_King_Cole"})
 MATCH    (p:POST)-[:HASTAG]->(otherTag:TAG)
 
-WITH otherTag, t,count(distinct p) as postCnt
+WITH otherTag, t,count(distinct p) as postCount
 WHERE 
     otherTag <> t 
 RETURN
-    otherTag.name as name,
-    postCnt 
+    otherTag.name as tagName,
+    postCount
 ORDER BY 
-    postCnt desc, 
-    name asc 
+    postCount desc, 
+    tagName asc 
 LIMIT 10;

@@ -13,9 +13,9 @@ RETURN
     liker.firstName AS personFirstName,
     liker.lastName AS personLastName,
     likeTime AS likeCreationDate,
-    message.id AS commentOrPostId,
-    message.content AS messageContent,
-    message.imageFile AS messageImageFile,
+    message.id AS messageId,
+    CASE WHEN message.content = "" THEN message.imageFile
+    ELSE message.content END as messageContent,
     (likeTime - message.creationDate)/1000/60 AS minutesLatency,
   	isNew
 ORDER BY

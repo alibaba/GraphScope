@@ -8,11 +8,11 @@ LIMIT 10
 MATCH (message: POST | COMMENT)-[:REPLYOF*0..*]->(post:POST)-[:HASCREATOR]->(person:PERSON)
 RETURN
  messageId,
+ CASE WHEN message.content = "" THEN message.imageFile 
+ ELSE message.content END as messageContent,
  messageCreationDate,
- message.content as messageContent,
- message.imageFile as messageImageFile,
- post.id AS postId,
- person.id AS personId,
- person.firstName AS personFirstName,
- person.lastName AS personLastName
+ post.id AS originalPostId,
+ person.id AS originalPostAuthorId,
+ person.firstName AS originalPostAuthorFirstName,
+ person.lastName AS originalPostAuthorLastName
 ORDER BY messageCreationDate DESC, messageId ASC

@@ -11,7 +11,7 @@ return
     friend.id AS personId,
     friend.firstName AS personFirstName,
     friend.lastName AS personLastName, 
-    message.id AS postOrCommentId,
-    message.content AS content,
-    message.imageFile AS imageFile,
-    message.creationDate AS postOrCommentCreationDate;
+    message.id AS messageId,
+    CASE WHEN message.content = "" THEN message.imageFile
+    ELSE message.content END as messageContent,
+    message.creationDate AS messageCreationDate;
