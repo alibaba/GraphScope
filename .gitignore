@@ -177,9 +177,7 @@ flex/interactive/sdk/master/.dockerignore
 flex/interactive/sdk/master/.gitignore
 flex/interactive/sdk/master/gs_interactive_admin/models/
 flex/interactive/sdk/master/gs_interactive_admin/typing_utils.py
-flex/interactive/sdk/master/gs_interactive_admin/encoder.py
 flex/interactive/sdk/master/gs_interactive_admin/util.py
-flex/interactive/sdk/master/gs_interactive_admin/openapi/
 
 interactive_engine/groot-http/src/main/java/com/alibaba/graphscope/groot/service/models/
 interactive_engine/groot-http/.openapi-generator/

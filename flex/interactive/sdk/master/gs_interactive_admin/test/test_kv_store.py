@@ -19,6 +19,7 @@ import unittest
 
 import os
 import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 from flask import json
 import logging
@@ -31,29 +32,29 @@ from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
 class TestEtcdKVStore(unittest.TestCase):
     def setup_class(self):
         # Read etcd server endpoint from environment variable
-        if 'ETCD_ENDPOINT' not in os.environ:
+        if "ETCD_ENDPOINT" not in os.environ:
             raise Exception("ETCD_ENDPOINT is not set")
-        self.etcd_endpoint = os.environ['ETCD_ENDPOINT']
+        self.etcd_endpoint = os.environ["ETCD_ENDPOINT"]
         host, port = self.etcd_endpoint.split(":")
         self.etcd_kv_store = ETCDKeyValueStore(host, int(port))
         self.etcd_kv_store.open()
         # config logging
         logging.basicConfig(level=logging.INFO)
-        
+
     def test_insert(self):
         key = "test_key"
-        value = 'test_value'
+        value = "test_value"
         self.etcd_kv_store.insert(key, value)
         assert self.etcd_kv_store.get(key) == value
         # delete the key
         assert self.etcd_kv_store.delete(key)
         assert self.etcd_kv_store.get(key) is None
-        
+
     def test_insert_without_key(self):
-        value1 = 'test_value'
-        value2 = 'test_value2'
-        key1 = self.etcd_kv_store.insert_with_prefix('prefix', value1)
-        key2 = self.etcd_kv_store.insert_with_prefix('prefix', value2)
+        value1 = "test_value"
+        value2 = "test_value2"
+        key1 = self.etcd_kv_store.insert_with_prefix("prefix", value1)
+        key2 = self.etcd_kv_store.insert_with_prefix("prefix", value2)
         print("key1: ", key1)
         print("key2: ", key2)
         assert self.etcd_kv_store.get(key1) == value1
@@ -61,50 +62,42 @@ class TestEtcdKVStore(unittest.TestCase):
         # delete the key
         assert self.etcd_kv_store.delete(key1)
         assert self.etcd_kv_store.get(key1) is None
-        value3 = 'test_value3'
-        key3 = self.etcd_kv_store.insert_with_prefix('prefix', value3)
+        value3 = "test_value3"
+        key3 = self.etcd_kv_store.insert_with_prefix("prefix", value3)
         assert self.etcd_kv_store.get(key3) == value3
-    
-        kv_tuples = self.etcd_kv_store.get_with_prefix('prefix')
+
+        kv_tuples = self.etcd_kv_store.get_with_prefix("prefix")
         assert kv_tuples == [(key2, value2), (key3, value3)]
-        
+
     def test_delete(self):
         key = "prefix/test_key"
-        value = 'test_value'
+        value = "test_value"
         self.etcd_kv_store.insert(key, value)
         assert self.etcd_kv_store.get(key) == value
         key2 = "prefix/test_key2"
-        value2 = 'test_value2'
+        value2 = "test_value2"
         self.etcd_kv_store.insert(key2, value2)
         assert self.etcd_kv_store.get(key2) == value2
-        
-        self.etcd_kv_store.delete_with_prefix('prefix')
+
+        self.etcd_kv_store.delete_with_prefix("prefix")
         assert self.etcd_kv_store.get(key) is None
         assert self.etcd_kv_store.get(key2) is None
-        
+
     def test_update(self):
         key = "prefix/test_key"
-        value = 'test_value'
+        value = "test_value"
         self.etcd_kv_store.insert(key, value)
         assert self.etcd_kv_store.get(key) == value
-        value2 = 'test_value2'
+        value2 = "test_value2"
         self.etcd_kv_store.update(key, value2)
         assert self.etcd_kv_store.get(key) == value2
-        
+
         assert self.etcd_kv_store.update_with_func(key, lambda x: x + "2")
         assert self.etcd_kv_store.get(key) == value2 + "2"
-        
+
         self.etcd_kv_store.delete(key)
         assert self.etcd_kv_store.get(key) is None
-        
-        
-        
+
     def teardown_class(self):
         self.etcd_kv_store.delete_with_prefix("/")
         self.etcd_kv_store.close()
-
-
-
-
-
-

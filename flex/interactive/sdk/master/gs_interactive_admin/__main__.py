@@ -23,7 +23,10 @@ import logging
 
 from gs_interactive_admin import encoder
 from gs_interactive_admin.core.config import Config
-from gs_interactive_admin.core.service_discovery.service_registry import initialize_service_registry
+from gs_interactive_admin.core.service_discovery.service_registry import (
+    initialize_service_registry,
+)
+
 
 def setup_args_parsing():
     parser = argparse.ArgumentParser()
@@ -36,6 +39,7 @@ def setup_args_parsing():
         "--config-file", type=str, help="The config file path in yaml or json format"
     )
     return parser.parse_args()
+
 
 def config_logging(log_level):
     """Set log level basic on config.
@@ -52,7 +56,8 @@ def config_logging(log_level):
 
     logger = logging.getLogger("interactive")
     logger.setLevel(log_level)
-    
+
+
 def initialize_global_variables(config):
     """
     Initialize global variables. All global variables should have two methods:
@@ -60,11 +65,10 @@ def initialize_global_variables(config):
     - get_xxx: Get the global variable
     """
     initialize_service_registry(config)
-    
 
 
 def main():
-    
+
     args = setup_args_parsing()
     if args.config:
         config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
@@ -73,18 +77,19 @@ def main():
         config = Config.load(args.config_file)
     else:
         raise RuntimeError("Must specify a config or config-file")
-    
+
     config_logging(config.log_level)
     initialize_global_variables(config)
-    
-    app = connexion.App(__name__, specification_dir='./openapi/')
-    app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('openapi.yaml',
-                arguments={'title': 'GraphScope Interactive API v0.3'},
-                pythonic_params=True)
+
+    app = connexion.App(__name__, specification_dir="./openapi/")
+    app.add_api(
+        "openapi.yaml",
+        arguments={"title": "GraphScope Interactive API v0.3"},
+        pythonic_params=True,
+    )
 
     app.run(port=8080)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

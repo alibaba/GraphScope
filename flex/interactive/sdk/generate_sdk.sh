@@ -30,7 +30,7 @@ developerOrganizationUrl="https://graphscope.io"
 DEVELOPER_NAME="GraphScope Team"
 LICENSE_NAME="Apache-2.0"
 LICENSE_URL="https://www.apache.org/licenses/LICENSE-2.0.html"
-LOG_LEVEL="error"
+LOG_LEVEL="INFO"
 export OPENAPI_GENERATOR_VERSION=7.2.0
 
 #get current bash scrip's directory

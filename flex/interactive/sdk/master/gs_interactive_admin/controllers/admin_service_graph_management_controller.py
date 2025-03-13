@@ -3,19 +3,32 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from gs_interactive_admin.models.api_response_with_code import APIResponseWithCode  # noqa: E501
+from gs_interactive_admin.models.api_response_with_code import (
+    APIResponseWithCode,
+)  # noqa: E501
 from gs_interactive_admin.models.create_edge_type import CreateEdgeType  # noqa: E501
-from gs_interactive_admin.models.create_graph_request import CreateGraphRequest  # noqa: E501
-from gs_interactive_admin.models.create_graph_response import CreateGraphResponse  # noqa: E501
-from gs_interactive_admin.models.create_vertex_type import CreateVertexType  # noqa: E501
-from gs_interactive_admin.models.get_graph_response import GetGraphResponse  # noqa: E501
-from gs_interactive_admin.models.get_graph_schema_response import GetGraphSchemaResponse  # noqa: E501
-from gs_interactive_admin.models.get_graph_statistics_response import GetGraphStatisticsResponse  # noqa: E501
+from gs_interactive_admin.models.create_graph_request import (
+    CreateGraphRequest,
+)  # noqa: E501
+from gs_interactive_admin.models.create_graph_response import (
+    CreateGraphResponse,
+)  # noqa: E501
+from gs_interactive_admin.models.create_vertex_type import (
+    CreateVertexType,
+)  # noqa: E501
+from gs_interactive_admin.models.get_graph_response import (
+    GetGraphResponse,
+)  # noqa: E501
+from gs_interactive_admin.models.get_graph_schema_response import (
+    GetGraphSchemaResponse,
+)  # noqa: E501
+from gs_interactive_admin.models.get_graph_statistics_response import (
+    GetGraphStatisticsResponse,
+)  # noqa: E501
 from gs_interactive_admin.models.job_response import JobResponse  # noqa: E501
 from gs_interactive_admin.models.schema_mapping import SchemaMapping  # noqa: E501
 from gs_interactive_admin.models.snapshot_status import SnapshotStatus  # noqa: E501
 from gs_interactive_admin import util
-
 
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
@@ -25,7 +38,7 @@ def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
 
     :param graph_id: The id of graph to do bulk loading.
     :type graph_id: str
-    :param schema_mapping: 
+    :param schema_mapping:
     :type schema_mapping: dict | bytes
 
     :rtype: Union[JobResponse, Tuple[JobResponse, int], Tuple[JobResponse, int, Dict[str, str]]
@@ -38,13 +51,15 @@ def create_graph(create_graph_request):  # noqa: E501
 
     Create a new graph # noqa: E501
 
-    :param create_graph_request: 
+    :param create_graph_request:
     :type create_graph_request: dict | bytes
 
     :rtype: Union[CreateGraphResponse, Tuple[CreateGraphResponse, int], Tuple[CreateGraphResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_graph_request = CreateGraphRequest.from_dict(connexion.request.get_json())  # noqa: E501
+        create_graph_request = CreateGraphRequest.from_dict(
+            connexion.request.get_json()
+        )  # noqa: E501
         return get_etcd_meta_store().create_graph(create_graph_request)
     else:
         raise RuntimeError("Invalid request")
@@ -61,6 +76,7 @@ def delete_graph(graph_id):  # noqa: E501
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     return get_etcd_meta_store().delete_graph(graph_id)
+
 
 def get_graph(graph_id):  # noqa: E501
     """get_graph
@@ -118,9 +134,9 @@ def create_edge_type(graph_id, create_edge_type=None):  # noqa: E501
 
     Create a edge type # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_edge_type: 
+    :param create_edge_type:
     :type create_edge_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
@@ -133,37 +149,39 @@ def create_vertex_type(graph_id, create_vertex_type):  # noqa: E501
 
     Create a vertex type # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_vertex_type: 
+    :param create_vertex_type:
     :type create_vertex_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     raise RuntimeError("Not supported")
+
 
 def update_vertex_type(graph_id, create_vertex_type):  # noqa: E501
     """update_vertex_type
 
     Update a vertex type to add more properties # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_vertex_type: 
+    :param create_vertex_type:
     :type create_vertex_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     raise RuntimeError("Not supported")
 
+
 def update_edge_type(graph_id, create_edge_type):  # noqa: E501
     """update_edge_type
 
     Update an edge type to add more properties # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_edge_type: 
+    :param create_edge_type:
     :type create_edge_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
@@ -171,48 +189,52 @@ def update_edge_type(graph_id, create_edge_type):  # noqa: E501
     raise RuntimeError("Not supported")
 
 
-def delete_edge_type(graph_id, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
+def delete_edge_type(
+    graph_id, type_name, source_vertex_type, destination_vertex_type
+):  # noqa: E501
     """delete_edge_type
 
     Delete an edge type by name # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param type_name: 
+    :param type_name:
     :type type_name: str
-    :param source_vertex_type: 
+    :param source_vertex_type:
     :type source_vertex_type: str
-    :param destination_vertex_type: 
+    :param destination_vertex_type:
     :type destination_vertex_type: str
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     raise RuntimeError("Not supported")
 
+
 def get_snapshot_status(graph_id, snapshot_id):  # noqa: E501
     """get_snapshot_status
 
     Get the status of a snapshot by id # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param snapshot_id: 
+    :param snapshot_id:
     :type snapshot_id: int
 
     :rtype: Union[SnapshotStatus, Tuple[SnapshotStatus, int], Tuple[SnapshotStatus, int, Dict[str, str]]
     """
     raise RuntimeError("Not supported")
 
+
 def delete_vertex_type(graph_id, type_name):  # noqa: E501
     """delete_vertex_type
 
     Delete a vertex type by name # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param type_name: 
+    :param type_name:
     :type type_name: str
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"

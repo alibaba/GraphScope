@@ -34,6 +34,7 @@ void ServiceRegister::Start() {
     while (running_.load(std::memory_order_relaxed)) {
       {
         std::unique_lock<std::mutex> lock(mutex_);
+        // TODO: consider cancel keepAlive when service is stopped
         cv_.wait_for(lock, std::chrono::seconds(interval_seconds_));
         register_service();
       }

@@ -6,12 +6,13 @@ from typing import Union
 from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
 from gs_interactive_admin import util
 
+
 def delete_job_by_id(job_id):  # noqa: E501
     """delete_job_by_id
 
      # noqa: E501
 
-    :param job_id: 
+    :param job_id:
     :type job_id: str
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]

@@ -24,11 +24,21 @@
 
 README.md
 setup.py
-gs_interactive_admin/controllers/
+gs_interactive_admin/controllers/admin_service_graph_management_controller.py
+gs_interactive_admin/controllers/admin_service_procedure_management_controller.py
+gs_interactive_admin/controllers/graph_service_edge_management_controller.py
+gs_interactive_admin/controllers/query_service_controller.py
+gs_interactive_admin/controllers/admin_service_job_management_controller.py
+gs_interactive_admin/controllers/admin_service_service_management_controller.py
+gs_interactive_admin/controllers/graph_service_vertex_management_controller.py
+gs_interactive_admin/controllers/utils_controller.py
+gs_interactive_admin/controllers/security_controller.py
+gs_interactive_admin/controllers/admin_service_service_registry_controller.py
 gs_interactive_admin/test/
+gs_interactive_admin/openapi/
+gs_interactive_admin/encoder.py
 requirements.txt
 test-requirements.txt
 setup.cfg
-openapi/
 gs_interactive_admin/__init__.py
 gs_interactive_admin/__main__.py

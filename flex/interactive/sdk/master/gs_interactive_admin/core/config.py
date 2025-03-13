@@ -23,33 +23,38 @@ from simple_parsing import ArgumentParser
 from simple_parsing.helpers import Serializable
 from simple_parsing.helpers import list_field
 
+
 @dataclass
 class ComputeEngine:
     """
     Stores configurations for the compute engine.
     """
-    engine : str = "vineyard"
-    vineyard_socket : str = "vineyard.default"
-    vineyard_rpc_endpoint : str = ""
-    
+
+    engine: str = "vineyard"
+    vineyard_socket: str = "vineyard.default"
+    vineyard_rpc_endpoint: str = ""
+
+
 @dataclass
 class HttpService:
     """
     Stores configurations for the http service.
     """
-    default_listen_address : str = "localhost"
-    admin_port : int = 7777
-    query_port : int = 10000
-    max_content_length : str = "1GB"
-    
+
+    default_listen_address: str = "localhost"
+    admin_port: int = 7777
+    query_port: int = 10000
+    max_content_length: str = "1GB"
+
 
 @dataclass
 class ServiceRegistry:
     """
     Stores configurations for the service registry.
     """
-    type : str = "etcd"
-    endpoint : str = "http://localhost:2379"
+
+    type: str = "etcd"
+    endpoint: str = "http://localhost:2379"
     ttl: int = 60
 
 
@@ -58,13 +63,14 @@ class Config(Serializable):
     """
     Stores all configurations for Interactive. Corresponding to the yaml file https://github.com/alibaba/GraphScope/blob/main/flex/tests/hqps/interactive_config_test.yaml
     """
-    log_level : str = "INFO"
-    verbose_level : int = 0
 
-    compute_engine: ComputeEngine = field(default_factory=ComputeEngine)    
-    namespace: str = "default"
+    log_level: str = "INFO"
+    verbose_level: int = 0
+
+    compute_engine: ComputeEngine = field(default_factory=ComputeEngine)
+    namespace: str = "interactive"
     instance_name: str = "default"
-    
+
     http_service: HttpService = field(default_factory=HttpService)
-    
+
     service_registry: ServiceRegistry = field(default_factory=ServiceRegistry)
