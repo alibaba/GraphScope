@@ -13,7 +13,7 @@ public class PlannerConfig {
                     "graph.planner.rules",
                     "FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule");
     public static final Config<Integer> GRAPH_PLANNER_CBO_GLOGUE_SIZE =
-            Config.intConfig("graph.planner.cbo.glogue.size", 3);
+            Config.intConfig("graph.planner.cbo.glogue.size", 2);
     public static final Config<Integer> JOIN_MIN_PATTERN_SIZE =
             Config.intConfig("graph.planner.join.min.pattern.size", 5);
     public static final Config<Integer> JOIN_COST_FACTOR_1 =
