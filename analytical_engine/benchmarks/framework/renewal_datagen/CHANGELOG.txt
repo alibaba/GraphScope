@@ -1,0 +1,49 @@
+
+v0.2.7 CHANGELOG
+
+- Added gscale option which allows specifying the size of the generated dataset
+based on the graphalytics scaling metric.
+
+- Fixed a bug which caused wrong serialization of data once the numPartitions
+parameter was larger than 1.
+
+- Integrated codacy and fixed a zillion of coding style issues
+
+- Updated license header and added it to those files where it was missing
+
+- Fixed a Bug causing the distribution of population to be wrong. Added a test
+  for this
+
+- Fixed a Bug causing the distribution of posts per country to be wrong. Added a
+  test for this
+
+- Fixed several bugs related to date generation of dependent events. Added a
+  test for this
+
+v0.2.6 CHANGELOG
+Bi parameter generation
+Added testing
+ -Added tests for data integrity (ids are valid, unique, etc.)
+ -Added tests for interactive workload parameter bindings
+ -Added tests for update streams proper sorting
+ -Added a test script for automatic test of determinism for pseudo-/distributed execution modes. This script must be manually executed outside the testing framework
+Improved performance of activity generation.
+ -Execution flow within activity generation is changed to shape things better for the java compiler
+ -Improved factor storage, releasing used memory when factors are no longer needed. This makes activity generation to scale close to linear with respect to the network's size
+Improved performance of sorting update streams and serialization
+Added the option to turn on/off printing the endline separator on csv serializers
+Added the option to override the way weights of edges are computed
+Added the option to override the way dates and datetimes are formatted
+Added the graphalytics extended serializer including weights and timestamps
+Added the option to override the way text of posts and comments is generated
+Improved tunable clustering coefficient edge generation
+Integrated parameter generation within java execution
+Added the option to enable/disable the sorting of persons prior to serialization (Enabled by default)
+Improved the way Exceptions are handled
+Critical Bug fixing
+ -Fixed a bug that caused corrupted data when a reducer failed to execute and hadoop retried its execution in another node
+ -Fixed a bug with factors generation, causing some queries not to produce valid parameters
+ -Fixed a bug causing message lengths to go beyond the maximum size of 2000 characters
+ -Fixed bugs at ttl serializer
+
+

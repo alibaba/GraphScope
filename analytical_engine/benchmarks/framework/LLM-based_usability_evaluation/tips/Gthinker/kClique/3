@@ -1,0 +1,137 @@
+Here are the main API functions with explanations, parameters, and simplified usage examples:
+
+1. KCliqueTrimHandler Class
+trim(KCliqueVertex & v)
+Parameters: v (a vertex object of type KCliqueVertex).
+Purpose: Trims the adjacency list of a vertex. In this case, it removes edges that point to vertices with IDs smaller than the current vertex ID (v.id), ensuring the clique is ordered.
+Usage Example:
+
+KCliqueVertex vertex;  // A vertex
+KCliqueTrimHandler TrimHandler;
+TrimHandler.trim(vertex);  // Trim the adjacency list of the vertex
+2. KCliqueAggregation Class (Aggregator)
+init()
+
+Purpose: Initializes the aggregation counters (count and sum) to zero.
+Usage Example:
+
+KCliqueAggregation aggregator;
+aggregator.init();  // Initializes count and sum
+init_udf(size_t & prev)
+
+Parameters: prev (previous global aggregation status).
+Purpose: Initializes the sum of the aggregator, typically used to reset the aggregation before starting a new round of aggregation.
+Usage Example:
+
+size_t prev = 0;
+aggregator.init_udf(prev);  // Reset the sum for the new round
+aggregate_udf(size_t & task_count)
+
+Parameters: task_count (the count from the current task).
+Purpose: Aggregates the local task count to the global count.
+Usage Example:
+
+size_t task_count = 10;
+aggregator.aggregate_udf(task_count);  // Aggregate the count
+stepFinal_udf(size_t & partial_count)
+
+Parameters: partial_count (partial count from other workers).
+Purpose: Combines partial counts from all workers into a final global count.
+Usage Example:
+
+size_t partial_count = 5;
+aggregator.stepFinal_udf(partial_count);  // Finalize the count after collecting partial counts
+finishPartial_udf(size_t & collector)
+
+Parameters: collector (collector for local partial results).
+Purpose: Returns the local partial count.
+Usage Example:
+
+size_t collector;
+aggregator.finishPartial_udf(collector);  // Get the local count
+finishFinal_udf(size_t & collector)
+
+Parameters: collector (collector for the final result).
+Purpose: Returns the final global count after aggregation, printing the result if the current worker is the master.
+Usage Example:
+
+size_t collector;
+aggregator.finishFinal_udf(collector);  // Final count after aggregation
+3. KCliqueWorkerNode Class (Computation Class)
+task_spawn(VertexT * v)
+
+Parameters: v (pointer to a vertex object of type KCliqueVertex).
+Purpose: Spawns tasks for vertices with a value (adjacency list) size greater than or equal to K-1. It pulls the neighboring vertices and creates tasks for them.
+Usage Example:
+
+KCliqueVertex vertex;  // A vertex
+KCliqueWorkerNode comper;
+comper.task_spawn(&vertex);  // Spawn tasks for this vertex
+KCliqueCounting(SubgraphT & g, VSet & candidateVertices, int lev)
+
+Parameters:
+g: the subgraph of type SubgraphT.
+candidateVertices: a set of candidateVerticesidate vertex IDs (VSet).
+lev: current depth level for the recursive K-Clique counting.
+Purpose: Recursively counts the K-Cliques in the subgraph, exploring vertices at a deeper level.
+Usage Example:
+
+SubgraphT g;  // A subgraph
+VSet candidateVerticesidates;  // candidateVerticesidate vertex set
+int level = 1;  // Starting level
+size_t result = comper.KCliqueCounting(g, candidateVerticesidates, level);  // Count K-Cliques recursively
+compute(SubgraphT & g, ContextT & context, vector<VertexT *> & frontier)
+
+Parameters:
+g: the subgraph of type SubgraphT.
+context: the context for the task.
+frontier: a vector of vertices that are part of the current frontier.
+Purpose: Executes the computation for the current subgraph. It prepares the subgraph, adds vertices, and computes K-Clique counts.
+Usage Example:
+
+SubgraphT g;  // A subgraph
+vector<VertexT *> frontier;  // List of frontier vertices
+ContextT context;  // Task context
+bool result = comper.compute(g, context, frontier);  // Execute computation
+4. KCliqueWorker Class (Worker Class)
+toVertex(char* line)
+
+Parameters: line (line of input data representing a vertex).
+Purpose: Parses a line of data and converts it into a vertex object.
+Usage Example:
+
+char line[] = "1 2 3 4 5";  // Example line representing a vertex
+VertexT *vertex = worker.toVertex(line);  // Parse the line to create a vertex
+task_spawn(VertexT * v, vector<KCliqueTask> & tcollector)
+
+Parameters:
+v: pointer to a vertex object of type KCliqueVertex.
+tcollector: vector that collects tasks.
+Purpose: Spawns tasks for a vertex and adds them to the task collector (tcollector).
+Usage Example:
+
+KCliqueVertex vertex;  // A vertex
+vector<KCliqueTask> task_collector;  // Task collector
+worker.task_spawn(&vertex, task_collector);  // Spawn tasks for this vertex
+5. Global Functions
+init_worker(int * argc, char*** argv)
+
+Purpose: Initializes the worker environment, setting up the worker rank and number of workers.
+Usage Example:
+
+int argc = 0;
+char **argv = nullptr;
+init_worker(&argc, &argv);  // Initialize worker environment
+worker_finalize()
+
+Purpose: Finalizes the worker environment, cleaning up any resources used during the job.
+Usage Example:
+
+worker_finalize();  // Finalize worker environment after task completion
+6. Main Execution Flow
+worker.run(param)
+Parameters: param (worker parameters, including input graph path and thread count).
+Purpose: Starts the worker execution using the provided parameters.
+Usage Example:
+
+worker.run(param);  // Run the worker with the specified parameters

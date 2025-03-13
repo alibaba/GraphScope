@@ -1,0 +1,97 @@
+Here is the detailed information about the main API functions used in the given implementation, including parameter descriptions and usage examples.
+
+1. processEdges
+Description:
+processEdges is a core test function used for applying a function to the edges of a graph. It is typically used for algorithms like PageRank, BFS, and others where operations are performed on the edges.
+
+Parameters:
+
+graph<vertex>& GA: The graph on which to operate.
+NodeGroup& vs: The subset of vertices to be considered as the frontier.
+F f: The function to be applied to the edges. This function should have update, updateAtomic, and cond methods.
+intT threshold = -1: A threshold value used to decide between dense and sparse edge traversal.
+const flags& fl = 0: Flags to control the behavior of the edge map.
+Usage Example:
+
+processEdges(GA, Frontier, PR_F<vertex>(p_curr, p_next, GA.V), 0, no_output);
+In this example, PR_F is used to apply the PageRank update function to the edges of the graph GA.
+
+2. processNodes
+Description:
+processNodes applies a function to each vertex in the vertex subset. It can be used to update the values of vertices based on some computation.
+
+Parameters:
+
+VS& V: The vertex subset on which to operate.
+F f: The function to be applied to each vertex. This function should have an operator() method.
+Usage Example:
+
+processNodes(Frontier, PR_Vertex_F(p_curr, p_next, damping, n));
+Here, PR_Vertex_F updates the p_next values of the vertices according to the PageRank equation.
+
+3. sequence::plusReduce
+Description:
+plusReduce is a utility function used to perform a parallel reduction (sum) of an array.
+
+Parameters:
+
+A a: The array to be reduced.
+long n: The size of the array.
+Usage Example:
+
+double L1_norm = sequence::plusReduce(p_curr, n);
+This computes the L1-norm by summing up the values in the p_curr array.
+
+4. parallel_for
+Description:
+parallel_for is used to run a loop in parallel. It is a utility function to parallelize loops.
+
+Parameters:
+
+long start: The starting index of the loop.
+long end: The ending index of the loop.
+F f: The function to be applied in each iteration of the loop.
+Usage Example:
+
+parallel_for(long i = 0; i < n; i++) {
+  p_curr[i] = one_over_n;
+}
+This initializes the p_curr array in parallel.
+
+PR_F
+Description:
+A functor that defines the update function for PageRank.
+
+Parameters:
+
+double* p_curr: The current PageRank values.
+double* p_next: The next PageRank values.
+vertex* V: The vertices of the graph.
+Methods:
+
+inline bool update(uintE s, uintE d): Applies the PageRank equation.
+inline bool updateAtomic(uintE s, uintE d): Atomic version of the update function.
+inline bool cond(intT d): Condition function always returning true.
+PR_Vertex_F
+Description:
+A functor that updates the PageRank values of vertices according to the PageRank equation.
+
+Parameters:
+
+double damping: The damping factor.
+double addedConstant: A constant added to each PageRank value.
+double* p_curr: The current PageRank values.
+double* p_next: The next PageRank values.
+Methods:
+
+inline bool operator()(uintE i): Applies the PageRank update to a vertex.
+PR_Vertex_Reset
+Description:
+A functor that resets the PageRank values to zero.
+
+Parameters:
+
+double* p_curr: The current PageRank values.
+Methods:
+
+inline bool operator()(uintE i): Resets the PageRank value of a vertex to zero.

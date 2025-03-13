@@ -1,0 +1,105 @@
+Main Functions and Analysis
+1. processVertices
+Function Signatures:
+template<class VTYPE, class F, class M>
+inline VSet processVertices(VSet &U, F &f, M &m, bool b = true);
+template<class VTYPE, class F>
+inline VSet processVertices(VSet &U, F &f);
+Description:
+The processVertices function is used to apply a function f to a set of vertices U and optionally a mapping function m. It returns a new vertex set.
+Parameters:
+U: The set of vertices to be processed.
+f: A function applied to filter the vertices.
+m: A function applied locally to map the vertices.
+b: A boolean flag (default is true).
+Examples:
+DefineVertexProcessor(init) {v.d = deg(v);};
+vertexSubset A = processVertices(All, CTrueV, init);
+Here, init is a mapping function that sets the degree of each vertex, and CTrueV is a filter that includes all vertices.
+
+2. processEdgesSparse
+Function Signatures:
+template<class VTYPE, class F, class M, class C, class R>
+VSet processEdgesSparseFunction(Graph<VTYPE> &G, VSet &U, int h, F &f, M &m, C &c, R &r);
+template<class VTYPE, class F, class M, class C, class R, class H>
+VSet processEdgesSparseFunction(Graph<VTYPE> &G, VSet &U, H &h, F &f, M &m, C &c, R &r);
+Description:
+The processEdgesSparse function processes edges in a sparse manner. It applies a filter function f to the edges and a mapping function m to update vertex properties.
+Parameters:
+G: The graph containing the vertices and edges.
+U: The set of vertices to be processed.
+h: Specifies the type of edges to process (e.g., incoming, outgoing).
+f: A filter function applied to the edges.
+m: A mapping function applied to update vertex properties.
+c: A condition function to further filter edges.
+r: A reduction function to combine results.
+Examples:
+DefineVertexFilter(check) {return v.d >= k;};
+DefineEdgeUpdater(update1) {d.c++; return d;};
+DefineEdgeUpdater(update2) {d.d -= s.c; return d;};
+A = processEdgesSparse(A, EU, CTrueE, update1, check, update2);
+Here, update1 increments a property c for each vertex, and update2 decrements a property d by s.c.
+
+3. Size
+Description:
+The Size function returns the number of elements in a vertex set.
+Parameters:
+U: The vertex set.
+Examples:
+int len = Size(A);
+Here, len stores the number of vertices in set A.
+
+4. GetTime
+Description:
+The GetTime function returns the current time, typically used to measure the execution time of a code segment.
+Examples:
+double t = GetTime();
+Here, t stores the current time.
+
+Below is the pseudocode:
+Algorithm: Graph Processing with Vertex and Edge Mappings
+
+Function INIT(v):
+
+v.d = deg(v)
+return v
+Function FILTER(v):
+
+return v.d < k
+Function LOCAL(v):
+
+v.c = 0
+return v
+Function CHECK(v):
+
+return v.d >= k
+Function UPDATE1(s, d):
+
+d.c++
+return d
+Function UPDATE2(s, d):
+
+d.d -= s.c
+return d
+Initialize dataset:
+
+LoadData(argv[1], argv[2])
+Convert input argument to integer k:
+
+k = atoi(argv[3])
+Initialize all vertices using processVertices:
+
+A = processVertices(All, CTrueV, INIT)
+Repeat until size of A is zero:
+
+For i = 0; len > 0; ++i:
+Print the current round number and size of A
+A = processVertices(A, FILTER, LOCAL)
+A = processEdgesSPARSE(A, EU, CTrueE, UPDATE1, CHECK, UPDATE2)
+len = Size(A)
+Measure total processing time:
+t = GetTime()
+Get the size of the remaining vertices:
+s = Size(processVertices(All, CHECK))
+Print results:
+Print k-core size and processing time

@@ -1,0 +1,170 @@
+Major API Functions and Their Usage
+Graph Construction and Loading:
+
+graph_type::add_vertex()
+graph_type::add_edge()
+graph.load()
+Engine Initialization and Execution:
+
+graphlab::omni_engine
+engine.signal_vset()
+engine.signal_all()
+engine.start()
+engine.elapsed_seconds()
+Vertex Program Methods:
+
+ivertex_program::collect_edges()
+ivertex_program::collect()
+ivertex_program::process()
+ivertex_program::distribute_edges()
+ivertex_program::distribute()
+Serialization:
+
+graphlab::oarchive
+graphlab::iarchive
+Detailed Explanation with Examples
+1. Graph Construction and Loading
+add_vertex:
+
+Description: Adds a vertex to the graph.
+Parameters:
+vertex_id_type gvid: Global vertex ID.
+vertex_data_type data: Data associated with the vertex.
+Example:
+
+graph.add_vertex(vid, node);
+add_edge:
+
+Description: Adds an edge to the graph.
+Parameters:
+vertex_id_type source: Source vertex ID.
+vertex_id_type target: Target vertex ID.
+edge_data_type data: Data associated with the edge.
+Example:
+
+graph.add_edge(vid, other_vid, edge_val);
+load:
+
+Description: Loads a graph from a file using a specified parser.
+Parameters:
+std::string graph_dir: Path to the graph file.
+std::function<bool(graph_type&, const std::string&, const std::string&)> parser: Line parser function.
+Example:
+
+graph.load(graph_dir, line_parser);
+2. Engine Initialization and Execution
+omni_engine:
+
+Description: A generic engine for running vertex programs.
+Parameters:
+distributed_control& dc: Distributed control object.
+graph_type& graph: Graph to run the engine on.
+std::string exec_type: Execution type (e.g., "asynchronous").
+command_line_options& clopts: Command line options.
+Example:
+
+graphlab::omni_engine<DjikstraAlgorithm> engine(dc, graph, "asynchronous", clopts);
+signal_vset:
+
+Description: Signals a set of vertices to start the computation.
+Parameters:
+vertex_set vset: Set of vertices to signal.
+Example:
+
+engine.signal_vset(start_set);
+signal_all:
+
+Description: Signals all vertices to start the computation.
+Parameters: None.
+Example:
+
+engine2.signal_all();
+start:
+
+Description: Starts the engine and runs the computation.
+Parameters: None.
+Example:
+
+engine.start();
+elapsed_seconds:
+
+Description: Returns the elapsed time since the engine started.
+Parameters: None.
+Example:
+
+float runtime = engine.elapsed_seconds();
+3. Vertex Program Methods
+collect_edges:
+
+Description: Specifies which edges to collect information from.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+Returns: Edge direction type (e.g., IN_EDGES, OUT_EDGES).
+Example:
+
+edge_dir_type collect_edges(icontext_type& context, const vertex_type& vertex) const {
+  return graphlab::IN_EDGES;
+}
+collect:
+
+Description: collects information from the specified edges.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+edge_type& edge: The edge to collect from.
+Returns: collected information.
+Example:
+
+collect_type collect(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // Implement collect logic
+}
+process:
+
+Description: Applies the collected information to the vertex.
+Parameters:
+icontext_type& context: Context of the computation.
+vertex_type& vertex: The current vertex.
+const collect_type& total: The total collected information.
+Example:
+
+void process(icontext_type& context, vertex_type& vertex, const collect_type& total) {
+  // Implement process logic
+}
+distribute_edges:
+
+Description: Specifies which edges to distribute information to.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+Returns: Edge direction type (e.g., IN_EDGES, OUT_EDGES).
+Example:
+
+edge_dir_type distribute_edges(icontext_type& context, const vertex_type& vertex) const {
+  return graphlab::OUT_EDGES;
+}
+distribute:
+
+Description: distributes information to the specified edges.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+edge_type& edge: The edge to distribute to.
+Example:
+
+void distribute(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // Implement distribute logic
+}
+4. Serialization
+oarchive and iarchive:
+Description: Serialization and deserialization of objects.
+Example for saving:
+
+void save(graphlab::oarchive& oarc) const {
+  oarc << id << cost << launched << done;
+}
+Example for loading:
+
+void load(graphlab::iarchive& iarc) {
+  iarc >> id >> cost >> launched >> done;
+}

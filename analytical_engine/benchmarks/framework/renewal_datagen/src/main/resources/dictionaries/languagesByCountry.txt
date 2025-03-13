@@ -1,0 +1,242 @@
+Aruba  es 12.6  en 7.7  nl * 5.8
+Antigua and Barbuda  en * 0
+United_Arab_Emirates  ar * 0  fa 0  en 0  hi 0  ur 0
+Afghanistan  uz 5.5  tk 5.5
+Algeria  ar * 0  fr 0
+Azerbaijan  az * 90.3  ru 1.8  hy 1.5
+Albania  sq * 0
+Armenia  hy * 97.7  ru 0.9
+Andorra  ca * 0  fr 0  es 0  pt 0
+Angola  pt * 0
+American Samoa  sm 90.6  en 2.9
+Argentina  es * 0  it 0  en 0  de 0  fr 0  qu 0
+Australia  en 78.5  zh 2.5  it 1.6  ar 1.2  vi 1
+Austria  de * 88.6  tr 2.3  sr 2.2  hr 1.6  hu 3.65
+Anguilla  en *
+Bahrain  ar * 0  en 0  ur 0
+Barbados  en 0
+Botswana  en * 2.1
+Bermuda  en * 0  pt 0
+Belgium  nl * 60  fr * 40  de * 1
+The_Bahamas  en * 0
+Bangladesh  en 0
+Belize  es 46  en * 3.9  de 3.3
+Bosnia_and_Herzegovina  bs *  hr *  sr *
+Bolivia  es * 60.7  qu * 21.2  ay * 14.6
+Burma  my * 0
+Benin  fr * 0  yo 0
+Belarus  be * 23.4  ru * 70.2  pl 3.2  uk 3.2
+Solomon_Islands  en * 2
+Brazil  pt * 0
+Bhutan  dz * 24
+Bulgaria  bg * 76.8  tr 8.2
+Brunei  ms * 0  en 0  zh 0
+Burundi  fr * 0  sw 0
+Canada  en * 58.8  fr * 21.6
+Cambodia  fr 0  en 0
+Curacao  nl * 8  es 4  en 2.9
+Chad  fr * 0  ar * 0
+Sri_Lanka  si * 74  ta * 18
+Republic_of_the_Congo  fr * 0  ln 0
+Democratic_Republic_of_the_Congo  fr * 0  ln 0
+China  zh 0
+Chile  es * 0  de 0  en 0
+Cayman_Islands  en * 95  es 3.2 0
+Cocos_Islands  ms 0  en 0
+Cameroon  en * 0  fr * 0
+Comoros  ar * 0  fr * 0
+Colombia  es * 0
+Northern_Mariana_Islands  zh 23.4  ch * 22.4  en * 10.8
+Costa_Rica  es * 0  en 0
+Central_African_Republic  fr * 0
+Cuba  es * 0
+Cape_Verde  pt * 0
+Cook_Islands  en * 0  mi 0
+Cyprus  tr * 0  en 0
+Denmark  da 0  fo 0  de 0
+Djibouti  fr * 0  ar * 0  so 0  aa 0
+Dominica  en * 0
+Dominican_Republic  es * 0
+Ecuador  es * 0  qu 0
+Egypt  ar * 0  en 0  fr 0
+Ireland  en * 0  ga * 0
+Equatorial Guinea  es * 67.6  fr 10.8
+Estonia  et * 67.3  ru 29.7
+Eritrea  ti * 0  ar * 0  en * 0  aa 0
+El_Salvador  es * 0
+Ethiopia  en * 0  ar * 0
+Czech_Republic  cs 95.4  sk 1.6
+Finland  fi * 91.2  sv * 5.5  ru 1.65
+Fiji  en * 0  fj * 0
+Falkland Islands (Islas Malvinas)  en 0
+Micronesia, Federated States of  en * 0
+Faroe Islands  fo 0  da 0
+French Polynesia  fr * 61.1
+France  fr * 100  br 0  co 0  ca 0  eu 0
+Gambia, The  en * 0  wo 0
+Gabon  fr * 0
+Georgia  ka * 71  ru 9  hy 7
+Ghana  ee 12.7  en * 36.1
+Gibraltar  en * 0  es 0  it 0  pt 0
+Grenada  en * 0
+Guernsey  en 0  fr 0
+Greenland  da * 0  en 0
+Germany  de 0
+Guam  en 38.3  ch 22.2
+Greece  en 0.5  fr 0.5
+Guatemala  es * 60
+Guinea  fr * 0
+Guyana  en 0  ur 0
+Gaza_Strip  ar 0  he 0  en 0
+Haiti  fr * 0
+Hong_Kong  en * 3.5  zh 1.4
+Honduras  es * 0
+Croatia  hr * 96.1  sr 1  it 0.58  hu 0.58  cs 0.58  sk 0.58  de 0.58
+Hungary  hu 93.6
+Iceland  is 0  en 0
+Indonesia  en 0  nl 0  jv 0
+Isle_of_Man  en 0  gv 0
+India  hi 41  bn 8.1  te 7.2  mr 7  ta 5.9  ur 5  gu 4.5  kn 3.7  ml 3.2  or 3.2  as 1.3
+Iran  fa * 53  tr 18  ku 10  ar 2
+Israel  he * 0  ar 0  en 0
+Italy  it * 0  de 0  fr 0
+Cote_d'Ivoire  fr * 0
+Iraq  ar * 0  ku * 0  tk 0  hy 0
+Japan  ja 0
+Jersey  en * 94.5  pt 4.6
+Jamaica  en 0
+Jordan  ar * 0  en 0
+Kenya  en * 0
+Kyrgyzstan  uz 13.6  ru * 12.5
+North_Korea  ko 0
+Kiribati  en * 0
+South_Korea  ko 0  en 0
+Christmas_Island  en * 0  zh 0  ms 0
+Kuwait  ar * 0  en 0
+Kosovo  sq * 0  sr * 0  bs 0  tr 0
+Kazakhstan  kk * 64.4  ru * 95
+Laos  lo * 0  fr 0  en 0
+Lebanon  ar * 0  fr 0  en 0  hy 0
+Latvia  lv * 58.2  ru 37.5  lt 4.3
+Lithuania  lt * 82  ru 8  pl 5.6
+Liberia  en * 20
+Slovakia  sk * 83.9  hu 10.7  uk 1
+Liechtenstein  de * 0
+Lesotho  en * 0  zu 0  xh 0
+Luxembourg  lb * 0  de * 0  fr * 0
+Libya  ar * 0  it 0  en 0
+Madagascar  fr * 0  mg * 0  en 0
+Macau  zh 5  en 2.3  tl 1.7  pt 0.7
+Moldova  ru 0
+Mayotte  fr * 35
+Mongolia  ru 0
+Montserrat  en 0
+Montenegro  sr 63.6  bs 5.5  sq 5.3  hr 3.7
+Macedonia  mk * 66.5  sq * 25.1  tr 3.5  sr 1.2
+Mali  fr * 0  bm 46.3
+Monaco  fr * 0  en 0  it 0
+Morocco  ar * 0  fr 0
+Mauritius  fr 3.4  en * 1
+Mauritania  ar * 0  wo 0  fr 0
+Malta  mt * 90.2  en * 6
+Oman  ar * 0  en 0  ur 0
+Maldives  dv * 0  en 0
+Mexico  es 92.7
+Malaysia  en 0  zh 0  ta 0  te 0  ml 0  pa 0  th 0
+Mozambique  pt * 10.7
+New_Caledonia  fr * 0
+New_Zealand  en 0  mi 0
+Niue  en * 0
+Norfolk_Island  en * 0
+Niger  fr * 0  ha 0
+Vanuatu  en * 1.9  fr * 1.4
+Nigeria  en * 0  ha 0  yo 0  ig 0
+Netherlands  nl * 0
+Norway  fi 0
+Nepal  ne * 47.8
+Nauru  en 0
+Suriname  nl * 0  en 0  jv 0
+Nicaragua  es * 97.5
+New Zealand  en * 91.2  mi * 3.9  sm 2.1  fr 1.3  hi 1.1
+South Sudan  en *  ar *
+Paraguay  es * 0  gn * 0
+Pitcairn Islands  en * 0
+Peru  es * 84.1  qu * 13  ay * 1.7
+Pakistan  sd 12  ur * 8  en * 4
+Poland  pl * 97.8
+Panama  es * 0  en 14
+Portugal  pt * 0
+Papua_New_Guinea  en * 0
+Palau  en * 9.4  zh 5.7  ja 1.5
+Guinea-Bissau  pt *
+Qatar  ar * 0  en 0
+Serbia  sr * 88.3  hu 3.8
+Marshall_Islands  mh * 98.2
+Saint_Martin  fr * 0  en 0  nl 0  es 0
+Romania  ro * 91  hu 6.7
+Philippines  en * 0  tl 0
+Puerto_Rico  es 0  en 0
+Republic_of_Macedonia  mk 0
+Russia  ru * 0
+Rwanda  rw * 0  fr * 0  en * 0
+Saudi_Arabia  ar * 0
+Saint_Pierre_and_Miquelon  fr * 0
+Saint_Kitts_and_Nevis  en * 0
+Seychelles  en * 4.9
+South_Africa  af * 13.35  en * 8.2
+Senegal  fr * 0  wo 0
+Saint_Helena, Ascension,_and_Tristan_da_Cunha  en 0
+Slovenia  sl * 91.1  sh 4.5  it 0  hu 0
+Sierra_Leone  en * 0
+San_Marino  it 0
+Singapore  zh * 35  en * 23  ms * 14.1  ta * 3.2
+Somalia  so * 0  ar * 0  it 0  en 0
+Spain  es * 74  ca 17  gl 7  eu 2
+Saint_Lucia  en * 0
+Sudan  ar * 0  en * 0
+Svalbard  no 0  ru 0
+Sweden  sv * 0  fi 0
+Syria  ar * 0  ku 0  hy 0  fr 0  en 0
+Switzerland  de * 63.7  fr * 20.4  it * 6.5  sh 1.5  sq 1.3  pt 1.2  es 1.1  en 1
+Saint_Barthelemy  fr 0  en 0
+Trinidad_and_Tobago  en * 0  fr 0  es 0  zh 0
+Thailand  th 0  en 0
+Tajikistan  tg * 0  ru 0
+Turks_and_Caicos_Islands  en * 0
+Tokelau  en 0
+Tonga  en * 0
+Togo  fr * 0  ee 0
+Sao_Tome_and_Principe  pt * 0
+Tunisia  ar * 0  fr 0
+Timor-Leste  pt * 0  id 0  en 0
+Turkey  tr * 0  ku 0
+Tuvalu  en * 0  sm 0
+Taiwan  zh * 0
+Turkmenistan  tk * 72  ru 12  uz 9
+Tanzania  en * 0  ar 0
+Uganda  en * 0  lg 0  ar 0
+United_Kingdom  en 0
+England  en 0
+Scotland  en 0
+Wales  en 0  cy 0
+Northern_Ireland  en 0
+Republic_of_Ireland  en 0  ga 0
+Ukraine  uk * 67  ru 24  ro 3  pl 3  hu 3
+United_States  en 82.1  es 10.7
+Burkina_Faso  fr * 0
+Uruguay  es * 0
+Uzbekistan  uz * 74.3  ru 14.2  tg 4.4
+Saint_Vincent_and_the_Grenadines  en 0
+Venezuela  es * 0
+British_Virgin_Islands  en * 0
+Vietnam  vi * 0  en 0  fr 0  zh 0
+Virgin_Islands  en 74.7  es 16.8  fr 6.6
+Vatican_City  it 0  la 0  fr 0
+Namibia  en * 7  af 60  de 32  hz 0.3
+West_Bank  ar 0  he 0  en 0
+Wallis_and_Futuna  fr * 10.8
+Samoa  sm * 0  en 0
+Swaziland  en * 0
+Yemen  ar * 0
+Zambia  ny * 10.7  to * 10.6  en * 1.7
+Zimbabwe  en * 0  sn 0

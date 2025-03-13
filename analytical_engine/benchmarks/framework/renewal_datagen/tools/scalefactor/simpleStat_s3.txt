@@ -1,0 +1,89 @@
+\begin{table}[H]
+\centering
+\begin{tabular} {| l | c | c |}
+\hline
+\textbf{Entity} & \textbf{Num Entities} & \textbf{Bytes} \\
+\hline
+\hline
+comment & 7135636 & 776534811 \\
+\hline
+forum & 272268 & 16231309 \\
+\hline
+organisation & 7996 & 813270 \\
+\hline
+person & 27000 & 2431528 \\
+\hline
+place & 1466 & 83667 \\
+\hline
+post & 3140119 & 374416646 \\
+\hline
+tag & 16080 & 1122429 \\
+\hline
+tagclass & 71 & 3946 \\
+\hline
+\hline
+\textbf{Relation} & \textbf{Num Relations} & \textbf{Bytes} \\
+\hline
+\hline
+comment\_hasCreator\_person & 7135636 & 194770123 \\
+\hline
+comment\_hasTag\_tag & 9264389 & 174656230 \\
+\hline
+comment\_isLocatedIn\_place & 7135636 & 121173303 \\
+\hline
+comment\_replyOf\_comment & 3619711 & 97338366 \\
+\hline
+comment\_replyOf\_post & 3515925 & 94545033 \\
+\hline
+forum\_containerOf\_post & 3140119 & 83915474 \\
+\hline
+forum\_hasMember\_person & 9939453 & 486936117 \\
+\hline
+forum\_hasModerator\_person & 272268 & 7495375 \\
+\hline
+forum\_hasTag\_tag & 873831 & 16205018 \\
+\hline
+organisation\_isLocatedIn\_place & 7996 & 79310 \\
+\hline
+person\_isLocatedIn\_place & 27000 & 482925 \\
+\hline
+person\_hasInterest\_tag & 628563 & 12575921 \\
+\hline
+person\_knows\_person & 1370174 & 68746822 \\
+\hline
+person\_likes\_comment & 5555074 & 272259351 \\
+\hline
+person\_likes\_post & 3629288 & 177882573 \\
+\hline
+person\_studyAt\_organisation & 21574 & 541636 \\
+\hline
+person\_workAt\_organisation & 58843 & 1428856 \\
+\hline
+place\_isPartOf\_place & 1460 & 11965 \\
+\hline
+post\_hasCreator\_person & 3140119 & 86258384 \\
+\hline
+post\_hasTag\_tag & 2384629 & 44446829 \\
+\hline
+post\_isLocatedIn\_place & 3140119 & 53352987 \\
+\hline
+tag\_hasType\_tagclass & 16080 & 163348 \\
+\hline
+tagclass\_isSubclassOf\_tagclass & 70 & 616 \\
+\hline
+\hline
+\textbf{Property Files} & \textbf{Num Properties} & \textbf{Bytes} \\
+\hline
+\hline
+person\_email\_emailaddress & 45573 & 2041123 \\
+\hline
+person\_speaks\_language & 59467 & 1076428 \\
+\hline
+\hline
+\textbf{Total Entities} & \textbf{Total Relations} & \textbf{Total Bytes} \\
+\hline
+\hline
+ 10600636 & 64877957 & 3170021719 \\
+\hline
+\end{tabular}
+\end{table}

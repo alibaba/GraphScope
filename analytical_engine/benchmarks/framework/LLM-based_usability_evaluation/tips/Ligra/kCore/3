@@ -1,0 +1,58 @@
+The provided code snippet leverages several core API functions from the test library to compute the largest core of a graph. Below, I'll explain the main API functions used in this code, including their parameters and some usage examples.
+
+Main API Functions
+vertexFilter
+
+Purpose: Filters vertices based on a provided condition.
+Parameters:
+NodeGroup V: The set of vertices to filter.
+F filter: The filtering function that defines the condition.
+Usage Example:
+
+// Define a condition function
+struct Deg_LessThan_K {
+  intE* Degrees;
+  uintE k;
+  Deg_LessThan_K(intE* _Degrees, uintE _k) : Degrees(_Degrees), k(_k) {}
+  inline bool operator () (uintE i) {
+    return Degrees[i] < k;
+  }
+};
+
+// Filter vertices with degree less than k
+NodeGroup toRemove = vertexFilter(Frontier, Deg_LessThan_K(Degrees, k));
+processEdges
+
+Purpose: Applies a function to the edges of a graph, typically used for updating or filtering edges.
+Parameters:
+graph<vertex>& GA: The input graph.
+NodeGroup& vs: The subset of vertices to consider.
+F f: The function to apply to each edge.
+intT threshold: The threshold for switching between sparse and dense representations.
+const flags& fl: Flags to control the behavior of the function.
+Usage Example:
+
+// Define an update function
+struct Update_Deg {
+  intE* Degrees;
+  Update_Deg(intE* _Degrees) : Degrees(_Degrees) {}
+  inline bool update(uintE s, uintE d) {
+    Degrees[d]--;
+    return 1;
+  }
+};
+
+// Apply the update function to the graph edges
+processEdges(GA, toRemove, Update_Deg(Degrees), -1, no_output);
+NodeGroup
+
+Purpose: Represents a subset of vertices in the graph.
+Constructor Parameters:
+long n: Total number of vertices in the graph.
+long m: Number of active vertices in the subset.
+bool* dense: An array indicating active vertices (dense representation).
+Usage Example:
+
+bool* active = newA(bool, n);
+parallel_for(long i = 0; i < n; i++) active[i] = 1;
+NodeGroup Frontier(n, n, active);

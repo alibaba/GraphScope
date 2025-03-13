@@ -1,0 +1,5 @@
+*
+!src/
+!pom.xml
+!docker_run.sh
+!paramgenerator/

@@ -1,0 +1,94 @@
+Detailed Explanation of Key API Functions Used
+1. signal
+Description: Signals a specific vertex with an optional message.
+Parameters:
+vertex_id_type gvid: The global vertex ID to signal.
+const message_type &message = message_type(): An optional message to send to the vertex.
+Example:
+
+test::distributed_control dc;
+graph_type graph(dc, clopts);
+test::async_consistent_engine<k_core> engine(dc, graph, clopts);
+
+// Signal a vertex with ID 1 with a message value of 10
+engine.signal(1, 10);
+2. signal_all
+Description: Signals all vertices with an optional message and order.
+Parameters:
+const message_type &message = message_type(): An optional message to send to all vertices.
+const std::string &order = "shuffle": The order in which vertices are signaled.
+Example:
+
+// Signal all vertices with a message value of 1
+engine.signal_all(1);
+3. transform_vertices
+Description: Applies a function to transform each vertex in the graph.
+Parameters:
+VertexMapperType mapfunction: The function to process to each vertex.
+Example:
+
+// Initialize each vertex's data with the sum of its in and out edges
+graph.transform_vertices([](graph_type::vertex_type &v) {
+  v.data() = v.num_in_edges() + v.num_out_edges();
+});
+4. map_reduce_vertices
+Description: Performs a map-reduce operation on each vertex in the graph.
+Parameters:
+VertexMapperType mapfunction: The function to map over each vertex.
+Example:
+
+// Count the number of active (non-deleted) vertices
+size_t active_vertex_count = graph.map_reduce_vertices<size_t>(
+  [](const graph_type::vertex_type &v) -> size_t {
+    return v.data() > 0 ? 1 : 0;
+  }
+);
+5. add_vertex_aggregator
+Description: Creates a vertex aggregator.
+Parameters:
+const std::string &key: The key for the aggregator.
+VertexMapType map_function: The mapping function.
+FinalizerType finalize_function: The finalizer function.
+Example:
+
+engine.add_vertex_aggregator("vertex_degree_sum",
+  [](const graph_type::vertex_type &v) -> int {
+    return v.data();
+  },
+  [](const int &a, const int &b) -> int {
+    return a + b;
+  }
+);
+6. add_edge_aggregator
+Description: Creates an edge aggregator.
+Parameters:
+const std::string &key: The key for the aggregator.
+EdgeMapType map_function: The mapping function.
+FinalizerType finalize_function: The finalizer function.
+Example:
+
+engine.add_edge_aggregator("edge_count",
+  [](const graph_type::edge_type &e) -> int {
+    return 1;
+  },
+  [](const int &a, const int &b) -> int {
+    return a + b;
+  }
+);
+7. aggregate_now
+Description: Performs an immediate aggregation on a key.
+Parameters:
+const std::string &key: The key to aggregate.
+Example:
+
+engine.aggregate_now("vertex_degree_sum");
+8. transform_edges
+Description: Applies a function to transform each edge in the graph.
+Parameters:
+EdgeMapperType mapfunction: The function to process to each edge.
+Example:
+
+// Example: Double the weight of each edge (assuming edge data represents weight)
+graph.transform_edges([](graph_type::edge_type &e) {
+  e.data() *= 2;
+});

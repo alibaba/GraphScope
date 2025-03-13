@@ -1,0 +1,5 @@
+Chrome  0.279 	
+Internet Explorer  0.232
+Firefox  0.422 	
+Safari  0.037 	
+Opera  0.024

@@ -1,0 +1,131 @@
+Primary API Functions
+processNodes
+processEdges
+NodeGroup
+1. processNodes
+Description:
+
+processNodes is used to apply a given function to each vertex in a NodeGroup. It iterates over the vertices and applies the function either to all vertices in the dense representation or to the active vertices in the sparse representation.
+
+Template Parameters:
+
+VS: The type of the vertex subset, which can be either dense or sparse.
+F: The function to be applied to each vertex.
+Parameters:
+
+VS& V: The vertex subset to iterate over.
+F f: The function to be applied to each vertex.
+Example:
+
+struct UpdateVertex {
+  uintE* IDs;
+  UpdateVertex(uintE* _IDs) : IDs(_IDs) {}
+  inline bool operator() (uintE i) {
+    IDs[i] = i; // Example function that sets ID to vertex index
+    return true;
+  }
+};
+
+NodeGroup Frontier = ...; // assume this is initialized
+processNodes(Frontier, UpdateVertex(IDs));
+2. processEdges
+Description:
+
+processEdges is used to apply a given function to all edges in the graph, either densely or sparsely, based on the active vertices in the NodeGroup. It efficiently processes edges in parallel.
+
+Template Parameters:
+
+vertex: The type of vertex in the graph.
+VS: The type of the vertex subset.
+F: The function to be applied to each edge.
+Parameters:
+
+graph<vertex>& GA: The input graph.
+VS& vs: The vertex subset to process.
+F f: The function to be applied to each edge.
+intT threshold: The threshold to decide between dense and sparse processing (optional).
+const flags& fl: Additional flags for processing (optional).
+Example:
+
+struct EdgeFunction {
+  uintE* IDs;
+  EdgeFunction(uintE* _IDs) : IDs(_IDs) {}
+  inline bool update(uintE s, uintE d) {
+    // Example edge function that updates IDs based on source vertex ID
+    if (IDs[s] < IDs[d]) {
+      IDs[d] = IDs[s];
+      return true;
+    }
+    return false;
+  }
+  inline bool cond(uintE d) { return true; }
+};
+
+NodeGroup Frontier = ...; // assume this is initialized
+NodeGroup output = processEdges(GA, Frontier, EdgeFunction(IDs));
+3. NodeGroup
+Description:
+
+NodeGroup represents a subset of vertices in the graph. It can be either dense or sparse. It provides methods for manipulating and querying the subset.
+
+Constructors:
+
+NodeGroup(long n): Initializes an empty vertex subset with n vertices.
+NodeGroup(long n, long m, bool* bits): Initializes a dense vertex subset with n vertices and a boolean array indicating active vertices.
+NodeGroup(long n, long m, uintE* indices): Initializes a sparse vertex subset with n vertices and an array of active vertex indices.
+Methods:
+
+bool isEmpty() const: Checks if the vertex subset is empty.
+void del(): Deletes the vertex subset, freeing allocated memory.
+void toSparse(): Converts the subset to sparse representation.
+void toDense(): Converts the subset to dense representation.
+size_t numRows() const: Returns the number of vertices.
+size_t numNonzeros() const: Returns the number of active vertices.
+Example:
+
+long n = ...; // number of vertices
+bool* frontier = new bool[n];
+for (long i = 0; i < n; ++i) frontier[i] = true; // initialize all vertices as active
+
+NodeGroup Frontier(n, n, frontier);
+// Use the vertex subset in computations
+Frontier.del(); // Clean up after use
+
+Below is the pseudocode:
+1: function INIT_VERTEX(n):
+   - IDs = array of size n, initialized to vertex indices [0, 1, ..., n-1]
+   - prevIDs = array of size n, initialized to zero
+   - frontier = array of size n, initialized to true (all vertices are active)
+   - return (IDs, prevIDs, frontier)
+
+2: function UPDATE_VERTEX(i, IDs, prevIDs):
+   - prevIDs[i] = IDs[i]
+   - return true
+
+3: function EDGE_UPDATE(s, d, IDs, prevIDs):
+   - origID = IDs[d]
+   - if IDs[s] < origID then
+       - IDs[d] = min(origID, IDs[s])
+       - if origID == prevIDs[d] then return true
+   - return false
+
+4: function EDGE_UPDATE_ATOMIC(s, d, IDs, prevIDs):
+   - origID = IDs[d]
+   - return (writeMin(&IDs[d], IDs[s]) && origID == prevIDs[d])
+
+5: function COND(d):
+   - return true
+
+6: function COMPUTE(GA, n):
+   - (IDs, prevIDs, frontier) = INIT_VERTEX(n)
+   - Frontier = new NodeGroup(n, n, frontier)
+
+7: while Frontier is not empty:
+   - processNodes(Frontier, UPDATE_VERTEX, IDs, prevIDs)
+   - output = processEdges(GA, Frontier, EDGE_UPDATE, COND, IDs, prevIDs)
+   - Frontier.del()
+   - Frontier = output
+
+8: Frontier.del()
+   - free(IDs)
+   - free(prevIDs)

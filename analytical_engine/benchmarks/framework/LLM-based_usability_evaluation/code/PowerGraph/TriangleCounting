@@ -1,0 +1,188 @@
+#include <boost/unordered_set.hpp>
+#include <test.hpp>
+#include <test/ui/metrics_server.hpp>
+#include <test/macros_def.hpp>
+
+struct vertex_data_type {
+  vertex_data_type():num_triangles(0) { }
+  // A list of all its neighbors
+  boost::unordered_set<test::vertex_id_type> vid_set;
+  // The number of triangles this vertex is involved it.
+  // only used if "per vertex counting" is used
+  size_t num_triangles;
+
+  void save(test::oarchive &oarc) const {
+    oarc << vid_set << num_triangles;
+  }
+  void load(test::iarchive &iarc) {
+    iarc >> vid_set >> num_triangles;
+  }
+};
+
+
+/*
+ * Each edge is simply a counter of triangles
+ */
+typedef size_t edge_data_type;
+
+// To collect the set of neighbors, we need a message type which is
+// basically a set of vertex IDs
+
+bool PER_VERTEX_COUNT = false;
+
+
+
+struct set_union_collect {
+  boost::unordered_set<test::vertex_id_type> vid_set;
+
+
+  set_union_collect& operator+=(const set_union_collect& other) {
+    foreach(test::vertex_id_type othervid, other.vid_set) {
+      vid_set.insert(othervid);
+    }
+    return *this;
+  }
+
+  // serialize
+  void save(test::oarchive& oarc) const {
+    oarc << vid_set;
+  }
+
+  // deserialize
+  void load(test::iarchive& iarc) {
+    iarc >> vid_set;
+  }
+};
+
+
+typedef test::distributed_graph<vertex_data_type,
+                                    edge_data_type> graph_type;
+
+
+class triangle_count :
+      public test::ivertex_program<graph_type,
+                                      set_union_collect>,
+      /* I have no data. Just force it to POD */
+      public test::IS_POD_TYPE  {
+public:
+  // collect on all edges
+  edge_dir_type collect_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
+    return test::ALL_EDGES;
+  }
+
+
+  collect_type collect(icontext_type& context,
+                     const vertex_type& vertex,
+                     edge_type& edge) const {
+    set_union_collect collect;
+    // Insert the opposite end of the edge IF the opposite end has
+    // ID greater than the current vertex
+    // If we are getting per vertex counts, we need the entire neighborhood
+    vertex_id_type otherid = edge.source().id() == vertex.id() ?
+                             edge.target().id() : edge.source().id();
+    if (PER_VERTEX_COUNT ||
+        otherid > vertex.id()) collect.vid_set.insert(otherid);
+    return collect;
+  }
+
+  /*
+   * the collect result now contains the vertex IDs in the neighborhood.
+   * store it on the vertex.
+   */
+  void process(icontext_type& context, vertex_type& vertex,
+             const collect_type& neighborhood) {
+    vertex.data().vid_set = neighborhood.vid_set;
+  } // end of process
+
+  edge_dir_type distribute_edges(icontext_type& context,
+                              const vertex_type& vertex) const {
+    return test::OUT_EDGES;
+  }
+
+  static size_t count_set_intersect(
+               const boost::unordered_set<vertex_id_type>& smaller_set,
+               const boost::unordered_set<vertex_id_type>& larger_set) {
+    size_t count = 0;
+    foreach(vertex_id_type vid, smaller_set) {
+      count += larger_set.count(vid);
+    }
+    return count;
+  }
+
+  void distribute(icontext_type& context,
+              const vertex_type& vertex,
+              edge_type& edge) const {
+    const vertex_data_type& srclist = edge.source().data();
+    const vertex_data_type& targetlist = edge.target().data();
+    if (srclist.vid_set.size() >= targetlist.vid_set.size()) {
+      edge.data() = count_set_intersect(targetlist.vid_set, srclist.vid_set);
+    }
+    else {
+      edge.data() = count_set_intersect(srclist.vid_set, targetlist.vid_set);
+    }
+  }
+};
+
+
+class get_per_vertex_count :
+      public test::ivertex_program<graph_type, size_t>,
+      /* I have no data. Just force it to POD */
+      public test::IS_POD_TYPE  {
+public:
+  // collect on all edges
+  edge_dir_type collect_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
+    return test::ALL_EDGES;
+  }
+  // We collect the number of triangles each edge is involved in
+  size_t collect(icontext_type& context,
+                     const vertex_type& vertex,
+                     edge_type& edge) const {
+    return edge.data();
+  }
+
+  /* the collect result is the total sum of the number of triangles
+   * each adjacent edge is involved in . Dividing by 2 gives the
+   * desired result.
+   */
+  void process(icontext_type& context, vertex_type& vertex,
+             const collect_type& num_triangles) {
+    vertex.data().num_triangles = num_triangles / 2;
+  }
+
+  // No distribute
+  edge_dir_type distribute_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
+    return test::NO_EDGES;
+  }
+
+
+};
+
+
+/* Used to sum over all the edges in the graph in a
+ * map_reduce_edges call
+ * to get the total number of triangles
+ */
+size_t get_edge_data(const graph_type::edge_type& e) {
+  return e.data();
+}
+
+
+
+/*
+ * A saver which saves a file where each line is a vid / # triangles pair
+ */
+struct save_triangle_count{
+  std::string save_vertex(graph_type::vertex_type v) {
+    return test::tostr(v.id()) + "\t" +
+           test::tostr(v.data().num_triangles) + "\n";
+  }
+  std::string save_edge(graph_type::edge_type e) {
+    return "";
+  }
+};
+
+
+

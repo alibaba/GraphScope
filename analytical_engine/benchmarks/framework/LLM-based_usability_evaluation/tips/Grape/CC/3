@@ -1,0 +1,114 @@
+Below is an analysis of the primary API functions and classes used in the provided implementation of the Weakly Connected Components (WCC) algorithm using the Test platform.
+
+1. VertexDataContext Class
+Description: This context class is used to manage vertex-specific data in the algorithm.
+
+Template Parameters:
+TEST_T: Type of the fragment.
+DATA_T: Type of the data associated with each vertex.
+Functions:
+
+Init(TEST_T& frag, parallel_engine_t& engine, message_manager_t& messages)
+Parameters:
+frag: The fragment containing the graph data.
+engine: The parallel engine used for computation.
+messages: The message manager for handling inter-process communication.
+Purpose: Initializes the context with the given fragment, engine, and message manager.
+Finalize()
+Purpose: Cleans up resources held by the context.
+Usage Example:
+
+class MyContext : public VertexDataContext<MyFragment, int> {
+public:
+  void Init(MyFragment& frag, parallel_engine_t& engine, message_manager_t& messages) override {
+    // Custom initialization code
+  }
+
+  void Finalize() override {
+    // Custom cleanup code
+  }
+};
+2. ParallelAppBase Class
+Description: This class serves as the base for parallel applications, providing the structure for initial and incremental evaluations.
+
+Template Parameters:
+APP_T: Type of the application.
+Functions:
+
+PEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+
+Parameters:
+frag: The fragment containing the graph data.
+ctx: The context managing the state.
+messages: The message manager for handling inter-process communication.
+Purpose: Performs the initial parallel evaluation.
+IncEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+
+Parameters:
+frag: The fragment containing the graph data.
+ctx: The context managing the state.
+messages: The message manager for handling inter-process communication.
+Purpose: Performs incremental parallel evaluation.
+Usage Example:
+
+class MyApp : public ParallelAppBase<MyApp> {
+public:
+  void PEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages) override {
+    // Initial evaluation logic
+  }
+
+  void IncEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages) override {
+    // Incremental evaluation logic
+  }
+};
+3. ParallelMessageManager Class
+Description: This class manages communication between different parts of the parallel computation.
+
+Functions:
+
+InitChannels(thread_num_t thread_num)
+
+Parameters:
+thread_num: Number of threads to initialize channels for.
+Purpose: Initializes the message channels.
+Start()
+
+Purpose: Starts the message manager.
+Stop()
+
+Purpose: Stops the message manager.
+Usage Example:
+
+ParallelMessageManager messages;
+messages.InitChannels(4); // Initialize with 4 threads
+messages.Start();         // Start the message manager
+// ... perform operations ...
+messages.Stop();          // Stop the message manager
+4. DenseVertexSet Class
+Description: This class is used to manage a set of vertices.
+
+Functions:
+
+Init(size_t size)
+
+Parameters:
+size: Size of the vertex set.
+Purpose: Initializes the vertex set with the given size.
+Insert(vertex_t v)
+
+Parameters:
+v: Vertex to insert into the set.
+Purpose: Adds a vertex to the set.
+Exist(vertex_t v)
+
+Parameters:
+v: Vertex to check for existence in the set.
+Purpose: Checks if the vertex exists in the set.
+Usage Example:
+
+DenseVertexSet vertex_set;
+vertex_set.Init(100);  // Initialize with 100 vertices
+vertex_set.Insert(v1); // Insert vertex v1
+if (vertex_set.Exist(v2)) {
+  // Check if vertex v2 exists
+}

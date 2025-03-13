@@ -1,0 +1,156 @@
+the key components and API functions used in the provided PageRank implementation for the GRAPE platform:
+
+1. PageRankContext Class
+This class is a specialized context for the PageRank algorithm, inheriting from VertexDataContext.
+
+Key Functions:
+Constructor:
+
+explicit PageRankContext(const TEST_T& fragment)
+Initializes the context with the provided fragment. Sets up various buffers and data structures needed for the algorithm.
+
+Init:
+
+void Init(BatchShuffleMessageManager& messages, double delta, int max_round)
+Parameters:
+
+messages: An instance of BatchShuffleMessageManager used to handle message passing.
+delta: Damping factor used in PageRank calculations.
+max_round: Maximum number of iterations for the algorithm.
+Purpose: Initializes message buffers and sets the initial state of the context.
+
+Output:
+
+void Output(std::ostream& os) override
+Parameters:
+
+os: Output stream to print the results.
+Purpose: Outputs the PageRank values of vertices to the provided stream.
+
+2. PageRank Class
+This class implements the PageRank algorithm and inherits from BatchShuffleAppBase, ParallelEngine, and Communicator.
+
+Key Functions:
+PEval:
+
+void PEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+Parameters:
+
+frag: The graph fragment on which the algorithm operates.
+ctx: The context holding the state and data for the algorithm.
+messages: Manages communication between parallel components.
+Purpose: Performs the initial evaluation of the PageRank algorithm, initializing vertex values and handling dangling vertices.
+
+IncEval:
+
+void IncEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+Parameters:
+
+frag: The graph fragment on which the algorithm operates.
+ctx: The context holding the state and data for the algorithm.
+messages: Manages communication between parallel components.
+Purpose: Performs incremental evaluations, updating the PageRank values iteratively until the maximum number of rounds is reached.
+
+Usage Examples
+Here are simple examples of how these functions might be used in practice:
+
+Example 1: Initializing the PageRankContext
+
+// Assume fragment is an instance of TEST_T and message_manager is an instance of BatchShuffleMessageManager
+PageRankContext<TEST_T> ctx(fragment);
+double delta = 0.85;
+int max_round = 10;
+ctx.Init(message_manager, delta, max_round);
+Example 2: Running the Initial Evaluation (PEval)
+
+PageRank<TEST_T> pagerank;
+pagerank.PEval(fragment, ctx, message_manager);
+Example 3: Running Incremental Evaluations (IncEval)
+
+for (int i = 0; i < max_round; ++i) {
+    pagerank.IncEval(fragment, ctx, message_manager);
+}
+These examples demonstrate the initialization of the context and the execution of the PageRank algorithm using the PEval and IncEval functions, highlighting how the core API functions and classes are utilized within the GRAPE framework.
+
+Below is the pseudocode:
+1: function INIT_CONTEXT(fragment):
+
+context = new PageRankContext(fragment)
+context.result = fragment.data()
+context.degree = INIT_ARRAY(fragment.inner_vertices)
+context.next_result = INIT_ARRAY(fragment.vertices)
+context.avg_degree = fragment.edge_num / fragment.inner_vertices_num
+context.send_buffers = INIT_BUFFERS(fragment.fnum)
+context.recv_buffers = INIT_BUFFERS(fragment.fnum)
+return context
+2: function INIT_MESSAGE_MANAGER(context, messages, delta, max_round):
+
+context.delta = delta
+context.max_round = max_round
+for each i in range(fragment.fnum):
+messages.setup_buffer(i, context.send_buffers[i], context.recv_buffers[i])
+context.step = 0
+return context
+3: function OUTPUT_RESULT(context, os):
+
+fragment = context.fragment
+for each vertex in fragment.inner_vertices:
+os.print(fragment.get_id(vertex), " ", vertex.result)
+return
+4: function PEVAL(fragment, context, messages):
+
+if context.max_round <= 0:
+return
+inner_vertices = fragment.inner_vertices
+context.step = 0
+context.graph_vnum = fragment.total_vertices_num
+dangling_vnum = 0
+p = 1.0 / context.graph_vnum
+dangling_vnum_tid = INIT_VECTOR(thread_num)
+for each vertex in inner_vertices parallel:
+edge_num = fragment.local_out_degree(vertex)
+context.degree[vertex] = edge_num
+if edge_num > 0:
+context.result[vertex] = p / edge_num
+else:
+dangling_vnum_tid[thread_id] += 1
+context.result[vertex] = p
+dangling_vnum = SUM(dangling_vnum_tid)
+context.total_dangling_vnum = REDUCE_SUM(dangling_vnum)
+context.dangling_sum = p * context.total_dangling_vnum
+messages.sync_inner_vertices(fragment, context.result, thread_num)
+return
+5: function INCEVAL(fragment, context, messages):
+
+inner_vertices = fragment.inner_vertices
+context.step += 1
+base = (1.0 - context.delta) / context.graph_vnum + context.delta * context.dangling_sum / context.graph_vnum
+context.dangling_sum = base * context.total_dangling_vnum
+messages.update_outer_vertices()
+for each vertex in inner_vertices parallel:
+cur = 0
+edges = fragment.outgoing_adj_list(vertex)
+for each edge in edges:
+cur += context.result[edge.neighbor]
+edge_num = fragment.local_out_degree(vertex)
+context.next_result[vertex] = edge_num > 0 ? (context.delta * cur + base) / edge_num : base
+SWAP(context.result, context.next_result)
+if context.step != context.max_round:
+messages.sync_inner_vertices(fragment, context.result, thread_num)
+else:
+for each vertex in inner_vertices:
+if context.degree[vertex] != 0:
+context.result[vertex] *= context.degree[vertex]
+return
+6: Initialize context and message manager:
+
+context = INIT_CONTEXT(fragment)
+context = INIT_MESSAGE_MANAGER(context, message_manager, delta, max_round)
+7: Perform PageRank computations:
+
+PEVAL(fragment, context, message_manager)
+for each round in range(max_round):
+INCEVAL(fragment, context, message_manager)
+8: Output the results:
+
+OUTPUT_RESULT(context, os)

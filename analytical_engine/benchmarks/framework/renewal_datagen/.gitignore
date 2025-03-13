@@ -1,0 +1,59 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.pyc
+*.iml
+
+# IntelliJ stuff
+.idea
+ldbc_socialnet_dbgen.iml
+
+# Eclipse
+.project
+
+# other stuff
+target/
+.m0factors.txt.crc
+.m0friendList0.csv.crc
+/*Factors.txt
+test_data/
+*.pyc
+scripts/
+*.iml
+/hadoop/
+/social_network*/
+/substitution_parameters*/
+*.log
+test_log
+.DS_Store
+
+# Eclipse stuff
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.project
+.classpath
+
+/*.crc
+/*.csv
+out/
+datagen_output/
+
+# Hadoop directory extracted as instructed in the Quick Start guide
+/hadoop-*.tar.gz
+/hadoop-*/
+
+# configuration file
+params.ini
+dependency-reduced-pom.xml

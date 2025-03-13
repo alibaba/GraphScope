@@ -1,0 +1,28 @@
+version: 2.1
+orbs:
+  slack: circleci/slack@3.4.2
+  gh-pages: sugarshin/gh-pages@0.0.6
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
+
+jobs:
+  test:
+    working_directory: ~/ldbc/ldbc_snb_datagen
+    machine:
+      image: ubuntu-2004:202008-01
+
+    steps:
+      - checkout
+      - run: docker build . --tag ldbc/datagen
+      - run: |
+          cp params-csv-basic.ini params.ini
+          rm -rf social_network/ substitution_parameters/
+          docker run --rm \
+            --mount type=bind,source="$(pwd)/",target="/opt/ldbc_snb_datagen/out" \
+            --mount type=bind,source="$(pwd)/params.ini",target="/opt/ldbc_snb_datagen/params.ini" \
+            ldbc/datagen
+          sudo chown -R ${USER}:${USER} social_network/ substitution_parameters/
+      - slack/status

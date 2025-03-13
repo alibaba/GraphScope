@@ -1,0 +1,360 @@
+0	Thing	thing
+1	BasketballLeague	basketball league
+2	LunarCrater	lunar crater
+3	MilitaryPerson	military person
+4	AutomobileEngine	automobile engine
+5	University	university
+6	AnatomicalStructure	anatomical structure
+7	TelevisionShow	television show
+8	LaunchPad	launch pad
+9	CyclingLeague	cycling league
+10	CurlingLeague	curling league
+11	MusicFestival	music festival
+12	Tax	tax
+13	IceHockeyPlayer	ice hockey player
+14	PublicTransitSystem	public transit system
+15	FootballMatch	football match
+16	MouseGeneLocation	MouseGeneLocation
+17	MilitaryConflict	military conflict
+18	FilmFestival	film festival
+19	Beverage	beverage
+20	SpaceShuttle	space shuttle
+21	Archaea	archaea
+22	Arachnid	arachnid
+23	Park	park
+24	Cricketer	cricketer
+25	FloweringPlant	flowering plant
+26	TelevisionEpisode	television episode
+27	Gnetophytes	Gnetophytes
+28	Protein	protein
+29	HumanGeneLocation	HumanGeneLocation
+30	SpeedwayTeam	speedway team
+31	ChristianPatriarch	Christian Patriarch
+32	GovernmentType	Government Type
+33	Town	town
+34	ReligiousBuilding	religious building
+35	PowerStation	power station
+36	Name	name
+37	FormulaOneRacer	Formula One racer
+38	Conifer	conifer
+39	SpeedwayLeague	speedway league
+40	VideogamesLeague	videogames league
+41	Company	company
+42	Locomotive	locomotive
+43	Wrestler	wrestler
+44	MotorcycleRacingLeague	motorcycle racing league
+45	Sales	sales
+46	AdultActor	adult (pornographic) actor
+47	GridironFootballPlayer	gridiron football player
+48	SoccerLeague	soccer league
+49	TeamMember	Team member
+50	GeneLocation	GeneLocation
+51	RoadJunction	road junction
+52	Brain	brain
+53	WomensTennisAssociationTournament	Women's Tennis Association tournament
+54	Settlement	municipality
+55	Software	software
+56	ComicBook	comic book
+57	President	president
+58	ArchitecturalStructure	architectural structure
+59	TennisPlayer	tennis player
+60	Event	event
+61	Band	Band
+62	Country	country
+63	BullFighter	bullfighter
+64	Fish	fish
+65	Magazine	magazine
+66	Galaxy	galaxy
+67	OrganisationMember	Organisation member
+68	TelevisionSeason	television season
+69	LawFirm	law firm
+70	WaterwayTunnel	waterway tunnel
+71	Airport	airport
+72	Boxer	boxer
+73	Fern	fern
+74	SoccerPlayer	soccer player
+75	Island	island
+76	NaturalPlace	natural place
+77	CollegeCoach	college coach
+78	HumanGene	HumanGene
+79	Muscle	muscle
+80	Stream	stream
+81	Hospital	hospital
+82	Philosopher	philosopher
+83	BiologicalDatabase	Biological database
+84	Church	church
+85	Tunnel	tunnel
+86	Ginkgo	ginkgo
+87	Valley	valley
+88	Writer	writer
+89	Automobile	automobile
+90	Ideology	ideology
+91	SupremeCourtOfTheUnitedStatesCase	Supreme Court of the United States case
+92	CanadianFootballTeam	canadian football team
+93	RadioStation	radio station
+94	SoccerManager	soccer manager
+95	Politician	politician
+96	Comedian	comedian
+97	ComicsCreator	comics creator
+98	Monarch	monarch
+99	Road	road
+100	PlayboyPlaymate	Playboy Playmate
+101	Device	device
+102	Volcano	volcano
+103	Newspaper	newspaper
+104	AmericanFootballPlayer	american football player
+105	AcademicJournal	academic journal
+106	Artwork	artwork
+107	VolleyballPlayer	volleyball player
+108	Non-ProfitOrganisation	non-profit organisation
+109	Cleric	cleric
+110	School	school
+111	SiteOfSpecialScientificInterest	Site of Special Scientific Interest
+112	SnookerPlayer	snooker player
+113	IceHockeyLeague	ice hockey league
+114	PersonFunction	person function
+115	MusicalArtist	musical artist
+116	PoliticalParty	political party
+117	Database	Database
+118	EthnicGroup	ethnic forum
+119	BaseballTeam	baseball team
+120	Holiday	holiday
+121	Insect	insect
+122	Mineral	mineral
+123	MusicalWork	musical work
+124	SoccerClubSeason	soccer club season
+125	MeanOfTransportation	mean of transportation
+126	NationalCollegiateAthleticAssociationAthlete	national collegiate athletic association athlete
+127	Gene	gene
+128	Referee	referee
+129	Reptile	reptile
+130	CanadianFootballPlayer	canadian football player
+131	GovernmentAgency	government agency
+132	Flag	flag
+133	Bacteria	bacteria
+134	Cardinal	cardinal
+135	Mollusca	mollusca
+136	Stadium	stadium
+137	NationalSoccerClub	national soccer club
+138	Museum	museum
+139	FigureSkater	figure skater
+140	College	college
+141	NascarDriver	nascar driver
+142	PeriodicalLiterature	periodical literature
+143	Vein	vein
+144	Plant	plant
+145	Film	film
+146	SkiArea	ski area
+147	Swimmer	Swimmer
+148	PrimeMinister	prime minister
+149	Athlete	athlete
+150	Colour	colour
+151	WrittenWork	written work
+152	SnookerChamp	snooker world champion
+153	Ambassador	ambassador
+154	SnookerWorldRanking	snooker world ranking
+155	Royalty	royalty
+156	BasketballTeam	basketball team
+157	Planet	planet
+158	Deputy	deputy
+159	YearInSpaceflight	year in spaceflight
+160	Village	village
+161	Theatre	theatre
+162	ProtectedArea	protected area
+163	Canal	canal
+164	MusicGenre	music genre
+165	Year	year
+166	Priest	priest
+167	Congressman	congressman
+168	Sport	Αθλήματα
+169	Nerve	nerve
+170	SambaSchool	samba school
+171	Hotel	hotel
+172	Library	library
+173	Model	model
+174	Activity	activity
+175	RecordLabel	record label
+176	VoiceActor	voice actor
+177	Olympics	olympics
+178	CanadianFootballLeague	canadian football league
+179	Food	Food
+180	Song	song
+181	Play	play
+182	Album	album
+183	Sculpture	Sculpture
+184	Airline	airline
+185	VolleyballLeague	volleyball league
+186	GrandPrix	Grand Prix
+187	MountainPass	mountain pass
+188	Work	work
+189	Rocket	rocket
+190	Bird	bird
+191	GolfPlayer	golf player
+192	BowlingLeague	bowling league
+193	Saint	saint
+194	PokerPlayer	poker player
+195	Book	book
+196	Language	language
+197	Restaurant	restaurant
+198	Game	game
+199	Legislature	legislature
+200	Actor	actor
+201	Amphibian	amphibian
+202	GolfLeague	golf league
+203	Skyscraper	skyscraper
+204	Drug	drug
+205	SportsLeague	sports league
+206	BadmintonPlayer	badminton player
+207	Currency	currency
+208	ProgrammingLanguage	programming language
+209	ChessPlayer	chess player
+210	RugbyPlayer	rugby player
+211	Person	person
+212	Architect	architect
+213	HandballLeague	handball league
+214	Infrastructure	infrastructure
+215	Atoll	atoll
+216	SpaceMission	space mission
+217	RailwayLine	railway line
+218	RailwayTunnel	railway tunnel
+219	Senator	senator
+220	ChemicalElement	chemical element
+221	GivenName	first name
+222	Artery	artery
+223	FieldHockeyLeague	field hockey league
+224	TennisTournament	tennis tournament
+225	Project	project
+226	Judge	judge
+227	Ship	ship
+228	Award	award
+229	CelestialBody	celestial body
+230	MartialArtist	martial artist
+231	Musical	musical
+232	InlineHockeyLeague	inline hockey league
+233	EurovisionSongContestEntry	Eurovision song contest entry
+234	Bone	bone
+235	City	city
+236	Convention	convention
+237	ShoppingMall	shopping mall
+238	Journalist	journalist
+239	Agent	agent
+240	Painting	Painting
+241	OlympicResult	olympic result
+242	SportsTeamMember	Sports team member
+243	MilitaryUnit	military unit
+244	SoccerTournament	soccer tournoment
+245	Disease	disease
+246	Grape	grape
+247	BodyOfWater	body of water
+248	HistoricBuilding	historic building
+249	Monument	monument
+250	Artist	artist
+251	GeopoliticalOrganisation	geopolitical organisation
+252	MouseGene	MouseGene
+253	AmericanFootballTeam	american football team
+254	GaelicGamesPlayer	Gaelic games player
+255	Eukaryote	eukaryote
+256	VicePresident	vice president
+257	BaseballLeague	baseball league
+258	EducationalInstitution	educational institution
+259	SpaceStation	space station
+260	Constellation	Constellation
+261	PaintballLeague	paintball league
+262	ClubMoss	club moss
+263	LacrosseLeague	lacrosse league
+264	FormulaOneRacing	formula one racing
+265	SportsEvent	sports event
+266	Pope	pope
+267	ChemicalCompound	chemical compound
+268	WorldHeritageSite	World Heritage Site
+269	AmericanFootballLeague	american football league
+270	SportsTeam	sports team
+271	AustralianFootballLeague	australian football league
+272	BroadcastNetwork	broadcast network
+273	HockeyTeam	hockey team
+274	Decoration	decoration
+275	WrestlingEvent	wrestling event
+276	Bridge	bridge
+277	Mountain	mountain
+278	Cave	cave
+279	Scientist	scientist
+280	Website	website
+281	Lymph	lymph
+282	ResearchProject	research project
+283	Animal	animal
+284	Continent	continent
+285	Arena	arena
+286	SoccerLeagueSeason	soccer league season
+287	Criminal	criminal
+288	Surname	surname
+289	Mammal	mammal
+290	Election	Election
+291	BoxingLeague	boxing league
+292	RadioControlledRacingLeague	radio-controlled racing league
+293	Fungus	fungus
+294	Aircraft	aircraft
+295	FictionalCharacter	fictional character
+296	Moss	moss
+297	TennisLeague	tennis league
+298	Biomolecule	Biomolecule
+299	Station	station
+300	River	river
+301	Organisation	organisation
+302	ComicsCharacter	comics character
+303	Place	place
+304	Embryology	embryology
+305	Unknown	Unknown
+306	RouteOfTransportation	route of transportation
+307	SportsTeamSeason	sports team season
+308	GreenAlga	green alga
+309	ChemicalSubstance	chemical substance
+310	BaseballPlayer	baseball player
+311	RoadTunnel	road tunnel
+312	VicePrimeMinister	vice prime minister
+313	Instrument	Instrument
+314	Mayor	mayor
+315	Species	species
+316	TelevisionStation	television station
+317	Race	race
+318	PopulatedPlace	populated place
+319	Cyclist	cyclist
+320	RugbyLeague	rugby league
+321	SoccerClub	soccer club
+322	Asteroid	asteroid
+323	Weapon	weapon
+324	Lake	lake
+325	Lieutenant	lieutenant
+326	Celebrity	celebrity
+327	Letter	letter
+328	TopicalConcept	topical concept
+329	Lighthouse	lighthouse
+330	MemberOfParliament	member of parliament
+331	WineRegion	wine region
+332	ChristianBishop	Christian Bishop
+333	PoloLeague	polo league
+334	AutoRacingLeague	auto racing league
+335	HistoricPlace	historic place
+336	BritishRoyalty	British royalty
+337	PolishKing	king of Poland
+338	Building	building
+339	Astronaut	astronaut
+340	MixedMartialArtsLeague	mixed martial arts league
+341	AdministrativeRegion	administrative region
+342	Single	single
+343	SoftballLeague	softball league
+344	Spacecraft	spacecraft
+345	MixedMartialArtsEvent	mixed martial arts event
+346	VideoGame	video game
+347	Governor	governor
+348	TradeUnion	trade union
+349	OfficeHolder	office holder
+350	CricketLeague	cricket league
+351	RugbyClub	rugby club
+352	MountainRange	mountain range
+353	AustralianRulesFootballPlayer	Australian rules football player
+354	BasketballPlayer	basketball player
+355	Chancellor	chancellor
+356	LegalCase	Legal Case
+357	Crustacean	crustacean
+358	Broadcaster	broadcaster
+359	Cycad	cycad

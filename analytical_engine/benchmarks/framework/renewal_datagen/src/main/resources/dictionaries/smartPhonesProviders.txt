@@ -1,0 +1,9 @@
+IPhone
+IPad
+HTC
+Samsung
+LG
+Nokia
+Motorola
+BlackBerry
+Sony Ericsson

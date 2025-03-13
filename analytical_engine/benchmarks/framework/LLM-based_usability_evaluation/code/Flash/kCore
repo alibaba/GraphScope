@@ -1,0 +1,25 @@
+int main(int argc, char *argv[]) {
+	NodeStruct(int,d, int,c);
+	LoadData(argv[1], argv[2]);
+	int k = atoi(argv[3]);
+
+	DefineVertexProcessor(init) {v.d = deg(v);};
+	vertexSubset A = processVertices(All, CTrueV, init);
+
+	DefineVertexFilter(filter) {return v.d < k;};
+	DefineVertexProcessor(local) {v.c = 0; return v;};
+	DefineVertexFilter(check) {return v.d >= k;};
+	DefineEdgeUpdater(update1) {d.c++; return d;};
+	DefineEdgeUpdater(update2) {d.d -= s.c; return d;};
+
+	for(int len = Size(A), i = 0; len > 0; len = Size(A),++i) {
+		print("Round %d: size=%d\n", i, len);
+		A = processVertices(A, filter, local);
+		A = processEdgesSparse(A, EU, CTrueE, update1, check, update2);
+	}
+
+	double t = GetTime();
+	int s = Size(processVertices(All, check));
+	print( "k-core size=%d,time=%0.3lf secs\n", s, t);
+	return 0;
+}

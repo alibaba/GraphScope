@@ -1,0 +1,297 @@
+University of Cambridge  United_Kingdom  100
+Harvard University  United_States  99.18
+Yale University  United_States  98.68
+UCL (University College London)  United_Kingdom  98.54
+Massachusetts Institute of Technology (MIT)  United_States  98.19
+University of Oxford  United_Kingdom  98.16
+Imperial College London  United_Kingdom  97.78
+University of Chicago  United_States  97.52
+California Institute of Technology  United_States  96.46
+Princeton University  United_States  96.03
+Columbia University  United_States  95.99
+University of Pennsylvania  United_States  95.97
+Stanford University  United_States  93.62
+Duke University  United_States  92.29
+University of Michigan  United_States  92.2
+Cornell University  United_States  90.44
+Johns Hopkins University  United_States  89.67
+ETH Zurich  Switzerland  89.28
+McGill University  Canada  89.25
+Australian National University  Australia  88.58
+Kings College London (University of London)  United_Kingdom  88.45
+University of Edinburgh  United_Kingdom  88.01
+University of Hong Kong  Hong_Kong  87.28
+The University of Tokyo  Japan  86.74
+Kyoto University  Japan  85.89
+Northwestern University  United_States  85.4
+University of Bristol  United_Kingdom  85.22
+University of California, Berkeley  United_States  85.18
+University of Toronto  Canada  84.29
+The University of Manchester  United_Kingdom  83.33
+National University of Singapore  Singapore  82.78
+Ecole Polytechnique Federale de Lausanne  Switzerland  82.27
+ecole Normale Superieure, Paris  France  82.09
+Carnegie Mellon University  United_States  81.8
+University of California, Los Angeles  United_States  81.49
+ecole Polytechnique  France  81.33
+The University of Sydney  Australia  81.31
+The University of Melbourne  Australia  80.64
+Brown University  United_States  80.54
+The Hong Kong University of Science and Technology  Hong_Kong  78.67
+New York University  United_States  78.41
+The Chinese University of Hong Kong  Hong_Kong  77.94
+The University of Queensland  Australia  77.56
+University of British Columbia  Canada  77.41
+University of Copenhagen  Denmark  76.71
+The University of New South Wales  Australia  76.66
+Peking University  China  76.35
+University of Wisconsin-Madison  United_States  76.28
+Osaka University  Japan  76.21
+Seoul National University  South_Korea  76.06
+Ruprecht-Karls-Universitat Heidelberg  Germany  75.89
+Trinity College Dublin  Republic_of_Ireland  75.04
+The University of Warwick  United_Kingdom  74.28
+Tsinghua University  China  74.18
+University of Washington  United_States  73.75
+University of Amsterdam  Netherlands  73.45
+University of North Carolina, Chapel Hill  United_States  73.22
+Technische Universitat Munchen  Germany  72.99
+University of Birmingham  United_Kingdom  72.68
+Tokyo Institute of Technology  Japan  72.59
+Monash University  Australia  72.54
+Uppsala University  Sweden  72.16
+University of Illinois at Urbana-Champaign  United_States  71.75
+Boston University  United_States  71.73
+University of California, San Diego  United_States  71.55
+Ludwig-Maximilians-Universitat Munchen  Germany  71.25
+University of Texas at Austin  United_States  71.24
+The University of Auckland  New_Zealand  71.13
+The University of Sheffield  United_Kingdom  70.76
+Freie Universitat Berlin  Germany  70.55
+University of Geneva  Switzerland  70.53
+Lund University  Sweden  70.38
+The University of Nottingham  United_Kingdom  69.95
+Nanyang Technological University  Singapore  69.77
+Washington University in St. Louis  United_States  69.64
+University of Helsinki  Finland  69.64
+University of Glasgow  United_Kingdom  69.54
+University of Alberta  Canada  69.3
+KAIST - Korea Advanced Institute of Science & Technology  South_Korea  69.05
+London School of Economics and Political Science  United_Kingdom  68.86
+University of Southampton  United_Kingdom  68.85
+Leiden University  Netherlands  68.81
+Utrecht University  Netherlands  68.77
+Aarhus University  Denmark  68.55
+University of Leeds  United_Kingdom  68.08
+Katholieke Universiteit Leuven  Belgium  67.56
+Purdue University  United_States  67.54
+University of York  United_Kingdom  67.37
+The University of Western Australia  Australia  66.95
+Dartmouth College  United_States  66.86
+Nagoya University  Japan  66.41
+Durham University  United_Kingdom  66.29
+Lomonosov Moscow State University  Russia  66.12
+National Taiwan University  Taiwan  66.03
+University of St Andrews  United_Kingdom  65.69
+University of Minnesota  United_States  65.58
+Universitat Freiburg  Germany  65.11
+Pennsylvania State University  United_States  64.91
+Erasmus University Rotterdam  Netherlands  64.48
+University of Oslo  Norway  64.21
+University of Zurich  Switzerland  64.04
+Tohoku University  Japan  63.96
+The University of Adelaide  Australia  63.87
+University of Maryland, College Park  United_States  63.72
+Fudan University  China  63.44
+Georgia Institute of Technology  United_States  63.34
+Emory University  United_States  63.15
+Delft University of Technology  Netherlands  63.14
+Hebrew University of Jerusalem  Israel  63.11
+University of California, Davis  United_States  62.85
+Maastricht University  Netherlands  62.77
+Pohang University of Science And Technology  South_Korea  62.75
+University of Southern California  United_States  62.66
+University College Dublin  Republic_of_Ireland  62.42
+Rice University  United_States  61.52
+University of California, Santa Barbara  United_States  61.37
+University of Aberdeen  United_Kingdom  61.3
+Universite Pierre et Marie Curie  France  60.5
+University of Pittsburgh  United_States  60.37
+University of Groningen  Netherlands  60.34
+University of Liverpool  United_Kingdom  59.5
+Cardiff University  United_Kingdom  59.47
+Humboldt-Universitat zu Berlin  Germany  59.3
+Universite Catholique de Louvain  Belgium  59.08
+Ohio State University  United_States  59.05
+Eindhoven University of Technology  Netherlands  58.52
+University of Rochester  United_States  58.42
+Case Western Reserve University  United_States  58.42
+City University of Hong Kong  Hong_Kong  58.38
+University of Virginia  United_States  58.3
+Eberhard Karls Universitat Tubingen  Germany  58.19
+Queen's University  Canada  58.17
+University of Bergen  Norway  57.92
+Vanderbilt University  United_States  57.24
+University of Otago  New_Zealand  57.08
+Universite de Montreal  Canada  56.87
+University of Basel  Switzerland  56.68
+Tel Aviv University  Israel  56.44
+ecole Normale Superieure de Lyon  France  56.2
+Newcastle University  United_Kingdom  56.06
+Technical University of Denmark  Denmark  55.63
+Yonsei University  South_Korea  55.51
+University of Vienna  Austria  55.27
+University of Bath  United_Kingdom  55.25
+University of Waterloo  Canada  54.73
+University of California, Irvine  United_States  54.68
+Queen Mary, University of London  United_Kingdom  54.47
+University of Barcelona  Spain  54.28
+Radboud University Nijmegen  Netherlands  54.2
+KTH, Royal Institute of Technology  Sweden  53.73
+Shanghai Jiao Tong University  China  53.68
+University of Lausanne  Switzerland  53.37
+Kyushu University  Japan  53.32
+University of Science and Technology of China  China  53.25
+Georgetown University  United_States  53.11
+University of Sussex  United_Kingdom  53.08
+Tufts University  United_States  52.69
+Rheinisch-Westfalische Technische Hochschule Aachen  Germany  52.58
+Technion - Israel Institute of Technology  Israel  52.38
+University of Arizona  United_States  52.35
+University of Cape Town  South_Africa  51.98
+McMaster University  Canada  51.85
+University of Bern  Switzerland  51.85
+The University of Western Ontario  Canada  51.83
+University of Calgary  Canada  51.74
+The Hong Kong Polytechnic University  Hong_Kong  51.67
+Universitat Karlsruhe  Germany  51.67
+Stockholm University  Sweden  51.51
+University of Leicester  United_Kingdom  51.5
+University of Colorado at Boulder  United_States  51.47
+VU University Amsterdam  Netherlands  51.43
+University of Tsukuba  Japan  51.42
+Universitat Autòa de Barcelona  Spain  51.26
+Georg-August-Universitat Gottingen  Germany  51.23
+Hokkaido University  Japan  51.06
+University of Bologna  Italy  50.85
+Nanjing University  China  50.63
+Wageningen University  Netherlands  50.35
+University of Antwerp  Belgium  50.26
+Chulalongkorn University  Thailand  50.21
+Lancaster University  United_Kingdom  50.2
+Waseda University  Japan  50.12
+University of Gothenburg  Sweden  50.1
+University College Cork  Republic_of_Ireland  50.07
+University of Reading  United_Kingdom  50
+Universite Paris Sorbonne, Paris IV  France  49.03
+Indian Institute of Technology Bombay  India  48.79
+University of Iowa  United_States  48.74
+University of Canterbury  New_Zealand  48.51
+Sapienza University of Rome  Italy  48.41
+Korea University  South_Korea  48.4
+University of Ghent  Belgium  48.38
+University of Florida  United_States  48.25
+Stony Brook University  United_States  48.19
+Universitat Frankfurt am Main  Germany  48.15
+National Tsing Hua University  Taiwan  47.94
+Queen's University of Belfast  United_Kingdom  47.9
+Texas A&M University  United_States  47.87
+University of Twente  Netherlands  47.66
+Rheinische Friedrich-Wilhelms-Universitat Bonn  Germany  47.51
+University of Dundee  United_Kingdom  47.46
+Indian Institute of Technology Delhi  India  47.39
+Sciences Po Paris  France  47.38
+Chalmers University of Technology  Sweden  47.34
+Universitat Stuttgart  Germany  47.23
+Keio University  Japan  47.22
+Universiti Malaya  Malaysia  47.09
+Michigan State University  United_States  47.05
+Universite Libre de Bruxelles  Belgium  46.73
+Saint-Petersburg State University  Russia  46.68
+University of Turku  Finland  46.43
+Dalhousie University  Canada  46.4
+Universidad Autóa de Madrid  Spain  46.05
+Simon Fraser University  Canada  45.88
+Julius-Maximilians-Universitat Wurzburg  Germany  45.87
+Rutgers, The State University of New Jersey, New Brunswick  United_States  45.6
+Technische Universitat Berlin  Germany  45.53
+Zhejiang University  China  45.51
+University of Notre Dame  United_States  45.03
+Macquarie University  Australia  45
+Universidad Nacional Autóa de Meexico  Mexico  44.86
+Rensselaer Polytechnic Institute  United_States  44.81
+RMIT University  Australia  44.77
+Victoria University of Wellington  New_Zealand  44.37
+Universite Paris-Sud 11  France  44.22
+Indiana University Bloomington  United_States  44.09
+Mahidol University  Thailand  43.74
+Universite Paris 1, Pantheon-Sorbonne  France  43.69
+University of Massachusetts, Amherst  United_States  43.57
+University of Ottawa  Canada  43.54
+National University of Ireland, Galway  Republic_of_Ireland  43.46
+Wake Forest University  United_States  43.21
+Kobe University  Japan  43.04
+University of Miami  United_States  42.97
+University of Indonesia  Indonesia  42.9
+Norwegian University of Science And Technology  Norway  42.79
+Vrije Universiteit Brussel  Belgium  42.77
+Tulane University  United_States  42.71
+Vienna University of Technology  Austria  42.68
+University of Victoria  Canada  42.64
+Universitat Hamburg  Germany  42.56
+University of Surrey  United_Kingdom  42.42
+Universitat Mannheim  Germany  42.36
+Universitat Koln  Germany  42.29
+Universite de Strasbourg  France  42.13
+Universitat Ulm  Germany  42.12
+University of Liege  Belgium  41.98
+Indian Institute of Technology Kanpur  India  41.95
+Aalto University  Finland  41.9
+Flinders University  Australia  41.87
+University of Illinois, Chicago  United_States  41.86
+Universidade de SãPaulo  Brazil  41.67
+Hiroshima University  Japan  41.66
+University of Newcastle  Australia  41.45
+University of Technology, Sydney  Australia  41.43
+SOAS - School of Oriental and African Studies, University of London  United_Kingdom  41.27
+University of Exeter  United_Kingdom  41.13
+Universitat Erlangen-Nurnberg  Germany  41.01
+University of Padua  Italy  40.91
+Indian Institute of Technology Madras  India  40.87
+Universiti Kebangsaan Malaysia  Malaysia  40.84
+George Washington University  United_States  40.76
+University of Strathclyde  United_Kingdom  40.74
+Technische Universitat Darmstadt  Germany  40.71
+Charles University  Czech_Republic  40.66
+University of Wollongong  Australia  40.66
+University Complutense Madrid  Spain  40.61
+Loughborough University  United_Kingdom  40.28
+Laval University  Canada  39.77
+North Carolina State University  United_States  39.52
+Universite Grenoble, Joseph Fourier  France  39.24
+Curtin University of Technology  Australia  39.23
+University of Cincinnati  United_States  39.13
+Iowa State University  United_States  39.13
+University of Hawaii at Manoa  United_States  39.06
+Universitat Innsbruck  Austria  38.95
+ecole des Ponts, ParisTech  France  38.8
+Brandeis University  United_States  38.78
+University of South Australia  Australia  38.75
+Universite Paris Diderot - Paris 7  France  38.52
+National Cheng Kung University  Taiwan  38.47
+University of California, Santa Cruz  United_States  38.46
+University of California, Riverside  United_States  38.35
+University of Athens  Greece  38.25
+La Trobe University  Australia  38.25
+Universite Montpellier 2, Sciences et Techniques  France  38.21
+Queensland University of Technology  Australia  38.12
+National Yang Ming University  Taiwan  38.04
+Royal Holloway University of London  United_Kingdom  37.97
+Universidade Estadual de Campinas  Brazil  37.89
+University of Tromso  Norway  37.83
+Universitat Leipzig  Germany  37.78
+Politecnico di Milano  Italy  37.73
+Aston University  United_Kingdom  37.66
+Umea University  Sweden  37.45
+University of Southern Denmark  Denmark  37.43
+University of Pisa  Italy  37.16

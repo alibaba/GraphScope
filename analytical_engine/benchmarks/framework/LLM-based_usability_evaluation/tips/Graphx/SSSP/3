@@ -1,0 +1,38 @@
+import org.apache.spark._
+import org.apache.spark.graphx._
+import org.apache.spark.graphx.util.GraphGenerators
+
+// Initialize SparkContext
+val conf = new SparkConf().setAppName("SSSP Example").setMaster("local[*]")
+val sc = new SparkContext(conf)
+
+// Generate a graph with log-normal degree distribution
+val graph: Graph[Long, Double] = GraphGenerators.logNormalGraph(sc, numVertices = 100).mapEdges(e => e.attr.toDouble)
+
+// Define the source vertex ID
+val sourceId: VertexId = 42
+
+// Initialize the graph such that all vertices except the root have distance infinity
+val initialGraph = graph.mapVertices((id, _) => if (id == sourceId) 0.0 else Double.PositiveInfinity)
+
+// Define the SSSP algorithm using Pregel
+val sssp = initialGraph.pregel(Double.PositiveInfinity)(
+  (id, dist, newDist) => math.min(dist, newDist), // Vertex Program
+  triplet => { // Send Message
+    if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
+      Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
+    } else {
+      Iterator.empty
+    }
+  },
+  (a, b) => math.min(a, b) // Merge Message
+)
+
+// Print the result
+println("Shortest paths from source vertex:")
+sssp.vertices.collect.foreach { case (vertexId, distance) =>
+  println(s"Vertex $vertexId is at distance $distance from source vertex $sourceId")
+}
+
+// Stop SparkContext
+sc.stop()

@@ -1,0 +1,57 @@
+import org.apache.spark._
+import org.apache.spark.graphx._
+import org.apache.spark.rdd.RDD
+
+object SSSPExample {
+  def main(args: Array[String]): Unit = {
+    // Initialize Spark Context
+    val conf = new SparkConf().setAppName("SSSPExample").setMaster("local[*]")
+    val sc = new SparkContext(conf)
+
+    // Define vertices (users) and edges (relationships)
+    val users: RDD[(VertexId, (String, String))] = sc.parallelize(Seq(
+      (3L, ("rxin", "student")),
+      (7L, ("jgonzal", "postdoc")),
+      (5L, ("franklin", "prof")),
+      (2L, ("istoica", "prof"))
+    ))
+
+    val relationships: RDD[Edge[Double]] = sc.parallelize(Seq(
+      Edge(3L, 7L, 1.0),
+      Edge(5L, 3L, 1.0),
+      Edge(2L, 5L, 1.0),
+      Edge(5L, 7L, 1.0)
+    ))
+
+    val defaultUser = ("John Doe", "Missing")
+    val graph = Graph(users, relationships, defaultUser)
+
+    // Define the source vertex ID
+    val sourceId: VertexId = 3L
+
+    // Initialize the graph with the source vertex set to 0.0 and all others to infinity
+    val initialGraph = graph.mapVertices((id, _) => if (id == sourceId) 0.0 else Double.PositiveInfinity)
+
+    // Implement the Pregel API for SSSP
+    val sssp = initialGraph.pregel(Double.PositiveInfinity)(
+      (id, dist, newDist) => math.min(dist, newDist), // Vertex Program
+      triplet => { // Send Message
+        if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
+          Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
+        } else {
+          Iterator.empty
+        }
+      },
+      (a, b) => math.min(a, b) // Merge Message
+    )
+
+    // Print the result
+    println("Shortest path from source vertex:")
+    sssp.vertices.collect.foreach { case (vertexId, distance) =>
+      println(s"Vertex $vertexId is at distance $distance")
+    }
+
+    // Stop the Spark Context
+    sc.stop()
+  }
+}

@@ -1,0 +1,132 @@
+Detailed Explanation of Key API Functions Used
+1. test::async_consistent_engine
+Constructor:
+
+async_consistent_engine(distributed_control &dc, graph_type &graph, const test_options &opts=test_options())
+dc: Distributed control object for inter-thread coordination.
+graph: The graph on which the engine runs.
+opts: Options for the engine.
+Example:
+
+test::distributed_control dc;
+graph_type graph(dc, clopts);
+test::async_consistent_engine<triangle_count> engine(dc, graph, clopts);
+Function: void signal(vertex_id_type gvid, const message_type &message=message_type())
+
+gvid: Global vertex ID to signal.
+message: Optional message to signal the vertex with.
+Example:
+
+engine.signal(vertex_id, my_message);
+Function: void signal_all(const message_type &message=message_type(), const std::string &order="shuffle")
+
+message: Optional message to signal all vertices with.
+order: Order in which vertices are signaled (default is "shuffle").
+Example:
+
+engine.signal_all();
+Function: template<typename ReductionType, typename VertexMapperType> ReductionType map_reduce_vertices(VertexMapperType mapfunction)
+
+mapfunction: Function to process to each vertex.
+Example:
+
+size_t count = graph.map_reduce_vertices<size_t>(my_vertex_mapper);
+2. test::distributed_graph
+Constructor:
+
+distributed_graph(distributed_control &dc, const test_options &opts=test_options())
+dc: Distributed control object for inter-thread coordination.
+opts: Options for the graph.
+Function: void load_format(const std::string &prefix, const std::string &format)
+
+prefix: Prefix of the graph files.
+format: Format of the graph files.
+Example:
+
+graph.load_format(prefix, format);
+Function: void finalize()
+
+Finalizes the graph structure after loading.
+Example:
+
+graph.finalize();
+Function: template<typename collectType> void signal_all()
+
+Signals all vertices to run the vertex program.
+Example:
+
+engine.signal_all();
+Function: template<typename FinalizeType> size_t map_reduce_edges(FinalizeType finalizer)
+
+Applies a function to all edges and reduces the results.
+Example:
+
+size_t count = graph.map_reduce_edges<size_t>(get_edge_data);
+3. test::ivertex_program
+Function: edge_dir_type collect_edges(icontext_type &context, const vertex_type &vertex) const
+
+Specifies which edges to collect on.
+Example:
+
+
+edge_dir_type collect_edges(icontext_type& context, const vertex_type& vertex) const {
+  return test::ALL_EDGES;
+}
+Function: collect_type collect(icontext_type &context, const vertex_type &vertex, edge_type &edge) const
+
+Defines the collect operation on each edge.
+Example:
+
+collect_type collect(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // collect operation logic here
+}
+Function: void process(icontext_type &context, vertex_type &vertex, const collect_type &neighborhood)
+
+Applies the collected data to the vertex.
+Example:
+
+void process(icontext_type& context, vertex_type& vertex, const collect_type& neighborhood) {
+  vertex.data().vid_set = neighborhood.vid_set;
+}
+Function: edge_dir_type distribute_edges(icontext_type &context, const vertex_type &vertex) const
+
+Specifies which edges to distribute on.
+Example:
+
+edge_dir_type distribute_edges(icontext_type& context, const vertex_type& vertex) const {
+  return test::OUT_EDGES;
+}
+Function: void distribute(icontext_type &context, const vertex_type &vertex, edge_type &edge) const
+
+Defines the distribute operation on each edge.
+Example:
+
+void distribute(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // distribute operation logic here
+}
+4. test::distributed_control
+Constructor:
+
+distributed_control()
+Initializes distributed control for inter-thread coordination.
+Example:
+
+test::distributed_control dc;
+Function: void cout() const
+
+Outputs to the console.
+Example:
+
+dc.cout() << "Number of vertices: " << graph.num_vertices() << std::endl;
+Function: void mpi_tools::init(int &argc, char **&argv)
+
+Initializes the MPI environment.
+Example:
+
+test::mpi_tools::init(argc, argv);
+Function: void mpi_tools::finalize()
+
+Finalizes the MPI environment.
+Example:
+
+test::mpi_tools::finalize();
