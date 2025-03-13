@@ -150,7 +150,7 @@ class GrootClient(object):
         ip_names = get_pod_ips(api_client, NAMESPACE, pod_prefix)
         for (ip, name) in ip_names:
             logger.info(f"Restart groot store pod {name}, ip {ip}")
-            self._restart_pod(name, ip,  GROOT_STORE_POD_ADMIN_PORT)
+            self._restart_pod(name, ip, GROOT_STORE_POD_ADMIN_PORT)
 
     def start_service(self, graph_id: str) -> str:
         raise RuntimeError("Start service is not supported yet.")
