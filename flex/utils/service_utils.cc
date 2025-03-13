@@ -14,6 +14,11 @@
  */
 
 #include "flex/utils/service_utils.h"
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <cstring>
 
 namespace gs {
 
@@ -218,6 +223,39 @@ size_t human_readable_to_bytes(const std::string& human_readable_bytes) {
 
   // Calculate bytes
   return static_cast<size_t>(number * multipliers[unit]);
+}
+
+std::string get_local_ip() {
+  // First check the environment variable.
+  if (const char* env_ip = std::getenv("FLEX_INTERACTIVE_ENGINE_IP")) {
+    return env_ip;
+  }
+
+  char hostname[256];
+  if (gethostname(hostname, sizeof(hostname)) == -1) {
+    std::cerr << "Error obtaining hostname" << std::endl;
+    return "";
+  }
+
+  struct addrinfo hints, *info, *p;
+  std::memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;  // Use AF_INET to only get IPv4 addresses
+  hints.ai_socktype = SOCK_STREAM;
+
+  if (getaddrinfo(hostname, nullptr, &hints, &info) != 0) {
+    std::cerr << "Error obtaining local IP address" << std::endl;
+    return "";
+  }
+
+  std::string ip;
+  for (p = info; p != nullptr; p = p->ai_next) {
+    struct sockaddr_in* address = (struct sockaddr_in*) p->ai_addr;
+    ip = inet_ntoa(address->sin_addr);
+    break;  // Take the first valid IP
+  }
+
+  freeaddrinfo(info);
+  return ip;
 }
 
 }  // namespace gs

@@ -18,18 +18,6 @@
 
 namespace gs {
 
-// see: https://etcd.io/docs/v2.3/errorcode/
-StatusCode etcdCodeToStatusCode(int etcd_code) {
-  switch (etcd_code) {
-  case 0:
-    return StatusCode::OK;
-  case 100:
-    return StatusCode::META_KEY_NOT_FOUND;
-  default:
-    return StatusCode::UNKNOWN;
-  }
-}
-
 #define TRT_PUT_ETCD_KEY_VALUE_TXN(client, key, value)         \
   etcdv3::Transaction txn;                                     \
   txn.setup_put(key, value);                                   \
@@ -48,6 +36,7 @@ StatusCode etcdCodeToStatusCode(int etcd_code) {
     return Status(etcdCodeToStatusCode(__res.error_code()),          \
                   __res.error_message());                            \
   }
+
 #define FAILS_IF_KEY_NOT_EXISTS(client, key)                        \
   auto __res = client->get(key);                                    \
   if (!__res.is_ok()) {                                             \

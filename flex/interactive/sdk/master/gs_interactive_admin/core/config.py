@@ -43,6 +43,15 @@ class HttpService:
     max_content_length : str = "1GB"
     
 
+@dataclass
+class ServiceRegistry:
+    """
+    Stores configurations for the service registry.
+    """
+    type : str = "etcd"
+    endpoint : str = "http://localhost:2379"
+    ttl: int = 60
+
 
 @dataclass
 class Config(Serializable):
@@ -57,3 +66,5 @@ class Config(Serializable):
     instance_name: str = "default"
     
     http_service: HttpService = field(default_factory=HttpService)
+    
+    service_registry: ServiceRegistry = field(default_factory=ServiceRegistry)

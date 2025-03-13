@@ -30,11 +30,10 @@ using timestamp_t = uint32_t;
 using boost_ptree = boost::property_tree::ptree;
 
 template <typename BufType,
-          typename = std::enable_if_t<
-              std::is_nothrow_move_constructible<BufType>::value &&
-                  std::is_nothrow_move_assignable<BufType>::value &&
-                  std::is_nothrow_destructible<BufType>::value,
-              void>>
+          typename = std::enable_if_t<std::is_nothrow_move_constructible<BufType>::value &&
+                                          std::is_nothrow_move_assignable<BufType>::value &&
+                                          std::is_nothrow_destructible<BufType>::value,
+                                      void>>
 struct payload {
   explicit payload(BufType&& content) : content(std::move(content)) {}
   ~payload() = default;
@@ -46,25 +45,59 @@ struct payload {
 
   void dump_to(hiactor::serializable_queue& qu) {}
 
-  static payload load_from(hiactor::serializable_queue& qu) {
-    return payload{BufType{}};
-  }
+  static payload load_from(hiactor::serializable_queue& qu) { return payload{BufType{}}; }
 
   BufType content;
+};
+
+struct ServiceMetrics {
+  std::string snapshot_id;
+  ServiceMetrics() = default;
+  ServiceMetrics(const std::string& snapshot_id) : snapshot_id(snapshot_id) {}
+
+  inline std::string to_string() const { return "\"snapshot_id\": \"" + snapshot_id + "\""; }
+};
+
+struct ServiceRegisterPayload {
+  std::string endpoint;    // ip:port
+  ServiceMetrics metrics;  // service metrics
+
+  ServiceRegisterPayload() = default;
+  ServiceRegisterPayload(const std::string& endpoint, const ServiceMetrics& metrics)
+      : endpoint(endpoint), metrics(metrics) {}
+
+  std::string to_string() const {
+    return "{\"endpoint\": \"" + endpoint + "\", \"metrics\": {" + metrics.to_string() + "}}";
+  }
+};
+
+struct AllServiceRegisterPayload {
+  std::unordered_map<std::string, ServiceRegisterPayload>
+      services;  // service name to service payload
+  std::string graph_id;
+
+  std::string to_string() const {
+    std::string res = "{";
+    for (const auto& [name, payload] : services) {
+      res += "\"" + name + "\": " + payload.to_string() + ", ";
+    }
+    if (!services.empty()) {
+      res.pop_back();
+    }
+    res += "}";
+    return res;
+  }
 };
 
 using query_param = payload<seastar::sstring>;
 using query_result = payload<seastar::sstring>;
 using admin_query_result = payload<gs::Result<seastar::sstring>>;
 // url_path, query_param
-using graph_management_param =
-    payload<std::pair<seastar::sstring, seastar::sstring>>;
+using graph_management_param = payload<std::pair<seastar::sstring, seastar::sstring>>;
 using graph_management_query_param =
     payload<std::unordered_map<seastar::sstring, seastar::sstring>>;
-using procedure_query_param =
-    payload<std::pair<seastar::sstring, seastar::sstring>>;
-using create_procedure_query_param =
-    payload<std::pair<seastar::sstring, seastar::sstring>>;
+using procedure_query_param = payload<std::pair<seastar::sstring, seastar::sstring>>;
+using create_procedure_query_param = payload<std::pair<seastar::sstring, seastar::sstring>>;
 using update_procedure_query_param =
     payload<std::tuple<seastar::sstring, seastar::sstring, seastar::sstring>>;
 

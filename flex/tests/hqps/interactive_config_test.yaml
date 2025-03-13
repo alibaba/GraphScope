@@ -1,11 +1,13 @@
 log_level: INFO
 verbose_level: 10
 default_graph: modern_graph
+namespace: interactive
+instance_name: default
 compute_engine:
   type: hiactor
   workers:
     - localhost:10000
-  thread_num_per_worker: 4
+  thread_num_per_worker: 1
   store:
     type: cpp-mcsr
   metadata_store:
@@ -43,3 +45,8 @@ http_service:
   admin_port: 7777
   query_port: 10000
   max_content_length: 1GB
+service_registry:
+  type: etcd
+  endpoint: http://localhost:2379
+  ttl: 5
+

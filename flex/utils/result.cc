@@ -16,6 +16,7 @@
 #include "flex/utils/result.h"
 
 namespace gs {
+
 Status::Status() noexcept : error_code_(StatusCode::OK) {}
 
 Status::Status(StatusCode error_code) noexcept : error_code_(error_code) {}
@@ -37,6 +38,17 @@ Status Status::OK() { return Status(StatusCode::OK); }
 std::string Status::ToString() const {
   return "{\"code\": " + std::to_string(error_code_) + ", \"message\": \"" +
          error_msg_ + "\"}";
+}
+
+StatusCode etcdCodeToStatusCode(int etcd_code) {
+  switch (etcd_code) {
+  case 0:
+    return StatusCode::OK;
+  case 100:
+    return StatusCode::META_KEY_NOT_FOUND;
+  default:
+    return StatusCode::UNKNOWN;
+  }
 }
 
 }  // namespace gs

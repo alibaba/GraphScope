@@ -29,6 +29,7 @@ import etcd3.watch
 from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
 from etcd3.events import PutEvent
 from etcd3.events import DeleteEvent
+from gs_interactive_admin.core.config import Config
 
 import etcd3
 
@@ -350,3 +351,22 @@ class EtcdServiceRegistry(IServiceRegistry):
         if len(_tuple) != 3:
             raise RuntimeError("Expect 3 parts, but got %d", len(_tuple))
         return _tuple
+    
+service_registry = None
+
+def initialize_service_registry(config : Config):
+    global service_registry
+    if config.service_registry.type == "etcd":
+        # get ip and port from http://ip:port
+        endpoint=config.service_registry.endpoint
+        endpoint=endpoint.startswith("http://") and endpoint[7:] or endpoint
+        ip,port=endpoint.split(":")
+        service_registry = EtcdServiceRegistry(ip, int(port), config.namespace, config.instance_name)
+    else:
+        raise ValueError("Invalid service registry type: %s", config.service_registry.type)
+    service_registry.start()
+    
+    
+def get_service_registry():
+    global service_registry
+    return service_registry

@@ -126,6 +126,14 @@ void GraphDBService::init(const ServiceConfig& config) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
         config.admin_port, config.get_exclusive_shard_id(),
         config.admin_svc_max_content_length);
+    LOG(INFO) << "Service registry endpoint: "
+              << config.service_registry_endpoint;
+    if (!config.service_registry_endpoint.empty()) {
+      service_register_ = std::make_unique<ServiceRegister>(
+          config.service_registry_endpoint, config.namespace_,
+          config.instance_name, [this]() { return get_service_info(); },
+          config.service_registry_ttl);
+    }
   }
 
   initialized_.store(true);
@@ -213,6 +221,9 @@ GraphDBService::~GraphDBService() {
   if (metadata_store_) {
     metadata_store_->Close();
   }
+  if (service_register_) {
+    service_register_->Stop();
+  }
 }
 
 const ServiceConfig& GraphDBService::get_service_config() const {
@@ -270,6 +281,12 @@ void GraphDBService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->start();
   }
+  if (service_register_) {
+    LOG(INFO) << "Start service register thread";
+    service_register_->Start();
+  } else {
+    LOG(INFO) << "Service register is not started!";
+  }
   if (service_config_.start_compiler) {
     if (!start_compiler_subprocess()) {
       LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
@@ -283,6 +300,9 @@ void GraphDBService::run_and_wait_for_exit() {
   query_hdl_->stop();
   if (admin_hdl_) {
     admin_hdl_->stop();
+  }
+  if (service_register_) {
+    service_register_->Stop();
   }
   actor_sys_->terminate();
 }
@@ -337,6 +357,34 @@ bool GraphDBService::check_compiler_ready() const {
     }
   }
   return true;
+}
+
+std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
+  auto ip = gs::get_local_ip();
+  AllServiceRegisterPayload payload;
+  if (!is_running()) {
+    return std::make_pair(false, payload);
+  }
+
+  auto cur_running_graph = metadata_store_->GetRunningGraph();
+  if (!cur_running_graph.ok()) {
+    LOG(ERROR) << "Failed to get running graph: "
+               << cur_running_graph.status().error_message();
+    return std::make_pair(false, payload);
+  }
+  payload.graph_id = cur_running_graph.value();
+
+  auto procedure_endpoint =
+      ip + ":" + std::to_string(service_config_.query_port);
+  auto cypher_endpoint = ip + ":" + std::to_string(service_config_.bolt_port);
+  ServiceMetrics procedure_metrics("0");  // TODO: get snapshot id
+  payload.services.emplace(std::make_pair(
+      "procedure",
+      ServiceRegisterPayload(procedure_endpoint, procedure_metrics)));
+  payload.services.emplace(std::make_pair(
+      "cypher", ServiceRegisterPayload(cypher_endpoint, procedure_metrics)));
+
+  return std::make_pair(true, payload);
 }
 
 bool GraphDBService::start_compiler_subprocess(

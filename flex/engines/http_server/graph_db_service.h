@@ -23,6 +23,7 @@
 #include "flex/engines/http_server/actor_system.h"
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/graph_db_http_handler.h"
+#include "flex/engines/http_server/service_register.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/metadata/metadata_store_factory.h"
@@ -57,6 +58,8 @@ struct ServiceConfig {
   static constexpr const char* DEFAULT_METADATA_STORE_URI =
       "{WORKSPACE}/METADATA";  // By default we will use the local file system
                                // as
+
+  std::string instance_name, namespace_;
 
   // Those has default value
   uint32_t bolt_port;
@@ -93,6 +96,9 @@ struct ServiceConfig {
   std::string engine_config_path;       // used for codegen.
   size_t admin_svc_max_content_length;  // max content length for admin service.
   std::string wal_uri;                  // The uri of the wal storage.
+  std::string
+      service_registry_endpoint;  // The address of the service registry.
+  int32_t service_registry_ttl;   // The ttl of the service registry.
 
   ServiceConfig();
 
@@ -178,6 +184,8 @@ class GraphDBService {
 
   bool check_compiler_ready() const;
 
+  std::pair<bool, AllServiceRegisterPayload> get_service_info();
+
  private:
   GraphDBService() = default;
 
@@ -200,6 +208,8 @@ class GraphDBService {
   boost::process::child compiler_process_;
   // handler for metadata store
   std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
+  // A thread periodically wakeup and register the service itself to master.
+  std::unique_ptr<ServiceRegister> service_register_;
 };
 
 }  // namespace server
@@ -242,6 +252,19 @@ struct convert<server::ServiceConfig> {
     } else {
       LOG(INFO) << "verbose_level not found, use default value "
                 << service_config.verbose_level;
+    }
+
+    if (config["namespace"]) {
+      service_config.namespace_ = config["namespace"].as<std::string>();
+    } else {
+      VLOG(1) << "namespace not found, use default value "
+              << service_config.namespace_;
+    }
+    if (config["instance_name"]) {
+      service_config.instance_name = config["instance_name"].as<std::string>();
+    } else {
+      VLOG(1) << "instance_name not found, use default value "
+              << service_config.instance_name;
     }
 
     auto engine_node = config["compute_engine"];
@@ -356,6 +379,23 @@ struct convert<server::ServiceConfig> {
     } else {
       LOG(WARNING) << "Fail to find default_graph configuration";
     }
+
+    // parse service registry
+    if (config["service_registry"]) {
+      if (config["service_registry"]["endpoint"]) {
+        service_config.service_registry_endpoint =
+            config["service_registry"]["endpoint"].as<std::string>();
+        VLOG(10) << "service_registry_endpoint: "
+                 << service_config.service_registry_endpoint;
+      }
+      if (config["service_registry"]["ttl"]) {
+        service_config.service_registry_ttl =
+            config["service_registry"]["ttl"].as<uint32_t>();
+        VLOG(10) << "service_registry_ttl: "
+                 << service_config.service_registry_ttl;
+      }
+    }
+
     return true;
   }
 };
