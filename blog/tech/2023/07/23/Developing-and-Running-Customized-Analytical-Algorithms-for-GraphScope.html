@@ -143,7 +143,7 @@ git clone https://github.com/&lt;username&gt;/&lt;repo-name&gt;.git
    *                "source vertex" for SSSP (single source shortest path)
    *                "delta, max_round" for Pagerank
    */</span>
-  <span class="kt">void</span> <span class="nf">Init</span><span class="p">(</span><span class="n">grape</span><span class="o">::</span><span class="n">ParallelMessageManager</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">,</span> <span class="kt">int</span> <span class="n">param1</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="n">Init</span><span class="p">(</span><span class="n">grape</span><span class="o">::</span><span class="n">ParallelMessageManager</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">,</span> <span class="kt">int</span> <span class="n">param1</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// record current superstep</span>
     <span class="k">this</span><span class="o">-&gt;</span><span class="n">step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="k">this</span><span class="o">-&gt;</span><span class="n">param1</span> <span class="o">=</span> <span class="n">param1</span><span class="p">;</span>
@@ -209,7 +209,7 @@ git clone https://github.com/&lt;username&gt;/&lt;repo-name&gt;.git
     <span class="n">messages</span><span class="p">.</span><span class="n">ForceContinue</span><span class="p">();</span>
   <span class="p">}</span>
 
-  <span class="kt">void</span> <span class="nf">IncEval</span><span class="p">(</span><span class="k">const</span> <span class="n">fragment_t</span><span class="o">&amp;</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">context_t</span><span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span>
+  <span class="kt">void</span> <span class="n">IncEval</span><span class="p">(</span><span class="k">const</span> <span class="n">fragment_t</span><span class="o">&amp;</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">context_t</span><span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span>
                <span class="n">message_manager_t</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// superstep</span>
     <span class="o">++</span><span class="n">context</span><span class="p">.</span><span class="n">step</span><span class="p">;</span>
@@ -254,24 +254,24 @@ make <span class="nb">test</span>           <span class="c"># unit test</span>
 
 <p>After development is completed, we can run the algorithm’s resource (gar file) on the GraphScope cluster. The steps are as follows:</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>  <span class="c1"># enable logging
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>  <span class="c1"># enable logging
 </span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">load_app</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">load_app</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># create session locally
 </span><span class="o">&gt;&gt;&gt;</span> <span class="c1"># you can create session on kubernetes by replacing "hosts" with "k8s"
-</span><span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="sh">"</span><span class="s">hosts</span><span class="sh">"</span><span class="p">)</span>
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s">"hosts"</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># load property graph and project to simple graph to run the algorithm
-</span><span class="o">&gt;&gt;&gt;</span> <span class="n">simple_graph</span> <span class="o">=</span> <span class="nf">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">).</span><span class="nf">_project_to_simple</span><span class="p">()</span>
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">simple_graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">).</span><span class="n">_project_to_simple</span><span class="p">()</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># load your algorithm's resource
-</span><span class="o">&gt;&gt;&gt;</span> <span class="n">my_app</span> <span class="o">=</span> <span class="nf">load_app</span><span class="p">(</span><span class="sh">'</span><span class="s">&lt;path_to_your_gar_resource&gt;</span><span class="sh">'</span><span class="p">)</span>
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s">'&lt;path_to_your_gar_resource&gt;'</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># run your algorithm
-</span><span class="o">&gt;&gt;&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="nf">my_app</span><span class="p">(</span><span class="n">simple_graph</span><span class="p">)</span>
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">simple_graph</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># output numpy result
-</span><span class="o">&gt;&gt;&gt;</span> <span class="nf">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="nf">to_numpy</span><span class="p">(</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span><span class="p">))</span>
+</span><span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s">"r"</span><span class="p">))</span>
 </code></pre></div></div>
 
 <h3 id="conclusion">Conclusion</h3>
@@ -335,7 +335,7 @@ make <span class="nb">test</span>           <span class="c"># unit test</span>
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>

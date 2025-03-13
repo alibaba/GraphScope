@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">RelGo: Optimizing Relational Databases with GOpt</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2025-03-10">10 Mar 2025</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2025-03-10">10 Mar 2025</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">RelGo: Optimizing Relational Databases with GOpt</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2025-03-10-title-picture.jpg" alt="title" />
+The GraphScope team’s work on proposing RelGo for optimizing SQL/PGQ queries has been accepted by SIGMOD 2025. In this work, RelGo integrates <a href="https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope">GOpt</a> into relational databases (using DuckDB as an example), enhancing its ability to optimize SQL/PGQ queries and providing better optimization results than DuckDB’s own optimizer.
+This article introduces the main content of RelGo.</p>
+
+<h2 id="1-background-and-motivations">1. Background and Motivations</h2>
+<p>In the realms of data management and analytics, relational databases have long been the bedrock of structured data storage and retrieval, empowering a plethora of applications, across domains ranging from finance to healthcare. To facilitate tasks like creating tables and retrieving information in a database, the Structured Query Language (SQL) was developed and has been widely adopted by various Relational Database Management Systems (RDBMS). Below is an example of querying on IMDB data with an SQL query:</p>
+
+<style>
+    img.small_img {
+        zoom: 20% !important;
+        width: unset !important;
+    }
+    img.small_cap {
+        zoom: 10% !important;
+        width: unset !important;
+    }
+</style>
+
+<pre><code class="language-plain">Query 1 (Q1)
+
+SELECT n.name 
+FROM NAME AS n1,
+     CAST_INFO AS ci1,
+     CAST_INFO AS ci2,
+     TITLE AS t1,
+     TITLE AS t2,
+     MOVIE_COMPANIES AS mc1,
+     MOVIE_COMPANIES AS mc2,
+     COMPANY_NAME AS cn
+WHERE n1.id = ci1.person_id
+      AND ci1.movie_id = t1.id
+      AND t1.id = mc1.movie_id
+      AND mc1.company_id = cn.id
+      AND n1.id = ci2.person_id
+      AND ci2.movie_id = t2.id
+      AND t2.id = mc2.movie_id
+      AND mc2.company_id = cn.id
+      AND t1.title &lt;&gt; t2.title;
+</code></pre>
+
+<p>The relationships between the tables relevant to Q1 in IMDB are illustrated in the following ER diagram</p>
+
+<p><img src="/blog/assets/images/relgo/fig1.jpg" style="zoom:10%;" /></p>
+
+<p>The NAME table and TITLE table store information about persons and movies, respectively. The CAST_INFO table holds the quaternary relationship between persons, movies, roles (characters played in the movies), and professions (such as actor, actress, director, writer, etc.). The COMPANY_NAME table contains the names of movie companies, while the MOVIE_COMPANIES table records the association between movies, movie companies, and company types. Therefore, the SQL query above aims to find individuals who have participated in the production of at least two movies for the same company.</p>
+
+<p>It’s easy to see that using SQL to describe such queries can sometimes result in very lengthy statements, especially when there’s a need to describe the relationships between tables.</p>
+
+<p>Another more intuitive example is finding n persons who all know each other. Each time we describe the mutual relationship between two persons, we need to add two join conditions. For example:</p>
+
+<pre><code class="language-plain">Person1.id = Knows.person1id AND Person2.id = Knows.person2id
+</code></pre>
+
+<p>Hence, describing n persons knowing each other requires writing at least $n \times (n-1)$ join conditions. Manually writing such query statements is evidently very inefficient.</p>
+
+<p>When a query requires describing the relationships between tables, using graph queries can be relatively more convenient. The advantage lies in being able to express the query in a graph-like manner. Using Cypher as an example, query Q1 can be expressed as follows:</p>
+
+<pre><code class="language-plain">MATCH (n1:NAME)-[ci1:CAST_INFO]-&gt;(t1:TITLE)-[mc1:MOVIE_COMPANIES]-&gt;(cn:COMPANY_NAME),
+      (n1)-[ci2:CAST_INFO]-&gt;(t2:TITLE)-[mc2:MOVIE_COMPANIES]-&gt;(cn)
+WHERE t1.title &lt;&gt; t2.title
+RETURN n1.name;
+</code></pre>
+
+<p>This query intuitively describes the following graph pattern:<br />
+<img src="/blog/assets/images/relgo/fig2.jpg" alt="" /></p>
+
+<p>For the scenario of finding n persons knowing each other, using a graph query only requires describing a complete graph with n vertices (i.e., an n-clique). The above example demonstrates that using graph queries can significantly reduce the time database users spend writing SQL, allowing them to express their intended queries more quickly and conveniently.</p>
+
+<p>Therefore, in ISO SQL:2023, an extension called SQL/PGQ (SQL/Property Graph Queries) has been introduced to support graph queries within SQL expressions. Assuming that each tuple in the NAME, TITLE, and COMPANY_NAME tables represents a vertex, and each tuple in the CAST_INFO and MOVIE_COMPANIES tables represents an edge, we can rewrite query Q1 as follows in SQL/PGQ:</p>
+
+<pre><code class="language-plain">SELECT n_name FROM GRAPH_TABLE (G
+    MATCH (n1:NAME)-[ci1:CAST_INFO]-&gt;(t1:TITLE)-[mc1:MOVIE_COMPANIES]-&gt;(cn:COMPANY_NAME),
+      (n1)-[ci2:CAST_INFO]-&gt;(t2:TITLE)-[mc2:MOVIE_COMPANIES]-&gt;(cn)
+    WHERE t1.title &lt;&gt; t2.title
+    COLUMNS (n1.name AS n_name) 
+) g;
+</code></pre>
+
+<p>The SQL/PGQ extension addresses how to write graph queries within SQL expressions. However, once we get the SQL/PGQ query statements, analyzing and optimizing them remains a new challenge brought by SQL/PGQ. Query optimization refers to finding an efficient query plan based on a user-given query to achieve better query performance. Research on relational database query optimizers is typically carried out for the SPJ (selection-projection-join) queries. However, SQL/PGQ queries cannot be expressed as SPJ queries, because the GRAPH_TABLE clause cannot be directly represented through traditional selection, projection, and join operators. Therefore, it is challenging to directly use traditional relational database optimizers to optimize SQL/PGQ statements.</p>
+
+<p>Addressing this issue, we introduce a new query skeleton called SPJM (selection-projection-join-matching) and subsequently designed and implemented a converged optimization framework named RelGo based on GOpt. Our main contributions can be summarized as follows:</p>
+
+<ol>
+  <li>We define RGMapping to map relational tables to a property graph based on SQL/PGQ statements. Using RGMapping, we have defined a new query skeleton called SPJM, which can be used to express queries that contain both relational and graph queries.</li>
+  <li>We have developed a theory to transform SPJM queries into SPJ queries, allowing existing relational databases to directly handle SPJM queries. This approach is called the graph-agnostic approach. We have demonstrated that this graph-agnostic method has a significantly larger search space (exponentially larger) compared to our method in some scenarios.</li>
+  <li>We have designed and implemented RelGo to leverage relational and graph query optimization techniques to optimize SPJM queries. In detail, RelGo employs state-of-the-art graph optimization techniques and implements graph-related physical operations based on graph indexes.</li>
+  <li>We developed RelGo by integrating it with the industrial relational optimization framework Calcite, and employing DuckDB for execution runtime. We conducted extensive experiments to evaluate its performance. The results on the LDBC Social Network Benchmark indicate that RelGo significantly surpasses the performance of the graph-agnostic baseline, achieving an average speedup of 21.9x over the baseline, which remains 5.4x faster even when graph indexing is enabled.</li>
+</ol>
+
+<p>This work has been accepted at SIGMOD 2025 (<a href="https://dl.acm.org/doi/10.1145/3698828">https://dl.acm.org/doi/10.1145/3698828</a>，<a href="https://arxiv.org/pdf/2408.13480">https://arxiv.org/pdf/2408.13480</a>).</p>
+
+<h2 id="2-concepts-and-spjm-skeleton">2. Concepts and SPJM Skeleton</h2>
+
+<p>Let’s start by briefly explaining some of the concepts that will be used in this blog, including Property Graph and RGMapping. In this blog, for the sake of convenience, we will use the terms “table” and “relation” interchangeably.</p>
+
+<h3 id="21-concepts">2.1 Concepts</h3>
+
+<p>Given an expression that contains both relational queries and graph queries, in order to integrate the query plans of both, it’s necessary to define a method for translating between relational data and graph data. Therefore, we use the following concepts.</p>
+
+<p><strong><u>Property Graph</u></strong></p>
+
+<p>A property graph is composed of vertices and edges, where vertices and edges can have various attributes. In the upper right corner of Figure 3(a), an example of a property graph is provided. This property graph contains a total of 5 vertices, including 3 <code class="language-plaintext highlighter-rouge">Person</code>s and 2 <code class="language-plaintext highlighter-rouge">Message</code>s. Additionally, the property graph includes 8 edges, each tagged with either <code class="language-plaintext highlighter-rouge">Knows</code> or <code class="language-plaintext highlighter-rouge">Likes</code>.</p>
+
+<p><strong><u>RGMapping</u></strong></p>
+
+<p>RGMapping maps tuples from relational tables to vertices or edges in a property graph. Specifically, RGMapping includes a vertex mapping and an edge mapping, which respectively map tuples from tables to different vertices and edges. To more conveniently describe the definition of RGMapping, we will illustrate this with the following figure.</p>
+
+<p><img src="/blog/assets/images/relgo/fig3.jpg" />
+<img src="/blog/assets/images/relgo/fig3cap.jpg" class="small_cap" /></p>
+
+<p>Fig. 3(a) contains four relational tables: <code class="language-plaintext highlighter-rouge">Knows</code>, <code class="language-plaintext highlighter-rouge">Person</code>, <code class="language-plaintext highlighter-rouge">Likes</code>, and <code class="language-plaintext highlighter-rouge">Message</code>. The relationships between them can be described using the ER diagram in the bottom left corner of Fig. 3(a). In relational data modeling, an ER diagram includes entities and relationships. Consequently, vertices can be mapped from relations corresponding to entities, and edges can be mapped from relations corresponding to relationships. In this example, tuples in the <code class="language-plaintext highlighter-rouge">Person</code> and <code class="language-plaintext highlighter-rouge">Message</code> tables are mapped to vertices, while tuples in the <code class="language-plaintext highlighter-rouge">Knows</code> and <code class="language-plaintext highlighter-rouge">Likes</code> tables are mapped to edges. The resulting property graph is shown in the upper right corner of Figure 3(a), labeled as property graph G.</p>
+
+<p><strong>In the property graph G, p1 represents the tuple with person_id = 1 in the <code class="language-plaintext highlighter-rouge">Person</code> table, and k1 represents the tuple with knows_id = 1 in the <code class="language-plaintext highlighter-rouge">Knows</code> table.</strong> RGMapping is used to define the mapping relationships between relational tables and the property graph. For ease of explanation, we will refer to tables mapped to vertices as vertex tables and tables mapped to edges as edge tables. For edge tables, it is not sufficient to just know the mapping relationship between a tuple and an edge; it is also necessary to know the association between the edge’s source and target vertices and the vertex tables. Specifically, for the edge table <code class="language-plaintext highlighter-rouge">Likes</code> in this example, we can provide the following two association relationships:</p>
+
+<p><img src="/blog/assets/images/relgo/formula1.jpg" alt="image" style="zoom:40%;" /></p>
+
+<p>These two association relationships respectively indicate that for a tuple in the <code class="language-plaintext highlighter-rouge">Likes</code> table, which corresponds to an edge in the property graph, the source vertex of the edge corresponds to a tuple in the <code class="language-plaintext highlighter-rouge">Person</code> table, and the target vertex corresponds to a tuple in the <code class="language-plaintext highlighter-rouge">Message</code> table. The correspondence between tuples is determined based on the values of Likes.pid, Person.person_id, and Message.message_id. Specifically, a tuple in the <code class="language-plaintext highlighter-rouge">Likes</code> table is associated with a tuple in the <code class="language-plaintext highlighter-rouge">Person</code> table if and only if the value of the pid attribute matches the value of the person_id attribute. For example, the first row in the <code class="language-plaintext highlighter-rouge">Likes</code> table is associated with the first row in the <code class="language-plaintext highlighter-rouge">Person</code> table, because l1.pid = p1.person_id. It means that the source vertex of the edge mapped from the first row of <code class="language-plaintext highlighter-rouge">Likes</code> is mapped from the first row of <code class="language-plaintext highlighter-rouge">Person</code>.</p>
+
+<p>Generally, this association can be derived from the primary-foreign key relationships between relational tables. Specifically, because the <code class="language-plaintext highlighter-rouge">Likes</code> table has foreign keys pid and mid pointing to the <code class="language-plaintext highlighter-rouge">Person</code> and <code class="language-plaintext highlighter-rouge">Message</code> tables, respectively, the vertex tables related to <code class="language-plaintext highlighter-rouge">Likes</code> are <code class="language-plaintext highlighter-rouge">Person</code> and <code class="language-plaintext highlighter-rouge">Message</code>.</p>
+
+<p>With this information, it is possible to convert between relational tables and vertices and edges in the property graph. Therefore, given a relational database, as long as the corresponding RGMapping is defined, part of the relational tables can be converted into a property graph, thereby leveraging the capabilities of a graph optimizer in query optimization.</p>
+
+<h3 id="22-spjm-skeleton">2.2 SPJM Skeleton</h3>
+
+<p>To represent graph queries, we introduce a new operator into the relational operators, namely the Matching Operator. This operator takes a graph relation and a pattern graph as input and produces a graph table as output. Here, a graph relation is a special type of table. Each tuple in this relation represents a property graph, with each attribute value of the tuple corresponding to a vertex or edge. The table shown at the bottom of Fig. 3(b) is an example of a graph relation.</p>
+
+<p>For each tuple (i.e., property graph) in the input graph relation, the Matching Operator searches for all subgraphs isomorphic to the input pattern graph. Each row of the graph relation returned by the Matching Operator corresponds to one such found isomorphic subgraph. In this paper, we consider queries that include selection, projection, join, and matching operators. Queries composed of these operators are referred to as SPJM queries.</p>
+
+<h2 id="3-optimizing-matching-operator">3. Optimizing Matching Operator</h2>
+
+<p>In this section, we focus on handling the matching operator, which plays a distinct role within the SPJM queries. We discuss two main perspectives of optimizing the matching operator: logical transformation and physical implementation. Logical transformation is responsible for transforming a matching operator into a logically equivalent representation, while physical implementation focuses on how the matching operator can be efficiently executed.</p>
+
+<h3 id="31-logical-transformation">3.1 Logical Transformation</h3>
+
+<p>Given a matching operator, suppose the input pattern graph is as follows:</p>
+
+<pre><code class="language-plain">MATCH (p1:PERSON)-[e1:KNOWS]-&gt;(p2:PERSON)-[e3:LIKES]-&gt;(m:MESSAGE),
+      (p1)-[e2:LIKES]-&gt;(m)
+RETURN p1.name, p1.place_id, p2.name
+</code></pre>
+
+<p>This pattern graph, as shown in Figure 3(b), searches for two persons who like the same message. The table names in the pattern graph use uppercase letters, such as <code class="language-plaintext highlighter-rouge">PERSON</code>. For this query, we propose two transformation methods: one is the graph-agnostic approach, and the other is the graph-aware approach.</p>
+
+<h4 id="311-graph-agnostic-approach">3.1.1 Graph-Agnostic Approach</h4>
+
+<p>The graph-agnostic approach directly converts the pattern graph into joins between tables based on the RGMapping, thus transforming the SPJM problem into an SPJ problem. Existing relational optimizers can then be used for query optimization. According to the RGMapping described in Section 2 and the ER diagram in Figure 3(a) that describes the relationships between the tables, it is easy to determine that the <code class="language-plaintext highlighter-rouge">Person</code>, <code class="language-plaintext highlighter-rouge">Message</code>, <code class="language-plaintext highlighter-rouge">Knows</code>, and <code class="language-plaintext highlighter-rouge">Likes</code> tables are respectively mapped to vertices or edges labeled <code class="language-plaintext highlighter-rouge">Person</code>, <code class="language-plaintext highlighter-rouge">Message</code>, <code class="language-plaintext highlighter-rouge">Knows</code>, and <code class="language-plaintext highlighter-rouge">Likes</code> in the graph.<br />
+Moreover, the following association relationships exist between the vertex tables and edge tables:</p>
+
+<p><img src="/blog/assets/images/relgo/formula2.jpg" alt="image" style="zoom:40%;" /></p>
+
+<p>Here, $Person_1$ and $Person_2$ represent two copies of the <code class="language-plaintext highlighter-rouge">Person</code> table, containing the same content as the original <code class="language-plaintext highlighter-rouge">Person</code> table. Subsequently, each edge in the pattern graph can be obtained through joins between the vertex tables and edge tables. Specifically, the edges in the aforementioned pattern graph can be converted into the following joins:</p>
+
+<p><img src="/blog/assets/images/relgo/formula3.jpg" alt="image" style="zoom:40%;" /></p>
+
+<p>Therefore, the matching operator can be converted to:</p>
+
+<p><img src="/blog/assets/images/relgo/formula4.jpg" alt="image" style="zoom:40%;" /></p>
+
+<p>Then, relational optimizers can be used to optimize the query.</p>
+
+<h4 id="312-graph-aware-approach">3.1.2 Graph-Aware Approach</h4>
+
+<p>In this section, we introduce a graph-aware transformation that incorporates key ideas from the literature on graph optimization. Specifically, we first decompose the pattern graph in Figure 3(b) to obtain the following decomposition tree.</p>
+
+<p><img src="/blog/assets/images/relgo/fig4.jpg" class="small_img" /></p>
+
+<p>In detail, the tree has a root node that represents the pattern graph, and each non-leaf intermediate node is a sub-pattern (a subgraph of the pattern) , which has left and right child nodes. These two child nodes are both subgraphs of the intermediate node, and by joining the two child nodes, we obtain this intermediate node. Following state-of-the-art graph optimizers, to guarantee a worst-case optimal execution plan, all intermediate sub-patterns in the decomposition tree must be induced subgraphs of the pattern graph.</p>
+
+<p>The leaf nodes of the decomposition tree must be Minimum Matching Components (MMCs). An MMC can either be a single-vertex pattern or a complete-star pattern. A complete-star pattern must be located in the right subtree, with all the leaf nodes of the star appearing in the left subtree. It is easy to see that a single-edge pattern is a special type of complete-star pattern. This design is mainly to ensure that the execution plan is worst-case optimal.</p>
+
+<p>The decomposition tree in Fig. 4 contains three MMCs: $\mathcal{P}_2$ (complete-star pattern), $\mathcal{P}_3$ (single-vertex pattern subgraph), and $\mathcal{P}_4$ (single-edge pattern subgraph). After decomposing, for each node in the decomposition tree, we join its left and right child nodes to obtain the result of the current node. For example, when matching the property graph G in Fig. 3(a) with the pattern graph in Fig. 4, the matching result of $\mathcal{P}_1$ is (p1, k1, p2), (p2, k2, p1), (p2, k3, p3), (p3, k4, p2). The matching result of $\mathcal{P}_2$ is (p1, l1, m1, l2, p2), (p2, l2, m1, l1, p1), (p2, l3, m2, l4, p3), (p3, l4, m2, l3, p2).</p>
+
+<p>By joining these results on vertices $\mathcal{P}_1$ and $\mathcal{P}_2$ in the pattern, we obtain (p1, k1, p2, l1, m1, l2), (p2, k2, p1, l2, m1, l1),  (p2, k3, p3, l3, m2, l4), and (p3, k4, p2, l4, m2, l3). These results are exactly the results of matching the original pattern graph $\mathcal{P}$, as shown in the table below Fig. 3(b).</p>
+
+<p>We have demonstrated that in some scenarios, the search space of the graph-aware approach is exponentially smaller than that of the graph-agnostic approach. Taking RelGo (graph-aware approach) and Calcite (graph-agnostic approach) as examples, we conducted experiments on the LDBC SNB benchmark (on LDBC30 dataset) and JOB benchmark (on IMDB dataset) to compare their optimization times. The experimental results show that RelGo significantly improves optimization speed compared to Calcite.</p>
+
+<p><img src="/blog/assets/images/relgo/fig5a.jpg" class="small_img" />
+<img src="/blog/assets/images/relgo/fig5b.jpg" class="small_img" />
+<img src="/blog/assets/images/relgo/fig5cap.jpg" class="small_img" /></p>
+
+<h3 id="32-physical-implementation">3.2 Physical Implementation</h3>
+
+<p>Physical implementation optimization refers to using efficient physical implementations when realizing the operators in the execution plan to make the actual execution more efficient. Referencing GRainDB, we implemented a graph index. The following illustration is an example of a graph index.</p>
+
+<p><img src="/blog/assets/images/relgo/fig6.jpg" alt="" /></p>
+
+<p>As shown in Fig. 6, the EV index is built on the edge table. For each tuple in the <code class="language-plaintext highlighter-rouge">Likes</code> table (which is an edge table), two new attribute columns, pid_rowid and mid_rowid, are added to record the positions (i.e., row numbers) of the source and target vertices of the corresponding edge in the respective vertex tables. For example, l1 in the <code class="language-plaintext highlighter-rouge">Likes</code> table corresponds to an edge whose source vertex is located at the 0-th row of the <code class="language-plaintext highlighter-rouge">Person</code> table and whose target vertex is at the 0-th row of the <code class="language-plaintext highlighter-rouge">Message</code> table.</p>
+
+<p>The VE index is built based on the vertex tables. For each tuple in the <code class="language-plaintext highlighter-rouge">Person</code> table, the VE index records the positions of its adjacent edges in the edge table (i.e., row numbers) and the positions of the other endpoints of these edges in the corresponding vertex tables. Specifically, for tuple p1 in the <code class="language-plaintext highlighter-rouge">Person</code> table, the VE index records its adjacent edge’s position at the 0-th row of the <code class="language-plaintext highlighter-rouge">Likes</code> table and the other endpoint of that edge at the 0-th row of the <code class="language-plaintext highlighter-rouge">Message</code> table.</p>
+
+<p>Based on these two indexes, when actually joining the vertex and edge tables, it is possible to skip value comparisons and quickly obtain tuples that can be joined.</p>
+
+<p>Specifically, we implemented three main types of physical implementation optimizations for the decomposition tree:</p>
+
+<ul>
+  <li>Given an intermediate node, when its right subtree is an MMC containing only a single edge, the join of its left and right subtrees can be implemented as a combination of the EXPAND_EDGE and GET_VERTEX operators, without flattening the result during the computation of these two operators. For example, consider Figure 5. Suppose a decomposition tree has an intermediate node <code class="language-plaintext highlighter-rouge">(:PERSON) JOIN (:PERSON)-[:LIKES]-&gt;(:MESSAGE)</code>. In this case, both the left and right subtrees are MMCs, i.e., <code class="language-plaintext highlighter-rouge">(:PERSON)</code> and <code class="language-plaintext highlighter-rouge">(:PERSON)-[:LIKES]-&gt;(:MESSAGE)</code>. Assume that a tuple from the matching results of the left subtree is (p2). When joined with the right subtree, the result is (p2, [l2, l3], [m1, m2]). After flattening, the resulting tuples are (p2, l2, m1) and (p2, l3, m2).</li>
+  <li>Given an intermediate node, when its right subtree is a complete-star pattern, we implemented the EXPAND_INTERSECT operator to avoid flattening the results during computation. Consider the intermediate node <code class="language-plaintext highlighter-rouge">(:PERSON)-[:KNOWS]-&gt;(:PERSON) JOIN (:PERSON)-[:LIKES]-&gt;(:MESSAGE)&lt;-[:LIKES]-(:PERSON)</code>, which corresponds to the two child nodes of the root in the decomposition tree shown in Fig. 4. Suppose a tuple from the matching results of the left subtree is (p1, k1, p2), then the EXPAND_INTERSECT operator first applies the EXPAND_EDGE and GET_VERTEX operators on p1 and p2, yielding the results (p1, k1, p2, [l1], [m1]) and (p1, k1, p2, [l2, l3], [m1, m2]). Subsequently, it directly intersects these results to obtain (p1, k1, p2, [(l1, l2, m1)]). Finally, flattening this yields the result (p1, k1, p2, l1, l2, m1).</li>
+  <li>Whenever possible, use graph indices in the physical implementation to accelerate joins between vertex tables and edge tables.</li>
+</ul>
+
+<h2 id="4-the-converged-optimization-framework-relgo">4. The Converged Optimization Framework: RelGo</h2>
+
+<p>In this section, we specifically introduce the proposed converged optimization framework, RelGo, with its optimization workflow as follows:</p>
+
+<p><img src="/blog/assets/images/relgo/fig7.jpg" alt="" /></p>
+
+<p>As illustrated in Fig. 7, the core workflow of the RelGo framework consists of two components: <strong>graph optimization</strong> and <strong>relational optimization</strong>. The graph optimization is responsible for handling the graph component in an SPJM query, leveraging graph optimization techniques to determine the optimal decomposition tree of the matching operator. On the other hand, the relational optimization takes over to optimize the relational component in the query. The order in which these two components are applied is not strictly defined. However, for the purpose of our discussion, we will first focus on the graph optimization and then proceed to the relational optimization.</p>
+
+<p>RelGo uses GOpt for graph optimization and applies techniques such as FilterIntoMatchRule TrimAndFuseRule during the optimization process. Specifically, the TrimAndFuseRule describes a scenario where the EXPAND_EDGE and GET_VERTEX operators, when executed consecutively without the need to retrieve edge properties, become equivalent to a direct neighbor retrieval operator. Therefore, if the corresponding graph index is constructed, the VE index can be utilized to merge the two operators into a single EXPAND operator, directly retrieving the neighboring vertices.</p>
+
+<p>Once the graph optimizer has computed the optimal execution plan for the matching operator, the next step is to integrate this plan with the remaining relational operators in the SPJM query. The relational optimization is responsible for optimizing these remaining operators, which are all relational operators.</p>
+
+<p>Specifically, to prevent the relational optimizer from delving into the internal details of the graph pattern matching process, we introduce a new physical operator called <code class="language-plaintext highlighter-rouge">SCAN_GRAPH_TABLE</code>, as shown in Fig. 7(c), which encapsulates the optimal execution plan for the matching operator.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">SCAN_GRAPH_TABLE</code> operator acts as a bridge between the graph and relational components of the query. From the perspective of the relational optimizer, <code class="language-plaintext highlighter-rouge">SCAN_GRAPH_TABLE</code> behaves like a standard SCAN operator, providing a relational interface to the matched results.</p>
+
+<p>We engineered the frontend of RelGo in Java and built it upon Apache Calcite to utilize its robust relational query optimization infrastructure. Firstly, we enhanced Calcite’s SQL parser to recognize SQL/PGQ extensions, specifically to parse the GRAPH_TABLE clause. We created a new ScanGraphTableRelNode that inherits from Calcite’s core RelNode class, translating the GRAPH_TABLE clause into this newly defined operator within the logical plan. Secondly, we incorporate heuristic rules such as FilterIntoMatchRule and TrimAndFuseRule into Calcite’s rule-based HepPlanner, by specifying the activation conditions and consequent transformations of each rule. For more nuanced optimization, we rely on the VolcanoPlanner, the cost-based planner in Calcite, to optimize the ScanGraphTableRelNode. We devised a top-down search algorithm that assesses the most efficient physical plan based on a cost model, combined with high-order statistics from GLogue for more accurate cost estimation. Lastly, the converged optimizer outputs an optimized and platform-independent plan formatted with Google Protocol Buffers (protobuf), ensuring the adaptability of \name’s output to various backend database systems</p>
+
+<p>We developed the RelGo framework’s backend in C++ using DuckDB as the relational execution engine to showcase its optimization capabilities. We integrated graph index support in GRainDB. Besides, we craft a new join on DuckDB called EI-Join for the support of EXPAND_INTERSECT. Without graph index, the HASH_JOIN operator is used throughout the entire plan.</p>
+
+<h2 id="5-experiments">5. Experiments</h2>
+
+<p>To evaluate the quality of the query plans generated by RelGo, we conducted performance testing using two datasets: LDBC and IMDB. The experiments were carried out on the LDBC SNB and JOB benchmarks. The LDBC dataset was generated by the official LDBC Data Generator with scale factors of 10, 30, and 100. The JOB benchmark queries were executed on the IMDB dataset. The baseline methods compared in the experiments include:</p>
+
+<ul>
+  <li>DuckDB：Common relational databases that use graph-agnostic methods for optimization.</li>
+  <li>GRainDB：GRainDB implements graph indexes on DuckDB. After optimizing the queries using DuckDB’s optimizer, some join operators are replaced with predefined joins utilizing the graph indexes.</li>
+  <li>Umbra：Its query optimizer can generate query plans that include worst-case optimal joins.</li>
+  <li>Kùzu: Graph database management systems using the property graph model.</li>
+</ul>
+
+<p>The experimental results are as follows:</p>
+
+<p><img src="/blog/assets/images/relgo/fig8a.jpg" alt="LDBC10" class="small_img" />
+LDBC10</p>
+
+<p><img src="/blog/assets/images/relgo/fig8b.jpg" alt="LDBC30" class="small_img" />
+LDBC30</p>
+
+<p><img src="/blog/assets/images/relgo/fig8c.jpg" alt="LDBC100" class="small_img" />
+LDBC100</p>
+
+<p><img src="/blog/assets/images/relgo/fig8d.jpg" alt="JOB" class="small_img" />
+<img src="/blog/assets/images/relgo/fig8e.jpg" alt="JOB" class="small_img" />
+JOB
+<img src="/blog/assets/images/relgo/fig8cap.jpg" class="small_img" /></p>
+
+<p>Experimental results show that on the LDBC100 dataset, the query plans generated by RelGo have average execution times that are 21.9x, 5.4x, 49.9x, and 188.7x faster than those generated by DuckDB, GRainDB, Umbra, and Kùzu, respectively. This indicates that RelGo has a significant advantage over baseline methods in optimizing graph-related queries.</p>
+
+<p>Another benchmark, i.e., the JOB benchmark that is established for assessing join optimizations in relational databases, lacks any cyclic-pattern queries. On the JOB benchmark, the query plans generated by RelGo have average execution times that are 8.2x, 4.0x, 1.7x, and 136.1x faster than those generated by DuckDB, GRainDB, Umbra, and Kùzu, respectively. This further demonstrates that RelGo can generate more efficient query plans.</p>
+
+<h2 id="references">References</h2>
+<ul>
+  <li><a href="https://dl.acm.org/doi/10.1145/3698828">https://dl.acm.org/doi/10.1145/3698828</a></li>
+  <li><a href="https://arxiv.org/pdf/2408.13480">https://arxiv.org/pdf/2408.13480</a></li>
+  <li><a href="https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope">GOpt</a></li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=RelGo: Optimizing Relational Databases with GOpt&amp;url=https://graphscope.io/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

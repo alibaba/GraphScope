@@ -130,18 +130,18 @@ The three information files are shown below:</p>
   <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">id</span>
         <span class="na">data_type</span><span class="pi">:</span> <span class="s">int64</span>
-        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">true</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="no">true</span>
     <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
   <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">firstName</span>
         <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
-        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="no">false</span>
       <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">lastName</span>
         <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
-        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="no">false</span>
       <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">gender</span>
         <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
-        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="no">false</span>
     <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
 <span class="na">version</span><span class="pi">:</span> <span class="s">gar/v1</span>
 </code></pre></div></div>
@@ -156,17 +156,17 @@ The three information files are shown below:</p>
 <span class="na">chunk_size</span><span class="pi">:</span> <span class="m">1024</span>
 <span class="na">src_chunk_size</span><span class="pi">:</span> <span class="m">100</span>
 <span class="na">dst_chunk_size</span><span class="pi">:</span> <span class="m">100</span>
-<span class="na">directed</span><span class="pi">:</span> <span class="kc">false</span>
+<span class="na">directed</span><span class="pi">:</span> <span class="no">false</span>
 <span class="na">prefix</span><span class="pi">:</span> <span class="s">edge/person_knows_person/</span>
 <span class="na">adj_lists</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="na">ordered</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="pi">-</span> <span class="na">ordered</span><span class="pi">:</span> <span class="no">true</span>
     <span class="na">aligned_by</span><span class="pi">:</span> <span class="s">src</span>
     <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
     <span class="na">property_groups</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
           <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">creationDate</span>
             <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
-            <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+            <span class="na">is_primary</span><span class="pi">:</span> <span class="no">false</span>
         <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
 <span class="na">version</span><span class="pi">:</span> <span class="s">gar/v1</span>
 </code></pre></div></div>
@@ -348,7 +348,7 @@ Finally, we can extend the metadata of vertices of the original “person” typ
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>

@@ -202,9 +202,9 @@ Taking Vertex as an example, we will introduce how <strong>FastFFI</strong> redu
   <span class="kr">inline</span> <span class="n">T</span> <span class="n">GetValue</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value_</span><span class="p">;</span> <span class="p">}</span>
 
   <span class="c1">// Set the id bound with this vertex.</span>
-  <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">SetValue</span><span class="p">(</span><span class="n">T</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="n">value_</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
+  <span class="kr">inline</span> <span class="kt">void</span> <span class="n">SetValue</span><span class="p">(</span><span class="n">T</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="n">value_</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
 
- <span class="k">private</span><span class="o">:</span>
+ <span class="nl">private:</span>
   <span class="n">T</span> <span class="n">value_</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></div>
@@ -264,7 +264,7 @@ class of the Java Vertex interface, which defines the corresponding native metho
 <span class="p">}</span>
 
 <span class="n">JNIEXPORT</span>
-<span class="kt">void</span> <span class="n">JNICALL</span> <span class="nf">Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeSetValue</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">arg0</span> <span class="cm">/* arg00 */</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="n">JNICALL</span> <span class="n">Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeSetValue</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">arg0</span> <span class="cm">/* arg00 */</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">grape</span><span class="o">::</span><span class="n">Vertex</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;*&gt;</span><span class="p">(</span><span class="n">ptr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">SetValue</span><span class="p">(</span><span class="n">arg0</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="cp">#ifdef __cplusplus
@@ -550,7 +550,7 @@ We welcome everyone to try <a href="https://graphscope.io/docs/latest/analytical
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
