@@ -509,12 +509,26 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
             std::move(rep), std::string("Unsupported action: ") + action);
       }
     } else {
-      return admin_actor_refs_[dst_executor]
-          .service_status(query_param{std::move(req->content)})
-          .then_wrapped([rep = std::move(rep)](
-                            seastar::future<admin_query_result>&& fut) mutable {
-            return return_reply_with_result(std::move(rep), std::move(fut));
-          });
+      // v1/service/ready or v1/service/status
+      if (path.find("ready") != seastar::sstring::npos) {
+        return admin_actor_refs_[dst_executor]
+            .service_ready(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      } else {
+        return admin_actor_refs_[dst_executor]
+            .service_status(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
+      }
     }
   }
 
@@ -828,6 +842,12 @@ seastar::future<> admin_http_handler::set_routes() {
 
       r.add(seastar::httpd::operation_type::GET,
             seastar::httpd::url("/v1/service/status"),
+            new admin_http_service_handler_impl(interactive_admin_group_id,
+                                                shard_admin_concurrency,
+                                                exclusive_shard_id_));
+
+      r.add(seastar::httpd::operation_type::GET,
+            seastar::httpd::url("/v1/service/ready"),
             new admin_http_service_handler_impl(interactive_admin_group_id,
                                                 shard_admin_concurrency,
                                                 exclusive_shard_id_));
