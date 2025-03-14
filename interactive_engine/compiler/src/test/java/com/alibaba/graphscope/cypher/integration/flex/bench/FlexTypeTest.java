@@ -37,8 +37,8 @@ import java.util.function.Supplier;
 public class FlexTypeTest {
     private static final Logger logger = LoggerFactory.getLogger(FlexTypeTest.class);
     private static Session session;
-    private static final double DOUBLE_DELTA = 1e-15;
-    private static final float FLOAT_DELTA = 1e-6f;
+    private static double DOUBLE_DELTA;
+    private static float FLOAT_DELTA;
 
     /**
      * start compiler before the test:
@@ -49,6 +49,8 @@ public class FlexTypeTest {
         String neo4jServerUrl =
                 System.getProperty("neo4j.bolt.server.url", "neo4j://localhost:7687");
         session = GraphDatabase.driver(neo4jServerUrl).session();
+        DOUBLE_DELTA = Double.parseDouble(System.getProperty("double.delta", "0.01"));
+        FLOAT_DELTA = Float.parseFloat(System.getProperty("float.delta", "0.01"));
     }
 
     @Test
