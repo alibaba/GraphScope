@@ -131,8 +131,15 @@ std::shared_ptr<IContextColumn> SLVertexColumn::union_col(
       return builder.finish(nullptr);
     }
   }
-  LOG(FATAL) << "not support...";
-  return nullptr;
+  auto builder = MLVertexColumnBuilder::builder();
+  for (auto v : vertices_) {
+    builder.push_back_vertex({label_, v});
+  }
+  auto col = dynamic_cast<const IVertexColumn*>(other.get());
+  for (size_t i = 0; i < col->size(); ++i) {
+    builder.push_back_vertex(col->get_vertex(i));
+  }
+  return builder.finish(nullptr);
 }
 
 std::shared_ptr<IContextColumn> SLVertexColumnBuilder::finish(

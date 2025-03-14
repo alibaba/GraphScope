@@ -80,6 +80,9 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
             int val1 = Integer.valueOf(ctx.oC_IntegerLiteral(0).getText());
             int val2 = Integer.valueOf(ctx.oC_IntegerLiteral(1).getText());
             return builder.range(val1, val2 - val1);
+        } else if (ctx != null && ctx.oC_IntegerLiteral().size() == 1) {
+            int val1 = Integer.valueOf(ctx.oC_IntegerLiteral(0).getText());
+            return builder.range(val1, Integer.MAX_VALUE);
         } else {
             return builder;
         }

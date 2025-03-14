@@ -1,0 +1,22 @@
+{
+    "operation": {
+        "personIdQ4": 10995116278874,
+        "startDate": 1338508800000,
+        "durationDays": 28,
+        "limit": 10
+    },
+    "result": [
+        {
+            "tagName": "Norodom_Sihanouk",
+            "postCount": 3
+        },
+        {
+            "tagName": "George_Clooney",
+            "postCount": 1
+        },
+        {
+            "tagName": "Louis_Philippe_I",
+            "postCount": 1
+        }
+    ]
+}

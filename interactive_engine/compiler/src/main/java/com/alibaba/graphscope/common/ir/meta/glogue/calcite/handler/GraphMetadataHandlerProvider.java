@@ -52,6 +52,8 @@ public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
             return new GraphNonCumulativeCostHandler(this.optPlanner, this.plannerConfig);
         } else if (handlerClass.equals(BuiltInMetadata.Selectivity.Handler.class)) {
             return new GraphSelectivityHandler();
+        } else if (handlerClass.equals(BuiltInMetadata.Collation.Handler.class)) {
+            return new GraphCollationHandler();
         } else {
             return (MetadataHandler)
                     handlerClass.cast(

@@ -38,21 +38,12 @@ public class QueryExecutionValidator {
     public static final int SYSTEM_MAX_ITERATIONS = 15;
 
     private static final Config<Integer> CONFIG_MAX_ITERATIONS =
-            Config.intConfig("query.execution.max.iterations", 15);
+            Config.intConfig("query.execution.max.iterations", SYSTEM_MAX_ITERATIONS);
 
     private final int maxIterations;
 
     public QueryExecutionValidator(Configs configs) {
-        int maxIterations = CONFIG_MAX_ITERATIONS.get(configs);
-        if (maxIterations > SYSTEM_MAX_ITERATIONS) {
-            throw new FrontendException(
-                    Code.LOGICAL_PLAN_BUILD_FAILED,
-                    "max iterations "
-                            + maxIterations
-                            + " exceeds the system limit "
-                            + SYSTEM_MAX_ITERATIONS);
-        }
-        this.maxIterations = maxIterations;
+        this.maxIterations = CONFIG_MAX_ITERATIONS.get(configs);
     }
 
     public boolean validate(LogicalPlan plan, boolean throwsOnFail) {
@@ -62,9 +53,9 @@ public class QueryExecutionValidator {
         while (!queue.isEmpty()) {
             RelNode top = queue.remove(0);
             if (top instanceof GraphLogicalExpand) {
-                ++hops;
+                hops = addHops(hops, 1);
             } else if (top instanceof GraphPhysicalExpand) {
-                ++hops;
+                hops = addHops(hops, 1);
             } else if (top instanceof GraphLogicalPathExpand) {
                 GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) top;
                 // null means no limit
@@ -82,10 +73,11 @@ public class QueryExecutionValidator {
                         (pxd.getOffset() == null)
                                 ? 0
                                 : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
-                hops +=
-                        (lower
-                                + ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
-                                - 1);
+                hops = addHops(hops, lower);
+                hops =
+                        addHops(
+                                hops,
+                                ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue() - 1);
             } else if (top instanceof GraphLogicalSingleMatch) {
                 validate(
                         new LogicalPlan(((GraphLogicalSingleMatch) top).getSentence()),
@@ -100,7 +92,7 @@ public class QueryExecutionValidator {
             }
             queue.addAll(top.getInputs());
         }
-        if (hops <= maxIterations) return true;
+        if (hops >= 0 && hops <= maxIterations) return true;
         if (throwsOnFail) {
             throw new FrontendException(
                     Code.LOGICAL_PLAN_BUILD_FAILED,
@@ -110,5 +102,11 @@ public class QueryExecutionValidator {
                             + maxIterations);
         }
         return false;
+    }
+
+    int addHops(int hops, int addOn) {
+        long sum = (long) hops + addOn;
+        if (sum >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        return (int) sum;
     }
 }

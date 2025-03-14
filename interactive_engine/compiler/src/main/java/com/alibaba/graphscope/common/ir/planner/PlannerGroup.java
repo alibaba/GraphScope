@@ -58,6 +58,9 @@ public class PlannerGroup {
             // apply rules of 'FilterPushDown' before the match optimization
             relPlanner.setRoot(before);
             RelNode relOptimized = relPlanner.findBestExp();
+            if (config.getRules().contains(FlatJoinToExpandRule.class.getSimpleName())) {
+                relOptimized = relOptimized.accept(new FlatJoinToExpandRule(config));
+            }
             if (config.getOpt() == PlannerConfig.Opt.CBO) {
                 relOptimized =
                         relOptimized.accept(
@@ -65,7 +68,7 @@ public class PlannerGroup {
             }
             // apply rules of 'FieldTrim' after the match optimization
             if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
-                relOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), relOptimized);
+                relOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), relOptimized, config);
             }
             physicalPlanner.setRoot(relOptimized);
             RelNode physicalOptimized = physicalPlanner.findBestExp();
