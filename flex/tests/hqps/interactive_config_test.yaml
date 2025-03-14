@@ -8,6 +8,7 @@ compute_engine:
   workers:
     - localhost:10000
   thread_num_per_worker: 1
+  memory_per_worker: 4Gi
   store:
     type: cpp-mcsr
   metadata_store:
@@ -49,4 +50,14 @@ service_registry:
   type: etcd
   endpoint: http://localhost:2379
   ttl: 5
+
+launcher_type: k8s # or host. Only works when launching via master. 
+k8s_launcher_config:
+  namespace: interactive
+  instance_prefix: default # The prefix of the instance name. The full instance name will be instance_name_prefix + instance_name.
+  config_file: ~/.kube/config # The config file used to connect to the k8s cluster.
+  image_pull_policy: Always
+  default_replicas: 1
+
+
 

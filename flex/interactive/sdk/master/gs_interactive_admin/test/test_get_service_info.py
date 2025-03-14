@@ -80,12 +80,12 @@ class TestServiceRegistryServer(BaseTestCase):
                     ],
                     "primary": {
                         "endpoint": "example.interactive.com:7687",
-                         "metrics": '{"endpoint": "example.interactive.com:7687", "service_name": "service_name_example", "snapshot_id": "0"}',
+                        "metrics": '{"endpoint": "example.interactive.com:7687", "service_name": "service_name_example", "snapshot_id": "0"}',
                     },
                 }
             }
         }
-        
+
         # insert another service instance
         self.etcd_client.put(service_key2, mock_metrics2)
         time.sleep(1)
