@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"com.alibaba.graphscope.interactive.client"},{"l":"com.alibaba.graphscope.interactive.client.common"},{"l":"com.alibaba.graphscope.interactive.client.impl"},{"l":"com.alibaba.graphscope.interactive.client.utils"}]

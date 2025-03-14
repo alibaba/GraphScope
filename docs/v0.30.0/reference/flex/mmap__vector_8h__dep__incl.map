@@ -1,9 +1,0 @@
-<map id="/home/runner/work/GraphScope/GraphScope/flex/utils/mmap_vector.h" name="/home/runner/work/GraphScope/GraphScope/flex/utils/mmap_vector.h">
-<area shape="rect" id="node1" title=" " alt="" coords="272,5,499,61"/>
-<area shape="rect" id="node2" href="$abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="264,109,507,180"/>
-<area shape="rect" id="node3" href="$abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="5,228,248,299"/>
-<area shape="rect" id="node4" href="$csv__fragment__loader_8h.html" title=" " alt="" coords="272,228,499,299"/>
-<area shape="rect" id="node6" href="$odps__fragment__loader_8h.html" title=" " alt="" coords="523,228,749,299"/>
-<area shape="rect" id="node5" href="$csv__fragment__loader_8cc.html" title=" " alt="" coords="272,347,499,417"/>
-<area shape="rect" id="node7" href="$odps__fragment__loader_8cc.html" title=" " alt="" coords="523,347,749,417"/>
-</map>

@@ -1,8 +1,0 @@
-<map id="gs::ReadTransaction::vertex_iterator" name="gs::ReadTransaction::vertex_iterator">
-<area shape="rect" id="node1" title=" " alt="" coords="127,407,279,448"/>
-<area shape="rect" id="node2" href="$classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="96,317,311,344"/>
-<area shape="rect" id="node3" href="$classgs_1_1Schema.html" title=" " alt="" coords="155,228,252,255"/>
-<area shape="rect" id="node4" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="133,109,273,151"/>
-<area shape="rect" id="node5" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="5,5,193,47"/>
-<area shape="rect" id="node6" href="$structgs_1_1GHash.html" title=" " alt="" coords="217,13,400,39"/>
-</map>
