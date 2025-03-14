@@ -138,6 +138,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                     if (stats != null && stats.getVertexCount() != 0) {
                         this.currentState =
                                 new IrMetaStats(
+                                        this.currentState.getGraphId(),
                                         this.currentState.getSnapshotId(),
                                         this.currentState.getSchema(),
                                         this.currentState.getStoredProcedures(),
