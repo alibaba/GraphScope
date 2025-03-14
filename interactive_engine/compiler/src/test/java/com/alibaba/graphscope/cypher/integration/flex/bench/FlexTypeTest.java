@@ -37,6 +37,8 @@ import java.util.function.Supplier;
 public class FlexTypeTest {
     private static final Logger logger = LoggerFactory.getLogger(FlexTypeTest.class);
     private static Session session;
+    private static final double DOUBLE_DELTA = 1e-15;
+    private static final float FLOAT_DELTA = 1e-6f;
 
     /**
      * start compiler before the test:
@@ -160,8 +162,16 @@ public class FlexTypeTest {
                 if (upperCase.endsWith("L") || upperCase.endsWith("D") || upperCase.endsWith("F")) {
                     expectedValue = expectedValue.substring(0, expectedValue.length() - 1);
                 }
-                String actualValue = getActualValue(actual, unsigned, int32);
-                Assert.assertEquals(expectedValue, actualValue);
+                if (upperCase.endsWith("F")) {
+                    Assert.assertEquals(
+                            Float.parseFloat(expectedValue), actual.asFloat(), FLOAT_DELTA);
+                } else if (upperCase.endsWith("D")) {
+                    Assert.assertEquals(
+                            Double.parseDouble(expectedValue), actual.asDouble(), DOUBLE_DELTA);
+                } else {
+                    String actualValue = getActualValue(actual, unsigned, int32);
+                    Assert.assertEquals(expectedValue, actualValue);
+                }
             }
         }
     }
