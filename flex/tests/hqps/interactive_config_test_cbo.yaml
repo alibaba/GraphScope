@@ -4,7 +4,7 @@ compute_engine:
   type: hiactor
   workers:
     - localhost:10000
-  thread_num_per_worker: 1
+  thread_num_per_worker: 4
   store:
     type: cpp-mcsr
 compiler:
