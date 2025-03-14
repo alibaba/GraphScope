@@ -511,7 +511,6 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
     } else {
       // v1/service/ready or v1/service/status
       if (path.find("ready") != seastar::sstring::npos) {
-        LOG(INFO) << "GET with action: ready";
         return admin_actor_refs_[dst_executor]
             .service_ready(query_param{std::move(req->content)})
             .then_wrapped(
@@ -521,7 +520,6 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
                                                   std::move(fut));
                 });
       } else {
-        LOG(INFO) << "GET with action: status";
         return admin_actor_refs_[dst_executor]
             .service_status(query_param{std::move(req->content)})
             .then_wrapped(
