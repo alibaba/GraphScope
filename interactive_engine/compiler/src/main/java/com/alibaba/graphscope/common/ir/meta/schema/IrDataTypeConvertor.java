@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,6 +45,15 @@ import java.util.Objects;
  */
 public interface IrDataTypeConvertor<T> {
     Logger logger = LoggerFactory.getLogger(IrDataTypeConvertor.class);
+
+    // support unsigned type as decimal type with fixed precision and scale
+    int UINT32_PRECISION = 10;
+    int UINT32_SCALE = 0;
+    int UINT64_PRECISION = 20;
+    int UINT64_SCALE = 0;
+
+    BigDecimal UINT32_MAX = new BigDecimal("4294967295");
+    BigDecimal UINT64_MAX = new BigDecimal("18446744073709551615");
 
     RelDataType convert(T dataFrom);
 
@@ -220,9 +230,15 @@ public interface IrDataTypeConvertor<T> {
                     case "DT_ANY":
                         // any type
                         return typeFactory.createSqlType(SqlTypeName.ANY);
+                    case "DT_UNSIGNED_INT32":
+                        return typeFactory.createSqlType(
+                                SqlTypeName.DECIMAL, UINT32_PRECISION, UINT32_SCALE);
                     case "DT_SIGNED_INT32":
                         // 4-bytes signed integer
                         return typeFactory.createSqlType(SqlTypeName.INTEGER);
+                    case "DT_UNSIGNED_INT64":
+                        return typeFactory.createSqlType(
+                                SqlTypeName.DECIMAL, UINT64_PRECISION, UINT64_SCALE);
                     case "DT_SIGNED_INT64":
                         // 8-bytes signed integer
                         return typeFactory.createSqlType(SqlTypeName.BIGINT);
@@ -435,12 +451,20 @@ public interface IrDataTypeConvertor<T> {
                                     ImmutableMap.of("key_type", keyType, "value_type", valueType));
                     break;
                 case DECIMAL:
-                    yamlDesc =
-                            ImmutableMap.of(
-                                    "decimal",
-                                    ImmutableMap.of(
-                                            "precision", from.getPrecision(),
-                                            "scale", from.getScale()));
+                    if (from.getPrecision() == UINT32_PRECISION
+                            && from.getScale() == UINT32_SCALE) {
+                        yamlDesc = ImmutableMap.of("primitive_type", "DT_UNSIGNED_INT32");
+                    } else if (from.getPrecision() == UINT64_PRECISION
+                            && from.getScale() == UINT64_SCALE) {
+                        yamlDesc = ImmutableMap.of("primitive_type", "DT_UNSIGNED_INT64");
+                    } else {
+                        yamlDesc =
+                                ImmutableMap.of(
+                                        "decimal",
+                                        ImmutableMap.of(
+                                                "precision", from.getPrecision(),
+                                                "scale", from.getScale()));
+                    }
                     break;
                 default:
                     if (throwsOnFail) {
