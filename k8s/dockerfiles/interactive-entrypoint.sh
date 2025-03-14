@@ -50,8 +50,10 @@ function prepare_workspace() {
         mkdir -p ${workspace}
         mkdir -p ${workspace}/conf/
     else 
-        echo "Workspace ${workspace} already exists"
-        return 0
+        if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
+            echo "Workspace ${workspace} already exists"
+            return 0
+        fi
     fi
     # prepare interactive_config.yaml
     engine_config_path="${workspace}/conf/interactive_config.yaml"
