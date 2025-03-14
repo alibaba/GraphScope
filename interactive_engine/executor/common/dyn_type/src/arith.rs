@@ -758,7 +758,7 @@ impl BitOperand for Primitives {
 // test arithmetic operations
 mod tests {
     use super::*;
-    use std::panic;
+    use std::{panic, u32};
 
     #[test]
     fn test_simple() {
@@ -886,12 +886,9 @@ mod tests {
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
 
-        // i32 - u32 or u32 - i32, -> u32
+        // u32 - i32, -> u32
         let x = Primitives::Integer(-10);
         let y = Primitives::UInteger(20);
-        // -10 - 20
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
         // 20 - (-10)
         if let Primitives::UInteger(result) = y - x {
             assert_eq!(result, 30);
@@ -899,13 +896,9 @@ mod tests {
             panic!("Expected UInteger result");
         }
 
-        // i32 - u64 or u64 - i32, -> u64
+        // u64 - i32, -> u64
         let x = Primitives::Integer(-20);
         let y = Primitives::ULong(30);
-
-        // -20 - 30
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
         // 30 - (-20)
         if let Primitives::ULong(result) = y - x {
             assert_eq!(result, 50);
@@ -930,18 +923,33 @@ mod tests {
             panic!("Expected Long result");
         }
 
-        // i64 - u64 or u64 - i64, -> u64
+        // u64 - i64, -> u64
         let x = Primitives::Long(-20);
         let y = Primitives::ULong(30);
-        // -20 - 30
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
         // 30 - (-20)
         if let Primitives::ULong(result) = y - x {
             assert_eq!(result, 50);
         } else {
             panic!("Expected Long result");
         }
+
+        // i32 - u32 -> u32, when i32 is negative
+        let x = Primitives::Integer(-1);
+        let y = Primitives::UInteger(0);
+        // -1_i32 - 0_u32, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::UInteger(u32::MAX));
+
+        // i32 - u64 -> u64, when i32 is negative
+        let x = Primitives::Integer(-1);
+        let y = Primitives::ULong(0);
+        // -1_i32 - 0_u64, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::ULong(u64::MAX));
+
+        // i64 - u64 -> u64, when i64 is negative
+        let x = Primitives::Long(-1);
+        let y = Primitives::ULong(0);
+        // -1_i64 - 0_u64, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::ULong(u64::MAX));
     }
 
     #[test]
@@ -970,18 +978,6 @@ mod tests {
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
 
-        // i32 - u32 -> u32 overflow
-        let x = Primitives::Integer(-10);
-        let y = Primitives::UInteger(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
-
-        // i32 - u64 -> u64 overflow
-        let x = Primitives::Integer(-10);
-        let y = Primitives::ULong(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
-
         // i64 - u32 -> i64 not overflow
         let x = Primitives::Long(-10);
         let y = Primitives::UInteger(20);
@@ -997,12 +993,6 @@ mod tests {
         let y = Primitives::UInteger(20);
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
-
-        // i64 - u64 -> u64 overflow
-        let x = Primitives::Long(-10);
-        let y = Primitives::ULong(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
     }
 
     #[test]
@@ -1010,8 +1000,8 @@ mod tests {
         // divide_uint32_int32_overflow 4294967295/-1
         let x = Primitives::UInteger(u32::MAX);
         let y = Primitives::Integer(-1);
-        let res = panic::catch_unwind(|| x / y);
-        assert!(res.is_err());
+        // divide u32 by a negative number, won't panic, but the result is not correct
+        assert_eq!(x / y, Primitives::UInteger(1));
 
         // divide_int32_int32_overflow -2147483648/-1
         let x = Primitives::Integer(i32::MIN);
