@@ -1,0 +1,63 @@
+Analysis of Core API Functions Used in the Code
+1. GraphLoader.loadEdgeList
+Description: Loads a graph from an edge list file. Each line in the file should contain two vertex IDs representing an edge.
+Parameters:
+
+sc: SparkContext – The Spark context to use for loading the data.
+path: String – The path to the edge list file.
+Example Usage:
+
+val graph = GraphLoader.loadEdgeList(sc, "")
+This function reads the edges of a graph from a file and creates a graph from these edges.
+
+2. graph.connectedComponents
+Description: Computes the connected components of the graph. Each connected component is labeled with the ID of its lowest-numbered vertex.
+Parameters: None (it is called on a Graph object).
+
+Example Usage:
+
+val cc = graph.connectedComponents().vertices
+This function finds all connected components in the graph and returns a VertexRDD containing pairs of vertex IDs and component IDs.
+
+3. RDD.join
+Description: Performs an inner join of two RDDs based on their keys.
+Parameters:
+
+other: RDD[(K, V)] – The RDD to join with.
+partitioner: Partitioner (optional) – A partitioner to use for the resulting RDD.
+Example Usage:
+
+val users = sc.textFile("data/test/users.txt").map { line =>
+  val fields = line.split(",")
+  (fields(0).toLong, fields(1))
+}
+val ccByUsername = users.join(cc).map {
+  case (id, (username, cc)) => (username, cc)
+}
+The join function is used here to join the connected components RDD with the usernames RDD on their vertex IDs.
+
+Detailed Information on the API Functions
+1. GraphLoader.loadEdgeList
+Function: GraphLoader.loadEdgeList(sc: SparkContext, path: String): Graph[Int, Int]
+
+sc: The Spark context required to read the file.
+path: The file path of the edge list.
+Returns: A Graph where both vertices and edges have integer attributes.
+Usage:
+
+Used to load a graph from an edge list file.
+2. connectedComponents
+Function: def connectedComponents(): Graph[VertexId, ED]
+
+Returns: A Graph where each vertex attribute is the ID of the component it belongs to.
+Usage:
+
+Used to find connected components in a graph.
+3. RDD.join
+Function: def join[W](other: RDD[(K, W)]): RDD[(K, (V, W))]
+
+other: Another RDD to join with.
+Returns: An RDD containing all pairs of elements with matching keys in both RDDs.
+Usage:
+
+Joins two RDDs based on their keys.

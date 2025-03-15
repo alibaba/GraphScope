@@ -1,0 +1,117 @@
+Below is a summary of the core APIs in GraphX, including their functions, parameters, and example code.
+
+1. Graph Construction
+Graph.apply
+Description: Creates a graph from RDDs of vertices and edges.
+Parameters:
+vertices: RDD[(VertexId, VD)]
+edges: RDD[Edge[ED]]
+defaultVertexAttr: VD
+Example:
+
+val users: RDD[(VertexId, (String, String))] = sc.parallelize(Seq(
+  (3L, ("rxin", "student")),
+  (7L, ("jgonzal", "postdoc")),
+  (5L, ("franklin", "prof")),
+  (2L, ("istoica", "prof"))
+))
+val relationships: RDD[Edge[String]] = sc.parallelize(Seq(
+  Edge(3L, 7L, "collab"),
+  Edge(5L, 3L, "advisor"),
+  Edge(2L, 5L, "colleague"),
+  Edge(5L, 7L, "pi")
+))
+val defaultUser = ("John Doe", "Missing")
+val graph = Graph(users, relationships, defaultUser)
+2. Basic Graph Operations
+mapVertices
+
+Description: Transforms vertex attributes using a user-defined function.
+Parameters:
+map: (VertexId, VD) => VD2
+Example:
+
+val newGraph = graph.mapVertices((id, attr) => attr._1)
+mapEdges
+
+Description: Transforms edge attributes using a user-defined function.
+Parameters:
+map: Edge[ED] => ED2
+Example:
+
+val newGraph = graph.mapEdges(e => e.attr.toUpperCase)
+subgraph
+
+Description: Constructs a subgraph by filtering vertices and edges.
+Parameters:
+epred: EdgeTriplet[VD, ED] => Boolean
+vpred: (VertexId, VD) => Boolean
+Example:
+
+val validGraph = graph.subgraph(vpred = (id, attr) => attr._2 != "Missing")
+3. Graph Algorithms
+PageRank
+
+Description: Measures the importance of each vertex.
+Parameters:
+tol: Double
+resetProb: Double
+Example:
+
+val ranks = graph.pageRank(0.0001).vertices
+Connected Components
+
+Description: Labels each connected component with the ID of its lowest-numbered vertex.
+Example:
+
+val cc = graph.connectedComponents().vertices
+Triangle Count
+
+Description: Counts the number of triangles passing through each vertex.
+Example:
+
+val triCounts = graph.triangleCount().vertices
+4. Pregel API
+pregel
+Description: Bulk-synchronous parallel messaging abstraction.
+Parameters:
+initialMsg: A
+maxIterations: Int
+activeDirection: EdgeDirection
+vprog: (VertexId, VD, A) => VD
+sendMsg: EdgeTriplet[VD, ED] => Iterator[(VertexId, A)]
+mergeMsg: (A, A) => A
+Example:
+
+val sourceId: VertexId = 42
+val initialGraph = graph.mapVertices((id, _) => if (id == sourceId) 0.0 else Double.PositiveInfinity)
+val sssp = initialGraph.pregel(Double.PositiveInfinity)(
+  (id, dist, newDist) => math.min(dist, newDist),
+  triplet => {
+    if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
+      Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
+    } else {
+      Iterator.empty
+    }
+  },
+  (a, b) => math.min(a, b)
+)
+5. Aggregation Operations
+aggregateMessages
+Description: Aggregates messages sent to vertices.
+Parameters:
+sendMsg: EdgeContext[VD, ED, Msg] => Unit
+mergeMsg: (Msg, Msg) => Msg
+Example:
+
+val olderFollowers: VertexRDD[(Int, Double)] = graph.aggregateMessages[(Int, Double)](
+  triplet => {
+    if (triplet.srcAttr > triplet.dstAttr) {
+      triplet.sendToDst((1, triplet.srcAttr))
+    }
+  },
+  (a, b) => (a._1 + b._1, a._2 + b._2)
+)
+val avgAgeOfOlderFollowers: VertexRDD[Double] = olderFollowers.mapValues {
+  case (count, totalAge) => totalAge / count
+}

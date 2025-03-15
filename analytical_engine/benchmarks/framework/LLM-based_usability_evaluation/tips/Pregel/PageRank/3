@@ -1,0 +1,110 @@
+Here is a detailed explanation of the major API functions used, including their parameters and examples of how they are used:
+
+Major API Functions
+1. Worker::run()
+The run function is the main method to execute the computation.
+
+Parameters:
+
+WorkerParams& params: A structure containing input and output paths, force write option, and native dispatcher flag.
+Example Usage:
+
+WorkerParams param;
+param.input_path = "input_path";
+param.output_path = "output_path";
+param.force_write = true;
+param.native_dispatcher = false;
+
+PRWorker_test worker;
+worker.run(param);
+2. Worker::setCombiner()
+The setCombiner function sets a combiner for message aggregation.
+
+Parameters:
+
+Combiner<MessageT>* cb: Pointer to the combiner object.
+Example Usage:
+
+PRCombiner_test combiner;
+worker.setCombiner(&combiner);
+3. Worker::setAggregator()
+The setAggregator function sets an aggregator for global aggregation.
+
+Parameters:
+
+AggregatorT* ag: Pointer to the aggregator object.
+Example Usage:
+
+PRAgg_test agg;
+worker.setAggregator(&agg);
+4. Vertex::send_message()
+The send_message function sends a message to another vertex.
+
+Parameters:
+
+const KeyT& id: The ID of the destination vertex.
+const MessageT& msg: The message to be sent.
+Example Usage:
+
+for (vector<VertexID>::iterator it = value().edges.begin(); it != value().edges.end(); it++) {
+    send_message(*it, msg);
+}
+5. Vertex::vote_to_halt()
+The vote_to_halt function halts the vertex's activity.
+
+Example Usage:
+
+vote_to_halt();
+6. Aggregator::init()
+The init function initializes the aggregator.
+
+Example Usage:
+
+virtual void init() {
+    sum = 0;
+}
+7. Aggregator::stepPartial()
+The stepPartial function performs partial aggregation.
+
+Parameters:
+
+PRVertex_test* v: Pointer to the vertex.
+Example Usage:
+
+virtual void stepPartial(PRVertex_test* v) {
+    if (v->value().edges.size() == 0) sum += v->value().pr;
+}
+8. Aggregator::stepFinal()
+The stepFinal function performs final aggregation.
+
+Parameters:
+
+double* part: Pointer to the partial aggregate.
+Example Usage:
+
+virtual void stepFinal(double* part) {
+    sum += *part;
+}
+9. Aggregator::finishPartial()
+The finishPartial function finalizes and returns the partial result.
+
+Returns:
+
+double*: Pointer to the partial result.
+Example Usage:
+
+virtual double* finishPartial() {
+    return &sum;
+}
+10. Aggregator::finishFinal()
+The finishFinal function finalizes and returns the final result.
+
+Returns:
+
+double*: Pointer to the final result.
+Example Usage:
+
+virtual double* finishFinal() {
+    return &sum;
+}
+

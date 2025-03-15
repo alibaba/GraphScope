@@ -1,0 +1,281 @@
+Major API Functions and Their Usage
+Graph Construction and Loading:
+
+graph_type::add_vertex()
+graph_type::add_edge()
+graph.load()
+Engine Initialization and Execution:
+
+test::omni_engine
+engine.signal_vset()
+engine.signal_all()
+engine.start()
+engine.elapsed_seconds()
+Vertex Program Methods:
+
+ivertex_program::collect_edges()
+ivertex_program::collect()
+ivertex_program::process()
+ivertex_program::distribute_edges()
+ivertex_program::distribute()
+Serialization:
+
+test::oarchive
+test::iarchive
+Detailed Explanation with Examples
+1. Graph Construction and Loading
+add_vertex:
+
+Description: Adds a vertex to the graph.
+Parameters:
+vertex_id_type gvid: Global vertex ID.
+vertex_data_type data: Data associated with the vertex.
+Example:
+
+graph.add_vertex(vid, node);
+add_edge:
+
+Description: Adds an edge to the graph.
+Parameters:
+vertex_id_type source: Source vertex ID.
+vertex_id_type target: Target vertex ID.
+edge_data_type data: Data associated with the edge.
+Example:
+
+graph.add_edge(vid, other_vid, edge_val);
+load:
+
+Description: Loads a graph from a file using a specified parser.
+Parameters:
+std::string graph_dir: Path to the graph file.
+std::function<bool(graph_type&, const std::string&, const std::string&)> parser: Line parser function.
+Example:
+
+graph.load(graph_dir, line_parser);
+2. Engine Initialization and Execution
+omni_engine:
+
+Description: A generic engine for running vertex programs.
+Parameters:
+distributed_control& dc: Distributed control object.
+graph_type& graph: Graph to run the engine on.
+std::string exec_type: Execution type (e.g., "asynchronous").
+command_line_options& clopts: Command line options.
+Example:
+
+test::omni_engine<DjikstraAlgorithm> engine(dc, graph, "asynchronous", clopts);
+signal_vset:
+
+Description: Signals a set of vertices to start the computation.
+Parameters:
+vertex_set vset: Set of vertices to signal.
+Example:
+
+engine.signal_vset(start_set);
+signal_all:
+
+Description: Signals all vertices to start the computation.
+Parameters: None.
+Example:
+
+engine2.signal_all();
+start:
+
+Description: Starts the engine and runs the computation.
+Parameters: None.
+Example:
+
+engine.start();
+elapsed_seconds:
+
+Description: Returns the elapsed time since the engine started.
+Parameters: None.
+Example:
+
+float runtime = engine.elapsed_seconds();
+3. Vertex Program Methods
+collect_edges:
+
+Description: Specifies which edges to collect information from.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+Returns: Edge direction type (e.g., IN_EDGES, OUT_EDGES).
+Example:
+
+edge_dir_type collect_edges(icontext_type& context, const vertex_type& vertex) const {
+  return test::IN_EDGES;
+}
+collect:
+
+Description: collects information from the specified edges.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+edge_type& edge: The edge to collect from.
+Returns: collected information.
+Example:
+
+collect_type collect(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // Implement collect logic
+}
+process:
+
+Description: Applies the collected information to the vertex.
+Parameters:
+icontext_type& context: Context of the computation.
+vertex_type& vertex: The current vertex.
+const collect_type& total: The total collected information.
+Example:
+
+void process(icontext_type& context, vertex_type& vertex, const collect_type& total) {
+  // Implement process logic
+}
+distribute_edges:
+
+Description: Specifies which edges to distribute information to.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+Returns: Edge direction type (e.g., IN_EDGES, OUT_EDGES).
+Example:
+
+edge_dir_type distribute_edges(icontext_type& context, const vertex_type& vertex) const {
+  return test::OUT_EDGES;
+}
+distribute:
+
+Description: distributes information to the specified edges.
+Parameters:
+icontext_type& context: Context of the computation.
+const vertex_type& vertex: The current vertex.
+edge_type& edge: The edge to distribute to.
+Example:
+
+void distribute(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
+  // Implement distribute logic
+}
+4. Serialization
+oarchive and iarchive:
+Description: Serialization and deserialization of objects.
+Example for saving:
+
+void save(test::oarchive& oarc) const {
+  oarc << id << cost << launched << done;
+}
+Example for loading:
+
+void load(test::iarchive& iarc) {
+  iarc >> id >> cost >> launched >> done;
+}
+
+Below is the pseudocode:
+
+DjikstraNode Class:
+
+id = 0
+cost = 1e100
+launched = false
+done = false
+save(oarc)
+oarc << id << cost << launched << done
+load(iarc)
+iarc >> id >> cost >> launched >> done
+PrestigeAnalysisNode Class:
+
+djikstra_pieces = {}
+local_value = 0.0
+total = 0.0
+count = 0
+edge_count = -1
+save(oarc)
+oarc << djikstra_pieces << local_value << total << count << edge_count
+load(iarc)
+iarc >> djikstra_pieces >> local_value >> total >> count >> edge_count
+collect Class:
+
+id = 0
+cost = 0.0
+edge_count = 1
+operator+=(other)
+Handle ID and cost comparison
+save(oarc)
+oarc << id << cost << edge_count
+load(iarc)
+iarc >> id >> cost >> edge_count
+collectMultiTree Class:
+
+content = {}
+edge_count = 0
+operator+=(other)
+save(oarc)
+oarc << content << edge_count
+load(iarc)
+iarc >> content >> edge_count
+Line Parser:
+
+Parse textline for vertex ID and edges
+Add vertex and edges to graph
+ClearBooleans Vertex Program:
+
+collect_edges(context, vertex): Return NO_EDGES
+collect(context, vertex, edge): Return empty collectMultiTree
+process(context, vertex, total)
+Reset launched and done to false
+Set cost to 0.0 for each piece in djikstra_pieces
+distribute_edges(context, vertex): Return NO_EDGES
+distribute(context, vertex, edge): No operation
+DjikstraAlgorithm Vertex Program:
+
+collect_edges(context, vertex): Return IN_EDGES
+collect(context, vertex, edge)
+Initialize collect and collectMultiTree
+Update collect object if conditions are met
+Return collectMultiTree
+process(context, vertex, total)
+Update djikstra_pieces based on total
+distribute_edges(context, vertex)
+Determine if distributeing is needed based on djikstra_pieces
+distribute(context, vertex, edge)
+Signal target vertex if conditions are met
+Betweenesscollect Class:
+
+counts = {}
+edge_count = {}
+save(oarc)
+oarc << counts << edge_count
+load(iarc)
+iarc >> counts >> edge_count
+operator+=(collect)
+Combine counts and edge counts
+BetweenessAlgorithm Vertex Program:
+
+collect_edges(context, vertex): Return IN_EDGES
+collect(context, vertex, edge)
+Initialize Betweenesscollect
+Update collect if conditions are met
+Return Betweenesscollect
+process(context, vertex, total)
+Update djikstra_pieces based on total
+distribute_edges(context, vertex)
+Determine if distributeing is needed based on djikstra_pieces
+distribute(context, vertex, edge)
+Signal target vertex if conditions are met
+Main Function:
+
+Initialize MPI and distributed control
+Parse command line options
+Load graph using line_parser
+Print number of vertices and edges
+Initialize and start DjikstraAlgorithm engine
+Signal vertices and start engine
+Print runtime
+Initialize and start ClearBooleans engine
+Signal all vertices and start engine
+Print runtime
+Initialize and start BetweenessAlgorithm engine
+Signal all vertices and start engine
+Print runtime
+Save results if saveprefix is set
+Finalize MPI
+Return EXIT_SUCCESS

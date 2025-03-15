@@ -1,0 +1,296 @@
+
+Here is a summary of the core API functions found in the provided code from the project "test.h"
+1. processEdgesDense:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+2. processEdgesDenseForward:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+3. processEdgesSparse:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+degrees: Degrees of the vertices.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+4. processEdgesSparse_no_filter:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+offsets: Offsets for the edges.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+5. processEdgesData:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+6. processEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+7. packEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+8. processEdgesFilter:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+9. processNodes (two versions):
+Parameters:
+V: The vertex subset.
+f: The function to apply to each vertex.
+
+10. vertexFilter:
+Parameters:
+V: The vertex subset.
+filter: The filtering function.
+
+11. vertexFilter2 (two versions):
+Parameters:
+V: The vertex subset or NodeGroupData.
+filter: The filtering function.
+
+12. Compute (two versions):
+Parameters:
+graph: The graph.
+commandLine: The command line parameters.
+
+
+Key API Functions from test
+processEdges Function
+
+template <class vertex, class VS, class F>
+NodeGroup processEdges(graph<vertex>& GA, VS& vs, F f, intT threshold = -1, const flags& fl=0);
+Parameters:
+
+graph<vertex>& GA: The input graph.
+VS& vs: A vertex subset representing the current frontier.
+F f: A functor specifying the update operation.
+intT threshold: A threshold to switch between dense and sparse edge traversal (optional).
+const flags& fl: Flags to control the behavior of processEdges.
+Usage Example:
+
+// Assuming GA is a graph, Frontier is a vertex subset, and BC_F is a functor
+NodeGroup output = processEdges(GA, Frontier, BC_F(NumPaths, Visited));
+processNodes Function
+
+template <class VS, class F>
+void processNodes(VS& V, F f);
+Parameters:
+
+VS& V: A vertex subset.
+F f: A functor specifying the operation to apply to each vertex.
+Usage Example:
+
+// Assuming output is a vertex subset and BC_Vertex_F is a functor
+processNodes(output, BC_Vertex_F(Visited));
+NodeGroup Class
+
+class NodeGroup {
+  public:
+    NodeGroup(long n, uintE* indices);
+    NodeGroup(long n, long m, uintE* indices);
+    NodeGroup(long n, uintE singleVertex);
+    bool isEmpty();
+    long numRows();
+    long numNonzeros();
+    void del();
+    // other member functions...
+};
+Constructor Parameters:
+
+long n: Number of vertices.
+uintE* indices: Array of vertex indices.
+long m: Number of nonzero vertices.
+uintE singleVertex: A single vertex.
+Member Functions:
+
+bool isEmpty(): Checks if the subset is empty.
+long numRows(): Returns the total number of vertices.
+long numNonzeros(): Returns the number of nonzero vertices.
+void del(): Deletes the subset.
+Usage Example:
+
+// Initializing a vertex subset with a single starting vertex
+NodeGroup Frontier(n, start);Key API Functions from Ligra
+processEdges Function
+
+template <class vertex, class VS, class F>
+NodeGroup processEdges(graph<vertex>& GA, VS& vs, F f, intT threshold = -1, const flags& fl=0);
+Parameters:
+
+graph<vertex>& GA: The input graph.
+VS& vs: A vertex subset representing the current frontier.
+F f: A functor specifying the update operation.
+intT threshold: A threshold to switch between dense and sparse edge traversal (optional).
+const flags& fl: Flags to control the behavior of processEdges.
+Usage Example:
+
+// Assuming GA is a graph, Frontier is a vertex subset, and BC_F is a functor
+NodeGroup output = processEdges(GA, Frontier, BC_F(NumPaths, Visited));
+processNodes Function
+
+template <class VS, class F>
+void processNodes(VS& V, F f);
+Parameters:
+
+VS& V: A vertex subset.
+F f: A functor specifying the operation to apply to each vertex.
+Usage Example:
+
+// Assuming output is a vertex subset and BC_Vertex_F is a functor
+processNodes(output, BC_Vertex_F(Visited));
+NodeGroup Class
+
+class NodeGroup {
+  public:
+    NodeGroup(long n, uintE* indices);
+    NodeGroup(long n, long m, uintE* indices);
+    NodeGroup(long n, uintE singleVertex);
+    bool isEmpty();
+    long numRows();
+    long numNonzeros();
+    void del();
+    // other member functions...
+};
+Constructor Parameters:
+
+long n: Number of vertices.
+uintE* indices: Array of vertex indices.
+long m: Number of nonzero vertices.
+uintE singleVertex: A single vertex.
+Member Functions:
+
+bool isEmpty(): Checks if the subset is empty.
+long numRows(): Returns the total number of vertices.
+long numNonzeros(): Returns the number of nonzero vertices.
+void del(): Deletes the subset.
+Usage Example:
+
+// Initializing a vertex subset with a single starting vertex
+NodeGroup Frontier(n, start);
+
+Below is the pseudocode:
+1: function BC_F_Init(NumPaths, Visited):
+
+Initialize NumPaths array to 0.0
+Set NumPaths[start] = 1.0
+Initialize Visited array to false
+Set Visited[start] = true
+2: function BC_F_Update(s, d, NumPaths):
+
+oldV = NumPaths[d]
+NumPaths[d] += NumPaths[s]
+return oldV == 0.0
+3: function BC_F_UpdateAtomic(s, d, NumPaths):
+
+repeat:
+oldV = NumPaths[d]
+newV = oldV + NumPaths[s]
+until CAS(&NumPaths[d], oldV, newV)
+return oldV == 0.0
+4: function BC_F_Cond(d, Visited):
+
+return Visited[d] == false
+5: function BC_processNodes(Visited):
+
+Set all Visited[i] = true for vertices in the subset
+6: function BC_Back_F_Init(Dependencies, Visited):
+
+Initialize Dependencies array to 0.0
+Initialize Visited array to false
+7: function BC_Back_F_Update(s, d, Dependencies):
+
+oldV = Dependencies[d]
+Dependencies[d] += Dependencies[s]
+return oldV == 0.0
+8: function BC_Back_F_UpdateAtomic(s, d, Dependencies):
+
+repeat:
+oldV = Dependencies[d]
+newV = oldV + Dependencies[s]
+until CAS(&Dependencies[d], oldV, newV)
+return oldV == 0.0
+9: function BC_Back_F_Cond(d, Visited):
+
+return Visited[d] == false
+10: function BC_Back_processNodes(Visited, Dependencies, inverseNumPaths):
+
+Set all Visited[i] = true for vertices in the subset
+Dependencies[i] += inverseNumPaths[i] for vertices in the subset
+11: function Compute_BC(GA, start):
+
+n = number of vertices in GA
+
+Initialize NumPaths, Visited arrays
+
+Call BC_F_Init(NumPaths, Visited)
+
+Initialize Frontier with start vertex
+
+Initialize Levels vector and add Frontier
+
+repeat until Frontier is empty:
+
+Increment round
+Call processEdges(GA, Frontier, BC_F(NumPaths, Visited))
+Call processNodes(Frontier, BC_processNodes(Visited))
+Add output to Levels and set Frontier to output
+Initialize Dependencies, inverseNumPaths arrays
+
+Call BC_Back_F_Init(Dependencies, Visited)
+
+Set inverseNumPaths[i] = 1 / NumPaths[i]
+
+Delete the last level in Levels
+
+Set Frontier to the second last level
+
+Call BC_Back_processNodes(Visited, Dependencies, inverseNumPaths)
+
+Transpose the graph GA
+
+repeat for each level in Levels from second last to first:
+
+Call processEdges(GA, Frontier, BC_Back_F(Dependencies, Visited), no_output)
+Delete current Frontier
+Set Frontier to the previous level
+Call BC_Back_processNodes(Visited, Dependencies, inverseNumPaths)
+Delete the last Frontier
+
+Update Dependencies scores
+
+Set Dependencies[i] = (Dependencies[i] - inverseNumPaths[i]) / inverseNumPaths[i]
+
+Free memory for NumPaths, Visited, Dependencies, inverseNumPaths
+
+12: Call Compute_BC(GA, start)

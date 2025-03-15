@@ -1,0 +1,26 @@
+
+object TriangleCountingExample {
+  def main(args: Array[String]): Unit = {
+    // Creates a SparkSession.
+    val spark = SparkSession
+      .builder()
+      .appName(s"${this.getClass.getSimpleName}")
+      .getOrCreate()
+    val sc = spark.sparkContext
+    // Find the triangle count for each vertex
+    val triCounts = graph.triangleCount().vertices
+    // Join the triangle counts with the usernames
+    val users = sc.textFile("").map { line =>
+      val fields = line.split(",")
+      (fields(0).toLong, fields(1))
+    }
+    val triCountByUsername = users.join(triCounts).map { case (id, (username, tc)) =>
+      (username, tc)
+    }
+    // Print the result
+    println(triCountByUsername.collect().mkString("\n"))
+    // $example off$
+    spark.stop()
+  }
+}
+// scalastyle:on println

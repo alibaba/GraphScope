@@ -1,0 +1,85 @@
+
+Here is a summary of the core API functions found in the provided code from the project "test.h"
+1. processEdgesDense:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+2. processEdgesDenseForward:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+3. processEdgesSparse:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+degrees: Degrees of the vertices.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+4. processEdgesSparse_no_filter:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+offsets: Offsets for the edges.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+5. processEdgesData:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+6. processEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+7. packEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+8. processEdgesFilter:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+9. processNodes (two versions):
+Parameters:
+V: The vertex subset.
+f: The function to apply to each vertex.
+
+10. vertexFilter:
+Parameters:
+V: The vertex subset.
+filter: The filtering function.
+
+11. vertexFilter2 (two versions):
+Parameters:
+V: The vertex subset or NodeGroupData.
+filter: The filtering function.
+
+12. Compute (two versions):
+Parameters:
+graph: The graph.
+commandLine: The command line parameters.

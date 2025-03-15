@@ -1,0 +1,146 @@
+1. void send_message(const KeyT& id, const MessageT& msg)
+Description: This function is used to send a message to a vertex identified by id.
+
+Parameters:
+
+id: The ID of the target vertex.
+msg: The message to be sent.
+Example Usage:
+
+send_message(neighbor_id, some_message);
+In the Provided Code:
+
+bcast_to_in_nbs(VertexID msg) and bcast_to_out_nbs(VertexID msg) use send_message to broadcast messages to all incoming and outgoing neighbors, respectively.
+2. void vote_to_halt()
+Description: This function is used to indicate that the current vertex has finished its computation and can be halted until it receives new messages.
+
+Example Usage:
+
+vote_to_halt();
+In the Provided Code:
+
+Used at the end of the compute function to halt the vertex after processing messages.
+3. inline ValueT& value()
+Description: This function returns a reference to the value stored in the vertex.
+
+Example Usage:
+
+OWCTYValue_scc &val = value();
+In the Provided Code:
+
+Used to access and modify the vertex's value in compute.
+4. inline int step_num()
+Description: Returns the current superstep number.
+
+Example Usage:
+
+if(step_num() == 1) {
+    // do something in the first step
+}
+In the Provided Code:
+
+Used in the compute function to check the current superstep and execute specific logic based on it.
+5. virtual VertexT* toVertex(char* line)
+Description: This pure virtual function converts a line from the input file into a vertex.
+
+Parameters:
+
+line: A line of input representing a vertex.
+Example Usage:
+
+
+virtual OWCTYVertex_scc* toVertex(char* line) {
+    // Implementation to convert line to OWCTYVertex_scc object
+}
+In the Provided Code:
+
+Implemented in the OWCTYWorker_scc class to parse the input file and create vertex objects.
+6. virtual void toline(VertexT* v, BufferedWriter& writer)
+Description: This pure virtual function converts a vertex into a line for the output file.
+
+Parameters:
+
+v: The vertex to be converted.
+writer: The writer object used to write the output.
+Example Usage:
+
+virtual void toline(OWCTYVertex_scc* v, BufferedWriter & writer) {
+    // Implementation to convert OWCTYVertex_scc object to line and write
+}
+In the Provided Code:
+
+Implemented in the OWCTYWorker_scc class to serialize vertex objects into the output format.
+
+Below is the pseudocode:
+
+1: Function bcast_to_in_nbs(v, msg)
+    For each neighbor in v.in_edges:
+        Send msg to neighbor
+
+2: Function bcast_to_out_nbs(v, msg)
+    For each neighbor in v.out_edges:
+        Send msg to neighbor
+
+3: Function compute(v, messages)
+    If step_num() == 1:
+        If v.id != -1:
+            If v.sccTag == 0:
+                If v.in_edges is empty:
+                    Call bcast_to_out_nbs(v, v.id)
+                    Clear v.out_edges
+                    Set v.color = -1
+                    Set v.sccTag = 1
+                Else if v.out_edges is empty:
+                    Call bcast_to_in_nbs(v, -v.id-1)
+                    Clear v.in_edges
+                    Set v.color = -1
+                    Set v.sccTag = 1
+    Else:
+        If v.sccTag == 0:
+            Initialize del_in and del_out as empty sets
+            For each msg in messages:
+                If msg < 0:
+                    Add -msg-1 to del_out
+                Else:
+                    Add msg to del_in
+            Update v.in_edges by removing vertices in del_in
+            Update v.out_edges by removing vertices in del_out
+            If v.in_edges is empty:
+                Call bcast_to_out_nbs(v, v.id)
+                Clear v.out_edges
+                Set v.color = -1
+                Set v.sccTag = 1
+            Else if v.out_edges is empty:
+                Call bcast_to_in_nbs(v, -v.id-1)
+                Clear v.in_edges
+                Set v.color = -1
+                Set v.sccTag = 1
+    Call vote_to_halt()
+
+4: Function toVertex(line)
+    Split line by tab
+    Initialize new OWCTYVertex_scc object v
+    Set v.id from first token
+    Set v.value().color from second token
+    If v.id == -1:
+        Return v
+    Set v.value().sccTag from third token
+    Set num to fourth token
+    Read num in-edges and add to v.value().in_edges
+    Set num to next token
+    Read num out-edges and add to v.value().out_edges
+    Return v
+
+5: Function toline(v, writer)
+    If v.id == -1:
+        Write -1 and v.value().color to writer
+    Else:
+        Write v.id, v.value().color, v.value().sccTag, and in_edges.size to writer
+        For each in-edge, write to writer
+        Write out_edges.size to writer
+        For each out-edge, write to writer
+
+6: Function pregel_owcty(in_path, out_path)
+    Initialize param with input_path, output_path, force_write = true, and native_dispatcher = false
+    Initialize worker as OWCTYWorker_scc
+    Call worker.run(param)

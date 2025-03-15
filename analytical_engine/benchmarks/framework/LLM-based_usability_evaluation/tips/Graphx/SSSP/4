@@ -1,0 +1,56 @@
+import org.apache.spark.graphx._
+import org.apache.spark.graphx.util.GraphGenerators
+import org.apache.spark.sql.SparkSession
+
+object SSSPExample {
+
+  def main(args: Array[String]): Unit = {
+    // Initialize SparkSession and SparkContext
+    val spark = SparkSession.builder().appName("SSSPExample").getOrCreate()
+    val sc = spark.sparkContext
+
+    // Generate a graph with edge attributes as distances
+    val graph = GraphGenerators.logNormalGraph(sc, numVertices = 100).mapEdges(e => e.attr.toDouble)
+
+    // Define the source vertex ID
+    val sourceId: VertexId = 42
+
+    // Initialize the graph with the source vertex having distance 0.0
+    val initialGraph = graph.mapVertices((id, _) => if (id == sourceId) 0.0 else Double.PositiveInfinity)
+
+    // Define the vertex program
+    def vertexProgram(id: VertexId, dist: Double, newDist: Double): Double = {
+      math.min(dist, newDist)
+    }
+
+    // Define the send message function
+    def sendMessage(triplet: EdgeTriplet[Double, Double]): Iterator[(VertexId, Double)] = {
+      if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
+        Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
+      } else {
+        Iterator.empty
+      }
+    }
+
+    // Define the merge message function
+    def mergeMessage(a: Double, b: Double): Double = {
+      math.min(a, b)
+    }
+
+    // Run the Pregel algorithm to compute the shortest paths
+    val sssp = initialGraph.pregel(Double.PositiveInfinity)(
+      vertexProgram,
+      sendMessage,
+      mergeMessage
+    )
+
+    // Collect and print the results
+    val result = sssp.vertices.collect()
+    result.foreach { case (vertexId, distance) =>
+      println(s"Vertex $vertexId has distance $distance from source vertex $sourceId")
+    }
+
+    // Stop SparkSession
+    spark.stop()
+  }
+}

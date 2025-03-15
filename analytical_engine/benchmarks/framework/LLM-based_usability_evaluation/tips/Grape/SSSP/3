@@ -1,0 +1,116 @@
+This code implements the Single Source Shortest Path (SSSP) algorithm using the Test framework. Here is an analysis of the key API functions and classes used in this implementation:
+
+1. VertexDataContext
+This context class holds vertex data, which in this case is the partial result of the shortest path distances.
+
+Main Functions:
+Init(TEST_T& frag, parallel_engine_t& engine, message_manager_t& messages)
+
+Parameters:
+frag: The graph fragment being processed.
+engine: The parallel engine managing the execution.
+messages: The message manager for communication.
+Purpose: Initializes the context with the given fragment, engine, and message manager.
+Example Usage:
+
+SSSPContext<TEST_T> ctx(fragment);
+ctx.Init(messages, source_id);
+Finalize()
+
+Purpose: Cleans up the context.
+Example Usage:
+
+ctx.Finalize();
+2. ParallelAppBase
+This base class is for applications that run in parallel.
+
+Main Functions:
+PEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+
+Parameters:
+frag: The graph fragment.
+ctx: The application context.
+messages: The message manager.
+Purpose: Initial parallel evaluation.
+Example Usage:
+
+SSSP<TEST_T> app;
+app.PEval(frag, ctx, messages);
+IncEval(const fragment_t& frag, context_t& ctx, message_manager_t& messages)
+
+Parameters:
+frag: The graph fragment.
+ctx: The application context.
+messages: The message manager.
+Purpose: Incremental parallel evaluation.
+Example Usage:
+
+app.IncEval(frag, ctx, messages);
+3. ParallelMessageManager
+This class handles communication between different parts of the parallel computation.
+
+Main Functions:
+InitChannels(thread_num_t thread_num)
+
+Parameters:
+thread_num: Number of threads.
+Purpose: Initializes message channels.
+Example Usage:
+
+messages.InitChannels(thread_num);
+Start()
+
+Purpose: Starts the message manager.
+Example Usage:
+
+messages.Start();
+Stop()
+
+Purpose: Stops the message manager.
+Example Usage:
+
+messages.Stop();
+4. DenseVertexSet
+This utility class manages sets of vertices, providing efficient operations for adding and checking vertices.
+
+Main Functions:
+Init(vertices_t vertices)
+
+Parameters:
+vertices: The vertices to initialize.
+Purpose: Initializes the vertex set.
+Example Usage:
+
+ctx.curr_modified.Init(frag.Vertices());
+Insert(vertex_t v)
+
+Parameters:
+v: Vertex to insert.
+Purpose: Inserts a vertex into the set.
+Example Usage:
+
+ctx.next_modified.Insert(v);
+ParallelClear(thread_pool_t& pool)
+
+Parameters:
+pool: Thread pool for parallel execution.
+Purpose: Clears the set in parallel.
+Example Usage:
+
+ctx.next_modified.ParallelClear(GetThreadPool());
+Swap(DenseVertexSet& other)
+
+Parameters:
+other: Another DenseVertexSet to swap with.
+Purpose: Swaps the content of two sets.
+Example Usage:
+
+ctx.next_modified.Swap(ctx.curr_modified);
+5. INSTALL_PARALLEL_WORKER
+A macro to simplify the creation of parallel workers.
+
+Usage:
+Purpose: Defines a specialized parallel worker for the SSSP application.
+Example Usage:
+
+INSTALL_PARALLEL_WORKER(SSSP<TEST_T>, SSSPContext<TEST_T>, TEST_T)

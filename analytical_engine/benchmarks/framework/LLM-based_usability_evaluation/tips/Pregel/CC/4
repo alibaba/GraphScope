@@ -1,0 +1,184 @@
+Main API Functions
+1. send_message
+Sends a message to a specific vertex.
+
+Prototype:
+
+void send_message(const KeyT& id, const MessageT& msg);
+Parameters:
+
+id: The ID of the vertex receiving the message.
+msg: The content of the message being sent.
+Usage Example:
+
+send_message(nbs[i], msg);
+Used in the bcast_to_in_nbs function to send a message to all incoming neighbors.
+
+2. vote_to_halt
+Marks the vertex as inactive.
+
+Prototype:
+
+void vote_to_halt();
+Parameters:
+None.
+
+Usage Example:
+
+vote_to_halt();
+Called in the compute function to indicate that the vertex will not participate in further computation.
+
+3. step_num
+Gets the current superstep number.
+
+Prototype:
+
+int step_num() const;
+Parameters:
+None.
+
+Usage Example:
+
+if (step_num() == 1) {
+    // Logic for the initial superstep
+}
+Checks if the current superstep is the first one in the compute function.
+
+4. value
+Gets or sets the value of the vertex.
+
+Prototype:
+
+ValueT& value();
+const ValueT& value() const;
+Parameters:
+None.
+
+Usage Example:
+
+OWCTYValue_scc& val = value();
+Used in the compute function to access the vertex's value for operations.
+
+5. add_vertex
+Adds a new vertex.
+
+Prototype:
+
+void add_vertex(VertexT* v);
+Parameters:
+
+v: Pointer to the new vertex.
+Usage Example:
+
+v->value().in_edges.push_back(atoi(pch));
+In the toVertex function, it parses input data and adds incoming edges.
+
+6. run
+Runs the Pregel job.
+
+Prototype:
+
+void run(const PointParams& params);
+Parameters:
+
+params: A structure containing input path, output path, force write flag, and other parameters.
+Usage Example:
+
+PointParams param;
+param.input_path = in_path;
+param.output_path = out_path;
+param.force_write = true;
+param.native_dispatcher = false;
+Point.run(param);
+In the pregel_owcty function, it configures parameters and runs the job.
+
+Below is the pseudocode:
+
+1: function INIT_VERTEX(v):
+
+v.id = parse_id(line)
+v.color = parse_color(line)
+v.sccTag = parse_sccTag(line)
+v.in_edges = parse_in_edges(line)
+v.out_edges = parse_out_edges(line)
+return v
+2: function BROADCAST_TO_IN_NEIGHBORS(v, msg):
+
+for each neighbor in v.in_edges:
+send_message(neighbor, msg)
+3: function BROADCAST_TO_OUT_NEIGHBORS(v, msg):
+
+for each neighbor in v.out_edges:
+send_message(neighbor, msg)
+4: function COMPUTE(v, messages):
+
+if step_num() == 1:
+if v.id != -1:
+if v.sccTag == 0:
+if v.in_edges is empty:
+BROADCAST_TO_OUT_NEIGHBORS(v, v.id)
+clear v.out_edges
+v.color = -1
+v.sccTag = 1
+else if v.out_edges is empty:
+BROADCAST_TO_IN_NEIGHBORS(v, -v.id - 1)
+clear v.in_edges
+v.color = -1
+v.sccTag = 1
+else:
+if v.sccTag == 0:
+del_in = set()
+del_out = set()
+for each message in messages:
+if message < 0:
+add -message - 1 to del_out
+else:
+add message to del_in
+filter v.in_edges using del_in
+filter v.out_edges using del_out
+if v.in_edges is empty:
+BROADCAST_TO_OUT_NEIGHBORS(v, v.id)
+clear v.out_edges
+v.color = -1
+v.sccTag = 1
+else if v.out_edges is empty:
+BROADCAST_TO_IN_NEIGHBORS(v, -v.id - 1)
+clear v.in_edges
+v.color = -1
+v.sccTag = 1
+vote_to_halt()
+5: function TO_VERTEX(line):
+
+return INIT_VERTEX(new_vertex, line)
+6: function TO_LINE(v, writer):
+
+if v.id == -1:
+write "-1\t" + v.color to writer
+else:
+write v.id, v.color, v.sccTag, v.in_edges, v.out_edges to writer
+7: function PREGEL_OWCTY(in_path, out_path):
+
+param.input_path = in_path
+param.output_path = out_path
+param.force_write = true
+param.native_dispatcher = false
+Point.run(param)
+8: function RUN_Point(param):
+
+initialize timers
+dispatch splits
+load graph
+sync graph
+initialize message buffer
+while true:
+if step_num() == 1:
+initialize aggregator
+clear message buffer
+if wake_all:
+apply all_compute
+else:
+apply active_compute
+combine messages
+sync messages
+synchronize aggregator
+dump graph

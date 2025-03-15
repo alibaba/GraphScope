@@ -1,0 +1,144 @@
+
+Here is a summary of the core API functions found in the provided code from the project "test.h"
+1. processEdgesDense:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+2. processEdgesDenseForward:
+Parameters:
+GA: The graph.
+NodeGroup: The subset of vertices to process.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+3. processEdgesSparse:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+degrees: Degrees of the vertices.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+4. processEdgesSparse_no_filter:
+Parameters:
+GA: The graph.
+frontierVertices: The vertices at the frontier.
+indices: Indices of the vertices.
+offsets: Offsets for the edges.
+m: Number of vertices.
+f: The function to apply to each edge.
+fl: The flags for the operation.
+
+5. processEdgesData:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+6. processEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+f: The function to apply to each edge.
+threshold: Threshold for deciding between sparse and dense processing.
+fl: The flags for the operation.
+
+7. packEdges:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+8. processEdgesFilter:
+Parameters:
+GA: The graph.
+vs: The vertex subset.
+p: The predicate function to filter edges.
+fl: The flags for the operation.
+
+9. processNodes (two versions):
+Parameters:
+V: The vertex subset.
+f: The function to apply to each vertex.
+
+10. vertexFilter:
+Parameters:
+V: The vertex subset.
+filter: The filtering function.
+
+11. vertexFilter2 (two versions):
+Parameters:
+V: The vertex subset or NodeGroupData.
+filter: The filtering function.
+
+12. Compute (two versions):
+Parameters:
+graph: The graph.
+commandLine: The command line parameters.
+
+
+Key API Functions from test
+processEdges Function
+
+template <class vertex, class VS, class F>
+NodeGroup processEdges(graph<vertex>& GA, VS& vs, F f, intT threshold = -1, const flags& fl=0);
+Parameters:
+
+graph<vertex>& GA: The input graph.
+VS& vs: A vertex subset representing the current frontier.
+F f: A functor specifying the update operation.
+intT threshold: A threshold to switch between dense and sparse edge traversal (optional).
+const flags& fl: Flags to control the behavior of processEdges.
+Usage Example:
+
+// Assuming GA is a graph, Frontier is a vertex subset, and BC_F is a functor
+NodeGroup output = processEdges(GA, Frontier, BC_F(NumPaths, Visited));
+processNodes Function
+
+template <class VS, class F>
+void processNodes(VS& V, F f);
+Parameters:
+
+VS& V: A vertex subset.
+F f: A functor specifying the operation to apply to each vertex.
+Usage Example:
+
+// Assuming output is a vertex subset and BC_Vertex_F is a functor
+processNodes(output, BC_Vertex_F(Visited));
+NodeGroup Class
+
+class NodeGroup {
+  public:
+    NodeGroup(long n, uintE* indices);
+    NodeGroup(long n, long m, uintE* indices);
+    NodeGroup(long n, uintE singleVertex);
+    bool isEmpty();
+    long numRows();
+    long numNonzeros();
+    void del();
+    // other member functions...
+};
+Constructor Parameters:
+
+long n: Number of vertices.
+uintE* indices: Array of vertex indices.
+long m: Number of nonzero vertices.
+uintE singleVertex: A single vertex.
+Member Functions:
+
+bool isEmpty(): Checks if the subset is empty.
+long numRows(): Returns the total number of vertices.
+long numNonzeros(): Returns the number of nonzero vertices.
+void del(): Deletes the subset.
+Usage Example:
+
+// Initializing a vertex subset with a single starting vertex
+NodeGroup Frontier(n, start);

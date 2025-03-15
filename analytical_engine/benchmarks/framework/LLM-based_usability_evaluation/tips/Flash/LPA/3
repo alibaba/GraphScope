@@ -1,0 +1,97 @@
+processVertices
+
+Declaration:
+
+template<class VTYPE, class F, class M>
+inline VSet processVertices(VSet &U, F &f, M &m, bool b = true);
+Parameters:
+VSet &U: A set of vertices to be processed.
+F &f: A function to be applied to each vertex.
+M &m: A mapping function to transform the vertex set.
+bool b: A boolean flag indicating whether to perform the local mapping (default is true).
+Description:
+This function applies a filter function f to the vertex set U and then applies a mapping function m locally to the filtered set. If b is true, the local mapping is performed; otherwise, a different variant is used.
+Example:
+
+DefineMapV(init) {v.c = id(v); v.cc = -1; v.s.clear(); return v;};
+vertexSubset A = processVertices(All, CTrueV, init);
+processEdgesDenseFunction
+
+Declaration:
+
+template<class VTYPE, class F, class M, class C, class H>
+VSet processEdgesDenseFunction(Graph<VTYPE> &G, VSet &U, H h, VSet &T, F &f, M &m, C &c, bool b = true);
+Parameters:
+Graph<VTYPE> &G: The graph on which the edge map is performed.
+VSet &U: A set of vertices to be processed.
+H &h: A function defining how edges are handled.
+VSet &T: A set of vertices to pull from.
+F &f: A function to be applied to each edge.
+M &m: A mapping function for edge transformation.
+C &c: A filter function for the edge processing.
+bool b: A boolean flag indicating whether to perform the local mapping (default is true).
+Description:
+This function processes edges in a dense manner, applying the filter function c and the mapping function m to each edge. Depending on the flag b, the mapping may be performed differently.
+Example:
+
+DefineEdgeUpdater(update) {d.s.push_back(s.c);};
+A = processEdgesDense(All, EU, CTrueE, update, CTrueV);
+DefineMapV
+
+Macro Definition:
+
+#define DefineMapV(name) auto name = [](auto &v) -> auto
+Description:
+This macro defines a lambda function name that operates on a vertex v. The lambda function can modify the properties of the vertex and returns the modified vertex.
+Example:
+
+DefineMapV(init) {v.c = id(v); v.cc = -1; v.s.clear(); return v;};
+DefineEdgeUpdater
+
+Macro Definition:
+
+#define DefineEdgeUpdater(name) auto name = [](auto &s, auto &d) -> void
+Description:
+This macro defines a lambda function name that operates on the source vertex s and destination vertex d of an edge. The lambda function can modify the properties of the destination vertex.
+Example:
+
+DefineEdgeUpdater(update) {d.s.push_back(s.c);};
+DefineFV
+
+Macro Definition:
+
+#define DefineFV(name) auto name = [](auto &v) -> bool
+Description:
+This macro defines a lambda function name that operates on a vertex v and returns a boolean value. The lambda function is used as a filter to decide whether a vertex should be included in the result set.
+Example:
+DefineFV(filter) {return v.cc != v.c;};
+Example Usage in Main Function
+Initialization:
+
+DefineMapV(init) {v.c = id(v); v.cc = -1; v.s.clear(); return v;};
+vertexSubset A = processVertices(All, CTrueV, init);
+Edge Mapping:
+
+DefineEdgeUpdater(update) {d.s.push_back(s.c);};
+A = processEdgesDense(All, EU, CTrueE, update, CTrueV);
+Vertex Processing:
+
+DefineMapV(local1) {
+    int max_cnt = 0;
+    for (auto &i:v.s) {
+        cnt[i]++;
+        if (cnt[i] > max_cnt) {
+            max_cnt = cnt[i];
+            v.cc = i;
+        }
+    }
+    v.s.clear();
+    return v;
+};
+A = processVertices(All, CTrueV, local1);
+Filtering Vertices:
+
+DefineFV(filter) {return v.cc != v.c;};
+DefineMapV(local2) {v.c = v.cc;};
+A = processVertices(All, filter, local2);
+These examples illustrate the usage of processVertices, processEdgesDenseFunction, and the DefineMapV, DefineEdgeUpdater, and DefineFV macros to manipulate vertex and edge sets in a graph processing context.

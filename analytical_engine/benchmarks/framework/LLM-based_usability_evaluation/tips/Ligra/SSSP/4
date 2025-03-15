@@ -1,0 +1,137 @@
+Here is the detailed information about the main API functions used in the provided code segment, including parameter descriptions and usage examples.
+
+1. NodeGroup
+Description: Represents a subset of vertices in the graph.
+
+Parameters:
+
+numVertices: Total number of vertices in the graph.
+start: Initial vertex for the frontier.
+Usage Example:
+
+NodeGroup Frontier(n, start); // Initialize frontier with the starting vertex
+2. processEdges
+Description: Applies a function to edges in the graph, allowing for parallel processing of edges.
+
+Parameters:
+
+graph: The graph on which to perform the edge map.
+NodeGroup: The subset of vertices to process.
+function: The function to apply to the edges.
+threshold: The threshold for switching between dense and sparse representations.
+flags: Flags for controlling the behavior of the edge map (e.g., dense_forward).
+Usage Example:
+
+NodeGroup output = processEdges(GA, Frontier, BF_F(ShortestPathLen, Visited), GA.m / 20, dense_forward);
+3. processNodes
+Description: Applies a function to vertices in a subset.
+
+Parameters:
+
+NodeGroup: The subset of vertices to process.
+function: The function to apply to the vertices.
+Usage Example:
+
+processNodes(output, BF_Vertex_F(Visited)); // Apply BF_Vertex_F to each vertex in the subset
+
+NodeGroup Frontier(n, start); // Initialize the frontier with the starting vertex
+
+Struct Definitions and Functions
+BF_F
+Description: Struct for the Bellman-Ford relaxation step.
+
+Parameters:
+
+ShortestPathLen: Array storing shortest path lengths.
+Visited: Array storing visited vertices.
+Methods:
+
+update: Updates shortest path length if a shorter path is found.
+updateAtomic: Atomically updates shortest path length.
+cond: Condition function that always returns true.
+Usage Example:
+
+BF_F(ShortestPathLen, Visited)
+BF_Vertex_F
+Description: Struct for resetting the visited vertices.
+
+Parameters:
+
+Visited: Array storing visited vertices.
+Methods:
+
+operator(): Resets the visited state of a vertex.
+Usage Example:
+
+BF_Vertex_F(Visited)
+
+Below is the pseudocode:
+
+1: function INIT(start, n):
+
+ShortestPathLen = array of size n, initialized to INT_MAX / 2
+ShortestPathLen[start] = 0
+Visited = array of size n, initialized to 0
+return ShortestPathLen, Visited
+2: function BF_UPDATE(s, d, edgeLen, ShortestPathLen, Visited):
+
+newDist = ShortestPathLen[s] + edgeLen
+if ShortestPathLen[d] > newDist:
+ShortestPathLen[d] = newDist
+if Visited[d] == 0:
+Visited[d] = 1
+return true
+return false
+3: function BF_UPDATE_ATOMIC(s, d, edgeLen, ShortestPathLen, Visited):
+
+newDist = ShortestPathLen[s] + edgeLen
+return (writeMin(&ShortestPathLen[d], newDist) && CAS(&Visited[d], 0, 1))
+4: function BF_COND(d):
+
+return true
+5: function RESET_VISITED(i, Visited):
+
+Visited[i] = 0
+return true
+6: Initialize graph parameters:
+
+GA = Load graph
+P = Parse command line arguments
+start = P.getOptionLongValue("-r", 0)
+n = GA.n
+7: Initialize ShortestPathLen and Visited arrays:
+
+ShortestPathLen, Visited = INIT(start, n)
+8: Initialize the frontier:
+
+Frontier = NodeGroup(n, start)
+9: Initialize round counter:
+
+round = 0
+10: While Frontier is not empty:
+
+If round == n:
+
+For each vertex i in 0 to n-1:
+ShortestPathLen[i] = -(INT_MAX / 2)
+Break
+Apply processEdges to update distances:
+
+output = processEdges(GA, Frontier, BF_F(ShortestPathLen, Visited), GA.m / 20, dense_forward)
+Reset visited vertices:
+
+processNodes(output, BF_Vertex_F(Visited))
+Delete previous frontier:
+
+Frontier.del()
+Update frontier:
+
+Frontier = output
+Increment round counter:
+
+round += 1
+11: Clean up:
+
+Frontier.del()
+free(Visited)
+free(ShortestPathLen)
