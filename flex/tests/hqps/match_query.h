@@ -1059,22 +1059,12 @@ class MatchQuery16 : public ReadAppBase {
         graph, std::array<label_id_t, 2>{0, 2}, std::move(expr0));
 
     auto edge_expand_opt0 = gs::make_edge_expand_multie_opt<
-        label_id_t, std::tuple<grape::EmptyType>, std::tuple<double>,
-        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
-        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>>(
+        label_id_t, std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>>(
         gs::Direction::Out,
-        std::array<std::array<label_id_t, 3>, 6>{
-            std::array<label_id_t, 3>{0, 1, 0},
-            std::array<label_id_t, 3>{2, 1, 5},
-            std::array<label_id_t, 3>{0, 1, 2},
-            std::array<label_id_t, 3>{0, 1, 3},
-            std::array<label_id_t, 3>{2, 0, 4},
-            std::array<label_id_t, 3>{0, 1, 1}},
+        std::array<std::array<label_id_t, 3>, 2>{
+            std::array<label_id_t, 3>{0, 0, 11},
+            std::array<label_id_t, 3>{6, 6, 13}},
         std::tuple{PropTupleArrayT<std::tuple<grape::EmptyType>>{},
-                   PropTupleArrayT<std::tuple<double>>{"rating"},
-                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
-                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
-                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
                    PropTupleArrayT<std::tuple<grape::EmptyType>>{}});
     auto ctx1 =
         Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
@@ -1090,10 +1080,8 @@ class MatchQuery16 : public ReadAppBase {
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
-                       gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
                        gs::PropertySelector<grape::EmptyType>(""))});
-    return Engine::Sink(graph, ctx3, std::array<int32_t, 3>{0, 1, 2});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 2>{0, 1});
   }
 
   // Wrapper query function for query class

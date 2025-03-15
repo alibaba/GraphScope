@@ -80,7 +80,7 @@ class MutableCSRInterface {
 
   using vertex_id_t = vid_t;
   using gid_t = uint64_t;
-  using label_id_t = uint8_t;
+  using label_id_t = gs::label_t;
 
   using nbr_list_array_t = mutable_csr_graph_impl::NbrListArray;
 

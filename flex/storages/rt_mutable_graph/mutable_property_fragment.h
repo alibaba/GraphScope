@@ -104,29 +104,29 @@ class MutablePropertyFragment {
 
   inline CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
                              label_t edge_label) {
-    size_t index = label * vertex_label_num_ * edge_label_num_ +
-                   neighbor_label * edge_label_num_ + edge_label;
+    size_t index =
+        schema_.get_edge_triplet_id(label, neighbor_label, edge_label);
     return oe_[index];
   }
 
   inline const CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const {
-    size_t index = label * vertex_label_num_ * edge_label_num_ +
-                   neighbor_label * edge_label_num_ + edge_label;
+    size_t index =
+        schema_.get_edge_triplet_id(label, neighbor_label, edge_label);
     return oe_[index];
   }
 
   inline CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                              label_t edge_label) {
-    size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                   label * edge_label_num_ + edge_label;
+    size_t index =
+        schema_.get_edge_triplet_id(neighbor_label, label, edge_label);
     return ie_[index];
   }
 
   inline const CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const {
-    size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                   label * edge_label_num_ + edge_label;
+    size_t index =
+        schema_.get_edge_triplet_id(neighbor_label, label, edge_label);
     return ie_[index];
   }
 

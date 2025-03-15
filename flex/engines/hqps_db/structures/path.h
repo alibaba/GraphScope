@@ -220,11 +220,11 @@ class PathSet {
   std::vector<LabelT> GetLabels(VOpt v_opt) const {
     std::vector<bool> label_set(sizeof(LabelT) * 8, false);
     if (v_opt == VOpt::End) {
-      for (auto i = 0; i < paths_.size(); ++i) {
+      for (size_t i = 0; i < paths_.size(); ++i) {
         label_set[paths_[i].GetLabels().back()] = true;
       }
     } else if (v_opt == VOpt::Start) {
-      for (auto i = 0; i < paths_.size(); ++i) {
+      for (size_t i = 0; i < paths_.size(); ++i) {
         label_set[paths_[i].GetLabels().front()] = true;
       }
     } else {
@@ -247,21 +247,23 @@ class PathSet {
     offsets.emplace_back(0);
 
     // intersect with req_labels
-    std::vector<bool> label_set(sizeof(LabelT) * 8, false);
+    // get num of max label num
+    std::set<LabelT> label_set;
     std::vector<LabelT> labels;
-    std::vector<int32_t> label_to_index(sizeof(LabelT) * 8, -1);
+    std::unordered_map<LabelT, size_t> label_to_index;
     if (req_labels.size() > 0) {
       for (auto label : req_labels) {
-        label_set[label] = true;
+        label_set.insert(label);
+      }
+      size_t valid_labels = 0;
+      for (auto label : label_set) {
+        labels.emplace_back(label);
+        label_to_index[label] = valid_labels++;
       }
     } else {
-      std::fill(label_set.begin(), label_set.end(), true);  // empty means all
-    }
-    size_t valid_labels = 0;
-    for (size_t i = 0; i < label_set.size(); ++i) {
-      if (label_set[i]) {
-        labels.emplace_back(i);
-        label_to_index[i] = valid_labels++;
+      labels = GetLabels(vopt);
+      for (size_t i = 0; i < labels.size(); ++i) {
+        label_to_index[labels[i]] = i;
       }
     }
 

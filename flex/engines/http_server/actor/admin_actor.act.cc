@@ -51,27 +51,25 @@ gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
     auto edge_label_name = schema.get_edge_label_name(edge_label_id);
     std::vector<std::tuple<std::string, std::string, int32_t>>
         vertex_type_pair_statistics;
-    for (auto src_label_id = 0; src_label_id < vertex_label_num;
-         ++src_label_id) {
-      auto src_label_name = schema.get_vertex_label_name(src_label_id);
-      for (auto dst_label_id = 0; dst_label_id < vertex_label_num;
-           ++dst_label_id) {
-        auto dst_label_name = schema.get_vertex_label_name(dst_label_id);
-        if (schema.exist(src_label_id, dst_label_id, edge_label_id)) {
-          auto oe_csr =
-              graph.get_oe_csr(src_label_id, dst_label_id, edge_label_id);
-          auto ie_csr =
-              graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
-          size_t cur_edge_cnt = 0;
-          if (oe_csr) {
-            cur_edge_cnt += oe_csr->edge_num();
-          } else if (ie_csr) {
-            cur_edge_cnt += ie_csr->edge_num();
-          }
-          stat.total_edge_count += cur_edge_cnt;
-          vertex_type_pair_statistics.emplace_back(
-              std::tuple{src_label_name, dst_label_name, cur_edge_cnt});
+    for (size_t index = 0; index < schema.get_edge_triplet_num(); ++index) {
+      auto triplet = schema.get_edge_triplet(index);
+      auto src_label_id = std::get<0>(triplet);
+      auto dst_label_id = std::get<1>(triplet);
+      if (schema.exist(src_label_id, dst_label_id, edge_label_id)) {
+        auto oe_csr =
+            graph.get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+        auto ie_csr =
+            graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
+        size_t cur_edge_cnt = 0;
+        if (oe_csr) {
+          cur_edge_cnt += oe_csr->edge_num();
+        } else if (ie_csr) {
+          cur_edge_cnt += ie_csr->edge_num();
         }
+        stat.total_edge_count += cur_edge_cnt;
+        vertex_type_pair_statistics.emplace_back(std::tuple{
+            schema.get_vertex_label_name(src_label_id),
+            schema.get_vertex_label_name(dst_label_id), cur_edge_cnt});
       }
     }
     if (!vertex_type_pair_statistics.empty()) {
