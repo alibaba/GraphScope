@@ -45,7 +45,7 @@ ServiceConfig::ServiceConfig()
       start_compiler(false),
       enable_gremlin(false),
       enable_bolt(false),
-      metadata_store_type_(gs::MetadataStoreType::kLocalFile),
+      metadata_store_uri(DEFAULT_METADATA_STORE_URI),
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
       sharding_mode(DEFAULT_SHARDING_MODE),
@@ -132,8 +132,14 @@ void GraphDBService::init(const ServiceConfig& config) {
   service_config_ = config;
   gs::init_cpu_usage_watch();
   if (config.start_admin_service) {
-    metadata_store_ = gs::MetadataStoreFactory::Create(
-        config.metadata_store_type_, WorkDirManipulator::GetWorkspace());
+    // instantiate the placeholder {WOKRSPACE} in metadata store uri.
+    auto metadata_store_uri = config.metadata_store_uri;
+    if (metadata_store_uri.find("{WORKSPACE}") != std::string::npos) {
+      metadata_store_uri =
+          std::regex_replace(metadata_store_uri, std::regex("\\{WORKSPACE\\}"),
+                             WorkDirManipulator::GetWorkspace());
+    }
+    metadata_store_ = gs::MetadataStoreFactory::Create(metadata_store_uri);
 
     auto res = metadata_store_->Open();
     if (!res.ok()) {
