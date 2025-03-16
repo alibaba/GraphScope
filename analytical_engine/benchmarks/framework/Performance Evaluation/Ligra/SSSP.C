@@ -1,5 +1,5 @@
 // This code is part of the project "Ligra: A Lightweight Graph Processing
-// Framework for Shared Memory", presented at Principles and Practice of 
+// Framework for Shared Memory", presented at Principles and Practice of
 // Parallel Programming, 2013.
 // Copyright (c) 2013 Julian Shun and Guy Blelloch
 //
@@ -27,29 +27,33 @@
 struct BF_F {
   intE* ShortestPathLen;
   int* Visited;
-  BF_F(intE* _ShortestPathLen, int* _Visited) : 
-    ShortestPathLen(_ShortestPathLen), Visited(_Visited) {}
-  inline bool update (uintE s, uintE d, intE edgeLen) { //Update ShortestPathLen if found a shorter path
+  BF_F(intE* _ShortestPathLen, int* _Visited)
+      : ShortestPathLen(_ShortestPathLen), Visited(_Visited) {}
+  inline bool update(
+      uintE s, uintE d,
+      intE edgeLen) {  // Update ShortestPathLen if found a shorter path
     intE newDist = ShortestPathLen[s] + edgeLen;
-    if(ShortestPathLen[d] > newDist) {
+    if (ShortestPathLen[d] > newDist) {
       ShortestPathLen[d] = newDist;
-      if(Visited[d] == 0) { Visited[d] = 1 ; return 1;}
+      if (Visited[d] == 0) {
+        Visited[d] = 1;
+        return 1;
+      }
     }
     return 0;
   }
-  inline bool updateAtomic (uintE s, uintE d, intE edgeLen){ //atomic Update
+  inline bool updateAtomic(uintE s, uintE d, intE edgeLen) {  // atomic Update
     intE newDist = ShortestPathLen[s] + edgeLen;
-    return (writeMin(&ShortestPathLen[d],newDist) &&
-	    CAS(&Visited[d],0,1));
+    return (writeMin(&ShortestPathLen[d], newDist) && CAS(&Visited[d], 0, 1));
   }
-  inline bool cond (uintE d) { return cond_true(d); }
+  inline bool cond(uintE d) { return cond_true(d); }
 };
 
-//reset visited vertices
+// reset visited vertices
 struct BF_Vertex_F {
   int* Visited;
   BF_Vertex_F(int* _Visited) : Visited(_Visited) {}
-  inline bool operator() (uintE i){
+  inline bool operator()(uintE i) {
     Visited[i] = 0;
     return 1;
   }
@@ -57,37 +61,42 @@ struct BF_Vertex_F {
 
 template <class vertex>
 void Compute(graph<vertex>& GA, commandLine P) {
-  
-  setWorkers(32); 
+  setWorkers(32);
 
-  long start = P.getOptionLongValue("-r",0);
+  long start = P.getOptionLongValue("-r", 0);
   long n = GA.n;
-  //initialize ShortestPathLen to "infinity"
-  intE* ShortestPathLen = newA(intE,n);
-  {parallel_for(long i=0;i<n;i++) ShortestPathLen[i] = INT_MAX/2;}
+  // initialize ShortestPathLen to "infinity"
+  intE* ShortestPathLen = newA(intE, n);
+  { parallel_for(long i = 0; i < n; i++) ShortestPathLen[i] = INT_MAX / 2; }
   ShortestPathLen[start] = 0;
 
-  int* Visited = newA(int,n);
-  {parallel_for(long i=0;i<n;i++) Visited[i] = 0;}
+  int* Visited = newA(int, n);
+  { parallel_for(long i = 0; i < n; i++) Visited[i] = 0; }
 
-  vertexSubset Frontier(n,start); //initial frontier
+  vertexSubset Frontier(n, start);  // initial frontier
 
   long round = 0;
-  while(!Frontier.isEmpty()){
+  while (!Frontier.isEmpty()) {
     // std::cout << round << std::endl;
-    if(round == n) {
-      //negative weight cycle
-      {parallel_for(long i=0;i<n;i++) ShortestPathLen[i] = -(INT_E_MAX/2);}
+    if (round == n) {
+      // negative weight cycle
+      {
+        parallel_for(long i = 0; i < n; i++) ShortestPathLen[i] =
+            -(INT_E_MAX / 2);
+      }
       break;
     }
-    vertexSubset output = edgeMap(GA, Frontier, BF_F(ShortestPathLen,Visited), GA.m/20, dense_forward);
-    vertexMap(output,BF_Vertex_F(Visited));
+    vertexSubset output = edgeMap(GA, Frontier, BF_F(ShortestPathLen, Visited),
+                                  GA.m / 20, dense_forward);
+    vertexMap(output, BF_Vertex_F(Visited));
     Frontier.del();
     Frontier = output;
     round++;
   }
   std::cout << "iteration round:" << round << std::endl;
-  // for (int i = 0;i < n; i++) std::cout << "vertex " << i << " distance " << ShortestPathLen[i] << std::endl;
-  Frontier.del(); free(Visited);
+  // for (int i = 0;i < n; i++) std::cout << "vertex " << i << " distance " <<
+  // ShortestPathLen[i] << std::endl;
+  Frontier.del();
+  free(Visited);
   free(ShortestPathLen);
 }

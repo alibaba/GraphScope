@@ -1,5 +1,5 @@
 // This code is part of the project "Ligra: A Lightweight Graph Processing
-// Framework for Shared Memory", presented at Principles and Practice of 
+// Framework for Shared Memory", presented at Principles and Practice of
 // Parallel Programming, 2013.
 // Copyright (c) 2013 Julian Shun and Guy Blelloch
 //
@@ -30,48 +30,56 @@
 #include "ligra.h"
 #include "quickSort.h"
 
-//assumes sorted neighbor lists
+// assumes sorted neighbor lists
 template <class vertex>
-long countCommon(vertex& A, vertex& B, uintE a, uintE b) { 
-  uintT i=0,j=0,nA = A.getOutDegree(), nB = B.getOutDegree();
-  uintE* nghA = (uintE*) A.getOutNeighbors(), *nghB = (uintE*) B.getOutNeighbors();
-  long ans=0;
-  while (i < nA && j < nB && nghA[i] < a && nghB[j] < b) { //count "directed" triangles
-    if (nghA[i]==nghB[j]) i++, j++, ans++;
-    else if (nghA[i] < nghB[j]) i++;
-    else j++;
+long countCommon(vertex& A, vertex& B, uintE a, uintE b) {
+  uintT i = 0, j = 0, nA = A.getOutDegree(), nB = B.getOutDegree();
+  uintE *nghA = (uintE*) A.getOutNeighbors(),
+        *nghB = (uintE*) B.getOutNeighbors();
+  long ans = 0;
+  while (i < nA && j < nB && nghA[i] < a &&
+         nghB[j] < b) {  // count "directed" triangles
+    if (nghA[i] == nghB[j])
+      i++, j++, ans++;
+    else if (nghA[i] < nghB[j])
+      i++;
+    else
+      j++;
   }
   return ans;
 }
 
 template <class vertex>
-struct countF { //for edgeMap
+struct countF {  // for edgeMap
   vertex* V;
-  long* counts; 
+  long* counts;
   countF(vertex* _V, long* _counts) : V(_V), counts(_counts) {}
-  inline bool update (uintE s, uintE d) {
-    if(s > d) //only count "directed" triangles
-      writeAdd(&counts[s], countCommon<vertex>(V[s],V[d],s,d));
+  inline bool update(uintE s, uintE d) {
+    if (s > d)  // only count "directed" triangles
+      writeAdd(&counts[s], countCommon<vertex>(V[s], V[d], s, d));
     return 1;
   }
-  inline bool updateAtomic (uintE s, uintE d) {
-    if (s > d) //only count "directed" triangles
-      writeAdd(&counts[s], countCommon<vertex>(V[s],V[d],s,d));
+  inline bool updateAtomic(uintE s, uintE d) {
+    if (s > d)  // only count "directed" triangles
+      writeAdd(&counts[s], countCommon<vertex>(V[s], V[d], s, d));
     return 1;
   }
-  inline bool cond (uintE d) { return cond_true(d); } //does nothing
+  inline bool cond(uintE d) { return cond_true(d); }  // does nothing
 };
 
-struct intLT { bool operator () (uintT a, uintT b) { return a < b; }; };
+struct intLT {
+  bool operator()(uintT a, uintT b) { return a < b; };
+};
 
 template <class vertex>
-struct initF { //for vertexMap to initial counts and sort neighbors for merging
+struct initF {  // for vertexMap to initial counts and sort neighbors for
+                // merging
   vertex* V;
   long* counts;
   initF(vertex* _V, long* _counts) : V(_V), counts(_counts) {}
-  inline bool operator () (uintE i) {
+  inline bool operator()(uintE i) {
     counts[i] = 0;
-    quickSort(V[i].getOutNeighbors(),V[i].getOutDegree(),intLT());
+    quickSort(V[i].getOutNeighbors(), V[i].getOutDegree(), intLT());
     return 1;
   }
 };
@@ -80,14 +88,15 @@ template <class vertex>
 void Compute(graph<vertex>& GA, commandLine P) {
   setWorkers(32);
   uintT n = GA.n;
-  long* counts = newA(long,n);
-  bool* frontier = newA(bool,n);
-  {parallel_for(long i=0;i<n;i++) frontier[i] = 1;} 
-  vertexSubset Frontier(n,n,frontier); //frontier contains all vertices
+  long* counts = newA(long, n);
+  bool* frontier = newA(bool, n);
+  { parallel_for(long i = 0; i < n; i++) frontier[i] = 1; }
+  vertexSubset Frontier(n, n, frontier);  // frontier contains all vertices
 
-  vertexMap(Frontier,initF<vertex>(GA.V,counts));
-  edgeMap(GA,Frontier,countF<vertex>(GA.V,counts), -1, no_output);
-  long count = sequence::plusReduce(counts,n);
+  vertexMap(Frontier, initF<vertex>(GA.V, counts));
+  edgeMap(GA, Frontier, countF<vertex>(GA.V, counts), -1, no_output);
+  long count = sequence::plusReduce(counts, n);
   cout << "triangle count = " << count << endl;
-  Frontier.del(); free(counts);
+  Frontier.del();
+  free(counts);
 }

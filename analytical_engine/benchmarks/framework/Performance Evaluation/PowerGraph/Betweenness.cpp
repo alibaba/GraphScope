@@ -1,5 +1,5 @@
-#include <vector>
 #include <graphlab.hpp>
+#include <vector>
 
 struct vertex_data {
   int shortest_paths_len;
@@ -9,14 +9,22 @@ struct vertex_data {
   int pred_siz;
   bool finish;
 
-  vertex_data() : centrality(0), shortest_paths_len(0), shortest_paths_num(0), delta(0), pred_siz(0), finish(false) {}
+  vertex_data()
+      : centrality(0),
+        shortest_paths_len(0),
+        shortest_paths_num(0),
+        delta(0),
+        pred_siz(0),
+        finish(false) {}
 
   void save(graphlab::oarchive& oarc) const {
-    oarc << centrality << shortest_paths_len << shortest_paths_num << delta << pred_siz << finish;
+    oarc << centrality << shortest_paths_len << shortest_paths_num << delta
+         << pred_siz << finish;
   }
 
   void load(graphlab::iarchive& iarc) {
-    iarc >> centrality >> shortest_paths_len >> shortest_paths_num >> delta >> pred_siz >> finish;
+    iarc >> centrality >> shortest_paths_len >> shortest_paths_num >> delta >>
+        pred_siz >> finish;
   }
 };
 
@@ -49,32 +57,38 @@ struct msg2_type : graphlab::IS_POD_TYPE {
   }
 };
 
-
-class BFS : public graphlab::ivertex_program<graph_type, graphlab::empty, msg_type> , public graphlab::IS_POD_TYPE {
+class BFS
+    : public graphlab::ivertex_program<graph_type, graphlab::empty, msg_type>,
+      public graphlab::IS_POD_TYPE {
   bool active;
   int local_len;
   int local_num;
   int local_siz;
 
-public:
-
-  void init(icontext_type& context, const vertex_type& vertex, const msg_type& msg) {
-    // std::cout << "init  " << vertex.id() << "  msg.len=" << msg.msg_num << " msg.num=" << msg.msg_num << std::endl;
+ public:
+  void init(icontext_type& context, const vertex_type& vertex,
+            const msg_type& msg) {
+    // std::cout << "init  " << vertex.id() << "  msg.len=" << msg.msg_num << "
+    // msg.num=" << msg.msg_num << std::endl;
     active = true;
     local_len = msg.msg_len;
     local_num = msg.msg_num;
     local_siz = msg.msg_siz;
   }
 
-  edge_dir_type gather_edges(icontext_type& context, const vertex_type& vertex) const { 
+  edge_dir_type gather_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   };
 
-  void apply(icontext_type& context, vertex_type& vertex, const graphlab::empty& empty) {
+  void apply(icontext_type& context, vertex_type& vertex,
+             const graphlab::empty& empty) {
     if (active == true) {
       active = false;
       if (vertex.data().shortest_paths_len == 0) {
-        // std::cout << "apply active  " << vertex.id() << "   pred_size=" << local_siz << "   degree=" << vertex.num_in_edges() + vertex.num_out_edges() << std::endl;
+        // std::cout << "apply active  " << vertex.id() << "   pred_size=" <<
+        // local_siz << "   degree=" << vertex.num_in_edges() +
+        // vertex.num_out_edges() << std::endl;
         active = true;
         vertex.data().shortest_paths_len = local_len;
         vertex.data().shortest_paths_num = local_num;
@@ -85,7 +99,8 @@ public:
     }
   }
 
-  edge_dir_type scatter_edges(icontext_type& context, const vertex_type& vertex) const {
+  edge_dir_type scatter_edges(icontext_type& context,
+                              const vertex_type& vertex) const {
     if (active) {
       // std::cout << "scatter edges active  " << vertex.id() << std::endl;
       return graphlab::ALL_EDGES;
@@ -94,55 +109,68 @@ public:
     }
   };
 
-  void scatter(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
-    const vertex_type other = vertex.id() == edge.source().id()? edge.target() : edge.source();
-    // std::cout << "scatter signal  " << vertex.id() << " " << other.id() << std::endl;
+  void scatter(icontext_type& context, const vertex_type& vertex,
+               edge_type& edge) const {
+    const vertex_type other =
+        vertex.id() == edge.source().id() ? edge.target() : edge.source();
+    // std::cout << "scatter signal  " << vertex.id() << " " << other.id() <<
+    // std::endl;
     if (other.data().shortest_paths_len == 0) {
-      const msg_type msg(vertex.data().shortest_paths_len + 1, vertex.data().shortest_paths_num, 1);
+      const msg_type msg(vertex.data().shortest_paths_len + 1,
+                         vertex.data().shortest_paths_num, 1);
       context.signal(other, msg);
-    } else if (vertex.data().shortest_paths_len == other.data().shortest_paths_len) {
+    } else if (vertex.data().shortest_paths_len ==
+               other.data().shortest_paths_len) {
       const msg_type msg(vertex.data().shortest_paths_len, 0, 1);
       context.signal(other, msg);
     }
   }
 };
 
-
-
-class Betweenness : public graphlab::ivertex_program<graph_type, graphlab::empty, msg2_type> , public graphlab::IS_POD_TYPE {
+class Betweenness
+    : public graphlab::ivertex_program<graph_type, graphlab::empty, msg2_type>,
+      public graphlab::IS_POD_TYPE {
   bool active;
   float local_delta;
   int local_num;
 
-public:
-
-  void init(icontext_type& context, const vertex_type& vertex, const msg2_type& msg) {
-    // std::cout << "init  " << vertex.id() << "  msg=" << msg.delta << " " << msg.num << std::endl;
+ public:
+  void init(icontext_type& context, const vertex_type& vertex,
+            const msg2_type& msg) {
+    // std::cout << "init  " << vertex.id() << "  msg=" << msg.delta << " " <<
+    // msg.num << std::endl;
     local_delta = msg.delta;
     local_num = msg.num;
   }
 
-  edge_dir_type gather_edges(icontext_type& context, const vertex_type& vertex) const { 
+  edge_dir_type gather_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   };
 
-  void apply(icontext_type& context, vertex_type& vertex, const graphlab::empty& empty) {
+  void apply(icontext_type& context, vertex_type& vertex,
+             const graphlab::empty& empty) {
     active = false;
-    if (vertex.data().pred_siz != vertex.num_in_edges() + vertex.num_out_edges()) {
+    if (vertex.data().pred_siz !=
+        vertex.num_in_edges() + vertex.num_out_edges()) {
       vertex.data().delta += local_delta;
       vertex.data().pred_siz += local_num;
-      // std::cout << "apply inactive  " << vertex.id() << "    pred=" << vertex.data().pred_siz << std::endl;
+      // std::cout << "apply inactive  " << vertex.id() << "    pred=" <<
+      // vertex.data().pred_siz << std::endl;
     }
-    if (vertex.data().pred_siz == vertex.num_in_edges() + vertex.num_out_edges() && vertex.data().finish == false) {
-        vertex.data().finish = true;
-        active = true;
-        vertex.data().delta *= vertex.data().shortest_paths_num;
-        // std::cout << "apply active  " << vertex.id() << "    pred=" << vertex.data().pred_siz << std::endl;
-
-      }
+    if (vertex.data().pred_siz ==
+            vertex.num_in_edges() + vertex.num_out_edges() &&
+        vertex.data().finish == false) {
+      vertex.data().finish = true;
+      active = true;
+      vertex.data().delta *= vertex.data().shortest_paths_num;
+      // std::cout << "apply active  " << vertex.id() << "    pred=" <<
+      // vertex.data().pred_siz << std::endl;
+    }
   }
 
-  edge_dir_type scatter_edges(icontext_type& context, const vertex_type& vertex) const {
+  edge_dir_type scatter_edges(icontext_type& context,
+                              const vertex_type& vertex) const {
     if (active) {
       // std::cout << "scatter edges active  " << vertex.id() << std::endl;
       return graphlab::ALL_EDGES;
@@ -151,16 +179,21 @@ public:
     }
   };
 
-  void scatter(icontext_type& context, const vertex_type& vertex, edge_type& edge) const {
-    const vertex_type other = vertex.id() == edge.source().id()? edge.target() : edge.source();
-    if (other.data().shortest_paths_len == vertex.data().shortest_paths_len - 1) {
-      const msg2_type msg(1.0 / vertex.data().shortest_paths_num * (1 + vertex.data().delta), 1);
-      // std::cout << "scatter signal  " << vertex.id() << " -> " << other.id() << "  msg=" << msg.delta << " " << msg.num << std::endl;
+  void scatter(icontext_type& context, const vertex_type& vertex,
+               edge_type& edge) const {
+    const vertex_type other =
+        vertex.id() == edge.source().id() ? edge.target() : edge.source();
+    if (other.data().shortest_paths_len ==
+        vertex.data().shortest_paths_len - 1) {
+      const msg2_type msg(
+          1.0 / vertex.data().shortest_paths_num * (1 + vertex.data().delta),
+          1);
+      // std::cout << "scatter signal  " << vertex.id() << " -> " << other.id()
+      // << "  msg=" << msg.delta << " " << msg.num << std::endl;
       context.signal(other, msg);
     }
   }
 };
-
 
 void initialize_vertex(graph_type::vertex_type& vertex) {
   vertex.data().centrality = 0;
@@ -175,7 +208,8 @@ void initialize_vertex(graph_type::vertex_type& vertex) {
  * Loads graphs in the form 'id (id edge_strength)*'
  *
  */
-bool line_parser(graph_type& graph, const std::string& filename, const std::string& textline) {
+bool line_parser(graph_type& graph, const std::string& filename,
+                 const std::string& textline) {
   std::stringstream strm(textline);
   graphlab::vertex_id_type vid;
   // first entry in the line is a vertex ID
@@ -185,7 +219,7 @@ bool line_parser(graph_type& graph, const std::string& filename, const std::stri
   graph.add_vertex(vid, node);
   // while there are elements in the line, continue to read until we fail
   // double edge_val=1.0;
-  while(1){
+  while (1) {
     graphlab::vertex_id_type other_vid;
     strm >> other_vid;
     // strm >> edge_val;
@@ -198,12 +232,15 @@ bool line_parser(graph_type& graph, const std::string& filename, const std::stri
   return true;
 }
 
-
 // output
 struct betweenness_writer {
   std::string save_vertex(const graph_type::vertex_type& vtx) {
     std::stringstream strm;
-    strm << "vertex " << vtx.id() << "  shortest path length=" << vtx.data().shortest_paths_len << "    shortest path number=" << vtx.data().shortest_paths_num << "   pred_size=" << vtx.data().pred_siz <<  "     delta=" << vtx.data().delta << "\n";
+    strm << "vertex " << vtx.id()
+         << "  shortest path length=" << vtx.data().shortest_paths_len
+         << "    shortest path number=" << vtx.data().shortest_paths_num
+         << "   pred_size=" << vtx.data().pred_siz
+         << "     delta=" << vtx.data().delta << "\n";
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
@@ -219,7 +256,7 @@ int main(int argc, char** argv) {
   graphlab::distributed_control dc;
   global_logger().set_log_level(LOG_INFO);
 
-// Parse command line options -----------------------------------------------
+  // Parse command line options -----------------------------------------------
   graphlab::command_line_options clopts("Betweeness Algorithm.");
   std::string graph_dir;
   clopts.attach_option("graph", graph_dir, "The graph file. Required ");
@@ -227,10 +264,10 @@ int main(int argc, char** argv) {
 
   std::string saveprefix;
   clopts.attach_option("saveprefix", saveprefix,
-                        "If set, will save the resultant betweness score to a "
-                        "sequence of files with prefix saveprefix");
+                       "If set, will save the resultant betweness score to a "
+                       "sequence of files with prefix saveprefix");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
@@ -241,9 +278,7 @@ int main(int argc, char** argv) {
 
   clopts.get_engine_args().set_option("type", "synchronous");
 
-
-
-// Build the graph ----------------------------------------------------------
+  // Build the graph ----------------------------------------------------------
   graph_type graph(dc);
   dc.cout() << "Loading graph using line parser" << std::endl;
   graph.load(graph_dir, line_parser);
@@ -257,10 +292,10 @@ int main(int argc, char** argv) {
   engine.start();
 
   if (saveprefix != "") {
-    graph.save(saveprefix+"0", betweenness_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+    graph.save(saveprefix + "0", betweenness_writer(),
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   graphlab::vertex_set last_layer = graph.select(depth_is_maximum);
@@ -268,15 +303,14 @@ int main(int argc, char** argv) {
   engine2.signal_vset(last_layer);
   engine2.start();
   const float runtime = engine.elapsed_seconds();
-  dc.cout() << "Finished Running engine in " << runtime
-            << " seconds." << std::endl;
-
+  dc.cout() << "Finished Running engine in " << runtime << " seconds."
+            << std::endl;
 
   if (saveprefix != "") {
     graph.save(saveprefix, betweenness_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   graphlab::mpi_tools::finalize();

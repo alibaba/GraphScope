@@ -10,7 +10,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 
-
 class Config:
     def __init__(self):
         self.CODE_GEN_TEMPLATE = """Please implement the {algorithm} algorithm using {language}. 
@@ -85,67 +84,71 @@ class Config:
         }}"""
 
     def get_api_key(self):
-        return os.getenv('OPENAI_API_KEY')
-    
+        return os.getenv("OPENAI_API_KEY")
+
     def get_algorithm_name(self):
         return {
-            'PageRank': 'PageRank',
-            'SSSP': 'Single-Source Shortest Path',
-            'kCore': 'k-Core',
-            'BC': 'Betweenness Centrality',
-            'TriangleCounting': 'Triangle Counting',
-            'kClique': 'k-Clique',
-            'LPA': 'Label Propagation',
-            'CC': 'Connected Component'
+            "PageRank": "PageRank",
+            "SSSP": "Single-Source Shortest Path",
+            "kCore": "k-Core",
+            "BC": "Betweenness Centrality",
+            "TriangleCounting": "Triangle Counting",
+            "kClique": "k-Clique",
+            "LPA": "Label Propagation",
+            "CC": "Connected Component",
         }
 
     def get_prompt(self, platform, algorithm, level):
-        with open('tips/' + platform + '/' + algorithm + '/' + level, 'r') as file:
+        with open("tips/" + platform + "/" + algorithm + "/" + level, "r") as file:
             file_contents = file.read()
             return str(file_contents)
 
     def get_algoritm(self, platform, algorithm):
-        return 'Refer to the above tips to help me generate the ' + self.get_algorithm_name()[algorithm] + ' algorithm completed code based on the platform’s API information.\n'
+        return (
+            "Refer to the above tips to help me generate the "
+            + self.get_algorithm_name()[algorithm]
+            + " algorithm completed code based on the platform’s API information.\n"
+        )
+
     def get_standard_code(self, platform, algorithm):
-        with open('code/' + platform + '/' + algorithm, 'r') as file:
+        with open("code/" + platform + "/" + algorithm, "r") as file:
             file_contents = file.read()
             return str(file_contents)
+
     def get_evaluate_code(self, codes):
-        str_ = ''
+        str_ = ""
         code_i = 1
         for code in codes:
-            str_+= 'The code ' + str(code_i) + ':\n' + code + '\n'
-            code_i+=1
+            str_ += "The code " + str(code_i) + ":\n" + code + "\n"
+            code_i += 1
 
         return str_
-
 
     def getCode(self, s):
         start_index = s.find("```")
         if start_index != -1:
-            
-            end_index = s.find("```", start_index + 3)  
+
+            end_index = s.find("```", start_index + 3)
             if end_index != -1:
-                
-                code = s[start_index + 6:end_index]
+
+                code = s[start_index + 6 : end_index]
                 return code
             else:
-                print("error \"```\"")
+                print('error "```"')
                 return -1
         else:
-            print("error \"```\"")
+            print('error "```"')
             return -1
 
     def build_faiss_index(self, input_dir, output_dir):
         embeddings = OpenAIEmbeddings(
             openai_api_base="https://chatapi.littlewheat.com/v1",
-            openai_api_key=self.get_api_key()
+            openai_api_key=self.get_api_key(),
         )
 
-        loader = TextLoader(input_dir, encoding='utf-8')
+        loader = TextLoader(input_dir, encoding="utf-8")
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
+            chunk_size=1000, chunk_overlap=200
         )
         documents = loader.load_and_split(text_splitter)
 
@@ -160,12 +163,7 @@ class Config:
         return self.EVAL_TEMPLATE
 
     def get_language(self, platform):
-        if platform == 'Graphx':
-            return 'Java'
+        if platform == "Graphx":
+            return "Java"
         else:
-            return 'C++'
-
-
-
-
-
+            return "C++"
