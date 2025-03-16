@@ -20,7 +20,8 @@ g++ generator.cpp -o generator -O3
 ./generator $Scale $Platform $Feature
 ```
 
-We also provide a LDBC-version of our generator consists of only a few modification.
+
+We also provide a [LDBC-version of our generator](https://github.com/Lingkai981/Graph-Analytics-Benchmarks/tree/e2377e5a5a1e752ed3db44c58b8c95afc80ae030/renewal_datagen) consists of only a few modification.
 
 To easy startup, here is the datasets used in our evalution. The format of these datasets are edge list, i.e., each line is a single edge.
 
