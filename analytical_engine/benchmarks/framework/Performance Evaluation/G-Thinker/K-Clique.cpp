@@ -151,11 +151,12 @@ class TriangleWorker : public Worker<TriangleComper> {
   virtual VertexT* toVertex(char* line) {
     VertexT* v = new VertexT;
     char* pch;
-    pch = strtok(line, " \t");
+    char* saveptr;
+    pch = strtok_r(line, " \t", &saveptr);
     v->id = atoi(pch);
-    strtok(NULL, " \t");
+    strtok_r(NULL, " \t", &saveptr);
     TriangleValue& val = v->value;
-    while ((pch = strtok(NULL, " ")) != NULL) {
+    while ((pch = strtok_r(NULL, " ", &saveptr)) != NULL) {
       val.push_back(atoi(pch));
     }
     return v;

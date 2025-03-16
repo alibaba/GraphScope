@@ -78,13 +78,14 @@ class PRWorker_pregel : public Worker<PRVertex_pregel, PRAgg_pregel> {
  public:
   virtual PRVertex_pregel* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     PRVertex_pregel* v = new PRVertex_pregel;
     v->id = atoi(pch);
-    pch = strtok(NULL, " ");
+    pch = strtok_r(NULL, " ", &saveptr);
     int num = atoi(pch);
     for (int i = 0; i < num; i++) {
-      pch = strtok(NULL, " ");
+      pch = strtok_r(NULL, " ", &saveptr);
       v->value().edges.push_back(atoi(pch));
     }
     return v;

@@ -23,7 +23,7 @@ object Betweenness {
 
     val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
     val date = new Date()
-    println(s"Middle Time:")
+    println("Middle Time:")
     println(dateFormat.format(date))
 
     AccumulationStep.run(g)

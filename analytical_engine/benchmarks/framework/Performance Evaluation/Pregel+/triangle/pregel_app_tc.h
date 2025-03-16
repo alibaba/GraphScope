@@ -7,14 +7,12 @@ struct TCValue_pregel {
   set<VertexID> neighbors;
   int triangle_count;
 
-  // 序列化操作符
   friend ibinstream& operator<<(ibinstream& m, const TCValue_pregel& v) {
     m << v.neighbors;
     m << v.triangle_count;
     return m;
   }
 
-  // 反序列化操作符
   friend obinstream& operator>>(obinstream& m, TCValue_pregel& v) {
     m >> v.neighbors;
     m >> v.triangle_count;
@@ -25,14 +23,12 @@ struct TCMsg_pregel {
   VertexID id;
   set<VertexID> neighbors;
 
-  // 序列化操作符
   friend ibinstream& operator<<(ibinstream& m, const TCMsg_pregel& v) {
     m << v.id;
     m << v.neighbors;
     return m;
   }
 
-  // 反序列化操作符
   friend obinstream& operator>>(obinstream& m, TCMsg_pregel& v) {
     m >> v.id;
     m >> v.neighbors;
@@ -43,7 +39,6 @@ class TCVertex_pregel : public Vertex<VertexID, TCValue_pregel, TCMsg_pregel> {
  public:
   virtual void compute(MessageContainer& messages) {
     if (step_num() == 1) {
-      // 第一步：将邻居列表发送给所有邻居
       // if(id%1000 == 0) cout<<id<<endl;
       for (const VertexID& nb : value().neighbors) {
         if (nb <= id)
@@ -58,7 +53,6 @@ class TCVertex_pregel : public Vertex<VertexID, TCValue_pregel, TCMsg_pregel> {
         send_message(nb, msg);
       }
     } else if (step_num() == 2) {
-      // 第二步：接收来自邻居的消息并计算共同邻居
       // set<VertexID> received_neighbors;
       int triangle_count = 0;
       // if(id%1000 == 0) cout<<id<<endl;
@@ -73,15 +67,12 @@ class TCVertex_pregel : public Vertex<VertexID, TCValue_pregel, TCMsg_pregel> {
           }
         }
       }
-
-      // 计算三角形数量
-
       // for (const VertexID &nb : received_neighbors) {
       //     if (value().neighbors.count(nb)) {
 
       //     }
       // }
-      value().triangle_count = triangle_count;  // 每个三角形被计算了两次
+      value().triangle_count = triangle_count;  
       all_tri += triangle_count;
       vote_to_halt();
     } else {
@@ -94,21 +85,19 @@ class TCWorker_pregel : public Worker<TCVertex_pregel> {
   // int all_tri = 0;
 
  public:
-  // 输入行格式: vertexID \t neighbor1 neighbor2 ...
   virtual TCVertex_pregel* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     TCVertex_pregel* v = new TCVertex_pregel;
     v->id = atoi(pch);
-    pch = strtok(NULL, " ");
-    while (pch = strtok(NULL, " ")) {
+    pch = strtok_r(NULL, " ", &saveptr);
+    while (pch = strtok_r(NULL, " ", &saveptr)) {
       v->value().neighbors.insert(atoi(pch));
     }
     v->value().triangle_count = 0;
     return v;
   }
-
-  // 输出行格式: vertexID \t triangle_count
 
   virtual void toline(TCVertex_pregel* v, BufferedWriter& writer) {
     return;

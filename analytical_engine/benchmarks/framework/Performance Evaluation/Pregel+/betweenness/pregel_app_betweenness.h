@@ -148,13 +148,14 @@ class BcWorker : public Worker<BcVertex> {
  public:
   virtual BcVertex* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     BcVertex* v = new BcVertex;
     v->id = atoi(pch);
-    pch = strtok(NULL, " ");
+    pch = strtok_r(NULL, " ", &saveptr);
     int num = atoi(pch);
     for (int i = 0; i < num; i++) {
-      pch = strtok(NULL, " ");
+      pch = strtok_r(NULL, " ", &saveptr);
       v->value().edges.push_back(atoi(pch));
     }
     return v;

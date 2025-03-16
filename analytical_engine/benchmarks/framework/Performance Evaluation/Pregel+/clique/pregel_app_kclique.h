@@ -7,14 +7,12 @@ struct TCValue_pregel {
   set<VertexID> neighbors;
   int triangle_count;
 
-  // 序列化操作符
   friend ibinstream& operator<<(ibinstream& m, const TCValue_pregel& v) {
     m << v.neighbors;
     m << v.triangle_count;
     return m;
   }
 
-  // 反序列化操作符
   friend obinstream& operator>>(obinstream& m, TCValue_pregel& v) {
     m >> v.neighbors;
     m >> v.triangle_count;
@@ -25,14 +23,12 @@ struct TCMsg_pregel {
   VertexID id;
   set<VertexID> neighbors;
 
-  // 序列化操作符
   friend ibinstream& operator<<(ibinstream& m, const TCMsg_pregel& v) {
     m << v.id;
     m << v.neighbors;
     return m;
   }
 
-  // 反序列化操作符
   friend obinstream& operator>>(obinstream& m, TCMsg_pregel& v) {
     m >> v.id;
     m >> v.neighbors;
@@ -64,8 +60,6 @@ class TCVertex_pregel : public Vertex<VertexID, TCValue_pregel, TCMsg_pregel> {
 
   virtual void compute(MessageContainer& messages) {
     if (step_num() == 1) {
-      // std::cout << "compute at " << id << std::endl;
-      // 第一步：将邻居列表发送给所有邻居
       TCMsg_pregel msg = {id, {}};
       for (auto& neighbor : value().neighbors) {
         if (neighbor > id) {
@@ -92,7 +86,6 @@ class TCVertex_pregel : public Vertex<VertexID, TCValue_pregel, TCMsg_pregel> {
       // }
 
     } else {
-      // 第二步：接收来自邻居的消息并计算共同邻居
       map<int, vector<int>> subgraph;
       set<int> cand;
       for (const TCMsg_pregel& msg : messages) {
@@ -126,21 +119,19 @@ class TCWorker_pregel : public Worker<TCVertex_pregel> {
   // int all_tri = 0;
 
  public:
-  // 输入行格式: vertexID \t neighbor1 neighbor2 ...
   virtual TCVertex_pregel* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     TCVertex_pregel* v = new TCVertex_pregel;
     v->id = atoi(pch);
-    pch = strtok(NULL, " ");
-    while (pch = strtok(NULL, " ")) {
+    pch = strtok_r(NULL, " ", &saveptr);
+    while (pch = strtok_r(NULL, " ", &saveptr)) {
       v->value().neighbors.insert(atoi(pch));
     }
     v->value().triangle_count = 0;
     return v;
   }
-
-  // 输出行格式: vertexID \t triangle_count
 
   virtual void toline(TCVertex_pregel* v, BufferedWriter& writer) {
     // return;
@@ -160,6 +151,5 @@ void pregel_triangle_counting(string in_path, string out_path) {
   TCWorker_pregel worker;
   // cout << "start2" << endl;
   worker.run(param);
-
   // cout<<"all_tri:"<<all_tri/3<<endl;
 }

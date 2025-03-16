@@ -119,10 +119,10 @@ class SPWorker_pregel : public Worker<SPVertex_pregel> {
   char buf[1000];
 
  public:
-  // input line:
   virtual SPVertex_pregel* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     SPVertex_pregel* v = new SPVertex_pregel;
     int id = atoi(pch);
     v->id = id;
@@ -133,8 +133,8 @@ class SPWorker_pregel : public Worker<SPVertex_pregel> {
       v->value().dist = DBL_MAX;
       v->vote_to_halt();
     }
-    pch = strtok(NULL, " ");
-    while (pch = strtok(NULL, " ")) {
+    pch = strtok_r(NULL, " ", &saveptr);
+    while (pch = strtok_r(NULL, " ", &saveptr)) {
       int nb = atoi(pch);
       double len = 1;
       SPEdge_pregel edge = {len, nb};

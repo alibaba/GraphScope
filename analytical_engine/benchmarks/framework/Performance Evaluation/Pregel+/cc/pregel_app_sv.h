@@ -298,13 +298,14 @@ class SVWorker_pregel : public Worker<SVVertex_pregel, SVAgg_pregel> {
  public:
   virtual SVVertex_pregel* toVertex(char* line) {
     char* pch;
-    pch = strtok(line, "\t");
+    char* saveptr;
+    pch = strtok_r(line, "\t", &saveptr);
     SVVertex_pregel* v = new SVVertex_pregel;
     v->id = atoi(pch);
-    pch = strtok(NULL, " ");
+    pch = strtok_r(NULL, " ", &saveptr);
     int num = atoi(pch);
     for (int i = 0; i < num; i++) {
-      pch = strtok(NULL, " ");
+      pch = strtok_r(NULL, " ", &saveptr);
       v->value().edges.push_back(atoi(pch));
     }
     v->value().D = v->id;

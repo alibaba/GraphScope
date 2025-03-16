@@ -95,7 +95,7 @@ object BetweennessCentralityExample {
 
     val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
     val date = new Date()
-    println(s"Start Time:")
+    println("Start Time:")
     println(dateFormat.format(date))
 
     val spark = SparkSession.builder
@@ -104,14 +104,14 @@ object BetweennessCentralityExample {
     implicit val sc = spark.sparkContext
 
     val date1 = new Date()
-    println(s"Preparing Time:")
+    println("Preparing Time:")
     println(dateFormat.format(date1))
 
     // 输入图
     val graph = NewGraphLoader.edgeListFile(sc, "/graphx_data/input.txt", numEdgePartitions=args(0).toInt)
 
     val date2 = new Date()
-    println(s"Loading Time:")
+    println("Loading Time:")
     println(dateFormat.format(date2))
 
     // 运行Betweenness
@@ -119,17 +119,17 @@ object BetweennessCentralityExample {
     val bcGraph = Betweenness(bfsGraph)
 
     val date3 = new Date()
-    println(s"Running Time:")
+    println("Running Time:")
     println(dateFormat.format(date3))
 
     // 输出结果
-    println(s"Finish Betweenness Centrality")
+    println("Finish Betweenness Centrality")
     // bcGraph.vertices.collect.foreach { case (id, (dist, count, succ, centrality, status)) =>
-    //   println(s"Vertex $id: distance = $dist, number of shortest paths = $count, centrality value = $centrality")
+    //   println("Vertex $id: distance = $dist, number of shortest paths = $count, centrality value = $centrality")
     // }
 
     val date4 = new Date()
-    println(s"Finish Time:")
+    println("Finish Time:")
     println(dateFormat.format(date4))
 
     spark.stop()

@@ -260,16 +260,13 @@ int main(int argc, char** argv) {
     alpha = 20.0;
     solveDistribution(N);
     printf("generate dense graph, alpha = %f\n", alpha);
-
   } else if (FEATURE == "Diameter") {
     group_size = N / (100 / 5);
     solveDistribution(N);
     alpha = 80.0;
     printf("generate large diameter, group size is %d\n", group_size);
-
   } else if (FEATURE == "Standard") {
     solveDistribution(N);
-
   } else {
     assert(0);
   }
@@ -379,42 +376,30 @@ int main(int argc, char** argv) {
 
   if (TYPE == "flash") {
     output_snap("flash");
-
   } else if (TYPE == "grape") {
     output_vertice("grape");
     output_snap("grape");
-
   } else if (TYPE == "flash-sssp") {
     output_snap_weight("flash-sssp");
-
   } else if (TYPE == "grape-sssp") {
     output_vertice("grape-sssp");
     output_snap_weight("grape-sssp");
-
   } else if (TYPE == "powergraph") {
     output_snap("powergraph");
-
   } else if (TYPE == "powergraph-bc") {
     output_powergraph_bc("powergraph-bc");
-
   } else if (TYPE == "powergraph-lpa") {
     output_labeled_adj("powergraph-lpa");
-
   } else if (TYPE == "pregel+") {
     output_adj("pregel+");
-
   } else if (TYPE == "ligra") {
     output_ligra("ligra");
-
   } else if (TYPE == "graphx") {
     output_snap("graphx");
-
   } else if (TYPE == "graphx-weight") {
     output_snap_weight("graphx-weight");
-
   } else if (TYPE == "ligra-sssp") {
     output_ligra_sssp("ligra-sssp");
-
   } else {
     assert(0);
   }
@@ -449,10 +434,11 @@ void solveDistribution(int N) {
 }
 
 int nextDegree() {
-  int bucket = rand() % buckets.size();
+  unsigned int seed = time(NULL);
+  int bucket = rand_r(&seed) % buckets.size();
   int min_degree = (int) buckets[bucket].min_degree;
   int max_degree = (int) buckets[bucket].max_degree;
-  return rand() % (max_degree - min_degree + 1) + min_degree;
+  rreturn rand_r(&seed) % (max_degree - min_degree + 1) + min_degree;
 }
 
 void initialize() {

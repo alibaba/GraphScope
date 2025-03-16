@@ -5,7 +5,7 @@ for dataset in Standard; do
     hdfs dfs -cp /graphx_data/graphx-weight-edges-${scale}-${dataset}.txt /graphx_data/input.txt
     hdfs dfs -ls /graphx_data
 
-    for machines in 1; do
+    machines=1
     threads=32
     tot_core=$((machines*threads))
 
@@ -19,5 +19,4 @@ for dataset in Standard; do
         --driver-memory 480G \
         ssspexample_2.11-0.1.jar $tot_core \
         > a_${dataset}-${scale}-${machines}machines-${threads}threads.txt
-    done
 done
