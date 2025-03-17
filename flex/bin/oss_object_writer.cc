@@ -75,5 +75,8 @@ int main(int argc, char** argv) {
       << "Put object to OSS failed";
   LOG(INFO) << "Successfully put object to OSS";
 
+  CHECK(writer.Delete(vm["object"].as<std::string>()).ok())
+      << "Delete object from OSS failed";
+
   return 0;
 }
