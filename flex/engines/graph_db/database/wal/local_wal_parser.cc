@@ -22,8 +22,7 @@
 
 namespace gs {
 
-LocalWalParser::LocalWalParser(const std::string& wal_uri)
-    : insert_wal_list_(NULL), insert_wal_list_size_(0) {
+LocalWalParser::LocalWalParser(const std::string& wal_uri) {
   LocalWalParser::open(wal_uri);
 }
 
@@ -54,16 +53,7 @@ void LocalWalParser::open(const std::string& wal_uri) {
     mmapped_size_.push_back(file_size);
   }
 
-  if (insert_wal_list_ != NULL) {
-    munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
-    insert_wal_list_ = NULL;
-    insert_wal_list_size_ = 0;
-  }
-  insert_wal_list_ = static_cast<WalContentUnit*>(
-      mmap(NULL, IWalWriter::MAX_WALS_NUM * sizeof(WalContentUnit),
-           PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE,
-           -1, 0));
-  insert_wal_list_size_ = IWalWriter::MAX_WALS_NUM;
+  insert_wal_list_.resize(4096);
   for (size_t i = 0; i < mmapped_ptrs_.size(); ++i) {
     char* ptr = static_cast<char*>(mmapped_ptrs_[i]);
     while (true) {
@@ -81,6 +71,9 @@ void LocalWalParser::open(const std::string& wal_uri) {
         unit.size = length;
         update_wal_list_.push_back(unit);
       } else {
+        if (ts >= insert_wal_list_.size()) {
+          insert_wal_list_.resize(ts + 1);
+        }
         insert_wal_list_[ts].ptr = ptr;
         insert_wal_list_[ts].size = length;
       }
@@ -98,11 +91,7 @@ void LocalWalParser::open(const std::string& wal_uri) {
 }
 
 void LocalWalParser::close() {
-  if (insert_wal_list_ != NULL) {
-    munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
-    insert_wal_list_ = NULL;
-    insert_wal_list_size_ = 0;
-  }
+  insert_wal_list_.clear();
   size_t ptr_num = mmapped_ptrs_.size();
   for (size_t i = 0; i < ptr_num; ++i) {
     munmap(mmapped_ptrs_[i], mmapped_size_[i]);
