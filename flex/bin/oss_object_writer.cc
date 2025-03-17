@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     conf.bucket_name_ = vm["bucket"].as<std::string>();
   }
 
-  gs::OSSRemoteStorageWriter writer(conf);
+  gs::OSSRemoteStorageUploader writer(conf);
 
   CHECK(writer.Open().ok()) << "Open OSS reader failed";
   if (!vm.count("input-file")) {

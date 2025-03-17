@@ -21,9 +21,9 @@
 
 namespace gs {
 
-class RemoteStorageWriter {
+class RemoteStorageUploader {
  public:
-  virtual ~RemoteStorageWriter() = default;
+  virtual ~RemoteStorageUploader() = default;
 
   /**
    * Open a remote storage for writing.
@@ -55,9 +55,9 @@ class RemoteStorageWriter {
   virtual Status Close() = 0;
 };
 
-class RemoteStorageReader {
+class RemoteStorageDownloader {
  public:
-  virtual ~RemoteStorageReader() = default;
+  virtual ~RemoteStorageDownloader() = default;
 
   /**
    * Open a remote storage for reading.

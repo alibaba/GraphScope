@@ -42,11 +42,11 @@ struct OSSConf {
   void load_conf_from_env();
 };
 
-class OSSRemoteStorageWriter : public RemoteStorageWriter {
+class OSSRemoteStorageUploader : public RemoteStorageUploader {
  public:
-  OSSRemoteStorageWriter(OSSConf conf = {}) : conf_(conf) {}
+  OSSRemoteStorageUploader(OSSConf conf = {}) : conf_(conf) {}
 
-  ~OSSRemoteStorageWriter() override = default;
+  ~OSSRemoteStorageUploader() override = default;
 
   // Will try to load the accesskey_id and accesskey_secret from the environment
   // variables if they are not set in the OSSConf.
@@ -64,11 +64,11 @@ class OSSRemoteStorageWriter : public RemoteStorageWriter {
   std::shared_ptr<AlibabaCloud::OSS::OssClient> client_;
 };
 
-class OSSRemoteStorageReader : public RemoteStorageReader {
+class OSSRemoteStorageDownloader : public RemoteStorageDownloader {
  public:
-  OSSRemoteStorageReader(OSSConf conf = {}) : conf_(conf) {}
+  OSSRemoteStorageDownloader(OSSConf conf = {}) : conf_(conf) {}
 
-  ~OSSRemoteStorageReader() override = default;
+  ~OSSRemoteStorageDownloader() override = default;
 
   Status Open() override;
 

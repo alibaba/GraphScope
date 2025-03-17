@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
   conf.endpoint_ = argv[3];
   conf.bucket_name_ = argv[4];
 
-  gs::OSSRemoteStorageWriter writer(conf);
-  gs::OSSRemoteStorageReader reader(conf);
+  gs::OSSRemoteStorageUploader writer(conf);
+  gs::OSSRemoteStorageDownloader reader(conf);
 
-  CHECK(writer.Open()) << "Open OSS writer failed";
-  CHECK(reader.Open()) << "Open OSS reader failed";
+  CHECK(writer.Open().ok()) << "Open OSS writer failed";
+  CHECK(reader.Open().ok()) << "Open OSS reader failed";
 
   std::string input_file = argv[5];
   std::string object_name = "test_object";

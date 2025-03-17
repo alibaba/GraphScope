@@ -117,7 +117,7 @@ std::string object_summary_to_string(
          ", restoreInfo: " + summary.RestoreInfo();
 }
 
-gs::Status OSSRemoteStorageWriter::Open() {
+gs::Status OSSRemoteStorageUploader::Open() {
   if (conf_.accesskey_id_.empty() || conf_.accesskey_secret_.empty()) {
     conf_.load_conf_from_env();
   }
@@ -132,9 +132,9 @@ gs::Status OSSRemoteStorageWriter::Open() {
   return Status::OK();
 }
 
-gs::Status OSSRemoteStorageWriter::Put(const std::string& local_path,
-                                       const std::string& remote_path,
-                                       bool override) {
+gs::Status OSSRemoteStorageUploader::Put(const std::string& local_path,
+                                         const std::string& remote_path,
+                                         bool override) {
   LOG(INFO) << "OSS Put local file " << local_path << " to remote "
             << remote_path;
   if (!client_ || local_path.empty() || remote_path.empty()) {
@@ -169,7 +169,7 @@ gs::Status OSSRemoteStorageWriter::Put(const std::string& local_path,
 
   return Status::OK();
 }
-gs::Status OSSRemoteStorageWriter::Delete(const std::string& remote_path) {
+gs::Status OSSRemoteStorageUploader::Delete(const std::string& remote_path) {
   AlibabaCloud::OSS::DeleteObjectRequest request(conf_.bucket_name_,
                                                  remote_path);
   auto outcome = client_->DeleteObject(request);
@@ -183,13 +183,13 @@ gs::Status OSSRemoteStorageWriter::Delete(const std::string& remote_path) {
   }
   return Status::OK();
 }
-gs::Status OSSRemoteStorageWriter::Close() {
+gs::Status OSSRemoteStorageUploader::Close() {
   client_.reset();
   return Status::OK();
 }
 
 /// OSSRemote storage reader
-gs::Status OSSRemoteStorageReader::Open() {
+gs::Status OSSRemoteStorageDownloader::Open() {
   if (conf_.accesskey_id_.empty() || conf_.accesskey_secret_.empty()) {
     conf_.load_conf_from_env();
   }
@@ -204,8 +204,8 @@ gs::Status OSSRemoteStorageReader::Open() {
   return Status::OK();
 }
 
-gs::Status OSSRemoteStorageReader::Get(const std::string& remote_path,
-                                       const std::string& local_path) {
+gs::Status OSSRemoteStorageDownloader::Get(const std::string& remote_path,
+                                           const std::string& local_path) {
   LOG(INFO) << "OSS Get remote file " << remote_path << " to local "
             << local_path;
   if (local_path.empty() || remote_path.empty()) {
@@ -262,8 +262,8 @@ gs::Status OSSRemoteStorageReader::Get(const std::string& remote_path,
   return Status::OK();
 }
 
-gs::Status OSSRemoteStorageReader::List(const std::string& remote_prefix,
-                                        std::vector<std::string>& path_list) {
+gs::Status OSSRemoteStorageDownloader::List(
+    const std::string& remote_prefix, std::vector<std::string>& path_list) {
   std::string nextMarker = "";
   bool isTruncated = false;
   do {
@@ -289,10 +289,10 @@ gs::Status OSSRemoteStorageReader::List(const std::string& remote_prefix,
   return Status::OK();
 }
 
-gs::Status OSSRemoteStorageReader::Close() { return Status::OK(); }
+gs::Status OSSRemoteStorageDownloader::Close() { return Status::OK(); }
 
-bool OSSRemoteStorageReader::get_metadata_etag(const std::string& remote_path,
-                                               std::string& etag) {
+bool OSSRemoteStorageDownloader::get_metadata_etag(
+    const std::string& remote_path, std::string& etag) {
   if (remote_path.empty()) {
     LOG(ERROR)
         << "OSS get_metadata_etag invalid argument, remote path is empty";
