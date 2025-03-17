@@ -1,6 +1,9 @@
 
 # file(GLOB_RECURSE GS_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 file(GLOB GS_TEST_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
+if (NOT BUILD_WITH_OSS)
+        list(REMOVE_ITEM GS_TEST_FILES "oss_test.cc")
+endif()
 
 foreach(f ${GS_TEST_FILES})
         string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${f})

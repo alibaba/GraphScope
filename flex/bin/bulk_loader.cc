@@ -25,6 +25,7 @@
 #include "flex/engines/http_server/options.h"
 
 #ifdef BUILD_WITH_OSS
+#include <boost/process.hpp>
 #include "flex/utils/remote/oss_storage.h"
 #endif
 
@@ -156,8 +157,8 @@ int main(int argc, char** argv) {
         vm["use-mmap-vector"].as<bool>());
   }
 
-#ifdef BUILD_WITH_OSS
   if (data_path.find("oss://") == 0) {
+#ifdef BUILD_WITH_OSS
     upload_to_oss = true;
     auto pos = data_path.find("/", 6);
     if (pos == std::string::npos) {
@@ -184,8 +185,11 @@ int main(int argc, char** argv) {
     }
     // use a random directory
     data_path = "/tmp/" + std::to_string(time(nullptr));
-  }
+#else
+    LOG(ERROR) << "OSS is not supported in this build";
+    return -1;
 #endif
+  }
 
   std::filesystem::path data_dir_path(data_path);
   if (!std::filesystem::exists(data_dir_path)) {
@@ -236,11 +240,15 @@ int main(int argc, char** argv) {
     // zip the data directory
     std::string zip_file = data_dir_path.string() + ".zip";
     std::string zip_cmd = "zip -r " + zip_file + " " + data_dir_path.string();
-    if (std::system(zip_cmd.c_str()) != 0) {
-      LOG(ERROR) << "Failed to zip data directory";
+    boost::process::child zip_process(zip_cmd);
+    zip_process.wait();
+
+    int res = zip_process.exit_code();
+    if (res != 0) {
+      LOG(ERROR) << "Failed to zip data directory: " << zip_cmd
+                 << ", code: " << res;
       return -1;
     }
-    // upload the zip file to oss
 
     auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
     if (!oss_writer || !oss_writer->Open().ok()) {
