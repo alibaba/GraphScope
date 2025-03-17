@@ -50,7 +50,7 @@ public class IrLdbcTest {
     @Test
     public void run_ldbc_tests() throws Exception {
         String queryDir =
-                System.getProperty("query.dir", "../../flex/resources/queries/ic/adhoc/ldbc/");
+                System.getProperty("query.dir", "../../flex/resources/queries/ic/runtime");
         File dir = new File(queryDir);
         int totalTests = 0;
         int passedTests = 0;
