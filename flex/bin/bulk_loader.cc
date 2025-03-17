@@ -49,6 +49,46 @@ void signal_handler(int signal) {
   }
 }
 
+#ifdef BUILD_WITH_OSS
+int32_t upload_data_dir_to_oss(const std::filesystem::path& data_dir_path,
+                               const std::string& object_path,
+                               const gs::OSSConf& oss_conf) {
+  // zip the data directory
+  std::string zip_file = data_dir_path.string() + ".zip";
+  std::string zip_cmd = "zip -r " + zip_file + " " + data_dir_path.string();
+  boost::process::child zip_process(zip_cmd);
+  zip_process.wait();
+
+  int res = zip_process.exit_code();
+  if (res != 0) {
+    LOG(ERROR) << "Failed to zip data directory: " << zip_cmd
+               << ", code: " << res;
+    return -1;
+  }
+
+  auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
+  if (!oss_writer || !oss_writer->Open().ok()) {
+    LOG(ERROR) << "Failed to open oss writer";
+    return -1;
+  }
+  auto status = oss_writer->Put(zip_file, object_path, false);
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to upload data to oss: " << status.ToString();
+    return -1;
+  }
+  status = oss_writer->Close();
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to close oss writer: " << status.ToString();
+    return -1;
+  }
+  LOG(INFO) << "Successfully uploaded data to oss: " << object_path
+            << ", it is in zip format";
+  std::filesystem::remove(zip_file);
+  std::filesystem::remove_all(data_dir_path);
+  return 0;
+}
+#endif
+
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
   /**
@@ -237,38 +277,7 @@ int main(int argc, char** argv) {
 
 #ifdef BUILD_WITH_OSS
   if (upload_to_oss) {
-    // zip the data directory
-    std::string zip_file = data_dir_path.string() + ".zip";
-    std::string zip_cmd = "zip -r " + zip_file + " " + data_dir_path.string();
-    boost::process::child zip_process(zip_cmd);
-    zip_process.wait();
-
-    int res = zip_process.exit_code();
-    if (res != 0) {
-      LOG(ERROR) << "Failed to zip data directory: " << zip_cmd
-                 << ", code: " << res;
-      return -1;
-    }
-
-    auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
-    if (!oss_writer || !oss_writer->Open().ok()) {
-      LOG(ERROR) << "Failed to open oss writer";
-      return -1;
-    }
-    auto status = oss_writer->Put(zip_file, object_path, false);
-    if (!status.ok()) {
-      LOG(ERROR) << "Failed to upload data to oss: " << status.ToString();
-      return -1;
-    }
-    status = oss_writer->Close();
-    if (!status.ok()) {
-      LOG(ERROR) << "Failed to close oss writer: " << status.ToString();
-      return -1;
-    }
-    LOG(INFO) << "Successfully uploaded data to oss: " << object_path
-              << ", it is in zip format";
-    std::filesystem::remove(zip_file);
-    std::filesystem::remove_all(data_dir_path);
+    return upload_data_dir_to_oss(data_dir_path, object_path, oss_conf);
   }
 #endif
 
