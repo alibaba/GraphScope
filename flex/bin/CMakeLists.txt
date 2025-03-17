@@ -49,3 +49,14 @@ install_without_export_flex_target(bulk_loader)
 add_executable(stored_procedure_runner stored_procedure_runner.cc)
 target_link_libraries(stored_procedure_runner flex_graph_db ${GFLAGS_LIBRARIES})
 install_without_export_flex_target(stored_procedure_runner)
+
+if (BUILD_WITH_OSS)
+        add_executable(oss_object_reader oss_object_reader.cc)
+        target_link_libraries(oss_object_reader flex_utils ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} cpp-sdk)
+        install_without_export_flex_target(oss_object_reader)
+
+
+        add_executable(oss_object_writer oss_object_writer.cc)
+        target_link_libraries(oss_object_writer flex_utils ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} cpp-sdk)
+        install_without_export_flex_target(oss_object_writer)
+endif()

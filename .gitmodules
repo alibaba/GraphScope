@@ -13,3 +13,6 @@
 [submodule "flex/third_party/parallel-hashmap"]
 	path = flex/third_party/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "flex/third_party/aliyun-oss-cpp-sdk"]
+	path = flex/third_party/aliyun-oss-cpp-sdk
+	url = https://github.com/aliyun/aliyun-oss-cpp-sdk.git
