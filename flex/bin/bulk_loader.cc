@@ -50,6 +50,33 @@ void signal_handler(int signal) {
 }
 
 #ifdef BUILD_WITH_OSS
+
+void check_oss_object_not_exist(std::string& data_path,
+                                std::string& object_path,
+                                gs::OSSConf& oss_conf) {
+  auto pos = data_path.find("/", 6);
+  if (pos == std::string::npos) {
+    LOG(FATAL) << "Invalid data path: " << data_path;
+  }
+  oss_conf.bucket_name_ = data_path.substr(6, pos - 6);
+  object_path = data_path.substr(pos + 1);
+  oss_conf.load_conf_from_env();
+  // check whether the object exists
+  auto oss_reader = std::make_shared<gs::OSSRemoteStorageDownloader>(oss_conf);
+  if (!oss_reader || !oss_reader->Open().ok()) {
+    LOG(FATAL) << "Failed to open oss reader";
+  }
+  std::vector<std::string> path_list;
+  auto status = oss_reader->List(object_path, path_list);
+  if (status.ok() && path_list.size() > 0) {
+    LOG(FATAL) << "Object already exists: " << object_path
+               << ", list size: " << path_list.size()
+               << ", please remove the object and try again.";
+  }
+  // use a random directory
+  data_path = "/tmp/" + std::to_string(time(nullptr));
+}
+
 int32_t upload_data_dir_to_oss(const std::filesystem::path& data_dir_path,
                                const std::string& object_path,
                                const gs::OSSConf& oss_conf) {
@@ -200,31 +227,7 @@ int main(int argc, char** argv) {
   if (data_path.find("oss://") == 0) {
 #ifdef BUILD_WITH_OSS
     upload_to_oss = true;
-    auto pos = data_path.find("/", 6);
-    if (pos == std::string::npos) {
-      LOG(ERROR) << "Invalid data path: " << data_path;
-      return -1;
-    }
-    oss_conf.bucket_name_ = data_path.substr(6, pos - 6);
-    object_path = data_path.substr(pos + 1);
-    oss_conf.load_conf_from_env();
-    // check whether the object exists
-    auto oss_reader =
-        std::make_shared<gs::OSSRemoteStorageDownloader>(oss_conf);
-    if (!oss_reader || !oss_reader->Open().ok()) {
-      LOG(ERROR) << "Failed to open oss reader";
-      return -1;
-    }
-    std::vector<std::string> path_list;
-    auto status = oss_reader->List(object_path, path_list);
-    if (status.ok() && path_list.size() > 0) {
-      LOG(ERROR) << "Object already exists: " << object_path
-                 << ", list size: " << path_list.size()
-                 << ", please remove the object and try again.";
-      return -1;
-    }
-    // use a random directory
-    data_path = "/tmp/" + std::to_string(time(nullptr));
+    check_oss_object_not_exist(data_path, object_path, oss_conf);
 #else
     LOG(ERROR) << "OSS is not supported in this build";
     return -1;
