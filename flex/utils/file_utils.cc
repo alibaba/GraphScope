@@ -18,13 +18,12 @@
 namespace gs {
 
 bool read_string_from_file(const std::string& file_path, std::string& content) {
-  std::ifstream inputFile(file_path);  // Open the file for reading
+  std::ifstream inputFile(file_path);
 
   if (!inputFile.is_open()) {
     LOG(ERROR) << "Error: Could not open the file " << file_path;
     return false;
   }
-  // Use a stringstream to read the entire content of the file
   std::ostringstream buffer;
   buffer << inputFile.rdbuf();
   content = buffer.str();
@@ -33,14 +32,12 @@ bool read_string_from_file(const std::string& file_path, std::string& content) {
 
 bool write_string_to_file(const std::string& content,
                           const std::string& file_path) {
-  // Open the file for writing, override the previous content
   std::ofstream outputFile(file_path, std::ios::out | std::ios::trunc);
 
   if (!outputFile.is_open()) {
     LOG(ERROR) << "Error: Could not open the file " << file_path;
     return false;
   }
-  // Write the content to the file
   outputFile << content;
   return true;
 }
