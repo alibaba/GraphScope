@@ -27,7 +27,8 @@ namespace gs {
 
 bool read_string_from_file(const std::string& file_path, std::string& content);
 
-bool write_string_to_file(const std::string& content, const std::string& file_path);
+bool write_string_to_file(const std::string& content,
+                          const std::string& file_path);
 
 }  // namespace gs
 
