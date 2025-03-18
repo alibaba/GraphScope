@@ -36,7 +36,11 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
 
     @Override
     public Object visitOC_IntegerLiteral(CypherGSParser.OC_IntegerLiteralContext ctx) {
-        String integerLiteral = ctx.getText().toLowerCase();
+        return parseInteger(ctx.getText());
+    }
+
+    public Object parseInteger(String text) {
+        String integerLiteral = text.toLowerCase();
         try {
             if (integerLiteral.length() > 1) {
                 char lastChar = integerLiteral.charAt(integerLiteral.length() - 1);
@@ -75,6 +79,9 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
                 } else if (integerLiteral.charAt(startIndex) == '0') {
                     radix = 8;
                 }
+                if (integerLiteral.endsWith("l")) {
+                    integerLiteral = integerLiteral.substring(0, integerLiteral.length() - 1);
+                }
                 // create big integer
                 return new BigInteger(integerLiteral, radix);
             }
@@ -84,6 +91,9 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
     @Override
     public Object visitOC_DoubleLiteral(CypherGSParser.OC_DoubleLiteralContext ctx) {
         String floatLiteral = ctx.getText().toLowerCase();
+        if (floatLiteral.endsWith("f")) {
+            return Float.valueOf(floatLiteral);
+        }
         return Double.valueOf(floatLiteral);
     }
 

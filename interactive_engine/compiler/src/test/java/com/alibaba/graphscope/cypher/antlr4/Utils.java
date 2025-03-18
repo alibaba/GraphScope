@@ -23,6 +23,9 @@ import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 public abstract class Utils {
     public static final GraphBuilder eval(String query) {
         GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
@@ -47,5 +50,19 @@ public abstract class Utils {
         IrMeta irMeta = com.alibaba.graphscope.common.ir.Utils.mockSchemaMeta(schemaPath);
         LogicalPlanVisitor logicalPlanVisitor = new LogicalPlanVisitor(graphBuilder, irMeta);
         return logicalPlanVisitor.visit(new CypherAntlr4Parser().parse(query));
+    }
+
+    public static byte[] longToBytes(long value) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putLong(value);
+        return buffer.array();
+    }
+
+    public static byte[] intToBytes(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(value);
+        return buffer.array();
     }
 }

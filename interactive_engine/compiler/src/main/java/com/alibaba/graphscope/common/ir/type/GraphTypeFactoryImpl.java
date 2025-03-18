@@ -18,12 +18,15 @@ package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.meta.schema.IrDataTypeConvertor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -36,7 +39,65 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     private final Configs configs;
 
     public GraphTypeFactoryImpl(Configs configs) {
-        super();
+        super(
+                new RelDataTypeSystemImpl() {
+                    @Override
+                    public int getMaxNumericPrecision() {
+                        return 20;
+                    }
+
+                    @Override
+                    public @Nullable RelDataType deriveDecimalPlusType(
+                            RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+                        if (!SqlTypeUtil.isExactNumeric(type1)
+                                || !SqlTypeUtil.isExactNumeric(type2)
+                                || !isDecimal(type1) && !isDecimal(type2)) {
+                            return null;
+                        }
+                        return super.deriveDecimalPlusType(typeFactory, type1, type2);
+                    }
+
+                    @Override
+                    public @Nullable RelDataType deriveDecimalMultiplyType(
+                            RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+                        if (!SqlTypeUtil.isExactNumeric(type1)
+                                || !SqlTypeUtil.isExactNumeric(type2)
+                                || !isDecimal(type1) && !isDecimal(type2)) {
+                            return null;
+                        }
+                        return super.deriveDecimalMultiplyType(typeFactory, type1, type2);
+                    }
+
+                    @Override
+                    public @Nullable RelDataType deriveDecimalDivideType(
+                            RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+                        if (!SqlTypeUtil.isExactNumeric(type1)
+                                || !SqlTypeUtil.isExactNumeric(type2)
+                                || !isDecimal(type1) && !isDecimal(type2)) {
+                            return null;
+                        }
+                        return super.deriveDecimalDivideType(typeFactory, type1, type2);
+                    }
+
+                    private boolean isDecimal(RelDataType type) {
+                        SqlTypeName typeName = type.getSqlTypeName();
+                        return typeName == SqlTypeName.DECIMAL
+                                && !isUint32(type)
+                                && !isUint64(type);
+                    }
+
+                    private boolean isUint32(RelDataType type) {
+                        return type.getSqlTypeName() == SqlTypeName.DECIMAL
+                                && type.getPrecision() == IrDataTypeConvertor.UINT32_PRECISION
+                                && type.getScale() == IrDataTypeConvertor.UINT32_SCALE;
+                    }
+
+                    private boolean isUint64(RelDataType type) {
+                        return type.getSqlTypeName() == SqlTypeName.DECIMAL
+                                && type.getPrecision() == IrDataTypeConvertor.UINT64_PRECISION
+                                && type.getScale() == IrDataTypeConvertor.UINT64_SCALE;
+                    }
+                });
         this.configs = configs;
     }
 
@@ -189,5 +250,15 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
                     new ArbitraryMapType.KeyValueType(leastKeyType, leastValueType));
         }
         return createArbitraryMapType(leastKeyValueType, isNullable);
+    }
+
+    @Override
+    public RelDataType createSqlType(SqlTypeName typeName, int precision, int scale) {
+        if (typeName == SqlTypeName.DECIMAL
+                && precision == typeSystem.getDefaultPrecision(SqlTypeName.BIGINT)
+                && scale == 0) {
+            return createSqlType(SqlTypeName.BIGINT);
+        }
+        return super.createSqlType(typeName, precision, scale);
     }
 }
