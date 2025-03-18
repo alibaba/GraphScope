@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef BUILD_WITH_OSS
+
 #include "flex/utils/remote/oss_storage.h"
 #include <filesystem>
 #include "flex/third_party/aliyun-oss-cpp-sdk/sdk/include/alibabacloud/oss/client/RetryStrategy.h"
@@ -315,3 +317,5 @@ bool OSSRemoteStorageDownloader::get_metadata_etag(
 }
 
 }  // namespace gs
+
+#endif  // BUILD_WITH_OSS

@@ -16,6 +16,8 @@
 #ifndef FLEX_UTILS_REMOTE_OSS_STORAGE_H_
 #define FLEX_UTILS_REMOTE_OSS_STORAGE_H_
 
+#ifdef BUILD_WITH_OSS
+
 #include <filesystem>
 #include <string>
 #include "flex/third_party/aliyun-oss-cpp-sdk/sdk/include/alibabacloud/oss/OssClient.h"
@@ -86,5 +88,7 @@ class OSSRemoteStorageDownloader : public RemoteStorageDownloader {
   std::shared_ptr<AlibabaCloud::OSS::OssClient> client_;
 };
 }  // namespace gs
+
+#endif  // BUILD_WITH_OSS
 
 #endif  // FLEX_UTILS_REMOTE_OSS_STORAGE_H_
