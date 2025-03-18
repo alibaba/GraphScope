@@ -29,7 +29,11 @@ enum class EdgeStrategy {
 
 using timestamp_t = uint32_t;
 using vid_t = uint32_t;
+#ifdef FLEX_LABEL_TYPE
+using label_t = FLEX_LABEL_TYPE;
+#else
 using label_t = uint8_t;
+#endif
 
 }  // namespace gs
 

@@ -1327,6 +1327,11 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const GlobalId& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, GlobalId& value);
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const std::vector<bool>& value);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              std::vector<bool>& value);
+
 }  // namespace gs
 
 namespace boost {

@@ -394,11 +394,12 @@ void grin_destroy_edge_property(GRIN_GRAPH g, GRIN_EDGE_PROPERTY ep) {}
 GRIN_DATATYPE grin_get_edge_property_datatype(GRIN_GRAPH g,
                                               GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto src_label_i = (ep >> 16) & 0xff;
+  auto edge_triplet_tuple = _g->g.schema().get_edge_triplet(ep);
+  auto src_label_i = std::get<0>(edge_triplet_tuple);
+  auto dst_label_i = std::get<1>(edge_triplet_tuple);
+  auto edge_label_i = std::get<2>(edge_triplet_tuple);
   const auto& src_label = _g->g.schema().get_vertex_label_name(src_label_i);
-  auto dst_label_i = (ep >> 8) & 0xff;
   const auto& dst_label = _g->g.schema().get_vertex_label_name(dst_label_i);
-  auto edge_label_i = ep & 0xff;
   const auto& edge_label = _g->g.schema().get_edge_label_name(edge_label_i);
   const auto& type =
       _g->g.schema().get_edge_properties(src_label, dst_label, edge_label);

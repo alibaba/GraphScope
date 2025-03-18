@@ -39,9 +39,11 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
   auto& v = adj_list.v;
   iter.adj_list = adj_list;
   auto label = adj_list.edge_label;
-  auto src_label = label >> 16;
-  auto dst_label = (label >> 8) & 0xff;
-  auto edge_label = label & 0xff;
+  auto edge_triplet_tuple =
+      static_cast<GRIN_GRAPH_T*>(g)->g.schema().get_edge_triplet(label);
+  auto src_label = std::get<0>(edge_triplet_tuple);
+  auto dst_label = std::get<1>(edge_triplet_tuple);
+  auto edge_label = std::get<2>(edge_triplet_tuple);
   auto v_label = v >> 32;
   auto vid = v & (0xffffffff);
   if (adj_list.dir == GRIN_DIRECTION::OUT) {
@@ -90,11 +92,13 @@ GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
   auto edge_iter = static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
   auto vid = edge_iter->get_neighbor();
   auto label = iter.adj_list.edge_label;
+  auto edge_triplet_tuple =
+      static_cast<GRIN_GRAPH_T*>(g)->g.schema().get_edge_triplet(label);
 
   if (iter.adj_list.dir == GRIN_DIRECTION::OUT) {
-    label = (label >> 8) & 0xff;
+    label = std::get<1>(edge_triplet_tuple);
   } else {
-    label = label >> 16;
+    label = std::get<0>(edge_triplet_tuple);
   }
   return ((label * 1ull) << 32) + vid;
 }

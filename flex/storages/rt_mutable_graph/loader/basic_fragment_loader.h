@@ -107,8 +107,8 @@ class BasicFragmentLoader {
   template <typename EDATA_T>
   void AddNoPropEdgeBatch(label_t src_label_id, label_t dst_label_id,
                           label_t edge_label_id) {
-    size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
-                   dst_label_id * edge_label_num_ + edge_label_id;
+    size_t index =
+        schema_.get_edge_triplet_id(src_label_id, dst_label_id, edge_label_id);
     CHECK(ie_[index] == NULL);
     CHECK(oe_[index] == NULL);
     auto src_label_name = schema_.get_vertex_label_name(src_label_id);
@@ -166,8 +166,8 @@ class BasicFragmentLoader {
                 label_t edge_label_id, const std::vector<VECTOR_T>& edges_vec,
                 const std::vector<int32_t>& ie_degree,
                 const std::vector<int32_t>& oe_degree, bool build_csr_in_mem) {
-    size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
-                   dst_label_id * edge_label_num_ + edge_label_id;
+    size_t index =
+        schema_.get_edge_triplet_id(src_label_id, dst_label_id, edge_label_id);
     auto dual_csr = dual_csr_list_[index];
     CHECK(dual_csr != NULL);
     auto casted_dual_csr = get_casted_dual_csr<EDATA_T>(dual_csr);

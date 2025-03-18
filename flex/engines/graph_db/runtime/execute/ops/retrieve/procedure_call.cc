@@ -127,11 +127,13 @@ RTAny vertex_to_rt_any(const results::Vertex& vertex) {
   return RTAny::from_vertex(label_id, label_id_vid.second);
 }
 
-RTAny edge_to_rt_any(const results::Edge& edge) {
+RTAny edge_to_rt_any(const GraphReadInterface& graph,
+                     const results::Edge& edge) {
   LOG(FATAL) << "Not implemented.";
   label_t src_label_id = (label_t) edge.src_label().id();
   label_t dst_label_id = (label_t) edge.dst_label().id();
-  auto edge_triplet_tuple = decode_edge_label_id(edge.label().id());
+  auto edge_triplet_tuple = graph.schema().get_edge_triplet(edge.label().id());
+
   CHECK((src_label_id == std::get<0>(edge_triplet_tuple)) &&
         (dst_label_id == std::get<1>(edge_triplet_tuple)))
       << "Inconsistent src label id.";
@@ -169,11 +171,12 @@ RTAny graph_path_to_rt_any(const results::GraphPath& path) {
   LOG(FATAL) << "Not implemented.";
 }
 
-RTAny element_to_rt_any(const results::Element& element) {
+RTAny element_to_rt_any(const GraphReadInterface& txn,
+                        const results::Element& element) {
   if (element.inner_case() == results::Element::kVertex) {
     return vertex_to_rt_any(element.vertex());
   } else if (element.inner_case() == results::Element::kEdge) {
-    return edge_to_rt_any(element.edge());
+    return edge_to_rt_any(txn, element.edge());
   } else if (element.inner_case() == results::Element::kObject) {
     return object_to_rt_any(element.object());
   } else if (element.inner_case() == results::Element::kGraphPath) {
@@ -183,27 +186,30 @@ RTAny element_to_rt_any(const results::Element& element) {
   }
 }
 
-RTAny collection_to_rt_any(const results::Collection& collection) {
+RTAny collection_to_rt_any(const GraphReadInterface& txn,
+                           const results::Collection& collection) {
   std::vector<RTAny> values;
   for (const auto& element : collection.collection()) {
-    values.push_back(element_to_rt_any(element));
+    values.push_back(element_to_rt_any(txn, element));
   }
   LOG(FATAL) << "Not implemented.";
   return RTAny();
 }
 
-RTAny column_to_rt_any(const results::Column& column) {
+RTAny column_to_rt_any(const GraphReadInterface& txn,
+                       const results::Column& column) {
   auto& entry = column.entry();
   if (entry.has_element()) {
-    return element_to_rt_any(entry.element());
+    return element_to_rt_any(txn, entry.element());
   } else if (entry.has_collection()) {
-    return collection_to_rt_any(entry.collection());
+    return collection_to_rt_any(txn, entry.collection());
   } else {
     LOG(FATAL) << "Unsupported column entry type: " << entry.inner_case();
   }
 }
 
-std::vector<RTAny> result_to_rt_any(const results::Results& result) {
+std::vector<RTAny> result_to_rt_any(const GraphReadInterface& txn,
+                                    const results::Results& result) {
   auto& record = result.record();
   if (record.columns_size() == 0) {
     LOG(WARNING) << "Empty result.";
@@ -211,7 +217,7 @@ std::vector<RTAny> result_to_rt_any(const results::Results& result) {
   } else {
     std::vector<RTAny> tuple;
     for (int32_t i = 0; i < record.columns_size(); ++i) {
-      tuple.push_back(column_to_rt_any(record.columns(i)));
+      tuple.push_back(column_to_rt_any(txn, record.columns(i)));
     }
     return tuple;
   }
@@ -219,7 +225,7 @@ std::vector<RTAny> result_to_rt_any(const results::Results& result) {
 
 std::pair<std::vector<std::shared_ptr<IContextColumn>>, std::vector<size_t>>
 collective_result_vec_to_column(
-    int32_t expect_col_num,
+    const GraphReadInterface& txn, int32_t expect_col_num,
     const std::vector<results::CollectiveResults>& collective_results_vec) {
   std::vector<size_t> offsets;
   offsets.push_back(0);
@@ -231,7 +237,7 @@ collective_result_vec_to_column(
   std::vector<std::vector<RTAny>> any_vec(expect_col_num);
   for (size_t i = 0; i < collective_results_vec.size(); ++i) {
     for (int32_t j = 0; j < collective_results_vec[i].results_size(); ++j) {
-      auto tuple = result_to_rt_any(collective_results_vec[i].results(j));
+      auto tuple = result_to_rt_any(txn, collective_results_vec[i].results(j));
       CHECK(tuple.size() == (size_t) expect_col_num)
           << "Inconsistent column number.";
       for (int32_t k = 0; k < expect_col_num; ++k) {
@@ -365,7 +371,7 @@ bl::result<Context> eval_procedure_call(const std::vector<int32_t>& aliases,
     }
 
     auto column_and_offsets =
-        collective_result_vec_to_column(aliases.size(), results);
+        collective_result_vec_to_column(txn, aliases.size(), results);
     auto& columns = column_and_offsets.first;
     auto& offsets = column_and_offsets.second;
     if (columns.size() != aliases.size()) {
