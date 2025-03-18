@@ -48,9 +48,11 @@ sed -e "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@g" \
     -e "\$a\
         graph.planner.opt=CBO" \
     -e "\$a\
-        graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,JoinDecompositionRule,ExpandGetVFusionRule" \
+        graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,FlatJoinToExpandRule,ExtendIntersectRule,FieldTrimRule,ExpandGetVFusionRule" \
     -e "\$a\
         gremlin.script.language.name=antlr_gremlin_calcite" \
+    -e "\$a\
+       query.execution.max.iterations=10" \
     ${GROOT_DIR}/conf/config.template > ${CONFIG_FILE}
 
 GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
