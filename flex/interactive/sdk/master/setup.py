@@ -1,8 +1,10 @@
 import sys
+import os
 from setuptools import setup, find_packages
 
 NAME = "gs_interactive_admin"
 VERSION = "0.3"
+repo_root = os.path.dirname(os.path.abspath(__file__))
 
 # To install the library, run the following
 #
@@ -11,7 +13,12 @@ VERSION = "0.3"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
-REQUIRES = ["connexion>=2.0.2", "swagger-ui-bundle>=0.0.2", "python_dateutil>=2.6.0"]
+def parsed_reqs():
+    with open(
+        os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8"
+    ) as fp:
+        pkgs = fp.read().splitlines()
+        return pkgs
 
 setup(
     name=NAME,
@@ -20,10 +27,11 @@ setup(
     author_email="graphscope@alibaba-inc.com",
     url="",
     keywords=["OpenAPI", "GraphScope Interactive API v0.3"],
-    install_requires=REQUIRES,
-    packages=find_packages(),
+    install_requires=parsed_reqs(),
+    packages=find_packages(exclude=["test", "tests"]),
     package_data={"": ["openapi/openapi.yaml"]},
     include_package_data=True,
+    license="Apache 2.0",
     entry_points={
         "console_scripts": ["gs_interactive_admin=gs_interactive_admin.__main__:main"]
     },

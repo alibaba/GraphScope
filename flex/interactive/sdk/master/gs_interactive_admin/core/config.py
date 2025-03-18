@@ -49,8 +49,7 @@ class HttpService:
     admin_port: int = 7777
     query_port: int = 10000
     max_content_length: str = "1GB"
-
-
+    
 @dataclass
 class ServiceRegistry:
     """
@@ -60,8 +59,7 @@ class ServiceRegistry:
     type: str = "etcd"
     endpoint: str = "http://localhost:2379"
     ttl: int = 60
-
-
+    
 @dataclass
 class K8sLauncherConfig:
     """
@@ -69,7 +67,7 @@ class K8sLauncherConfig:
     """
 
     # The namespace must be created before launching the interactive engine.
-    namespace: Union[str, None] = None
+    namespace: Union[str, None] = "default"
     instance_prefix: str = "gs-interactive"
     instance_id: str = (
         None  # If instance_id is specified, it will override the instance_prefix
@@ -98,6 +96,16 @@ class K8sLauncherConfig:
     service_type: str = "NodePort"
     cluster_ip: str = None # If service_type is ClusterIP, user could specify the cluster_ip
 
+    
+@dataclass
+class Master:
+    port: int = 7776
+    instance_name: str = "default"
+    service_registry: ServiceRegistry = field(default_factory=ServiceRegistry)
+
+    k8s_launcher_config : K8sLauncherConfig = field(default_factory=K8sLauncherConfig)
+    launcher_type: str = "k8s"
+
 @dataclass
 class ConnectorConfig:
     disabled: bool = False
@@ -124,15 +132,9 @@ class Config(Serializable):
     compute_engine: ComputeEngine = field(default_factory=ComputeEngine)
     
     compiler : CompilerConfig = field(default_factory=CompilerConfig)
-    
-    instance_name: str = "default"
 
     http_service: HttpService = field(default_factory=HttpService)
 
-    service_registry: ServiceRegistry = field(default_factory=ServiceRegistry)
-
-    launcher_type: str = "k8s"
-
-    k8s_launcher_config : K8sLauncherConfig = field(default_factory=K8sLauncherConfig)
-
     workspace: str = "/tmp/interactive_workspace"
+    
+    master : Master = field(default_factory=Master)

@@ -82,3 +82,13 @@ def stop_service(stop_service_request=None):  # noqa: E501
         return get_service_manager().stop_service(stop_service_request)
     else:
         raise RuntimeError("Invalid request")
+    
+def check_service_ready():  # noqa: E501
+    """check_service_ready
+
+    Check if service is ready # noqa: E501
+
+
+    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
+    """
+    return get_service_manager().check_service_ready()

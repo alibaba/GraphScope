@@ -1,6 +1,9 @@
 class ServiceManager(object):
     def __init__(self):
         pass
+    
+    def check_service_ready(self):
+        return "Service is ready"
 
 
 service_manager = ServiceManager()

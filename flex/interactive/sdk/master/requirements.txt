@@ -1,10 +1,3 @@
-#connexion[swagger-ui] >= 2.6.0; python_version>="3.6"
-# 2.3 is the last version that supports python 3.4-3.5
-#connexion[swagger-ui] <= 2.3.0; python_version=="3.5" or python_version=="3.4"
-# connexion requires werkzeug but connexion < 2.4.0 does not install werkzeug
-# we must peg werkzeug versions below to fix connexion
-# https://github.com/zalando/connexion/pull/1044
-#werkzeug == 0.16.1; python_version=="3.5" or python_version=="3.4"
 connexion == 2.14.2
 werkzeug == 3.0.3; python_version=="3.5" or python_version=="3.4"
 swagger-ui-bundle >= 0.0.2
@@ -13,3 +6,4 @@ setuptools >= 21.0.0
 Flask == 2.1.1
 etcd3 == 0.12.0
 kubernetes>=24.2.0
+simple_parsing == 0.1.7

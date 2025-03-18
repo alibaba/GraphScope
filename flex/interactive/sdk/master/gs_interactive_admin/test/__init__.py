@@ -15,7 +15,7 @@ class BaseTestCase(TestCase):
     def create_app(self):
         logging.basicConfig(level=logging.INFO)
         config = Config()
-        config.service_registry.ttl = 3
+        config.master.service_registry.ttl = 3
 
         initialize_service_registry(config)
         logging.getLogger("connexion.operation").setLevel("ERROR")

@@ -254,19 +254,6 @@ struct convert<server::ServiceConfig> {
                 << service_config.verbose_level;
     }
 
-    if (config["namespace"]) {
-      service_config.namespace_ = config["namespace"].as<std::string>();
-    } else {
-      VLOG(1) << "namespace not found, use default value "
-              << service_config.namespace_;
-    }
-    if (config["instance_name"]) {
-      service_config.instance_name = config["instance_name"].as<std::string>();
-    } else {
-      VLOG(1) << "instance_name not found, use default value "
-              << service_config.instance_name;
-    }
-
     auto engine_node = config["compute_engine"];
     if (engine_node) {
       auto engine_type = engine_node["type"];
@@ -381,18 +368,31 @@ struct convert<server::ServiceConfig> {
     }
 
     // parse service registry
-    if (config["service_registry"]) {
-      if (config["service_registry"]["endpoint"]) {
-        service_config.service_registry_endpoint =
-            config["service_registry"]["endpoint"].as<std::string>();
-        VLOG(10) << "service_registry_endpoint: "
-                 << service_config.service_registry_endpoint;
+
+    if (config["master"]){
+      auto master_node = config["master"];
+      if (master_node["instance_name"]){
+        service_config.master_instance_name = master_node["instance_name"].as<std::string>();
       }
-      if (config["service_registry"]["ttl"]) {
-        service_config.service_registry_ttl =
-            config["service_registry"]["ttl"].as<uint32_t>();
-        VLOG(10) << "service_registry_ttl: "
-                 << service_config.service_registry_ttl;
+      if (master_node["service_registry"]) {
+        if (master_node["service_registry"]["endpoint"]) {
+          service_config.service_registry_endpoint =
+          master_node["service_registry"]["endpoint"].as<std::string>();
+          VLOG(10) << "service_registry_endpoint: "
+                   << service_config.service_registry_endpoint;
+        }
+        if (master_node["service_registry"]["ttl"]) {
+          service_config.service_registry_ttl =
+          master_node["service_registry"]["ttl"].as<uint32_t>();
+          VLOG(10) << "service_registry_ttl: "
+                   << service_config.service_registry_ttl;
+        }
+      }
+      if (master_node["k8s_launcher_config"]){
+        auto k8s_config_node = master_node["k8s_launcher_config"];
+        if (k8s_config_node["namespace"]){
+          service_config.namespace_ = k8s_config_node["namespace"].as<std::string>();
+        }
       }
     }
 

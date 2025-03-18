@@ -34,17 +34,18 @@ from gs_interactive_admin.core.service_discovery.service_registry import (
 from gs_interactive_admin.core.service_discovery.service_registry import EtcdKeyHelper
 from gs_interactive_admin.core.service_discovery.service_registry import ServiceInstance
 
+logger = logging.getLogger("interactive")
 
 class TestServiceDiscovery(unittest.TestCase):
-    def setup_class(self):
+    def setUp(self):
         # Read etcd server endpoint from environment variable
         if "ETCD_ENDPOINT" not in os.environ:
             raise Exception("ETCD_ENDPOINT is not set")
         self.etcd_endpoint = os.environ["ETCD_ENDPOINT"]
         host, port = self.etcd_endpoint.split(":")
         self.etcd_client = etcd3.client(host=host, port=int(port))
-        self.etcd_key_helper = EtcdKeyHelper()
-        self.registry = EtcdServiceRegistry(host, int(port))
+        self.etcd_key_helper = EtcdKeyHelper(namespace="test", instance_name="test")
+        self.registry = EtcdServiceRegistry(host, int(port), "test", "test")
         # config logging
         logging.basicConfig(level=logging.INFO)
 
@@ -69,22 +70,24 @@ class TestServiceDiscovery(unittest.TestCase):
 
         self.registry.start()
         pre_registry = self.registry.discover("0", "cypher")
-        assert pre_registry is None
+        assert pre_registry is None or pre_registry == {}
         # mock_service()
         t = threading.Thread(target=mock_service)
         t.start()
         time.sleep(2)
         post_registry = self.registry.discover("0", "cypher")
         assert post_registry is not None
-        assert (
-            post_registry.is_valid()
-            and post_registry.get_primary_instance()
-            == ServiceInstance(mock_endpoint, mock_metrics)
+        assert (post_registry["primary"]
+            == ServiceInstance(mock_endpoint, mock_metrics).to_dict()
+        )
+        logger.info("post_registry: %s", post_registry)
+        assert (post_registry["instance_list"]
+            == [ServiceInstance(mock_endpoint, mock_metrics).to_dict()]
         )
         self.registry.stop()
         t.join()
 
-    def teardown_class(self):
+    def teardown(self):
         self.registry.stop()
         self.etcd_client.delete_prefix("/")
         self.etcd_client.close()

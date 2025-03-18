@@ -17,9 +17,12 @@
 #
 
 import base64
+import string
 import connexion
 import argparse
 import logging
+import random
+import os
 
 from gs_interactive_admin import encoder
 from gs_interactive_admin.core.config import Config
@@ -65,11 +68,22 @@ def initialize_global_variables(config):
     - get_xxx: Get the global variable
     """
     initialize_service_registry(config)
-
+    
+def preprocess_config(config: Config):
+    if config.master.instance_name is None:
+        if os.environ.get("MASTER_INSTANCE_NAME"):
+            config.master.instance_name = os.environ.get("MASTER_INSTANCE_NAME")
+        else:
+            # generate a random instance name with six characters
+            config.master.instance_name = "gs-interactive-{}".format(
+                "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            )
+        logging.info("Generated instance name: %s", config.master.instance_name)
 
 def main():
 
     args = setup_args_parsing()
+    config: Config = None
     if args.config:
         config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
         config = Config.loads_json(config)
@@ -77,6 +91,8 @@ def main():
         config = Config.load(args.config_file)
     else:
         raise RuntimeError("Must specify a config or config-file")
+    preprocess_config(config)
+        
 
     config_logging(config.log_level)
     initialize_global_variables(config)
@@ -88,7 +104,7 @@ def main():
         pythonic_params=True,
     )
 
-    app.run(port=8080)
+    app.run(port=config.master.port)
 
 
 if __name__ == "__main__":

@@ -22,8 +22,9 @@ class TestLaunchK8sCluster(unittest.TestCase):
     def setup_class(self):
         self._config = Config()
         self._k8s_launcher = K8sLauncher(self._config)
-        self._config.k8s_launcher_config.namespace = "test"
-        self._config.k8s_launcher_config.default_replicas = 1
+        self._config.master.instance_name = "test"
+        self._config.master.k8s_launcher_config.namespace = "test"
+        self._config.master.k8s_launcher_config.default_replicas = 1
         self._cluster = None
 
     def test_launch_cluster(self):

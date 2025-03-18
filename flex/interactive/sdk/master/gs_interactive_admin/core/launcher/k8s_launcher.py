@@ -50,34 +50,34 @@ class InteractiveK8sCluster(InteractiveCluster):
 
         self._started = False
         self._graph_id = graph_id
-        self._namespace = config.k8s_launcher_config.namespace
-        self._instance_prefix = config.k8s_launcher_config.instance_prefix
-        self._instance_id = config.k8s_launcher_config.instance_id
-        self._config_file = config.k8s_launcher_config.config_file
-        self._default_replicas = config.k8s_launcher_config.default_replicas
+        self._namespace = config.master.k8s_launcher_config.namespace
+        self._instance_prefix = config.master.k8s_launcher_config.instance_prefix
+        self._instance_id = config.master.k8s_launcher_config.instance_id
+        self._config_file = config.master.k8s_launcher_config.config_file
+        self._default_replicas = config.master.k8s_launcher_config.default_replicas
         self._config = config
         self._initialized = True
 
-        self._image_pull_policy = config.k8s_launcher_config.image_pull_policy
-        self._image_tag = config.k8s_launcher_config.image_tag
-        self._image_registry = config.k8s_launcher_config.image_registry
-        self._repository = config.k8s_launcher_config.repository
-        self._image_name = config.k8s_launcher_config.image_name
-        self._default_container_name = config.k8s_launcher_config.default_container_name
+        self._image_pull_policy = config.master.k8s_launcher_config.image_pull_policy
+        self._image_tag = config.master.k8s_launcher_config.image_tag
+        self._image_registry = config.master.k8s_launcher_config.image_registry
+        self._repository = config.master.k8s_launcher_config.repository
+        self._image_name = config.master.k8s_launcher_config.image_name
+        self._default_container_name = config.master.k8s_launcher_config.default_container_name
 
         self._cpu_request = config.compute_engine.thread_num_per_worker
         self._cpu_limit = config.compute_engine.thread_num_per_worker
         self._memory_request = config.compute_engine.memory_per_worker
         self._memory_limit = config.compute_engine.memory_per_worker
-        self._node_selectors = config.k8s_launcher_config.node_selectors
+        self._node_selectors = config.master.k8s_launcher_config.node_selectors
         self._workspace = config.workspace
         
         self._admin_port = config.http_service.admin_port
         self._query_port = config.http_service.query_port
         self._cypher_port = config.compiler.endpoint.bolt_connector.port
         
-        self._service_type = config.k8s_launcher_config.service_type
-        self._cluster_ip = config.k8s_launcher_config.cluster_ip
+        self._service_type = config.master.k8s_launcher_config.service_type
+        self._cluster_ip = config.master.k8s_launcher_config.cluster_ip
 
         # Some preprocessing
         if self._config_file is not None:
@@ -353,20 +353,20 @@ class InteractiveK8sCluster(InteractiveCluster):
             api_version="v1",
             kind="PersistentVolumeClaim",
             metadata=kube_client.V1ObjectMeta(
-                name=self._config.k8s_launcher_config.volume_claim_name
+                name=self._config.master.k8s_launcher_config.volume_claim_name
             ),
             spec=kube_client.V1PersistentVolumeClaimSpec(
-                access_modes=[self._config.k8s_launcher_config.volume_access_mode],
-                storage_class_name=self._config.k8s_launcher_config.volume_storage_class,
+                access_modes=[self._config.master.k8s_launcher_config.volume_access_mode],
+                storage_class_name=self._config.master.k8s_launcher_config.volume_storage_class,
                 resources=kube_client.V1ResourceRequirements(
-                    requests={"storage": self._config.k8s_launcher_config.volume_size}
+                    requests={"storage": self._config.master.k8s_launcher_config.volume_size}
                 ),
             ),
         )
         # mount to the container
         volume_mount = kube_client.V1VolumeMount(
-            name=self._config.k8s_launcher_config.volume_claim_name,
-            mount_path=self._config.k8s_launcher_config.volume_mount_path,
+            name=self._config.master.k8s_launcher_config.volume_claim_name,
+            mount_path=self._config.master.k8s_launcher_config.volume_mount_path,
         )
         return pvc, volume_mount
 
@@ -385,7 +385,7 @@ class K8sLauncher(ILauncher):
         Initialize the launcher.
         """
         self._config = config
-        self._config_file = self._config.k8s_launcher_config.config_file
+        self._config_file = self._config.master.k8s_launcher_config.config_file
         if self._config_file is not None:
             self._config_file = os.environ.get("KUBECONFIG", "~/.kube/config")
 
@@ -441,7 +441,7 @@ class K8sLauncher(ILauncher):
             return None
         try:
             stateful_set = self._apps_api.read_namespaced_stateful_set(
-                name=instance_id, namespace=self._config.k8s_launcher_config.namespace
+                name=instance_id, namespace=self._config.master.k8s_launcher_config.namespace
             )
             return stateful_set.status
         except Exception as e:

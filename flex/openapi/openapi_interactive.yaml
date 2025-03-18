@@ -1656,6 +1656,20 @@ paths:
       tags:
       - AdminService/ServiceRegistry
       x-openapi-router-controller: gs_interactive_admin.controllers.admin_service_service_registry_controller
+  /v1/service/ready:
+    get:
+      description: Check if the service is ready
+      operationId: check_service_ready
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: successful operation
+      tags:
+      - AdminService/ServiceManagement
+      x-openapi-router-controller: gs_interactive_admin.controllers.admin_service_service_management_controller
   /v1/service/restart:
     post:
       description: Start current service

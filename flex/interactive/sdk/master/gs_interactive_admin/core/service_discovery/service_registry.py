@@ -302,7 +302,7 @@ class DiscoverResult(Model):
                 if self._primary_instance is not None
                 else None
             ),
-            "instance_list": self._instance_list.to_dict(),
+            "instance_list": [i.to_dict() for i in self._instance_list],
         }
 
 
@@ -355,7 +355,9 @@ class EtcdServiceRegistry(IServiceRegistry):
         namespace="interactive",
         instance_name="default",
     ):
-        # self._etcd_client = etcd3.client(host=etcd_host, port=etcd_port)
+        logger.info("namespace: %s, instance_name: %s", namespace, instance_name)
+        self._namespace = namespace
+        self._instance_name = instance_name
         self._etcd_kv_store = ETCDKeyValueStore(
             etcd_host, etcd_port, namespace, instance_name
         )
@@ -365,6 +367,14 @@ class EtcdServiceRegistry(IServiceRegistry):
         )
         self._global_discovery = GlobalServiceDiscovery()
         self._cancel_watch_handler = None
+        
+    @property
+    def namespace(self):
+        return self._namespace
+    
+    @property
+    def instance_name(self):
+        return self._instance_name
 
     def __del__(self):
         self.stop()
@@ -491,17 +501,17 @@ service_registry = None
 
 def initialize_service_registry(config: Config):
     global service_registry
-    if config.service_registry.type == "etcd":
+    if config.master.service_registry.type == "etcd":
         # get ip and port from http://ip:port
-        endpoint = config.service_registry.endpoint
+        endpoint = config.master.service_registry.endpoint
         endpoint = endpoint.startswith("http://") and endpoint[7:] or endpoint
         ip, port = endpoint.split(":")
         service_registry = EtcdServiceRegistry(
-            ip, int(port), config.namespace, config.instance_name
+            ip, int(port), config.master.k8s_launcher_config.namespace, config.master.instance_name
         )
     else:
         raise ValueError(
-            "Invalid service registry type: %s", config.service_registry.type
+            "Invalid service registry type: %s", config.master.service_registry.type
         )
     service_registry.start()
 

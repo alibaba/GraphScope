@@ -10,20 +10,21 @@ from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
 from gs_interactive_admin.test import BaseTestCase
 
 from gs_interactive_admin.core.service_discovery.service_registry import EtcdKeyHelper
+from gs_interactive_admin.core.service_discovery.service_registry import get_service_registry
 
 logger = logging.getLogger("interactive")
 
 
 class TestServiceRegistryServer(BaseTestCase):
     """AdminServiceJobManagementController integration test stubs"""
-
-    def setup_class(self):
-        self._helper = EtcdKeyHelper()
+    def setUp(self):
+        # get the field from the parent class
         if os.environ.get("ETCD_ENDPOINT") is None:
             raise Exception("ETCD_ENDPOINT is not set")
         self.etcd_endpoint = os.environ["ETCD_ENDPOINT"]
         self.host, self.port = self.etcd_endpoint.split(":")
         self.etcd_client = etcd3.client(host=self.host, port=int(self.port))
+        self._helper = EtcdKeyHelper(namespace=get_service_registry().namespace, instance_name=get_service_registry().instance_name)
 
     def send_request(self, method, url, data=None):
         headers = {
@@ -91,7 +92,17 @@ class TestServiceRegistryServer(BaseTestCase):
         time.sleep(1)
         # registry should immediately get the updated data
         resp = self.send_request(method="get", url="/v1/service/registry")
-        assert resp.status_code == 200 and resp.json == {
+        # sort the resp.json
+        sorted_resp = resp.json
+        for graph_id in sorted_resp:
+            for service_name in sorted_resp[graph_id]:
+                sorted_resp[graph_id][service_name]["instance_list"] = sorted(
+                    sorted_resp[graph_id][service_name]["instance_list"],
+                    key=lambda x: x["endpoint"],
+                    reverse=False,
+                )
+    
+        assert resp.status_code == 200 and sorted_resp == {
             "graph_id_example": {
                 "service_name_example": {
                     "instance_list": [
@@ -112,7 +123,7 @@ class TestServiceRegistryServer(BaseTestCase):
             }
         }
 
-    def teardown_class(self):
+    def teardown(self):
         self.etcd_client.delete_prefix(self._helper.service_prefix())
         self.etcd_client.close()
 

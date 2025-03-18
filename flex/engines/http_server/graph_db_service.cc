@@ -131,7 +131,7 @@ void GraphDBService::init(const ServiceConfig& config) {
     if (!config.service_registry_endpoint.empty()) {
       service_register_ = std::make_unique<ServiceRegister>(
           config.service_registry_endpoint, config.namespace_,
-          config.instance_name, [this]() { return get_service_info(); },
+          config.master_instance_name, [this]() { return get_service_info(); },
           config.service_registry_ttl);
     }
   }
