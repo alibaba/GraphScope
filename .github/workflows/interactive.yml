@@ -55,7 +55,7 @@ jobs:
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG && sudo make -j$(nproc)
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_ETCD_METASTORE=ON && sudo make -j$(nproc)
         # package the build artifacts
         cd .. && tar -zcf build.tar.gz build
     
@@ -185,6 +185,22 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
+
+        # test admin service with etcd metastore
+        GOOGLE_URL=https://storage.googleapis.com/etcd
+        GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
+        DOWNLOAD_URL=${GOOGLE_URL}
+        rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
+        curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+        tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test
+        /tmp/etcd-download-test/etcd &
+        sleep 3
+
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        python3 -c 'import yaml;f=open("./interactive_config_test.yaml");y=yaml.safe_load(f);y["compute_engine"]["metadata_store"]["uri"] = "http://localhost:2379"; f.close();f=open("./interactive_config_test_etcd.yaml","w");yaml.dump(y,f);f.close()'
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test_etcd.yaml ${GS_TEST_DIR}
+        rm ./interactive_config_test_etcd.yaml
+
 
     - name: Build and test Interactive Java/Python SDK
       env: 
@@ -471,7 +487,7 @@ jobs:
         git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
         mkdir -p build && cd build
-        cmake ..
+        cmake .. -BUILD_ETCD_METASTORE=ON
         make -j$(nproc)
         make install
 
@@ -637,3 +653,16 @@ jobs:
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
         sed -i 's/|/\\t/g' ${BULK_LOAD_FILE}
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+    - name: Test etcd-based metadata service
+      run: |
+        GOOGLE_URL=https://storage.googleapis.com/etcd
+        GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
+        DOWNLOAD_URL=${GOOGLE_URL}
+        rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
+        curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+        tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test
+        /tmp/etcd-download-test/etcd &
+        sleep 3
+
+        GLOG_v=10 ./tests/hqps/etcd_meta_test http://localhost:2379/
