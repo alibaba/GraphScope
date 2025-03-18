@@ -18,6 +18,10 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
+import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
@@ -222,5 +226,19 @@ public class Utils {
             rel.explain(planWriter);
             return sw.toString();
         }
+    }
+
+    public static String getAlias(RelNode rel) {
+        String alias = null;
+        if (rel instanceof AbstractBindableTableScan) {
+            alias = ((AbstractBindableTableScan) rel).getAliasName();
+        } else if (rel instanceof GraphLogicalPathExpand) {
+            alias = ((GraphLogicalPathExpand) rel).getAliasName();
+        } else if (rel instanceof GraphPhysicalExpand) {
+            alias = ((GraphPhysicalExpand) rel).getAliasName();
+        } else if (rel instanceof GraphPhysicalGetV) {
+            alias = ((GraphPhysicalGetV) rel).getAliasName();
+        }
+        return alias;
     }
 }

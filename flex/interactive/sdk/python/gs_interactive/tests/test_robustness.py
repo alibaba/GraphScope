@@ -282,11 +282,11 @@ def test_builtin_procedure(interactive_session, neo4j_session, create_modern_gra
         create_modern_graph,
         "shortest_path_among_three",
         '"person"',
-        "1L",
+        '"1"',
         '"person"',
-        "2L",
+        '"2"',
         '"person"',
-        "4L",
+        '"4"',
     )
 
 

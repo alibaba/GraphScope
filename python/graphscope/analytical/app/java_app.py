@@ -104,7 +104,7 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         elif line.find("ParallelAppBase") != -1:
             _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
-            raise Exception("Error occured in verifying user app")
+            raise Exception("Error occurred in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
@@ -139,7 +139,7 @@ def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
 class JavaApp(AppAssets):
     """A class represents a java app assert node in a DAG that holds the jar file.
 
-    It holds neccessary resouces to run a java app, including java class path, the gar
+    It holds necessary resources to run a java app, including java class path, the gar
     file which consists jar and configuration yaml, and the specified java class.
     On creating a JavaApp, graphscope will try to load the specified java class, and parse
     the Base class for your app, and the base class for your Context Class. This operation
@@ -338,7 +338,7 @@ class JavaApp(AppAssets):
 
 
 class JavaAppDagNode(AppDAGNode):
-    """retrict app assets to javaAppAssets"""
+    """restrict app assets to javaAppAssets"""
 
     def __init__(self, graph: Graph, app_assets: JavaApp):
         self._graph = graph

@@ -189,8 +189,11 @@ public class UnitTypeTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        Assert.assertEquals("GraphLogicalProject(prop_date=[p.prop_date], isAppend=[false])\n" +
-                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], fusedFilter=[[=(_.prop_date, 20132)]], opt=[VERTEX])", after.explain().trim());
+        Assert.assertEquals(
+                "GraphLogicalProject(prop_date=[p.prop_date], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[p], fusedFilter=[[=(_.prop_date, 20132)]], opt=[VERTEX])",
+                after.explain().trim());
     }
 
     @Test
@@ -205,23 +208,26 @@ public class UnitTypeTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        Assert.assertEquals("GraphLogicalProject(prop_ts=[p.prop_ts], isAppend=[false])\n" +
-                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], fusedFilter=[[=(_.prop_ts, 1739454301000:BIGINT)]], opt=[VERTEX])", after.explain().trim());
+        Assert.assertEquals(
+                "GraphLogicalProject(prop_ts=[p.prop_ts], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[p], fusedFilter=[[=(_.prop_ts, 1739454301000:BIGINT)]],"
+                        + " opt=[VERTEX])",
+                after.explain().trim());
     }
 
     @Test
     public void compare_int32_int64_array_test() {
-        String query =
-                "MATCH (p:person) Where p.prop_int32 in [123L, 456] RETURN p.prop_int32";
+        String query = "MATCH (p:person) Where p.prop_int32 in [123L, 456] RETURN p.prop_int32";
         GraphBuilder builder =
                 com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(optimizer, irMeta);
-        RelNode before =
-                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                query,
-                                builder)
-                        .build();
+        RelNode before = com.alibaba.graphscope.cypher.antlr4.Utils.eval(query, builder).build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        Assert.assertEquals("GraphLogicalProject(prop_int32=[p.prop_int32], isAppend=[false])\n" +
-                "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[p], opt=[VERTEX], uniqueKeyFilters=[SEARCH(_.prop_int32, Sarg[123L:BIGINT, 456L:BIGINT]:BIGINT)])", after.explain().trim());
+        Assert.assertEquals(
+                "GraphLogicalProject(prop_int32=[p.prop_int32], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[p], opt=[VERTEX], uniqueKeyFilters=[SEARCH(_.prop_int32,"
+                        + " Sarg[123L:BIGINT, 456L:BIGINT]:BIGINT)])",
+                after.explain().trim());
     }
 }

@@ -1,1 +1,0 @@
-MATCH(p : POST | COMMENT {id : $messageId}) - [:HASCREATOR] -> (friend : PERSON) return friend.id as personId, friend.firstName as personFirstName, friend.lastName As personLastName

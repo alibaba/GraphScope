@@ -46,6 +46,16 @@ namespace gs {
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
 
 /// Util functions.
+
+inline void blockSignal(int sig) {
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, sig);
+  if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
+    perror("pthread_sigmask");
+  }
+}
+
 inline int64_t GetCurrentTimeStamp() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::system_clock::now().time_since_epoch())

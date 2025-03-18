@@ -200,7 +200,9 @@ oC_NodeLabels
           :  ':' SP? oC_LabelName ( SP? '|' ':'? SP? oC_LabelName )* ;
 
 oC_RangeLiteral
-            :  '*' SP? ( oC_IntegerLiteral SP? ) '..' SP? ( oC_IntegerLiteral SP? ) ;
+            :  '*' SP? ( oC_IntegerLiteral SP? ) '..' SP? ( oC_IntegerLiteral SP? )
+            |  '*' SP? ( oC_IntegerLiteral SP? ) '..' SP? ( '*' SP? )
+            ;
 
 oC_LabelName
          :  oC_SchemaName ;

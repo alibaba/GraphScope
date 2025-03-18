@@ -16,21 +16,28 @@
 
 package com.alibaba.graphscope.cypher.integration.ldbc;
 
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 
-import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
-import com.alibaba.graphscope.cypher.integration.suite.ldbc.LdbcQueries;
-
-import org.junit.AfterClass;
-import org.junit.Assert;
+import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class IrLdbcTest {
+    private static final Logger logger = LoggerFactory.getLogger(IrLdbcTest.class);
     private static Session session;
 
     @BeforeClass
@@ -41,99 +48,97 @@ public class IrLdbcTest {
     }
 
     @Test
-    public void run_ldbc_2_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_2_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_3_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_3_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_4_test() {
-        // skip this test in pegasus (actually exp-store) since the date format is different.
-        assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_4_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_4_test_exp() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_4_test_exp();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_6_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_6_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_7_test() {
-        // skip this test in pegasus as optional match (via optional edge_expand) is not supported
-        // yet.
-        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_8_test() {
-        assumeFalse("pegasus".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_8_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_8_test_exp() {
-        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_8_test_exp();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_10_test() {
-        // skip this test in pegasus (actually exp-store and groot-store) since the date format is
-        // different
-        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_ldbc_12_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_12();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @Test
-    public void run_st_path_test() {
-        // skip st path test in gs interactive for it is unsupported yet in hiactor engine
-        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
-        QueryContext testQuery = LdbcQueries.get_st_path();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        if (session != null) {
-            session.close();
+    public void run_ldbc_tests() throws Exception {
+        String queryDir =
+                System.getProperty("query.dir", "../../flex/resources/queries/ic/runtime");
+        File dir = new File(queryDir);
+        int totalTests = 0;
+        int passedTests = 0;
+        for (File file : dir.listFiles()) {
+            String queryName;
+            try {
+                if (file.getName().endsWith(".cypher")) {
+                    ++totalTests;
+                    queryName = file.getName().substring(0, file.getName().length() - 7);
+                    String query = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                    String results =
+                            FileUtils.readFileToString(
+                                    new File(Path.of(queryDir, queryName + ".json").toString()),
+                                    StandardCharsets.UTF_8);
+                    Map<String, Object> resultMap =
+                            new ObjectMapper().readValue(results, Map.class);
+                    query = renderQuery(query, (Map<String, Object>) resultMap.get("operation"));
+                    List<String> errors = Lists.newArrayList();
+                    Object result = resultMap.get("result");
+                    if (!(result instanceof List)) {
+                        result = Lists.newArrayList(result);
+                    }
+                    boolean equals =
+                            checkResults(
+                                    queryName, query, session.run(query), (List) result, errors);
+                    if (equals) {
+                        ++passedTests;
+                        logger.warn("Test {} passed", queryName);
+                    } else {
+                        logger.error("Test {} failed. Errors: {}", queryName, errors);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Test {} failed due to unexpected exception: ", file.getName(), e);
+            }
         }
+        if (passedTests != totalTests) {
+            throw new IllegalArgumentException(
+                    "Total Tests " + totalTests + ", Passed Tests " + passedTests);
+        }
+        logger.warn("All Tests Passed");
+    }
+
+    private String renderQuery(String query, Map<String, Object> params) throws Exception {
+        for (Map.Entry<String, Object> param : params.entrySet()) {
+            query = query.replace("$" + param.getKey(), param.getValue().toString());
+        }
+        return query;
+    }
+
+    private boolean checkResults(
+            String queryName, String query, Result result, List expected, List<String> errors) {
+        Iterator expectedIt = expected.iterator();
+        while (result.hasNext() && expectedIt.hasNext()) {
+            if (!checkRecord(
+                    queryName, result.next(), (Map<String, Object>) expectedIt.next(), errors)) {
+                return false;
+            }
+        }
+        if (result.hasNext()) {
+            errors.add(
+                    String.format(
+                            "QueryName: %s, Redundant record. No matching expected result was found"
+                                    + " for record %s",
+                            queryName, result.next()));
+            return false;
+        }
+        if (expectedIt.hasNext()) {
+            errors.add(
+                    String.format(
+                            "QueryName: %s, Missing record. No record was found to match the"
+                                    + " expected result %s",
+                            queryName, expectedIt.next()));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkRecord(
+            String queryName, Record record, Map<String, Object> expected, List<String> errors) {
+        Map<String, Object> recordMap = record.asMap();
+        if (!recordMap.toString().equals(expected.toString())) {
+            errors.add(
+                    String.format(
+                            "QueryName: %s, Record not equal. Record: %s vs Expected: %s",
+                            queryName, recordMap, expected));
+            return false;
+        }
+        return true;
     }
 }

@@ -474,9 +474,7 @@ public class FlexTypeQueries {
          */
         public QueryContext compare_timestamp_i64_test() {
             String query =
-                    "MATCH (p:person)\n"
-                            + "    WHERE p.prop_ts = $1\n"
-                            + "    RETURN p.prop_ts";
+                    "MATCH (p:person)\n" + "    WHERE p.prop_ts = $1\n" + "    RETURN p.prop_ts";
             Parameter parameter = queryParameters.get("compare_timestamp_i64");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
@@ -489,8 +487,7 @@ public class FlexTypeQueries {
          * @return
          */
         public QueryContext compare_i32_within_i32_array_test() {
-            String query =
-                    "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
+            String query = "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
             Parameter parameter = queryParameters.get("compare_i32_within_i32_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
@@ -501,8 +498,7 @@ public class FlexTypeQueries {
          * @return
          */
         public QueryContext compare_i32_within_i64_array_test() {
-            String query =
-                    "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
+            String query = "MATCH (p:person) Where p.prop_int32 in $1 RETURN p.prop_int32";
             Parameter parameter = queryParameters.get("compare_i32_within_i64_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
@@ -513,8 +509,7 @@ public class FlexTypeQueries {
          * @return
          */
         public QueryContext compare_i64_within_i32_array_test() {
-            String query =
-                    "MATCH (p:person) Where p.prop_int64 in $1 RETURN p.prop_int64";
+            String query = "MATCH (p:person) Where p.prop_int64 in $1 RETURN p.prop_int64";
             Parameter parameter = queryParameters.get("compare_i64_within_i32_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
@@ -525,8 +520,7 @@ public class FlexTypeQueries {
          * @return
          */
         public QueryContext compare_float_within_double_array_test() {
-            String query =
-                    "MATCH (p:person) Where p.prop_float in $1 RETURN p.prop_float";
+            String query = "MATCH (p:person) Where p.prop_float in $1 RETURN p.prop_float";
             Parameter parameter = queryParameters.get("compare_float_within_double_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);
@@ -537,8 +531,7 @@ public class FlexTypeQueries {
          * @return
          */
         public QueryContext compare_char_within_string_array_test() {
-            String query =
-                    "MATCH (p:person) Where p.prop_char in $1 RETURN p.prop_char";
+            String query = "MATCH (p:person) Where p.prop_char in $1 RETURN p.prop_char";
             Parameter parameter = queryParameters.get("compare_char_within_string_array");
             query = parameter.render(query);
             return new QueryContext(query, parameter.results);

@@ -18,7 +18,6 @@ package com.alibaba.graphscope.groot.servers.ir;
 
 import com.alibaba.graphscope.GraphServer;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
-import com.alibaba.graphscope.common.config.*;
 import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
@@ -112,49 +111,7 @@ public class IrServiceProducer {
 
     private com.alibaba.graphscope.common.config.Configs getConfigs() {
         Map<String, String> configMap = new HashMap<>();
-        // add pegasus config
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_HOSTS.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_WORKER_NUM.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
-        // add authentication
-        addToConfigMapIfExist(AuthConfig.AUTH_USERNAME.getKey(), configMap);
-        addToConfigMapIfExist(AuthConfig.AUTH_PASSWORD.getKey(), configMap);
-        // add gremlin config
-        addToConfigMapIfExist(FrontendConfig.GREMLIN_SERVER_DISABLED.getKey(), configMap);
-        addToConfigMapIfExist(FrontendConfig.GREMLIN_SERVER_PORT.getKey(), configMap);
-        // add neo4j config
-        addToConfigMapIfExist(FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.getKey(), configMap);
-        addToConfigMapIfExist(FrontendConfig.NEO4J_BOLT_SERVER_PORT.getKey(), configMap);
-        // add timeout config
-        addToConfigMapIfExist(FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.getKey(), configMap);
-        // add frontend server id
-        addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_ID.getKey(), configMap);
-        // add frontend server num
-        addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_NUM.getKey(), configMap);
-        // add frontend qps limit
-        addToConfigMapIfExist(FrontendConfig.QUERY_PER_SECOND_LIMIT.getKey(), configMap);
-        // add graph schema fetch interval
-        addToConfigMapIfExist(GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.getKey(), configMap);
-        // add graph statistics fetch interval
-        addToConfigMapIfExist(
-                GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.getKey(), configMap);
-        // add graph planner configs
-        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_IS_ON.getKey(), configMap);
-        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_OPT.getKey(), configMap);
-        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_RULES.getKey(), configMap);
-        addToConfigMapIfExist(FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.getKey(), configMap);
-        addToConfigMapIfExist(FrontendConfig.GRAPH_PHYSICAL_OPT.getKey(), configMap);
-        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_CBO_GLOGUE_SIZE.getKey(), configMap);
-        addToConfigMapIfExist(PlannerConfig.JOIN_MIN_PATTERN_SIZE.getKey(), configMap);
+        configs.getInnerProperties().forEach((k, v) -> configMap.put((String) k, (String) v));
         return new com.alibaba.graphscope.common.config.Configs(configMap);
-    }
-
-    private void addToConfigMapIfExist(String key, Map<String, String> configMap) {
-        String value = configs.get(key);
-        if (value != null) {
-            configMap.put(key, value);
-        }
     }
 }

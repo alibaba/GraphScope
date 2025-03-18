@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.29.0"
+  tag: "0.30.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -73,6 +73,9 @@ store:
     ##
     size: 1Gi
     selector: {}
+
+  service:
+    adminPort: 10001
 
   ## @param hostAliases pods host aliases
   ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
@@ -263,7 +266,7 @@ portal:
   coordinatorImage:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/coordinator
-    tag: "0.29.0"
+    tag: "0.30.0"
   ## Service parameters
   ##
   service:

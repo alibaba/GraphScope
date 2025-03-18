@@ -156,6 +156,16 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         collection.getCollectionList().stream()
                                 .map(k -> parseElement(k, componentType))
                                 .collect(Collectors.toList()));
+            case ARRAY:
+            case MULTISET:
+                return VirtualValues.fromList(
+                        collection.getCollectionList().stream()
+                                .map(
+                                        k ->
+                                                parseValue(
+                                                        k.getObject(),
+                                                        componentType.getComponentType()))
+                                .collect(Collectors.toList()));
             default:
                 throw new NotImplementedException(
                         componentType.getSqlTypeName() + " is unsupported yet");

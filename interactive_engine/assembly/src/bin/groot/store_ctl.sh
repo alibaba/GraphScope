@@ -70,6 +70,7 @@ start_server() {
             -XX:NumberOfGCLogFiles=4
             -XX:GCLogFileSize=64m"
 	export RUST_BACKTRACE=full
+	java -cp ${libpath} com.alibaba.graphscope.groot.servers.GrootGraphDaemon &
 	java ${java_opt} \
 		-Dlogback.configurationFile="${GROOT_LOGBACK_FILE}" \
 		-Dconfig.file="${GROOT_CONF_FILE}" \

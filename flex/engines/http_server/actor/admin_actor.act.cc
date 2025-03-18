@@ -1125,6 +1125,17 @@ seastar::future<admin_query_result> admin_actor::stop_service(
   });
 }
 
+seastar::future<admin_query_result> admin_actor::service_ready(
+    query_param&& query_param) {
+  auto& graph_db_service = GraphDBService::get();
+  return graph_db_service.is_actors_running()
+             ? seastar::make_ready_future<admin_query_result>(
+                   gs::Result<seastar::sstring>("true"))
+             : seastar::make_exception_future<admin_query_result>(
+                   gs::Status(gs::StatusCode::SERVICE_UNAVAILABLE,
+                              "Service is not ready"));
+}
+
 // get service status
 seastar::future<admin_query_result> admin_actor::service_status(
     query_param&& query_param) {

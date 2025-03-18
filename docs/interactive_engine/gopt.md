@@ -130,7 +130,7 @@ dbms.default_database=movie
 ```bash
 ./bin/neo4j start
 
-# wait unitl neo4j service started
+# wait until neo4j service started
 ...
 
 ./bin/cypher-shell
@@ -288,7 +288,7 @@ You can now experience our one-click benchmarking feature.
 3. Restart the Neo4j service, and confirm that the data is ready
    ```bash
    bin/neo4j start
-   # wait unitl neo4j service started
+   # wait until neo4j service started
    ...
 
    ./bin/cypher-shell

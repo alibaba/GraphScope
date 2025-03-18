@@ -24,6 +24,11 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/options.h"
 
+#ifdef BUILD_WITH_OSS
+#include <boost/process.hpp>
+#include "flex/utils/remote/oss_storage.h"
+#endif
+
 namespace bpo = boost::program_options;
 
 static std::string work_dir;
@@ -43,6 +48,73 @@ void signal_handler(int signal) {
     exit(1);
   }
 }
+
+#ifdef BUILD_WITH_OSS
+
+void check_oss_object_not_exist(std::string& data_path,
+                                std::string& object_path,
+                                gs::OSSConf& oss_conf) {
+  auto pos = data_path.find("/", 6);
+  if (pos == std::string::npos) {
+    LOG(FATAL) << "Invalid data path: " << data_path;
+  }
+  oss_conf.bucket_name_ = data_path.substr(6, pos - 6);
+  object_path = data_path.substr(pos + 1);
+  oss_conf.load_conf_from_env();
+  // check whether the object exists
+  auto oss_reader = std::make_shared<gs::OSSRemoteStorageDownloader>(oss_conf);
+  if (!oss_reader || !oss_reader->Open().ok()) {
+    LOG(FATAL) << "Failed to open oss reader";
+  }
+  std::vector<std::string> path_list;
+  auto status = oss_reader->List(object_path, path_list);
+  if (status.ok() && path_list.size() > 0) {
+    LOG(FATAL) << "Object already exists: " << object_path
+               << ", list size: " << path_list.size()
+               << ", please remove the object and try again.";
+  }
+  // use a random directory
+  data_path = "/tmp/" + std::to_string(time(nullptr));
+}
+
+int32_t upload_data_dir_to_oss(const std::filesystem::path& data_dir_path,
+                               const std::string& object_path,
+                               const gs::OSSConf& oss_conf) {
+  // zip the data directory
+  std::string zip_file = data_dir_path.string() + ".zip";
+  std::string zip_cmd = "zip -r " + zip_file + " " + data_dir_path.string();
+  boost::process::child zip_process(zip_cmd);
+  zip_process.wait();
+
+  int res = zip_process.exit_code();
+  if (res != 0) {
+    LOG(ERROR) << "Failed to zip data directory: " << zip_cmd
+               << ", code: " << res;
+    return -1;
+  }
+
+  auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
+  if (!oss_writer || !oss_writer->Open().ok()) {
+    LOG(ERROR) << "Failed to open oss writer";
+    return -1;
+  }
+  auto status = oss_writer->Put(zip_file, object_path, false);
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to upload data to oss: " << status.ToString();
+    return -1;
+  }
+  status = oss_writer->Close();
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to close oss writer: " << status.ToString();
+    return -1;
+  }
+  LOG(INFO) << "Successfully uploaded data to oss: " << object_path
+            << ", it is in zip format";
+  std::filesystem::remove(zip_file);
+  std::filesystem::remove_all(data_dir_path);
+  return 0;
+}
+#endif
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
@@ -90,6 +162,17 @@ int main(int argc, char** argv) {
   }
 
   std::string data_path = "";
+  /**
+   * If the data path is an oss path, the data will be uploaded to oss after
+   * loading to a temporary directory. To improve the performance of the
+   * performance, bulk_loader will zip the data directory before uploading.
+   * The data path should be in the format of oss://bucket_name/object_path
+   */
+#ifdef BUILD_WITH_OSS
+  bool upload_to_oss = false;
+  std::string object_path = "";
+  auto oss_conf = gs::OSSConf();
+#endif
   std::string bulk_load_config_path = "";
   std::string graph_schema_path = "";
 
@@ -141,6 +224,16 @@ int main(int argc, char** argv) {
         vm["use-mmap-vector"].as<bool>());
   }
 
+  if (data_path.find("oss://") == 0) {
+#ifdef BUILD_WITH_OSS
+    upload_to_oss = true;
+    check_oss_object_not_exist(data_path, object_path, oss_conf);
+#else
+    LOG(ERROR) << "OSS is not supported in this build";
+    return -1;
+#endif
+  }
+
   std::filesystem::path data_dir_path(data_path);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);
@@ -184,6 +277,12 @@ int main(int argc, char** argv) {
   }
   t += grape::GetCurrentTime();
   LOG(INFO) << "Finished bulk loading in " << t << " seconds.";
+
+#ifdef BUILD_WITH_OSS
+  if (upload_to_oss) {
+    return upload_data_dir_to_oss(data_dir_path, object_path, oss_conf);
+  }
+#endif
 
   return 0;
 }

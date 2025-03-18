@@ -14,7 +14,7 @@ For your reference, we've tested the tutorial on Ubuntu 20.04.
 
 To get started, you need to prepare a Kubernetes Cluster to continue.
 
-Incase you doesn't have one, you could refer to the instruction of [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster).
+In case you doesn't have one, you could refer to the instruction of [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster).
 
 
 ## Deploy Your First GIE Service

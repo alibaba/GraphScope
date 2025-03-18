@@ -1258,7 +1258,7 @@ print(q1)
 
 The output is also `[2822]`.
 
-In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entires. For example, the following Gremlin sentence counts there are how many different related `(country, forum)` pairs in the graph.
+In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entries. For example, the following Gremlin sentence counts there are how many different related `(country, forum)` pairs in the graph.
 
 ```python
 # Count how many different related (country, forum) pairs in the graph
