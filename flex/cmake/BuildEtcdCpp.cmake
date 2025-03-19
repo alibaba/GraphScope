@@ -19,7 +19,7 @@ set(BUILD_TESTS OFF CACHE BOOL "Build tests.")
 set(BUILD_SAMPLES OFF CACHE BOOL "Build sample applications.")
 set(CPPREST_EXCLUDE_WEBSOCKETS ON CACHE BOOL "Exclude websockets functionality..")
 add_subdirectory(third_party/cpprestsdk)
-set(CPPREST_INCLUDE_DIR flex/third_party/cpprestsdk/Release/include)
+set(CPPREST_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/cpprestsdk/Release/include)
 set(CPPREST_LIB cpprest)
 
 # disable a warning message inside cpprestsdk on Mac with llvm/clang
