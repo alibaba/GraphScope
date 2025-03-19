@@ -29,9 +29,13 @@ from gs_interactive_admin.core.config import Config
 from gs_interactive_admin.core.service_discovery.service_registry import (
     initialize_service_registry,
 )
-from gs_interactive_admin.core.metadata.metadata_store import init_metadata_store,get_metadata_store
+from gs_interactive_admin.core.metadata.metadata_store import (
+    init_metadata_store,
+    get_metadata_store,
+)
 from gs_interactive_admin.core.service.service_manager import init_service_manager
 from gs_interactive_admin.core.job.job_manager import init_job_manager
+
 
 def setup_args_parsing():
     parser = argparse.ArgumentParser()
@@ -73,7 +77,8 @@ def initialize_global_variables(config):
     init_metadata_store(config)
     init_service_manager(config)
     init_job_manager(config, get_metadata_store())
-    
+
+
 def preprocess_config(config: Config):
     if config.master.instance_name is None:
         if os.environ.get("MASTER_INSTANCE_NAME"):
@@ -84,6 +89,7 @@ def preprocess_config(config: Config):
                 "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
             )
         logging.info("Generated instance name: %s", config.master.instance_name)
+
 
 def main():
 
@@ -97,7 +103,6 @@ def main():
     else:
         raise RuntimeError("Must specify a config or config-file")
     preprocess_config(config)
-        
 
     config_logging(config.log_level)
     initialize_global_variables(config)

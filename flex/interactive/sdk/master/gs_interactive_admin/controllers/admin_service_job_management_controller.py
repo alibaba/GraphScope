@@ -5,6 +5,9 @@ from typing import Union
 
 from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
 from gs_interactive_admin import util
+from gs_interactive_admin.core.job.job_manager import get_job_manager
+import logging
+
 
 
 def delete_job_by_id(job_id):  # noqa: E501
@@ -17,7 +20,7 @@ def delete_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    pass
+    return get_job_manager().delete_job_by_id(job_id)
 
 
 def get_job_by_id(job_id):  # noqa: E501
@@ -30,7 +33,10 @@ def get_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[JobStatus, Tuple[JobStatus, int], Tuple[JobStatus, int, Dict[str, str]]
     """
-    pass
+    logging.info("Get job by id: %s", job_id)
+    data = get_job_manager().get_job_by_id(job_id)
+    return JobStatus.from_dict(data)
+    
 
 
 def list_jobs():  # noqa: E501
@@ -41,4 +47,6 @@ def list_jobs():  # noqa: E501
 
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
     """
-    pass
+    ret_list = [JobStatus.from_dict(data) for data in get_job_manager().list_jobs()]
+    logging.info("List jobs: %s", ret_list)
+    return ret_list

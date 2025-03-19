@@ -2486,6 +2486,7 @@ components:
               metadata:
                 key: ""
               type: type
+            destination: destination
             import_option: init
             data_source:
               scheme: odps
@@ -2791,6 +2792,7 @@ components:
             metadata:
               key: ""
             type: type
+          destination: destination
           import_option: init
           data_source:
             scheme: odps
@@ -3072,6 +3074,7 @@ components:
                 metadata:
                   key: ""
                 type: type
+              destination: destination
               import_option: init
               data_source:
                 scheme: odps
@@ -3584,6 +3587,7 @@ components:
           metadata:
             key: ""
           type: type
+        destination: destination
         import_option: init
         data_source:
           scheme: odps
@@ -3601,6 +3605,9 @@ components:
           type: string
         format:
           $ref: '#/components/schemas/SchemaMapping_loading_config_format'
+        destination:
+          title: destination
+          type: string
       title: SchemaMapping_loading_config
       type: object
     EdgeMapping_type_triplet:

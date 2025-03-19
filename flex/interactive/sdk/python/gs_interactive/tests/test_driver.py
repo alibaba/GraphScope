@@ -319,6 +319,7 @@ class TestDriver(unittest.TestCase):
             status = resp.get_value().status
             print("job status: ", status)
             if status == "SUCCESS":
+                print(resp.get_value())
                 return True
             elif status == "FAILED":
                 return False

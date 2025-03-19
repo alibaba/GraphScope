@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifdef ENABLE_SERVICE_REGISTER
 
 #ifndef FLEX_ENGINES_HTTP_SERVICE_SERVICE_REGISTER_H_
 #define FLEX_ENGINES_HTTP_SERVICE_SERVICE_REGISTER_H_
@@ -145,3 +146,5 @@ class ServiceRegister {
 }  // namespace server
 
 #endif  // FLEX_ENGINES_HTTP_SERVICE_SERVICE_REGISTER_H_
+
+#endif  // ENABLE_SERVICE_REGISTER

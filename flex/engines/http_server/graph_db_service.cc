@@ -126,17 +126,17 @@ void GraphDBService::init(const ServiceConfig& config) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
         config.admin_port, config.get_exclusive_shard_id(),
         config.admin_svc_max_content_length);
-#ifdef ENABLE_SERVICE_REGISTER
-    LOG(INFO) << "Service registry endpoint: "
-              << config.service_registry_endpoint;
-    if (!config.service_registry_endpoint.empty()) {
-      service_register_ = std::make_unique<ServiceRegister>(
-          config.service_registry_endpoint, config.namespace_,
-          config.master_instance_name, [this]() { return get_service_info(); },
-          config.service_registry_ttl);
-    }
-#endif
   }
+#ifdef ENABLE_SERVICE_REGISTER
+  LOG(INFO) << "Service registry endpoint: "
+            << config.service_registry_endpoint;
+  if (!config.service_registry_endpoint.empty()) {
+    service_register_ = std::make_unique<ServiceRegister>(
+        config.service_registry_endpoint, config.namespace_,
+        config.master_instance_name, [this]() { return get_service_info(); },
+        config.service_registry_ttl);
+  }
+#endif
 
   initialized_.store(true);
   service_config_ = config;

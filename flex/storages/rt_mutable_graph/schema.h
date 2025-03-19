@@ -267,6 +267,10 @@ class Schema {
 
   void SetDescription(const std::string& description);
 
+  void SetRemotePath(const std::string& remote_path);
+
+  inline std::string GetRemotePath() const { return remote_path_; }
+
   void SetVersion(const std::string& version);
 
   std::string GetVersion() const;
@@ -310,6 +314,7 @@ class Schema {
   std::string description_;
   std::string version_;
   std::string compiler_path_;
+  std::string remote_path_;  // The path to the data on the remote storage
   bool has_multi_props_edge_;
 };
 

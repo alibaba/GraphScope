@@ -23,7 +23,7 @@ class TestLaunchK8sCluster(unittest.TestCase):
         self._config = Config()
         self._k8s_launcher = K8sLauncher(self._config)
         self._config.master.instance_name = "test"
-        self._config.master.k8s_launcher_config.namespace = "test"
+        self._config.master.k8s_launcher_config.namespace = "default"
         self._config.master.k8s_launcher_config.default_replicas = 1
         self._cluster = None
 
@@ -37,24 +37,23 @@ class TestLaunchK8sCluster(unittest.TestCase):
                 break
             time.sleep(1)
             max_wait -= 1
-            
+
         assert self._cluster.is_ready()
         logger.info("Cluster is ready")
-        
+
         instance_id = self._cluster.instance_id
-        
+
         # Now stop the cluster
         self._cluster.stop()
         logger.info("Cluster is stopped")
-        
+
         # Check from k8s_launcher
         clusters = self._k8s_launcher.get_cluster_status(instance_id)
         assert clusters is None
-            
 
     def teardown_class(self):
-        if self._cluster:
-            self._cluster.stop()
+        # if self._cluster:
+            # self._cluster.stop()
         pass
 
 

@@ -23,6 +23,9 @@
 #include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
+#ifdef BUILD_WITH_OSS
+#include "flex/utils/remote/oss_storage.h"
+#endif
 
 #include <yaml-cpp/yaml.h>
 #include <boost/program_options.hpp>
@@ -103,6 +106,11 @@ void config_log_level(int log_level, int verbose_level) {
     }
   }
 }
+
+#ifdef BUILD_WITH_OSS
+std::string download_data_from_oss(const std::string& data_path) {}
+#endif
+
 }  // namespace gs
 
 /**
@@ -219,16 +227,32 @@ int main(int argc, char** argv) {
       return -1;
     }
     graph_schema_path = vm["graph-config"].as<std::string>();
-    if (!vm.count("data-path")) {
-      LOG(ERROR) << "data-path is required";
-      return -1;
-    }
-    data_path = vm["data-path"].as<std::string>();
-
     auto schema_res = gs::Schema::LoadFromYaml(graph_schema_path);
     if (!schema_res.ok()) {
       LOG(FATAL) << "Fail to load graph schema from yaml file: "
                  << graph_schema_path;
+    }
+
+    if (vm.count("data-path")) {
+      data_path = vm["data-path"].as<std::string>();
+    } else {
+      // If data path is not specified, we will check whether remote_
+      auto remote_path = schema_res.value().GetRemotePath();
+      if (!remote_path.empty()) {
+        data_path = remote_path;
+      } else {
+        LOG(FATAL) << "data-path is required";
+      }
+    }
+
+    // If data_path starts with oss, download the data from oss
+    if (data_path.find("oss://") == 0) {
+#ifdef BUILD_WITH_OSS
+      data_path = gs::download_data_from_oss(data_path);
+      LOG(INFO) << "Download data from oss to local path: " << data_path;
+#else
+      LOG(FATAL) << "OSS is not supported in this build";
+#endif
     }
 
     // The schema is loaded just to get the plugin dir and plugin list

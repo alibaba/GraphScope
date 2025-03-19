@@ -58,6 +58,14 @@ spec:
           env:
             - name: INTERACTIVE_WORKSPACE
               value: {{ .Values.workspace | quote }}
+            - name: OSS_ACCESS_KEY_ID
+              value: {{ include "graphscope-interactive.ossAccessKeyId" . | quote }}
+            - name: OSS_ACCESS_KEY_SECRET
+              value: {{ include "graphscope-interactive.ossAccessKeySecret" . | quote }}
+            - name: OSS_ENDPOINT
+              value: {{ include "graphscope-interactive.ossEndpoint" . | quote }}
+            - name: OSS_BUCKET_NAME
+              value: {{ include "graphscope-interactive.ossBucketName" . | quote }}
           ports:
             - name: admin-port
               containerPort: {{ .Values.master.service.adminPort }}

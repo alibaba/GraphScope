@@ -21,7 +21,7 @@ RUN cd ${HOME}/GraphScope && \
 
 # install flex
 RUN cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && \
+    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && \
     make -j ${PARALLEL} && make install
 
 # strip all .so in /opt/flex/lib
@@ -51,7 +51,7 @@ COPY --from=builder /opt/flex/wheel/ /opt/flex/wheel/
 
 RUN apt-get update && apt-get install -y git && pip3 install --upgrade pip && \
     pip3 install git+https://github.com/kragniz/python-etcd3.git@e58a899579ba416449c4e225b61f039457c8072a && \
-    pip3 install /opt/flex/wheel/*.whl && apt-get remove -y git && \
+    pip3 install /opt/flex/wheel/*.whl && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /opt/vineyard/

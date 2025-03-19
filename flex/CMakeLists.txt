@@ -236,22 +236,18 @@ macro(install_without_export_flex_target target)
     )
 endmacro()
 
-if (BUILD_ETCD_METASTORE)
-    add_definitions(-DBUILD_ETCD_METASTORE)
-    # cd to third_party/cpprestsdk and run git submodule update --init
+if (BUILD_ETCD_METASTORE OR ENABLE_SERVICE_REGISTER)
     include("cmake/BuildEtcdCpp.cmake")
-    # set(WERROR OFF CACHE BOOL "Treat warnings as errors")
-    # set(CPPREST_EXCLUDE_WEBSOCKETS ON CACHE BOOL "Exclude websockets functionality..")
-    # add_subdirectory(third_party/cpprestsdk EXCLUDE_FROM_ALL)
-    # set(CPPREST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cpprestsdk/Release/include)
-    # set(CPPREST_LIB cpprest)
-    # add_subdirectory(third_party/etcd-cpp-apiv3 EXCLUDE_FROM_ALL)
     include_directories(SYSTEM ${CPPREST_INCLUDE_DIR})
-    # for each directory in ${ETCD_CPP_INCLUDE_DIR}
     foreach(dir ${ETCD_CPP_INCLUDE_DIR})
         message(STATUS "Include directory: ${dir}")
         include_directories(SYSTEM ${dir})
     endforeach()
+endif()
+
+if (BUILD_ETCD_METASTORE)
+    add_definitions(-DBUILD_ETCD_METASTORE)
+    # cd to third_party/cpprestsdk and run git submodule update --init
 endif()
 
 if (ENABLE_SERVICE_REGISTER)

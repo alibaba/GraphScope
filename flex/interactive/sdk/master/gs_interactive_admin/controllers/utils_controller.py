@@ -9,7 +9,7 @@ from gs_interactive_admin.models.api_response_with_code import (
 from gs_interactive_admin.models.upload_file_response import (
     UploadFileResponse,
 )  # noqa: E501
-from gs_interactive_admin import util
+from gs_interactive_admin.file_utils import upload_file_impl
 
 
 def upload_file(filestorage=None):  # noqa: E501
@@ -22,4 +22,5 @@ def upload_file(filestorage=None):  # noqa: E501
 
     :rtype: Union[UploadFileResponse, Tuple[UploadFileResponse, int], Tuple[UploadFileResponse, int, Dict[str, str]]
     """
-    raise RuntimeError("Not Implemented")
+    return upload_file_impl(filestorage)
+   

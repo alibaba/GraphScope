@@ -1,8 +1,47 @@
 import datetime
 
 import typing
+import subprocess
+import threading
+import os
 from gs_interactive_admin import typing_utils
+import logging
 
+logger = logging.getLogger("interactive")
+
+class SubProcessRunner(object):
+    def __init__(self, command, callback, log_file):
+        self.command = command
+        self.callback = callback
+        self.log_file = log_file
+        self.process_id = None
+        self.thread = None
+        
+    def start(self):
+        def target():
+            with open(self.log_file, "w") as log:
+                process = subprocess.Popen(self.command, stdout=log, stderr=log)
+                self.process_id = process.pid
+                
+            process.wait()
+            logger.info(f"Job process {self.process_id} finished with code {process.returncode}, calling callback")
+            self.callback(process)
+        
+        self.thread = threading.Thread(target=target)
+        self.thread.start()
+        return self.thread, self.process_id
+
+
+def remove_nones(data: dict):
+    """
+    Recursively remove None values from a dictionary.
+    """
+    if isinstance(data, dict):
+        return {key: remove_nones(value) for key, value in data.items() if value is not None}
+    elif isinstance(data, list):
+        return [remove_nones(item) for item in data]
+    else:
+        return data
 
 def _deserialize(data, klass):
     """Deserializes dict, list, str into an object.
@@ -67,10 +106,11 @@ def deserialize_date(string):
     :rtype: date
     """
     if string is None:
-      return None
-    
+        return None
+
     try:
         from dateutil.parser import parse
+
         return parse(string).date()
     except ImportError:
         return string
@@ -87,10 +127,11 @@ def deserialize_datetime(string):
     :rtype: datetime
     """
     if string is None:
-      return None
-    
+        return None
+
     try:
         from dateutil.parser import parse
+
         return parse(string)
     except ImportError:
         return string
@@ -110,9 +151,11 @@ def deserialize_model(data, klass):
         return data
 
     for attr, attr_type in instance.openapi_types.items():
-        if data is not None \
-                and instance.attribute_map[attr] in data \
-                and isinstance(data, (list, dict)):
+        if (
+            data is not None
+            and instance.attribute_map[attr] in data
+            and isinstance(data, (list, dict))
+        ):
             value = data[instance.attribute_map[attr]]
             setattr(instance, attr, _deserialize(value, attr_type))
 
@@ -129,8 +172,7 @@ def _deserialize_list(data, boxed_type):
     :return: deserialized list.
     :rtype: list
     """
-    return [_deserialize(sub_data, boxed_type)
-            for sub_data in data]
+    return [_deserialize(sub_data, boxed_type) for sub_data in data]
 
 
 def _deserialize_dict(data, boxed_type):
@@ -143,51 +185,52 @@ def _deserialize_dict(data, boxed_type):
     :return: deserialized dict.
     :rtype: dict
     """
-    return {k: _deserialize(v, boxed_type)
-            for k, v in data.items() }
+    return {k: _deserialize(v, boxed_type) for k, v in data.items()}
 
 
-META_SERVICE_KEY = 'service'
-INSTANCE_LIST_KEY = 'instance_list'
-META_PRIMARY_KEY = 'primary'
-METADATA_KEY = 'metadata'
-GRAPH_META_KEY = 'graph_meta'
-JOB_META_KEY = 'job_meta'
-PLUGIN_META_KEY = 'plugin_meta'
-STATUS_META_KEY = 'status'
+META_SERVICE_KEY = "service"
+INSTANCE_LIST_KEY = "instance_list"
+META_PRIMARY_KEY = "primary"
+METADATA_KEY = "metadata"
+GRAPH_META_KEY = "graph_meta"
+JOB_META_KEY = "job_meta"
+PLUGIN_META_KEY = "plugin_meta"
+STATUS_META_KEY = "status"
 
 
 class MetaKeyHelper(object):
     def __init__(self, namespace="interactive", instance_name="default"):
         self.namespace = namespace
         self.instance_name = instance_name
-        self._service_root = "/" + "/".join([namespace, instance_name, META_SERVICE_KEY])
-        self._meta_root ="/" + "/".join([namespace, instance_name, METADATA_KEY])
-        
+        self._service_root = "/" + "/".join(
+            [namespace, instance_name, META_SERVICE_KEY]
+        )
+        self._meta_root = "/" + "/".join([namespace, instance_name, METADATA_KEY])
+
     def graph_meta_prefix(self):
         return "/".join([self._meta_root, GRAPH_META_KEY])
-    
+
     def plugin_meta_prefix(self):
         return "/".join([self._meta_root, PLUGIN_META_KEY])
-    
+
     def job_meta_prefix(self):
         return "/".join([self._meta_root, JOB_META_KEY])
-    
+
     def service_prefix(self):
         return self._service_root
-    
+
     def service_instance_list_prefix(self, graph_id, service_name):
         return "/".join([self._service_root, graph_id, service_name, INSTANCE_LIST_KEY])
-    
+
     def service_primary_key(self, graph_id, service_name):
         return "/".join([self._service_root, graph_id, service_name, META_PRIMARY_KEY])
-    
+
     def graph_status_key(self, graph_id):
         return "/".join([self._meta_root, STATUS_META_KEY, graph_id])
-    
+
     def decode_service_key(self, key):
         """
-        Decode a key into instance_list_key or primary_key. 
+        Decode a key into instance_list_key or primary_key.
         /namespace/instance_name/service/graph_id/service_name/instance_list/ip:port
         /namespace/instance_name/service/graph_id/service_name/primary
         return graph_id, service_name, endpoint, <ip:port>
@@ -202,7 +245,3 @@ class MetaKeyHelper(object):
             return graph_id, service_name, None
         else:
             raise ValueError("Invalid key type: %s" % key_type)
-       
-        
-    
-    

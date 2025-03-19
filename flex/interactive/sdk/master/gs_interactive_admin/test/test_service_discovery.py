@@ -36,6 +36,7 @@ from gs_interactive_admin.core.service_discovery.service_registry import Service
 
 logger = logging.getLogger("interactive")
 
+
 class TestServiceDiscovery(unittest.TestCase):
     def setUp(self):
         # Read etcd server endpoint from environment variable
@@ -78,13 +79,14 @@ class TestServiceDiscovery(unittest.TestCase):
         post_registry = self.registry.discover("0", "cypher")
         logger.info("post_registry: %s", post_registry)
         assert post_registry is not None
-        assert (post_registry["primary"]
+        assert (
+            post_registry["primary"]
             == ServiceInstance(mock_endpoint, mock_metrics).to_dict()
         )
         logger.info("post_registry: %s", post_registry)
-        assert (post_registry["instance_list"]
-            == [ServiceInstance(mock_endpoint, mock_metrics).to_dict()]
-        )
+        assert post_registry["instance_list"] == [
+            ServiceInstance(mock_endpoint, mock_metrics).to_dict()
+        ]
         self.registry.stop()
         t.join()
 

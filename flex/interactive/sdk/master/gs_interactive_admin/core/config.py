@@ -24,6 +24,13 @@ from simple_parsing import ArgumentParser
 from simple_parsing.helpers import Serializable
 from simple_parsing.helpers import list_field
 
+import os
+
+OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME", "graphscope")
+OSS_BUCKET_DATA_DIR = os.getenv("OSS_BUCKET_DATA_DIR", "interactive")
+
+INTERACTIVE_WORKSPACE = os.environ.get("INTERACTIVE_WORKSPACE", "/tmp/interactive_workspace")
+
 
 @dataclass
 class MetadataStore:
@@ -32,8 +39,8 @@ class MetadataStore:
     """
 
     uri: str = f"file://{{WORKSPACE}}/METADATA"
-    
-    
+
+
 @dataclass
 class ComputeEngine:
     """
@@ -46,9 +53,12 @@ class ComputeEngine:
 
     thread_num_per_worker: int = 1
     memory_per_worker: str = "4Gi"
-    
+
     metadata_store: MetadataStore = field(default_factory=MetadataStore)
     wal_uri: str = f"file://{{GRAPH_DATA_DIR}}/wal"
+    
+    config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+    entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
 
 
 @dataclass
@@ -61,7 +71,8 @@ class HttpService:
     admin_port: int = 7777
     query_port: int = 10000
     max_content_length: str = "1GB"
-    
+
+
 @dataclass
 class ServiceRegistry:
     """
@@ -71,7 +82,8 @@ class ServiceRegistry:
     type: str = "etcd"
     endpoint: str = "http://localhost:2379"
     ttl: int = 60
-    
+
+
 @dataclass
 class K8sLauncherConfig:
     """
@@ -104,33 +116,49 @@ class K8sLauncherConfig:
     node_selectors: dict = field(default_factory=dict)
     affinity: dict = field(default_factory=dict)
     tolerations: list = field(default_factory=list)
-    
-    service_type: str = "NodePort"
-    cluster_ip: str = None # If service_type is ClusterIP, user could specify the cluster_ip
+    annotations: dict = field(default_factory=dict)
 
+    service_type: str = "NodePort"
+    cluster_ip: str = (
+        None  # If service_type is ClusterIP, user could specify the cluster_ip
+    )
+    update_strategy: str = "RollingUpdate"
+    engine_pod_annotations: dict = field(default_factory=dict)
+    service_account_create: bool = True
+    service_account_name: str = None
     
+    engine_config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+    engine_entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
+
+
 @dataclass
 class Master:
     port: int = 7776
-    instance_name: str = "default"
+    instance_name: str = "test"
     service_registry: ServiceRegistry = field(default_factory=ServiceRegistry)
 
-    k8s_launcher_config : K8sLauncherConfig = field(default_factory=K8sLauncherConfig)
+    k8s_launcher_config: K8sLauncherConfig = field(default_factory=K8sLauncherConfig)
     launcher_type: str = "k8s"
+    entrypoint_mount_path: str = "/etc/interactive/master_entrypoint.sh"
+    config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+
 
 @dataclass
 class ConnectorConfig:
     disabled: bool = False
-    port : int = 7687
+    port: int = 7687
+
 
 @dataclass
 class CompilerEndpoint:
     default_listen_address: str = "localhost"
-    bolt_connector : ConnectorConfig = field(default_factory=ConnectorConfig)
+    bolt_connector: ConnectorConfig = field(default_factory=ConnectorConfig)
+
 
 @dataclass
 class CompilerConfig:
-    endpoint : CompilerEndpoint = field(default_factory=CompilerEndpoint)
+    endpoint: CompilerEndpoint = field(default_factory=CompilerEndpoint)
+
 
 @dataclass
 class Config(Serializable):
@@ -142,11 +170,11 @@ class Config(Serializable):
     verbose_level: int = 0
 
     compute_engine: ComputeEngine = field(default_factory=ComputeEngine)
-    
-    compiler : CompilerConfig = field(default_factory=CompilerConfig)
+
+    compiler: CompilerConfig = field(default_factory=CompilerConfig)
 
     http_service: HttpService = field(default_factory=HttpService)
 
     workspace: str = "/tmp/interactive_workspace"
-    
-    master : Master = field(default_factory=Master)
+
+    master: Master = field(default_factory=Master)

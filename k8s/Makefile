@@ -185,7 +185,7 @@ flex-interactive-master:
 		--build-arg PLATFORM=${PLATFORM} \
 		--build-arg ARCH=${ARCH} \
 		-t graphscope/interactive-master:${VERSION}  \
-		-f ${DOCKERFILES_DIR}/flex-interactive-master.Dockerfile .
+		-f ${DOCKERFILES_DIR}/flex-interactive-master.Dockerfile --no-cache .
 
 learning:
 	cd $(WORKING_DIR)/.. && \

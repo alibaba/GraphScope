@@ -20,6 +20,40 @@
 {{- end -}}
 {{- end -}}
 
+
+{{- define "graphscope-interactive.ossAccessKeyId "-}}
+{{- if .Values.oss.accessKeyId -}}
+{{- .Values.oss.accessKeyId | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossAccessKeySecret" -}}
+{{- if .Values.oss.accessKeySecret -}}
+{{- .Values.oss.accessKeySecret | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossEndpoint" -}}
+{{- if .Values.oss.endpoint -}}
+{{- .Values.oss.endpoint | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossBucketName" -}}
+{{- if .Values.oss.bucketName -}}
+{{- .Values.oss.bucketName | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+
 {{- define "graphscope-interactive.engine.fullname" -}}
 {{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "engine" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

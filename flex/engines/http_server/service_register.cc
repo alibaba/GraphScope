@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef ENABLE_SERVICE_REGISTER
+
 #include "flex/engines/http_server/service_register.h"
 
 namespace server {
@@ -115,3 +117,5 @@ gs::Status ServiceRegister::insert_to_primary(const std::string& key,
 }
 
 }  // namespace server
+
+#endif

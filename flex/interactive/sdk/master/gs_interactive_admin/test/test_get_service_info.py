@@ -10,13 +10,16 @@ from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
 from gs_interactive_admin.test import BaseTestCase
 
 from gs_interactive_admin.util import MetaKeyHelper
-from gs_interactive_admin.core.service_discovery.service_registry import get_service_registry
+from gs_interactive_admin.core.service_discovery.service_registry import (
+    get_service_registry,
+)
 
 logger = logging.getLogger("interactive")
 
 
 class TestServiceRegistryServer(BaseTestCase):
     """AdminServiceJobManagementController integration test stubs"""
+
     def setUp(self):
         # get the field from the parent class
         if os.environ.get("ETCD_ENDPOINT") is None:
@@ -24,7 +27,10 @@ class TestServiceRegistryServer(BaseTestCase):
         self.etcd_endpoint = os.environ["ETCD_ENDPOINT"]
         self.host, self.port = self.etcd_endpoint.split(":")
         self.etcd_client = etcd3.client(host=self.host, port=int(self.port))
-        self._helper = MetaKeyHelper(namespace=get_service_registry().namespace, instance_name=get_service_registry().instance_name)
+        self._helper = MetaKeyHelper(
+            namespace=get_service_registry().namespace,
+            instance_name=get_service_registry().instance_name,
+        )
 
     def send_request(self, method, url, data=None):
         headers = {
@@ -101,7 +107,7 @@ class TestServiceRegistryServer(BaseTestCase):
                     key=lambda x: x["endpoint"],
                     reverse=False,
                 )
-    
+
         assert resp.status_code == 200 and sorted_resp == {
             "graph_id_example": {
                 "service_name_example": {

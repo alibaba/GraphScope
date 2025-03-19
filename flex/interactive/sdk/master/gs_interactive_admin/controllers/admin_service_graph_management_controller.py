@@ -47,9 +47,13 @@ def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
     :rtype: Union[JobResponse, Tuple[JobResponse, int], Tuple[JobResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-        graph_id = get_job_manager().create_dataloading_job(graph_id=graph_id, schema_mapping=schema_mapping.to_dict())
-        return CreateGraphResponse(graph_id=graph_id)
+        schema_mapping = SchemaMapping.from_dict(
+            connexion.request.get_json()
+        )  # noqa: E501
+        job_id = get_job_manager().create_dataloading_job(
+            graph_id=graph_id, schema_mapping=schema_mapping.to_dict()
+        )
+        return JobResponse(job_id=job_id)
     else:
         raise RuntimeError("Invalid request")
 
@@ -68,7 +72,9 @@ def create_graph(create_graph_request):  # noqa: E501
         create_graph_request = CreateGraphRequest.from_dict(
             connexion.request.get_json()
         )  # noqa: E501
-        graph_id = get_metadata_store().create_graph_meta(create_graph_request.to_dict())
+        graph_id = get_metadata_store().create_graph_meta(
+            create_graph_request.to_dict()
+        )
         return CreateGraphResponse(graph_id=graph_id)
     else:
         raise RuntimeError("Invalid request")

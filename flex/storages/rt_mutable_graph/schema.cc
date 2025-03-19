@@ -413,7 +413,8 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
       << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_
-      << v_descriptions_ << e_descriptions_ << description_ << version_;
+      << v_descriptions_ << e_descriptions_ << description_ << version_
+      << remote_path_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -426,7 +427,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
       ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
-      v_descriptions_ >> e_descriptions_ >> description_ >> version_;
+      v_descriptions_ >> e_descriptions_ >> description_ >> version_ >>
+      remote_path_;
   has_multi_props_edge_ = false;
   for (auto& eprops : eproperties_) {
     if (eprops.second.size() > 1) {
@@ -1204,6 +1206,10 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
     schema.SetDescription(graph_node["description"].as<std::string>());
   }
 
+  if (graph_node["remote_path"]) {
+    schema.SetRemotePath(graph_node["remote_path"].as<std::string>());
+  }
+
   // check whether a version field is specified for the schema, if
   // specified, we will use it to check the compatibility of the schema.
   // If not specified, we will use the default version.
@@ -1385,6 +1391,10 @@ std::string Schema::GetDescription() const { return description_; }
 
 void Schema::SetDescription(const std::string& description) {
   description_ = description;
+}
+
+void Schema::SetRemotePath(const std::string& remote_path) {
+  remote_path_ = remote_path;
 }
 
 void Schema::SetVersion(const std::string& version) { version_ = version; }

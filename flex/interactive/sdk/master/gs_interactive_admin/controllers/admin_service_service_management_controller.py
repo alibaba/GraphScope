@@ -82,7 +82,8 @@ def stop_service(stop_service_request=None):  # noqa: E501
         return get_service_manager().stop_service(stop_service_request)
     else:
         raise RuntimeError("Invalid request")
-    
+
+
 def check_service_ready():  # noqa: E501
     """check_service_ready
 

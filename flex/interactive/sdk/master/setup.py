@@ -13,12 +13,12 @@ repo_root = os.path.dirname(os.path.abspath(__file__))
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
+
 def parsed_reqs():
-    with open(
-        os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8"
-    ) as fp:
+    with open(os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8") as fp:
         pkgs = fp.read().splitlines()
         return pkgs
+
 
 setup(
     name=NAME,

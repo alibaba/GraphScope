@@ -7,3 +7,4 @@ Flask == 2.1.1
 etcd3 == 0.12.0
 kubernetes>=24.2.0
 simple_parsing == 0.1.7
+pyyaml >= 6.0.2

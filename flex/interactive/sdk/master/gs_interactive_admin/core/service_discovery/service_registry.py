@@ -69,7 +69,6 @@ class IServiceRegistry(metaclass=ABCMeta):
         pass
 
 
-
 class ServiceInstance(Model):
     """
     A service instance.
@@ -272,11 +271,11 @@ class EtcdServiceRegistry(IServiceRegistry):
         )
         self._global_discovery = GlobalServiceDiscovery()
         self._cancel_watch_handler = None
-        
+
     @property
     def namespace(self):
         return self._namespace
-    
+
     @property
     def instance_name(self):
         return self._instance_name
@@ -290,7 +289,10 @@ class EtcdServiceRegistry(IServiceRegistry):
         Start watching the service registry, and will be kept updated with watch mechanism.
         Watch all changes in the service registry.
         """
-        logger.info("Start watching the service registry on %s", self._key_helper.service_prefix())
+        logger.info(
+            "Start watching the service registry on %s",
+            self._key_helper.service_prefix(),
+        )
 
         def service_watch_call_back(event):
             """
@@ -414,7 +416,10 @@ def initialize_service_registry(config: Config):
         endpoint = endpoint.startswith("http://") and endpoint[7:] or endpoint
         ip, port = endpoint.split(":")
         service_registry = EtcdServiceRegistry(
-            ip, int(port), config.master.k8s_launcher_config.namespace, config.master.instance_name
+            ip,
+            int(port),
+            config.master.k8s_launcher_config.namespace,
+            config.master.instance_name,
         )
     else:
         raise ValueError(
