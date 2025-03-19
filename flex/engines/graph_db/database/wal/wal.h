@@ -53,7 +53,6 @@ struct UpdateWalUnit {
  */
 class IWalWriter {
  public:
-  static constexpr size_t MAX_WALS_NUM = 134217728;
   virtual ~IWalWriter() {}
 
   virtual std::string type() const = 0;

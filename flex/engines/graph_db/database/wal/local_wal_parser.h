@@ -42,8 +42,7 @@ class LocalWalParser : public IWalParser {
   std::vector<int> fds_;
   std::vector<void*> mmapped_ptrs_;
   std::vector<size_t> mmapped_size_;
-  WalContentUnit* insert_wal_list_;
-  size_t insert_wal_list_size_;
+  std::vector<WalContentUnit> insert_wal_list_;
   uint32_t last_ts_{0};
 
   std::vector<UpdateWalUnit> update_wal_list_;

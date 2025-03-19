@@ -107,6 +107,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            {{- if .Values.store.service.adminPort }}
+            - name: GROOT_STORE_POD_ADMIN_PORT
+              value: {{ .Values.store.service.adminPort | quote }}
+            {{- end }}
           ports:
             - name: inner-rpc
               containerPort: 55555

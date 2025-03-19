@@ -19,6 +19,7 @@ option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arr
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
 option(BUILD_ETCD_METASTORE "Whether to build with etcd metastore" OFF) # Whether to build with etcd metastore, default is OFF
 option(ENABLE_SERVICE_REGISTER "Whether to enable service register" OFF) # Whether to enable service register, default is OFF
+option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -51,6 +52,13 @@ message(${LINUX_KERNEL_VERSION})
 if(LINUX_KERNEL_VERSION VERSION_GREATER_EQUAL "4.5")
     message("Use copy file range")
     add_definitions(-DUSE_COPY_FILE_RANGE)
+endif()
+
+if (BUILD_WITH_OSS)
+    add_definitions(-DBUILD_WITH_OSS)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/aliyun-oss-cpp-sdk/sdk/include)
+    set(TARGET_OUTPUT_NAME_PREFIX "alibabacloud-oss-" CACHE STRING "The target's output name prefix")
+    add_subdirectory(third_party/aliyun-oss-cpp-sdk)
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)

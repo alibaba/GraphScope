@@ -73,12 +73,21 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex
 
 ############################################ Build Utils Library ############################################
 file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
+
+if (NOT BUILD_WITH_OSS)
+        list(REMOVE_ITEM UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/remote/oss_storage.cc")
+endif()
+
+
 add_library(flex_utils SHARED ${UTILS_SRC_FILES} ${ERROR_PROTO_SRCS})
 target_include_directories(flex_utils PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 # Link the static library of arrow, to save the trouble of linking the shared library of arrow
 target_link_libraries(flex_utils PUBLIC ${Protobuf_LIBRARIES} ${ARROW_LIB} ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
+if (BUILD_WITH_OSS)
+        target_link_libraries(flex_utils PRIVATE cpp-sdk)
+endif()
 
 
 find_package(mimalloc 1.8 REQUIRED)

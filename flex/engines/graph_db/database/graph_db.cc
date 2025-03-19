@@ -479,15 +479,17 @@ void GraphDB::openWalAndCreateContexts(const GraphDBConfig& config,
   }
   VLOG(1) << "Using wal uri: " << wal_uri;
 
-  auto wal_parser = WalParserFactory::CreateWalParser(wal_uri);
-  ingestWals(*wal_parser, data_dir, thread_num_);
   for (int i = 0; i < thread_num_; ++i) {
     new (&contexts_[i])
         SessionLocalContext(*this, data_dir, i, allocator_strategy,
                             WalWriterFactory::CreateWalWriter(wal_uri));
+  }
+  auto wal_parser = WalParserFactory::CreateWalParser(wal_uri);
+  ingestWals(*wal_parser, data_dir, thread_num_);
+
+  for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].logger->open(wal_uri, i);
   }
-
   initApps(graph_.schema().GetPlugins());
   VLOG(1) << "Successfully restore load plugins";
 }

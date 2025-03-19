@@ -66,7 +66,8 @@ static Context left_outer_intersect(Context&& ctx, Context&& ctx0,
       ctx.reshuffle(ctx0.get_offsets().data());
       for (size_t i = 0; i < ctx0.col_num() || i < ctx1.col_num(); ++i) {
         if (i < ctx0.col_num()) {
-          if (ctx0.get(i) != nullptr) {
+          if ((i >= ctx.col_num() || ctx.get(i) == nullptr) &&
+              ctx0.get(i) != nullptr) {
             ctx.set(i, ctx0.get(i));
           }
         }

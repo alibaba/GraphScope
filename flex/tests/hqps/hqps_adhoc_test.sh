@@ -22,13 +22,24 @@ GIE_HOME=${FLEX_HOME}/../interactive_engine/
 # 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
   echo "Receives: $# args, need 3 or 4 args"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG> [TEST_TYPE(cypher/gremlin/all)]"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <CBO/RBO> [TEST_TYPE(cypher/gremlin/all)]"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
 GRAPH_NAME=$2
-ENGINE_CONFIG_PATH=$3
+COMPILER_PLANNER_OPT=$3
+if [ "${COMPILER_PLANNER_OPT}" == "CBO" ]; then
+  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_test_cbo.yaml
+elif [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
+  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_test.yaml
+else
+  echo "COMPILER_PLANNER_OPT: ${COMPILER_PLANNER_OPT} not supported, use CBO or RBO"
+  exit 1
+fi
+# Export this enviroment variable enable different test cases for different planner
+export COMPILER_PLANNER_OPT=${COMPILER_PLANNER_OPT}
+
 if [ $# -eq 4 ]; then
   TEST_TYPE=$4
 else
@@ -81,7 +92,9 @@ kill_service(){
     ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
     ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
     sleep 3
-    # check if service is killed
+    sed -i "s/default_graph: .*/default_graph: modern_graph/g" ${ENGINE_CONFIG_PATH}
+    rm -rf ${INTERACTIVE_WORKSPACE}/METADATA || (err "rm METADATA failed")
+    rm ${INTERACTIVE_WORKSPACE}/data/1 || (err "rm builtin graph failed")
     info "Kill Service success"
 }
 
@@ -102,8 +115,15 @@ start_engine_service(){
         err "SERVER_BIN not found"
         exit 1
     fi
-    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
-    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
+    sed -i "s/default_graph: .*/default_graph: ${GRAPH_NAME}/g" ${ENGINE_CONFIG_PATH}
+
+    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} "
+    if [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
+      cmd="${cmd} -g ${GRAPH_SCHEMA_YAML}  --data-path ${GRAPH_CSR_DATA_DIR} "
+    else
+      cmd="${cmd} -w ${INTERACTIVE_WORKSPACE} --enable-admin-service true --start-compiler true"
+    fi
+    
 
     if [ "${TEST_TYPE}" == "gremlin" ]; then
       cmd="${cmd} --enable-adhoc-handler=true"
@@ -179,8 +199,13 @@ run_cypher_test(){
     exit 1
   fi
   if [ "${GRAPH_NAME}" == "ldbc" ]; then
-    run_ldbc_test
-    run_simple_test
+    if [ "${COMPILER_PLANNER_OPT}" == "CBO" ]; then
+       run_ldbc_test
+    fi
+    # run simple test for RBO
+    if [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
+      run_simple_test
+    fi
   elif [ "${GRAPH_NAME}" == "movies" ]; then
     run_movie_test
   elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
@@ -208,7 +233,9 @@ run_gremlin_test(){
 
 kill_service
 start_engine_service
-start_compiler_service
+if [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
+  start_compiler_service
+fi
 
 
 if [ "${TEST_TYPE}" == "cypher" ]; then
