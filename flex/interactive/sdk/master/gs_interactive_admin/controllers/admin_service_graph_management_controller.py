@@ -29,6 +29,7 @@ from gs_interactive_admin.models.job_response import JobResponse  # noqa: E501
 from gs_interactive_admin.models.schema_mapping import SchemaMapping  # noqa: E501
 from gs_interactive_admin.models.snapshot_status import SnapshotStatus  # noqa: E501
 from gs_interactive_admin import util
+from gs_interactive_admin.core.metadata.metadata_store import get_metadata_store
 
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
@@ -43,7 +44,14 @@ def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
 
     :rtype: Union[JobResponse, Tuple[JobResponse, int], Tuple[JobResponse, int, Dict[str, str]]
     """
-    raise RuntimeError("Not Implemented")
+    if connexion.request.is_json:
+        create_graph_request = CreateGraphRequest.from_dict(
+            connexion.request.get_json()
+        )  # noqa: E501
+        graph_id = get_metadata_store().create_graph_meta(create_graph_request.to_dict())
+        return CreateGraphResponse(graph_id=graph_id)
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def create_graph(create_graph_request):  # noqa: E501
@@ -60,7 +68,8 @@ def create_graph(create_graph_request):  # noqa: E501
         create_graph_request = CreateGraphRequest.from_dict(
             connexion.request.get_json()
         )  # noqa: E501
-        return get_etcd_meta_store().create_graph(create_graph_request)
+        graph_id = get_metadata_store().create_graph_meta(create_graph_request.to_dict())
+        return CreateGraphResponse(graph_id=graph_id)
     else:
         raise RuntimeError("Invalid request")
 
@@ -75,7 +84,7 @@ def delete_graph(graph_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return get_etcd_meta_store().delete_graph(graph_id)
+    return get_metadata_store().delete_graph_meta(graph_id)
 
 
 def get_graph(graph_id):  # noqa: E501
@@ -88,7 +97,7 @@ def get_graph(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphResponse, Tuple[GetGraphResponse, int], Tuple[GetGraphResponse, int, Dict[str, str]]
     """
-    return get_etcd_meta_store().get_graph_by_id(graph_id)
+    return get_metadata_store().get_graph_meta(graph_id)
 
 
 def get_graph_statistic(graph_id):  # noqa: E501
@@ -101,7 +110,7 @@ def get_graph_statistic(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphStatisticsResponse, Tuple[GetGraphStatisticsResponse, int], Tuple[GetGraphStatisticsResponse, int, Dict[str, str]]
     """
-    return get_etcd_meta_store().get_graph_statistics(graph_id)
+    raise RuntimeError("Not supported")
 
 
 def get_schema(graph_id):  # noqa: E501
@@ -114,7 +123,7 @@ def get_schema(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphSchemaResponse, Tuple[GetGraphSchemaResponse, int], Tuple[GetGraphSchemaResponse, int, Dict[str, str]]
     """
-    return get_etcd_meta_store().get_schema_by_id(graph_id)
+    return get_metadata_store().get_graph_schema(graph_id)
 
 
 def list_graphs():  # noqa: E501
@@ -125,7 +134,7 @@ def list_graphs():  # noqa: E501
 
     :rtype: Union[List[GetGraphResponse], Tuple[List[GetGraphResponse], int], Tuple[List[GetGraphResponse], int, Dict[str, str]]
     """
-    return get_etcd_meta_store().list_graphs()
+    return dict(get_metadata_store().get_all_graph_meta())
 
 
 ################################################################
@@ -237,4 +246,4 @@ def delete_vertex_type(graph_id, type_name):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return "do some magic!"
+    raise RuntimeError("Not supported")

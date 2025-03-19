@@ -53,8 +53,8 @@ class TestEtcdKVStore(unittest.TestCase):
     def test_insert_without_key(self):
         value1 = "test_value"
         value2 = "test_value2"
-        key1 = self.etcd_kv_store.insert_with_prefix("prefix", value1)
-        key2 = self.etcd_kv_store.insert_with_prefix("prefix", value2)
+        key1,key_id = self.etcd_kv_store.insert_with_prefix("prefix", value1)
+        key2,key_id = self.etcd_kv_store.insert_with_prefix("prefix", value2)
         print("key1: ", key1)
         print("key2: ", key2)
         assert self.etcd_kv_store.get(key1) == value1
@@ -63,7 +63,7 @@ class TestEtcdKVStore(unittest.TestCase):
         assert self.etcd_kv_store.delete(key1)
         assert self.etcd_kv_store.get(key1) is None
         value3 = "test_value3"
-        key3 = self.etcd_kv_store.insert_with_prefix("prefix", value3)
+        key3,key_id = self.etcd_kv_store.insert_with_prefix("prefix", value3)
         assert self.etcd_kv_store.get(key3) == value3
 
         kv_tuples = self.etcd_kv_store.get_with_prefix("prefix")

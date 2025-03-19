@@ -2786,6 +2786,7 @@ components:
             parallelism: 0
             build_csr_in_mem: true
             use_mmap_vector: true
+            in_master: true
           format:
             metadata:
               key: ""
@@ -3539,6 +3540,9 @@ components:
           type: boolean
         use_mmap_vector:
           title: use_mmap_vector
+          type: boolean
+        in_master: 
+          title: in_master
           type: boolean
       title: SchemaMapping_loading_config_x_csr_params
       type: object

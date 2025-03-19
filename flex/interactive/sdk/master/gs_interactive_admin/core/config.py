@@ -26,6 +26,15 @@ from simple_parsing.helpers import list_field
 
 
 @dataclass
+class MetadataStore:
+    """
+    Stores configurations for the metadata store.
+    """
+
+    uri: str = f"file://{{WORKSPACE}}/METADATA"
+    
+    
+@dataclass
 class ComputeEngine:
     """
     Stores configurations for the compute engine.
@@ -37,6 +46,9 @@ class ComputeEngine:
 
     thread_num_per_worker: int = 1
     memory_per_worker: str = "4Gi"
+    
+    metadata_store: MetadataStore = field(default_factory=MetadataStore)
+    wal_uri: str = f"file://{{GRAPH_DATA_DIR}}/wal"
 
 
 @dataclass

@@ -138,7 +138,12 @@ int main(int argc, char** argv) {
       "memory-level,m", bpo::value<unsigned>()->default_value(1),
       "memory allocation strategy")("enable-adhoc-handler",
                                     bpo::value<bool>()->default_value(false),
-                                    "whether to enable adhoc handler");
+                                    "whether to enable adhoc handler")(
+      "open-graph-id", bpo::value<std::string>(),
+      "Open the graph service from the graph id");
+  // Note: When open-graph-id is specified, graph-config and data-path should
+  // NOT be specified. We will fetch the graph schema, data path and plugins
+  // from the metadata store.
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();

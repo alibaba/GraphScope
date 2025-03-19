@@ -24,12 +24,14 @@ import logging
 import random
 import os
 
-from gs_interactive_admin import encoder
+from gs_interactive_admin.encoder import JSONEncoder
 from gs_interactive_admin.core.config import Config
 from gs_interactive_admin.core.service_discovery.service_registry import (
     initialize_service_registry,
 )
-
+from gs_interactive_admin.core.metadata.metadata_store import init_metadata_store,get_metadata_store
+from gs_interactive_admin.core.service.service_manager import init_service_manager
+from gs_interactive_admin.core.job.job_manager import init_job_manager
 
 def setup_args_parsing():
     parser = argparse.ArgumentParser()
@@ -68,6 +70,9 @@ def initialize_global_variables(config):
     - get_xxx: Get the global variable
     """
     initialize_service_registry(config)
+    init_metadata_store(config)
+    init_service_manager(config)
+    init_job_manager(config, get_metadata_store())
     
 def preprocess_config(config: Config):
     if config.master.instance_name is None:
@@ -103,6 +108,7 @@ def main():
         arguments={"title": "GraphScope Interactive API v0.3"},
         pythonic_params=True,
     )
+    app.app.json_encoder = JSONEncoder
 
     app.run(port=config.master.port)
 

@@ -53,7 +53,7 @@ class AbstractKeyValueStore(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def insert(self, value) -> str:
+    def insert_with_prefix(self, prefix,  value) -> str:
         """
         Create a key value pair.
         """
@@ -95,7 +95,7 @@ class AbstractKeyValueStore(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def update(self, key, func):
+    def update_with_func(self, key, func):
         """
         Update the value of a key using a function.
         """
@@ -120,15 +120,30 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
     """
     An implementation of key value store using ETCD.
     """
-
-    def __init__(
-        self, host: str, port: int, namespace="interactive", instance_name="default"
-    ):
+    
+    def __init__(self, host = "localhost", port = 2379, root = "/interactive/default"):
         self._host = host
         self._port = port
         self._client = None
-        self._root = "/" + "/".join([namespace, instance_name])
+        self._root = root
         self.inc_id_dir = "/inc_id"
+    
+    @classmethod
+    def create(cls, host: str, port: int, namespace="interactive", instance_name="default"):
+        return ETCDKeyValueStore(host, port, "/" + "/".join([namespace, instance_name]))
+        
+    @classmethod
+    def create_from_endpoint(cls, endpoint: str, namespace="interactive", instance_name="default"):
+        """
+        Initialize the key value store with the endpoint.
+        param endpoint: The endpoint of the key value store, in format http://host:port
+        """
+        # parse the endpoint
+        if not endpoint.startswith("http://"):
+            raise ValueError("Invalid endpoint format.")
+        endpoint = endpoint[7:]
+        host, port = endpoint.split(":")
+        return ETCDKeyValueStore(host, int(port), "/" + "/".join([namespace, instance_name]))
 
     def _get_full_key(self, keys: list):
         if isinstance(keys, str):
@@ -152,7 +167,7 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         while max_retry > 0:
             cur_value = int(self._client.get(full_key)[0])
             if self._client.replace(full_key, str(cur_value), str(cur_value + 1)):
-                return prefix + "/" + str(cur_value)
+                return prefix + "/" + str(cur_value + 1), cur_value + 1
             max_retry -= 1
         raise RuntimeError("Failed to get next key.")
 
@@ -173,11 +188,11 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         """
         Insert the value without giving a specific key, but a prefix. The key is generated automatically, in increasing order.
         """
-        next_key = self._get_next_key(prefix)
+        next_key, next_val = self._get_next_key(prefix)
         full_key = self._get_full_key(next_key)
         logger.info(f"Inserting key {full_key} with value {value}")
         self._client.put(full_key, value)
-        return next_key
+        return next_key, next_val
 
     def get(self, key) -> str:
         logger.info("Getting key: " + self._get_full_key(key))

@@ -31,7 +31,7 @@ from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
 from gs_interactive_admin.core.service_discovery.service_registry import (
     EtcdServiceRegistry,
 )
-from gs_interactive_admin.core.service_discovery.service_registry import EtcdKeyHelper
+from gs_interactive_admin.util import MetaKeyHelper
 from gs_interactive_admin.core.service_discovery.service_registry import ServiceInstance
 
 logger = logging.getLogger("interactive")
@@ -44,7 +44,7 @@ class TestServiceDiscovery(unittest.TestCase):
         self.etcd_endpoint = os.environ["ETCD_ENDPOINT"]
         host, port = self.etcd_endpoint.split(":")
         self.etcd_client = etcd3.client(host=host, port=int(port))
-        self.etcd_key_helper = EtcdKeyHelper(namespace="test", instance_name="test")
+        self.etcd_key_helper = MetaKeyHelper(namespace="test", instance_name="test")
         self.registry = EtcdServiceRegistry(host, int(port), "test", "test")
         # config logging
         logging.basicConfig(level=logging.INFO)

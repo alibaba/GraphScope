@@ -31,6 +31,7 @@ from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
 from etcd3.events import PutEvent
 from etcd3.events import DeleteEvent
 from gs_interactive_admin.core.config import Config
+from gs_interactive_admin.util import MetaKeyHelper, META_SERVICE_KEY
 
 import etcd3
 
@@ -38,9 +39,6 @@ from gs_interactive_admin.models.base_model import Model
 
 logger = logging.getLogger("interactive")
 
-ETCD_SERVICE_KEY = "service"
-ETCD_SERVICE_INSTANCE_LIST_KEY = "instance_list"
-ETCD_SERVICE_INSTANCE_PRIMARY_KEY = "primary"
 ETCD_RETRY_TIMES = 3
 
 
@@ -70,99 +68,6 @@ class IServiceRegistry(metaclass=ABCMeta):
         """
         pass
 
-
-class EtcdKeyHelper(object):
-    """
-    A helper class to generate etcd keys. The root /service/namespace/instance_name is not shown in the following tree.
-    ├── graph_1
-    │   ├── cypher
-    │   │   ├── instance_list
-    │   │   │   ├── 11.12.13.14_7687
-    │   │   │   └── 22.12.13.14_7687
-    │   │   └── primary
-    │   ├── gremlin
-    │   │   ├── instance_list
-    │   │   │   ├── 11.12.13.14_12314
-    │   │   │   └── 22.12.13.14_12314
-    │   │   └── primary
-    │   └── procedure
-    │       ├── instance_list
-    │       │   ├── 11.12.13.14_10000
-    │       │   └── 22.12.13.14_10000
-    │       └── primary
-    ├── graph_2
-    │   ├── cypher
-    │   │   ├── instance_list
-    │   │   │   ├── 66.77.88.99_7687
-    │   │   │   └── 77.77.88.99_7687
-    │   │   └── primary
-    │   ├── gremlin
-    │   │   ├── instance_list
-    │   │   │   ├── 66.77.88.99_12314
-    │   │   │   └── 77.77.88.99_12314
-    │   │   └── primary
-    │   └── procedure
-    │       ├── instance_list
-    │       │   ├── 66.77.88.99_10000
-    │       │   └── 77.77.88.99_10000
-    │       └── primary
-    └── metadata
-        ├── graph_meta
-        │   ├── graph_1
-        │   └── graph_2
-        ├── job_meta
-        │   └── job_1
-        └── plugin_meta
-            └── plugin_1
-    """
-
-    def __init__(self, namespace="interactive", instance_name="default"):
-        self._root = "/" + "/".join([namespace, instance_name, ETCD_SERVICE_KEY])
-
-    def service_prefix(self):
-        """
-        Get the key for the service prefix.
-        """
-        return self._root
-
-    def service_instance_list_prefix(self, graph_id: str, service_name: str):
-        """
-        Get the key for the service instance list.
-        """
-        return "/".join(
-            [self._root, graph_id, service_name, ETCD_SERVICE_INSTANCE_LIST_KEY]
-        )
-
-    def service_primary_key(self, graph_id: str, service_name: str):
-        """
-        Get the key for the primary service instance.
-        """
-        return "/".join(
-            [self._root, graph_id, service_name, ETCD_SERVICE_INSTANCE_PRIMARY_KEY]
-        )
-
-    def decode_service_key(self, key):
-        """
-        Decode the key to get the graph_id and service_name.
-        expect key: /service/namespace/instance_name/graph_id/service_name/instance_list/ip_port
-        """
-        logger.info("Decode key: %s", key)
-        if isinstance(key, bytes):
-            key = key.decode("utf-8")
-        if not key.startswith(self._root):
-            return None
-        split_list = key[len(self._root) :].strip("/").split("/")
-        if len(split_list) == 4:
-            return split_list[0], split_list[1], split_list[3]
-        elif len(split_list) == 3:
-            return split_list[0], split_list[1], None
-        else:
-            logger.error(
-                "Fail to decode the key: %s, expect 3 or 4 parts, but got %d",
-                key,
-                len(split_list),
-            )
-            return None
 
 
 class ServiceInstance(Model):
@@ -358,11 +263,11 @@ class EtcdServiceRegistry(IServiceRegistry):
         logger.info("namespace: %s, instance_name: %s", namespace, instance_name)
         self._namespace = namespace
         self._instance_name = instance_name
-        self._etcd_kv_store = ETCDKeyValueStore(
+        self._etcd_kv_store = ETCDKeyValueStore.create(
             etcd_host, etcd_port, namespace, instance_name
         )
         self._etcd_kv_store.open()
-        self._key_helper = EtcdKeyHelper(
+        self._key_helper = MetaKeyHelper(
             namespace=namespace, instance_name=instance_name
         )
         self._global_discovery = GlobalServiceDiscovery()
@@ -385,7 +290,7 @@ class EtcdServiceRegistry(IServiceRegistry):
         Start watching the service registry, and will be kept updated with watch mechanism.
         Watch all changes in the service registry.
         """
-        logger.info("Start watching the service registry on %s", ETCD_SERVICE_KEY)
+        logger.info("Start watching the service registry on %s", META_SERVICE_KEY)
 
         def service_watch_call_back(event):
             """
@@ -411,7 +316,7 @@ class EtcdServiceRegistry(IServiceRegistry):
                 raise ValueError("Invalid event type: %s", event)
 
         self._cancel_watch_handler = self._etcd_kv_store.add_watch_prefix_callback(
-            ETCD_SERVICE_KEY, service_watch_call_back
+            META_SERVICE_KEY, service_watch_call_back
         )
         logger.info("Watch handler: %s", self._cancel_watch_handler)
 
