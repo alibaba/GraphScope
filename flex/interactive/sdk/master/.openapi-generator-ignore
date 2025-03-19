@@ -35,7 +35,6 @@ gs_interactive_admin/controllers/utils_controller.py
 gs_interactive_admin/controllers/security_controller.py
 gs_interactive_admin/controllers/admin_service_service_registry_controller.py
 gs_interactive_admin/test/
-gs_interactive_admin/openapi/
 gs_interactive_admin/encoder.py
 requirements.txt
 test-requirements.txt
