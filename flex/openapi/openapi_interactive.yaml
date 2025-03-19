@@ -1,11 +1,4 @@
 openapi: 3.0.3
-servers:
-  # Added by API Auto Mocking Plugin
-  # Added by API Auto Mocking Plugin
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0
 info:
   description: |
     This is the definition of GraphScope Interactive API, including
@@ -1519,6 +1512,13 @@ paths:
                   $ref: "#/components/schemas/AllGraphServiceRegistryRecord"
                 type: array
           description: successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                example: Internal error
+                type: string
+          description: Internal error
       tags:
         - AdminService/ServiceRegistry
   /v1/service/registry/{graph_id}/{service_name}:
@@ -2534,3 +2534,22 @@ components:
         $ref: "#/components/schemas/GraphServiceRegistryRecord"
       title: AllGraphServiceRegistryRecord
       type: array
+  responses:
+    "400":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Bad request
+    "404":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Not found
+    "500":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Server error

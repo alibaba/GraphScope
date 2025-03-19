@@ -30,10 +30,12 @@ from gs_interactive_admin.models.schema_mapping import SchemaMapping  # noqa: E5
 from gs_interactive_admin.models.snapshot_status import SnapshotStatus  # noqa: E501
 from gs_interactive_admin import util
 from gs_interactive_admin.core.metadata.metadata_store import get_metadata_store
+from gs_interactive_admin.core.job.job_manager import get_job_manager
 
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
     """create_dataloading_job
+    TODO: currently we launch the job in master, we should launch the job in a temporary pod in the future.
 
     Create a dataloading job # noqa: E501
 
@@ -45,10 +47,8 @@ def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
     :rtype: Union[JobResponse, Tuple[JobResponse, int], Tuple[JobResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_graph_request = CreateGraphRequest.from_dict(
-            connexion.request.get_json()
-        )  # noqa: E501
-        graph_id = get_metadata_store().create_graph_meta(create_graph_request.to_dict())
+        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
+        graph_id = get_job_manager().create_dataloading_job(graph_id=graph_id, schema_mapping=schema_mapping.to_dict())
         return CreateGraphResponse(graph_id=graph_id)
     else:
         raise RuntimeError("Invalid request")

@@ -126,6 +126,7 @@ void GraphDBService::init(const ServiceConfig& config) {
     admin_hdl_ = std::make_unique<admin_http_handler>(
         config.admin_port, config.get_exclusive_shard_id(),
         config.admin_svc_max_content_length);
+#ifdef ENABLE_SERVICE_REGISTER
     LOG(INFO) << "Service registry endpoint: "
               << config.service_registry_endpoint;
     if (!config.service_registry_endpoint.empty()) {
@@ -134,6 +135,7 @@ void GraphDBService::init(const ServiceConfig& config) {
           config.master_instance_name, [this]() { return get_service_info(); },
           config.service_registry_ttl);
     }
+#endif
   }
 
   initialized_.store(true);
@@ -221,9 +223,11 @@ GraphDBService::~GraphDBService() {
   if (metadata_store_) {
     metadata_store_->Close();
   }
+#ifdef ENABLE_SERVICE_REGISTER
   if (service_register_) {
     service_register_->Stop();
   }
+#endif
 }
 
 const ServiceConfig& GraphDBService::get_service_config() const {
@@ -281,12 +285,14 @@ void GraphDBService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->start();
   }
+#ifdef ENABLE_SERVICE_REGISTER
   if (service_register_) {
     LOG(INFO) << "Start service register thread";
     service_register_->Start();
   } else {
     LOG(INFO) << "Service register is not started!";
   }
+#endif
   if (service_config_.start_compiler) {
     if (!start_compiler_subprocess()) {
       LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
@@ -301,9 +307,11 @@ void GraphDBService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->stop();
   }
+#ifdef ENABLE_SERVICE_REGISTER
   if (service_register_) {
     service_register_->Stop();
   }
+#endif
   actor_sys_->terminate();
 }
 
@@ -359,6 +367,7 @@ bool GraphDBService::check_compiler_ready() const {
   return true;
 }
 
+#ifdef ENABLE_SERVICE_REGISTER
 std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
   auto ip = gs::get_local_ip();
   AllServiceRegisterPayload payload;
@@ -386,6 +395,7 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
 
   return std::make_pair(true, payload);
 }
+#endif
 
 bool GraphDBService::start_compiler_subprocess(
     const std::string& graph_schema_path) {

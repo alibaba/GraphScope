@@ -23,7 +23,9 @@
 #include "flex/engines/http_server/actor_system.h"
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/graph_db_http_handler.h"
+#ifdef ENABLE_SERVICE_REGISTER
 #include "flex/engines/http_server/service_register.h"
+#endif
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/metadata/metadata_store_factory.h"
@@ -96,6 +98,7 @@ struct ServiceConfig {
   std::string engine_config_path;       // used for codegen.
   size_t admin_svc_max_content_length;  // max content length for admin service.
   std::string wal_uri;                  // The uri of the wal storage.
+  std::string master_instance_name;     // The name of the master instance.
   std::string
       service_registry_endpoint;  // The address of the service registry.
   int32_t service_registry_ttl;   // The ttl of the service registry.
@@ -184,7 +187,9 @@ class GraphDBService {
 
   bool check_compiler_ready() const;
 
+#ifdef ENABLE_SERVICE_REGISTER
   std::pair<bool, AllServiceRegisterPayload> get_service_info();
+#endif
 
  private:
   GraphDBService() = default;
@@ -208,8 +213,10 @@ class GraphDBService {
   boost::process::child compiler_process_;
   // handler for metadata store
   std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
+#ifdef ENABLE_SERVICE_REGISTER
   // A thread periodically wakeup and register the service itself to master.
   std::unique_ptr<ServiceRegister> service_register_;
+#endif
 };
 
 }  // namespace server
@@ -369,29 +376,31 @@ struct convert<server::ServiceConfig> {
 
     // parse service registry
 
-    if (config["master"]){
+    if (config["master"]) {
       auto master_node = config["master"];
-      if (master_node["instance_name"]){
-        service_config.master_instance_name = master_node["instance_name"].as<std::string>();
+      if (master_node["instance_name"]) {
+        service_config.master_instance_name =
+            master_node["instance_name"].as<std::string>();
       }
       if (master_node["service_registry"]) {
         if (master_node["service_registry"]["endpoint"]) {
           service_config.service_registry_endpoint =
-          master_node["service_registry"]["endpoint"].as<std::string>();
+              master_node["service_registry"]["endpoint"].as<std::string>();
           VLOG(10) << "service_registry_endpoint: "
                    << service_config.service_registry_endpoint;
         }
         if (master_node["service_registry"]["ttl"]) {
           service_config.service_registry_ttl =
-          master_node["service_registry"]["ttl"].as<uint32_t>();
+              master_node["service_registry"]["ttl"].as<uint32_t>();
           VLOG(10) << "service_registry_ttl: "
                    << service_config.service_registry_ttl;
         }
       }
-      if (master_node["k8s_launcher_config"]){
+      if (master_node["k8s_launcher_config"]) {
         auto k8s_config_node = master_node["k8s_launcher_config"];
-        if (k8s_config_node["namespace"]){
-          service_config.namespace_ = k8s_config_node["namespace"].as<std::string>();
+        if (k8s_config_node["namespace"]) {
+          service_config.namespace_ =
+              k8s_config_node["namespace"].as<std::string>();
         }
       }
     }

@@ -41,3 +41,4 @@ test-requirements.txt
 setup.cfg
 gs_interactive_admin/__init__.py
 gs_interactive_admin/__main__.py
+gs_interactive_admin/util.py

@@ -31,7 +31,7 @@ from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
 from etcd3.events import PutEvent
 from etcd3.events import DeleteEvent
 from gs_interactive_admin.core.config import Config
-from gs_interactive_admin.util import MetaKeyHelper, META_SERVICE_KEY
+from gs_interactive_admin.util import MetaKeyHelper
 
 import etcd3
 
@@ -290,7 +290,7 @@ class EtcdServiceRegistry(IServiceRegistry):
         Start watching the service registry, and will be kept updated with watch mechanism.
         Watch all changes in the service registry.
         """
-        logger.info("Start watching the service registry on %s", META_SERVICE_KEY)
+        logger.info("Start watching the service registry on %s", self._key_helper.service_prefix())
 
         def service_watch_call_back(event):
             """
@@ -315,8 +315,9 @@ class EtcdServiceRegistry(IServiceRegistry):
             else:
                 raise ValueError("Invalid event type: %s", event)
 
+        logger.info("Watch prefix: %s", self._key_helper.service_prefix())
         self._cancel_watch_handler = self._etcd_kv_store.add_watch_prefix_callback(
-            META_SERVICE_KEY, service_watch_call_back
+            self._key_helper.service_prefix(), service_watch_call_back
         )
         logger.info("Watch handler: %s", self._cancel_watch_handler)
 
@@ -356,7 +357,8 @@ class EtcdServiceRegistry(IServiceRegistry):
         Handle the put event.
         """
         value = event.value.decode("utf-8")
-        graph_id, service_name, ip_port = self._try_decode_key(event.key)
+        key = event.key.decode("utf-8")
+        graph_id, service_name, ip_port = self._try_decode_key(key)
         logger.info(
             "Put event: graph_id=%s, service_name=%s, endpoint=%s, value=%s",
             graph_id,

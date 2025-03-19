@@ -76,6 +76,7 @@ class TestServiceDiscovery(unittest.TestCase):
         t.start()
         time.sleep(2)
         post_registry = self.registry.discover("0", "cypher")
+        logger.info("post_registry: %s", post_registry)
         assert post_registry is not None
         assert (post_registry["primary"]
             == ServiceInstance(mock_endpoint, mock_metrics).to_dict()

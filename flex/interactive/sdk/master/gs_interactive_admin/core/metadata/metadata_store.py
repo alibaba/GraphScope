@@ -156,6 +156,13 @@ class IMetadataStore(metaclass=ABCMeta):
         Delete the metadata for all plugins of a graph.
         """
         pass
+    
+    @abstractmethod
+    def set_graph_status(self, graph_id: str, status: str):
+        """
+        Set the status for a graph.
+        """
+        pass
 
 
 class DefaultMetadataStore(IMetadataStore):
@@ -251,6 +258,12 @@ class DefaultMetadataStore(IMetadataStore):
             if plugin_meta['graph_id'] == graph_id:
                 self.delete_plugin_meta(graph_id, plugin_meta['plugin_id'])
         return True
+    
+    def set_graph_status(self, graph_id, status):
+        """
+        Use a key-value pair to store the status of a graph.
+        """
+        return self._kv_store_handle.update(self._meta_key_helper.graph_status_key(graph_id), status)
 
 metadata_store = None
 

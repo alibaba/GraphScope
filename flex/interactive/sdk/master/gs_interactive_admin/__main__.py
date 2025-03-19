@@ -110,7 +110,7 @@ def main():
     )
     app.app.json_encoder = JSONEncoder
 
-    app.run(port=config.master.port)
+    app.run(port=config.master.port, debug=True)
 
 
 if __name__ == "__main__":

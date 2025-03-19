@@ -240,7 +240,7 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         """
         logger.info("Adding watch on prefix: " + self._get_full_key(prefix))
         return self._client.add_watch_prefix_callback(
-            self._get_full_key(prefix), callback
+            prefix, callback
         )
 
     def cancel_watch(self, watch_id):
