@@ -81,7 +81,7 @@ master:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "master-latest"
+    tag: "master-debug"
     pullPolicy: IfNotPresent
     pullSecrets: []
 

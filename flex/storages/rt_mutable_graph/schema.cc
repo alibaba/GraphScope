@@ -414,7 +414,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
       << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_
       << v_descriptions_ << e_descriptions_ << description_ << version_
-      << remote_path_;
+      << remote_path_ << name_ << id_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -428,7 +428,7 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
       ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
       v_descriptions_ >> e_descriptions_ >> description_ >> version_ >>
-      remote_path_;
+      remote_path_ >> name_ >> id_;
   has_multi_props_edge_ = false;
   for (auto& eprops : eproperties_) {
     if (eprops.second.size() > 1) {
@@ -1200,6 +1200,13 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
   if (!expect_config(graph_node, "store_type", std::string("mutable_csr"))) {
     LOG(WARNING) << "store_type is not set properly, use default value: "
                  << "mutable_csr";
+  }
+  if (graph_node["name"]) {
+    schema.SetGraphName(graph_node["name"].as<std::string>());
+  }
+
+  if (graph_node["id"]) {
+    schema.SetGraphId(graph_node["id"].as<std::string>());
   }
 
   if (graph_node["description"]) {

@@ -33,6 +33,7 @@ message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 include(CheckLibraryExists)
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -96,6 +97,11 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+# if compiler support -Wno-format-truncation, add it
+CHECK_CXX_COMPILER_FLAG("-Wno-format-truncation" COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+if(COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format-truncation")
+endif()
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})

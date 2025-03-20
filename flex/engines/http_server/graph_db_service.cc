@@ -375,13 +375,20 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
     return std::make_pair(false, payload);
   }
 
-  auto cur_running_graph = metadata_store_->GetRunningGraph();
-  if (!cur_running_graph.ok()) {
-    LOG(ERROR) << "Failed to get running graph: "
-               << cur_running_graph.status().error_message();
-    return std::make_pair(false, payload);
+  if (metadata_store_) {
+    auto cur_running_graph = metadata_store_->GetRunningGraph();
+    if (!cur_running_graph.ok()) {
+      LOG(ERROR) << "Failed to get running graph: "
+                 << cur_running_graph.status().error_message();
+      return std::make_pair(false, payload);
+    }
+    payload.graph_id = cur_running_graph.value();
+
+  } else {
+    // Try to get from current graph_db
+    auto& db = gs::GraphDB::get();
+    payload.graph_id = db.schema().GetGraphName();
   }
-  payload.graph_id = cur_running_graph.value();
 
   auto procedure_endpoint =
       ip + ":" + std::to_string(service_config_.query_port);

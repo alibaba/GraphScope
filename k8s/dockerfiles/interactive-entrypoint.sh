@@ -77,6 +77,21 @@ function prepare_workspace() {
     echo "Successfully loaded builtin graph: ${DEFAULT_GRAPH_NAME}"
 }
 
+function start_query_service() {
+    #expect 1 arg
+    if [ $# -ne 1 ]; then
+        echo "Usage: start_query_service <graph_yaml>"
+        exit 1
+    fi
+    local graph_yaml=$1
+    engine_config_path="${WORKSPACE}/conf/interactive_config.yaml"
+    # start the service
+    start_cmd="${INTERACTIVE_SERVER_BIN} -c ${DEFAULT_INTERACTIVE_CONFIG_FILE}"
+    start_cmd="${start_cmd} -g ${graph_yaml}"
+    echo "Starting the service with command: $start_cmd"
+    eval $start_cmd
+}
+
 function launch_service() {
     #expect 1 arg
     if [ $# -ne 1 ]; then
@@ -153,6 +168,7 @@ EOF
 
 ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
+DEFAULT_GRAPH_YAML=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     -w | --workspace)
@@ -162,6 +178,15 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       WORKSPACE=$1
+      shift
+      ;;
+    -g | --graph)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -g requires an argument." >&2
+        exit 1
+      fi
+      DEFAULT_GRAPH_YAML=$1
       shift
       ;;
     -c | --enable-coordinator)
@@ -189,8 +214,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ -z "${DEFAULT_GRAPH_YAML}" ]; then
+  prepare_workspace $WORKSPACE
+  launch_service $WORKSPACE
+  # Note that the COORDINATOR_CONFIG_FILE should be inside the container
+  launch_coordinator $PORT_MAPPING
+else
+  echo "Got graph yaml: ${DEFAULT_GRAPH_YAML}, will start query service only on it."
+  start_query_service $DEFAULT_GRAPH_YAML
+fi
 
-prepare_workspace $WORKSPACE
-launch_service $WORKSPACE
-# Note that the COORDINATOR_CONFIG_FILE should be inside the container
-launch_coordinator $PORT_MAPPING

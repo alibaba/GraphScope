@@ -4,7 +4,7 @@ ARG PLATFORM=x86_64
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG VINEYARD_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:v0.24.2-amd64 AS builder
 ARG ENABLE_COORDINATOR="false"
 ARG OPTIMIZE_FOR_HOST=OFF
 ARG ENABLE_OPENTELMETRY=false

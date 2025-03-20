@@ -174,7 +174,7 @@ flex-interactive:
 		--build-arg ARCH=${ARCH} \
 		--build-arg OPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} \
 		-t graphscope/interactive:${VERSION}  \
-		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile .
+		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile --no-cache .
 
 flex-interactive-master:
 	cd $(WORKING_DIR)/.. && \

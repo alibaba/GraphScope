@@ -21,7 +21,7 @@ RUN cd ${HOME}/GraphScope && \
 
 # install flex
 RUN cd ${HOME}/GraphScope/flex && \
-    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && \
+    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON -DBUILD_WITH_OSS=ON -DENABLE_SERVICE_REGISTER=ON && \
     make -j ${PARALLEL} && make install
 
 # strip all .so in /opt/flex/lib
