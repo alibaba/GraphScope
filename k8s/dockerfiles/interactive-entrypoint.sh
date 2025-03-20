@@ -36,6 +36,8 @@ function usage() {
                 -p, --port-mapping: Specify the port mapping for the interactive.
                   The format is container_port:host_port, multiple mappings are
                   separated by comma. For example, 8080:8081,7777:7778
+                -g, --graph: Specify the graph yaml file to start the query service
+                -d, --data: Specify the data directory to start the query service
 EOF
 }
 
@@ -75,6 +77,21 @@ function prepare_workspace() {
     echo "Loading builtin graph: ${DEFAULT_GRAPH_NAME} with command: $builtin_graph_loader_cmd"
     eval $builtin_graph_loader_cmd || (echo "Failed to load builtin graph: ${DEFAULT_GRAPH_NAME}" && exit 1)
     echo "Successfully loaded builtin graph: ${DEFAULT_GRAPH_NAME}"
+}
+
+function start_query_service() {
+    #expect 2 args
+    if [ $# -ne 2 ]; then
+        echo "Usage: start_query_service <graph_yaml> <data_dir>"
+        exit 1
+    fi
+    local graph_yaml=$1
+    local data_dir=$2
+    start_cmd="${INTERACTIVE_SERVER_BIN} -c ${DEFAULT_INTERACTIVE_CONFIG_FILE}"
+    start_cmd="${start_cmd} -g ${graph_yaml}"
+    start_cmd="${start_cmd} -d ${data_dir}"
+    echo "Starting the service with command: $start_cmd"
+    eval $start_cmd
 }
 
 function launch_service() {
@@ -153,6 +170,8 @@ EOF
 
 ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
+DEFAULT_GRAPH_YAML=""
+FLEX_DATA_DIR=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     -w | --workspace)
@@ -162,6 +181,24 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       WORKSPACE=$1
+      shift
+      ;;
+    -g | --graph)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -g requires an argument." >&2
+        exit 1
+      fi
+      DEFAULT_GRAPH_YAML=$1
+      shift
+      ;;
+    -d | --data)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -d requires an argument." >&2
+        exit 1
+      fi
+      FLEX_DATA_DIR=$1
       shift
       ;;
     -c | --enable-coordinator)
@@ -189,8 +226,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-
-prepare_workspace $WORKSPACE
-launch_service $WORKSPACE
-# Note that the COORDINATOR_CONFIG_FILE should be inside the container
-launch_coordinator $PORT_MAPPING
+if [ -z "${DEFAULT_GRAPH_YAML}" ]; then
+  prepare_workspace $WORKSPACE
+  launch_service $WORKSPACE
+  # Note that the COORDINATOR_CONFIG_FILE should be inside the container
+  launch_coordinator $PORT_MAPPING
+else
+  echo "Got graph yaml: ${DEFAULT_GRAPH_YAML}, data dir ${FLEX_DATA_DIR}, will start query service only on it."
+  start_query_service $DEFAULT_GRAPH_YAML $FLEX_DATA_DIR
+fi

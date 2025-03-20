@@ -131,6 +131,14 @@ jobs:
         # destroy instance
         gsctl instance destroy --type interactive -y
 
+    
+    - name: Test launching query service only Interactive
+      run: |
+        docker run -d --name test -p 10001:10000 graphscope/interactive:latest -g /opt/flex/share/gs_interactive_default_graph/graph.yaml -d /tmp/csr-data
+        sleep 5
+        # curl localhost:10001 should return 404
+        (curl localhost:10001 | grep '{"message": "Not found", "code": 404}') || exit 1
+
     - name: Upload Coverage
       uses: codecov/codecov-action@v4
       continue-on-error: true
@@ -143,3 +151,5 @@ jobs:
       if: failure()
       run: |
         docker logs gs-interactive-instance
+        docker rm gs-interactive-instance || true
+        docker rm test || true
