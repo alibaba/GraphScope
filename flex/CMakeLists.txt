@@ -57,8 +57,8 @@ endif()
 
 if (BUILD_WITH_OSS)
     add_definitions(-DBUILD_WITH_OSS)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/aliyun-oss-cpp-sdk/sdk/include)
-    set(TARGET_OUTPUT_NAME_PREFIX "alibabacloud-oss-" CACHE STRING "The target's output name prefix")
+    set(OSS_CPP_SDK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/aliyun-oss-cpp-sdk/sdk/include)
+    include_directories(${OSS_CPP_SDK_INCLUDE_DIR})
     add_subdirectory(third_party/aliyun-oss-cpp-sdk)
 endif()
 

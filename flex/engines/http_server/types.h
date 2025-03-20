@@ -20,7 +20,7 @@
 #include <hiactor/net/serializable_queue.hh>
 #include <seastar/core/sstring.hh>
 #include <seastar/core/temporary_buffer.hh>
-#include "flex/utils/service_utils.h"
+#include "flex/utils/result.h"
 
 #include <string>
 
